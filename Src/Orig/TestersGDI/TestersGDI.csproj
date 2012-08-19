@@ -1,0 +1,503 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DA0C3B05-D45D-4F47-8F3A-9FA38A2DBA70}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Game.Orig.TestersGDI</RootNamespace>
+    <AssemblyName>Game.Orig.TestersGDI</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BallTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BallTester.designer.cs">
+      <DependentUpon>BallTester.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CollisionTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CollisionTester.designer.cs">
+      <DependentUpon>CollisionTester.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MapTester1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MapTester1.designer.cs">
+      <DependentUpon>MapTester1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\BallAdder.cs" />
+    <Compile Include="PhysicsPainter\BallProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\BallProps.designer.cs">
+      <DependentUpon>BallProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\GeneralProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\GeneralProps.designer.cs">
+      <DependentUpon>GeneralProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\GeneralPropsDensity.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\GeneralPropsDensity.designer.cs">
+      <DependentUpon>GeneralPropsDensity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\GravityProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\GravityProps.designer.cs">
+      <DependentUpon>GravityProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\GravMouse.cs" />
+    <Compile Include="PhysicsPainter\GravMouseProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\GravMouseProps.designer.cs">
+      <DependentUpon>GravMouseProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\KeyboardHints.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\KeyboardHints.designer.cs">
+      <DependentUpon>KeyboardHints.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\MapShape.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\MapShape.Designer.cs">
+      <DependentUpon>MapShape.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\ObjectRenderer.cs" />
+    <Compile Include="PhysicsPainter\PhysicsPainterMainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\PhysicsPainterMainForm.Designer.cs">
+      <DependentUpon>PhysicsPainterMainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\Scenes.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\Scenes.Designer.cs">
+      <DependentUpon>Scenes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\Selector.cs" />
+    <Compile Include="PhysicsPainter\ShipController.cs" />
+    <Compile Include="PhysicsPainter\ShipProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipProps.Designer.cs">
+      <DependentUpon>ShipProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsGun.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsGun.Designer.cs">
+      <DependentUpon>ShipPropsGun.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsMain.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsMain.Designer.cs">
+      <DependentUpon>ShipPropsMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsTractor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\ShipPropsTractor.Designer.cs">
+      <DependentUpon>ShipPropsTractor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\SizeProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\SizeProps.Designer.cs">
+      <DependentUpon>SizeProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\SolidBallProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\SolidBallProps.Designer.cs">
+      <DependentUpon>SolidBallProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\SolidBallPropsMenu.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\SolidBallPropsMenu.Designer.cs">
+      <DependentUpon>SolidBallPropsMenu.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\VectorPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\VectorPanel.Designer.cs">
+      <DependentUpon>VectorPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PhysicsPainter\VelocityProps.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PhysicsPainter\VelocityProps.Designer.cs">
+      <DependentUpon>VelocityProps.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PolygonTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PolygonTester.designer.cs">
+      <DependentUpon>PolygonTester.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RigidBodyTester1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RigidBodyTester1.designer.cs">
+      <DependentUpon>RigidBodyTester1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RigidBodyTester2.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RigidBodyTester2.designer.cs">
+      <DependentUpon>RigidBodyTester2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RotateAroundPointTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RotateAroundPointTester.designer.cs">
+      <DependentUpon>RotateAroundPointTester.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SolidBallTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SolidBallTester.designer.cs">
+      <DependentUpon>SolidBallTester.cs</DependentUpon>
+    </Compile>
+    <Compile Include="VectorTester.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="VectorTester.designer.cs">
+      <DependentUpon>VectorTester.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="BallTester.resx">
+      <DependentUpon>BallTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="CollisionTester.resx">
+      <DependentUpon>CollisionTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MapTester1.resx">
+      <DependentUpon>MapTester1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\BallProps.resx">
+      <DependentUpon>BallProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\GeneralProps.resx">
+      <DependentUpon>GeneralProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\GeneralPropsDensity.resx">
+      <DependentUpon>GeneralPropsDensity.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\GravityProps.resx">
+      <DependentUpon>GravityProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\GravMouseProps.resx">
+      <DependentUpon>GravMouseProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\KeyboardHints.resx">
+      <DependentUpon>KeyboardHints.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\MapShape.resx">
+      <DependentUpon>MapShape.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\PhysicsPainterMainForm.resx">
+      <DependentUpon>PhysicsPainterMainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\Scenes.resx">
+      <DependentUpon>Scenes.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\ShipProps.resx">
+      <DependentUpon>ShipProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\ShipPropsGun.resx">
+      <DependentUpon>ShipPropsGun.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\ShipPropsMain.resx">
+      <DependentUpon>ShipPropsMain.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\ShipPropsTractor.resx">
+      <DependentUpon>ShipPropsTractor.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\SizeProps.resx">
+      <DependentUpon>SizeProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\SolidBallProps.resx">
+      <DependentUpon>SolidBallProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\VectorPanel.resx">
+      <DependentUpon>VectorPanel.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PhysicsPainter\VelocityProps.resx">
+      <DependentUpon>VelocityProps.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PolygonTester.resx">
+      <DependentUpon>PolygonTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RigidBodyTester1.resx">
+      <DependentUpon>RigidBodyTester1.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RigidBodyTester2.resx">
+      <DependentUpon>RigidBodyTester2.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RotateAroundPointTester.resx">
+      <DependentUpon>RotateAroundPointTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SolidBallTester.resx">
+      <DependentUpon>SolidBallTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VectorTester.resx">
+      <DependentUpon>VectorTester.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+      <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
+      <Name>HelperClasses</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HelperClassesGDI\HelperClassesGDI.csproj">
+      <Project>{491C4322-B760-4898-AE62-F52029C6C78D}</Project>
+      <Name>HelperClassesGDI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HelperClasses\HelperClassesOrig.csproj">
+      <Project>{F625ABD5-0378-4524-BA6F-A89C63D546FE}</Project>
+      <Name>HelperClassesOrig</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Map\Map.csproj">
+      <Project>{9595B310-A0E9-48A0-A011-91584138C027}</Project>
+      <Name>Map</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Math3D\Math3D.csproj">
+      <Project>{68F469F1-0A7D-4E74-B311-E29583551D6D}</Project>
+      <Name>Math3D</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Arrow1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Blank1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlueDot1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Clear1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\CollisionProps1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GeneralProps1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GravityArrow1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\GravityProps1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Layer1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MapShape1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pan1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Pause1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Polygon1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\RigidBodyDot1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship21.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship31.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship41.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship61.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Ship71.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ShowStats1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Start1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\StopVelocity1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VectorField1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\VectorFieldArrow1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\YellowDot1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ZoomFit1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ZoomIn1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ZoomOut1.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

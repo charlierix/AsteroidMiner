@@ -1,0 +1,124 @@
+﻿<Window x:Class="Game.GameTester.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About" ResizeMode="CanResizeWithGrip" Width="564" Height="412">
+    <Window.Resources>
+        <Style x:Key="headerText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <Style x:Key="ackHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="ackDescription" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="ackLink" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style x:Key="expandedText" TargetType="TextBlock">
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <TabControl>
+            <TabItem Header="About">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Asteroid Miner" Style="{StaticResource headerText}"/>
+
+                    <!-- About -->
+                    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Expander Header="General">
+                                <TextBlock Name="lblGeneral" Style="{StaticResource expandedText}"/>
+                            </Expander>
+
+                            <Expander Header="Artificial life goals">
+                                <TextBlock Name="lblALifeGoal" Style="{StaticResource expandedText}"/>
+                            </Expander>
+
+                            <Expander Header="Points of interest">
+                                <TextBlock Name="lblPointsOfInterest" Style="{StaticResource expandedText}"/>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <!-- License -->
+            <TabItem Header="License">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="zlib license" Style="{StaticResource headerText}"/>
+
+                    <!-- This is set in code, it was easier with all the line breaks -->
+                    <TextBox Grid.Row="1" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Name="txtLicense" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="2,0"/>
+
+                    <TextBlock Grid.Row="2"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.gzip.org/zlib/zlib_license.html"/></Hyperlink></TextBlock>
+                </Grid>
+            </TabItem>
+
+            <!-- References -->
+            <TabItem Header="References">
+                <ScrollViewer Name="pnlReferences" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="Physics Engine" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="This handles collision detection and realistic response" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.newtondynamics.com"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Newton wrapper 1.53" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="I used this for all the 1.53 stuff.  My wrapper of newton 2 is heavily inspired by this." Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.codeproject.com/Articles/27574/Newton-Game-Dynamics-Extensions-for-the-WPF-The-Mo"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="3D Tools for the Windows Presentation Foundation" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="The previous link had code from here embedded in it.  Lots of good stuff" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://3dtools.codeplex.com"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Methods in Math3D" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="There is a section of methods in Math3D that deals with polygon collision" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.GameTutorials.com"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Application Icon" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.iconarchive.com/artist/artcore-illustrations.html"/></Hyperlink></TextBlock>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://artcore-illustrations.de/"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://creativecommons.org/licenses/by-nc-nd/3.0/"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="General websites" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="At this point, I'm just thanking the internet, but without these resources, this would be much harder.  Also, c# really is a great language, as well as visual studio." Style="{StaticResource ackDescription}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.google.com/"/></Hyperlink></TextBlock>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.wikipedia.org/"/></Hyperlink></TextBlock>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://stackoverflow.com"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.gamedev.net"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Over time, I've gotten better about putting links to sources in my comments.  But I'm sure there's quite a few methods that have no acknowledgments.  If you see any of your code, and it's not acknowleged, let me know so I can give proper credit." Margin="0,12" Style="{StaticResource ackDescription}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <TextBlock Grid.Row="1" Margin="0,4,0,0"><Hyperlink Click="Hyperlink_Click"><Run Text="http://asteroidminer.blogspot.com"/></Hyperlink></TextBlock>
+    </Grid>
+</Window>

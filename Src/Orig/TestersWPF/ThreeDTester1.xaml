@@ -1,0 +1,32 @@
+﻿<Window x:Class="Game.Orig.TestersWPF.ThreeDTester1"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="ThreeDTester1" Height="604" Width="664">
+    <Grid Name="grid1" Background="DimGray">
+        <Viewport3D Margin="0" Name="viewport3D1">
+            <Viewport3D.Camera>
+                <PerspectiveCamera x:Name="_camera" Position="0,0,5" UpDirection="0,1,0" LookDirection="0,0,-10" FieldOfView="45" NearPlaneDistance="0" FarPlaneDistance="5000000" />
+            </Viewport3D.Camera>
+
+            <ModelVisual3D>
+                <ModelVisual3D.Content>
+                    <Model3DGroup x:Name="_modelGroup">
+                        <AmbientLight Color="DimGray" />
+                        <DirectionalLight Color="White" Direction="1,-1,-1" />
+                    </Model3DGroup>
+                </ModelVisual3D.Content>
+            </ModelVisual3D>
+        </Viewport3D>
+        <Button Height="23" HorizontalAlignment="Left" Name="btnSingleBall" VerticalAlignment="Top" Width="75" Click="btnSingleBall_Click">Single Cube</Button>
+        <TextBox Height="22.48" Margin="76,0.52,0,0" Name="textBox1" VerticalAlignment="Top" HorizontalAlignment="Left" Width="45" Visibility="Hidden">5</TextBox>
+        <Button Height="23" HorizontalAlignment="Right" Name="btnMultiBalls" VerticalAlignment="Top" Width="75" Click="btnMultiBalls_Click">Multi Balls</Button>
+        <TextBox Height="22.48" HorizontalAlignment="Right" Margin="0,0.52,76,0" Name="textBox2" VerticalAlignment="Top" Width="45">50</TextBox>
+        <CheckBox Height="20" HorizontalAlignment="Right" Margin="0,48,15,0" Name="chkGravity" VerticalAlignment="Top" Width="60" Foreground="White" IsChecked="True">Gravity</CheckBox>
+        <CheckBox Foreground="White" Height="20" HorizontalAlignment="Right" IsChecked="False" Margin="0,29,0,0" Name="chkRandSize" VerticalAlignment="Top" Width="75">Rand Size</CheckBox>
+        <Button Height="23" HorizontalAlignment="Right" Name="btnStop" VerticalAlignment="Bottom" Width="75" Click="btnStop_Click" Margin="0,0,76,0">All Stop</Button>
+        <Button Height="23" Name="btnRandHigh" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="75" Tag="Gives each ball a random velocity" Click="btnRandHigh_Click">Rand High</Button>
+        <Button Height="23" HorizontalAlignment="Right" Margin="0,0,0,24" Name="btnRandMed" VerticalAlignment="Bottom" Width="75" ToolTip="Gives each ball a random velocity" Click="btnRandMed_Click">Rand Med</Button>
+        <Button Height="23" HorizontalAlignment="Right" Margin="0,0,0,48" Name="btnRandLow" VerticalAlignment="Bottom" Width="75" ToolTip="Gives each ball a random velocity" Click="btnRandLow_Click">Rand Low</Button>
+        <Button Height="23" HorizontalAlignment="Left" Name="btnResetCamera" VerticalAlignment="Bottom" Width="75" Click="btnResetCamera_Click">Reset Camera</Button>
+    </Grid>
+</Window>

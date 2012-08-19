@@ -1,0 +1,19 @@
+<p:PrimitiveVisual3D xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:p="clr-namespace:ControlsLibrary.Primitives3D;assembly=ControlsLibrary">
+  <p:PrimitiveVisual3D.Material>
+    <DiffuseMaterial Brush="Red" />
+  </p:PrimitiveVisual3D.Material>
+  <p:ConeVisual3D>
+    <p:PrimitiveVisual3D.Material>
+      <DiffuseMaterial Brush="Red" />
+    </p:PrimitiveVisual3D.Material>
+  </p:ConeVisual3D>
+  <p:CubeVisual3D>
+    <p:PrimitiveVisual3D.Material>
+      <DiffuseMaterial>
+        <DiffuseMaterial.Brush>
+          <SolidColorBrush Color="Blue" Opacity="0.5" />
+        </DiffuseMaterial.Brush>
+      </DiffuseMaterial>
+    </p:PrimitiveVisual3D.Material>
+  </p:CubeVisual3D>
+</p:PrimitiveVisual3D>

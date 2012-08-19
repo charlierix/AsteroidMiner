@@ -1,0 +1,64 @@
+﻿<UserControl x:Class="Game.Newt.HelperClasses.Controls.UndoRedo"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Loaded="UserControl_Loaded">
+    <Grid IsEnabledChanged="Grid_IsEnabledChanged">
+        <!-- Undo -->
+        <Rectangle Name="rctUndo">
+            <Rectangle.Fill>
+                <DrawingBrush Stretch="Uniform">
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <GeometryDrawing Geometry="M 44.6337,412.96L 3,427.182L 28.3116,271.225L 71.8438,3L 163.864,108.309C 172.256,101.506 180.873,94.9543 189.709,88.6716C 399.837,-60.7343 654.672,-1.62238 758.9,220.701C 844.955,404.263 801.435,641.695 665.373,803C 762.428,629.234 772.108,416.166 676.547,275.914C 579.495,133.473 403.536,109.641 245.835,202.116L 341.469,311.561L 44.6337,412.96 Z ">
+                                <GeometryDrawing.Brush>
+                                    <RadialGradientBrush Center="0.0175717,-0.0149105" GradientOrigin="0.0175717,-0.0149105" RadiusX="1.23844" RadiusY="1.25172">
+                                        <RadialGradientBrush.RelativeTransform>
+                                            <TransformGroup>
+                                                <SkewTransform AngleX="6.20362" AngleY="0" CenterX="0.0175717" CenterY="-0.0149105" />
+                                                <RotateTransform Angle="43.7774" CenterX="0.0175717" CenterY="-0.0149105" />
+                                            </TransformGroup>
+                                        </RadialGradientBrush.RelativeTransform>
+                                        <GradientStop Color="{Binding Path=ArrowBackgroundFromFinal}" Offset="0" />
+                                        <GradientStop Color="{Binding Path=ArrowBackgroundToFinal}" Offset="1" />
+                                    </RadialGradientBrush>
+                                </GeometryDrawing.Brush>
+                                <GeometryDrawing.Pen>
+                                    <Pen Brush="{Binding Path=ArrowBorderFinal}" LineJoin="Round" Thickness="6" />
+                                </GeometryDrawing.Pen>
+                            </GeometryDrawing>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+
+        <!-- Redo -->
+        <Rectangle Name="rctRedo">
+            <Rectangle.Fill>
+                <DrawingBrush Stretch="Uniform">
+                    <DrawingBrush.Drawing>
+                        <DrawingGroup>
+                            <GeometryDrawing Geometry="M 761.366,412.96L 803,427.182L 777.689,271.225L 734.156,3L 642.136,108.309C 633.744,101.506 625.128,94.9543 616.291,88.6716C 406.163,-60.7343 151.328,-1.62238 47.1005,220.701C -38.9548,404.263 4.56559,641.695 140.627,803C 43.5717,629.234 33.8923,416.166 129.453,275.914C 226.505,133.473 402.464,109.641 560.165,202.116L 464.531,311.561L 761.366,412.96 Z ">
+                                <GeometryDrawing.Brush>
+                                    <RadialGradientBrush Center="0.247116,0.015166" GradientOrigin="0.247116,0.015166" RadiusX="0.82447" RadiusY="0.824344">
+                                        <RadialGradientBrush.RelativeTransform>
+                                            <TransformGroup>
+                                                <SkewTransform AngleX="0.0136647" AngleY="0" CenterX="0.247116" CenterY="0.015166" />
+                                                <RotateTransform Angle="61.3825" CenterX="0.247116" CenterY="0.015166" />
+                                            </TransformGroup>
+                                        </RadialGradientBrush.RelativeTransform>
+                                        <GradientStop Color="{Binding Path=ArrowBackgroundFromFinal}" Offset="0" />
+                                        <GradientStop Color="{Binding Path=ArrowBackgroundToFinal}" Offset="1" />
+                                    </RadialGradientBrush>
+                                </GeometryDrawing.Brush>
+                                <GeometryDrawing.Pen>
+                                    <Pen Brush="{Binding Path=ArrowBorderFinal}" LineJoin="Round" Thickness="6" />
+                                </GeometryDrawing.Pen>
+                            </GeometryDrawing>
+                        </DrawingGroup>
+                    </DrawingBrush.Drawing>
+                </DrawingBrush>
+            </Rectangle.Fill>
+        </Rectangle>
+    </Grid>
+</UserControl>

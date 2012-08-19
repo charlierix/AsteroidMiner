@@ -1,0 +1,73 @@
+﻿<UserControl x:Class="Game.Newt.Testers.Newt2Tester.AddSimple"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Vertical" RadioButton.Checked="Radio_Checked" RadioButton.Unchecked="Radio_Checked">
+        <StackPanel.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="Stylesheet.xaml"/>
+                </ResourceDictionary.MergedDictionaries>
+
+                <Style TargetType="Slider">
+                    <Setter Property="Minimum" Value="0"/>
+                    <Setter Property="Maximum" Value="1000"/>
+                    <Setter Property="Value" Value="250"/>
+                    <Setter Property="TickFrequency" Value="100"/>
+                    <Setter Property="TickPlacement" Value="None"/>
+                    <Setter Property="Margin" Value="2,4"/>
+                </Style>
+
+                <Style x:Key="labelSlider" TargetType="Label">
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                </Style>
+            </ResourceDictionary>
+        </StackPanel.Resources>
+
+        <!-- Collision Hull Shape -->
+        <RadioButton Name="radBox" Content="Box" IsChecked="True"/>
+        <RadioButton Name="radSphere" Content="Sphere"/>
+        <RadioButton Name="radCylinder" Content="Cylinder"/>
+        <RadioButton Name="radCone" Content="Cone"/>
+        <RadioButton Name="radCapsule" Content="Capsule" IsEnabled="False"/>
+        <RadioButton Name="radChamferCylinder" Content="Chamfer Cylinder" IsEnabled="False"/>
+
+        <!-- Do these in more dedicated testers -->
+        <!--<RadioButton Name="radConvexHull" Content="ConvexHull"/>-->
+        <!--<RadioButton Name="radHeightField" Content="HeightField"/>-->
+        <!--<RadioButton Name="radTree" Content="Tree"/>-->
+
+        <!-- Aspect Ratio Header -->
+        <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+            <Label Content="Aspect Ratio" FontWeight="bold" VerticalAlignment="Center"/>
+            <CheckBox Name="chkRandomRatios" Content="Random Ratios" Checked="chkRandomRatios_Checked" Unchecked="chkRandomRatios_Checked" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- X,Y,Z Sliders -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Label Grid.Column="0" Grid.Row="0" Name="lblX" Content="X" Style="{StaticResource labelSlider}" />
+            <Slider Grid.Column="1" Grid.Row="0" Name="trkX"/>
+
+            <Label Grid.Column="0" Grid.Row="1" Name="lblY" Content="Y" Style="{StaticResource labelSlider}"/>
+            <Slider Grid.Column="1" Grid.Row="1" Name="trkY"/>
+
+            <Label Grid.Column="0" Grid.Row="2" Name="lblZ" Content="Z" Style="{StaticResource labelSlider}"/>
+            <Slider Grid.Column="1" Grid.Row="2" Name="trkZ"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="2" Name="lblRatioHint" Text="hint" Foreground="DimGray" Visibility="Collapsed" HorizontalAlignment="Left" MaxWidth="200" TextWrapping="Wrap" Margin="0,3"/>
+        </Grid>
+
+        <!-- Add Button -->
+        <Button Name="btnAdd" Click="btnAdd_Click" Content="Add Shape" ToolTip="After clicking, hold in enter key to make a bunch" Style="{StaticResource standardButton}" Margin="0,8,0,0"/>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,125 @@
+﻿<Window x:Class="Game.Newt.Testers.ShipPartTesterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ShipPartTesterWindow" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid Background="#E0E0E0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Column="0" Grid.Row="0" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,12,0,6">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+                    <!-- Unit Tests -->
+                    <Expander IsExpanded="False" Header="Unit Tests">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Click="btnAmmoBox_Click" Name="btnAmmoBox" Content="Ammo Box"/>
+                                <Button Click="btnSingleFuel_Click" Name="btnSingleFuel" Content="Fuel Tank"/>
+                                <Button Click="btnSingleEnergy_Click" Name="btnSingleEnergy" Content="Energy Tank"/>
+                                <Button Click="btnMultiEnergy_Click" Name="btnMultiEnergy" Content="Energy Tanks"/>
+                                
+                                <Button Click="btnEnergyToAmmo_Click" Name="btnEnergyToAmmo" Content="Energy to Ammo" Margin="0,6,0,2"/>
+                                <Button Click="btnEnergyToFuel_Click" Name="btnEnergyToFuel" Content="Energy to Fuel"/>
+                                <Button Click="btnFuelToEnergy_Click" Name="btnFuelToEnergy" Content="Fuel to Energy"/>
+                                <Button Click="btnSolarPanel_Click" Name="btnSolarPanel" Content="Solar Panel"/>
+                                
+                                <Button Click="btnThruster_Click" Name="btnThruster" Content="Thruster" Margin="0,6,0,2"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Standalone Parts -->
+                    <Expander IsExpanded="False" Header="Standalone Parts">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Click="btnStandaloneAmmoEmpty_Click" Name="btnStandaloneAmmoEmpty" Content="Ammo Box (empty)"/>
+                                <Button Click="btnStandaloneAmmoFull_Click" Name="btnStandaloneAmmoFull" Content="Ammo Box (full)"/>
+                                <Button Click="btnStandaloneFuelEmpty_Click" Name="btnStandaloneFuelEmpty" Content="Fuel Tank (empty)"/>
+                                <Button Click="btnStandaloneFuelFull_Click" Name="btnStandaloneFuelFull" Content="Fuel Tank (full)"/>
+                                <Button Click="btnStandaloneEnergy_Click" Name="btnStandaloneEnergy" Content="Energy Tank"/>
+
+                                <Button Click="btnStandaloneEnergyToAmmo_Click" Name="btnStandaloneEnergyToAmmo" Content="Energy to Ammo" Margin="0,6,0,2"/>
+                                <Button Click="btnStandaloneEnergyToFuel_Click" Name="btnStandaloneEnergyToFuel" Content="Energy to Fuel"/>
+                                <Button Click="btnStandaloneFuelToEnergy_Click" Name="btnStandaloneFuelToEnergy" Content="Fuel to Energy"/>
+                                <Button Click="btnStandaloneSolarPanel_Click" Name="btnStandaloneSolarPanel" Content="Solar Panel"/>
+
+                                <Button Click="btnStandaloneThruster_Click" Name="btnStandaloneThruster" Content="Thruster" Margin="0,6,0,2"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Ships -->
+                    <Expander IsExpanded="False" Header="Ship Tests">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="True" Header="Misc">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Click="btnBoxBreakdown_Click" Name="btnBoxBreakdown" Content="Box Breakdown"/>
+                                <Button Click="btnCylinderBreakdown_Click" Name="btnCylinderBreakdown" Content="Cylinder Breakdown"/>
+                                <Button Click="btnMassMatrix_Click" Name="btnMassMatrix" Content="Mass Matrix"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="0" Grid.Row="1" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,0,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+                    <!-- Unit Tests -->
+                    <Expander IsExpanded="False" Header="Environment">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <!-- TODO: Style as a toggle button -->
+                                <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSand" Content="Falling Sand"/>
+                                <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSandPlates" Content="Falling Sand (plates)"/>
+                                <RadioButton IsChecked="True" Name="radNone" Content="None"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,25" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+    </Grid>
+</Window>

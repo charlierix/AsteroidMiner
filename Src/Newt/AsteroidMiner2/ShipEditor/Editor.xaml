@@ -1,0 +1,387 @@
+﻿<UserControl x:Class="Game.Newt.AsteroidMiner2.ShipEditor.Editor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpctrl="clr-namespace:Game.Newt.HelperClasses.Controls;assembly=Game.Newt.HelperClasses"
+    Loaded="UserControl_Loaded" KeyDown="grdViewPort_PreviewKeyDown" KeyUp="grdViewPort_PreviewKeyUp" GotFocus="UserControl_GotFocus">
+
+    <!-- Color Theme -->
+    <!-- Neutral: #D7D2CA -->
+    <!-- NeutralDarkDark: #363432 -->
+    <!-- BrownLight: #D7C2AB -->
+    <!-- BrownDark: #8A8274 -->
+    <!-- BlueLight: #CAD1D7 -->
+    <!-- BlueDark: #667A8A -->
+
+    <UserControl.Resources>
+        <Style  TargetType="{x:Type TabControl}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabControl}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TabPanel Grid.Row="0" Panel.ZIndex="1" Margin="0,0,4,-1" IsItemsHost="True" Background="Transparent" />
+                            <Border Grid.Row="1" Padding="6" BorderThickness="2" CornerRadius="6" Background="{Binding Path=PanelBackground}" BorderBrush="{Binding Path=PanelBorder}">
+                                <ContentPresenter ContentSource="SelectedContent" />
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="{x:Type TabItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TabItem}">
+                        <Grid Margin="2">
+                            <Border Name="Border" BorderThickness="1" CornerRadius="6">
+                                <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="12,2,12,2" RecognizesAccessKey="True"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Panel.ZIndex" Value="100" />
+                                <Setter TargetName="Border" Property="Background" Value="{Binding Path=TabItemSelectedBackground}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{Binding Path=TabItemSelectedBorder}" />
+                                <Setter TargetName="Border" Property="CornerRadius" Value="6,6,0,0" />
+                                <Setter Property="Foreground" Value="{Binding Path=TabItemSelectedText}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter TargetName="Border" Property="Background" Value="{Binding Path=PanelBackground}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{Binding Path=PanelBorder}" />
+                                <Setter Property="Foreground" Value="{Binding Path=TextStandard}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="tabScrollViewer" TargetType="ScrollViewer">
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        </Style>
+
+        <Style x:Key="checkbox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+        </Style>
+
+        <Style x:Key="radioGroupBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{Binding Path=PanelBackground}"/>
+            <Setter Property="BorderBrush" Value="{Binding Path=PanelBorder}"/>
+            <Setter Property="Padding" Value="3"/>
+        </Style>
+
+        <Style x:Key="radioGroupHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="17"/>
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+
+        <Style x:Key="radioGroupRadio" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+            <Setter Property="Margin" Value="5,1"/>
+        </Style>
+
+        <Style x:Key="radioGroupCheck" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+            <Setter Property="Margin" Value="5,1"/>
+        </Style>
+
+        <Style x:Key="labelText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+        </Style>
+
+        <Style x:Key="sideExpanderHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{Binding Path=TextStandard}"/>
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <RotateTransform Angle="90"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="sideExpanderHeaderBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{Binding Path=SideExpanderBackground}"/>
+            <Setter Property="BorderBrush" Value="{Binding Path=SideExpanderBorder}"/>
+            <Setter Property="Padding" Value="4,4,1,4"/>
+        </Style>
+
+        <Style x:Key="undoButton" TargetType="helpctrl:UndoRedo">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Margin" Value="6"/>
+            <!-- NOTE: Setting this doesn't have any effect.  They need to be set manually during form load -->
+            <Setter Property="ArrowBorder" Value="{Binding Path=UndoRedoBorder}"/>
+            <Setter Property="ArrowBackgroundFrom" Value="{Binding Path=UndoRedoGradientFrom}"/>
+            <Setter Property="ArrowBackgroundTo" Value="{Binding Path=UndoRedoGradientTo}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Background="{Binding Path=GridBackground}">
+        <!-- Viewport -->
+        <Border Name="grdViewPort" Focusable="True" AllowDrop="True" Background="Transparent" MouseDown="grdViewPort_MouseDown" MouseLeftButtonDown="grdViewPort_MouseLeftButtonDown" MouseLeftButtonUp="grdViewPort_MouseLeftButtonUp" MouseMove="grdViewPort_MouseMove" PreviewDragEnter="grdViewPort_PreviewDragOver" PreviewDragOver="grdViewPort_PreviewDragOver" Drop="grdViewPort_Drop">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,35,5" LookDirection="0,-35,-5" UpDirection="0,-1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+        <!-- Selection Rectangle -->
+        <Canvas Name="selectionCanvas">
+            <Border Name="selectionBox" Visibility="Collapsed" BorderBrush="{Binding Path=SelectionRectangleBorder}" Background="{Binding Path=SelectionRectangleBackground}" BorderThickness="1" CornerRadius="3"/>
+        </Canvas>
+
+        <StackPanel Orientation="Horizontal">
+            <StackPanel>
+                <!-- Parts -->
+                <TabControl Name="tabControl" Margin="8" HorizontalAlignment="Left" VerticalAlignment="Top" MaxWidth="200" Height="225" UIElement.PreviewMouseLeftButtonDown="Tool_PreviewMouseLeftButtonDown" UIElement.PreviewMouseMove="Tool_PreviewMouseMove">
+                    <TabItem Visibility="Collapsed" Header="Test" ToolTip="Test buttons">
+                        <TabItem.Resources>
+                            <Style x:Key="smallButton" TargetType="Button">
+                                <Setter Property="LayoutTransform">
+                                    <Setter.Value>
+                                        <ScaleTransform ScaleX=".8" ScaleY=".8"/>
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Margin" Value="1"/>
+                            </Style>
+                        </TabItem.Resources>
+
+                        <ScrollViewer Style="{StaticResource tabScrollViewer}">
+                            <WrapPanel Name="pnlTest">
+                                <!--<Button Name="btnDragTest" PreviewMouseLeftButtonDown="btnDragTest_PreviewMouseLeftButtonDown" PreviewMouseMove="btnDragTest_PreviewMouseMove" GiveFeedback="btnDragTest_GiveFeedback" Content="drag me" Style="{StaticResource smallButton}"/>-->
+
+                                <Button Click="btnSkewTest_Click" Content="Skew Lines" Name="btnSkewTest" Style="{StaticResource smallButton}"/>
+                                <Button Click="btnPlanes_Click" Content="Intersecting Planes" Name="btnPlanes" Style="{StaticResource smallButton}"/>
+                                <Button Click="btnCircleLineTest_Click" Content="Circle Line" Name="btnCircleLineTest" Style="{StaticResource smallButton}"/>
+                                <Button Click="btnCylinderLineTest_Click" Content="Cylinder Line" Name="btnCylinderLineTest" Style="{StaticResource smallButton}"/>
+                                <Button Click="btnSphereLineTest_Click" Content="Sphere Line" Name="btnSphereLineTest" Style="{StaticResource smallButton}"/>
+
+                                <Button Visibility="Collapsed" Click="btnCylinderTest_Click" Name="btnCylinderTest" Content="Cylinder Test" Style="{StaticResource smallButton}"/>
+                                <Button Visibility="Collapsed" Click="btnHalfDomeTest_Click" Name="btnHalfDomeTest" Content="Capsule Test" Style="{StaticResource smallButton}"/>
+                                <Button Visibility="Collapsed" Click="btnThrusterTest_Click" Name="btnThrusterTest" Content="Thruster Test" Style="{StaticResource smallButton}"/>
+
+                                <!--<Button Click="btnThruster1_Click" Name="btnThruster1" Content="Thruster one way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnThruster2_Click" Name="btnThruster2" Content="Thruster two way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnThruster2_1_Click" Name="btnThruster2_1" Content="Thruster 2+1 way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnThruster2_2_Click" Name="btnThruster2_2" Content="Thruster 2+2 way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnThruster2_2_1_Click" Name="btnThruster2_2_1" Content="Thruster 2+2+1 way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnThruster2_2_2_Click" Name="btnThruster2_2_2" Content="Thruster 2+2+2 way" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnFuelTank_Click" Name="btnFuelTank" Content="Fuel Tank" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnEnergyTank_Click" Name="btnEnergyTank" Content="Energy Tank" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnCargoBay1_1_1_Click" Name="btnCargoBay1_1_1" Content="Cargo Bay 1x1x1" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnCargoBay2_1_1_Click" Name="btnCargoBay2_1_1" Content="Cargo Bay 2x1x1" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnCargoBay2_2_1_Click" Name="btnCargoBay2_2_1" Content="Cargo Bay 2x2x1" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnCargoBay3_2_1_Click" Name="btnCargoBay3_2_1" Content="Cargo Bay 3x2x1" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnCargoBay3_3_1_Click" Name="btnCargoBay3_3_1" Content="Cargo Bay 3x3x1" Style="{StaticResource smallButton}"/>
+                        <Button Click="btnTractorBeam_Click"  Name="btnTractorBeam" Content="Tractor Beam" Style="{StaticResource smallButton}"/>-->
+                            </WrapPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                </TabControl>
+
+                <StackPanel Margin="8,0,8,8" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                    <!-- Show Guides -->
+                    <CheckBox Checked="chkShowGuideLines_Checked" Unchecked="chkShowGuideLines_Checked" IsChecked="True" Name="chkShowGuideLines" Content="Show guide lines" Style="{StaticResource checkbox}"/>
+                    <CheckBox Checked="chkShowGuideLines_Checked" Unchecked="chkShowGuideLines_Checked" IsChecked="True" Name="chkShowGuideLinesAllLayers" Content="Show in all layers" Margin="12,2,0,0" Style="{StaticResource checkbox}"/>
+
+                    <!-- Layers -->
+                    <Expander ExpandDirection="Right" IsExpanded="False" Margin="0,8,0,0">
+                        <Expander.Header>
+                            <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                                <TextBlock Text="Drag snap shape" Style="{StaticResource sideExpanderHeader}"/>
+                            </Border>
+                        </Expander.Header>
+
+                        <Border Margin="4,0,0,0" Style="{StaticResource radioGroupBorder}">
+                            <StackPanel RadioButton.Checked="DragSnapShape_Checked" RadioButton.Unchecked="DragSnapShape_Checked">
+                                <TextBlock Text="Drag snap shape" Style="{StaticResource radioGroupHeader}"/>
+
+                                <RadioButton IsChecked="True" Name="radDragPlaneOrth" Content="Plane (orthogonal)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Default: Vertical (X,Z)<LineBreak/>Hold Shift: Horizontal (X,Y)<LineBreak/>Hold CapsLock: Line
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragPlaneCamera" Content="Plane (perp to camera)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Shift does nothing<LineBreak/>Hold CapsLock: Line
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCylinderX" Content="Cylinder (X)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Default: Cylinder (along X)<LineBreak/>Hold Shift: Plane (radial, intersecting x axis)<LineBreak/>Hold CapsLock: Circle or Line
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCylinderY" Content="Cylinder (Y)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Default: Cylinder (along Y)<LineBreak/>Hold Shift: Plane (radial, intersecting y axis)<LineBreak/>Hold CapsLock: Circle or Line
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCylinderZ" Content="Cylinder (Z)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Default: Cylinder (along Z)<LineBreak/>Hold Shift: Plane (radial, intersecting z axis)<LineBreak/>Hold CapsLock: Circle or Line
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragSphere" Content="Sphere" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Default: Sphere<LineBreak/>Hold Shift: Line (radial, from origin)<LineBreak/>Hold CapsLock: Circle
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCircleX" Content="Circle (X)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Circle (YZ)<LineBreak/>Shift and CapsLock do nothing
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCircleY" Content="Circle (Y)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Circle (XZ)<LineBreak/>Shift and CapsLock do nothing
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <RadioButton Name="radDragCircleZ" Content="Circle (Z)" Style="{StaticResource radioGroupRadio}">
+                                    <RadioButton.ToolTip>
+                                        <TextBlock>
+                                    Circle (XZ)<LineBreak/>Shift and CapsLock do nothing
+                                        </TextBlock>
+                                    </RadioButton.ToolTip>
+                                </RadioButton>
+
+                                <CheckBox Visibility="Collapsed" IsEnabled="False" Name="chkDragParts" Content="Also snap to existing parts" Margin="5,6,5,1" Style="{StaticResource radioGroupCheck}"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Margin="8">
+                <!-- Undo/Redo -->
+                <helpctrl:GlassButton_Circle IsEnabled="False" ButtonClicked="btnUndo_Click" Name="btnUndo" ToolTip="Undo (Ctrl+Z)" ButtonBackground="Transparent">
+                    <helpctrl:GlassButton_Circle.ButtonContent>
+                        <helpctrl:UndoRedo IsUndo="True" Style="{DynamicResource undoButton}"/>
+                    </helpctrl:GlassButton_Circle.ButtonContent>
+                </helpctrl:GlassButton_Circle>
+
+                <helpctrl:GlassButton_Circle IsEnabled="False" ButtonClicked="btnRedo_Click" Name="btnRedo" ToolTip="Redo (Ctrl+Y)" ButtonBackground="Transparent" Margin="2,0,0,0">
+                    <helpctrl:GlassButton_Circle.ButtonContent>
+                        <helpctrl:UndoRedo IsUndo="False" Style="{DynamicResource undoButton}" />
+                    </helpctrl:GlassButton_Circle.ButtonContent>
+                </helpctrl:GlassButton_Circle>
+
+                <!-- Cut/Copy/Paste -->
+                <Button Click="btnCut_Click" Name="btnCut" Content="Cut" Margin="4,0,0,0" VerticalAlignment="Top"/>
+                <Button Click="btnCopy_Click" Name="btnCopy" Content="Copy" VerticalAlignment="Top"/>
+                <Button Click="btnPaste_Click" Name="btnPaste" Content="Paste" VerticalAlignment="Top"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Right: Various panels supplied by the calling window, like for a ship editor: -->
+        <!-- Global Stats (mass, price, fitness) -->
+        <!-- Moment of inertia, center of mass graphic -->
+        <!-- Selected Item Stats -->
+
+        <!-- For a map editor: -->
+        <!-- Stuff I'll think about when I get there? -->
+
+        <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8">
+            <Border HorizontalAlignment="Left" Margin="0,8" Style="{StaticResource radioGroupBorder}">
+                <StackPanel>
+                    <TextBlock Text="Layers" Style="{StaticResource radioGroupHeader}"/>
+
+                    <StackPanel Name="pnlLayers" Margin="2">
+                        <StackPanel.LayoutTransform>
+                            <!-- I want the last row to be on top, so rotate them all 180 (each row has a similar rotation to make it look right side up) -->
+                            <RotateTransform Angle="180"/>
+                        </StackPanel.LayoutTransform>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                        <!-- TODO: Use icons -->
+                        <Button Click="btnNewLayer_Click" Name="btnNewLayer" Content="New" ToolTip="New Layer" Margin="2"/>
+                        <Button Click="btnDeleteLayer_Click" Name="btnDeleteLayer" Content="Del" ToolTip="Delete Layer" Margin="2"/>
+                    </StackPanel>
+
+                    <Button Click="btnLayersByType_Click" Content="Group by type" Name="btnLayersByType" Margin="0,0,0,2">
+                        <Button.ToolTip>
+                            <TextBlock>
+                                    Creates layers by part type, and distributes parts into them<LineBreak/>(removes existing layers)
+                            </TextBlock>
+                        </Button.ToolTip>
+                    </Button>
+
+                </StackPanel>
+            </Border>
+
+            <!-- Misc Buttons -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                <Button Click="btnResetCamera_Click" Name="btnResetCamera" Content="Reset Camera"/>
+
+                <Button Click="btnCenterDrawing_Click" Name="btnCenterDrawing" Content="Center Drawing" Margin="4,0,0,0"/>
+
+                <Border MouseUp="btnShowMappings_Click" Name="btnShowMappings" ToolTip="Key/Mouse Mappings" Padding="2" Margin="4,0,0,0">
+                    <Image Source="../Resources/Keyboard_Icon.png" Stretch="None"/>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                
+                
+                <!-- TODO: Save/Load/Validate/Commit, etc need to be passed in from the calling window, and just shown here like a content presenter -->
+                <!-- TODO: Emulate the popup name/description/save panel from the spore editor -->
+                <!--<Button Click="btnSave_Click" Name="btnSave" Content="Save"/>
+                <Button Click="btnLoad_Click" Name="btnLoad" Content="Load" Margin="4,0,0,0"/>-->
+
+                <Border Name="pnlManagement"/>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="8,0,0,0">
+                    <TextBlock Text="Name:" VerticalAlignment="Center" Style="{StaticResource labelText}"/>
+                    <TextBox Name="txtDesignName" MinWidth="75" BorderBrush="Transparent" Margin="2,0,0,0"/>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,136 @@
+﻿<Window x:Class="Game.Newt.Testers.Newt2Tester.Newt2Tester"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Game.Newt.Testers.Newt2Tester"
+    Title="Newton 2 Tester" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed" Background="#C0C0C0" ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Stylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- This fails with recursion, tired of fighting it -->
+            <!--<DataTemplate x:Key="expanderContent">
+                <Border CornerRadius="3" Background="#F0F0F0" Margin="3">
+                    <ContentPresenter Margin="4,4,4,6"/>
+                </Border>
+            </DataTemplate>-->
+            
+            <DataTemplate x:Key="expanderHeader">
+                <TextBlock Text="{Binding}" FontSize="14" FontWeight="bold"/>
+            </DataTemplate>
+            <Style TargetType="Expander">
+                <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+                <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+            </Style>
+
+            <Style x:Key="expanderContentBorder" TargetType="Border">
+                <Setter Property="CornerRadius" Value="3"/>
+                <Setter Property="Background" Value="#F0F0F0"/>
+                <Setter Property="BorderBrush" Value="#E8E8E8"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Margin" Value="3"/>
+                <Setter Property="Padding" Value="4,4,4,9"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Margin="8,8,4,8" BorderBrush="#B0B0B0" BorderThickness="2" CornerRadius="5" Background="#E0E0E0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" Margin="4" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Orientation="Vertical" MinWidth="150">
+                        <!-- Add Simple -->
+                        <Expander IsExpanded="True" Header="Add Simple">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:AddSimple x:Name="addSimple1" AddBody="addSimple1_AddBody"/>
+                            </Border>
+                        </Expander>
+
+                        <!-- Add Joined Bodies -->
+                        <Expander IsExpanded="False" Header="Add Joined Bodies">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:AddJoinedBodies x:Name="addJoined1" AddJoint="addJoined1_AddJoint"/>
+                            </Border>
+                        </Expander>
+
+                        <!-- Fluid -->
+                        <Expander IsExpanded="False" Header="Fluid">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:FluidEmulation x:Name="fluidEmulation1" ValueChanged="fluidEmulation1_ValueChanged"/>
+                            </Border>
+                        </Expander>
+
+                        <!-- Set Velocities -->
+                        <Expander IsExpanded="False" Header="Set Velocities">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:SetVelocities x:Name="setVelocities1" Stop="setVelocities1_Stop" WhackEm="setVelocities1_WhackEm"/>
+                            </Border>
+                        </Expander>
+
+                        <!-- Vector Field -->
+                        <Expander IsExpanded="False" Header="Vector Field">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:VectorField x:Name="vectorField1" ApplyVectorField="vectorField1_ApplyVectorField"/>
+                            </Border>
+                        </Expander>
+
+                        <!-- Body/Body Attraction -->
+                        <Expander IsExpanded="False" Header="Body/Body Attraction">
+                            <Border Style="{StaticResource expanderContentBorder}">
+                                <local:BodyAttraction x:Name="bodyAttraction1" AttractionChanged="bodyAttraction1_AttractionChanged"/>
+                            </Border>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Clear Buttons -->
+                <UniformGrid Grid.Row="1" Rows="1" Margin="6,3,6,6">
+                    <Button Name="btnRestart" Content="Restart World" Click="btnRestart_Click" Height="23" Margin="0,0,2,0"/>
+                    <Button Name="btnClear" Content="Clear All" Click="btnClear_Click" Height="23" Margin="2,0,0,0"/>
+                </UniformGrid>
+            </Grid>
+        </Border>
+
+        <Border Name="grdViewPort" Grid.Column="1" Margin="4,8,8,8" BorderBrush="#B0B0B0" BorderThickness="2" CornerRadius="5" SizeChanged="grdViewPort_SizeChanged">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Offset="0" Color="#FAFAFA"/>
+                        <GradientStop Offset=".1" Color="#F0F0F0"/>
+                        <GradientStop Offset=".6" Color="#E8E8E8"/>
+                        <GradientStop Offset=".9" Color="#D8D8D8"/>
+                        <GradientStop Offset="1" Color="#D0D0D0"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+            
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,30" LookDirection="0,0,-10" UpDirection="0,1,0" FieldOfView="45" Changed="Camera_Changed"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+    </Grid>
+</Window>

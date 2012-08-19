@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="Game.Newt.Testers.Newt2Tester.BodyAttraction"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel RadioButton.Checked="Radio_Checked" RadioButton.Unchecked="Radio_Checked">
+        <StackPanel.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="Stylesheet.xaml"/>
+                </ResourceDictionary.MergedDictionaries>
+
+            </ResourceDictionary>
+        </StackPanel.Resources>
+
+        <RadioButton Name="radNone" Content="None" IsChecked="True"/>
+        <RadioButton Name="radGravity" Content="Gravity" ToolTip="F = K * (M * M) / Dist^2"/>
+        <RadioButton Name="radSpring" Content="Spring">
+            <RadioButton.ToolTip>
+                <TextBlock>This gets stronger as distance grows<LineBreak/>F = K * Dist</TextBlock>
+            </RadioButton.ToolTip>
+        </RadioButton>
+
+        <RadioButton Name="radSpringInverseDist" Content="Spring Inverse">
+            <RadioButton.ToolTip>
+                <TextBlock>This gets weaker as distance grows (then zero once too far)<LineBreak/>F = K * (MaxDist - Dist)</TextBlock>
+            </RadioButton.ToolTip>
+        </RadioButton>
+
+        <RadioButton Name="radSpringPushPull" Content="Spring at distance">
+            <RadioButton.ToolTip>
+                <TextBlock>Just like spring, but the center of attraction is a ring around<LineBreak/>the body (based on distance slider)<LineBreak/>F = K * (Dist - MaxDist)</TextBlock>
+            </RadioButton.ToolTip>
+        </RadioButton>
+
+        <RadioButton Name="radConstant" Content="Constant" ToolTip="F = K"/>
+
+        <!-- I can't get this to work right, and am tired of trying -->
+        <RadioButton Visibility="Collapsed" Name="radTangent" Content="Tangent"/>
+
+        <Label Content="Strength"/>
+        <Slider ValueChanged="Slider_ValueChanged" Name="trkStrength" Minimum="0" Maximum="1000" Value="150"/>
+
+        <Label Visibility="Collapsed" Name="lblDistance" Content="Distance"/>
+        <Slider Visibility="Collapsed" ValueChanged="Slider_ValueChanged" Name="trkDistance" Minimum="0" Maximum="200" Value="25"/>
+
+        <UniformGrid Rows="1" Margin="4,6,4,0">
+            <RadioButton Name="radToward" Content="Toward" IsChecked="True" Style="{StaticResource radioToggle}" Margin="2"/>
+            <RadioButton Name="radAway" Content="Away" Style="{StaticResource radioToggle}" Margin="2"/>
+        </UniformGrid>
+
+    </StackPanel>
+</UserControl>

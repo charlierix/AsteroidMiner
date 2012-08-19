@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Class />
+  <NameSpaces />
+  <ProjectItems>
+    <ProjectItem>
+      <Path>[_body]</Path>
+      <XmlText>&lt;current&gt;&lt;p:PrimitiveVisual3D.Material&gt;&lt;DiffuseMaterial&gt;&lt;DiffuseMaterial.Brush&gt;&lt;ImageBrush ImageSource="monster.gif"/&gt;&lt;/DiffuseMaterial.Brush&gt;&lt;/DiffuseMaterial&gt;
+&lt;/p:PrimitiveVisual3D.Material&gt;&lt;/current&gt;</XmlText>
+    </ProjectItem>
+  </ProjectItems>
+  <RemoveViewport>false</RemoveViewport>
+  <CleanRedundentNodes>false</CleanRedundentNodes>
+</Project>

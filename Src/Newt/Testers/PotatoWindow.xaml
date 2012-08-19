@@ -1,0 +1,204 @@
+﻿<Window x:Class="Game.Newt.Testers.PotatoWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Potatoes" Width="950" Height="850" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Closed="Window_Closed">
+
+    <!-- Color Theme -->
+    <!-- From kuler.adobe.com (graze by paquinn) -->
+    <!-- TODO: Figure out how to define constants in xaml -->
+    <!-- DarkGray: #1F1F1E -->
+    <!-- MedGray: #555455 -->
+    <!-- LightGray: #959993 -->
+    <!-- LightLightGray #B8BDB5 -->
+    <!-- MedSlate: #4E554D -->
+    <!-- DarkSlate: #2B3434 -->
+
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="15" FontWeight="bold" Foreground="#BDC2BA"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+        </Style>
+
+        <Style x:Key="controlsPanel" TargetType="Border">
+            <Setter Property="Background" Value="#959993"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#1F1F1E"/>
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+
+        <Style x:Key="controlsPanelInExpander" TargetType="Border" BasedOn="{StaticResource controlsPanel}">
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <Style x:Key="controlPanelLabel" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="4,4,4,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#2B3434"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="MinWidth" Value="118"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#555455">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" Margin="12,12,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- TODO: Change the colors of the expander buttons (the entire expander needs to be retemplated to do that) -->
+            <Border Grid.Row="0" Background="#727571" BorderBrush="#1F1F1E" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                    <StackPanel>
+                        <!-- Point Cloud -->
+                        <Expander Header="Point Cloud">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <Grid>
+                                    <StackPanel Margin="8">
+                                        <Button Click="btnPointCloudDisk_Click" Name="btnPointCloudDisk" Content="Disk"/>
+                                        <Button Click="btnPointCloudRingThick_Click" Name="btnPointCloudRingThick" Content="Ring (thick)"/>
+                                        <Button Click="btnPointCloudRing_Click" Name="btnPointCloudRing" Content="Ring"/>
+                                        <Button Click="btnPointCloudSphere_Click" Name="btnPointCloudSphere" Content="Sphere"/>
+                                        <Button Click="btnPointCloudSphereShellThick_Click" Name="btnPointCloudSphereShellThick" Content="Sphere Shell (thick)"/>
+                                        <Button Click="btnPointCloudSphereShell_Click" Name="btnPointCloudSphereShell" Content="Sphere Shell"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <!-- Hull from points -->
+                        <Expander IsExpanded="True" Header="Hull from Points">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <Grid>
+                                    <StackPanel Margin="8">
+                                        <Button Click="btnHullCircle2D_Click" Name="btnHullCircle2D" Content="Circle 2D"/>
+                                        <Button Click="btnHullSphere3D_Click" Name="btnHullSphere3D" Content="Sphere 3D"/>
+                                        <CheckBox Name="chkConcentricHulls" Content="Concentric hulls" Margin="2,5,2,2"/>
+                                        <CheckBox Name="chkDrawDots" Content="Draw Dots" IsChecked="True"/>
+                                        <CheckBox Name="chkDrawLines" Content="Draw Lines" IsChecked="True"/>
+                                        <CheckBox Name="chkDrawNormals" Content="Draw Normals"/>
+                                        <CheckBox Name="chkSoftFaces" Content="Soft Faces"/>
+                                        <CheckBox Name="chkNearlyTransparent" Content="Nearly Transparent"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <!-- Points on Hull -->
+                        <Expander Header="Points on Hull">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <Grid>
+                                    <StackPanel Margin="8">
+                                        <Button Click="btnPointsOnHullTriangle_Click" Name="btnPointsOnHullTriangle" Content="Triangle"/>
+                                        <Button Click="btnPointsOnHullSeveralTriangles_Click" Name="btnPointsOnHullSeveralTriangles" Content="Several Triangles"/>
+                                        <Button Click="btnPointsOnHullRandom_Click" Name="btnPointsOnHullRandom" Content="Random Hull"/>
+                                        <CheckBox Name="chkPointsDrawLines" Content="Draw Lines" IsChecked="False"/>
+                                        <CheckBox Name="chkPointsDrawFaces" Content="Draw Faces" IsChecked="True"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <!-- Hull, Points, Hull -->
+                        <Expander IsExpanded="True" Header="Hull, Points, Hull">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <Grid>
+                                    <StackPanel Margin="8">
+                                        <Button Click="btnHPHOrigAttempt_Click" Name="btnHPHOrigAttempt" Content="Orig Attempt (fail)"/>
+                                        <Button Click="btnHPHPreprocessPoints_Click" Name="btnHPHPreprocessPoints" Content="Preprocess Points (fail)"/>
+                                        <Button Click="btnHPHDetectCoplanar_Click" Name="btnHPHDetectCoplanar" Content="Detect Coplanar (fail)"/>
+                                        <Button Click="btnHPHPreprocessPoints2_Click" Name="btnHPHPreprocessPoints2" Content="Preprocess Points 2"/>
+                                        <CheckBox Name="chkHPHOrigLines" Content="Orig Lines" IsChecked="False"/>
+                                        <CheckBox Name="chkHPHOrigFaces" Content="Orig Faces" IsChecked="True"/>
+                                        <CheckBox Name="chkHPHOrigSoftFaces" Content="Orig Soft Faces" IsChecked="False"/>
+                                        <CheckBox Name="chkHPHPoints" Content="Points" IsChecked="True"/>
+                                        <CheckBox Name="chkHPHFinalLines" Content="Final Lines" IsChecked="False"/>
+                                        <CheckBox Name="chkHPHFinalFaces" Content="Final Faces" IsChecked="True"/>
+                                        <CheckBox Name="chkHPHFinalSoftFaces" Content="Final Soft Faces" IsChecked="False"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <!-- Random Tests -->
+                        <Expander Header="Random Tests">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <Grid>
+                                    <StackPanel Margin="8">
+                                        <Button Visibility="Collapsed" Click="btnVariousNormals_Click" Name="btnVariousNormals" Content="Various Normals"/>
+                                        <Button Click="btnOutsideSet_Click" Name="btnOutsideSet" Content="Outside Set"/>
+                                        <Button Click="btnStart3D_Click" Name="btnStart3D" Content="Start 3D"/>
+                                        <Button Click="btnFail3D_Click" Name="btnFail3D" Content="Fail 3D"/>
+                                        <Button Visibility="Collapsed" Click="btn3DAttempt6_Click" Name="btn3DAttempt6" Content="Attempt 6"/>
+                                        <Button Visibility="Collapsed" Click="btn3DAttempt6FromFile_Click" Name="btn3DAttempt6FromFile">
+                                            <Button.Content>
+                                                <TextBlock>Attempt 6<LineBreak/>From File</TextBlock>
+                                            </Button.Content>
+                                        </Button>
+                                        <TextBlock Name="lblTriangleReport" Text="" Visibility="Collapsed" Foreground="#2B3434"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Num Points -->
+            <Border Grid.Row="1" Style="{StaticResource controlsPanel}" VerticalAlignment="Bottom" Margin="0,12,0,0">
+                <Grid>
+                    <TextBlock Text="Number of Points" Style="{StaticResource controlPanelLabel}"/>
+
+                    <StackPanel Margin="8,28,8,8" RadioButton.Checked="RadioRange_Checked" RadioButton.Unchecked="RadioRange_Checked">
+                        <Slider Name="trkNumPoints" Minimum="4" Maximum="2500" Value="250"/>
+                        <RadioButton Name="radSmallRange" Content="Small Range" Margin="2,6,2,2"/>
+                        <RadioButton IsChecked="True" Name="radLargeRange" Content="Large Range"/>
+                        <RadioButton Name="radHugeRange" Content="Huge Range"/>
+                        <RadioButton Name="radExtremeRange" Content="Extreme Range"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" Background="#B8BDB5" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3" Margin="9,12,12,12">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,-25,25" LookDirection="0,1,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+    </Grid>
+</Window>

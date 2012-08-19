@@ -1,0 +1,85 @@
+﻿<Window x:Class="Game.Newt.Testers.CollisionShapes"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:newton="clr-namespace:Game.Newt.NewtonDynamics_153;assembly=Game.Newt.NewtonDynamics_153"
+    Title="Collision Shapes" Height="600" Width="800" Loaded="Window_Loaded" Closed="Window_Closed">
+    <DockPanel LastChildFill="True">
+        <Grid Name="grdPanel" Width="250.075" DockPanel.Dock="Left">
+
+            <!-- Object Type -->
+            <RadioButton Checked="RadioShape_Checked" IsChecked="True" Height="16" Margin="6.28,6,0,0" Name="radCube" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109">Cube</RadioButton>
+            <RadioButton Checked="RadioShape_Checked" Height="16" Margin="6.28,27.151,0,0" Name="radSphere" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109">Sphere</RadioButton>
+            <RadioButton Checked="RadioShape_Checked" Height="16" Margin="6.28,49,0,0" Name="radPill" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109" IsEnabled="False">Pill (capsule)</RadioButton>
+            <RadioButton Checked="RadioShape_Checked" Height="16" Margin="6.28,71,0,0" Name="radCylinder" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109" IsEnabled="False">Cylinder</RadioButton>
+            <RadioButton Checked="RadioShape_Checked" Height="16" Margin="6,93,0,0" Name="radCone" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109.28" IsEnabled="False">Cone</RadioButton>
+            <RadioButton Checked="RadioShape_Checked" Height="16" Margin="6.28,115,0,0" Name="radChamferCylinder" VerticalAlignment="Top" HorizontalAlignment="Left" Width="109" IsEnabled="False">Chamfer Cylinder</RadioButton>
+
+            <Image Height="125.45" Margin="121,6,5.716,0" Name="image1" Stretch="Fill" VerticalAlignment="Top" />
+
+            <!-- Object Properties -->
+            <Grid Name="grdGlobalProps" Margin="10,143.75,21.25,0" Height="168.25" VerticalAlignment="Top">
+                <Label Height="28.322" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="2.499,5.831,0,0" Name="label1" VerticalAlignment="Top" Width="87.75" FontWeight="Bold">Aspect Ratio</Label>
+                <CheckBox Checked="chkRandomRatios_Checked" Unchecked="chkRandomRatios_Checked" Height="16" IsChecked="False" Margin="99.96,10.831,6,0" Name="chkRandomRatios" VerticalAlignment="Top">Random Ratios</CheckBox>
+
+                <Label Height="28" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="6,39.984,0,0" Name="lblX" VerticalAlignment="Top" Width="22.5">X</Label>
+                <Slider Margin="26.656,39.151,6,0" Maximum="1000" Name="trkX" Orientation="Horizontal" TickFrequency="100" TickPlacement="None" Value="250" Height="25.823" VerticalAlignment="Top" />
+
+                <Label Height="28" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="6,70.805,0,0" Name="lblY" VerticalAlignment="Top" Width="23">Y</Label>
+                <Slider Margin="26.656,71.25,6,0" Maximum="1000" Name="trkY" Orientation="Horizontal" TickFrequency="100" TickPlacement="None" Value="250" Height="27.016" VerticalAlignment="Top" />
+
+                <Label Height="28" HorizontalAlignment="Left" HorizontalContentAlignment="Center" Margin="6.5,101.516,0,0" Name="lblZ" VerticalAlignment="Top" Width="22.5">Z</Label>
+                <Slider Margin="26.656,103.694,6,0" Maximum="1000" Name="trkZ" Orientation="Horizontal" TickFrequency="100" TickPlacement="None" Value="250" Height="28.322" VerticalAlignment="Top" />
+                
+                <CheckBox Height="16" HorizontalAlignment="Left" IsChecked="False" Margin="6,144.352,0,0" Name="chkConstantMass" VerticalAlignment="Top" Width="86">Constant Mass</CheckBox>
+            </Grid>
+
+            <!-- Add/Remove Shapes -->
+            <Button Height="23" HorizontalAlignment="Left" Margin="6.28,317.75,0,0" Name="btnAdd" VerticalAlignment="Top" Width="75" Click="btnAdd_Click">Add Shape</Button>
+            <Button Margin="86.296,317.75,0,0" Name="btnClear" Height="23" VerticalAlignment="Top" Click="btnClear_Click" HorizontalAlignment="Left" Width="75.04">Clear All</Button>
+
+            <!-- Set Velocity -->
+            <Button Height="23" HorizontalAlignment="Left" Margin="6,0,0,174" Name="btnZeroVel" VerticalAlignment="Bottom" Width="86.5" Click="btnZeroVel_Click">Zero Vel</Button>
+            <Button Click="btnRandVelLow_Click" Height="23" HorizontalAlignment="Left" Margin="6,0,0,145" Name="btnRandVelLow" VerticalAlignment="Bottom" Width="86.5">Rand Vel (low)</Button>
+            <Button Click="btnRandVelMed_Click" Height="23" HorizontalAlignment="Left" Margin="6,0,0,116" Name="btnRandVelMed" VerticalAlignment="Bottom" Width="86.5">Rand Vel (med)</Button>
+            <Button Click="btnRandVelHigh_Click" Height="23" HorizontalAlignment="Left" Margin="6,0,0,88" Name="btnRandVelHigh" VerticalAlignment="Bottom" Width="86.5">Rand Vel (high)</Button>
+            <Button Click="btnRandVelExtreme_Click" Height="23" HorizontalAlignment="Left" Margin="6,0,0,58" Name="btnRandVelExtreme" VerticalAlignment="Bottom" Width="86.5">Rand Vel (!!!)</Button>
+
+            <!-- Simulation Speed -->
+            <Label Height="36.25" HorizontalAlignment="Right" HorizontalContentAlignment="Center" Margin="0,0,38.75,182" Name="label3" VerticalAlignment="Bottom" Width="43" Content="Sim&#x0a;Speed" />
+            <Label Height="23.75" HorizontalContentAlignment="Center" Margin="0,0,38.5,160" Name="lblSimSpeed" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="43.25">lblSimSpeed</Label>
+            <Slider Height="110" HorizontalAlignment="Right" Margin="0,0,42,45" Maximum="1000" Minimum="0" Name="trkSimulationSpeed" Orientation="Vertical" TickFrequency="250" TickPlacement="TopLeft" Value="500" VerticalAlignment="Bottom" Width="26.269" ValueChanged="trkSimulationSpeed_ValueChanged" />
+
+            <!-- Map Size -->
+            <Label Height="36.25" HorizontalContentAlignment="Center" Margin="0,0,6,182" Name="label2" VerticalAlignment="Bottom" Content="Map&#x0a;Size" HorizontalAlignment="Right" Width="33.75" />
+            <Label Height="23.75" HorizontalAlignment="Right" HorizontalContentAlignment="Center" Margin="0,0,6,160" Name="lblMapSize" VerticalAlignment="Bottom" Width="33.75">lblMapSize</Label>
+            <Slider Margin="0,0,6.25,45" Minimum="15" Maximum="200" Value="100" Name="trkMapSize" Orientation="Vertical" TickFrequency="100" TickPlacement="None" HorizontalAlignment="Right" Width="26.269" Height="110" VerticalAlignment="Bottom" ValueChanged="trkMapSize_ValueChanged" />
+
+            <!-- Bottom Checkboxes -->
+            <CheckBox Height="16" Margin="6.28,0,0,8.138" Name="chkAttractedToOrigin" VerticalAlignment="Bottom" HorizontalAlignment="Left">Attracted to origin</CheckBox>
+            <CheckBox Checked="chkShouldForce2D_Checked" Unchecked="chkShouldForce2D_Checked" Height="16" Margin="6,0,124.039,28" Name="chkShouldForce2D" VerticalAlignment="Bottom">Restrict to 2D</CheckBox>
+
+            <!-- Reset Camera -->
+            <Button Height="23" Margin="0,0,5.716,6" Name="btnResetCamera" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="87.169" Click="btnResetCamera_Click">Reset Camera</Button>
+        </Grid>
+
+        <!-- Viewport -->
+        <Grid Name="grdViewPort" Background="Gray" SizeChanged="grdViewPort_SizeChanged">
+            <newton:World x:Name="_world" Updating="World_Updating" />
+            <Viewport3D Name="_viewport" newton:World.World="{Binding ElementName=_world}" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,40" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45" Changed="Camera_Changed" />
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Grid>
+    </DockPanel>
+</Window>

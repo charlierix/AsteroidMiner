@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="Since multiple inheritance isn't supported, this is the next best thing.  IPolygon gives the common interface, and Polygon gives the common implementation (instead of a base class)">
+    <Position X="1.01" Y="8.438" Height="0.739" Width="3.273" />
+  </Comment>
+  <Comment CommentText="The objects in this column are the same as the base objects in the right column, but collision detection should use the Polygon instead of a simple sphere">
+    <Position X="5.337" Y="8.427" Height="0.875" Width="2.252" />
+  </Comment>
+  <Comment CommentText="For more detail about the objects in this column, see PhysicsObjects.cd">
+    <Position X="8.42" Y="8.416" Height="0.625" Width="1.669" />
+  </Comment>
+  <Class Name="Game.Orig.Math3D.MyPolygon" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="2.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAADACAAAAAAAAAAABAAAAAAAACAABA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="Game.Orig.Math3D.Sphere" Collapsed="true">
+    <Position X="8.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAIAABAAAAAAIAwIAAAAAAAABAABAAAADAAgBAAFBA=</HashCode>
+      <FileName>Sphere.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.SpherePolygon" Collapsed="true">
+    <Position X="5.25" Y="6.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAABAAAAAAAAAAAIAAAAAAAQAAAABBA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Game.Orig.Math3D.BallPolygon" Collapsed="true">
+    <Position X="5.25" Y="4.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAABAAAAAAAAAAAIBAAAAAAAAAAABBA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Game.Orig.Math3D.Ball" Collapsed="true">
+    <Position X="8.5" Y="6" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ICEAKQgAIEICgAAgUAAyAAACAAAAAGAAAgAEBQGECRA=</HashCode>
+      <FileName>Ball.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.SolidBallPolygon" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="5.25" Y="3.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAABAAAAAAAAAAAIAAAAAAAAAAAABBA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.204" />
+  </Class>
+  <Class Name="Game.Orig.Math3D.RigidBodyPolygon" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="5.25" Y="1.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAABAAAAAAAAAAAIAAABAAAAAAAABBA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Game.Orig.Math3D.SolidBall" Collapsed="true">
+    <Position X="8.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIEAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAACAABA=</HashCode>
+      <FileName>SolidBall.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.RigidBody" Collapsed="true">
+    <Position X="8.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAkAAQAAAAAAAAAAAAIAAMAAAQAAAAEIAAAACBABg=</HashCode>
+      <FileName>RigidBody.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.MyPolygonSyncedRotation" Collapsed="true">
+    <Position X="2" Y="6.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAABAABAAAAAAAAAAIAAQAEAAAAAAAAABA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Game.Orig.Math3D.IMyPolygon" Collapsed="true">
+    <Position X="1.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAgIAAABAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Polygon.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>

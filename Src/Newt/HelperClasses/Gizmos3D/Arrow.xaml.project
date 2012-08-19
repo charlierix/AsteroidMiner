@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<Project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Class />
+  <NameSpaces>
+    <Namespace>
+      <Name>p</Name>
+      <ClrNamespace>ControlsLibrary.Primitives3D</ClrNamespace>
+      <Assembly>ControlsLibrary</Assembly>
+      <Url />
+    </Namespace>
+  </NameSpaces>
+  <ProjectItems>
+    <ProjectItem>
+      <Path>p:CompoundVisual3D</Path>
+      <XmlText>&lt;current&gt;
+&lt;p:PrimitiveVisual3D.Material&gt;
+&lt;DiffuseMaterial Brush="Red" /&gt;
+&lt;/p:PrimitiveVisual3D.Material&gt;
+&lt;/current&gt;</XmlText>
+    </ProjectItem>
+  </ProjectItems>
+  <RemoveViewport>false</RemoveViewport>
+  <CleanRedundentNodes>false</CleanRedundentNodes>
+  <CreateOutputModel>false</CreateOutputModel>
+</Project>

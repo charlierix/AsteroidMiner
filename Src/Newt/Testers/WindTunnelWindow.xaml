@@ -1,0 +1,230 @@
+﻿<Window x:Class="Game.Newt.Testers.WindTunnelWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Wind Tunnel" Width="792" Height="684" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style x:Key="controlsPanel" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint=".1,1" >
+                        <LinearGradientBrush.GradientStops>
+                            <GradientStop Offset="-.1" Color="#FFF5E8"/>
+                            <GradientStop Offset=".1" Color="#F0E3D3"/>
+                            <GradientStop Offset=".7" Color="#E0D4C1"/>
+                            <GradientStop Offset=".9" Color="#D6C8B4"/>
+                            <GradientStop Offset="1.2" Color="#CCBBA7"/>
+                        </LinearGradientBrush.GradientStops>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#8A7B71"/>
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+
+        <Style x:Key="controlsPanelTop" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint=".05,1" >
+                        <LinearGradientBrush.GradientStops>
+                            <GradientStop Offset="-.1" Color="#A0FFFFFF"/>
+                            <GradientStop Offset=".1" Color="#80FFFFFF"/>
+                            <GradientStop Offset=".7" Color="#20E0D4C1"/>
+                            <GradientStop Offset=".9" Color="#60D6C8B4"/>
+                            <GradientStop Offset="1.2" Color="#80CCBBA7"/>
+                        </LinearGradientBrush.GradientStops>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#8A7B71"/>
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+
+        <Style x:Key="controlPanelLabel" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="4,4,4,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#8A7B71"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="1,0" EndPoint=".9,1" >
+                <LinearGradientBrush.GradientStops>
+                    <GradientStop Offset="0" Color="#FFF5E8"/>
+                    <GradientStop Offset=".33" Color="#FFF0DE"/>
+                    <GradientStop Offset="1" Color="#BFAE9B"/>
+                </LinearGradientBrush.GradientStops>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Column="0" Grid.Row="0">
+            <!-- Static Objects -->
+            <Border Style="{StaticResource controlsPanelTop}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,12">
+                <Grid>
+                    <TextBlock Text="Static Objects" Style="{StaticResource controlPanelLabel}"/>
+
+                    <UniformGrid Columns="2" Margin="8,28,8,8" Width="150">
+                        <Button Name="btnStaticTriangle" Click="btnStaticTriangle_Click" Margin="2" Content="Triangle"/>
+                        <Button Name="btnStaticSphere1" Click="btnStaticSphere1_Click" Margin="2" Content="Sphere 1"/>
+                        <Button Name="btnStaticSphere2" Click="btnStaticSphere2_Click" Margin="2" Content="Sphere 2"/>
+                        <Button Name="btnStaticSphere3" Click="btnStaticSphere3_Click" Margin="2" Content="Sphere 3"/>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+
+            <!-- Physics Bodies -->
+            <Border Style="{StaticResource controlsPanelTop}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,12">
+                <Grid>
+                    <TextBlock Text="Physics Bodies" Style="{StaticResource controlPanelLabel}"/>
+
+                    <UniformGrid Columns="2" Margin="8,28,8,8" Width="150">
+                        <Button Name="btnBodyPlate" Click="btnBodyPlate_Click" Margin="2" Content="Plate"/>
+                        <Button Name="btnBodyPropeller2" Click="btnBodyPropeller2_Click" Margin="2" Content="Propeller 2"/>
+                        <Button Name="btnBodyPropeller3" Click="btnBodyPropeller3_Click" Margin="2" Content="Propeller 3"/>
+                        <Button Name="btnBodyPropellerPlates" Click="btnBodyPropellerPlates_Click" Content="Prop Plates" Margin="2"/>
+                    </UniformGrid>
+                </Grid>
+            </Border>
+            
+            <CheckBox IsChecked="True" Name="chkClosedHulls" Content="Closed Hulls" ToolTip="This setting only applies to the convex hulls" Margin="12,12,0,12"/>
+        </StackPanel>
+
+        <Grid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Margin="12,0,12,12">
+            <!-- Camera Presets -->
+            <Border HorizontalAlignment="Left" VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}">
+                <Grid>
+                    <TextBlock Text="Camera Presets" Style="{StaticResource controlPanelLabel}"/>
+
+                    <StackPanel Margin="8,28,8,8">
+                        <StackPanel.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Margin" Value="2"/>
+                                <Setter Property="Width" Value="100"/>
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <Button Click="btnCameraDefault_Click" Name="btnCameraDefault" Content="Default"/>
+                        <Button Click="btnCameraTopDown_Click" Name="btnCameraTopDown" Content="Top Down"/>
+                        <Button Click="btnCameraSide_Click" Name="btnCameraSide" Content="Side"/>
+                        <Button Click="btnCameraFront_Click" Name="btnCameraFront" Content="Front"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- Model Orientation -->
+                <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}">
+                    <Grid>
+                        <TextBlock Text="Model Orientation" Style="{StaticResource controlPanelLabel}"/>
+                    
+                        <Grid Name="grdModelRotateViewport" Background="Transparent" Margin="8,28,8,8" MinWidth="120" MinHeight="120">
+                            <Viewport3D Name="_viewportModelRotate" IsHitTestVisible="False">
+                                <Viewport3D.Camera>
+                                    <PerspectiveCamera x:Name="_cameraModelRotate" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                                </Viewport3D.Camera>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <Model3DGroup>
+                                            <AmbientLight Color="DimGray" />
+                                            <DirectionalLight x:Name="_cameraModelRotateLight1" Color="White" Direction="1,-1,-1" />
+                                            <!--<DirectionalLight x:Name="_cameraModelRotateLight2" Color="#303030" Direction="-1,1,1" />-->
+                                        </Model3DGroup>
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                            </Viewport3D>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Flow Orientation -->
+                <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}" Margin="12,0,0,0">
+                    <Grid>
+                        <TextBlock Text="Flow Orientation" Style="{StaticResource controlPanelLabel}"/>
+                    
+                        <Grid Name="grdFlowRotateViewport" Background="Transparent" Margin="8,28,8,8" MinWidth="120" MinHeight="120">
+                            <Viewport3D Name="_viewportFlowRotate" IsHitTestVisible="False">
+                                <Viewport3D.Camera>
+                                    <PerspectiveCamera x:Name="_cameraFlowRotate" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                                </Viewport3D.Camera>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <Model3DGroup>
+                                            <AmbientLight Color="DimGray" />
+                                            <DirectionalLight x:Name="_cameraFlowRotateLight1" Color="White" Direction="1,-1,-1" />
+                                            <!--<DirectionalLight x:Name="_cameraFlowRotateLight2" Color="#303030" Direction="-1,1,1" />-->
+                                        </Model3DGroup>
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                            </Viewport3D>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Flow Viscosity -->
+                <StackPanel Orientation="Vertical" VerticalAlignment="Bottom" Margin="12,0,0,0">
+                    <Border Style="{StaticResource controlsPanel}">
+                        <Grid>
+                            <TextBlock Text="Flow Viscosity" Style="{StaticResource controlPanelLabel}"/>
+                        
+                            <Slider Name="trkFlowViscosity" ValueChanged="trkFlow_ValueChanged" MinWidth="100" Minimum=".001" Maximum="5" Value="1" Margin="8,28,8,8"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Flow Speed -->
+                    <Border VerticalAlignment="Bottom" Style="{StaticResource controlsPanel}" Margin="0,12,0,0">
+                        <Grid>
+                            <TextBlock Text="Flow Speed" Style="{StaticResource controlPanelLabel}"/>
+                        
+                            <Slider Name="trkFlowSpeed" ValueChanged="trkFlow_ValueChanged" MinWidth="100" Minimum=".001" Maximum="5" Value="1" Margin="8,28,8,8"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+            </StackPanel>
+        </Grid>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" BorderThickness="2" BorderBrush="#645A4E" CornerRadius="3" Margin="12">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint=".1,1" >
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Offset="0" Color="#90AB8E"/>
+                        <GradientStop Offset=".1" Color="#859C83"/>
+                        <GradientStop Offset=".6" Color="#7D8F7B"/>
+                        <GradientStop Offset=".85" Color="#84947F"/>
+                        <GradientStop Offset="1" Color="#8C9985"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,-7.071,7.071" LookDirection="0,1,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+    </Grid>
+</Window>

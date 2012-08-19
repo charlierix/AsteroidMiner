@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="A point, radius, and direction facing">
+    <Position X="9.222" Y="7.031" Height="0.458" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Adds mass and timer, does translational physics (no angular momentum)">
+    <Position X="9.221" Y="5.489" Height="0.625" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Adds inertia tensor, does rotational physics">
+    <Position X="9.232" Y="4.063" Height="0.521" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Implements a solid sphere of uniform density">
+    <Position X="10.971" Y="2.282" Height="0.521" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Implements a set of point masses">
+    <Position X="2.877" Y="2.323" Height="0.521" Width="1.7" />
+  </Comment>
+  <Class Name="Game.Orig.Math3D.Sphere" Collapsed="true">
+    <Position X="6.5" Y="7" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>Sphere.cs</FileName>
+      <HashCode>CAAIAABAAAAAAIAwIAAAAAAAABAABAAAADAAgBAAFBA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.Ball" Collapsed="true">
+    <Position X="6.5" Y="5.5" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>Ball.cs</FileName>
+      <HashCode>ICEAKAAAIAICgAAgUAAyAAACAAAAAGAAAgAEBQCECRA=</HashCode>
+    </TypeIdentifier>
+    <NestedTypes>
+      <Enum Name="Game.Orig.Math3D.Ball.Coords" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Ball.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+  </Class>
+  <Class Name="Game.Orig.Math3D.TorqueBall" Collapsed="true">
+    <Position X="6.5" Y="4" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>TorqueBall.cs</FileName>
+      <HashCode>MAAEECAQAIgAEAAAQAAQAECBAAIAAAQAGkCARAIAABA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Game.Orig.Math3D.SolidBall" Collapsed="true">
+    <Position X="8.25" Y="2.25" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>SolidBall.cs</FileName>
+      <HashCode>AAAIEAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAACAABA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Game.Orig.Math3D.TorqueBall" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="4" />
+        <Point X="7.75" Y="3.255" />
+        <Point X="9.5" Y="3.255" />
+        <Point X="9.5" Y="2.88" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Class Name="Game.Orig.Math3D.RigidBody" Collapsed="true">
+    <Position X="4.75" Y="2.25" Width="2.5" />
+    <TypeIdentifier>
+      <FileName>RigidBody.cs</FileName>
+      <HashCode>AAEAkAAQAAAAAAAAAAAAIAAMAAAQAAAAEIAAAACBABg=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="Game.Orig.Math3D.TorqueBall" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="4" />
+        <Point X="7.75" Y="3.255" />
+        <Point X="6.114" Y="3.255" />
+        <Point X="6.114" Y="2.88" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+</ClassDiagram>

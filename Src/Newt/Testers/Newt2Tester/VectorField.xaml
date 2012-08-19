@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="Game.Newt.Testers.Newt2Tester.VectorField"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Vertical" RadioButton.Checked="Radio_Checked" RadioButton.Unchecked="Radio_Checked">
+        <StackPanel.Resources>
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="Stylesheet.xaml"/>
+                </ResourceDictionary.MergedDictionaries>
+
+            </ResourceDictionary>
+        </StackPanel.Resources>
+
+        <RadioButton Name="radNone" Content="None" IsChecked="True"/>
+        <RadioButton Name="radInward" Content="Inward"/>
+        <RadioButton Name="radOutward" Content="Outward"/>
+        <RadioButton Name="radSwirlInward" Content="Swirl Inward"/>
+        <RadioButton Name="radSwirl" Content="Swirl"/>
+        <RadioButton Name="radTowardZ" Content="Toward Z=0 Plane"/>
+
+        <Label Content="Strength"/>
+        <Slider ValueChanged="trkStrength_ValueChanged" Name="trkStrength" Minimum="0" Maximum="100" Value="15"/>
+        
+        <!-- TODO:  Make a slider for dist from center falloff.  Middle is 1:1 regardless of distance from center, left of middle -->
+        <!-- makes it stronger the closer to center the body gets, right of middle makes it stronger the farther from center -->
+
+        <UniformGrid Rows="1" Margin="4,6,4,0">
+            <RadioButton Name="radForce" Content="Force" IsChecked="True" Style="{StaticResource radioToggle}" Margin="2"/>
+            <RadioButton Name="radAccel" Content="Acceleration" Style="{StaticResource radioToggle}" Margin="2"/>
+        </UniformGrid>
+    </StackPanel>
+</UserControl>

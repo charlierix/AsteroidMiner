@@ -1,0 +1,203 @@
+﻿<Window x:Class="Game.Newt.Testers.GravityCubes2"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:newton="clr-namespace:Game.Newt.NewtonDynamics_153;assembly=Game.Newt.NewtonDynamics_153"
+    Title="Gravity Cubes 2" Height="600" Width="683.75" Loaded="Window_Loaded" Closed="Window_Closed">
+    <DockPanel LastChildFill="True">
+        <Grid Name="grdPanel" Width="99" DockPanel.Dock="Left">
+            <Button Margin="4,248,7,0" Name="btnClear" Click="btnClear_Click" Height="23.25" VerticalAlignment="Top">Clear</Button>
+            <Button Height="23" Margin="6.25,0,6.25,134.532" Name="button2" VerticalAlignment="Bottom" Click="button2_Click">Rand Vel (low)</Button>
+            <Button Height="23" Margin="6.25,0,6.25,104.535" Name="button3" VerticalAlignment="Bottom" Click="button3_Click">Rand Vel (med)</Button>
+            <Button Height="23" Margin="6.25,0,6.25,75.447" Name="button4" VerticalAlignment="Bottom" Click="button4_Click">Rand Vel (high)</Button>
+            <Button Height="23" Margin="6.25,0,6.25,46.359" Name="button5" VerticalAlignment="Bottom" Click="button5_Click">Rand Vel (!!!)</Button>
+            <Button Margin="4,219,7,0" Name="btnAdd" Click="btnAdd_Click" Height="22.963" VerticalAlignment="Top">Add</Button>
+            <CheckBox Height="32.5" Margin="6.25,0,6.25,156.348" Name="chkAttractedToOrigin" VerticalAlignment="Bottom" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" OverridesDefaultStyle="False">Attracted To Origin</CheckBox>
+            <Slider Height="120" Margin="6.25,35,0,0" Name="trkX" VerticalAlignment="Top" Orientation="Vertical" HorizontalAlignment="Left" Width="22.5" Maximum="1000" Value="250" TickFrequency="100" TickPlacement="None" />
+            <Slider Height="120" Margin="35,35,41.25,0" Name="trkY" Orientation="Vertical" VerticalAlignment="Top" Maximum="1000" Value="250" TickFrequency="100" TickPlacement="None" />
+            <Slider Height="120" HorizontalAlignment="Right" Margin="0,35,12.5,0" Name="trkZ" Orientation="Vertical" VerticalAlignment="Top" Width="22.5" Maximum="1000" Value="250" TickFrequency="100" TickPlacement="None" />
+            <Label Height="28" Margin="5,6,6.25,0" Name="label1" VerticalAlignment="Top" HorizontalContentAlignment="Center">Aspect Ratio</Label>
+            <Label Height="28" Margin="6,150,0,0" Name="lblX" VerticalAlignment="Top" HorizontalAlignment="Left" Width="22.5" HorizontalContentAlignment="Center">X</Label>
+            <Label Height="28" HorizontalContentAlignment="Center" Margin="35,150,41,0" Name="lblY" VerticalAlignment="Top">Y</Label>
+            <Label Height="28" HorizontalAlignment="Right" HorizontalContentAlignment="Center" Margin="0,150,12,0" Name="lblZ" VerticalAlignment="Top" Width="22.5">Z</Label>
+            <CheckBox Margin="6,198,7,0" Name="chkConstantMass" Height="16" VerticalAlignment="Top" IsChecked="True">Constant Mass</CheckBox>
+            <Button Click="btnResetCamera_Click"  Height="23" Margin="6.25,0,6.25,6" Name="btnResetCamera" VerticalAlignment="Bottom">Reset Camera</Button>
+            <CheckBox Checked="chkRandomRatios_Checked" Unchecked="chkRandomRatios_Checked" Height="16" IsChecked="False" Margin="6,176,6,0" Name="chkRandomRatios" VerticalAlignment="Top">Random Ratios</CheckBox>
+            <Button Height="23.25" Margin="5,0,0,236" Name="button1" VerticalAlignment="Bottom" Click="button1_Click" HorizontalAlignment="Left" Width="21.478" Visibility="Hidden">lines</Button>
+            <Button Height="23.25" Margin="0,0,2.272,237" Name="button6" VerticalAlignment="Bottom" Click="button6_Click" HorizontalAlignment="Right" Width="18" Visibility="Hidden">cube</Button>
+            <Button Height="23.25" Margin="32.728,0,44.272,237" Name="button7" VerticalAlignment="Bottom" Click="button7_Click" Visibility="Hidden">report</Button>
+            <Button Height="23.25" HorizontalAlignment="Left" Margin="4,0,0,207" Name="button8" VerticalAlignment="Bottom" Width="21.478" Click="button8_Click" Visibility="Hidden">hc line</Button>
+        </Grid>
+        <Grid Name="grdViewPort" Background="Gray" SizeChanged="grdViewPort_SizeChanged">
+            <newton:World x:Name="_world" Updating="World_Updating" />
+            <Viewport3D Name="_viewport" newton:World.World="{Binding ElementName=_world}" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,30" LookDirection="0,0,-10" UpDirection="0,1,0" FieldOfView="45" Changed="Camera_Changed" />
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+
+
+
+
+
+
+
+
+
+
+                <!-- Bottom Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="SlateGray" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="-0.5,0,-0.5 -0.5,0,0.5 0.5,0,0.5 0.5,0,-0.5"
+                                    TriangleIndices="0 1 2 0 2 3"
+                                    Normals="0,1,0 0,1,0 0,1,0 0,1,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleX="2000" ScaleZ="2000" />
+                            <TranslateTransform3D OffsetY="-15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+                <!-- Top Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="SlateGray" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="-0.5,0,-0.5 -0.5,0,0.5 0.5,0,0.5 0.5,0,-0.5"
+                                    TriangleIndices="0 2 1 0 3 2"
+                                    Normals="0,1,0 0,1,0 0,1,0 0,1,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleX="2000" ScaleZ="2000" />
+                            <TranslateTransform3D OffsetY="15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+                <!-- Left Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="White"/>
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="0,.5,-0.5 0,0.5,0.5 0,-0.5,0.5 0,-0.5,-0.5"
+                                    TriangleIndices="0 1 2 0 2 3"
+                                    Normals="1,0,0 1,0,0 1,0,0 1,0,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleY="2000" ScaleZ="2000" />
+                            <TranslateTransform3D OffsetX="-15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+                <!-- Right Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="White" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="0,.5,-0.5 0,0.5,0.5 0,-0.5,0.5 0,-0.5,-0.5"
+                                    TriangleIndices="0 2 1 0 3 2"
+                                    Normals="1,0,0 1,0,0 1,0,0 1,0,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleY="2000" ScaleZ="2000" />
+                            <TranslateTransform3D OffsetX="15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+                <!-- Far Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="Gray" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="-0.5,0.5,0 -0.5,-0.5,0 0.5,-0.5,0 0.5,0.5,0"
+                                    TriangleIndices="0 1 2 0 2 3"
+                                    Normals="0,1,0 0,1,0 0,1,0 0,1,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleX="2000" ScaleY="2000" />
+                            <TranslateTransform3D OffsetY="0" OffsetZ="-15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+                <!-- Near Plane -->
+                <!--
+                <ModelVisual3D newton:World.Body="TerrianBody3D">
+                    <ModelVisual3D.Content>
+                        <GeometryModel3D>
+                            <GeometryModel3D.Material>
+                                <DiffuseMaterial Brush="Gray" />
+                            </GeometryModel3D.Material>
+                            <GeometryModel3D.Geometry>
+                                <MeshGeometry3D 
+                                    Positions="-0.5,0.5,0 -0.5,-0.5,0 0.5,-0.5,0 0.5,0.5,0"
+                                    TriangleIndices="0 2 1 0 3 2"
+                                    Normals="0,1,0 0,1,0 0,1,0 0,1,0"/>
+                            </GeometryModel3D.Geometry>
+                        </GeometryModel3D>
+                    </ModelVisual3D.Content>
+                    <ModelVisual3D.Transform>
+                        <Transform3DGroup>
+                            <ScaleTransform3D ScaleX="2000" ScaleY="2000" />
+                            <TranslateTransform3D OffsetZ="15" />
+                        </Transform3DGroup>
+                    </ModelVisual3D.Transform>
+                </ModelVisual3D>
+                -->
+            </Viewport3D>
+        </Grid>
+    </DockPanel>
+</Window>
