@@ -5,6 +5,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
 
+using Game.Newt.HelperClasses;
+
 namespace Game.Newt.NewtonDynamics
 {
 	public static class UtilityNewt
@@ -18,8 +20,9 @@ namespace Game.Newt.NewtonDynamics
 		{
 			Box,
 			Cylinder,
+			Dome,		//	this is half a sphere
 			//Cone,
-			//Capsule,
+			Combined
 		}
 
 		#endregion
@@ -112,6 +115,75 @@ namespace Game.Newt.NewtonDynamics
 		}
 
 		#endregion
+		#region Class: ObjectMassBreakdownSet
+
+		public class ObjectMassBreakdownSet
+		{
+			#region Constructor
+
+			public ObjectMassBreakdownSet(ObjectMassBreakdown[] objects, Transform3D[] transforms)
+			{
+				if (objects == null || transforms == null || objects.Length != transforms.Length)
+				{
+					throw new ArgumentException("The arrays passed in are null or different sizes");
+				}
+
+				this.Objects = objects;
+				this.Transforms = transforms;
+
+				//	Transform the centers (doing this once in the constructor so consumers can just use the values)
+				this.TransformedCenters = new Point3D[objects.Length][];
+				for (int cntr = 0; cntr < objects.Length; cntr++)
+				{
+					this.TransformedCenters[cntr] = objects[cntr].Centers.Select(o => transforms[cntr].Transform(o)).ToArray();
+				}
+
+				this.CenterMass = GetCenterOfMass(objects, this.TransformedCenters);
+			}
+
+			#endregion
+
+			public readonly Point3D CenterMass;
+
+			//	These arrays are all the same size
+			public ObjectMassBreakdown[] Objects;
+			public Transform3D[] Transforms;
+			public readonly Point3D[][] TransformedCenters;
+
+			#region Private Methods
+
+			/// <summary>
+			/// Sum(m*r)/M
+			/// </summary>
+			private static Point3D GetCenterOfMass(ObjectMassBreakdown[] objects, Point3D[][] positions)
+			{
+				Point3D retVal = new Point3D(0, 0, 0);
+
+				double totalMass = 0;
+
+				for (int outerCntr = 0; outerCntr < objects.Length; outerCntr++)
+				{
+					for (int innerCntr = 0; innerCntr < objects[outerCntr].Masses.Length; innerCntr++)
+					{
+						retVal.X += positions[outerCntr][innerCntr].X * objects[outerCntr].Masses[innerCntr];
+						retVal.Y += positions[outerCntr][innerCntr].Y * objects[outerCntr].Masses[innerCntr];
+						retVal.Z += positions[outerCntr][innerCntr].Z * objects[outerCntr].Masses[innerCntr];
+						totalMass += objects[outerCntr].Masses[innerCntr];
+					}
+				}
+
+				retVal.X /= totalMass;
+				retVal.Y /= totalMass;
+				retVal.Z /= totalMass;
+
+				//	Exit Function
+				return retVal;
+			}
+
+			#endregion
+		}
+
+		#endregion
 
 		/// <summary>
 		/// This divides an object up into cells, and tells the mass of each cell.  This is used to help calculate the mass matrix
@@ -121,18 +193,14 @@ namespace Game.Newt.NewtonDynamics
 		/// <param name="cellSize">This is how big to make each cell.  The cells are always cubes</param>
 		public static ObjectMassBreakdown GetMassBreakdown(ObjectBreakdownType objectType, MassDistribution distribution, Vector3D size, double cellSize)
 		{
-			//	Figure out how big to make the return (it will be an even multiple of the cell size)
-			int xLen = Convert.ToInt32(Math.Ceiling(size.X / cellSize));
-			int yLen = Convert.ToInt32(Math.Ceiling(size.Y / cellSize));
-			int zLen = Convert.ToInt32(Math.Ceiling(size.Z / cellSize));
-
-			Point3D aabbMax = new Point3D((cellSize * xLen) / 2d, (cellSize * yLen) / 2d, (cellSize * zLen) / 2d);
-			Point3D aabbMin = new Point3D(-aabbMax.X, -aabbMax.Y, -aabbMax.Z);		//	it's centered at zero, so min is just max negated
+			//	Figure out the dimensions of the return
+			Tuple<int, int, int> lengths;
+			Tuple<Point3D, Point3D> aabb;
+			CalculateReturnSize(out lengths, out aabb, size, cellSize);
 
 			//	Instead of passing loose variables to the private methods, just fill out what I can of the return, and use it like an args class
-			ObjectMassBreakdown args = new ObjectMassBreakdown(objectType, size, aabbMin, aabbMax, new Point3D(), cellSize, xLen, yLen, zLen, null, null);
+			ObjectMassBreakdown args = new ObjectMassBreakdown(objectType, size, aabb.Item1, aabb.Item2, new Point3D(), cellSize, lengths.Item1, lengths.Item2, lengths.Item3, null, null);
 
-			//TODO: This can be done in a separate task
 			Point3D[] centers = GetCenters(args);
 
 			Point3D centerMass;
@@ -145,13 +213,13 @@ namespace Game.Newt.NewtonDynamics
 
 					centerMass = new Point3D(0, 0, 0);		//	for a box, the center of mass is the same as center of position
 
-					if (xLen == 1 || yLen == 1 || zLen == 1)
+					if (lengths.Item1 == 1 || lengths.Item2 == 1 || lengths.Item3 == 1)
 					{
-						GetMassBreakdownSprtBox2D(out masses, args);
+						masses = GetMassBreakdownSprtBox2D(args);
 					}
 					else
 					{
-						GetMassBreakdownSprtBox3D(out masses, args);
+						masses = GetMassBreakdownSprtBox3D(args);
 					}
 
 					#endregion
@@ -162,7 +230,7 @@ namespace Game.Newt.NewtonDynamics
 
 					centerMass = new Point3D(0, 0, 0);		//	for a cylinder, the center of mass is the same as center of position
 
-					GetMassBreakdownSprtCylinder(out masses, args);
+					masses = GetMassBreakdownSprtCylinder(args);
 
 					#endregion
 					break;
@@ -172,17 +240,43 @@ namespace Game.Newt.NewtonDynamics
 			}
 
 			//	Now make the total mass add up to 1
-			NormalizeMasses(masses);
+			Normalize(masses);
 
 			//	Exit Function
-			return new ObjectMassBreakdown(objectType, size, aabbMin, aabbMax, centerMass, cellSize, xLen, yLen, zLen, centers, masses);
+			return new ObjectMassBreakdown(objectType, size, aabb.Item1, aabb.Item2, centerMass, cellSize, lengths.Item1, lengths.Item2, lengths.Item3, centers, masses);
+		}
+
+		/// <summary>
+		/// This creates a set of breakdowns, which lets the user create more complex shapes (a capsule would be 2 domes and a cylinder,
+		/// but the dome would only have to be calculated once)
+		/// NOTE: The sum of the mass of the cells will always be 1
+		/// NOTE: Be careful of overlapping, the mass will double up
+		/// </summary>
+		public static ObjectMassBreakdownSet Combine(Tuple<ObjectMassBreakdown, Point3D, Quaternion>[] objects)
+		{
+			//	Make the mass of all the objects add to one (the ratios are preserved, just the sum of masses changes)
+			ObjectMassBreakdown[] normalized = Normalize(objects.Select(o => o.Item1));
+
+			//	Build transforms
+			Transform3D[] transforms = new Transform3D[objects.Length];
+			for (int cntr = 0; cntr < objects.Length; cntr++)
+			{
+				Transform3DGroup transform = new Transform3DGroup();
+				transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(objects[cntr].Item3)));
+				transform.Children.Add(new TranslateTransform3D(objects[cntr].Item2.ToVector()));
+
+				transforms[cntr] = transform;
+			}
+
+			//	Exit Function
+			return new ObjectMassBreakdownSet(normalized, transforms);
 		}
 
 		#region Private Methods
 
-		private static void GetMassBreakdownSprtBox2D(out double[] masses, ObjectMassBreakdown e)
+		private static double[] GetMassBreakdownSprtBox2D(ObjectMassBreakdown e)
 		{
-			masses = new double[e.ZLength * e.YLength * e.XLength];
+			double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
 
 			double halfSize = e.CellSize * .5d;
 			Vector3D halfObjSize = new Vector3D(e.ObjectSize.X * .5d, e.ObjectSize.Y * .5d, e.ObjectSize.Z * .5d);
@@ -211,15 +305,17 @@ namespace Game.Newt.NewtonDynamics
 						double subVolume = xAmt * yAmt * zAmt;
 						double percent = subVolume / wholeVolume;
 
-						masses[e.GetIndex(x, y, z)] = percent;
+						retVal[e.GetIndex(x, y, z)] = percent;
 					}
 				}
 			}
 
-			if (masses.Any(o => o == 0d))
+			if (retVal.Any(o => o == 0d))
 			{
 				throw new ApplicationException("This shouldn't happen");
 			}
+
+			return retVal;
 		}
 		private static double GetMassBreakdownSprtBox2DSprtAxis(double absMin, double absMax, double size, double halfSize, double cellSize)
 		{
@@ -250,9 +346,9 @@ namespace Game.Newt.NewtonDynamics
 			}
 		}
 
-		private static void GetMassBreakdownSprtBox3D(out double[] masses, ObjectMassBreakdown e)
+		private static double[] GetMassBreakdownSprtBox3D(ObjectMassBreakdown e)
 		{
-			masses = new double[e.ZLength * e.YLength * e.XLength];
+			double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
 
 			double halfSize = e.CellSize * .5d;
 			Vector3D halfObjSize = new Vector3D(e.ObjectSize.X * .5d, e.ObjectSize.Y * .5d, e.ObjectSize.Z * .5d);
@@ -269,15 +365,15 @@ namespace Game.Newt.NewtonDynamics
 				double subVolume = (halfObjSize.X - min.X) * (halfObjSize.Y - min.Y) * (halfObjSize.Z - min.Z);
 				double percent = subVolume / wholeVolume;
 
-				masses[e.GetIndex(0, 0, 0)] = percent;
-				masses[e.GetIndex(e.XLength - 1, 0, 0)] = percent;
-				masses[e.GetIndex(0, e.YLength - 1, 0)] = percent;
-				masses[e.GetIndex(e.XLength - 1, e.YLength - 1, 0)] = percent;
+				retVal[e.GetIndex(0, 0, 0)] = percent;
+				retVal[e.GetIndex(e.XLength - 1, 0, 0)] = percent;
+				retVal[e.GetIndex(0, e.YLength - 1, 0)] = percent;
+				retVal[e.GetIndex(e.XLength - 1, e.YLength - 1, 0)] = percent;
 
-				masses[e.GetIndex(0, 0, e.ZLength - 1)] = percent;
-				masses[e.GetIndex(e.XLength - 1, 0, e.ZLength - 1)] = percent;
-				masses[e.GetIndex(0, e.YLength - 1, e.ZLength - 1)] = percent;
-				masses[e.GetIndex(e.XLength - 1, e.YLength - 1, e.ZLength - 1)] = percent;
+				retVal[e.GetIndex(0, 0, e.ZLength - 1)] = percent;
+				retVal[e.GetIndex(e.XLength - 1, 0, e.ZLength - 1)] = percent;
+				retVal[e.GetIndex(0, e.YLength - 1, e.ZLength - 1)] = percent;
+				retVal[e.GetIndex(e.XLength - 1, e.YLength - 1, e.ZLength - 1)] = percent;
 			}
 
 			#endregion
@@ -294,11 +390,11 @@ namespace Game.Newt.NewtonDynamics
 
 				for (int x = 1; x < e.XLength - 1; x++)
 				{
-					masses[e.GetIndex(x, 0, 0)] = percent;
-					masses[e.GetIndex(x, e.YLength - 1, 0)] = percent;
+					retVal[e.GetIndex(x, 0, 0)] = percent;
+					retVal[e.GetIndex(x, e.YLength - 1, 0)] = percent;
 
-					masses[e.GetIndex(x, 0, e.ZLength - 1)] = percent;
-					masses[e.GetIndex(x, e.YLength - 1, e.ZLength - 1)] = percent;
+					retVal[e.GetIndex(x, 0, e.ZLength - 1)] = percent;
+					retVal[e.GetIndex(x, e.YLength - 1, e.ZLength - 1)] = percent;
 				}
 			}
 
@@ -312,11 +408,11 @@ namespace Game.Newt.NewtonDynamics
 
 				for (int y = 1; y < e.YLength - 1; y++)
 				{
-					masses[e.GetIndex(0, y, 0)] = percent;
-					masses[e.GetIndex(e.XLength - 1, y, 0)] = percent;
+					retVal[e.GetIndex(0, y, 0)] = percent;
+					retVal[e.GetIndex(e.XLength - 1, y, 0)] = percent;
 
-					masses[e.GetIndex(0, y, e.ZLength - 1)] = percent;
-					masses[e.GetIndex(e.XLength - 1, y, e.ZLength - 1)] = percent;
+					retVal[e.GetIndex(0, y, e.ZLength - 1)] = percent;
+					retVal[e.GetIndex(e.XLength - 1, y, e.ZLength - 1)] = percent;
 				}
 			}
 
@@ -330,11 +426,11 @@ namespace Game.Newt.NewtonDynamics
 
 				for (int z = 1; z < e.ZLength - 1; z++)
 				{
-					masses[e.GetIndex(0, 0, z)] = percent;
-					masses[e.GetIndex(e.XLength - 1, 0, z)] = percent;
+					retVal[e.GetIndex(0, 0, z)] = percent;
+					retVal[e.GetIndex(e.XLength - 1, 0, z)] = percent;
 
-					masses[e.GetIndex(0, e.YLength - 1, z)] = percent;
-					masses[e.GetIndex(e.XLength - 1, e.YLength - 1, z)] = percent;
+					retVal[e.GetIndex(0, e.YLength - 1, z)] = percent;
+					retVal[e.GetIndex(e.XLength - 1, e.YLength - 1, z)] = percent;
 				}
 			}
 
@@ -354,8 +450,8 @@ namespace Game.Newt.NewtonDynamics
 				{
 					for (int z = 1; z < e.ZLength - 1; z++)
 					{
-						masses[e.GetIndex(e.XLength - 1, y, z)] = percent;
-						masses[e.GetIndex(0, y, z)] = percent;
+						retVal[e.GetIndex(e.XLength - 1, y, z)] = percent;
+						retVal[e.GetIndex(0, y, z)] = percent;
 					}
 				}
 			}
@@ -372,8 +468,8 @@ namespace Game.Newt.NewtonDynamics
 				{
 					for (int z = 1; z < e.ZLength - 1; z++)
 					{
-						masses[e.GetIndex(x, e.YLength - 1, z)] = percent;
-						masses[e.GetIndex(x, 0, z)] = percent;
+						retVal[e.GetIndex(x, e.YLength - 1, z)] = percent;
+						retVal[e.GetIndex(x, 0, z)] = percent;
 					}
 				}
 			}
@@ -390,8 +486,8 @@ namespace Game.Newt.NewtonDynamics
 				{
 					for (int y = 1; y < e.YLength - 1; y++)
 					{
-						masses[e.GetIndex(x, y, e.ZLength - 1)] = percent;
-						masses[e.GetIndex(x, y, 0)] = percent;
+						retVal[e.GetIndex(x, y, e.ZLength - 1)] = percent;
+						retVal[e.GetIndex(x, y, 0)] = percent;
 					}
 				}
 			}
@@ -410,22 +506,26 @@ namespace Game.Newt.NewtonDynamics
 
 					for (int x = 1; x < e.XLength - 1; x++)
 					{
-						masses[zOffset + yOffset + x] = 1d;
+						retVal[zOffset + yOffset + x] = 1d;
 					}
 				}
 			}
 
 			#endregion
 
-			if (masses.Any(o => o == 0d))
+			if (retVal.Any(o => o == 0d))
 			{
 				throw new ApplicationException("This shouldn't happen");
 			}
+
+			return retVal;
 		}
 
-		private static void GetMassBreakdownSprtCylinder(out double[] masses, ObjectMassBreakdown e)
+		private static double[] GetMassBreakdownSprtCylinder(ObjectMassBreakdown e)
 		{
-			masses = new double[e.ZLength * e.YLength * e.XLength];
+			double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
+
+			#region Pre calculations
 
 			double halfSize = e.CellSize * .5d;
 			Vector3D halfObjSize = new Vector3D(e.ObjectSize.X * .5d, e.ObjectSize.Y * .5d, e.ObjectSize.Z * .5d);
@@ -434,23 +534,380 @@ namespace Game.Newt.NewtonDynamics
 			//	The cylinder's axis is along x
 			//	Only go through the quadrant with positive values.  Then copy the results to the other three quadrants
 
-			int zStart = e.ZLength / 2;
-			if (zStart % 2 == 1)
-			{
-				zStart++;
-			}
-
+			bool isYEven = true;
 			int yStart = e.YLength / 2;
-			if (yStart % 2 == 1)
+			if (e.YLength % 2 == 1)
 			{
 				yStart++;
+				isYEven = false;
+			}
+
+			bool isZEven = true;
+			int zStart = e.ZLength / 2;
+			if (e.ZLength % 2 == 1)
+			{
+				zStart++;
+				isZEven = false;
 			}
 
 			//	These tell how to convert the ellipse into a circle
-			double maxRadius = Math.Max(e.ObjectSize.Y, e.ObjectSize.Z);
-			double ratioY = maxRadius / e.ObjectSize.Y;
-			double ratioZ = maxRadius / e.ObjectSize.Z;
+			double objectSizeHalfY = e.ObjectSize.Y * .5d;
+			double objectSizeHalfZ = e.ObjectSize.Z * .5d;
+			double maxRadius = Math.Max(objectSizeHalfY, objectSizeHalfZ);
+			double ratioY = maxRadius / objectSizeHalfY;
+			double ratioZ = maxRadius / objectSizeHalfZ;
 
+			#endregion
+
+			#region Y,Z axis tiles
+
+			if (!isYEven)
+			{
+				GetMassBreakdownSprtCylinderSprtYZero(retVal, yStart - 1, zStart, isZEven, ratioZ, ratioZ, halfObjSize, maxRadius, e);
+			}
+
+			if (!isZEven)
+			{
+				GetMassBreakdownSprtCylinderSprtZZero(retVal, yStart, zStart - 1, isYEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
+			}
+
+			if (!isYEven && !isZEven)
+			{
+				GetMassBreakdownSprtCylinderSprtYZZero(retVal, yStart - 1, zStart - 1, ratioY, ratioZ, halfObjSize, maxRadius, e);
+			}
+
+			#endregion
+
+			//	Quadrant tiles
+			GetMassBreakdownSprtCylinderSprtQuadrant(retVal, yStart, zStart, isYEven, isZEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
+
+			//	Exit Function
+			return retVal;
+		}
+		private static void GetMassBreakdownSprtCylinderSprtYZero(double[] masses, int y, int zStart, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+		{
+			for (int z = zStart; z < e.ZLength; z++)
+			{
+				int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
+
+				#region Area of Y,Z tile
+
+				//	Figure out how much of the circle is inside this square (just 2D for now)
+				Vector3D min = new Vector3D(0, e.CellSize * .5d * ratioY, (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);		//NOTE: min has positive y as well as max.  This just makes some of the calculations easier
+				Vector3D max = new Vector3D(0, min.Y, (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
+
+				double mass = 0d;
+
+				double maxLength = max.Length;
+				if (maxLength < maxRadius)
+				{
+					//	This tile is completely inside the circle
+					mass = e.CellSize * e.CellSize;		//	just the 2D mass
+				}
+				else if (min.Z < maxRadius)		//	the bottom edge should never be greater than the circle, but just making sure
+				{
+					#region Intersect Circle
+
+					List<double> lengths = new List<double>();
+					double percent;
+					bool isTriangle = false;
+
+					#region Y
+
+					double minLength = min.Length;
+					if (minLength < maxRadius)
+					{
+						//	Circle intersects the line from min.Z,Y to max.Z,Y
+						lengths.Add(e.CellSize);		//	add one for the bottom segment
+
+						//	Add one for the y intercept
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
+						lengths.Add(e.CellSize * percent);
+						lengths.Add(e.CellSize * percent);
+					}
+					else
+					{
+						//TODO: Test this, execution has never gotten here
+
+						//	Circle never goes as far as min/max.Y, find the intersect along the min z line
+						//NOTE: There are 2 intersects, so define min z as 0
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, min.Y, min.Z), maxRadius);		//	min.Y is positive
+						lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
+					}
+
+					#endregion
+					#region Z
+
+					if (max.Z > maxRadius)
+					{
+						//	The circle doesn't go all the way to the right edge, so assume a triangle
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, 0d, max.Z), maxRadius);
+						lengths.Add(e.CellSize * percent);
+						isTriangle = true;
+					}
+					else
+					{
+						//TODO: Test this, execution has never gotten here
+
+						//	Find the intersect along the max z line
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, max.Y), new Vector3D(0d, max.Y, max.Z), maxRadius);
+						lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
+					}
+
+					#endregion
+
+					//	Calculate the area (just assuming the circle portion is a straight line)
+					switch (lengths.Count)
+					{
+						case 2:
+							//TODO: Test this, execution has never gotten here
+
+							if (isTriangle)
+							{
+								//	Triangle (1/2 * base * height)
+								mass = lengths[0] * lengths[1] * .5d;
+							}
+							else
+							{
+								//	Trapazoid (.5 * (b1 + b2) * h)
+								mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
+							}
+							break;
+
+						case 4:
+							//	This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
+							mass = lengths[0] * lengths[1];
+
+							if (isTriangle)
+							{
+								//	Rect + Triangle
+								mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
+							}
+							else
+							{
+								//TODO: Test this, execution has never gotten here
+
+								//	Rect + Trapazoid
+								mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
+							}
+							break;
+
+						default:
+							throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
+					}
+
+					#endregion
+				}
+
+				#endregion
+
+				#region Set mass
+
+				//	The end caps get partial height along x
+				double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+				double volume = mass * (halfObjSize.X - xMin);
+				masses[e.GetIndex(0, y, z)] = volume;
+				masses[e.GetIndex(0, y, altZ)] = volume;
+
+				masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+				masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
+
+				//	Everything inside gets the full height
+				volume = mass * e.CellSize;
+				for (int x = 1; x < e.XLength - 1; x++)
+				{
+					masses[e.GetIndex(x, y, z)] = volume;
+					masses[e.GetIndex(x, y, altZ)] = volume;
+				}
+
+				#endregion
+			}
+		}
+		private static void GetMassBreakdownSprtCylinderSprtZZero(double[] masses, int yStart, int z, bool isYEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+		{
+			for (int y = yStart; y < e.YLength; y++)
+			{
+				int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
+
+				#region Area of Y,Z tile
+
+				//	Figure out how much of the circle is inside this square (just 2D for now)
+				Vector3D min = new Vector3D(0, (e.AABBMin.Y + (y * e.CellSize)) * ratioY, e.CellSize * .5d * ratioZ);		//NOTE: min has positive z as well as max.  This just makes some of the calculations easier
+				Vector3D max = new Vector3D(0, (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY, min.Z);
+
+				double mass = 0d;
+
+				double maxLength = max.Length;
+				if (maxLength < maxRadius)
+				{
+					//	This tile is completely inside the circle
+					mass = e.CellSize * e.CellSize;		//	just the 2D mass
+				}
+				else if (min.Y < maxRadius)		//	the left edge should never be greater than the circle, but just making sure
+				{
+					#region Intersect Circle
+
+					List<double> lengths = new List<double>();
+					double percent;
+					bool isTriangle = false;
+
+					#region Z
+
+					double minLength = min.Length;
+					if (minLength < maxRadius)
+					{
+						//	Circle intersects the line from min.Y,Z to max.Y,Z
+						lengths.Add(e.CellSize);		//	add one for the left segment
+
+						//	Add one for the z intercept
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
+						lengths.Add(e.CellSize * percent);
+						lengths.Add(e.CellSize * percent);
+					}
+					else
+					{
+						//	Circle never goes as far as min/max.Z, find the intersect along the min y line
+						//NOTE: There are 2 intersects, so define min z as 0
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, min.Y, min.Z), maxRadius);		//	min.Z is positive
+						lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
+					}
+
+					#endregion
+					#region Y
+
+					if (max.Y > maxRadius)
+					{
+						//	The circle doesn't go all the way to the right edge, so assume a triangle
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, max.Y, 0), maxRadius);
+						lengths.Add(e.CellSize * percent);
+						isTriangle = true;
+					}
+					else
+					{
+						//TODO: Test this, execution has never gotten here
+
+						//	Find the intersect along the max y line
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, max.Y, 0d), new Vector3D(0d, max.Y, max.Z), maxRadius);
+						lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
+					}
+
+					#endregion
+
+					//	Calculate the area (just assuming the circle portion is a straight line)
+					switch (lengths.Count)
+					{
+						case 2:
+							if (isTriangle)
+							{
+								//	Triangle (1/2 * base * height)
+								mass = lengths[0] * lengths[1] * .5d;
+							}
+							else
+							{
+								//	Trapazoid (.5 * (b1 + b2) * h)
+								mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
+							}
+							break;
+
+						case 4:
+							//	This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
+							mass = lengths[0] * lengths[1];
+
+							if (isTriangle)
+							{
+								//	Rect + Triangle
+								mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
+							}
+							else
+							{
+								//TODO: Test this, execution has never gotten here
+
+								//	Rect + Trapazoid
+								mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
+							}
+							break;
+
+						default:
+							throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
+					}
+
+					#endregion
+				}
+
+				#endregion
+
+				#region Set mass
+
+				//	The end caps get partial height along x
+				double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+				double volume = mass * (halfObjSize.X - xMin);
+				masses[e.GetIndex(0, y, z)] = volume;
+				masses[e.GetIndex(0, altY, z)] = volume;
+
+				masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+				masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
+
+				//	Everything inside gets the full height
+				volume = mass * e.CellSize;
+				for (int x = 1; x < e.XLength - 1; x++)
+				{
+					masses[e.GetIndex(x, y, z)] = volume;
+					masses[e.GetIndex(x, altY, z)] = volume;
+				}
+
+				#endregion
+			}
+		}
+		private static void GetMassBreakdownSprtCylinderSprtYZZero(double[] masses, int y, int z, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+		{
+			#region Area of Y,Z tile
+
+			//	Figure out how much of the circle is inside this square (just 2D for now)
+			Vector3D max = new Vector3D(0, e.CellSize * .5d * ratioY, e.CellSize * .5d * ratioZ);
+
+			double mass = 0d;
+
+			double maxLength = max.Length;
+			if (maxLength < maxRadius)
+			{
+				//	This tile is completely inside the circle
+				mass = e.CellSize * e.CellSize;		//	just the 2D mass
+			}
+			else
+			{
+				double percent = maxRadius / maxLength;
+
+				percent *= e.CellSize * .5d;		//	reuse percent as the scaled radius
+
+				//	A = pi r^2
+				mass = Math.PI * percent * percent;
+			}
+
+			#endregion
+
+			#region Set mass
+
+			//	The end caps get partial height along x
+			double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+			double volume = mass * (halfObjSize.X - xMin);
+			masses[e.GetIndex(0, y, z)] = volume;
+			masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+
+			//	Everything inside gets the full height
+			volume = mass * e.CellSize;
+			for (int x = 1; x < e.XLength - 1; x++)
+			{
+				masses[e.GetIndex(x, y, z)] = volume;
+			}
+
+			#endregion
+		}
+		private static void GetMassBreakdownSprtCylinderSprtQuadrant(double[] masses, int yStart, int zStart, bool isYEven, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+		{
+			//	Loop through the y,z tiles in only one quadrant, then just copy the result to the other 3 quadrants
 			for (int z = zStart; z < e.ZLength; z++)
 			{
 				int zOffset = z * e.XLength * e.YLength;
@@ -458,6 +915,10 @@ namespace Game.Newt.NewtonDynamics
 				for (int y = yStart; y < e.YLength; y++)
 				{
 					int yOffset = y * e.XLength;
+
+					//	Figure out what the coords are in the other quadrants (when the length of the axis odd, start needs to be skipped over)
+					int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
+					int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
 
 					#region Area of Y,Z tile
 
@@ -555,8 +1016,6 @@ namespace Game.Newt.NewtonDynamics
 
 					#endregion
 
-					//TODO: Set the mass in the other 3 quadrants
-
 					#region Set mass
 
 					//	The end caps get partial height along x
@@ -564,13 +1023,23 @@ namespace Game.Newt.NewtonDynamics
 
 					double volume = mass * (halfObjSize.X - xMin);
 					masses[e.GetIndex(0, y, z)] = volume;
+					masses[e.GetIndex(0, altY, z)] = volume;
+					masses[e.GetIndex(0, y, altZ)] = volume;
+					masses[e.GetIndex(0, altY, altZ)] = volume;
+
 					masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+					masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
+					masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
+					masses[e.GetIndex(e.XLength - 1, altY, altZ)] = volume;
 
 					//	Everything inside gets the full height
 					volume = mass * e.CellSize;
 					for (int x = 1; x < e.XLength - 1; x++)
 					{
 						masses[e.GetIndex(x, y, z)] = volume;
+						masses[e.GetIndex(x, altY, z)] = volume;
+						masses[e.GetIndex(x, y, altZ)] = volume;
+						masses[e.GetIndex(x, altY, altZ)] = volume;
 					}
 
 					#endregion
@@ -730,10 +1199,25 @@ namespace Game.Newt.NewtonDynamics
 			return retVal;
 		}
 
+		private static void CalculateReturnSize(out Tuple<int, int, int> lengths, out Tuple<Point3D, Point3D> aabb, Vector3D size, double cellSize)
+		{
+			//	Figure out how big to make the return (it will be an even multiple of the cell size)
+			int xLen = Convert.ToInt32(Math.Ceiling(size.X / cellSize));
+			int yLen = Convert.ToInt32(Math.Ceiling(size.Y / cellSize));
+			int zLen = Convert.ToInt32(Math.Ceiling(size.Z / cellSize));
+
+			Point3D aabbMax = new Point3D((cellSize * xLen) / 2d, (cellSize * yLen) / 2d, (cellSize * zLen) / 2d);
+			Point3D aabbMin = new Point3D(-aabbMax.X, -aabbMax.Y, -aabbMax.Z);		//	it's centered at zero, so min is just max negated
+
+			//	Build the returns
+			lengths = new Tuple<int, int, int>(xLen, yLen, zLen);
+			aabb = new Tuple<Point3D, Point3D>(aabbMin, aabbMax);
+		}
+
 		/// <summary>
 		/// Once this method completes, the sum of the mass in the array will be 1
 		/// </summary>
-		private static void NormalizeMasses(double[] masses)
+		private static void Normalize(double[] masses)
 		{
 			double total = masses.Sum();
 			if (total == 0d)
@@ -747,6 +1231,30 @@ namespace Game.Newt.NewtonDynamics
 			{
 				masses[cntr] *= mult;
 			}
+		}
+
+		/// <summary>
+		/// This returns the same sized set of breakdown objects as what was passed in, but the sum of the returned mass adds to 1
+		/// </summary>
+		private static ObjectMassBreakdown[] Normalize(IEnumerable<ObjectMassBreakdown> items)
+		{
+			List<ObjectMassBreakdown> retVal = new List<ObjectMassBreakdown>();
+
+			double total = items.Sum(o => o.Masses.Sum());
+			if (total == 0d)
+			{
+				retVal.AddRange(items);
+				return retVal.ToArray();
+			}
+
+			double mult = 1d / total;		//	multiplication is cheaper than division, so just do the division once
+
+			foreach (var item in items)
+			{
+				retVal.Add(new ObjectMassBreakdown(item.ObjectType, item.ObjectSize, item.AABBMin, item.AABBMax, item.CenterMass, item.CellSize, item.XLength, item.YLength, item.ZLength, item.Centers, item.Masses.Select(o => o * mult).ToArray()));
+			}
+
+			return retVal.ToArray();
 		}
 
 		#endregion

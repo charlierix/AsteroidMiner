@@ -111,6 +111,7 @@
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.google.com/"/></Hyperlink></TextBlock>
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.wikipedia.org/"/></Hyperlink></TextBlock>
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://stackoverflow.com"/></Hyperlink></TextBlock>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://kuler.adobe.com"/></Hyperlink></TextBlock>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.gamedev.net"/></Hyperlink></TextBlock>
 
                         <TextBlock Text="Over time, I've gotten better about putting links to sources in my comments.  But I'm sure there's quite a few methods that have no acknowledgments.  If you see any of your code, and it's not acknowleged, let me know so I can give proper credit." Margin="0,12" Style="{StaticResource ackDescription}"/>

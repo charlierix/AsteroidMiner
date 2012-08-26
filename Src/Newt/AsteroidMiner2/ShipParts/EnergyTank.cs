@@ -133,14 +133,18 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(this.Scale));
+			//transform.Children.Add(new ScaleTransform3D(this.Scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90)));		//	the physics hull is along x, but dna is along z
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
 			transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 
+			Vector3D scale = this.Scale;
+			double radius = RADIUSPERCENTOFSCALE * (scale.X + scale.Y) * .5d;
+			double height = scale.Z;
+
 			//TODO: Every ship will have an energy tank.  Do a performance test of cylinder vs chamfercylinder
-			return CollisionHull.CreateCylinder(world, 0, RADIUSPERCENTOFSCALE, 1d, transform.Value);
-			//return CollisionHull.CreateChamferCylinder(world, 0, RADIUSPERCENTOFSCALE, 1d, transform.Value);
+			//return CollisionHull.CreateCylinder(world, 0, radius, height, transform.Value);
+			return CollisionHull.CreateChamferCylinder(world, 0, radius, height, transform.Value);
 		}
 
 		#endregion

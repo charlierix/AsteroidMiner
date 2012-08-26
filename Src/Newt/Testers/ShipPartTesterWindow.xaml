@@ -42,7 +42,7 @@
                     </Expander>
 
                     <!-- Standalone Parts -->
-                    <Expander IsExpanded="False" Header="Standalone Parts">
+                    <Expander IsExpanded="True" Header="Standalone Parts">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnStandaloneAmmoEmpty_Click" Name="btnStandaloneAmmoEmpty" Content="Ammo Box (empty)"/>
@@ -57,6 +57,9 @@
                                 <Button Click="btnStandaloneSolarPanel_Click" Name="btnStandaloneSolarPanel" Content="Solar Panel"/>
 
                                 <Button Click="btnStandaloneThruster_Click" Name="btnStandaloneThruster" Content="Thruster" Margin="0,6,0,2"/>
+                                
+                                <CheckBox Name="chkStandaloneRandSize" Content="Random Size" Margin="0,8,0,2"/>
+                                <CheckBox Name="chkStandaloneRandOrientation" Content="Random Orientation" Margin="0,2"/>
                             </StackPanel>
                         </Border>
                     </Expander>

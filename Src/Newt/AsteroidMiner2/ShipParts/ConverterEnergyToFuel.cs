@@ -139,14 +139,15 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		internal static CollisionHull CreateCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
 		{
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(scale));
+			//transform.Children.Add(new ScaleTransform3D(scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90)));		//	the physics hull is along x, but dna is along z
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(orientation)));
 			transform.Children.Add(new TranslateTransform3D(position.ToVector()));
 
-			//NOTE: The visual changes the caps around, but I want the physics to be a capsule
-			//return CollisionHull.CreateChamferCylinder(world, 0, RADIUSPERCENTOFSCALE, 1d, transform.Value);
-			return CollisionHull.CreateChamferCylinder(world, 0, RADIUSPERCENTOFSCALE, HEIGHTPERCENTOFSCALE, transform.Value);
+			double radius = RADIUSPERCENTOFSCALE * (scale.X + scale.Y) * .5d;
+			double height = scale.Z * HEIGHTPERCENTOFSCALE;
+
+			return CollisionHull.CreateChamferCylinder(world, 0, radius, height, transform.Value);
 		}
 
 		#endregion

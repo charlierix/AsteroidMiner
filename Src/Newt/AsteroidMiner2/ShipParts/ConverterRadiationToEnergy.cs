@@ -189,15 +189,17 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 				CreateGeometry(true);
 			}
 
-			double halfThick = THICKNESS * .5d;
+			Vector3D scale = this.Scale;
+
+			double halfThick = THICKNESS * .5d * scale.Z;
 
 			List<Point3D> points = new List<Point3D>();
-			points.AddRange(this.Vertices.Select(o => new Point3D(o.X, o.Y, -halfThick)));
-			points.AddRange(this.Vertices.Select(o => new Point3D(o.X, o.Y, halfThick)));
+			points.AddRange(this.Vertices.Select(o => new Point3D(o.X * scale.X, o.Y * scale.Y, -halfThick)));
+			points.AddRange(this.Vertices.Select(o => new Point3D(o.X * scale.X, o.Y * scale.Y, halfThick)));
 
 			//	Transform
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(this.Scale));
+			//transform.Children.Add(new ScaleTransform3D(this.Scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
 			transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 

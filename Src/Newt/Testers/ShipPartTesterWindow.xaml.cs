@@ -721,6 +721,8 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+
 				AmmoBox ammoBox = new AmmoBox(_editorOptions, _itemOptions, dna);
 				ammoBox.RemovalMultiple = ammoBox.QuantityMax * .1d;
 
@@ -736,6 +738,8 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+
 				AmmoBox ammoBox = new AmmoBox(_editorOptions, _itemOptions, dna);
 				ammoBox.RemovalMultiple = ammoBox.QuantityMax * .1d;
 				ammoBox.QuantityCurrent = ammoBox.QuantityMax;
@@ -752,6 +756,10 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
+				dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
+
 				FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 
 				BuildStandalonePart(fuelTank);
@@ -766,6 +774,12 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
+				dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
+
+				//dna.Scale = new Vector3D(2, 2, .9);
+
 				FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 				fuelTank.QuantityCurrent = fuelTank.QuantityMax;
 
@@ -781,6 +795,10 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
+				dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
+
 				EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
 				BuildStandalonePart(energyTank);
@@ -795,6 +813,10 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(ConverterEnergyToAmmo.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z)  / 3d;
+				dna.Scale = new Vector3D(size, size, size);
+				
 				ConverterEnergyToAmmo converter = new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
@@ -809,6 +831,10 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(ConverterEnergyToFuel.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
+				dna.Scale = new Vector3D(size, size, size);
+				
 				ConverterEnergyToFuel converter = new ConverterEnergyToFuel(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
@@ -823,6 +849,12 @@ namespace Game.Newt.Testers
 			try
 			{
 				PartDNA dna = GetDefaultDNA(ConverterFuelToEnergy.PARTTYPE);
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+
+				//	It's inacurate to comment this out, but it tests the collision hull better
+				//double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
+				//dna.Scale = new Vector3D(size, size, size);
+				
 				ConverterFuelToEnergy converter = new ConverterFuelToEnergy(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
@@ -847,6 +879,8 @@ namespace Game.Newt.Testers
 					Orientation = Quaternion.Identity,
 					Scale = new Vector3D(1, 1, 1)
 				};
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				
 				ConverterRadiationToEnergy solar = new ConverterRadiationToEnergy(_editorOptions, _itemOptions, dna, null, radiation);
 
 				BuildStandalonePart(solar);
@@ -863,11 +897,15 @@ namespace Game.Newt.Testers
 				ThrusterDNA dna = new ThrusterDNA()
 				{
 					PartType = Thruster.PARTTYPE,
-					ThrusterType = GetRandomEnum<ThrusterType>(),
+					ThrusterType = GetRandomEnum<ThrusterType>(ThrusterType.Custom),
 					Position = new Point3D(0, 0, 0),
 					Orientation = Quaternion.Identity,
 					Scale = new Vector3D(1, 1, 1)
 				};
+				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
+				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
+				dna.Scale = new Vector3D(size, size, size);
+				
 				Thruster thruster = new Thruster(_editorOptions, _itemOptions, dna, null);
 
 				BuildStandalonePart(thruster);
@@ -883,6 +921,7 @@ namespace Game.Newt.Testers
 			try
 			{
 				EnsureWorldStarted();
+				ClearCurrent();
 
 				if (_ship != null)
 				{
@@ -967,24 +1006,70 @@ namespace Game.Newt.Testers
 				ClearCurrent();
 				Random rand = StaticRandom.GetRandomForThread();
 
-				//	Visual
+
+
+				//	Break it down
 				Vector3D size = new Vector3D(1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2));
 				double cellSize = .1 + (rand.NextDouble() * 1.2);
+
+				//Vector3D size = new Vector3D(1, 1, 1);
+				//double cellSize = .3d;
+
+				//Vector3D size = new Vector3D(1, 1, 1);
+				//double cellSize = .17d;
+
+				//Vector3D size = new Vector3D(3, .2, .2);
+				//double cellSize = .3d;
+
 				var cylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+
+				#region Draw masses as cubes
 
 				double radMult = (cylinder.CellSize * .75d) / cylinder.Masses.Max();
 				DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
+
+				Model3DGroup geometries = new Model3DGroup();
 
 				for (int cntr = 0; cntr < cylinder.Centers.Length; cntr++)
 				{
 					double radius = cylinder.Masses[cntr] * radMult;
 
 					CollisionHull dummy1; Transform3DGroup dummy2; Quaternion dummy3; DiffuseMaterial dummy4;
-					ModelVisual3D visual = GetWPFModel(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), cylinder.Centers[cntr], dirFacing, false);
+					geometries.Children.Add(GetWPFGeometry(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), cylinder.Centers[cntr], dirFacing, false));
 
-					_viewport.Children.Add(visual);
-					_currentVisuals.Add(visual);
 				}
+
+				ModelVisual3D visual = new ModelVisual3D();
+				visual.Content = geometries;
+				_viewport.Children.Add(visual);
+				_currentVisuals.Add(visual);
+
+				#endregion
+				#region Draw Axiis
+
+				ScreenSpaceLines3D line = new ScreenSpaceLines3D();
+				line.Color = Colors.DimGray;
+				line.Thickness = 2d;
+				line.AddLine(new Point3D(0, 0, 0), new Point3D(10, 0, 0));
+				_viewport.Children.Add(line);
+				_currentVisuals.Add(line);
+
+				line = new ScreenSpaceLines3D();
+				line.Color = Colors.Silver;
+				line.Thickness = 2d;
+				line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 10, 0));
+				_viewport.Children.Add(line);
+				_currentVisuals.Add(line);
+
+				line = new ScreenSpaceLines3D();
+				line.Color = Colors.White;
+				line.Thickness = 2d;
+				line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 0, 10));
+				_viewport.Children.Add(line);
+				_currentVisuals.Add(line);
+
+				#endregion
+				//	Draw Cylinder
 			}
 			catch (Exception ex)
 			{
@@ -1234,6 +1319,85 @@ namespace Game.Newt.Testers
 
 			return retVal;
 		}
+		private Model3D GetWPFGeometry(out CollisionHull hull, out Transform3DGroup transform, out Quaternion rotation, out DiffuseMaterial bodyMaterial, CollisionShapeType shape, Color color, Color reflectionColor, double reflectionIntensity, Vector3D size, Point3D position, DoubleVector directionFacing, bool createHull)
+		{
+			//	Material
+			MaterialGroup materials = new MaterialGroup();
+			bodyMaterial = new DiffuseMaterial(new SolidColorBrush(color));
+			materials.Children.Add(bodyMaterial);
+			materials.Children.Add(new SpecularMaterial(new SolidColorBrush(reflectionColor), reflectionIntensity));
+
+			//	Geometry Model
+			GeometryModel3D geometry = new GeometryModel3D();
+			geometry.Material = materials;
+			geometry.BackMaterial = materials;
+
+			hull = null;
+
+			switch (shape)
+			{
+				case CollisionShapeType.Box:
+					Vector3D halfSize = size / 2d;
+					geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-halfSize.X, -halfSize.Y, -halfSize.Z), new Point3D(halfSize.X, halfSize.Y, halfSize.Z));
+					if (createHull)
+					{
+						hull = CollisionHull.CreateBox(_world, 0, size, null);
+					}
+					break;
+
+				case CollisionShapeType.Sphere:
+					geometry.Geometry = UtilityWPF.GetSphere(5, size.X, size.Y, size.Z);
+					if (createHull)
+					{
+						hull = CollisionHull.CreateSphere(_world, 0, size, null);
+					}
+					break;
+
+				case CollisionShapeType.Cylinder:
+					geometry.Geometry = UtilityWPF.GetCylinder_AlongX(20, size.X, size.Y);
+					if (createHull)
+					{
+						hull = CollisionHull.CreateCylinder(_world, 0, size.X, size.Y, null);
+					}
+					break;
+
+				case CollisionShapeType.Cone:
+					geometry.Geometry = UtilityWPF.GetCone_AlongX(20, size.X, size.Y);
+					if (createHull)
+					{
+						hull = CollisionHull.CreateCone(_world, 0, size.X, size.Y, null);
+					}
+					break;
+
+				default:
+					throw new ApplicationException("Unexpected CollisionShapeType: " + shape.ToString());
+			}
+
+			//	Transform
+			transform = new Transform3DGroup();		//	rotate needs to be added before translate
+
+
+
+			//rotation = _defaultDirectionFacing.GetAngleAroundAxis(directionFacing);		//	can't use double vector, it over rotates (not anymore, but this is still isn't rotating correctly)
+
+			rotation = Math3D.GetRotation(_defaultDirectionFacing.Standard, directionFacing.Standard);
+
+
+
+			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+			transform.Children.Add(new TranslateTransform3D(position.ToVector()));
+
+			geometry.Transform = transform;
+
+			////	Model Visual
+			//ModelVisual3D retVal = new ModelVisual3D();
+			//retVal.Content = geometry;
+			//retVal.Transform = transform;
+
+			//	Exit Function
+			//return retVal;
+			return geometry;
+		}
 		private ModelVisual3D GetWPFModel(out CollisionHull hull, out Transform3DGroup transform, out Quaternion rotation, out DiffuseMaterial bodyMaterial, CollisionShapeType shape, Color color, Color reflectionColor, double reflectionIntensity, Vector3D size, Point3D position, DoubleVector directionFacing, bool createHull)
 		{
 			//	Material
@@ -1311,7 +1475,7 @@ namespace Game.Newt.Testers
 			return retVal;
 		}
 
-		private PartDNA GetDefaultDNA(string partType)
+		private static PartDNA GetDefaultDNA(string partType)
 		{
 			PartDNA retVal = new PartDNA();
 
@@ -1323,7 +1487,34 @@ namespace Game.Newt.Testers
 
 			return retVal;
 		}
+		private static void ModifyDNA(PartDNA dna, bool randSize, bool randOrientation)
+		{
+			if (randSize)
+			{
+				dna.Scale = Math3D.GetRandomVector(new Vector3D(.25, .25, .25), new Vector3D(2.5, 2.5, 2.5));
+			}
 
+			if (randOrientation)
+			{
+				dna.Orientation = Math3D.GetRandomRotation();
+			}
+		}
+
+		private T GetRandomEnum<T>(T excluding)
+		{
+			return GetRandomEnum<T>(new T[] { excluding });
+		}
+		private T GetRandomEnum<T>(IEnumerable<T> excluding)
+		{
+			while (true)
+			{
+				T retVal = GetRandomEnum<T>();
+				if (!excluding.Contains(retVal))
+				{
+					return retVal;
+				}
+			}
+		}
 		private T GetRandomEnum<T>()
 		{
 			Array allValues = Enum.GetValues(typeof(T));

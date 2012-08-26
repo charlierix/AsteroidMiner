@@ -91,6 +91,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 		public const double RADIUSPERCENTOFSCALE = .2d;
 
+		private Point3D[] _pointsForHull = null;
+
 		#endregion
 
 		#region Constructor
@@ -201,13 +203,52 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(this.Scale));
+			//transform.Children.Add(new ScaleTransform3D(this.Scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90)));		//	the physics hull is along x, but dna is along z
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
 			transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 
-			//TODO: Support the other thruster types (either as a composite, or a single convex hull)
-			return CollisionHull.CreateCapsule(world, 0, RADIUSPERCENTOFSCALE, 1d, transform.Value);
+			Vector3D scale = this.Scale;
+
+			switch (this.ThrusterType)
+			{
+				case ShipParts.ThrusterType.One:
+				case ShipParts.ThrusterType.Two:
+					#region Cylinder
+
+					double radius = RADIUSPERCENTOFSCALE * (scale.X + scale.Y) * .5d;
+					double height = scale.Z;
+
+					if (height < radius * 2d)
+					{
+						//	Newton keeps the capsule caps spherical, but the visual scales them.  So when the height is less than the radius, newton
+						//	make a sphere.  So just make a cylinder instead
+						return CollisionHull.CreateChamferCylinder(world, 0, radius, height, transform.Value);
+						//return CollisionHull.CreateCylinder(world, 0, radius, height, transform.Value);
+					}
+					else
+					{
+						//NOTE: The visual changes the caps around, but I want the physics to be a capsule
+						return CollisionHull.CreateCapsule(world, 0, radius, height, transform.Value);
+					}
+
+					#endregion
+
+				default:
+					#region Convex Hull
+
+					if (_pointsForHull == null)		//	the thruster calls get final model in its constructor, so this should never be needed
+					{
+						CreateGeometry(true);
+					}
+
+					double maxScale = Math.Max(Math.Max(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE), scale.Z);
+					Point3D[] points = _pointsForHull.Select(o => new Point3D(o.X * maxScale, o.Y * maxScale, o.Z * maxScale)).ToArray();
+
+					return CollisionHull.CreateConvexHull(world, 0, points, 0.002d, transform.Value);
+
+					#endregion
+			}
 		}
 
 		#endregion
@@ -488,6 +529,17 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 				default:
 					throw new ApplicationException("Unknown ThrusterType: " + this.ThrusterType.ToString());
+			}
+
+			//	Remember the points
+			if (isFinal)
+			{
+				List<Point3D> pointsForHull = new List<Point3D>();
+				foreach (GeometryModel3D child in retVal.Children)
+				{
+					pointsForHull.AddRange(UtilityWPF.GetPointsFromMesh((MeshGeometry3D)child.Geometry));
+				}
+				_pointsForHull = pointsForHull.ToArray();
 			}
 
 			//	Transform

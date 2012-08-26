@@ -133,17 +133,13 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
-			//Vector3D halfSize = size / 2d;
-
-			//UtilityWPF.GetCube_IndependentFaces(new Point3D(-.5d + PLATEHEIGHTQUARTER, (-.5d + PLATEHEIGHTQUARTER) * RATIOY, -.5d * RATIOZ), new Point3D(.5d - PLATEHEIGHTQUARTER, (.5d - PLATEHEIGHTQUARTER) * RATIOY, .5d * RATIOZ));
-			//geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-halfSize.X, -halfSize.Y, -halfSize.Z), new Point3D(halfSize.X, halfSize.Y, halfSize.Z));
-
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(this.Scale));
+			//transform.Children.Add(new ScaleTransform3D(this.Scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
 			transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 
-			Vector3D size = new Vector3D(1d, RATIOY, RATIOZ);		//	using a constant size so that newton can reuse collision hulls
+			Vector3D scale = this.Scale;
+			Vector3D size = new Vector3D(1d * scale.X, RATIOY * scale.Y, RATIOZ * scale.Z);
 
 			return CollisionHull.CreateBox(world, 0, size, transform.Value);
 		}
@@ -309,7 +305,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		}
 		public double QuantityMaxMinusCurrent
 		{
-			get 
+			get
 			{
 				return _container.QuantityMaxMinusCurrent;
 			}

@@ -134,11 +134,13 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			Transform3DGroup transform = new Transform3DGroup();
-			transform.Children.Add(new ScaleTransform3D(this.Scale));
+			//transform.Children.Add(new ScaleTransform3D(this.Scale));		//	it ignores scale
 			transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
 			transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 
-			return CollisionHull.CreateSphere(world, 0, new Vector3D(RADIUSPERCENTOFSCALE, RADIUSPERCENTOFSCALE, HEIGHTPERCENTOFSCALE), transform.Value);
+			Vector3D scale = this.Scale;
+
+			return CollisionHull.CreateSphere(world, 0, new Vector3D(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE, scale.Z * HEIGHTPERCENTOFSCALE), transform.Value);
 		}
 
 		#endregion
