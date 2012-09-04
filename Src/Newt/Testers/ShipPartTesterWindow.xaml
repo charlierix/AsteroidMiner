@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.ShipPartTesterWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="ShipPartTesterWindow" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+        Title="ShipPartTesterWindow" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed" PreviewKeyDown="Window_PreviewKeyDown" PreviewKeyUp="Window_PreviewKeyUp">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin" Value="0,2"/>
@@ -42,7 +42,7 @@
                     </Expander>
 
                     <!-- Standalone Parts -->
-                    <Expander IsExpanded="True" Header="Standalone Parts">
+                    <Expander IsExpanded="False" Header="Standalone Parts">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnStandaloneAmmoEmpty_Click" Name="btnStandaloneAmmoEmpty" Content="Ammo Box (empty)"/>
@@ -58,27 +58,30 @@
 
                                 <Button Click="btnStandaloneThruster_Click" Name="btnStandaloneThruster" Content="Thruster" Margin="0,6,0,2"/>
                                 
-                                <CheckBox Name="chkStandaloneRandSize" Content="Random Size" Margin="0,8,0,2"/>
-                                <CheckBox Name="chkStandaloneRandOrientation" Content="Random Orientation" Margin="0,2"/>
+                                <CheckBox Name="chkStandaloneRandSize" Content="Random size" Margin="0,8,0,2"/>
+                                <CheckBox Name="chkStandaloneRandOrientation" Content="Random orientation" Margin="0,2"/>
+                                <CheckBox Name="chkStandaloneShowMassBreakdown" Content="Show mass breakdown" Margin="0,2"/>
                             </StackPanel>
                         </Border>
                     </Expander>
 
                     <!-- Ships -->
-                    <Expander IsExpanded="False" Header="Ship Tests">
+                    <Expander IsExpanded="True" Header="Ship Tests">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic"/>
+                                <Button Click="btnShipSimpleFlyer_Click" Name="btnShipSimpleFlyer" Content="Simple Flyer"/>
                             </StackPanel>
                         </Border>
                     </Expander>
 
                     <!-- Misc -->
-                    <Expander IsExpanded="True" Header="Misc">
+                    <Expander IsExpanded="False" Header="Misc">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnBoxBreakdown_Click" Name="btnBoxBreakdown" Content="Box Breakdown"/>
                                 <Button Click="btnCylinderBreakdown_Click" Name="btnCylinderBreakdown" Content="Cylinder Breakdown"/>
+                                <Button Click="btnCapsuleBreakdown_Click" Name="btnCapsuleBreakdown" Content="Capsule Breakdown"/>
                                 <Button Click="btnMassMatrix_Click" Name="btnMassMatrix" Content="Mass Matrix"/>
                             </StackPanel>
                         </Border>
@@ -98,6 +101,9 @@
                                 <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSand" Content="Falling Sand"/>
                                 <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSandPlates" Content="Falling Sand (plates)"/>
                                 <RadioButton IsChecked="True" Name="radNone" Content="None"/>
+                                
+                                <Slider Minimum=".01" Maximum="500" Name="trkMass" ToolTip="Mass"/>
+                                <Slider Minimum=".25" Maximum="10" Name="trkSpeed" ToolTip="Speed"/>
                             </StackPanel>
                         </Border>
                     </Expander>

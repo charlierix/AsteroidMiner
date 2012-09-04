@@ -81,6 +81,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 		internal const double RADIUSPERCENTOFSCALE = 0.3030303030303d;		//	when x scale is 1, the x radius will be this (x and y are the same)
 
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
 		#endregion
 
 		#region Constructor
@@ -145,6 +147,35 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			//TODO: Every ship will have an energy tank.  Do a performance test of cylinder vs chamfercylinder
 			//return CollisionHull.CreateCylinder(world, 0, radius, height, transform.Value);
 			return CollisionHull.CreateChamferCylinder(world, 0, radius, height, transform.Value);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			//	Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
+			//	Reducing Z a bit, because the energy tank has a rounded cap
+			Vector3D size = new Vector3D(this.Scale.Z * .92d, this.Scale.X * RADIUSPERCENTOFSCALE * 2d, this.Scale.Y * RADIUSPERCENTOFSCALE * 2d);
+
+			//	Cylinder
+			UtilityNewt.ObjectMassBreakdown cylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+			
+			Transform3D transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90));		//	the physics hull is along x, but dna is along z
+
+			//	Rotated
+			UtilityNewt.ObjectMassBreakdownSet combined = new UtilityNewt.ObjectMassBreakdownSet(
+				new UtilityNewt.ObjectMassBreakdown[] { cylinder },
+				new Transform3D[] { transform });
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
 		}
 
 		#endregion
@@ -384,6 +415,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		#endregion

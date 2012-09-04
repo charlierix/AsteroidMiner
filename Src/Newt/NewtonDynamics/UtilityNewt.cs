@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -51,7 +52,7 @@ namespace Game.Newt.NewtonDynamics
 		#endregion
 		#region Class: ObjectMassBreakdown
 
-		public class ObjectMassBreakdown
+		public class ObjectMassBreakdown : IObjectMassBreakdown
 		{
 			#region Constructor
 
@@ -62,7 +63,7 @@ namespace Game.Newt.NewtonDynamics
 
 				this.AABBMin = aabbMin;
 				this.AABBMax = aabbMax;
-				this.CenterMass = centerMass;
+				_centerMass = centerMass;
 				this.CellSize = cellSize;
 
 				this.XLength = xLength;
@@ -75,13 +76,42 @@ namespace Game.Newt.NewtonDynamics
 
 			#endregion
 
+			#region IObjectMassBreakdown Members
+
+			public Point3D CenterMass
+			{
+				get
+				{
+					return _centerMass;
+				}
+			}
+
+			public IEnumerator<Tuple<Point3D, double>> GetEnumerator()
+			{
+				for (int cntr = 0; cntr < Masses.Length; cntr++)
+				{
+					yield return new Tuple<Point3D, double>(this.Centers[cntr], this.Masses[cntr]);
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				//TODO: Figure out if this can call the other GetEnumerator
+				for (int cntr = 0; cntr < Masses.Length; cntr++)
+				{
+					yield return new Tuple<Point3D, double>(this.Centers[cntr], this.Masses[cntr]);
+				}
+			}
+
+			#endregion
+
 			public readonly ObjectBreakdownType ObjectType;
 			public readonly Vector3D ObjectSize;
 
 			//	The AABB size will always be a multiple of cell size (it will likely be a bit larger than ObjectSize - the object is centered inside of it)
 			public readonly Point3D AABBMin;
 			public readonly Point3D AABBMax;
-			public readonly Point3D CenterMass;
+			private readonly Point3D _centerMass;
 			public readonly double CellSize;
 
 			public readonly int XLength;
@@ -117,7 +147,7 @@ namespace Game.Newt.NewtonDynamics
 		#endregion
 		#region Class: ObjectMassBreakdownSet
 
-		public class ObjectMassBreakdownSet
+		public class ObjectMassBreakdownSet : IObjectMassBreakdown
 		{
 			#region Constructor
 
@@ -138,12 +168,48 @@ namespace Game.Newt.NewtonDynamics
 					this.TransformedCenters[cntr] = objects[cntr].Centers.Select(o => transforms[cntr].Transform(o)).ToArray();
 				}
 
-				this.CenterMass = GetCenterOfMass(objects, this.TransformedCenters);
+				_centerMass = GetCenterOfMass(objects, this.TransformedCenters);
 			}
 
 			#endregion
 
-			public readonly Point3D CenterMass;
+			#region IObjectMassBreakdown Members
+
+			public Point3D CenterMass
+			{
+				get
+				{
+					return _centerMass;
+				}
+			}
+
+			public IEnumerator<Tuple<Point3D, double>> GetEnumerator()
+			{
+				for (int outerCntr = 0; outerCntr < this.Objects.Length; outerCntr++)
+				{
+					for (int innerCntr = 0; innerCntr < this.Objects[outerCntr].Masses.Length; innerCntr++)
+					{
+						//NOTE: Returning the transformed center
+						yield return new Tuple<Point3D, double>(this.TransformedCenters[outerCntr][innerCntr], this.Objects[outerCntr].Masses[innerCntr]);
+					}
+				}
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				for (int outerCntr = 0; outerCntr < this.Objects.Length; outerCntr++)
+				{
+					for (int innerCntr = 0; innerCntr < this.Objects[outerCntr].Masses.Length; innerCntr++)
+					{
+						//NOTE: Returning the transformed center
+						yield return new Tuple<Point3D, double>(this.TransformedCenters[outerCntr][innerCntr], this.Objects[outerCntr].Masses[innerCntr]);
+					}
+				}
+			}
+
+			#endregion
+
+			private readonly Point3D _centerMass;
 
 			//	These arrays are all the same size
 			public ObjectMassBreakdown[] Objects;
@@ -181,6 +247,20 @@ namespace Game.Newt.NewtonDynamics
 			}
 
 			#endregion
+		}
+
+		#endregion
+		#region Interface: IObjectMassBreakdown
+
+		public interface IObjectMassBreakdown : IEnumerable<Tuple<Point3D, double>>
+		{
+			/// <summary>
+			/// The center of position is always 0
+			/// </summary>
+			Point3D CenterMass
+			{
+				get;
+			}
 		}
 
 		#endregion
@@ -252,10 +332,16 @@ namespace Game.Newt.NewtonDynamics
 		/// NOTE: The sum of the mass of the cells will always be 1
 		/// NOTE: Be careful of overlapping, the mass will double up
 		/// </summary>
-		public static ObjectMassBreakdownSet Combine(Tuple<ObjectMassBreakdown, Point3D, Quaternion>[] objects)
+		/// <param name="objects">
+		/// ObjectMassBreakdown: The object to add to the set.
+		/// Point3D: The offset.
+		/// Quaternion: How this object should be rotated.
+		/// double: The amount to multiply this object's mass.  Say object one has a mass of 10, and object two has a mass of 25.  The mass of the set will be 1, but object two will be 2.5 times greater than one.
+		/// </param>
+		public static ObjectMassBreakdownSet Combine(Tuple<ObjectMassBreakdown, Point3D, Quaternion, double>[] objects)
 		{
 			//	Make the mass of all the objects add to one (the ratios are preserved, just the sum of masses changes)
-			ObjectMassBreakdown[] normalized = Normalize(objects.Select(o => o.Item1));
+			ObjectMassBreakdown[] normalized = Normalize(objects);
 
 			//	Build transforms
 			Transform3D[] transforms = new Transform3D[objects.Length];
@@ -638,7 +724,7 @@ namespace Game.Newt.NewtonDynamics
 					#endregion
 					#region Z
 
-					if (max.Z > maxRadius)
+					if (max.Z >= maxRadius)
 					{
 						//	The circle doesn't go all the way to the right edge, so assume a triangle
 						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, 0d, max.Z), maxRadius);
@@ -650,7 +736,7 @@ namespace Game.Newt.NewtonDynamics
 						//TODO: Test this, execution has never gotten here
 
 						//	Find the intersect along the max z line
-						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, max.Y), new Vector3D(0d, max.Y, max.Z), maxRadius);
+						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, max.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
 						lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
 					}
 
@@ -776,7 +862,7 @@ namespace Game.Newt.NewtonDynamics
 					#endregion
 					#region Y
 
-					if (max.Y > maxRadius)
+					if (max.Y >= maxRadius)
 					{
 						//	The circle doesn't go all the way to the right edge, so assume a triangle
 						percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, max.Y, 0), maxRadius);
@@ -877,7 +963,8 @@ namespace Game.Newt.NewtonDynamics
 			}
 			else
 			{
-				double percent = maxRadius / maxLength;
+				//double percent = maxRadius / maxLength;		//	radius is half of the cell, and max is also half of the cell, so no need to multiply anything by 2
+				double percent = maxRadius / (e.CellSize * .5d);		//	the previous line is wrong, max.length goes to the corner of the cell, but maxRadius is calculated with the length to the side of the cell
 
 				percent *= e.CellSize * .5d;		//	reuse percent as the scaled radius
 
@@ -1133,7 +1220,6 @@ namespace Game.Newt.NewtonDynamics
 			else
 			{
 				// ray didn't totally miss circle, so there is a solution to the equation.
-
 				discriminant = Math.Sqrt(discriminant);
 
 				// either solution may be on or off the ray so need to test both
@@ -1144,6 +1230,14 @@ namespace Game.Newt.NewtonDynamics
 				{
 					// t1 solution on is ON THE RAY.
 					return t1;
+				}
+				else if (Math3D.IsNearZero(t1))
+				{
+					return 0d;
+				}
+				else if (Math3D.IsNearValue(t1, 1d))
+				{
+					return 1d;
 				}
 				else
 				{
@@ -1156,6 +1250,14 @@ namespace Game.Newt.NewtonDynamics
 					// t2 solution on is ON THE RAY.
 					return t2;
 				}
+				else if (Math3D.IsNearZero(t2))
+				{
+					return 0d;
+				}
+				else if (Math3D.IsNearValue(t2, 1d))
+				{
+					return 1d;
+				}
 				else
 				{
 					// t2 solution "out of range" of ray
@@ -1163,8 +1265,6 @@ namespace Game.Newt.NewtonDynamics
 			}
 
 			return null;
-
-
 		}
 
 		private static Point3D[] GetCenters(ObjectMassBreakdown e)
@@ -1236,14 +1336,14 @@ namespace Game.Newt.NewtonDynamics
 		/// <summary>
 		/// This returns the same sized set of breakdown objects as what was passed in, but the sum of the returned mass adds to 1
 		/// </summary>
-		private static ObjectMassBreakdown[] Normalize(IEnumerable<ObjectMassBreakdown> items)
+		private static ObjectMassBreakdown[] Normalize(IEnumerable<Tuple<ObjectMassBreakdown, Point3D, Quaternion, double>> items)
 		{
 			List<ObjectMassBreakdown> retVal = new List<ObjectMassBreakdown>();
 
-			double total = items.Sum(o => o.Masses.Sum());
+			double total = items.Sum(o => o.Item1.Masses.Sum() * o.Item4);
 			if (total == 0d)
 			{
-				retVal.AddRange(items);
+				retVal.AddRange(items.Select(o => o.Item1));
 				return retVal.ToArray();
 			}
 
@@ -1251,7 +1351,13 @@ namespace Game.Newt.NewtonDynamics
 
 			foreach (var item in items)
 			{
-				retVal.Add(new ObjectMassBreakdown(item.ObjectType, item.ObjectSize, item.AABBMin, item.AABBMax, item.CenterMass, item.CellSize, item.XLength, item.YLength, item.ZLength, item.Centers, item.Masses.Select(o => o * mult).ToArray()));
+				retVal.Add(new ObjectMassBreakdown(
+					item.Item1.ObjectType, item.Item1.ObjectSize,
+					item.Item1.AABBMin, item.Item1.AABBMax,
+					item.Item1.CenterMass, item.Item1.CellSize,
+					item.Item1.XLength, item.Item1.YLength, item.Item1.ZLength,
+					item.Item1.Centers,
+					item.Item1.Masses.Select(o => o * item.Item4 * mult).ToArray()));
 			}
 
 			return retVal.ToArray();

@@ -6,10 +6,12 @@ using System.Windows.Media.Media3D;
 
 using Game.Newt.AsteroidMiner2.ShipEditor;
 using Game.Newt.AsteroidMiner2.ShipParts;
+using Game.Newt.HelperClasses;
 using Game.Newt.NewtonDynamics;
 
 namespace Game.Newt.AsteroidMiner2
 {
+	//TODO: Make sure the part visuals and hulls and mass breakdowns are aligned (not one along X and one along Z)
 	//TODO: Support changes in mass
 	//TODO: Support parts getting damaged/destroyed/repaired (probably keep the parts around maybe 75% mass, with a charred visual)
 	//TODO: I'm still undecided about whether to make this derive from PartBase or not, I think no, but give it a similar signature
@@ -71,6 +73,10 @@ namespace Game.Newt.AsteroidMiner2
 
 			#region Physics Body
 
+			MassMatrix massMatrix;
+			Point3D centerMass;
+			GetInertiaTensorAndCenterOfMass_Points(out massMatrix, out centerMass, _allParts.ToArray(), _dna.PartsByLayer.Values.SelectMany(o => o).ToArray());
+
 			//	For now, just make a composite collision hull out of all the parts
 			CollisionHull[] partHulls = _allParts.Select(o => o.CreateCollisionHull(world)).ToArray();
 			CollisionHull hull = CollisionHull.CreateCompoundCollision(world, 0, partHulls);
@@ -79,34 +85,8 @@ namespace Game.Newt.AsteroidMiner2
 			this.PhysicsBody.MaterialGroupID = materialID;
 			this.PhysicsBody.LinearDamping = .01f;
 			this.PhysicsBody.AngularDamping = new Vector3D(.01f, .01f, .01f);
-
-			//TODO: Calculate mass
-			//TODO: For the parts that can change mass, cache results and reuse them when they are that same mass again
-			//this.PhysicsBody.MassMatrix = 
-
-
-			//TODO: Add some mass for the invisible structural "stuff" holding all the parts together.  May want to come up with a convex hull and assume uniform density
-
-
-			//NOTE: I can't just assume everything is a point mass.  I need to calculate the inerta matrix of each part, then combine all the matrices together into a final matrix
-
-
-			//this only thinks of it as point masses
-			//Game.Orig.Math3D.RigidBody.ResetInertiaTensorAndCenterOfMass
-
-			//see the bottom post
-			//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?f=4&t=246
-
-			//a simple algorithm (I think it just assumes point masses)
-			//http://www.melax.com/volint
-
-
-			//MassMatrix massMatrix;
-			//Point3D centerMass;
-			//GetInertiaTensorAndCenterOfMass_Points(out massMatrix, out centerMass, _allParts);
-
-
-
+			this.PhysicsBody.CenterOfMass = centerMass;
+			this.PhysicsBody.MassMatrix = massMatrix;
 
 			#endregion
 
@@ -160,15 +140,64 @@ namespace Game.Newt.AsteroidMiner2
 
 		#region Public Properties
 
-		public double DryMass
+		//public double DryMass
+		//{
+		//    get;
+		//    private set;
+		//}
+		//public double TotalMass
+		//{
+		//    get;
+		//    private set;
+		//}
+
+		//	These are exposed for debugging convienience.  Don't change their capacity, you'll mess stuff up
+		public IContainer Ammo
 		{
-			get;
-			private set;
+			get
+			{
+				return _ammoGroup;
+			}
 		}
-		public double TotalMass
+		public IContainer Energy
 		{
-			get;
-			private set;
+			get
+			{
+				return _energyGroup;
+			}
+		}
+		public IContainer Fuel
+		{
+			get
+			{
+				return _fuelGroup;
+			}
+		}
+
+		//	This is exposed for debugging
+		public List<Thruster> Thrusters
+		{
+			get
+			{
+				return _thrust;
+			}
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		/// <summary>
+		/// This is for debugging to manual update the mass matrix
+		/// </summary>
+		public void RecalculateMass()
+		{
+			MassMatrix massMatrix;
+			Point3D centerMass;
+			GetInertiaTensorAndCenterOfMass_Points(out massMatrix, out centerMass, _allParts.ToArray(), _dna.PartsByLayer.Values.SelectMany(o => o).ToArray());
+
+			this.PhysicsBody.CenterOfMass = centerMass;
+			this.PhysicsBody.MassMatrix = massMatrix;
 		}
 
 		#endregion
@@ -330,73 +359,152 @@ namespace Game.Newt.AsteroidMiner2
 			return retVal;
 		}
 
-		private static void GetInertiaTensorAndCenterOfMass_Points(out MassMatrix matrix, out Point3D center, IEnumerable<PartBase> parts)
+		//TODO: Account for the invisible structural filler between the parts (probably just do a convex hull and give the filler a uniform density)
+		private static void GetInertiaTensorAndCenterOfMass_Points(out MassMatrix matrix, out Point3D center, PartBase[] parts, PartDNA[] dna)
 		{
-			throw new ApplicationException("finish this");
+			#region Prep work
 
-			//const double NEARZERO = .0001d;
+			//	Break the mass of the parts into pieces
+			double cellSize = dna.Select(o => Math.Max(Math.Max(o.Scale.X, o.Scale.Y), o.Scale.Z)).Max() * .2d;		//	break the largest object up into roughly 5x5x5
+			UtilityNewt.IObjectMassBreakdown[] massBreakdowns = parts.Select(o => o.GetMassBreakdown(cellSize)).ToArray();
 
-			//if (parts.Count() == 0)
-			//{
-			//    matrix = new MassMatrix(NEARZERO, new Vector3D(NEARZERO, NEARZERO, NEARZERO));
-			//    center = new Point3D(0, 0, 0);
-			//    return;
-			//}
+			double cellSphereMultiplier = (cellSize * .5d) * (cellSize * .5d) * .4d;		//	2/5 * r^2
 
-			////	Figure out the center of mass
-			//double totalMass;
-			//GetCenterMass(out center, out totalMass, parts);
+			double[] partMasses = parts.Select(o => o.TotalMass).ToArray();
+			double totalMass = partMasses.Sum();
+			double totalMassInverse = 1d / totalMass;
 
-			////	Get the locations of the parts relative to the center of mass (instead of relative to the center of position)
-			//Point3D centerCopy = center;
-			//Vector3D[] massLocations = parts.Select(o => o.Position - centerCopy).ToArray();
+			Vector3D axisX = new Vector3D(1d, 0d, 0d);
+			Vector3D axisY = new Vector3D(0d, 1d, 0d);
+			Vector3D axisZ = new Vector3D(0d, 0d, 1d);
 
-			////	Figure out the inertia tensor
-			//Matrix3D inertiaTensor = new Matrix3D();
-			//#region Calculate Tensor
+			#endregion
 
-			//int index = -1;
-			//foreach(PartBase part in parts)
-			//{
-			//    index++;
-			//    double mass = part.TotalMass;
+			#region Ship's center of mass
 
-			//    //	M(Y^2 + Z^2)
-			//    inertiaTensor.M11 += mass * ((massLocations[massCntr].Y * massLocations[massCntr].Y) + (massLocations[massCntr].Z * massLocations[massCntr].Z));
+			//	Calculate the ship's center of mass
+			double centerX = 0d;
+			double centerY = 0d;
+			double centerZ = 0d;
+			for (int cntr = 0; cntr < massBreakdowns.Length; cntr++)
+			{
+				//	Shift the part into ship coords
+				Point3D centerMass = parts[cntr].Position + massBreakdowns[cntr].CenterMass.ToVector();
 
-			//    //	M(X^2 + Z^2)
-			//    inertiaTensor.M22 += mass * ((massLocations[massCntr].X * massLocations[massCntr].X) + (massLocations[massCntr].Z * massLocations[massCntr].Z));
+				centerX += centerMass.X * partMasses[cntr];
+				centerY += centerMass.Y * partMasses[cntr];
+				centerZ += centerMass.Z * partMasses[cntr];
+			}
 
-			//    //	M(X^2 + Y^2)
-			//    inertiaTensor.M33 += mass * ((massLocations[massCntr].X * massLocations[massCntr].X) + (massLocations[massCntr].Y * massLocations[massCntr].Y));
+			center = new Point3D(centerX * totalMassInverse, centerY * totalMassInverse, centerZ * totalMassInverse);
 
-			//    //	MXY
-			//    inertiaTensor.M21 += mass * massLocations[massCntr].X * massLocations[massCntr].Y;
+			#endregion
 
-			//    //	MXZ
-			//    inertiaTensor.M31 += _masses[massCntr].Mass * massLocations[massCntr].X * massLocations[massCntr].Z;
+			#region Local inertias
 
-			//    //	MYZ
-			//    inertiaTensor.M32 += _masses[massCntr].Mass * massLocations[massCntr].Y * massLocations[massCntr].Z;
-			//}
+			//	Get the local moment of inertia of each part for each of the three ship's axiis
+			//TODO: If the number of cells is large, this would be a good candidate for running in parallel, but this method keeps cellSize pretty course
+			Vector3D[] localInertias = new Vector3D[massBreakdowns.Length];
+			for (int cntr = 0; cntr < massBreakdowns.Length; cntr++)
+			{
+				RotateTransform3D localRotation = new RotateTransform3D(new QuaternionRotation3D(parts[cntr].Orientation.ToReverse()));
 
-			////	Finish up the non diagnals (it's actually the negative sum for them, and the transpose elements have
-			////	the same value)
-			//inertiaTensor.M21 *= -1;
-			//inertiaTensor.M12 = inertiaTensor.M21;
 
-			//inertiaTensor.M31 *= -1;
-			//inertiaTensor.M13 = inertiaTensor.M31;
 
-			//inertiaTensor.M32 *= -1;
-			//inertiaTensor.M23 = inertiaTensor.M32;
-
-			//#endregion
+				//TODO: Verify these results with the equation for the moment of inertia of a cylinder
 
 
 
 
 
+
+				//NOTE: Each mass breakdown adds up to a mass of 1, so putting that mass back now (otherwise the ratios of masses between parts would be lost)
+				localInertias[cntr] = new Vector3D(
+					GetInertia(massBreakdowns[cntr], localRotation.Transform(axisX), cellSphereMultiplier) * partMasses[cntr],
+					GetInertia(massBreakdowns[cntr], localRotation.Transform(axisY), cellSphereMultiplier) * partMasses[cntr],
+					GetInertia(massBreakdowns[cntr], localRotation.Transform(axisZ), cellSphereMultiplier) * partMasses[cntr]);
+			}
+
+			#endregion
+			#region Global inertias
+
+			//	Apply the parallel axis theorem to each part
+			double shipInertiaX = 0d;
+			double shipInertiaY = 0d;
+			double shipInertiaZ = 0d;
+			for (int cntr = 0; cntr < massBreakdowns.Length; cntr++)
+			{
+				//	Shift the part into ship coords
+				Point3D partCenter = parts[cntr].Position + massBreakdowns[cntr].CenterMass.ToVector();
+
+				shipInertiaX += GetInertia(partCenter, localInertias[cntr].X, partMasses[cntr], center, axisX);
+				shipInertiaY += GetInertia(partCenter, localInertias[cntr].Y, partMasses[cntr], center, axisY);
+				shipInertiaZ += GetInertia(partCenter, localInertias[cntr].Z, partMasses[cntr], center, axisZ);
+			}
+
+			#endregion
+
+			//	Newton want the inertia vector to be one, so divide of the mass of all the parts
+			matrix = new MassMatrix(totalMass, new Vector3D(shipInertiaX * totalMassInverse, shipInertiaY * totalMassInverse, shipInertiaZ * totalMassInverse));
+		}
+
+		/// <summary>
+		/// This calculates the moment of inertia of the body around the axis (the axis goes through the center of mass)
+		/// </summary>
+		/// <remarks>
+		/// Inertia of a body is the sum of all the mr^2
+		/// 
+		/// Each cell of the mass breakdown needs to be thought of as a sphere.  If it were a point mass, then for a body with only one
+		/// cell, the mass would be at the center, and it would have an inertia of zero.  So by using the parallel axis theorem on each cell,
+		/// the returned inertia is accurate.  The reason they need to thought of as spheres instead of cubes, is because the inertia is the
+		/// same through any axis of a sphere, but not for a cube.
+		/// 
+		/// So sphereMultiplier needs to be 2/5 * cellRadius^2
+		/// </remarks>
+		private static double GetInertia(UtilityNewt.IObjectMassBreakdown body, Vector3D axis, double sphereMultiplier)
+		{
+			double retVal = 0d;
+
+			//	Cache this point in case the property call is somewhat expensive
+			Point3D center = body.CenterMass;
+
+			foreach (var pointMass in body)
+			{
+				if (pointMass.Item2 == 0d)
+				{
+					continue;
+				}
+
+				//	Tack on the inertia of the cell sphere (2/5*mr^2)
+				retVal += pointMass.Item2 * sphereMultiplier;
+
+				//	Get the distance between this point and the axis
+				double distance = Math3D.GetClosestDistanceBetweenPointAndLine(body.CenterMass, axis, pointMass.Item1);
+
+				//	Now tack on the md^2
+				retVal += pointMass.Item2 * distance * distance;
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+		/// <summary>
+		/// This returns the inertia of the part relative to the ship's axis
+		/// NOTE: The other overload takes a vector that was transformed into the part's model coords.  The vector passed to this overload is in ship's model coords
+		/// </summary>
+		private static double GetInertia(Point3D partCenter, double partInertia, double partMass, Point3D shipCenterMass, Vector3D axis)
+		{
+			//	Start with the inertia of the part around the axis passed in
+			double retVal = partInertia;
+
+			//	Get the distance between the part and the axis
+			double distance = Math3D.GetClosestDistanceBetweenPointAndLine(shipCenterMass, axis, partCenter);
+
+			//	Now tack on the md^2
+			retVal += partMass * distance * distance;
+
+			//	Exit Function
+			return retVal;
 		}
 
 		private static void GetCenterMass(out Point3D center, out double mass, IEnumerable<PartBase> parts)
@@ -457,6 +565,27 @@ namespace Game.Newt.AsteroidMiner2
 		{
 			get;
 			set;
+		}
+
+		/// <summary>
+		/// This is just a convenience if you don't care about the ship's name and layers (it always creates 1 layer)
+		/// </summary>
+		public static ShipDNA Create(IEnumerable<PartDNA> parts)
+		{
+			return Create(Guid.NewGuid().ToString(), parts);
+		}
+		/// <summary>
+		/// This is just a convenience if you don't care about the layers (it always creates 1 layer)
+		/// </summary>
+		public static ShipDNA Create(string name, IEnumerable<PartDNA> parts)
+		{
+			ShipDNA retVal = new ShipDNA();
+			retVal.ShipName = Guid.NewGuid().ToString();
+			retVal.LayerNames = new string[] { "layer1" }.ToList();
+			retVal.PartsByLayer = new SortedList<int, List<PartDNA>>();
+			retVal.PartsByLayer.Add(0, new List<PartDNA>(parts));
+
+			return retVal;
 		}
 	}
 

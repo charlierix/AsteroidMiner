@@ -82,6 +82,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public const double RATIOY = .6d;
 		public const double RATIOZ = .7d;
 
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
 		#endregion
 
 		#region Constructor
@@ -142,6 +144,26 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			Vector3D size = new Vector3D(1d * scale.X, RATIOY * scale.Y, RATIOZ * scale.Z);
 
 			return CollisionHull.CreateBox(world, 0, size, transform.Value);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			//	Convert this.Scale into a size that the mass breakdown will use
+			Vector3D size = new Vector3D(this.Scale.X, this.Scale.Y * RATIOY, this.Scale.Z * RATIOZ);
+
+			var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
 		}
 
 		#endregion
@@ -474,6 +496,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		#endregion

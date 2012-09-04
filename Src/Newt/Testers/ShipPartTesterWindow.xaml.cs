@@ -18,6 +18,7 @@ using Game.Newt.AsteroidMiner2.ShipParts;
 using Game.Newt.NewtonDynamics;
 using Game.Newt.HelperClasses.Primitives3D;
 using Game.Newt.HelperClasses;
+using Game.HelperClasses;
 
 namespace Game.Newt.Testers
 {
@@ -93,9 +94,6 @@ namespace Game.Newt.Testers
 		}
 
 		#endregion
-
-		#region Declaration Section
-
 		#region Class: ItemColors
 
 		private class ItemColors
@@ -122,6 +120,133 @@ namespace Game.Newt.Testers
 		}
 
 		#endregion
+		#region Class: ThrustController
+
+		/// <summary>
+		/// This is a proof of concept class.  The final version will be owned by the ship
+		/// </summary>
+		private class ThrustController : IDisposable
+		{
+			#region Declaration Section
+
+			private Ship _ship = null;
+			private List<Thruster> _thrusters = null;
+
+			private Viewport3D _viewport = null;
+			private ScreenSpaceLines3D _lines = null;
+
+			private bool _isUpPressed = false;
+			private bool _isDownPressed = false;
+
+			private DateTime? _lastTick = null;
+
+			#endregion
+
+			#region Constructor
+
+			public ThrustController(Ship ship, Viewport3D viewport)
+			{
+				_ship = ship;
+				_thrusters = ship.Thrusters;
+				_viewport = viewport;
+
+				_lines = new ScreenSpaceLines3D();
+				_lines.Color = Colors.Orange;
+				_lines.Thickness = 2d;
+				_viewport.Children.Add(_lines);
+			}
+
+			public void Dispose()
+			{
+				if (_viewport != null && _lines != null)
+				{
+					_viewport.Children.Remove(_lines);
+					_viewport = null;
+					_lines = null;
+				}
+			}
+
+			#endregion
+
+			#region Public Methods
+
+			public void ApplyForce(BodyApplyForceAndTorqueArgs e)
+			{
+				_lines.Clear();
+
+				if (!_isUpPressed && !_isDownPressed)
+				{
+					return;
+				}
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+
+				double elapsedTime = 1d;
+				DateTime curTick = DateTime.Now;
+				if (_lastTick != null)
+				{
+					elapsedTime = (curTick - _lastTick.Value).TotalSeconds;
+				}
+
+				_lastTick = curTick;
+
+				foreach (Thruster thruster in _thrusters)
+				{
+					double percent = 1d;
+					Vector3D? force = thruster.Fire(ref percent, 0, elapsedTime);
+					if (force != null)
+					{
+						Vector3D bodyForce = e.Body.DirectionToWorld(force.Value);
+						Point3D bodyPoint = e.Body.PositionToWorld(thruster.Position);
+						e.Body.AddForceAtPoint(bodyForce, bodyPoint);
+
+						_lines.AddLine(bodyPoint, bodyPoint + bodyForce);
+					}
+					else
+					{
+						int seven = -2;
+					}
+				}
+			}
+
+			public void KeyDown(KeyEventArgs e)
+			{
+				switch (e.Key)
+				{
+					case Key.Up:
+						_isUpPressed = true;
+						break;
+
+					case Key.Down:
+						_isDownPressed = true;
+						break;
+				}
+			}
+			public void KeyUp(KeyEventArgs e)
+			{
+				switch (e.Key)
+				{
+					case Key.Up:
+						_isUpPressed = false;
+						break;
+
+					case Key.Down:
+						_isDownPressed = false;
+						break;
+				}
+
+				if (!_isDownPressed && !_isUpPressed)
+				{
+					_lastTick = null;
+				}
+			}
+
+			#endregion
+		}
+
+		#endregion
+
+		#region Declaration Section
 
 		private Random _rand = new Random();
 
@@ -137,8 +262,6 @@ namespace Game.Newt.Testers
 		private World _world = null;
 		private Map _map = null;
 		private RadiationField _radiation = null;
-
-		private Ship _ship = null;
 
 		private MaterialManager _materialManager = null;
 		private int _material_Asteroid = -1;
@@ -157,7 +280,8 @@ namespace Game.Newt.Testers
 
 		private List<Visual3D> _currentVisuals = new List<Visual3D>();
 		private Body _currentBody = null;
-		private Ship _currentShip = null;
+		private Ship _ship = null;
+		private ThrustController _thrustController = null;
 
 		private List<TempBody> _tempBodies = new List<TempBody>();
 		private DateTime _lastSandAdd = DateTime.MinValue;
@@ -174,6 +298,9 @@ namespace Game.Newt.Testers
 		public ShipPartTesterWindow()
 		{
 			InitializeComponent();
+
+			_itemOptions.ThrusterStrengthRatio = 100000d;
+			_itemOptions.FuelToThrustRatio /= _itemOptions.ThrusterStrengthRatio;
 
 			_isInitialized = true;
 		}
@@ -343,11 +470,11 @@ namespace Game.Newt.Testers
 					Color color = UtilityWPF.ColorFromHex("FFF5EE95");
 					Vector3D size = new Vector3D(.05, .05, .05);
 					double maxDist = 1.1 * size.LengthSquared;
-					double mass = .01;
+					double mass = trkMass.Value;
 					double radius = 1d;
 					double startHeight = 1d;
 					TimeSpan lifespan = TimeSpan.FromSeconds(15d);
-					Vector3D velocity = new Vector3D(0, 0, -.25);
+					Vector3D velocity = new Vector3D(0, 0, -trkSpeed.Value);
 					int numCubes = isPlate ? 150 : 1;
 
 					//	Calculate positions (they must all be calculated up front, or some sand will be built later)
@@ -391,6 +518,28 @@ namespace Game.Newt.Testers
 			catch (Exception ex)
 			{
 				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void Ship_ApplyForceAndTorque(object sender, BodyApplyForceAndTorqueArgs e)
+		{
+			if (_thrustController != null)
+			{
+				_thrustController.ApplyForce(e);
+			}
+		}
+
+		private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			if (_thrustController != null)
+			{
+				_thrustController.KeyDown(e);
+			}
+		}
+		private void Window_PreviewKeyUp(object sender, KeyEventArgs e)
+		{
+			if (_thrustController != null)
+			{
+				_thrustController.KeyUp(e);
 			}
 		}
 
@@ -727,6 +876,12 @@ namespace Game.Newt.Testers
 				ammoBox.RemovalMultiple = ammoBox.QuantityMax * .1d;
 
 				BuildStandalonePart(ammoBox);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -745,6 +900,12 @@ namespace Game.Newt.Testers
 				ammoBox.QuantityCurrent = ammoBox.QuantityMax;
 
 				BuildStandalonePart(ammoBox);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -763,6 +924,12 @@ namespace Game.Newt.Testers
 				FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 
 				BuildStandalonePart(fuelTank);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -779,11 +946,18 @@ namespace Game.Newt.Testers
 				dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
 
 				//dna.Scale = new Vector3D(2, 2, .9);
+				//dna.Scale = new Vector3D(1.15, 1.15, 4);
 
 				FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 				fuelTank.QuantityCurrent = fuelTank.QuantityMax;
 
 				BuildStandalonePart(fuelTank);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -802,6 +976,12 @@ namespace Game.Newt.Testers
 				EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
 				BuildStandalonePart(energyTank);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(energyTank.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -814,12 +994,18 @@ namespace Game.Newt.Testers
 			{
 				PartDNA dna = GetDefaultDNA(ConverterEnergyToAmmo.PARTTYPE);
 				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
-				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z)  / 3d;
+				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
 				dna.Scale = new Vector3D(size, size, size);
-				
+
 				ConverterEnergyToAmmo converter = new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -834,10 +1020,16 @@ namespace Game.Newt.Testers
 				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
 				dna.Scale = new Vector3D(size, size, size);
-				
+
 				ConverterEnergyToFuel converter = new ConverterEnergyToFuel(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -852,12 +1044,18 @@ namespace Game.Newt.Testers
 				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 
 				//	It's inacurate to comment this out, but it tests the collision hull better
-				//double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
-				//dna.Scale = new Vector3D(size, size, size);
-				
+				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
+				dna.Scale = new Vector3D(size, size, size);
+
 				ConverterFuelToEnergy converter = new ConverterFuelToEnergy(_editorOptions, _itemOptions, dna, null, null);
 
 				BuildStandalonePart(converter);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -880,10 +1078,16 @@ namespace Game.Newt.Testers
 					Scale = new Vector3D(1, 1, 1)
 				};
 				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
-				
+
 				ConverterRadiationToEnergy solar = new ConverterRadiationToEnergy(_editorOptions, _itemOptions, dna, null, radiation);
 
 				BuildStandalonePart(solar);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(solar.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -905,10 +1109,16 @@ namespace Game.Newt.Testers
 				ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 				double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
 				dna.Scale = new Vector3D(size, size, size);
-				
+
 				Thruster thruster = new Thruster(_editorOptions, _itemOptions, dna, null);
 
 				BuildStandalonePart(thruster);
+
+				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
+				{
+					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					DrawMassBreakdown(thruster.GetMassBreakdown(cellSize), cellSize);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -923,25 +1133,52 @@ namespace Game.Newt.Testers
 				EnsureWorldStarted();
 				ClearCurrent();
 
-				if (_ship != null)
-				{
-					_map.RemoveItem(_ship);
-					_ship = null;
-				}
-
 				List<PartDNA> parts = new List<PartDNA>();
 				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(-.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
 				parts.Add(new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
 
-				ShipDNA shipDNA = new ShipDNA();
-				shipDNA.ShipName = "basic";
-				shipDNA.LayerNames = new string[] { "layer1" }.ToList();
-				shipDNA.PartsByLayer = new SortedList<int, List<PartDNA>>();
-				shipDNA.PartsByLayer.Add(0, parts);
+				ShipDNA shipDNA = ShipDNA.Create(parts);
 
 				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
 
 				_map.AddItem(_ship);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShipSimpleFlyer_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport);
+
+				//double mass = _ship.PhysicsBody.Mass;
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+
+				//mass = _ship.PhysicsBody.Mass;
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
 			}
 			catch (Exception ex)
 			{
@@ -980,19 +1217,7 @@ namespace Game.Newt.Testers
 				double cellSize = .1 + (rand.NextDouble() * 1.2);
 				var rect = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
-				double radMult = (rect.CellSize * .75d) / rect.Masses.Max();
-				DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
-
-				for (int cntr = 0; cntr < rect.Centers.Length; cntr++)
-				{
-					double radius = rect.Masses[cntr] * radMult;
-
-					CollisionHull dummy1; Transform3DGroup dummy2; Quaternion dummy3; DiffuseMaterial dummy4;
-					ModelVisual3D visual = GetWPFModel(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), rect.Centers[cntr], dirFacing, false);
-
-					_viewport.Children.Add(visual);
-					_currentVisuals.Add(visual);
-				}
+				DrawMassBreakdown(rect, cellSize);
 			}
 			catch (Exception ex)
 			{
@@ -1023,52 +1248,8 @@ namespace Game.Newt.Testers
 
 				var cylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
-				#region Draw masses as cubes
+				DrawMassBreakdown(cylinder, cellSize);
 
-				double radMult = (cylinder.CellSize * .75d) / cylinder.Masses.Max();
-				DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
-
-				Model3DGroup geometries = new Model3DGroup();
-
-				for (int cntr = 0; cntr < cylinder.Centers.Length; cntr++)
-				{
-					double radius = cylinder.Masses[cntr] * radMult;
-
-					CollisionHull dummy1; Transform3DGroup dummy2; Quaternion dummy3; DiffuseMaterial dummy4;
-					geometries.Children.Add(GetWPFGeometry(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), cylinder.Centers[cntr], dirFacing, false));
-
-				}
-
-				ModelVisual3D visual = new ModelVisual3D();
-				visual.Content = geometries;
-				_viewport.Children.Add(visual);
-				_currentVisuals.Add(visual);
-
-				#endregion
-				#region Draw Axiis
-
-				ScreenSpaceLines3D line = new ScreenSpaceLines3D();
-				line.Color = Colors.DimGray;
-				line.Thickness = 2d;
-				line.AddLine(new Point3D(0, 0, 0), new Point3D(10, 0, 0));
-				_viewport.Children.Add(line);
-				_currentVisuals.Add(line);
-
-				line = new ScreenSpaceLines3D();
-				line.Color = Colors.Silver;
-				line.Thickness = 2d;
-				line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 10, 0));
-				_viewport.Children.Add(line);
-				_currentVisuals.Add(line);
-
-				line = new ScreenSpaceLines3D();
-				line.Color = Colors.White;
-				line.Thickness = 2d;
-				line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 0, 10));
-				_viewport.Children.Add(line);
-				_currentVisuals.Add(line);
-
-				#endregion
 				//	Draw Cylinder
 			}
 			catch (Exception ex)
@@ -1076,9 +1257,70 @@ namespace Game.Newt.Testers
 				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
-		/// <summary>
-		/// 
-		/// </summary>
+		private void btnCapsuleBreakdown_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				ClearCurrent();
+				Random rand = StaticRandom.GetRandomForThread();
+
+
+				Vector3D size = new Vector3D(1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2));
+				size.Z = size.Y;
+				double cellSize = .1 + (rand.NextDouble() * 1.2);
+
+				//Vector3D size = new Vector3D(3, .75, .75);
+				//double cellSize = .25;
+
+
+				Vector3D mainSize = new Vector3D(size.X * .75d, size.Y, size.Z);
+				double mainVolume = Math.Pow((mainSize.Y + mainSize.Z) / 4d, 2d) * Math.PI * mainSize.X;
+				var mainCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, mainSize, cellSize);
+
+				Vector3D capSize = new Vector3D(size.X * .125d, size.Y * .5d, size.Z * .5d);
+				double capVolume = Math.Pow((capSize.Y + capSize.Z) / 4d, 2d) * Math.PI * capSize.X;
+				var capCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, capSize, cellSize);
+
+				double offsetX = (mainSize.X * .5d) + (capSize.X * .5d);
+
+				var objects = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>[3];
+				objects[0] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(mainCylinder, new Point3D(0, 0, 0), Quaternion.Identity, mainVolume);
+				objects[1] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(capCylinder, new Point3D(offsetX, 0, 0), Quaternion.Identity, capVolume);
+				objects[2] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(capCylinder, new Point3D(-offsetX, 0, 0), Quaternion.Identity, capVolume);
+				var combined = UtilityNewt.Combine(objects);
+
+				DrawMassBreakdown(combined, cellSize);
+
+				#region Draw Capsule
+
+				//	Material
+				MaterialGroup materials = new MaterialGroup();
+				materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("402A4A52"))));
+				materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("602C8564")), .25d));
+
+				//	Geometry Model
+				GeometryModel3D geometry = new GeometryModel3D();
+				geometry.Material = materials;
+				geometry.BackMaterial = materials;
+
+				//NOTE: This capsule will become a sphere if the height isn't enough to overcome twice the radius.  But the fuel tank will start off
+				//as a capsule, then the scale along height will deform the caps
+				geometry.Geometry = UtilityWPF.GetCapsule_AlongZ(20, 20, size.Y * .5d, size.X);
+
+				geometry.Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90));
+
+				ModelVisual3D visual = new ModelVisual3D();
+				visual.Content = geometry;
+				_viewport.Children.Add(visual);
+				_currentVisuals.Add(visual);
+
+				#endregion
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
 		/// <remarks>
 		/// Good links:
 		/// http://newtondynamics.com/wiki/index.php5?title=NewtonBodySetMassMatrix
@@ -1195,9 +1437,16 @@ namespace Game.Newt.Testers
 				_currentBody = null;
 			}
 
-			if (_currentShip != null)
+			if (_ship != null)
 			{
-				throw new ApplicationException("finish this");
+				_map.RemoveItem(_ship);
+				_ship = null;
+			}
+
+			if (_thrustController != null)
+			{
+				_thrustController.Dispose();
+				_thrustController = null;
 			}
 		}
 
@@ -1313,7 +1562,7 @@ namespace Game.Newt.Testers
 			_viewport.Children.Add(model);
 
 			//	Make a physics body that represents this shape
-			Body retVal = new Body(hull, transform.Value, 1d, new Visual3D[] { model });
+			Body retVal = new Body(hull, transform.Value, mass, new Visual3D[] { model });
 			retVal.AutoSleep = false;		//	the falling sand was falling asleep, even though the velocity was non zero (the sand would suddenly stop)
 			retVal.MaterialGroupID = materialID;
 
@@ -1498,6 +1747,55 @@ namespace Game.Newt.Testers
 			{
 				dna.Orientation = Math3D.GetRandomRotation();
 			}
+		}
+
+		private void DrawMassBreakdown(UtilityNewt.IObjectMassBreakdown breakdown, double cellSize)
+		{
+			#region Draw masses as cubes
+
+			double radMult = (cellSize * .75d) / breakdown.Max(o => o.Item2);
+			DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
+
+			Model3DGroup geometries = new Model3DGroup();
+
+			foreach (var pointMass in breakdown)
+			{
+				double radius = pointMass.Item2 * radMult;
+
+				CollisionHull dummy1; Transform3DGroup dummy2; Quaternion dummy3; DiffuseMaterial dummy4;
+				geometries.Children.Add(GetWPFGeometry(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), pointMass.Item1, dirFacing, false));
+			}
+
+			ModelVisual3D visual = new ModelVisual3D();
+			visual.Content = geometries;
+			_viewport.Children.Add(visual);
+			_currentVisuals.Add(visual);
+
+			#endregion
+			#region Draw Axiis
+
+			ScreenSpaceLines3D line = new ScreenSpaceLines3D();
+			line.Color = Colors.DimGray;
+			line.Thickness = 2d;
+			line.AddLine(new Point3D(0, 0, 0), new Point3D(10, 0, 0));
+			_viewport.Children.Add(line);
+			_currentVisuals.Add(line);
+
+			line = new ScreenSpaceLines3D();
+			line.Color = Colors.Silver;
+			line.Thickness = 2d;
+			line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 10, 0));
+			_viewport.Children.Add(line);
+			_currentVisuals.Add(line);
+
+			line = new ScreenSpaceLines3D();
+			line.Color = Colors.White;
+			line.Thickness = 2d;
+			line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 0, 10));
+			_viewport.Children.Add(line);
+			_currentVisuals.Add(line);
+
+			#endregion
 		}
 
 		private T GetRandomEnum<T>(T excluding)

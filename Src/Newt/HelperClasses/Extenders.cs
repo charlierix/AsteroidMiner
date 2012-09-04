@@ -109,6 +109,7 @@ namespace Game.Newt.HelperClasses
 		#region Quaternion
 
 		//	I copy the code in each of these overloads, rather than make a private method to increase speed
+		//TODO: I don't use these rotate extension methods anymore, but it would be worth testing whether to use this matrix transform, or use: new RotateTransform3D(new QuaternionRotation3D(quaternion))
 		public static Vector3D GetRotatedVector(this Quaternion quaternion, Vector3D vector)
 		{
 			Matrix3D matrix = new Matrix3D();
@@ -193,6 +194,51 @@ namespace Game.Newt.HelperClasses
 				{
 					doubleVectors[cntr] = new DoubleVector(transform.Transform(doubleVectors[cntr].Standard), transform.Transform(doubleVectors[cntr].Orth));
 				}
+			}
+		}
+
+		/// <summary>
+		/// This returns a quaternion that will rotate in the opposite direction
+		/// </summary>
+		public static Quaternion ToReverse(this Quaternion quaternion)
+		{
+			#region OLD
+
+			//	From MSDN:
+			//		Conjugate - Replaces a quaternion with its conjugate.
+			//		Invert - Replaces the specified quaternion with its inverse
+			//
+			//	Awesome explanation.  I'm assuming that conjugate is the inverse of a unit quaternion, and invert is the inverse of any quaternion (slower but safer)
+			//
+			//	I poked around, and found the source for quaternion here:
+			//	http://reflector.webtropy.com/default.aspx/Dotnetfx_Vista_SP2/Dotnetfx_Vista_SP2/8@0@50727@4016/DEVDIV/depot/DevDiv/releases/Orcas/QFE/wpf/src/Core/CSharp/System/Windows/Media3D/Quaternion@cs/1/Quaternion@cs
+			//
+			//	Here is the important part of the invert method:
+			//		Conjugate();
+			//		double norm2 = _x * _x + _y * _y + _z * _z + _w * _w;
+			//		_x /= norm2;
+			//		_y /= norm2;
+			//		_z /= norm2;
+			//		_w /= norm2;
+
+			//	I was about to do this, but I'm not sure if that would return what I think, so I'll just use the same axis and invert the angle
+			//Quaternion retVal = quaternion;
+			//if (!retVal.IsNormalized)
+			//{
+			//    retVal.Normalize();
+			//}
+			//retVal.Conjugate();
+			//return retVal;
+
+			#endregion
+
+			if (quaternion.IsIdentity)
+			{
+				return Quaternion.Identity;
+			}
+			else
+			{
+				return new Quaternion(quaternion.Axis, quaternion.Angle * -1d);
 			}
 		}
 

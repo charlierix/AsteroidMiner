@@ -511,10 +511,26 @@ namespace Game.Newt.AsteroidMiner2
 		/// </remarks>
 		public abstract Model3D GetFinalModel();
 
+		//TODO: Make this abstract
 		/// <summary>
 		/// This is what gets handed to the physics body
 		/// </summary>
 		public virtual CollisionHull CreateCollisionHull(WorldBase world)
+		{
+			throw new ApplicationException("make this abstract");
+		}
+
+		//TODO: Make this abstract
+		/// <summary>
+		/// This is used to calculate the moment of inertia of this part
+		/// </summary>
+		/// <remarks>
+		/// This mass breakdown is thought of as a bunch of solid balls.  The ship will be make rigid bodies of parts, and the moment of inertia of the whole
+		/// rigid body will use the parallel axis formula on each part's mass breakdown (for all three axiis)
+		/// 
+		/// If the part can be thought of as a sphere (uniform scale), then the breakdown can just be one cell
+		/// </remarks>
+		public virtual UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
 		{
 			throw new ApplicationException("make this abstract");
 		}
@@ -860,7 +876,14 @@ namespace Game.Newt.AsteroidMiner2
 
 		#region Public Methods
 
+		//TODO: Make this abstract
 		public virtual CollisionHull CreateCollisionHull(WorldBase world)
+		{
+			throw new ApplicationException("make this abstract");
+		}
+
+		//TODO: Make this abstract
+		public virtual UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
 		{
 			throw new ApplicationException("make this abstract");
 		}

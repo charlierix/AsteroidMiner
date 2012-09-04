@@ -923,6 +923,13 @@ namespace Game.Newt.HelperClasses
 
 			return retVal;
 		}
+		/// <summary>
+		/// This is a wrapper to GetNearestPointAlongLine that just returns the distance
+		/// </summary>
+		public static double GetClosestDistanceBetweenPointAndLine(Point3D pointOnLine, Vector3D lineDirection, Point3D testPoint)
+		{
+			return (testPoint - GetNearestPointAlongLine(pointOnLine, lineDirection, testPoint)).Length;
+		}
 
 		/// <summary>
 		/// This returns the distance beween two skew lines at their closest point

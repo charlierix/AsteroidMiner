@@ -88,6 +88,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 		public const double THICKNESS = .1d;
 
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
 		#endregion
 
 		#region Constructor
@@ -184,7 +186,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(NewtonDynamics.WorldBase world)
 		{
 			//	Get points
-			if(this.Vertices == null)
+			if (this.Vertices == null)
 			{
 				CreateGeometry(true);
 			}
@@ -205,6 +207,47 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 			//	Exit Function
 			return CollisionHull.CreateConvexHull(world, 0, points, 0.002d, transform.Value);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			//	Convert this.Scale into a size that the mass breakdown will use
+			Vector3D size = new Vector3D(this.Scale.X, this.Scale.Y, this.Scale.Z * THICKNESS);
+
+			UtilityNewt.IObjectMassBreakdown breakdown = null;
+
+			switch (this.Shape)
+			{
+				case SolarPanelShape.Square:
+					breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+					break;
+
+				case SolarPanelShape.Right_Triangle:
+				case SolarPanelShape.Triangle:
+					var triangleBreakdown = GetMassBreakdownSprtTriangle(size, cellSize, this.Shape == SolarPanelShape.Right_Triangle);
+					breakdown = UtilityNewt.Combine(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>[] { new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangleBreakdown.Item1, triangleBreakdown.Item2.ToPoint(), Quaternion.Identity, 1d) });
+					break;
+
+				case SolarPanelShape.Right_Trapazoid:
+				case SolarPanelShape.Trapazoid:
+					breakdown = GetMassBreakdownSprtTrapazoid(this.Vertices.ToArray(), size, cellSize, this.Shape == SolarPanelShape.Right_Trapazoid);
+					break;
+
+				default:
+					throw new ApplicationException("Unknown SolarPanelShape: " + this.Shape.ToString());
+			}
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
 		}
 
 		#endregion
@@ -228,9 +271,12 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			switch (this.Shape)
 			{
 				case SolarPanelShape.Triangle:
-					points.Add(new Point(0d, .5d));		//	90
-					points.Add(new Point(-.43301270189221d, -.25d));		//	210
-					points.Add(new Point(.43301270189221d, -.25d));		//	330
+					//points.Add(new Point(0d, .5d));		//	90
+					//points.Add(new Point(-.43301270189221d, -.25d));		//	210
+					//points.Add(new Point(.43301270189221d, -.25d));		//	330
+					points.Add(new Point(0d, .5d));		//	instead, just filling out the square
+					points.Add(new Point(-.5d, -.5d));
+					points.Add(new Point(.5d, -.5d));
 					break;
 
 				case SolarPanelShape.Right_Triangle:
@@ -581,6 +627,93 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			return retVal;
 		}
 
+		private static Tuple<UtilityNewt.ObjectMassBreakdown, Vector3D> GetMassBreakdownSprtTriangle(Vector3D size, double cellSize, bool isRight)
+		{
+			//	This is just a hack, because I'm too lazy to make the breakdown calculate a triangle.
+			//	I figure if the area of the breakdown is the same as the area of the triangle, and if the breakdown is offset, it should be pretty close
+			//	(actually, probably not, because distance counts more than mass: mr^2, so this rectangle approach will probably give a lower inertia
+			//	than it should)
+			Vector sizeExtended = new Vector(size.X * 1.1, size.Y * 1.1);		//	compensating for the lower inertia of the hack rectangle by assuming the triangle is larger
+			double area = sizeExtended.X * sizeExtended.Y * .5d;		//	cache the area of this triangle
+			double areaRoot = Math.Sqrt(area);		//	take the square root to see what the average width/height should be
+			double x = sizeExtended.X / sizeExtended.Y * areaRoot;		//	use the ratio of x to y to see how much of that square root should be
+			double y = sizeExtended.Y / sizeExtended.X * areaRoot;
+
+			//	When the ratio of x to y is too great, the derived x and y become larger than the original, so cap them
+			if (x > sizeExtended.X)
+			{
+				x = sizeExtended.X;
+				y = 2d * area / x;		//	since x was capped, make y take up the slack
+			}
+			else if (y > sizeExtended.Y)
+			{
+				y = sizeExtended.Y;
+				x = 2d * area / y;
+			}
+
+			//	Now shift the hack rectangle so that it's more over the triangle portion
+			double offsetX = 0d;
+			if (isRight)
+			{
+				offsetX = size.X * -.12d;
+			}
+
+			double offsetY = size.Y * -.12d;
+
+			//	Build the breakdown and return the breakdown along with the offset
+			var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, new Vector3D(x, y, size.Z), cellSize);
+
+			return new Tuple<UtilityNewt.ObjectMassBreakdown, Vector3D>(breakdown, new Vector3D(offsetX, offsetY, 0d));
+		}
+		private static UtilityNewt.ObjectMassBreakdownSet GetMassBreakdownSprtTrapazoid(Point[] verticies, Vector3D size, double cellSize, bool isRight)
+		{
+			if (verticies.Length != 4)
+			{
+				throw new ApplicationException("There should be exactly 4 verticies passed in: " + verticies.Length.ToString());
+			}
+
+			double base1 = (verticies[2].X - verticies[3].X) * size.X;		//	the verticies are built counter clockwise, starting at the lower left corner
+			double base2 = (verticies[1].X - verticies[0].X) * size.X;
+			double height = (verticies[2].Y - verticies[1].Y) * size.Y;
+
+			List<Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>> items = new List<Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>>();
+
+			if (isRight)
+			{
+				//	Rectangle
+				double rectBase = base1;
+				var rectangle = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, new Vector3D(rectBase, height, size.Z), cellSize);
+				items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(rectangle, new Vector3D((base1 * .5d) - (base2 * .5d), 0d, 0d).ToPoint(), Quaternion.Identity, rectBase * height));
+
+				//	Triangle
+				double triangleBase = base2 - base1;
+				var triangle = GetMassBreakdownSprtTriangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
+				items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangle.Item1, new Vector3D(base1 * .5d, 0d, 0d) + triangle.Item2.ToPoint(), Quaternion.Identity, triangleBase * height * .5d));
+			}
+			else
+			{
+				//	Rectangle
+				double rectBase = base1;
+				var rectangle = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, new Vector3D(rectBase, height, size.Z), cellSize);
+				items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(rectangle, new Vector3D(0d, 0d, 0d).ToPoint(), Quaternion.Identity, rectBase * height));
+
+				//	Triangle - right
+				double triangleBase = (base2 - base1) * .5d;
+				var triangle = GetMassBreakdownSprtTriangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
+				Vector3D triangleOffset = new Vector3D((rectBase * .5d) + (triangleBase * .5d), 0d, 0d) + triangle.Item2;
+				double triangleArea = triangleBase * height * .5d;
+				items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangle.Item1, triangleOffset.ToPoint(), Quaternion.Identity, triangleArea));
+
+				//	Triangle - left
+				triangleOffset = new Vector3D(triangleOffset.X * -1d, triangleOffset.Y, triangleOffset.Z);
+				Quaternion triangleOrientation = new Quaternion(new Vector3D(0, 1, 0), 180d);
+				items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangle.Item1, triangleOffset.ToPoint(), triangleOrientation, triangleArea));
+			}
+
+			//	Exit Function
+			return UtilityNewt.Combine(items.ToArray());
+		}
+
 		#endregion
 	}
 
@@ -748,6 +881,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		#endregion

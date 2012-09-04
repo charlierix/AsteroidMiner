@@ -81,6 +81,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 		internal const double RADIUSPERCENTOFSCALE = .25d;		//	when x scale is 1, the x radius will be this (x and y are the same)
 
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
 		#endregion
 
 		#region Constructor
@@ -154,6 +156,44 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 				//NOTE: The visual changes the caps around, but I want the physics to be a capsule
 				return CollisionHull.CreateCapsule(world, 0, radius, height, transform.Value);
 			}
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			//	Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
+			Vector3D size = new Vector3D(this.Scale.Z, this.Scale.X * RADIUSPERCENTOFSCALE * 2d, this.Scale.Y * RADIUSPERCENTOFSCALE * 2d);
+
+			//	Main Cylinder
+			Vector3D mainSize = new Vector3D(size.X * .75d, size.Y, size.Z);
+			double mainVolume = Math.Pow((mainSize.Y + mainSize.Z) / 4d, 2d) * Math.PI * mainSize.X;		//	dividing by 4, because div 2 is the average, then another 2 is to convert diameter to radius
+			var mainCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, mainSize, cellSize);
+
+			//	End Caps
+			Vector3D capSize = new Vector3D(size.X * .125d, size.Y * .5d, size.Z * .5d);
+			double capVolume = Math.Pow((capSize.Y + capSize.Z) / 4d, 2d) * Math.PI * capSize.X;
+			var capCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, capSize, cellSize);
+
+			//	Combined shape
+			double offsetX = (mainSize.X * .5d) + (capSize.X * .5d);
+			Quaternion rotate = new Quaternion(new Vector3D(0, 1, 0), 90);
+
+			var objects = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>[3];
+			objects[0] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(mainCylinder, new Point3D(0, 0, 0), rotate, mainVolume);
+			objects[1] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(capCylinder, new Point3D(0, 0, offsetX), rotate, capVolume);		//	the breakdowns were build along X, but now putting them back along Z
+			objects[2] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(capCylinder, new Point3D(0, 0, -offsetX), rotate, capVolume);
+			var combined = UtilityNewt.Combine(objects);
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
 		}
 
 		#endregion
@@ -410,6 +450,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		#endregion

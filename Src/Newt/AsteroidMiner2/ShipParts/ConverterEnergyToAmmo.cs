@@ -76,6 +76,12 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 	public class ConverterEnergyToAmmoDesign : PartDesignBase
 	{
+		#region Declaration Section
+
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
+		#endregion
+
 		#region Constructor
 
 		public ConverterEnergyToAmmoDesign(EditorOptions options)
@@ -126,6 +132,23 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return ConverterEnergyToFuelDesign.CreateCollisionHull(world, this.Scale, this.Orientation, this.Position);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			var breakdown = ConverterEnergyToFuelDesign.GetMassBreakdown(this.Scale, cellSize);
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
 		}
 
 		#endregion
@@ -249,6 +272,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		#endregion

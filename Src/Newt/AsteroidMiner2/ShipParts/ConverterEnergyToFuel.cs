@@ -82,6 +82,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public const double RADIUSPERCENTOFSCALE = .3d;
 		public const double HEIGHTPERCENTOFSCALE = .66d;
 
+		private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+
 		#endregion
 
 		#region Constructor
@@ -148,6 +150,62 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			double height = scale.Z * HEIGHTPERCENTOFSCALE;
 
 			return CollisionHull.CreateChamferCylinder(world, 0, radius, height, transform.Value);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+			{
+				//	This has already been built for this size
+				return _massBreakdown.Item1;
+			}
+
+			var breakdown = GetMassBreakdown(this.Scale, cellSize);
+
+			//	Store this
+			_massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+
+			//	Exit Function
+			return _massBreakdown.Item1;
+		}
+
+		internal static UtilityNewt.IObjectMassBreakdown GetMassBreakdown(Vector3D scale, double cellSize)
+		{
+			//	Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
+			Vector3D size = new Vector3D(scale.Z * HEIGHTPERCENTOFSCALE, scale.X * RADIUSPERCENTOFSCALE * 2d, scale.Y * RADIUSPERCENTOFSCALE * 2d);
+
+			//	Center
+			Vector3D centerSize = new Vector3D(size.X * .4d, size.Y * .65d, size.Z * .65d);
+			double centerVolume = Math.Pow((centerSize.Y + centerSize.Z) / 4d, 2d) * Math.PI * centerSize.X;		//	dividing by 4, because div 2 is the average, then another 2 is to convert diameter to radius
+			var centerCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, centerSize, cellSize);
+
+			//	Bulb
+			Vector3D bulbSize = new Vector3D(size.X * .18d, size.Y, size.Z);
+			double bulbVolume = Math.Pow((bulbSize.Y + bulbSize.Z) / 4d, 2d) * Math.PI * bulbSize.X;
+			var bulbCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, bulbSize, cellSize);
+
+			//	Tip
+			Vector3D tipSize = new Vector3D(size.X * .12d, size.Y * .5d, size.Z * .5d);
+			double tipVolume = Math.Pow((tipSize.Y + tipSize.Z) / 4d, 2d) * Math.PI * tipSize.X;
+			var tipCylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, tipSize, cellSize);
+
+			//	Combined shape
+			double offsetXBulb = (centerSize.X * .5d) + (bulbSize.X * .5d);
+			double offsetXTip = (centerSize.X * .5d) + bulbSize.X + (tipSize.X * .5d);
+			Quaternion rotate = new Quaternion(new Vector3D(0, 1, 0), 90);
+
+			var objects = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>[5];
+			objects[0] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(centerCylinder, new Point3D(0, 0, 0), rotate, centerVolume);
+
+			objects[1] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(bulbCylinder, new Point3D(0, 0, offsetXBulb), rotate, bulbVolume);		//	the breakdowns were build along X, but now putting them back along Z
+			objects[2] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(bulbCylinder, new Point3D(0, 0, -offsetXBulb), rotate, bulbVolume);
+
+			objects[3] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(tipCylinder, new Point3D(0, 0, offsetXTip), rotate, tipVolume);
+			objects[4] = new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(tipCylinder, new Point3D(0, 0, -offsetXTip), rotate, tipVolume);
+
+			var combined = UtilityNewt.Combine(objects);
+
+			return combined;
 		}
 
 		#endregion
@@ -387,6 +445,11 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		public override CollisionHull CreateCollisionHull(WorldBase world)
 		{
 			return _design.CreateCollisionHull(world);
+		}
+
+		public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+		{
+			return _design.GetMassBreakdown(cellSize);
 		}
 
 		internal static double GetVolume(PartDNA dna)
