@@ -350,7 +350,8 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[1];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);		//	the visual's bottle points down, but the thrust is up
 
 					#endregion
 					break;
@@ -374,8 +375,10 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[2];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 
 					#endregion
 					break;
@@ -411,9 +414,12 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[3];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
+					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
 
 					#endregion
 					break;
@@ -448,10 +454,14 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[4];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
+					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
+					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
+					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
 
 					#endregion
 					break;
@@ -498,11 +508,16 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[5];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
-					this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
+					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
+					//this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
+					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
+					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
+					this.ThrusterDirections[4] = new Vector3D(0, 1, 0);
 
 					#endregion
 					break;
@@ -547,12 +562,18 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[6];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
-					this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
-					this.ThrusterDirections[5] = new Vector3D(0, 1, 0);
+					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
+					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
+					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
+					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
+					//this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
+					//this.ThrusterDirections[5] = new Vector3D(0, 1, 0);
+					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
+					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
+					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
+					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
+					this.ThrusterDirections[4] = new Vector3D(0, 1, 0);
+					this.ThrusterDirections[5] = new Vector3D(0, -1, 0);
 
 					#endregion
 					break;
@@ -715,7 +736,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		private double _mass = 0d;
 		private double _forceStrength = 0d;
 
-		private Vector3D[] _thrusterDirectionsUnit = null;
+		private Vector3D[] _thrusterDirectionsUnit = null;		//	these are in ship coords
 
 		#endregion
 
@@ -738,7 +759,9 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			_mass = GetMass(itemOptions, _design.ThrusterDirections.Length, cylinderVolume);
 			_forceStrength = cylinderVolume * itemOptions.ThrusterStrengthRatio;
 
-			_thrusterDirectionsUnit = _design.ThrusterDirections.Select(o => o.ToUnit()).ToArray();
+			RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(dna.Orientation));
+			this.ThrusterDirectionsShip = _design.ThrusterDirections.Select(o => transform.Transform(o)).ToArray();
+			_thrusterDirectionsUnit = this.ThrusterDirectionsShip.Select(o => o.ToUnit()).ToArray();
 		}
 
 		#endregion
@@ -791,12 +814,17 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 				return _design.ThrusterType;
 			}
 		}
-		public Vector3D[] ThrusterDirections
+		public Vector3D[] ThrusterDirectionsModel
 		{
 			get
 			{
 				return _design.ThrusterDirections;
 			}
+		}
+		public Vector3D[] ThrusterDirectionsShip
+		{
+			get;
+			private set;
 		}
 
 		public double ForceAtMax
@@ -815,6 +843,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		/// This will fire the thruster
 		/// NOTE: It is assumed that the thruster is firing steady throughout elapsedTime
 		/// NOTE: The percent max is byref so that the caller knows what percent was actually used (good for visuals/sounds)
+		/// NOTE: The returned vector is in ship coords
 		/// </summary>
 		public Vector3D? Fire(ref double percentMax, int index, double elapsedTime)
 		{

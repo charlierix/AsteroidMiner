@@ -71,6 +71,7 @@
                             <StackPanel Margin="8,6">
                                 <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic"/>
                                 <Button Click="btnShipSimpleFlyer_Click" Name="btnShipSimpleFlyer" Content="Simple Flyer"/>
+                                <Button Click="btnShipWackyFlyer_Click" Name="btnShipWackyFlyer" Content="Wacky Flyer"/>
                             </StackPanel>
                         </Border>
                     </Expander>

@@ -170,7 +170,7 @@ namespace Game.Newt.Testers
 
 			#region Public Methods
 
-			public void ApplyForce(BodyApplyForceAndTorqueArgs e)
+			public void ApplyForce1(BodyApplyForceAndTorqueArgs e)
 			{
 				_lines.Clear();
 
@@ -200,12 +200,42 @@ namespace Game.Newt.Testers
 						Point3D bodyPoint = e.Body.PositionToWorld(thruster.Position);
 						e.Body.AddForceAtPoint(bodyForce, bodyPoint);
 
-						_lines.AddLine(bodyPoint, bodyPoint + bodyForce);
+						_lines.AddLine(bodyPoint, bodyPoint - bodyForce);		//	subtracting, so the line looks like a flame
 					}
 					else
 					{
 						int seven = -2;
 					}
+				}
+			}
+			public void ApplyForce2(BodyApplyForceAndTorqueArgs e)
+			{
+				_lines.Clear();
+
+				if (!_isUpPressed && !_isDownPressed)
+				{
+					return;
+				}
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+
+				double elapsedTime = 1d;
+				DateTime curTick = DateTime.Now;
+				if (_lastTick != null)
+				{
+					elapsedTime = (curTick - _lastTick.Value).TotalSeconds;
+				}
+
+				_lastTick = curTick;
+
+				if (_isUpPressed)
+				{
+					FireThrustLinear(e, elapsedTime, new Vector3D(0, 0, 1));
+				}
+
+				if (_isDownPressed)
+				{
+					FireThrustLinear(e, elapsedTime, new Vector3D(0, 0, -1));
 				}
 			}
 
@@ -239,6 +269,81 @@ namespace Game.Newt.Testers
 				{
 					_lastTick = null;
 				}
+			}
+
+			#endregion
+
+			#region Private Methods
+
+			//NOTE: direction must be a unit vector
+			private void FireThrustLinear(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
+			{
+				#region Get contributing thrusters
+
+				//	Get a list of thrusters that will contribute to the direction
+
+				List<Tuple<Thruster, int, Vector3D, double>> contributing = new List<Tuple<Thruster, int, Vector3D, double>>();
+
+				foreach (Thruster thruster in _thrusters)
+				{
+					for (int cntr = 0; cntr < thruster.ThrusterDirectionsShip.Length; cntr++)
+					{
+						Vector3D thrustDirUnit = thruster.ThrusterDirectionsShip[cntr].ToUnit();
+						double dot = Vector3D.DotProduct(thrustDirUnit, direction);
+
+						if (dot > 0d)
+						{
+							contributing.Add(new Tuple<Thruster, int, Vector3D, double>(thruster, cntr, thrustDirUnit, dot));
+						}
+					}
+				}
+
+				#endregion
+
+				if (contributing.Count == 0)
+				{
+					return;
+				}
+
+				Point3D center = _ship.PhysicsBody.CenterOfMass;
+				MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
+
+				#region Balance them against each other
+
+				for (int cntr = 0; cntr < contributing.Count; cntr++)
+				{
+
+
+
+
+
+
+
+				}
+
+				#endregion
+
+				#region Fire them
+
+				foreach (var contribute in contributing)
+				{
+					double percent = 1d;
+					Vector3D? force = contribute.Item1.Fire(ref percent, contribute.Item2, elapsedTime);
+					if (force != null)
+					{
+						Vector3D bodyForce = e.Body.DirectionToWorld(force.Value);
+						Point3D bodyPoint = e.Body.PositionToWorld(contribute.Item1.Position);
+						e.Body.AddForceAtPoint(bodyForce, bodyPoint);
+
+						_lines.AddLine(bodyPoint, bodyPoint - bodyForce);		//	subtracting, so the line looks like a flame
+					}
+					else
+					{
+						int seven = -2;
+					}
+				}
+
+				#endregion
 			}
 
 			#endregion
@@ -299,7 +404,8 @@ namespace Game.Newt.Testers
 		{
 			InitializeComponent();
 
-			_itemOptions.ThrusterStrengthRatio = 100000d;
+			//_itemOptions.ThrusterStrengthRatio = 100000d;
+			_itemOptions.ThrusterStrengthRatio = 500d;
 			_itemOptions.FuelToThrustRatio /= _itemOptions.ThrusterStrengthRatio;
 
 			_isInitialized = true;
@@ -524,7 +630,8 @@ namespace Game.Newt.Testers
 		{
 			if (_thrustController != null)
 			{
-				_thrustController.ApplyForce(e);
+				//_thrustController.ApplyForce1(e);
+				_thrustController.ApplyForce2(e);
 			}
 		}
 
@@ -1157,10 +1264,51 @@ namespace Game.Newt.Testers
 
 				List<PartDNA> parts = new List<PartDNA>();
 				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport);
+
+				//double mass = _ship.PhysicsBody.Mass;
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+
+				//mass = _ship.PhysicsBody.Mass;
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShipWackyFlyer_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = GetRandomEnum<ThrusterType>(ThrusterType.Custom) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = GetRandomEnum<ThrusterType>(ThrusterType.Custom) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = GetRandomEnum<ThrusterType>(ThrusterType.Custom) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = GetRandomEnum<ThrusterType>(ThrusterType.Custom) });
 
 				ShipDNA shipDNA = ShipDNA.Create(parts);
 
@@ -1440,6 +1588,7 @@ namespace Game.Newt.Testers
 			if (_ship != null)
 			{
 				_map.RemoveItem(_ship);
+				_ship.PhysicsBody.Dispose();
 				_ship = null;
 			}
 
