@@ -97,7 +97,7 @@ namespace Game.Orig.TestersGDI
 				return;
 			}
 
-			_polygon.AngularMomentum.StoreNewValues(Utility3D.GetRandomVector(_rand, MOMENTUM));
+			_polygon.AngularMomentum.StoreNewValues(Utility3D.GetRandomVector(MOMENTUM));
 		}
 		private void btnSpinX_Click(object sender, EventArgs e)
 		{
@@ -107,7 +107,7 @@ namespace Game.Orig.TestersGDI
 				return;
 			}
 
-			_polygon.AngularMomentum.X = Utility3D.GetNearZeroValue(_rand, MOMENTUM);
+			_polygon.AngularMomentum.X = Utility3D.GetNearZeroValue(MOMENTUM);
 			_polygon.AngularMomentum.Y = 0;
 			_polygon.AngularMomentum.Z = 0;
 		}
@@ -120,7 +120,7 @@ namespace Game.Orig.TestersGDI
 			}
 
 			_polygon.AngularMomentum.X = 0;
-			_polygon.AngularMomentum.Y = Utility3D.GetNearZeroValue(_rand, MOMENTUM);
+			_polygon.AngularMomentum.Y = Utility3D.GetNearZeroValue(MOMENTUM);
 			_polygon.AngularMomentum.Z = 0;
 		}
 		private void btnSpinZ_Click(object sender, EventArgs e)
@@ -133,7 +133,7 @@ namespace Game.Orig.TestersGDI
 
 			_polygon.AngularMomentum.X = 0;
 			_polygon.AngularMomentum.Y = 0;
-			_polygon.AngularMomentum.Z = Utility3D.GetNearZeroValue(_rand, MOMENTUM);
+			_polygon.AngularMomentum.Z = Utility3D.GetNearZeroValue(MOMENTUM);
 		}
 
 		private void timer1_Tick(object sender, EventArgs e)

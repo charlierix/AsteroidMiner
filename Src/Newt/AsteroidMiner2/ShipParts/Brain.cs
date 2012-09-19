@@ -8,6 +8,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 
+using Game.HelperClasses;
 using Game.Newt.AsteroidMiner2.ShipEditor;
 using Game.Newt.HelperClasses;
 

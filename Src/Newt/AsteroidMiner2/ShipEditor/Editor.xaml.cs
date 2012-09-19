@@ -14,6 +14,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
+using Game.HelperClasses;
 using Game.Newt.AsteroidMiner2.ShipParts;
 using Game.Newt.HelperClasses;
 using Game.Newt.HelperClasses.Primitives3D;

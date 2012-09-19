@@ -12,13 +12,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
+using Game.HelperClasses;
 using Game.Newt.AsteroidMiner2;
 using Game.Newt.AsteroidMiner2.ShipEditor;
 using Game.Newt.AsteroidMiner2.ShipParts;
 using Game.Newt.NewtonDynamics;
 using Game.Newt.HelperClasses.Primitives3D;
 using Game.Newt.HelperClasses;
-using Game.HelperClasses;
 
 namespace Game.Newt.Testers
 {
@@ -127,6 +127,115 @@ namespace Game.Newt.Testers
 		/// </summary>
 		private class ThrustController : IDisposable
 		{
+			#region Class: ThrustContribution
+
+			private class ThrustContribution
+			{
+				#region Constructor
+
+				public ThrustContribution(Thruster thruster, int index, Vector3D translationForce, Vector3D torque)
+				{
+					this.Thruster = thruster;
+					this.Index = index;
+					this.TranslationForce = translationForce;
+					this.Torque = torque;
+				}
+
+				#endregion
+
+				public readonly Thruster Thruster;
+				public readonly int Index;
+
+				public readonly Vector3D TranslationForce;
+				public readonly Vector3D Torque;
+			}
+
+			#endregion
+			#region Class: ThrustSetting
+
+			private class ThrustSetting
+			{
+				#region Constructor
+
+				public ThrustSetting(Thruster thruster, int index, Vector3D translationForceFull, Vector3D torqueFull, Vector3D translationForceUnit, Vector3D torqueUnit, Vector3D translationForce, Vector3D torque, double percent)
+				{
+					this.Thruster = thruster;
+					this.Index = index;
+
+					this.TranslationForceFull = translationForceFull;
+					this.TorqueFull = torqueFull;
+
+					this.TranslationForceUnit = translationForceUnit;
+					this.TorqueUnit = torqueUnit;
+
+					this.TranslationForce = translationForce;
+					this.Torque = torque;
+
+					this.Percent = percent;
+				}
+
+				#endregion
+
+				public readonly Thruster Thruster;
+				public readonly int Index;
+
+				//	These are what the translation and torque would be if percent were 1
+				public readonly Vector3D TranslationForceFull;
+				public readonly Vector3D TorqueFull;
+
+				//	These are the translation and torque as unit vectors
+				public readonly Vector3D TranslationForceUnit;
+				public readonly Vector3D TorqueUnit;
+
+				//	These are what the translation and torque are for the stored percent
+				public readonly Vector3D TranslationForce;
+				public readonly Vector3D Torque;
+
+				//	This is how much to fire this thruster
+				public readonly double Percent;
+			}
+
+			#endregion
+			#region Class: ThrustSet
+
+			private class ThrustSet
+			{
+				#region Constructor
+
+				public ThrustSet(ThrustSetting[] thrusters, Vector3D translation, Vector3D torque, double fuelUsage)
+				{
+					this.Thrusters = thrusters;
+
+					this.Translation = translation;
+					this.Torque = torque;
+
+					this.TranslationLength = this.Translation.Length;
+					this.TorqueLength = this.Torque.Length;
+
+					//this.TranslationUnit = this.Translation.ToUnit();
+					//this.TorqueUnit = this.Torque.ToUnit();
+
+					this.FuelUsage = fuelUsage;
+				}
+
+				#endregion
+
+				public readonly ThrustSetting[] Thrusters;
+
+				public readonly Vector3D Translation;
+				public readonly Vector3D Torque;
+
+				public readonly double TranslationLength;
+				public readonly double TorqueLength;
+
+				//public readonly Vector3D TranslationUnit;
+				//public readonly Vector3D TorqueUnit;
+
+				public readonly double FuelUsage;
+			}
+
+			#endregion
+
 			#region Declaration Section
 
 			private Ship _ship = null;
@@ -134,21 +243,32 @@ namespace Game.Newt.Testers
 
 			private Viewport3D _viewport = null;
 			private ScreenSpaceLines3D _lines = null;
+			private List<Visual3D> _debugVisuals = null;
+
+			private ItemOptions _itemOptions = null;
 
 			private bool _isUpPressed = false;
 			private bool _isDownPressed = false;
 
 			private DateTime? _lastTick = null;
 
+			//	These are pre calculated to help with figuring out which thrusters to fire when a certain direction is requested
+			private Point3D _shipCenterMass;
+			private MassMatrix _shipMassMatrix;
+			private ThrustContribution[] _contributions = null;
+			private ThrustSet[] _zeroTranslationSets = null;
+			private ThrustSet[] _zeroTorqueSets = null;
+
 			#endregion
 
 			#region Constructor
 
-			public ThrustController(Ship ship, Viewport3D viewport)
+			public ThrustController(Ship ship, Viewport3D viewport, ItemOptions itemOptions)
 			{
 				_ship = ship;
 				_thrusters = ship.Thrusters;
 				_viewport = viewport;
+				_itemOptions = itemOptions;
 
 				_lines = new ScreenSpaceLines3D();
 				_lines.Color = Colors.Orange;
@@ -161,15 +281,44 @@ namespace Game.Newt.Testers
 				if (_viewport != null && _lines != null)
 				{
 					_viewport.Children.Remove(_lines);
-					_viewport = null;
 					_lines = null;
 				}
+
+				if (_viewport != null && _debugVisuals != null)
+				{
+					foreach (Visual3D model in _debugVisuals)
+					{
+						_viewport.Children.Remove(model);
+					}
+
+					_debugVisuals = null;
+				}
+
+				_viewport = null;
 			}
 
 			#endregion
 
 			#region Public Methods
 
+			/// <summary>
+			/// Call this whenever the ship's mass matrix changes
+			/// </summary>
+			public void MassChanged()
+			{
+				_contributions = null;
+				_zeroTranslationSets = null;
+				_zeroTorqueSets = null;
+
+
+				EnsureThrustSetsCalculated();
+
+
+			}
+
+			/// <summary>
+			/// This fires every thruster at 100%
+			/// </summary>
 			public void ApplyForce1(BodyApplyForceAndTorqueArgs e)
 			{
 				_lines.Clear();
@@ -228,15 +377,44 @@ namespace Game.Newt.Testers
 
 				_lastTick = curTick;
 
+				//	Keeping each button's contribution in a set so they are easier to normalize
+				List<Tuple<Thruster, int, double>[]> thrusterSets = new List<Tuple<Thruster, int, double>[]>();
+
 				if (_isUpPressed)
 				{
-					FireThrustLinear(e, elapsedTime, new Vector3D(0, 0, 1));
+					thrusterSets.Add(FireThrustLinear3(e, elapsedTime, new Vector3D(0, 0, 1)).ToArray());
 				}
 
 				if (_isDownPressed)
 				{
-					FireThrustLinear(e, elapsedTime, new Vector3D(0, 0, -1));
+					thrusterSets.Add(FireThrustLinear3(e, elapsedTime, new Vector3D(0, 0, -1)).ToArray());
 				}
+
+				//TODO: Normalize these so no thruster will fire above 100% (keep the ratios though)
+
+				#region Fire them
+
+				foreach (var thruster in thrusterSets.SelectMany(o => o))
+				{
+					double percent = thruster.Item3;
+					Vector3D? force = thruster.Item1.Fire(ref percent, thruster.Item2, elapsedTime);
+					if (force != null)
+					{
+						Vector3D bodyForce = e.Body.DirectionToWorld(force.Value);
+						Point3D bodyPoint = e.Body.PositionToWorld(thruster.Item1.Position);
+						e.Body.AddForceAtPoint(bodyForce, bodyPoint);
+
+						Vector3D lineVect = GetThrustLine(bodyForce, _itemOptions.ThrusterStrengthRatio);		//	this returns a vector in the opposite direction, so the line looks like a flame
+						Point3D lineStart = bodyPoint + (lineVect.ToUnit() * thruster.Item1.ThrustVisualStartRadius);
+						_lines.AddLine(lineStart, lineStart + lineVect);
+					}
+					else
+					{
+						int seven = -2;
+					}
+				}
+
+				#endregion
 			}
 
 			public void KeyDown(KeyEventArgs e)
@@ -271,12 +449,88 @@ namespace Game.Newt.Testers
 				}
 			}
 
+			public void DrawDebugVisuals()
+			{
+				EnsureThrustSetsCalculated();
+
+				#region Clear existing
+
+				if (_debugVisuals == null)
+				{
+					_debugVisuals = new List<Visual3D>();
+				}
+				else
+				{
+					foreach (Visual3D existing in _debugVisuals)
+					{
+						_viewport.Children.Remove(existing);
+					}
+					_debugVisuals.Clear();
+				}
+
+				#endregion
+
+				#region Center Mass
+
+				//	Material
+				MaterialGroup materials = new MaterialGroup();
+				materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("BA5E67"))));
+				materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("CF6F68")), 75d));
+
+				//	Geometry Model
+				GeometryModel3D geometry = new GeometryModel3D();
+				geometry.Material = materials;
+				geometry.BackMaterial = materials;
+				geometry.Geometry = UtilityWPF.GetSphere(5, .1d, .1d, .1d);
+
+				ModelVisual3D model = new ModelVisual3D();
+				model.Content = geometry;
+				model.Transform = new TranslateTransform3D(_ship.PhysicsBody.PositionToWorld(_shipCenterMass).ToVector());
+
+				_debugVisuals.Add(model);
+				_viewport.Children.Add(model);
+
+				#endregion
+				#region Torques
+
+				ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+				lines.Thickness = 3d;
+				lines.Color = UtilityWPF.ColorFromHex("EB9B73");
+
+				ScreenSpaceLines3D opposites = new ScreenSpaceLines3D();
+				opposites.Thickness = 1d;
+				opposites.Color = UtilityWPF.ColorFromHex("FFDAA5");
+
+				foreach (var thruster in _contributions)
+				{
+					lines.AddLine(_ship.PhysicsBody.PositionToWorld(_shipCenterMass), _ship.PhysicsBody.PositionToWorld(_shipCenterMass) + _ship.PhysicsBody.DirectionToWorld(thruster.Torque));
+					opposites.AddLine(_ship.PhysicsBody.PositionToWorld(_shipCenterMass), _ship.PhysicsBody.PositionToWorld(_shipCenterMass) - _ship.PhysicsBody.DirectionToWorld(thruster.Torque));
+				}
+
+				_debugVisuals.Add(lines);
+				_debugVisuals.Add(opposites);
+				_viewport.Children.Add(lines);
+				_viewport.Children.Add(opposites);
+
+				#endregion
+
+				//	May want to do translations
+
+
+
+
+
+			}
+
 			#endregion
 
-			#region Private Methods
+			#region Private Methods - fire
 
 			//NOTE: direction must be a unit vector
-			private void FireThrustLinear(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
+			/// <summary>
+			/// This fires any thruster that contributes to the direction at 100%
+			/// </summary>
+			private void FireThrustLinear1(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
 			{
 				#region Get contributing thrusters
 
@@ -308,20 +562,10 @@ namespace Game.Newt.Testers
 				Point3D center = _ship.PhysicsBody.CenterOfMass;
 				MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
 
-				#region Balance them against each other
-
-				for (int cntr = 0; cntr < contributing.Count; cntr++)
-				{
+				//	Figure out the drift
 
 
-
-
-
-
-
-				}
-
-				#endregion
+				//	See which thrusters can most reduce that drift
 
 				#region Fire them
 
@@ -344,6 +588,617 @@ namespace Game.Newt.Testers
 				}
 
 				#endregion
+			}
+			/// <summary>
+			/// This is an attempt to fix 1, but I didn't get very far
+			/// </summary>
+			private List<Tuple<Thruster, int, double>> FireThrustLinear2(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
+			{
+				Point3D center = _ship.PhysicsBody.CenterOfMass;
+				MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
+
+				ThrustContribution[] contributions = GetThrusterContributions(center);
+
+				#region Find along and against
+
+				List<Tuple<ThrustContribution, double>> along = new List<Tuple<ThrustContribution, double>>();
+				List<Tuple<ThrustContribution, double>> against = new List<Tuple<ThrustContribution, double>>();
+
+				foreach (ThrustContribution contribution in contributions)
+				{
+					double dot = Vector3D.DotProduct(contribution.Thruster.ThrusterDirectionsShip[contribution.Index], direction);
+
+					//	Don't include zero
+					if (dot > 0d)
+					{
+						along.Add(new Tuple<ThrustContribution, double>(contribution, dot));
+					}
+					else if (dot < 0d)
+					{
+						against.Add(new Tuple<ThrustContribution, double>(contribution, dot));
+					}
+				}
+
+				#endregion
+
+				Tuple<Vector3D, Vector3D> alongCombinedForceAndTorque = GetCombinedForceAndTorque(along.Select(o => new Tuple<Vector3D, Vector3D>(o.Item1.TranslationForce, o.Item1.Torque)));
+
+
+				//	I think that fixing torque drif is much more important than linear drift
+
+
+				if (!Math3D.IsNearZero(alongCombinedForceAndTorque.Item2.LengthSquared))
+				{
+					//	There is a net torque
+
+
+
+
+				}
+
+
+
+				if (!Math3D.IsNearValue(Vector3D.DotProduct(alongCombinedForceAndTorque.Item1.ToUnit(), direction), 1d))
+				{
+					//	There is a linear drift
+
+
+
+				}
+
+
+
+
+
+
+
+				//	Exit Function
+				return along.Select(o => new Tuple<Thruster, int, double>(o.Item1.Thruster, o.Item1.Index, 1d)).ToList();
+			}
+			private List<Tuple<Thruster, int, double>> FireThrustLinear3(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
+			{
+				//TODO: Expose these as properties of the class, or take as args to the method call
+				const double PERFECTALIGN = .01;
+
+				EnsureThrustSetsCalculated();
+
+				//	Find the best thruster set for the requested direction, may need to combine sets
+
+				var matches = _zeroTorqueSets.Select(o => new Tuple<ThrustSet, double>(o, Vector3D.DotProduct(o.Translation, direction))).OrderByDescending(o => o.Item2).ToArray();
+
+				if (matches.Length > 0)
+				{
+					//	Find set that are perfectly aligned (direction is a unit vector, so if they are perfectly aligned, the dot product will be the translation's length)
+					var perfectAlign = matches.Where(o => IsNearValue(o.Item2, o.Item1.TranslationLength, o.Item1.TranslationLength * PERFECTALIGN)).OrderByDescending(o => o.Item2).ToArray();
+
+					if (perfectAlign.Length > 0)
+					{
+						ThrustSet set = GetBestPerfectAlign(perfectAlign);
+
+						return set.Thrusters.Select(o => new Tuple<Thruster, int, double>(o.Thruster, o.Index, o.Percent)).ToList();
+					}
+
+
+					//TODO: Combine solutions to get the requested direction
+
+
+				}
+
+				return new List<Tuple<Thruster, int, double>>();
+			}
+
+			private static ThrustSet GetBestPerfectAlign(Tuple<ThrustSet, double>[] sets)
+			{
+				// Find the most fuel efficient set
+				var setsWithFuelEfficiency = sets.Select(o => new Tuple<ThrustSet, double, double>(o.Item1, o.Item2, o.Item2 / o.Item1.FuelUsage)).OrderByDescending(o => o.Item3).ToArray();
+
+				return setsWithFuelEfficiency[0].Item1;
+			}
+
+			private static Tuple<Vector3D, Vector3D> GetCombinedForceAndTorque(IEnumerable<Tuple<Vector3D, Vector3D>> forcesAndTorques)
+			{
+				Vector3D force = new Vector3D(0, 0, 0);
+				Vector3D torque = new Vector3D(0, 0, 0);
+
+				foreach (var item in forcesAndTorques)
+				{
+					force += item.Item1;
+					torque += item.Item2;
+				}
+
+				return new Tuple<Vector3D, Vector3D>(force, torque);
+			}
+
+			private static Vector3D GetThrustLine(Vector3D force, double strengthRatio)
+			{
+				const double MULT = -1d;		//	the desired length when force.length / strengthRatio is one
+
+				double ratio = MULT * force.Length / strengthRatio;
+
+				return force.ToUnit() * MULT;
+			}
+
+			#endregion
+			#region Private Methods - prep
+
+			private void EnsureThrustSetsCalculated()
+			{
+				if (_contributions != null)
+				{
+					return;
+				}
+
+				_shipCenterMass = _ship.PhysicsBody.CenterOfMass;
+				_shipMassMatrix = _ship.PhysicsBody.MassMatrix;
+
+				_contributions = GetThrusterContributions(_shipCenterMass);
+
+				List<ThrustSet> zeroTorques = new List<ThrustSet>();
+				List<ThrustSet> zeroTranslations = new List<ThrustSet>();
+
+				var illegalCombos = GetIllegalCombos(_contributions);
+
+				double fuelToThrust = _itemOptions.FuelToThrustRatio;
+
+				//var test = AllCombosEnumerator(_contributions.Length, illegalCombos).ToList();
+
+				//NOTE: AllCombosEnumerator seems to only be called once, so I'm guessing AsParallel gets all enumerated values before
+				//dividing up the work (I would hate for it to call AllCombosEnumerator many times - once for Count(), etc)
+				//foreach (Tuple<ThrustSet[], ThrustSet[]> zeros in AllCombosEnumerator(_contributions.Length, illegalCombos).AsParallel().Select(o => GetZeros(_contributions, o, fuelToThrust)))
+				foreach (Tuple<ThrustSet[], ThrustSet[]> zeros in AllCombosEnumerator(_contributions.Length, illegalCombos).Select(o => GetZeros(_contributions, o, fuelToThrust)))
+				{
+					if (zeros == null)
+					{
+						continue;
+					}
+
+					if (zeros.Item1 != null && zeros.Item1.Length > 0)
+					{
+						zeroTorques.AddRange(zeros.Item1);
+					}
+
+					if (zeros.Item2 != null && zeros.Item2.Length > 0)
+					{
+						zeroTranslations.AddRange(zeros.Item2);
+					}
+				}
+
+				_zeroTorqueSets = zeroTorques.ToArray();
+				_zeroTranslationSets = zeroTranslations.ToArray();
+			}
+
+			private ThrustContribution[] GetThrusterContributions(Point3D center)
+			{
+				List<ThrustContribution> retVal = new List<ThrustContribution>();
+
+				foreach (Thruster thruster in _thrusters)
+				{
+					for (int cntr = 0; cntr < thruster.ThrusterDirectionsShip.Length; cntr++)
+					{
+						//	This is copied from Body.AddForceAtPoint
+
+						Vector3D offsetFromMass = thruster.Position - center;		//	this is ship's local coords
+						Vector3D force = thruster.ThrusterDirectionsShip[cntr] * thruster.ForceAtMax;
+
+						Vector3D translationForce, torque;
+						Math3D.SplitForceIntoTranslationAndTorque(out translationForce, out torque, offsetFromMass, force);
+
+						retVal.Add(new ThrustContribution(thruster, cntr, translationForce, torque));
+					}
+				}
+
+				//	Exit Function
+				return retVal.ToArray();
+			}
+
+			/// <summary>
+			/// This taks a set of thrusters and tries to find combinations that will produce zero torque and combinations that will produce zero translation
+			/// </summary>
+			/// <returns>
+			/// Item1=Torques
+			/// Item2=Translations
+			/// </returns>
+			private static Tuple<ThrustSet[], ThrustSet[]> GetZeros(ThrustContribution[] all, int[] combo, double fuelToThrust)
+			{
+				//	Get an array of the referenced thrusters
+				ThrustContribution[] used = new ThrustContribution[combo.Length];
+				for (int cntr = 0; cntr < combo.Length; cntr++)
+				{
+					used[cntr] = all[combo[cntr]];
+				}
+
+				//This is now done up front (more efficient)
+				//	Make sure this combo doesn't have the same thruster firing is opposite directions
+				//if (!IsValidCombo(used))
+				//{
+				//    return null;
+				//}
+
+				//	Try to find combinations of these thrusters that will produce zero torque and zero translation
+				List<ThrustSet> torques = GetZeroTorques(used, fuelToThrust);
+				List<ThrustSet> translations = GetZeroTranslations(used, fuelToThrust);
+
+				//	Exit Function
+				if (torques.Count == 0 && translations.Count == 0)
+				{
+					return null;
+				}
+				else
+				{
+					return new Tuple<ThrustSet[], ThrustSet[]>(torques.ToArray(), translations.ToArray());
+				}
+			}
+
+			private static Tuple<int, int>[] GetIllegalCombos(ThrustContribution[] thrusters)
+			{
+				List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
+
+				for (int outer = 0; outer < thrusters.Length - 1; outer++)
+				{
+					for (int inner = outer + 1; inner < thrusters.Length; inner++)
+					{
+						if (thrusters[outer].Thruster == thrusters[inner].Thruster)
+						{
+							Vector3D dir1 = thrusters[outer].Thruster.ThrusterDirectionsModel[thrusters[outer].Index];
+							Vector3D dir2 = thrusters[inner].Thruster.ThrusterDirectionsModel[thrusters[inner].Index];
+
+							if (Math3D.IsNearValue(Vector3D.DotProduct(dir1, dir2), -1d))
+							{
+								retVal.Add(new Tuple<int, int>(outer, inner));
+							}
+						}
+					}
+				}
+
+				return retVal.ToArray();
+			}
+
+			//TODO: Finish these
+			private static List<ThrustSet> GetZeroTorques(ThrustContribution[] used, double fuelToThrust)
+			{
+				//	Split the list into inline thrusters, and thrusters that produce torque.  So there could be 5 total, but if only 2
+				//	produce torque, only those 2 are used in the torque calculations
+				List<ThrustContribution> noTorque = new List<ThrustContribution>();
+				List<ThrustContribution> hasTorque = new List<ThrustContribution>();
+
+				for (int cntr = 0; cntr < used.Length; cntr++)
+				{
+					if (IsNearZeroTorque(used[cntr].Torque))
+					{
+						noTorque.Add(used[cntr]);
+					}
+					else
+					{
+						hasTorque.Add(used[cntr]);
+					}
+				}
+
+				List<ThrustSet> retVal = new List<ThrustSet>();
+
+				if (hasTorque.Count == 0)
+				{
+					//	All zero torque
+					retVal.AddRange(GetZeroTorquesSprtZeroTorque(noTorque, fuelToThrust));
+				}
+				else if (hasTorque.Count == 2)
+				{
+					//	Two
+					retVal.AddRange(GetZeroTorquesSprtTwoTorque(noTorque, hasTorque, fuelToThrust));
+				}
+				else if (hasTorque.Count > 2)
+				{
+					//	Many
+					retVal.AddRange(GetZeroTorquesSprtManyTorque(noTorque, hasTorque, fuelToThrust));
+				}
+
+				//	Throw out any that have zero translation
+				retVal = retVal.Where(o => !IsNearZeroTranslation(o.TranslationLength)).ToList();
+
+				//	Exit Function
+				return retVal;
+			}
+			private static List<ThrustSet> GetZeroTorquesSprtZeroTorque(List<ThrustContribution> noTorque, double fuelToThrust)
+			{
+				Vector3D translation = new Vector3D(0, 0, 0);
+				Vector3D torque = new Vector3D(0, 0, 0);
+				double fuelUsed = 0d;
+
+				ThrustSetting[] thrusters = new ThrustSetting[noTorque.Count];
+				for (int cntr = 0; cntr < noTorque.Count; cntr++)
+				{
+					thrusters[cntr] = new ThrustSetting(noTorque[cntr].Thruster, noTorque[cntr].Index, noTorque[cntr].TranslationForce, noTorque[cntr].Torque, noTorque[cntr].TranslationForce.ToUnit(), noTorque[cntr].Torque.ToUnit(), noTorque[cntr].TranslationForce, noTorque[cntr].Torque, 1d);
+
+					translation += noTorque[cntr].TranslationForce;
+					torque += noTorque[cntr].Torque;
+					fuelUsed += noTorque[cntr].Thruster.ForceAtMax * fuelToThrust;
+				}
+
+				List<ThrustSet> retVal = new List<ThrustSet>();
+				retVal.Add(new ThrustSet(thrusters, translation, torque, fuelUsed));
+				return retVal;
+			}
+			private static List<ThrustSet> GetZeroTorquesSprtTwoTorque(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
+			{
+				List<ThrustSet> retVal = new List<ThrustSet>();
+
+				//	Both torques are non zero.  See if they're opposed
+				Vector3D torque1Unit = hasTorque[0].Torque.ToUnit();
+				Vector3D torque2Unit = hasTorque[1].Torque.ToUnit();
+
+				double dot = Vector3D.DotProduct(torque1Unit, torque2Unit);
+
+				if (!IsNearValueTorquesDot(dot, -1d))
+				{
+					//	Nothing to return
+					return retVal;
+				}
+
+				//	They are opposed, now get the ratio between the two
+				double[] lengths = new double[] { hasTorque[0].Torque.Length, hasTorque[1].Torque.Length };
+
+				Vector3D translation = new Vector3D(0, 0, 0);
+				Vector3D torque = new Vector3D(0, 0, 0);
+				double fuelUsed = 0d;
+
+				List<ThrustSetting> thrusters = new List<ThrustSetting>();
+
+				//	Add the two torque producing thrusters
+				for (int cntr = 0; cntr < hasTorque.Count; cntr++)
+				{
+					#region Add opposing torques
+
+					double lengthThis = lengths[cntr];
+					double lengthOther = cntr == 0 ? lengths[1] : lengths[0];
+
+					double percent = 1d;
+
+					//	Figure out the percent.  The smaller one fires at 100%.  The other is a fraction of that
+					if (!Math3D.IsNearValue(lengthThis, lengthOther) && lengthThis > lengthOther)
+					{
+						percent = lengthOther / lengthThis;
+					}
+
+					thrusters.Add(new ThrustSetting(hasTorque[cntr].Thruster, hasTorque[cntr].Index, hasTorque[cntr].TranslationForce, hasTorque[cntr].Torque, hasTorque[cntr].TranslationForce.ToUnit(), hasTorque[cntr].Torque.ToUnit(), hasTorque[cntr].TranslationForce * percent, hasTorque[cntr].Torque * percent, percent));
+
+					translation += hasTorque[cntr].TranslationForce * percent;
+					torque += hasTorque[cntr].Torque * percent;
+					fuelUsed += hasTorque[cntr].Thruster.ForceAtMax * fuelToThrust * percent;
+
+					#endregion
+				}
+
+				//	Add any inline thrusters each at 100%
+				foreach (ThrustContribution thruster in noTorque)
+				{
+					#region Add inline
+
+					thrusters.Add(new ThrustSetting(thruster.Thruster, thruster.Index, thruster.TranslationForce, thruster.Torque, thruster.TranslationForce.ToUnit(), thruster.Torque.ToUnit(), thruster.TranslationForce, thruster.Torque, 1d));
+
+					translation += thruster.TranslationForce;
+					torque += thruster.Torque;
+					fuelUsed += thruster.Thruster.ForceAtMax * fuelToThrust;
+
+					#endregion
+				}
+
+				retVal.Add(new ThrustSet(thrusters.ToArray(), translation, torque, fuelUsed));
+
+				//	Exit Function
+				return retVal;
+			}
+			private static List<ThrustSet> GetZeroTorquesSprtManyTorque(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
+			{
+
+				#region See if adds to zero
+
+				bool[] foundPlusMinus = new bool[6];
+				foreach (ThrustContribution thrust in hasTorque)
+				{
+					if (thrust.Torque.X > 0)
+					{
+						foundPlusMinus[0] = true;
+					}
+					else if (thrust.Torque.X < 0)
+					{
+						foundPlusMinus[1] = true;
+					}
+
+					if (thrust.Torque.Y > 0)
+					{
+						foundPlusMinus[2] = true;
+					}
+					else if (thrust.Torque.Y < 0)
+					{
+						foundPlusMinus[3] = true;
+					}
+
+					if (thrust.Torque.Z > 0)
+					{
+						foundPlusMinus[4] = true;
+					}
+					else if (thrust.Torque.Z < 0)
+					{
+						foundPlusMinus[5] = true;
+					}
+				}
+
+				List<ThrustSet> retVal = new List<ThrustSet>();
+
+				if (foundPlusMinus[0] != foundPlusMinus[1] || foundPlusMinus[2] != foundPlusMinus[3] || foundPlusMinus[4] != foundPlusMinus[5])
+				{
+					//	Nothing to return
+					return retVal;
+				}
+
+				if (!foundPlusMinus.All(o => o))
+				{
+					//	Nothing to return
+					return retVal;
+				}
+
+				#endregion
+
+				//	Not exactly sure how to figure this out, but I'm guessing it's some combination of cross and dot products
+
+				//	May need lots of visualizations of thruster setup, and the debug lines
+
+				//	There could be stable sets within what was passed in, for example:
+				//		4 thrusters in a cross pointing down.  Each opposite pair perfectly oppose each other, but all 4 can be fired at 100%
+				//		
+
+				//	If the torque is along or against the translation, that should also be added, but marked (this would cause the
+				//	ship to spin like a football but at least it won't wobble)
+
+
+
+				return new List<ThrustSet>();
+			}
+
+			private static List<ThrustSet> GetZeroTranslations(ThrustContribution[] used, double fuelToThrust)
+			{
+				return new List<ThrustSet>();
+			}
+
+			private static bool IsNearZeroTorque(Vector3D testVect)
+			{
+				const double NEARZERO = .05d;
+
+				return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
+			}
+			private static bool IsNearValueTorquesDot(double testValue, double compareTo)
+			{
+				const double NEARZERO = .0005d;
+
+				return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
+			}
+
+			private static bool IsNearZeroTranslation(Vector3D testVect)
+			{
+				const double NEARZERO = .05d;
+
+				return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
+			}
+			private static bool IsNearZeroTranslation(double length)
+			{
+				const double NEARZERO = .05d;
+
+				return Math.Abs(length) <= NEARZERO;
+			}
+
+			private static bool IsNearValue(double testValue, double compareTo, double threshold)
+			{
+				return testValue >= compareTo - threshold && testValue <= compareTo + threshold;
+			}
+
+			/// <summary>
+			/// This iterates over all combinations of a set of numbers
+			/// NOTE: The number of iterations is (2^inputSize) - 1, so be careful with input sizes over 10 to 15
+			/// </summary>
+			/// <remarks>
+			/// For example, if you pass in 4, you will get:
+			///		0,1,2,3
+			///		0,1,2
+			///		0,1,3
+			///		0,2,3
+			///		1,2,3
+			///		0,1
+			///		0,2
+			///		0,3
+			///		1,2
+			///		1,3
+			///		2,3
+			///		0
+			///		1
+			///		2
+			///		3
+			/// </remarks>
+			private static IEnumerable<int[]> AllCombosEnumerator(int inputSize)
+			{
+				int inputMax = inputSize - 1;		//	save me from subtracting one all the time
+
+				for (int numUsed = inputSize; numUsed >= 1; numUsed--)
+				{
+					int usedMax = numUsed - 1;		//	save me from subtracting one all the time
+
+					//	Seed the return with everything at the left
+					int[] retVal = Enumerable.Range(0, numUsed).ToArray();
+					yield return (int[])retVal.Clone();		//	if this isn't cloned here, then the consumer needs to do it
+
+					while (true)
+					{
+						//	Try to bump the last item
+						if (retVal[usedMax] < inputMax)
+						{
+							retVal[usedMax]++;
+							yield return (int[])retVal.Clone();
+							continue;
+						}
+
+						//	The last item is as far as it will go, find an item to the left of it to bump
+						bool foundOne = false;
+
+						for (int cntr = usedMax - 1; cntr >= 0; cntr--)
+						{
+							if (retVal[cntr] < retVal[cntr + 1] - 1)
+							{
+								//	This one has room to bump
+								retVal[cntr]++;
+
+								//	Reset everything to the right of this spot
+								for (int resetCntr = cntr + 1; resetCntr < numUsed; resetCntr++)
+								{
+									retVal[resetCntr] = retVal[cntr] + (resetCntr - cntr);
+								}
+
+								foundOne = true;
+								yield return (int[])retVal.Clone();
+								break;
+							}
+						}
+
+						if (!foundOne)
+						{
+							//	This input size is exhausted (everything is as far right as they can go)
+							break;
+						}
+					}
+				}
+			}
+			private static IEnumerable<int[]> AllCombosEnumerator(int inputSize, Tuple<int, int>[] illegalPairs)
+			{
+				foreach (int[] retVal in AllCombosEnumerator(inputSize))
+				{
+					bool isValid = true;
+
+					for (int illegalCntr = 0; illegalCntr < illegalPairs.Length; illegalCntr++)
+					{
+						bool found1 = false;
+						bool found2 = false;
+
+						for (int returnCntr = 0; returnCntr < retVal.Length; returnCntr++)
+						{
+							if (retVal[returnCntr] == illegalPairs[illegalCntr].Item1)
+							{
+								found1 = true;
+							}
+							else if (retVal[returnCntr] == illegalPairs[illegalCntr].Item2)
+							{
+								found2 = true;
+							}
+						}
+
+						if (found1 && found2)
+						{
+							isValid = false;
+							break;
+						}
+					}
+
+					if (isValid)
+					{
+						yield return retVal;
+					}
+				}
 			}
 
 			#endregion
@@ -404,8 +1259,8 @@ namespace Game.Newt.Testers
 		{
 			InitializeComponent();
 
-			//_itemOptions.ThrusterStrengthRatio = 100000d;
-			_itemOptions.ThrusterStrengthRatio = 500d;
+			_itemOptions.ThrusterStrengthRatio = 100000d;
+			//_itemOptions.ThrusterStrengthRatio = 500d;
 			_itemOptions.FuelToThrustRatio /= _itemOptions.ThrusterStrengthRatio;
 
 			_isInitialized = true;
@@ -986,7 +1841,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1010,7 +1865,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1034,7 +1889,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1062,7 +1917,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1086,7 +1941,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(energyTank.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1110,7 +1965,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1134,7 +1989,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1160,7 +2015,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1192,7 +2047,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(solar.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1223,7 +2078,7 @@ namespace Game.Newt.Testers
 
 				if (chkStandaloneShowMassBreakdown.IsChecked.Value)
 				{
-					double cellSize = Math.Max(Math.Max(dna.Scale.X, dna.Scale.Y), dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+					double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
 					DrawMassBreakdown(thruster.GetMassBreakdown(cellSize), cellSize);
 				}
 			}
@@ -1255,6 +2110,111 @@ namespace Game.Newt.Testers
 				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
+		private void btnSimplestFlyer_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, .5), Orientation = Quaternion.Identity, Scale = new Vector3D(2, 2, .9) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 0, -.5), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+				_thrustController.MassChanged();
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShip3Thrust_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1.3, 0, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-0.65, 1.125833025, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-0.65, -1.125833025, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+				_thrustController.MassChanged();
+
+				//TODO: May want to make a checkbox
+				_thrustController.DrawDebugVisuals();
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShip3ThrustRand_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterType = ThrusterType.One });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+				_thrustController.MassChanged();
+
+				//TODO: May want to make a checkbox
+				_thrustController.DrawDebugVisuals();
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
 		private void btnShipSimpleFlyer_Click(object sender, RoutedEventArgs e)
 		{
 			try
@@ -1264,26 +2224,34 @@ namespace Game.Newt.Testers
 
 				List<PartDNA> parts = new List<PartDNA>();
 				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
+
 				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
 				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
 				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
 				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
-				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.One });
+
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 90d), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two_Two_One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 270d), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two_Two_One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 180d), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two_Two_One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 0d), Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two_Two_One });
 
 				ShipDNA shipDNA = ShipDNA.Create(parts);
 
 				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
 				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-				_thrustController = new ThrustController(_ship, _viewport);
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
 
 				//double mass = _ship.PhysicsBody.Mass;
 
 				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
 				_ship.RecalculateMass();
+				_thrustController.MassChanged();
 
 				//mass = _ship.PhysicsBody.Mass;
 
@@ -1315,12 +2283,88 @@ namespace Game.Newt.Testers
 				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
 				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-				_thrustController = new ThrustController(_ship, _viewport);
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
 
 				//double mass = _ship.PhysicsBody.Mass;
 
 				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
 				_ship.RecalculateMass();
+				_thrustController.MassChanged();
+
+				//mass = _ship.PhysicsBody.Mass;
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShipChallenge1_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1.48216852903668, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1.65021551755816, 1.65021551755816, 1.65021551755816), ThrusterType = ThrusterType.Two });
+				//parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60730396412872, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 270), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterType = ThrusterType.Two_Two_One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1.48216852903668, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1.65021551755816, 1.65021551755816, 1.65021551755816), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60730396412872, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 270), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterType = ThrusterType.Two });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+
+				//double mass = _ship.PhysicsBody.Mass;
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+				_thrustController.MassChanged();
+
+				//mass = _ship.PhysicsBody.Mass;
+
+				_map.AddItem(_ship);
+
+				grdViewPort.Focus();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnShipChallenge2_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				EnsureWorldStarted();
+				ClearCurrent();
+
+				List<PartDNA> parts = new List<PartDNA>();
+				parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0.0153375982352619), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1.48216852903668, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1.65021551755816, 1.65021551755816, 1.65021551755816), ThrusterType = ThrusterType.Two });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60730396412872, 1.18811621237628, -0.0147591913688635), Orientation = new Quaternion(0, 0, -0.846976393198269, 0.531630500784946), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterType = ThrusterType.Two_Two_One });
+				parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60721450068017, -1.18828382189838, -0.0147591913688617), Orientation = new Quaternion(0, 0, -0.496864090131338, 0.867828367788216), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterType = ThrusterType.Two_Two_One });
+
+				ShipDNA shipDNA = ShipDNA.Create(parts);
+
+				_ship = new Ship(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation);
+				_ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+
+				_thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+
+				//double mass = _ship.PhysicsBody.Mass;
+
+				_ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+				_ship.RecalculateMass();
+				_thrustController.MassChanged();
 
 				//mass = _ship.PhysicsBody.Mass;
 

@@ -185,6 +185,10 @@
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+      <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
+      <Name>HelperClasses</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HelperClasses\HelperClasses.csproj">
       <Project>{0F6B42D4-C2C8-499A-897D-76D4CE6D0DB6}</Project>
       <Name>HelperClasses %28Newt\HelperClasses%29</Name>

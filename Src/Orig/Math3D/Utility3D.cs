@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
+using Game.HelperClasses;
+
 namespace Game.Orig.Math3D
 {
 	#region Class: DoubleVector
@@ -129,6 +131,8 @@ namespace Game.Orig.Math3D
 	/// set of properties (vectors or uniquevalues[pointer]), but I figure it's easier to code against.  Besides, these
 	/// triangles should only be used for physics, not graphics, so the total number of triangles should be fewer.
 	/// (use DirectX's, or OpenGL's, or XAML3D's, or whoever's primitives for graphics)
+	/// 
+	/// NOTE: See Game.Newt.HelperClasses.Triangle for a better implementation
 	/// </remarks>
 	public class Triangle
 	{
@@ -357,14 +361,9 @@ namespace Game.Orig.Math3D
 		/// </summary>
 		public static MyVector GetRandomVector(MyVector boundryLower, MyVector boundryUpper)
 		{
-			return GetRandomVector(new Random(), boundryLower, boundryUpper);
-		}
-		/// <summary>
-		/// Get a random vector between boundry lower and boundry upper
-		/// </summary>
-		public static MyVector GetRandomVector(Random rand, MyVector boundryLower, MyVector boundryUpper)
-		{
 			MyVector retVal = new MyVector();
+
+			Random rand = StaticRandom.GetRandomForThread();
 
 			retVal.X = boundryLower.X + (rand.NextDouble() * (boundryUpper.X - boundryLower.X));
 			retVal.Y = boundryLower.Y + (rand.NextDouble() * (boundryUpper.Y - boundryLower.Y));
@@ -377,39 +376,26 @@ namespace Game.Orig.Math3D
 		/// </summary>
 		public static MyVector GetRandomVector(double maxValue)
 		{
-			return GetRandomVector(new Random(), maxValue);
-		}
-		/// <summary>
-		/// Get a random vector between maxValue*-1 and maxValue
-		/// </summary>
-		public static MyVector GetRandomVector(Random rand, double maxValue)
-		{
 			MyVector retVal = new MyVector();
 
-			retVal.X = GetNearZeroValue(rand, maxValue);
-			retVal.Y = GetNearZeroValue(rand, maxValue);
-			retVal.Z = GetNearZeroValue(rand, maxValue);
+			retVal.X = GetNearZeroValue(maxValue);
+			retVal.Y = GetNearZeroValue(maxValue);
+			retVal.Z = GetNearZeroValue(maxValue);
 
 			return retVal;
 		}
+
+		//NOTE: These two methods are wrong, see the proper implementation in Game.Newt.HelperClasses.Math3D
 		/// <summary>
 		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
 		/// rather than cube)
 		/// </summary>
 		public static MyVector GetRandomVectorSpherical(double maxRadius)
 		{
-			return GetRandomVectorSpherical(new Random(), maxRadius);
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube)
-		/// </summary>
-		public static MyVector GetRandomVectorSpherical(Random rand, double maxRadius)
-		{
-			MyVector retVal = new MyVector(GetNearZeroValue(rand, maxRadius), 0, 0);
+			MyVector retVal = new MyVector(GetNearZeroValue(maxRadius), 0, 0);
 
-			MyVector rotateAxis = GetRandomVector(rand, 5d);
-			double radians = GetNearZeroValue(rand, 2d * Math.PI);
+			MyVector rotateAxis = GetRandomVector(5d);
+			double radians = GetNearZeroValue(2d * Math.PI);
 
 			retVal.RotateAroundAxis(rotateAxis, radians);
 
@@ -417,18 +403,10 @@ namespace Game.Orig.Math3D
 		}
 		public static MyVector GetRandomVectorSpherical2D(double maxRadius)
 		{
-			return GetRandomVectorSpherical2D(new Random(), maxRadius);
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube).  Z will always be zero.
-		/// </summary>
-		public static MyVector GetRandomVectorSpherical2D(Random rand, double maxRadius)
-		{
-			MyVector retVal = new MyVector(GetNearZeroValue(rand, maxRadius), 0, 0);
+			MyVector retVal = new MyVector(GetNearZeroValue(maxRadius), 0, 0);
 
 			MyVector rotateAxis = new MyVector(0, 0, 1);
-			double radians = GetNearZeroValue(rand, 2d * Math.PI);
+			double radians = GetNearZeroValue(2d * Math.PI);
 
 			retVal.RotateAroundAxis(rotateAxis, radians);
 
@@ -438,8 +416,10 @@ namespace Game.Orig.Math3D
 		/// <summary>
 		/// Gets a value between -maxValue and maxValue
 		/// </summary>
-		public static double GetNearZeroValue(Random rand, double maxValue)
+		public static double GetNearZeroValue(double maxValue)
 		{
+			Random rand = StaticRandom.GetRandomForThread();
+
 			double retVal = rand.NextDouble() * maxValue;
 
 			if (rand.Next(0, 2) == 1)

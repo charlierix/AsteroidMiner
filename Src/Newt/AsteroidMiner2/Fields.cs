@@ -5,9 +5,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-
-using Game.Newt.HelperClasses;
 using System.Windows.Threading;
+
+using Game.HelperClasses;
+using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2
 {

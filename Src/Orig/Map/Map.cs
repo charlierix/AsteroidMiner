@@ -143,7 +143,7 @@ namespace Game.Orig.Map
 		/// <summary>
 		/// Every time I create a token, I bump this by 1
 		/// </summary>
-		private long _tokenGenerator = 0;		//	long.MinValue
+		//private long _tokenGenerator = 0;		//	long.MinValue
 
 		/// <summary>
 		/// These are all the radar blips, sorted on token
@@ -568,11 +568,11 @@ namespace Game.Orig.Map
 		/// <remarks>
 		/// Tokens aren't persisted across runs.  Use the ObjectID for that
 		/// </remarks>
-		public long GetNextToken()
-		{
-			_tokenGenerator++;
-			return _tokenGenerator;
-		}
+		//public long GetNextToken()
+		//{
+		//    _tokenGenerator++;
+		//    return _tokenGenerator;
+		//}
 
 		#endregion
 

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
+using Game.HelperClasses;
 using Game.Newt.HelperClasses;
 using Game.Newt.NewtonDynamics_153.Api;
 

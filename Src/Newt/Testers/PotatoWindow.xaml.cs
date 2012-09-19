@@ -80,7 +80,7 @@ namespace Game.Newt.Testers
 				//	Compare the normals
 				double dot = Vector3D.DotProduct(this.NormalUnit, triangle.NormalUnit);
 
-				double dotCloseness =Math.Abs(1d - dot);
+				double dotCloseness = Math.Abs(1d - dot);
 
 				if (dotCloseness < .01)
 				{
@@ -5420,7 +5420,7 @@ namespace Game.Newt.Testers
 
 			#region Calculate error distance
 
-			double smallestAxis = Math.Min(Math.Min(maxValues[0] - minValues[0], maxValues[1] - minValues[1]), maxValues[2] - minValues[2]);
+			double smallestAxis = Math3D.Min(maxValues[0] - minValues[0], maxValues[1] - minValues[1], maxValues[2] - minValues[2]);
 			coplanarDistance = smallestAxis * .001;
 
 			#endregion

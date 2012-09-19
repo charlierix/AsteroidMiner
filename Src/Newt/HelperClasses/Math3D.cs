@@ -898,6 +898,107 @@ namespace Game.Newt.HelperClasses
 			translationForce = force;
 		}
 
+		//	I got tired of nesting min/max statements
+		public static int Min(int v1, int v2, int v3)
+		{
+			return Math.Min(Math.Min(v1, v2), v3);
+		}
+		public static int Min(int v1, int v2, int v3, int v4)
+		{
+			return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
+		}
+		public static int Min(int v1, int v2, int v3, int v4, int v5)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
+		}
+		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
+		}
+		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
+		}
+		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+		}
+
+		public static double Min(double v1, double v2, double v3)
+		{
+			return Math.Min(Math.Min(v1, v2), v3);
+		}
+		public static double Min(double v1, double v2, double v3, double v4)
+		{
+			return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
+		}
+		public static double Min(double v1, double v2, double v3, double v4, double v5)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
+		}
+		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
+		}
+		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
+		}
+		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
+		{
+			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+		}
+
+		public static int Max(int v1, int v2, int v3)
+		{
+			return Math.Max(Math.Max(v1, v2), v3);
+		}
+		public static int Max(int v1, int v2, int v3, int v4)
+		{
+			return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
+		}
+		public static int Max(int v1, int v2, int v3, int v4, int v5)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
+		}
+		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
+		}
+		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
+		}
+		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
+		}
+
+		public static double Max(double v1, double v2, double v3)
+		{
+			return Math.Max(Math.Max(v1, v2), v3);
+		}
+		public static double Max(double v1, double v2, double v3, double v4)
+		{
+			return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
+		}
+		public static double Max(double v1, double v2, double v3, double v4, double v5)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
+		}
+		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
+		}
+		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
+		}
+		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
+		{
+			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
+		}
+
 		#endregion
 
 		#region Plane/Line Intersections

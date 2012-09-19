@@ -63,7 +63,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 			_boundryLower = boundryLower;
 			_boundryUpper = boundryUpper;
 
-            _cursorBlip = new BallBlip(new Ball(new MyVector(), new DoubleVector(1, 0, 0, 0, 1, 0), RADIUS, UtilityHelper.GetMassForRadius(RADIUS, 1d), 1, 0, 0, _boundryLower, _boundryUpper), CollisionStyle.Stationary, RadarBlipQual.BallUserDefined05, _map.GetNextToken());
+			_cursorBlip = new BallBlip(new Ball(new MyVector(), new DoubleVector(1, 0, 0, 0, 1, 0), RADIUS, UtilityHelper.GetMassForRadius(RADIUS, 1d), 1, 0, 0, _boundryLower, _boundryUpper), CollisionStyle.Stationary, RadarBlipQual.BallUserDefined05, TokenGenerator.Instance.NextToken());
 
 			_picturebox.MouseDown += new MouseEventHandler(picturebox_MouseDown);
 			_picturebox.MouseUp += new MouseEventHandler(picturebox_MouseUp);

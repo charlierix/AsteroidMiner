@@ -369,7 +369,7 @@ namespace Game.Newt.AsteroidMiner2.View
 
 			_gravityField.GravitationalConstant = gravitationalConstant;
 
-			_gravityField.Swirl = new GravityField.SwirlField(swirlStrength, new Vector3D(0,0,1), 10d);
+			_gravityField.Swirl = new GravityField.SwirlField(swirlStrength, new Vector3D(0, 0, 1), 10d);
 			_gravityField.Boundry = new GravityField.BoundryField(.85d, 5000d, 2d, _boundryMin, _boundryMax);
 		}
 
@@ -378,7 +378,7 @@ namespace Game.Newt.AsteroidMiner2.View
 			const double DENSITY = 1000d / (800d * 800d);
 			const double STARSIZE = 1d / 1500d;
 
-			double innerRadius = Math.Max(Math.Max(Math.Abs(_boundryMax.X), Math.Abs(_boundryMax.Y)), Math.Abs(_boundryMax.Z));
+			double innerRadius = Math3D.Max(Math.Abs(_boundryMax.X), Math.Abs(_boundryMax.Y), Math.Abs(_boundryMax.Z));
 			innerRadius *= 2;
 			double outerRadius = innerRadius * 2d;
 

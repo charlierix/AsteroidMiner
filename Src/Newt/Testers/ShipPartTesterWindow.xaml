@@ -70,8 +70,13 @@
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic"/>
+                                <Button Click="btnSimplestFlyer_Click" Name="btnSimplestFlyer" Content="Simplest Flyer"/>
+                                <Button Click="btnShip3Thrust_Click" Name="btnShip3Thrust" Content="3 thrust flyer"/>
+                                <Button Click="btnShip3ThrustRand_Click" Name="btnShip3ThrustRand" Content="3 thrust flyer (rand)"/>
                                 <Button Click="btnShipSimpleFlyer_Click" Name="btnShipSimpleFlyer" Content="Simple Flyer"/>
                                 <Button Click="btnShipWackyFlyer_Click" Name="btnShipWackyFlyer" Content="Wacky Flyer"/>
+                                <Button Click="btnShipChallenge1_Click" Name="btnShipChallenge1" Content="Challenge Flyer 1"/>
+                                <Button Click="btnShipChallenge2_Click" Name="btnShipChallenge2" Content="Challenge Flyer 2"/>
                             </StackPanel>
                         </Border>
                     </Expander>

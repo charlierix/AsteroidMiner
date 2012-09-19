@@ -174,11 +174,11 @@ namespace Game.Orig.TestersGDI
 			double mass = GetMass(radius);
 			double elasticity = GetElasticity();
 
-			Ball ball = new Ball(Utility3D.GetRandomVector(_rand, _boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, mass, elasticity, 1, 1, _boundryLower, _boundryUpper);
-			ball.Velocity.Add(Utility3D.GetRandomVector(_rand, MAXVELOCITY));
+			Ball ball = new Ball(Utility3D.GetRandomVector(_boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, mass, elasticity, 1, 1, _boundryLower, _boundryUpper);
+			ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
 			ball.Velocity.Z = 0;
 
-			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, _map.GetNextToken());
+			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.Instance.NextToken());
 
 			_map.Add(blip);
 		}
@@ -188,11 +188,11 @@ namespace Game.Orig.TestersGDI
 			double mass = GetMass(radius);
 			double elasticity = GetElasticity();
 
-			SolidBall ball = new SolidBall(Utility3D.GetRandomVector(_rand, _boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, mass, elasticity, 1, 1, _boundryLower, _boundryUpper);
-			ball.Velocity.Add(Utility3D.GetRandomVector(_rand, MAXVELOCITY));
+			SolidBall ball = new SolidBall(Utility3D.GetRandomVector(_boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, mass, elasticity, 1, 1, _boundryLower, _boundryUpper);
+			ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
 			ball.Velocity.Z = 0;
 
-			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined01, _map.GetNextToken());
+			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined01, TokenGenerator.Instance.NextToken());
 
 			_map.Add(blip);
 		}
@@ -204,7 +204,7 @@ namespace Game.Orig.TestersGDI
 			const double MAXPOINTMASSRADIUS = MAXRADIUSMASS / MAXPOINTMASSES;
 
 			//	Make the chassis
-			RigidBody ball = new RigidBody(Utility3D.GetRandomVector(_rand, _boundryLower, _boundryUpper), new DoubleVector(0, -1, 0, -1, 0, 0), .1d, GetElasticity(), 1, 1, _boundryLower, _boundryUpper);
+			RigidBody ball = new RigidBody(Utility3D.GetRandomVector(_boundryLower, _boundryUpper), new DoubleVector(0, -1, 0, -1, 0, 0), .1d, GetElasticity(), 1, 1, _boundryLower, _boundryUpper);
 
 			int numPointMasses = _rand.Next(MINPOINTMASSES, MAXPOINTMASSES + 1);
 			//double maxOffset = MAXRADIUSMASS - ((MINPOINTMASSRADIUS + MAXPOINTMASSRADIUS) / 2d);		//	this could result in bodies slightly larger than the other two types, but it should be close
@@ -215,7 +215,7 @@ namespace Game.Orig.TestersGDI
 			//	Add point masses
 			for (int massCntr = 1; massCntr <= numPointMasses; massCntr++)
 			{
-                MyVector pointMassPos = Utility3D.GetRandomVectorSpherical(_rand, maxOffset);
+                MyVector pointMassPos = Utility3D.GetRandomVectorSpherical(maxOffset);
 				pointMassPos.Z = 0;		//	I do this here for the radius calculation below
 				double pointMassMass = MINPOINTMASSRADIUS + (_rand.NextDouble() * (MAXPOINTMASSRADIUS - MINPOINTMASSRADIUS));
 
@@ -234,10 +234,10 @@ namespace Game.Orig.TestersGDI
 			ball.Radius = ballRadius * 1.1d;		//	make it slightly bigger
 
 			//	Set the velocity
-			ball.Velocity.Add(Utility3D.GetRandomVector(_rand, MAXVELOCITY));
+			ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
 			ball.Velocity.Z = 0;
 
-			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined02, _map.GetNextToken());
+			BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined02, TokenGenerator.Instance.NextToken());
 
 			_map.Add(blip);
 		}
@@ -254,7 +254,7 @@ namespace Game.Orig.TestersGDI
 
 					//	Set up the ship
 					double radius = MINRADIUSMASS + (_rand.NextDouble() * (MAXRADIUSMASS - MINRADIUSMASS));
-					SolidBall ship = new SolidBall(Utility3D.GetRandomVector(_rand, _boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, GetMass(radius), GetElasticity(), 1, 1, _boundryLower, _boundryUpper);
+					SolidBall ship = new SolidBall(Utility3D.GetRandomVector(_boundryLower, _boundryUpper), new DoubleVector(0, 1, 0, 1, 0, 0), radius, GetMass(radius), GetElasticity(), 1, 1, _boundryLower, _boundryUpper);
 
 					//	Set up the thrusters
                     MyVector thrusterSeed = new MyVector(0, ship.Radius, 0);
@@ -276,7 +276,7 @@ namespace Game.Orig.TestersGDI
 					_shipThrusterOffset_TopLeft.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(THRUSTERANGLE * -1));
 
 					//	Add to the map
-					_ship = new BallBlip(ship, CollisionStyle.Standard, RadarBlipQual.BallUserDefined03, _map.GetNextToken());
+					_ship = new BallBlip(ship, CollisionStyle.Standard, RadarBlipQual.BallUserDefined03, TokenGenerator.Instance.NextToken());
 					_map.Add(_ship);
 
 					#endregion
@@ -386,7 +386,7 @@ namespace Game.Orig.TestersGDI
 		{
 			foreach (BallBlip blip in _map.GetAllBlips())
 			{
-				blip.Ball.Velocity.StoreNewValues(Utility3D.GetRandomVector(_rand, MAXVELOCITY));
+				blip.Ball.Velocity.StoreNewValues(Utility3D.GetRandomVector(MAXVELOCITY));
 				blip.Ball.Velocity.Z = 0;
 			}
 		}

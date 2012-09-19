@@ -129,7 +129,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             _boundryLower = boundryLower;
             _boundryUpper = boundryUpper;
 
-			_blipToken = map.GetNextToken();
+			_blipToken = TokenGenerator.Instance.NextToken();
 
             _picturebox.KeyDown += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyDown);
             _picturebox.KeyUp += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyUp);
@@ -803,7 +803,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
             else
             {
-                position = Utility3D.GetRandomVector(_rand, _boundryLower, _boundryUpper);
+                position = Utility3D.GetRandomVector(_boundryLower, _boundryUpper);
             }
 
 			_tractorBeams.Clear();

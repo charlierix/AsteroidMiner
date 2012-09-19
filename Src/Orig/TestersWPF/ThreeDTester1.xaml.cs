@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
+using Game.HelperClasses;
 using Game.Orig.Math3D;
 using Game.Orig.Map;
 using Game.Orig.HelperClassesWPF;
@@ -311,12 +312,12 @@ namespace Game.Orig.TestersWPF
         private void AddMultiBall(double radius, double mass)
         {
             // Physical Ball
-            MyVector pos = Utility3D.GetRandomVector(_rand, BOUNDRY);
+            MyVector pos = Utility3D.GetRandomVector(BOUNDRY);
             DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
 
             Ball ball = new Ball(pos, dirFacing, radius, mass, ELASTICITY, KINETICFRICTION, STATICFRICTION, _boundryLower, _boundryUpper);
 
-            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, _map.GetNextToken());
+            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.Instance.NextToken());
             _map.Add(blip);
 
             // WPF Rendering
@@ -418,7 +419,7 @@ namespace Game.Orig.TestersWPF
         {
             foreach (BallBlip blip in _map.GetAllBlips())
             {
-                blip.Ball.Velocity.StoreNewValues(Utility3D.GetRandomVectorSpherical(_rand, maxVelocity));
+                blip.Ball.Velocity.StoreNewValues(Utility3D.GetRandomVectorSpherical(maxVelocity));
             }
         }
 

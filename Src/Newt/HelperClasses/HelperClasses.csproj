@@ -132,8 +132,6 @@
     </Compile>
     <Compile Include="ScreenSpaceLines3DHelper.cs" />
     <Compile Include="SoundPool.cs" />
-    <Compile Include="StaticRandom.cs" />
-    <Compile Include="TokenGenerator.cs" />
     <Compile Include="TrackBall.cs" />
     <Compile Include="TrackballGrabber.cs" />
     <Compile Include="Transform3DHelper.cs" />

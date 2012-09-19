@@ -17,6 +17,15 @@ namespace Game.Newt.HelperClasses
     /// You could do that just by having multiple instances of MediaPlayer yourself, but if 10 different consumers want
     /// to play the same sound (and it's a monotenous sound, like a thruster or buzz), then you'd only need one instance
     /// playing that sound, until all 10 have said to stop
+	/// 
+	/// NOTE: This class is very much a work in progress.
+	/// 
+	/// I tried to use this to make a thruster sound, and used a program to combine/distort various generated noises (white,
+	/// pink, brown, etc).  Then I made the final sound file roughly quarter second.  When a continuous thruster sound was
+	/// wanted, the sound clip was repeated over and over, but there was a slight delay between playing.
+	/// 
+	/// Instead, use a longer sound file (20 seconds or so), then keep pausing/resuming when they want short bursts, instead
+	/// of stopping, and repositioning to 0.
     /// </remarks>
     public class SoundPool
     {
@@ -27,7 +36,6 @@ namespace Game.Newt.HelperClasses
 
         #region Declaration Section
         #endregion
-
 
         #region Public Properties
 
@@ -61,7 +69,6 @@ namespace Game.Newt.HelperClasses
         }
 
         #endregion
-
 
         public void Test(string waveFileName)
         {

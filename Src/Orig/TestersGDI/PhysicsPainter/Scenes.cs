@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
+using Game.HelperClasses;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI.Controls;
 using Game.Orig.Map;
@@ -243,7 +244,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
 		public static RadarBlip CloneBlip(RadarBlip blip, SimpleMap map)
 		{
-			BallBlip retVal = new BallBlip((Ball)blip.Sphere.Clone(), blip.CollisionStyle, blip.Qual, map.GetNextToken());
+			BallBlip retVal = new BallBlip((Ball)blip.Sphere.Clone(), blip.CollisionStyle, blip.Qual, TokenGenerator.Instance.NextToken());
 			retVal.Ball.Velocity.StoreNewValues(((Ball)blip.Sphere).Velocity);
 
 			if (blip.Sphere is TorqueBall)

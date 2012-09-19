@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
+using Game.HelperClasses;
 using Game.Newt.AsteroidMiner2.ShipEditor;
 using Game.Newt.HelperClasses;
 using Game.Newt.NewtonDynamics;
-using System.Text.RegularExpressions;
 
 namespace Game.Newt.AsteroidMiner2
 {

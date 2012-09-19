@@ -71,6 +71,7 @@ namespace Game.Newt.AsteroidMiner2
 			if (_snapshotTimer != null)
 			{
 				_snapshotTimer.IsEnabled = false;
+				_snapshotTimer = null;
 			}
 
 			//	Kill em all
@@ -487,6 +488,11 @@ namespace Game.Newt.AsteroidMiner2
 
 		private void SnapshotTimer_Tick(object sender, EventArgs e)
 		{
+			if (_snapshotTimer == null)
+			{
+				return;		//	I had a rare case where this tick fired after dispose
+			}
+
 			_snapshotTimer.IsEnabled = false;
 
 			BuildSnapshot();

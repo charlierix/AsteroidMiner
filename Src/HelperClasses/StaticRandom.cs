@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Security.Cryptography;
 
-namespace Game.Newt.HelperClasses
+namespace Game.HelperClasses
 {
 	/// <summary>
 	/// This is a wrapper to unique random classes per thread, each one generated with a random seed

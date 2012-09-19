@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media.Media3D;
 
+using Game.HelperClasses;
+
 namespace Game.Newt.HelperClasses
 {
 	#region Class: Triangle
@@ -133,7 +135,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normal == null)
 				{
-					CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normal.Value;
@@ -149,7 +157,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normalUnit == null)
 				{
-					CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normalUnit.Value;
@@ -166,7 +180,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normalLength == null)
 				{
-					CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normalLength.Value;
@@ -203,7 +223,7 @@ namespace Game.Newt.HelperClasses
 
 		public Point3D GetCenterPoint()
 		{
-			return GetCenterPoint(this);
+			return GetCenterPoint(this.Point0, this.Point1, this.Point2);
 		}
 
 		#endregion
@@ -252,26 +272,26 @@ namespace Game.Newt.HelperClasses
 		#endregion
 		#region Internal Methods
 
-		internal static void CalculateNormal(out Vector3D? normal, out double? normalLength, out Vector3D? normalUnit, ITriangle triangle)
+		internal static void CalculateNormal(out Vector3D normal, out double normalLength, out Vector3D normalUnit, Point3D point0, Point3D point1, Point3D point2)
 		{
-			Vector3D dir1 = triangle.Point0 - triangle.Point1;
-			Vector3D dir2 = triangle.Point2 - triangle.Point1;
+			Vector3D dir1 = point0 - point1;
+			Vector3D dir2 = point2 - point1;
 
 			Vector3D triangleNormal = Vector3D.CrossProduct(dir2, dir1);
 
 			normal = triangleNormal;
 			normalLength = triangleNormal.Length;
-			normalUnit = triangleNormal / normalLength.Value;
+			normalUnit = triangleNormal / normalLength;
 		}
 
-		internal static Point3D GetCenterPoint(ITriangle triangle)
+		internal static Point3D GetCenterPoint(Point3D point0, Point3D point1, Point3D point2)
 		{
 			//return ((triangle.Point0.ToVector() + triangle.Point1.ToVector() + triangle.Point2.ToVector()) / 3d).ToPoint();
 
 			//	Doing the math with doubles to avoid casting to vector
-			double x = (triangle.Point0.X + triangle.Point1.X + triangle.Point2.X) / 3d;
-			double y = (triangle.Point0.Y + triangle.Point1.Y + triangle.Point2.Y) / 3d;
-			double z = (triangle.Point0.Z + triangle.Point1.Z + triangle.Point2.Z) / 3d;
+			double x = (point0.X + point1.X + point2.X) / 3d;
+			double y = (point0.Y + point1.Y + point2.Y) / 3d;
+			double z = (point0.Z + point1.Z + point2.Z) / 3d;
 
 			return new Point3D(x, y, z);
 		}
@@ -379,7 +399,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normal == null)
 				{
-					Triangle.CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normal.Value;
@@ -395,7 +421,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normalUnit == null)
 				{
-					Triangle.CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normalUnit.Value;
@@ -412,7 +444,13 @@ namespace Game.Newt.HelperClasses
 			{
 				if (_normalLength == null)
 				{
-					Triangle.CalculateNormal(out _normal, out _normalLength, out _normalUnit, this);
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					_normal = normal;
+					_normalLength = length;
+					_normalUnit = normalUnit;
 				}
 
 				return _normalLength.Value;
@@ -449,7 +487,7 @@ namespace Game.Newt.HelperClasses
 
 		public Point3D GetCenterPoint()
 		{
-			return Triangle.GetCenterPoint(this);
+			return Triangle.GetCenterPoint(this.Point0, this.Point1, this.Point2);
 		}
 
 		#endregion
@@ -1148,6 +1186,595 @@ namespace Game.Newt.HelperClasses
 
 			//	No neighbor found
 			return null;
+		}
+
+		#endregion
+	}
+
+	#endregion
+
+	#region Class: TriangleThreadsafe
+
+	/// <summary>
+	/// This is a copy of Triangle, but is readonly
+	/// </summary>
+	public class TriangleThreadsafe : ITriangle
+	{
+		#region Constructor
+
+		public TriangleThreadsafe(Point3D point0, Point3D point1, Point3D point2, bool calculateNormalUpFront)
+		{
+			_point0 = point0;
+			_point1 = point1;
+			_point2 = point2;
+
+			if (calculateNormalUpFront)
+			{
+				Vector3D normal, normalUnit;
+				double length;
+				Triangle.CalculateNormal(out normal, out length, out normalUnit, point0, point1, point2);
+
+				_normal = normal;
+				_normalLength = length;
+				_normalUnit = normalUnit;
+
+				_planeDistance = Math3D.GetPlaneDistance(normalUnit, point0);
+			}
+			else
+			{
+				_normal = null;
+				_normalLength = null;
+				_normalUnit = null;
+				_planeDistance = null;
+			}
+
+			_token = TokenGenerator.Instance.NextToken();
+		}
+
+		#endregion
+
+		#region ITriangle Members
+
+		private readonly Point3D _point0;
+		public Point3D Point0
+		{
+			get
+			{
+				return _point0;
+			}
+		}
+
+		private readonly Point3D _point1;
+		public Point3D Point1
+		{
+			get
+			{
+				return _point1;
+			}
+		}
+
+		private readonly Point3D _point2;
+		public Point3D Point2
+		{
+			get
+			{
+				return _point2;
+			}
+		}
+
+		public Point3D this[int index]
+		{
+			get
+			{
+				switch (index)
+				{
+					case 0:
+						return this.Point0;
+
+					case 1:
+						return this.Point1;
+
+					case 2:
+						return this.Point2;
+
+					default:
+						throw new ArgumentOutOfRangeException("index", "index can only be 0, 1, 2: " + index.ToString());
+				}
+			}
+		}
+
+		private readonly Vector3D? _normal;
+		/// <summary>
+		/// This returns the triangle's normal.  Its length is the area of the triangle
+		/// </summary>
+		public Vector3D Normal
+		{
+			get
+			{
+				if (_normal == null)
+				{
+					return Vector3D.CrossProduct(_point0 - _point1, _point2 - _point1);
+				}
+				else
+				{
+					return _normal.Value;
+				}
+			}
+		}
+		private readonly Vector3D? _normalUnit;
+		/// <summary>
+		/// This returns the triangle's normal.  Its length is one
+		/// </summary>
+		public Vector3D NormalUnit
+		{
+			get
+			{
+				if (_normalUnit == null)
+				{
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, _point0, _point1, _point2);
+
+					return normalUnit;
+				}
+				else
+				{
+					return _normalUnit.Value;
+				}
+			}
+		}
+		private readonly double? _normalLength;
+		/// <summary>
+		/// This returns the length of the normal (the area of the triangle)
+		/// NOTE:  Call this if you just want to know the length of the normal, it's cheaper than calling this.Normal.Length, since it's already been calculated
+		/// </summary>
+		public double NormalLength
+		{
+			get
+			{
+				if (_normalLength == null)
+				{
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, _point0, _point1, _point2);
+
+					return length;
+				}
+				else
+				{
+					return _normalLength.Value;
+				}
+			}
+		}
+
+		private readonly double? _planeDistance;
+		public double PlaneDistance
+		{
+			get
+			{
+				if (_planeDistance == null)
+				{
+					return Math3D.GetPlaneDistance(this.NormalUnit, _point0);
+				}
+				else
+				{
+					return _planeDistance.Value;
+				}
+			}
+		}
+
+		private readonly long _token;
+		public long Token
+		{
+			get
+			{
+				return _token;
+			}
+		}
+
+		public Point3D GetCenterPoint()
+		{
+			return Triangle.GetCenterPoint(_point0, _point1, _point2);
+		}
+
+		#endregion
+		#region IComparable<ITriangle> Members
+
+		/// <summary>
+		/// I wanted to be able to use triangles as keys in a sorted list
+		/// </summary>
+		public int CompareTo(ITriangle other)
+		{
+			if (other == null)
+			{
+				//	I'm greater than null
+				return 1;
+			}
+
+			if (this.Token < other.Token)
+			{
+				return -1;
+			}
+			else if (this.Token > other.Token)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		/// <summary>
+		/// This helps a lot when looking at lists of triangles in the quick watch
+		/// </summary>
+		public override string ToString()
+		{
+			return string.Format("({0}) ({1}) ({2})", _point0.ToString(2), _point1.ToString(2), _point2.ToString(2));
+		}
+
+		#endregion
+	}
+
+	#endregion
+	#region Class: TriangleIndexedThreadsafe
+
+	/// <summary>
+	/// This is a copy of TriangleIndexed, but is readonly
+	/// </summary>
+	public class TriangleIndexedThreadsafe : ITriangle
+	{
+		#region Constructor
+
+		public TriangleIndexedThreadsafe(int index0, int index1, int index2, Point3D[] allPoints, bool calculateNormalUpFront)
+		{
+			_index0 = index0;
+			_index1 = index1;
+			_index2 = index2;
+			_allPoints = allPoints;
+			_indexArray = new int[] { index0, index1, index2 };
+
+			if (calculateNormalUpFront)
+			{
+				Vector3D normal, normalUnit;
+				double length;
+				Triangle.CalculateNormal(out normal, out length, out normalUnit, allPoints[index0], allPoints[index1], allPoints[index2]);
+
+				_normal = normal;
+				_normalLength = length;
+				_normalUnit = normalUnit;
+
+				_planeDistance = Math3D.GetPlaneDistance(normalUnit, allPoints[index0]);
+			}
+			else
+			{
+				_normal = null;
+				_normalLength = null;
+				_normalUnit = null;
+				_planeDistance = null;
+			}
+
+			_token = TokenGenerator.Instance.NextToken();
+		}
+
+		#endregion
+
+		#region ITriangle Members
+
+		public Point3D Point0
+		{
+			get
+			{
+				return _allPoints[_index0];
+			}
+		}
+		public Point3D Point1
+		{
+			get
+			{
+				return _allPoints[_index1];
+			}
+		}
+		public Point3D Point2
+		{
+			get
+			{
+				return _allPoints[_index2];
+			}
+		}
+
+		public Point3D this[int index]
+		{
+			get
+			{
+				switch (index)
+				{
+					case 0:
+						return this.Point0;
+
+					case 1:
+						return this.Point1;
+
+					case 2:
+						return this.Point2;
+
+					default:
+						throw new ArgumentOutOfRangeException("index", "index can only be 0, 1, 2: " + index.ToString());
+				}
+			}
+		}
+
+		private Vector3D? _normal = null;
+		/// <summary>
+		/// This returns the triangle's normal.  Its length is the area of the triangle
+		/// </summary>
+		public Vector3D Normal
+		{
+			get
+			{
+				if (_normal == null)
+				{
+					return Vector3D.CrossProduct(this.Point0 - this.Point1, this.Point2 - this.Point1);
+				}
+				else
+				{
+					return _normal.Value;
+				}
+			}
+		}
+		private Vector3D? _normalUnit = null;
+		/// <summary>
+		/// This returns the triangle's normal.  Its length is one
+		/// </summary>
+		public Vector3D NormalUnit
+		{
+			get
+			{
+				if (_normalUnit == null)
+				{
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					return normalUnit;
+				}
+				else
+				{
+					return _normalUnit.Value;
+				}
+			}
+		}
+		private double? _normalLength = null;
+		/// <summary>
+		/// This returns the length of the normal (the area of the triangle)
+		/// </summary>
+		public double NormalLength
+		{
+			get
+			{
+				if (_normalLength == null)
+				{
+					Vector3D normal, normalUnit;
+					double length;
+					Triangle.CalculateNormal(out normal, out length, out normalUnit, this.Point0, this.Point1, this.Point2);
+
+					return length;
+				}
+				else
+				{
+					return _normalLength.Value;
+				}
+			}
+		}
+
+		private double? _planeDistance = null;
+		public double PlaneDistance
+		{
+			get
+			{
+				if (_planeDistance == null)
+				{
+					return Math3D.GetPlaneDistance(this.NormalUnit, this.Point0);
+				}
+				else
+				{
+					return _planeDistance.Value;
+				}
+			}
+		}
+
+		private readonly long _token;
+		public long Token
+		{
+			get
+			{
+				return _token;
+			}
+		}
+
+		public Point3D GetCenterPoint()
+		{
+			return Triangle.GetCenterPoint(this.Point0, this.Point1, this.Point2);
+		}
+
+		#endregion
+		#region IComparable<ITriangle> Members
+
+		/// <summary>
+		/// I wanted to be able to use triangles as keys in a sorted list
+		/// </summary>
+		public int CompareTo(ITriangle other)
+		{
+			if (other == null)
+			{
+				//	I'm greater than null
+				return 1;
+			}
+
+			if (this.Token < other.Token)
+			{
+				return -1;
+			}
+			else if (this.Token > other.Token)
+			{
+				return 1;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		#endregion
+
+		#region Public Properties
+
+		private readonly int _index0;
+		public int Index0
+		{
+			get
+			{
+				return _index0;
+			}
+		}
+
+		private readonly int _index1;
+		public int Index1
+		{
+			get
+			{
+				return _index1;
+			}
+		}
+
+		private readonly int _index2;
+		public int Index2
+		{
+			get
+			{
+				return _index2;
+			}
+		}
+
+		//NOTE: There is no readonly version of array, just don't change any values
+		private readonly Point3D[] _allPoints;
+		public Point3D[] AllPoints
+		{
+			get
+			{
+				return _allPoints;
+			}
+		}
+
+		private readonly int[] _indexArray;
+		/// <summary>
+		/// This returns an array (element 0 is this.Index0, etc)
+		/// NOTE:  This is readonly - any changes to this array won't be reflected by this class
+		/// </summary>
+		public int[] IndexArray
+		{
+			get
+			{
+				return _indexArray;
+			}
+		}
+
+		#endregion
+
+		#region Public Methods
+
+		public int GetIndex(int whichIndex)
+		{
+			switch (whichIndex)
+			{
+				case 0:
+					return this.Index0;
+
+				case 1:
+					return this.Index1;
+
+				case 2:
+					return this.Index2;
+
+				default:
+					throw new ArgumentOutOfRangeException("whichIndex", "whichIndex can only be 0, 1, 2: " + whichIndex.ToString());
+			}
+		}
+
+		public TriangleThreadsafe ToTriangle()
+		{
+			return new TriangleThreadsafe(this.Point0, this.Point1, this.Point2, _normal != null);
+		}
+
+		/// <summary>
+		/// This helps a lot when looking at lists of triangles in the quick watch
+		/// </summary>
+		public override string ToString()
+		{
+			return string.Format("{0} - {1} - {2}       |       ({3}) ({4}) ({5})",
+				_index0.ToString(), _index1.ToString(), _index2.ToString(),
+				this.Point0.ToString(2), this.Point1.ToString(2), this.Point2.ToString(2));
+		}
+
+		/// <summary>
+		/// This creates a clone of the triangles passed in, but the new list will only have points that are used
+		/// </summary>
+		public static TriangleIndexedThreadsafe[] Clone_CondensePoints(TriangleIndexedThreadsafe[] triangles, bool calculateNormalUpFront)
+		{
+			//	Analize the points
+			Point3D[] allUsedPoints;
+			SortedList<int, int> oldToNewIndex;
+			GetCondensedPointMap(out allUsedPoints, out oldToNewIndex, triangles);
+
+			//	Make new triangles that only have the used points
+			TriangleIndexedThreadsafe[] retVal = new TriangleIndexedThreadsafe[triangles.Length];
+
+			for (int cntr = 0; cntr < triangles.Length; cntr++)
+			{
+				retVal[cntr] = new TriangleIndexedThreadsafe(oldToNewIndex[triangles[cntr].Index0], oldToNewIndex[triangles[cntr].Index1], oldToNewIndex[triangles[cntr].Index2], allUsedPoints, calculateNormalUpFront);
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+
+		#endregion
+		#region Protected Methods
+
+		/// <summary>
+		/// This figures out which points in the list of triangles are used, and returns out to map from AllPoints to allUsedPoints
+		/// </summary>
+		/// <param name="allUsedPoints">These are only the points that are used</param>
+		/// <param name="oldToNewIndex">
+		/// Key = Index to a point from the list of triangles passed in.
+		/// Value = Corresponding index into allUsedPoints.
+		/// </param>
+		protected static void GetCondensedPointMap(out Point3D[] allUsedPoints, out SortedList<int, int> oldToNewIndex, TriangleIndexedThreadsafe[] triangles)
+		{
+			if (triangles == null || triangles.Length == 0)
+			{
+				allUsedPoints = new Point3D[0];
+				oldToNewIndex = new SortedList<int, int>();
+				return;
+			}
+
+			//	Get all the used indices
+			int[] allUsedIndices = triangles.SelectMany(o => o.IndexArray).Distinct().OrderBy(o => o).ToArray();
+
+			//	Get the points
+			Point3D[] allPoints = triangles[0].AllPoints;
+			allUsedPoints = allUsedIndices.Select(o => allPoints[o]).ToArray();
+
+			//	Build the map
+			oldToNewIndex = new SortedList<int, int>();
+			for (int cntr = 0; cntr < allUsedIndices.Length; cntr++)
+			{
+				oldToNewIndex.Add(allUsedIndices[cntr], cntr);
+			}
 		}
 
 		#endregion

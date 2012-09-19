@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Game.Newt.HelperClasses
+namespace Game.HelperClasses
 {
 	/// <summary>
 	/// This hands out a unique token each time its called:  TokenGenerator.Instance.NextToken()

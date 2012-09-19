@@ -125,6 +125,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			get;
 			private set;
 		}
+		//	These are unit vectors
 		public Vector3D[] ThrusterDirections
 		{
 			get;
@@ -244,7 +245,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 						CreateGeometry(true);
 					}
 
-					double maxScale = Math.Max(Math.Max(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE), scale.Z);
+					double maxScale = Math3D.Max(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE, scale.Z);
 					Point3D[] points = _pointsForHull.Select(o => new Point3D(o.X * maxScale, o.Y * maxScale, o.Z * maxScale)).ToArray();
 
 					return CollisionHull.CreateConvexHull(world, 0, points, 0.002d, transform.Value);
@@ -350,7 +351,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[1];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);		//	the visual's bottle points down, but the thrust is up
 
 					#endregion
@@ -375,8 +375,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[2];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 
@@ -414,9 +412,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[3];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
@@ -454,10 +449,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[4];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
@@ -508,11 +499,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[5];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
-					//this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
@@ -562,12 +548,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					//	Directions
 					this.ThrusterDirections = new Vector3D[6];
-					//this.ThrusterDirections[0] = new Vector3D(0, 0, -1);
-					//this.ThrusterDirections[1] = new Vector3D(0, 0, 1);
-					//this.ThrusterDirections[2] = new Vector3D(-1, 0, 0);
-					//this.ThrusterDirections[3] = new Vector3D(1, 0, 0);
-					//this.ThrusterDirections[4] = new Vector3D(0, -1, 0);
-					//this.ThrusterDirections[5] = new Vector3D(0, 1, 0);
 					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
 					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
@@ -736,8 +716,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		private double _mass = 0d;
 		private double _forceStrength = 0d;
 
-		private Vector3D[] _thrusterDirectionsUnit = null;		//	these are in ship coords
-
 		#endregion
 
 		#region Constructor
@@ -760,8 +738,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			_forceStrength = cylinderVolume * itemOptions.ThrusterStrengthRatio;
 
 			RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(dna.Orientation));
-			this.ThrusterDirectionsShip = _design.ThrusterDirections.Select(o => transform.Transform(o)).ToArray();
-			_thrusterDirectionsUnit = this.ThrusterDirectionsShip.Select(o => o.ToUnit()).ToArray();
+			this.ThrusterDirectionsShip = _design.ThrusterDirections.Select(o => transform.Transform(o)).ToArray();		//NOTE: It is expected that _design.ThrusterDirections are unit vectors
 		}
 
 		#endregion
@@ -814,6 +791,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 				return _design.ThrusterType;
 			}
 		}
+		//	These are unit vectors
 		public Vector3D[] ThrusterDirectionsModel
 		{
 			get
@@ -825,6 +803,19 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 		{
 			get;
 			private set;
+		}
+
+		/// <summary>
+		/// When drawing a thrust line visual, this is where to start it
+		/// </summary>
+		public double ThrustVisualStartRadius
+		{
+			get
+			{
+				double maxSize = Math3D.Max(_design.Scale.X, _design.Scale.Y, _design.Scale.Z);		//	they should all be the same
+
+				return maxSize * .5d;
+			}
 		}
 
 		public double ForceAtMax
@@ -876,7 +867,7 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			//	Exit Function
 			if (actualForce > 0d)
 			{
-				return _thrusterDirectionsUnit[index] * actualForce;
+				return this.ThrusterDirectionsShip[index] * actualForce;
 			}
 			else
 			{

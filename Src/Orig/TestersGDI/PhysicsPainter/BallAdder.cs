@@ -326,7 +326,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 			#endregion
 
 			//	Create a blip to contain this object
-			BallBlip blip = new BallBlip(newObject, _newBallProps.CollisionStyle, blipQual, _map.GetNextToken());
+			BallBlip blip = new BallBlip(newObject, _newBallProps.CollisionStyle, blipQual, TokenGenerator.Instance.NextToken());
 
 			//	If this is a torqueball, then it will get the angular velocity.  I have to wait until now, because
 			//	the size could change during a draw (you don't see it spin during the drag anyway, because I
@@ -461,7 +461,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 		private bool WillCollide(Ball ball)
 		{
 			//	Make a temp blip to be a wrapper for this
-			RadarBlip blip = new RadarBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined10, _map.GetNextToken());
+			RadarBlip blip = new RadarBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined10, TokenGenerator.Instance.NextToken());
 
 			foreach(RadarBlip existingBlip in _map.GetAllBlips())
 			{

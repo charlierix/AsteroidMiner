@@ -530,7 +530,7 @@ namespace Game.Orig.TestersGDI
             Random rand = new Random();
             foreach (Ball gravBall in _gravityBalls)
             {
-                MyVector newVelocity = Utility3D.GetRandomVector(rand, MAXSPEED);
+                MyVector newVelocity = Utility3D.GetRandomVector(MAXSPEED);
                 newVelocity.Z = 0;
                 gravBall.Velocity.StoreNewValues(newVelocity);
             }
@@ -886,7 +886,7 @@ namespace Game.Orig.TestersGDI
 
             //	Figure out ball properties
             int radius = rand.Next(100, 500);
-            MyVector position = Utility3D.GetRandomVector(rand, _boundryLower, _boundryUpper);
+            MyVector position = Utility3D.GetRandomVector(_boundryLower, _boundryUpper);
             DoubleVector dirFacing = new DoubleVector(new MyVector(1, 0, 0), new MyVector(0, 1, 0));
             int mass = rand.Next(MINMASS, MAXMASS);
 

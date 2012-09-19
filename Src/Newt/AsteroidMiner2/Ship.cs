@@ -365,7 +365,7 @@ namespace Game.Newt.AsteroidMiner2
 			#region Prep work
 
 			//	Break the mass of the parts into pieces
-			double cellSize = dna.Select(o => Math.Max(Math.Max(o.Scale.X, o.Scale.Y), o.Scale.Z)).Max() * .2d;		//	break the largest object up into roughly 5x5x5
+			double cellSize = dna.Select(o => Math3D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z)).Max() * .2d;		//	break the largest object up into roughly 5x5x5
 			UtilityNewt.IObjectMassBreakdown[] massBreakdowns = parts.Select(o => o.GetMassBreakdown(cellSize)).ToArray();
 
 			double cellSphereMultiplier = (cellSize * .5d) * (cellSize * .5d) * .4d;		//	2/5 * r^2

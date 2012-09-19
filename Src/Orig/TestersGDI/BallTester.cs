@@ -84,7 +84,7 @@ namespace Game.Orig.TestersGDI
 
 			//	Figure out ball properties
 			int radius = _rand.Next(2, 31);
-            MyVector position = Utility3D.GetRandomVector(_rand, new MyVector(radius, radius, 0), new MyVector(pictureBox1.Width - radius, pictureBox1.Height - radius, 0));
+            MyVector position = Utility3D.GetRandomVector(new MyVector(radius, radius, 0), new MyVector(pictureBox1.Width - radius, pictureBox1.Height - radius, 0));
             DoubleVector dirFacing = new DoubleVector(new MyVector(1, 0, 0), new MyVector(0, 1, 0));
 			int mass = _rand.Next(MINMASS, MAXMASS);
             MyVector boundingLower = new MyVector(0, 0, -1);
@@ -99,7 +99,7 @@ namespace Game.Orig.TestersGDI
 			//	Calculate the shell color
 			if (chkRandVelocity.Checked)
 			{
-				_balls[_balls.Count - 1].Velocity.Add(Utility3D.GetRandomVector(_rand, MAXVELOCITY));
+				_balls[_balls.Count - 1].Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
 			}
 
 			_ballColors.Add(Color.FromArgb(colorValue, colorValue, colorValue));
