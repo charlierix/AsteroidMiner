@@ -113,9 +113,6 @@ using Game.HelperClasses;
 
 namespace Game.Newt.HelperClasses
 {
-	/// <summary>
-	/// NOTE:  A lot of these methods seem to be the same as what is already provided by the framework
-	/// </summary>
 	public static class Math3D
 	{
 		#region Enum: RayCastReturn
@@ -561,12 +558,10 @@ namespace Game.Newt.HelperClasses
 		/// This is a reworked copy of QuickHull3D.GetOutsideSet, which was inspired by:
 		/// http://www.gamedev.net/topic/106765-determining-if-a-point-is-in-front-of-or-behind-a-plane/
 		/// </remarks>
-		public static bool IsInside(List<ITriangle> planes, Point3D testPoint)
+		public static bool IsInside(IEnumerable<ITriangle> planes, Point3D testPoint)
 		{
-			for (int cntr = 0; cntr < planes.Count; cntr++)
+			foreach(ITriangle plane in planes)
 			{
-				ITriangle plane = planes[cntr];
-
 				//	Compute D, using a arbitrary point P, that lies on the plane: D = - (Nx*Px + Ny*Py + Nz*Pz); Don't forget the inversion !
 				double d = -((plane.NormalUnit.X * plane.Point0.X) + (plane.NormalUnit.Y * plane.Point0.Y) + (plane.NormalUnit.Z * plane.Point0.Z));
 
@@ -765,8 +760,10 @@ namespace Game.Newt.HelperClasses
 		}
 		public static Point3D FromBarycentric(Point3D p0, Point3D p1, Point3D p2, Vector bary)
 		{
-			Vector3D line01 = p1 - p0;
-			Vector3D line02 = p2 - p0;
+			//Vector3D line01 = p1 - p0;
+			//Vector3D line02 = p2 - p0;
+			Vector3D line01 = p2 - p0;		//	ToBarycentric has x as p2
+			Vector3D line02 = p1 - p0;
 
 			return p0 + (line01 * bary.X) + (line02 * bary.Y);
 		}
@@ -1732,8 +1729,10 @@ namespace Game.Newt.HelperClasses
 		/// <summary>
 		/// This checks if a line is intersecting a polygon
 		/// </summary>
-		public static bool IntersectedPolygon(Vector3D[] polygon, Vector3D[] line, int verticeCount, out Vector3D normal, out double originDistance)
+		public static bool IntersectedPolygon(Vector3D[] polygon, Vector3D[] line, int verticeCount, out Vector3D normal, out double originDistance, out Vector3D? intersectionPoint)
 		{
+			intersectionPoint = null;
+
 			// First we check to see if our line intersected the plane.  If this isn't true
 			// there is no need to go on, so return false immediately.
 			// We pass in address of vNormal and originDistance so we only calculate it once
@@ -1748,15 +1747,15 @@ namespace Game.Newt.HelperClasses
 			// this point test next, if we are inside the polygon.  To get the I-Point, we
 			// give our function the normal of the plan, the points of the line, and the originDistance.
 
-			Vector3D? vIntersection = GetIntersectionOfPlaneAndLine(normal, line, originDistance);
-			if (vIntersection == null)
+			intersectionPoint = GetIntersectionOfPlaneAndLine(normal, line, originDistance);
+			if (intersectionPoint == null)
 				return false;
 
 			// Now that we have the intersection point, we need to test if it's inside the polygon.
 			// To do this, we pass in :
 			// (our intersection point, the polygon, and the number of vertices our polygon has)
 
-			if (InsidePolygon(vIntersection.Value, polygon, verticeCount))
+			if (InsidePolygon(intersectionPoint.Value, polygon, verticeCount))
 				return true;							// We collided!	  Return success
 
 
@@ -1771,8 +1770,9 @@ namespace Game.Newt.HelperClasses
 		{
 			Vector3D normal;
 			double originDistance;
+			Vector3D? intersectionPoint;
 
-			return IntersectedPolygon(polygon, line, polygon.Length, out normal, out originDistance);
+			return IntersectedPolygon(polygon, line, polygon.Length, out normal, out originDistance, out intersectionPoint);
 		}
 
 		public static double DistanceFromPlane(Vector3D[] polygon, Vector3D point)

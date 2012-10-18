@@ -467,10 +467,10 @@ namespace Game.Newt.HelperClasses
 				List<TriangleWithPoints> retVal = new List<TriangleWithPoints>();
 
 				//	Make triangles
-				retVal.Add(CreateTriangle(startPoints[0], startPoints[1], startPoints[2], allPoints[startPoints[3]], allPoints));
-				retVal.Add(CreateTriangle(startPoints[3], startPoints[1], startPoints[0], allPoints[startPoints[2]], allPoints));
-				retVal.Add(CreateTriangle(startPoints[3], startPoints[2], startPoints[1], allPoints[startPoints[0]], allPoints));
-				retVal.Add(CreateTriangle(startPoints[3], startPoints[0], startPoints[2], allPoints[startPoints[1]], allPoints));
+				retVal.Add(CreateTriangle(startPoints[0], startPoints[1], startPoints[2], allPoints[startPoints[3]], allPoints, null));
+				retVal.Add(CreateTriangle(startPoints[3], startPoints[1], startPoints[0], allPoints[startPoints[2]], allPoints, null));
+				retVal.Add(CreateTriangle(startPoints[3], startPoints[2], startPoints[1], allPoints[startPoints[0]], allPoints, null));
+				retVal.Add(CreateTriangle(startPoints[3], startPoints[0], startPoints[2], allPoints[startPoints[1]], allPoints, null));
 
 				//	Link triangles together
 				TriangleIndexedLinked.LinkTriangles_Edges(retVal.ConvertAll(o => (TriangleIndexedLinked)o).ToList(), true);
@@ -480,11 +480,21 @@ namespace Game.Newt.HelperClasses
 				//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
 				List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
 
+				//	Remove the indicies that are in the return triangles (I ran into a case where 4 points were passed in, but they were nearly coplanar - enough
+				//	that GetOutsideSet's Math3D.IsNearZero included it)
+				foreach (int index in retVal.SelectMany(o => o.IndexArray).Distinct())
+				{
+					allPointIndicies.Remove(index);
+				}
+
 				//	For every triangle, find the points that are outside the polygon (not the points behind the triangle)
 				//	Note that a point will never be shared between triangles
 				foreach (TriangleWithPoints triangle in retVal)
 				{
-					triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, allPointIndicies, allPoints));
+					if (allPointIndicies.Count > 0)
+					{
+						triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, allPointIndicies, allPoints));
+					}
 				}
 
 				#endregion
@@ -505,9 +515,13 @@ namespace Game.Newt.HelperClasses
 				int fartherstIndex = ProcessTriangleSprtFarthestPoint(removedTriangle);
 				if (fartherstIndex < 0)
 				{
-					//	The outside points are on the same plane as this triangle.  Just wipe them and go away
+					//	The outside points are on the same plane as this triangle (and sitting within the bounds of the triangle).
+					//	Just wipe the points and go away
 					removedTriangle.OutsidePoints.Clear();
 					return;
+					//throw new ApplicationException(string.Format("Couldn't find a farthest point for triangle\r\n{0}\r\n\r\n{1}\r\n",
+					//    removedTriangle.ToString(),
+					//    string.Join("\r\n", removedTriangle.OutsidePoints.Select(o => o.Item1.ToString() + "   |   " + allPoints[o.Item1].ToString(true)).ToArray())));		//	this should never happen
 				}
 
 				//Key=which triangles to remove from the hull
@@ -534,6 +548,8 @@ namespace Game.Newt.HelperClasses
 			}
 			private static int ProcessTriangleSprtFarthestPoint(TriangleWithPoints triangle)
 			{
+				//NOTE: This method is nearly a copy of GetOutsideSet
+
 				Vector3D[] polygon = new Vector3D[] { triangle.Point0.ToVector(), triangle.Point1.ToVector(), triangle.Point2.ToVector() };
 
 				List<int> pointIndicies = triangle.OutsidePoints;
@@ -546,18 +562,24 @@ namespace Game.Newt.HelperClasses
 				{
 					double distance = Math3D.DistanceFromPlane(polygon, allPoints[pointIndicies[cntr]].ToVector());
 
-					if (distance > maxDistance)		//	distance should never be negative (or the point wouldn't be in the list of outside points).  If for some reason there is one with a negative distance, it shouldn't be considered, because it sits inside the hull
+					//	Distance should never be negative (or the point wouldn't be in the list of outside points).  If for some reason there is one with a negative distance,
+					//	it shouldn't be considered, because it sits inside the hull
+					if (distance > maxDistance)
 					{
 						maxDistance = distance;
 						retVal = pointIndicies[cntr];
 					}
+					else if (Math3D.IsNearZero(distance) && Math3D.IsNearZero(maxDistance))		//	this is for a coplanar point that can have a very slightly negative distance
+					{
+						//	Can't trust the previous bary check, need another one (maybe it's false because it never went through that first check?)
+						Vector bary = Math3D.ToBarycentric(triangle, allPoints[pointIndicies[cntr]]);
+						if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+						{
+							maxDistance = 0d;
+							retVal = pointIndicies[cntr];
+						}
+					}
 				}
-
-				//	This can happen when the outside points are on the same plane as the triangle
-				//if (retVal < 0)
-				//{
-				//    throw new ApplicationException("Didn't find a return point, this should never happen");
-				//}
 
 				//	Exit Function
 				return retVal;
@@ -590,7 +612,8 @@ namespace Game.Newt.HelperClasses
 
 				//	Need to subtract the far point from some point on this triangle, so that it's a vector from the triangle to the
 				//	far point, and not from the origin
-				if (Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector()) > 0d)		//	0 would be coplanar, -1 would be the opposite side
+				double dot = Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector());
+				if (dot >= 0d || Math3D.IsNearZero(dot))		//	0 is coplanar, -1 is the opposite side
 				{
 					//	This triangle is visible to the point.  Remove it (recurse)
 					ProcessTriangleSprtRemove(triangle, removedTriangles, removedRim, farPoint);
@@ -639,7 +662,7 @@ namespace Game.Newt.HelperClasses
 						rimTriangle.GetIndices(out index1, out index2, rimEdge);
 
 						//	Build the triangle
-						TriangleWithPoints triangle = CreateTriangle(fartherstIndex, index1, index2, insidePoint, allPoints);
+						TriangleWithPoints triangle = CreateTriangle(fartherstIndex, index1, index2, insidePoint, allPoints, rimTriangle);
 
 						//	Now link this triangle with the boundry triangle (just the one edge, the other edges will be joined later)
 						TriangleIndexedLinked.LinkTriangles_Edges(triangle, rimTriangle);
@@ -709,7 +732,7 @@ namespace Game.Newt.HelperClasses
 			/// This takes in 3 points that belong to the triangle, and a point that is not on the triangle, but is toward the rest
 			/// of the hull.  It then creates a triangle whose normal points away from the hull (right hand rule)
 			/// </summary>
-			private static TriangleWithPoints CreateTriangle(int point0, int point1, int point2, Point3D pointWithinHull, Point3D[] allPoints)
+			private static TriangleWithPoints CreateTriangle(int point0, int point1, int point2, Point3D pointWithinHull, Point3D[] allPoints, ITriangle neighbor)
 			{
 				//	Try an arbitrary orientation
 				TriangleWithPoints retVal = new TriangleWithPoints(point0, point1, point2, allPoints);
@@ -717,11 +740,22 @@ namespace Game.Newt.HelperClasses
 				//	Get a vector pointing from point0 to the inside point
 				Vector3D towardHull = pointWithinHull - allPoints[point0];
 
-				if (Vector3D.DotProduct(towardHull, retVal.Normal) > 0d)
+				double dot = Vector3D.DotProduct(towardHull, retVal.Normal);
+				if (dot > 0d)
 				{
 					//	When the dot product is greater than zero, that means the normal points in the same direction as the vector that points
 					//	toward the hull.  So buid a triangle that points in the opposite direction
 					retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+				}
+				else if (dot == 0d)
+				{
+					//	This new triangle is coplanar with the neighbor triangle, so pointWithinHull can't be used to figure out if this return
+					//	triangle is facing the correct way.  Instead, make it point the same direction as the neighbor triangle
+					dot = Vector3D.DotProduct(retVal.Normal, neighbor.Normal);
+					if (dot < 0)
+					{
+						retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+					}
 				}
 
 				//	Exit Function
@@ -764,6 +798,20 @@ namespace Game.Newt.HelperClasses
 					{
 						retVal.Add(index);
 						pointIndicies.Remove(index);		//	an outside point can only belong to one triangle
+					}
+					else if (Math3D.IsNearZero(res))
+					{
+						//	This point is coplanar.  Only consider it an outside point if it is outside the bounds of this triangle
+						Vector bary = Math3D.ToBarycentric(triangle, allPoints[index]);
+						if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+						{
+							retVal.Add(index);
+							pointIndicies.Remove(index);		//	an outside point can only belong to one triangle
+						}
+						else
+						{
+							cntr++;
+						}
 					}
 					else
 					{

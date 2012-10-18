@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Game.HelperClasses
@@ -90,6 +91,81 @@ namespace Game.HelperClasses
 			}
 
 			return retVal;
+		}
+
+		/// <summary>
+		/// This iterates over all combinations of a set of numbers
+		/// NOTE: The number of iterations is (2^inputSize) - 1, so be careful with input sizes over 10 to 15
+		/// </summary>
+		/// <remarks>
+		/// For example, if you pass in 4, you will get:
+		///		0,1,2,3
+		///		0,1,2
+		///		0,1,3
+		///		0,2,3
+		///		1,2,3
+		///		0,1
+		///		0,2
+		///		0,3
+		///		1,2
+		///		1,3
+		///		2,3
+		///		0
+		///		1
+		///		2
+		///		3
+		/// </remarks>
+		public static IEnumerable<int[]> AllCombosEnumerator(int inputSize)
+		{
+			int inputMax = inputSize - 1;		//	save me from subtracting one all the time
+
+			for (int numUsed = inputSize; numUsed >= 1; numUsed--)
+			{
+				int usedMax = numUsed - 1;		//	save me from subtracting one all the time
+
+				//	Seed the return with everything at the left
+				int[] retVal = Enumerable.Range(0, numUsed).ToArray();
+				yield return (int[])retVal.Clone();		//	if this isn't cloned here, then the consumer needs to do it
+
+				while (true)
+				{
+					//	Try to bump the last item
+					if (retVal[usedMax] < inputMax)
+					{
+						retVal[usedMax]++;
+						yield return (int[])retVal.Clone();
+						continue;
+					}
+
+					//	The last item is as far as it will go, find an item to the left of it to bump
+					bool foundOne = false;
+
+					for (int cntr = usedMax - 1; cntr >= 0; cntr--)
+					{
+						if (retVal[cntr] < retVal[cntr + 1] - 1)
+						{
+							//	This one has room to bump
+							retVal[cntr]++;
+
+							//	Reset everything to the right of this spot
+							for (int resetCntr = cntr + 1; resetCntr < numUsed; resetCntr++)
+							{
+								retVal[resetCntr] = retVal[cntr] + (resetCntr - cntr);
+							}
+
+							foundOne = true;
+							yield return (int[])retVal.Clone();
+							break;
+						}
+					}
+
+					if (!foundOne)
+					{
+						//	This input size is exhausted (everything is as far right as they can go)
+						break;
+					}
+				}
+			}
 		}
 	}
 }

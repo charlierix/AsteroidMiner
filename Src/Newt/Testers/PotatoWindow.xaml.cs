@@ -15,6 +15,7 @@ using System.Windows.Media.Media3D;
 using Game.Newt.HelperClasses;
 using Game.Newt.HelperClasses.Primitives3D;
 using Game.HelperClasses;
+using System.IO;
 
 namespace Game.Newt.Testers
 {
@@ -264,6 +265,22 @@ namespace Game.Newt.Testers
 
 		}
 
+		private void trkNumPoints_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+		{
+			if (!_isInitialized)
+			{
+				return;
+			}
+
+			try
+			{
+				trkNumPoints.ToolTip = Convert.ToInt32(trkNumPoints.Value).ToString("N0");
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
 		private void RadioRange_Checked(object sender, RoutedEventArgs e)
 		{
 			try
@@ -273,6 +290,7 @@ namespace Game.Newt.Testers
 					return;
 				}
 
+				//NOTE: If these change, the radio button tooltips also need to change
 				if (radSmallRange.IsChecked.Value)
 				{
 					trkNumPoints.Maximum = 100;
@@ -1246,6 +1264,203 @@ namespace Game.Newt.Testers
 				TriangleIndexed[] hull = QuickHull6.GetQuickHull(points.ToArray());
 
 				AddHull(hull, true, true, true, false, false, false);
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnHullCoplanar3D_Click(object sender, RoutedEventArgs e)
+		{
+			try
+			{
+				RemoveCurrentBody();
+
+				#region Seeds
+
+				List<Vector3D> seeds = new List<Vector3D>();
+
+				for (int cntr = 0; cntr < 5; cntr++)
+				{
+					seeds.Add(Math3D.GetRandomVectorSpherical(MAXRADIUS));
+				}
+
+				//string filename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), Guid.NewGuid().ToString() + ".txt");
+				//using (StreamWriter writer = new StreamWriter(filename, false))
+				//{
+				//    foreach (Vector3D seed in seeds)
+				//    {
+				//        writer.WriteLine(string.Format("seeds.Add(new Vector3D({0}, {1}, {2}));", seed.X.ToString(), seed.Y.ToString(), seed.Z.ToString()));
+				//    }
+				//}
+
+
+				//	Makes a convex shape
+				//seeds.Add(new Vector3D(-6.13418541495184, 3.03904877007752, -3.33505554369484));
+				//seeds.Add(new Vector3D(-5.26142042059921, 1.04813002910126, 8.15585398846667));
+				//seeds.Add(new Vector3D(5.6147484615464, 5.38143218113028, 3.25425260401201));
+
+				//	Leaves an abondonded point
+				//seeds.Add(new Vector3D(0.713522368731609, -3.27925607677954, -2.94485193678854));
+				//seeds.Add(new Vector3D(-0.546270952731412, 5.95208652950101, -0.554781188177078));
+				//seeds.Add(new Vector3D(-7.00070327046414, 2.23338317770599, -1.35619062070206));
+
+				//	Makes a convex shape and leaves an abandonded point
+				//seeds.Add(new Vector3D(-7.57161225829881, 0.148610202190096, 0.616364243479363));
+				//seeds.Add(new Vector3D(-1.13578481882369, 1.0110125692943, -8.07250656366576));
+				//seeds.Add(new Vector3D(-4.51519718097258, 5.87249320352238, -3.15885908394965));
+
+				//	This was screwing up (some triangles were built backward)
+				//seeds.Add(new Vector3D(-3.05681705374527, -1.02859045292147, 1.21525025154558));
+				//seeds.Add(new Vector3D(-0.32665179497561, 0.526585142860568, 0.405072111091191));
+				//seeds.Add(new Vector3D(-1.4057994914715, -0.342068911634135, -1.91853848540546));
+
+				//	This one can't find the farthest point (may not be an issue) - couldn't recreate using these points, not enough precision
+				//seeds.Add(new Vector3D(-2.75148437489207, 3.11744323865764, 0.990357457098332));
+				//seeds.Add(new Vector3D(2.00180062415458, 7.75232506225408, 1.91351276138827));
+				//seeds.Add(new Vector3D(2.36452088846013, 1.27573207068764, 0.911452948072206));
+
+				//	This one missed a point
+				//seeds.Add(new Vector3D(-2.78661683481391, 3.11224586772823, 6.96732377222608));
+				//seeds.Add(new Vector3D(-5.10567180289431, -5.35921261948769, 4.94990438457728));
+				//seeds.Add(new Vector3D(0.116756086702488, -0.139430820232176, -0.158165585474803));
+
+				#endregion
+				#region Generate Points
+
+				List<Point3D> points = new List<Point3D>();
+
+				//	Make a nearly coplanar hull
+				//points.Add(new Point3D(-1, -1, 0));
+				//points.Add(new Point3D(1, -1, 0));
+				//points.Add(new Point3D(0, 1, 0));
+				//points.Add(new Point3D(0, 0, .00000000001));
+
+
+				points.Add(new Point3D(0, 0, 0));
+
+				foreach (int[] combo in UtilityHelper.AllCombosEnumerator(seeds.Count))
+				{
+					//	Add up the vectors that this combo points to
+					Vector3D extremity = seeds[combo[0]];
+					for (int cntr = 1; cntr < combo.Length; cntr++)
+					{
+						extremity += seeds[combo[cntr]];
+					}
+
+					Point3D point = extremity.ToPoint();
+					if (!points.Contains(point))
+					{
+						points.Add(point);
+					}
+				}
+
+				#endregion
+
+				if (chkDrawDots.IsChecked.Value)
+				{
+					#region Add dots
+
+					for (int cntr = 0; cntr < points.Count; cntr++)
+					{
+						//	Use 16 colors to help identify the dots.  Memories.......
+						//http://en.wikipedia.org/wiki/Enhanced_Graphics_Adapter
+						Color color;
+						switch (cntr)
+						{
+							case 0:
+								color = UtilityWPF.ColorFromHex("000000");
+								break;
+							case 1:
+								color = UtilityWPF.ColorFromHex("0000AA");
+								break;
+							case 2:
+								color = UtilityWPF.ColorFromHex("00AA00");
+								break;
+							case 3:
+								color = UtilityWPF.ColorFromHex("00AAAA");
+								break;
+							case 4:
+								color = UtilityWPF.ColorFromHex("AA0000");
+								break;
+							case 5:
+								color = UtilityWPF.ColorFromHex("AA00AA");
+								break;
+							case 6:
+								color = UtilityWPF.ColorFromHex("AA5500");
+								break;
+							case 7:
+								color = UtilityWPF.ColorFromHex("AAAAAA");
+								break;
+							case 8:
+								color = UtilityWPF.ColorFromHex("555555");
+								break;
+							case 9:
+								color = UtilityWPF.ColorFromHex("5555FF");
+								break;
+							case 10:
+								color = UtilityWPF.ColorFromHex("55FF55");
+								break;
+							case 11:
+								color = UtilityWPF.ColorFromHex("55FFFF");
+								break;
+							case 12:
+								color = UtilityWPF.ColorFromHex("FF5555");
+								break;
+							case 13:
+								color = UtilityWPF.ColorFromHex("FF55FF");
+								break;
+							case 14:
+								color = UtilityWPF.ColorFromHex("FFFF55");
+								break;
+							case 15:
+								color = UtilityWPF.ColorFromHex("FFFFFF");
+								break;
+							default:
+								color = _colors.MedSlate;
+								break;
+						}
+
+						AddDot(points[cntr], DOTRADIUS, color);
+					}
+
+					#endregion
+				}
+
+				List<TriangleIndexed[]> hulls = new List<TriangleIndexed[]>();
+				while (points.Count > 3)
+				{
+					//TriangleIndexed[] hull = QuickHull8.GetConvexHull(points.ToArray(), Convert.ToInt32(txtCoplanarMaxSteps.Text));
+					TriangleIndexed[] hull = UtilityWPF.GetConvexHull(points.ToArray());
+					if (hull == null)
+					{
+						break;
+					}
+
+					hulls.Add(hull);
+
+					//	Prep for the next run
+					if (!chkConcentricHulls.IsChecked.Value)
+					{
+						break;
+					}
+
+					foreach (TriangleIndexed triangle in hull)
+					{
+						points.Remove(triangle.Point0);
+						points.Remove(triangle.Point1);
+						points.Remove(triangle.Point2);
+					}
+				}
+
+				//	They must be added in reverse order so that the outermost one is added last (or the transparency fails)
+				for (int cntr = hulls.Count - 1; cntr >= 0; cntr--)
+				{
+					AddHull(hulls[cntr], true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+				}
+
+				//TriangleIndexed[] hull = QuickHull6.GetQuickHull(points.ToArray());
+				//AddHull(hull, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value);
 			}
 			catch (Exception ex)
 			{
@@ -5241,6 +5456,8 @@ namespace Game.Newt.Testers
 
 	//TODO:  This still fails with lots of coplanar points.  Triangles overlap, not all resulting triangles have neighbors.
 	//I think a preprocess is nessassary
+	//
+	//	A preprocess wasn't nessassary (fixed in quickhull8) plane distance of 0 and dot products of 0 needed to be handled special
 
 	public static class QuickHull7
 	{
@@ -5947,6 +6164,641 @@ namespace Game.Newt.Testers
 				{
 					retVal.Add(index);
 					pointIndicies.Remove(index);		//	an outside point can only belong to one triangle
+				}
+				else
+				{
+					cntr++;
+				}
+			}
+
+			return retVal;
+		}
+
+		#endregion
+	}
+
+	#endregion
+	#region Class: QuickHull8
+
+	//TODO: May want to make a custom IsNearZero that is more strict than Math3D
+
+	public static class QuickHull8
+	{
+		#region Class: TriangleWithPoints
+
+		/// <summary>
+		/// This links a triangle with a set of points that sit "outside" the triangle
+		/// </summary>
+		public class TriangleWithPoints : TriangleIndexedLinked
+		{
+			public TriangleWithPoints()
+				: base()
+			{
+				this.OutsidePoints = new List<int>();
+			}
+
+			public TriangleWithPoints(int index0, int index1, int index2, Point3D[] allPoints)
+				: base(index0, index1, index2, allPoints)
+			{
+				this.OutsidePoints = new List<int>();
+			}
+
+			public List<int> OutsidePoints
+			{
+				get;
+				private set;
+			}
+		}
+
+		#endregion
+
+		public static TriangleIndexed[] GetConvexHull(Point3D[] points, int maxSteps)
+		{
+			if (points.Length < 4)
+			{
+				throw new ArgumentException("There must be at least 4 points", "points");
+			}
+
+			//	Pick 4 points
+			int[] startPoints = GetStartingTetrahedron(points);
+			List<TriangleWithPoints> retVal = ConvertStartingPointsToTriangles(startPoints, points);
+
+
+
+			int stepCount = 0;
+
+
+
+
+			//	If any triangle has any points outside the hull, then remove that triangle, and replace it with triangles connected to the
+			//	farthest out point (relative to the triangle that got removed)
+			bool foundOne;
+			do
+			{
+				foundOne = false;
+				int index = 0;
+				while (index < retVal.Count)
+				{
+
+
+					if (maxSteps >= 0 && stepCount >= maxSteps)
+					{
+						break;
+					}
+					stepCount++;
+
+
+
+					if (retVal[index].OutsidePoints.Count > 0)
+					{
+						foundOne = true;
+						ProcessTriangle(retVal, index, points);
+					}
+					else
+					{
+						index++;
+					}
+				}
+			} while (foundOne);
+
+			//	Exit Function
+			return retVal.ToArray();
+		}
+
+		#region Private Methods
+
+		/// <summary>
+		/// I've seen various literature call this initial tetrahedron a simplex
+		/// </summary>
+		private static int[] GetStartingTetrahedron(Point3D[] points)
+		{
+			int[] retVal = new int[4];
+
+			//	Validate the point cloud is 3D, also get the points that have the smallest and largest X (an exception is thrown if they are the same point)
+			int minXIndex, maxXIndex;
+			GetStartingTetrahedronSprtGetMinMaxX(out minXIndex, out maxXIndex, points);
+
+			//	The first two return points will be the ones with the min and max X values
+			retVal[0] = minXIndex;
+			retVal[1] = maxXIndex;
+
+			//	The third point will be the one that is farthest from the line defined by the first two
+			int thirdIndex = GetStartingTetrahedronSprtFarthestFromLine(minXIndex, maxXIndex, points);
+			retVal[2] = thirdIndex;
+
+			//	The fourth point will be the one that is farthest from the plane defined by the first three
+			int fourthIndex = GetStartingTetrahedronSprtFarthestFromPlane(minXIndex, maxXIndex, thirdIndex, points);
+			retVal[3] = fourthIndex;
+
+			//	Exit Function
+			return retVal;
+		}
+		/// <summary>
+		/// This does more than just look at X.  It looks at Y and Z as well to verify the point cloud has points in all 3 dimensions
+		/// </summary>
+		private static void GetStartingTetrahedronSprtGetMinMaxX(out int minXIndex, out int maxXIndex, Point3D[] points)
+		{
+			//	Create arrays to hold the min and max along each axis (0=X, 1=Y, 2=Z) - using the first point
+			double[] minValues = new double[] { points[0].X, points[0].Y, points[0].Z };
+			double[] maxValues = new double[] { points[0].X, points[0].Y, points[0].Z };
+			int[] minIndicies = new int[] { 0, 0, 0 };
+			int[] maxIndicies = new int[] { 0, 0, 0 };
+
+			for (int cntr = 1; cntr < points.Length; cntr++)
+			{
+				#region Examine Point
+
+				//	Min
+				if (points[cntr].X < minValues[0])
+				{
+					minValues[0] = points[cntr].X;
+					minIndicies[0] = cntr;
+				}
+
+				if (points[cntr].Y < minValues[1])
+				{
+					minValues[1] = points[cntr].Y;
+					minIndicies[1] = cntr;
+				}
+
+				if (points[cntr].Z < minValues[2])
+				{
+					minValues[2] = points[cntr].Z;
+					minIndicies[2] = cntr;
+				}
+
+				//	Max
+				if (points[cntr].X > maxValues[0])
+				{
+					maxValues[0] = points[cntr].X;
+					maxIndicies[0] = cntr;
+				}
+
+				if (points[cntr].Y > maxValues[1])
+				{
+					maxValues[1] = points[cntr].Y;
+					maxIndicies[1] = cntr;
+				}
+
+				if (points[cntr].Z > maxValues[2])
+				{
+					maxValues[2] = points[cntr].Z;
+					maxIndicies[2] = cntr;
+				}
+
+				#endregion
+			}
+
+			#region Validate
+
+			for (int cntr = 0; cntr < 3; cntr++)
+			{
+				if (maxValues[cntr] == minValues[cntr])
+				{
+					throw new ApplicationException("The points passed in aren't in 3D - they are either all on the same point (0D), or colinear (1D), or coplanar (2D)");
+				}
+			}
+
+			#endregion
+
+			//	Return the two points that are the min/max X
+			minXIndex = minIndicies[0];
+			maxXIndex = maxIndicies[0];
+		}
+		/// <summary>
+		/// Finds the point that is farthest from the line
+		/// </summary>
+		private static int GetStartingTetrahedronSprtFarthestFromLine(int index1, int index2, Point3D[] points)
+		{
+			Vector3D lineDirection = points[index2] - points[index1];		//	The nearest point method wants a vector, so calculate it once
+			Point3D startPoint = points[index1];		//	not sure if there is much of a penalty to referencing a list by index, but I figure I'll just cache this point once
+
+			double maxDistance = -1d;
+			int retVal = -1;
+
+			for (int cntr = 0; cntr < points.Length; cntr++)
+			{
+				if (cntr == index1 || cntr == index2)
+				{
+					continue;
+				}
+
+				//	Calculate the distance from the line
+				Point3D nearestPoint = Math3D.GetNearestPointAlongLine(startPoint, lineDirection, points[cntr]);
+				double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
+
+				if (distanceSquared > maxDistance)
+				{
+					maxDistance = distanceSquared;
+					retVal = cntr;
+				}
+			}
+
+			if (retVal < 0)
+			{
+				throw new ApplicationException("Didn't find a return point, this should never happen");
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+		private static int GetStartingTetrahedronSprtFarthestFromPlane(int index1, int index2, int index3, Point3D[] points)
+		{
+			//NOTE:  I'm copying bits of Math3D.DistanceFromPlane here for optimization reasons
+			Vector3D[] triangle = new Vector3D[] { points[index1].ToVector(), points[index2].ToVector(), points[index3].ToVector() };
+			Vector3D normal = Math3D.Normal(triangle);
+			double originDistance = Math3D.GetPlaneDistance(normal, triangle[0].ToPoint());
+
+			double maxDistance = 0d;
+			int retVal = -1;
+
+			for (int cntr = 0; cntr < points.Length; cntr++)
+			{
+				if (cntr == index1 || cntr == index2 || cntr == index3)
+				{
+					continue;
+				}
+
+				//NOTE:  This is Math3D.DistanceFromPlane copied inline to speed things up
+				Point3D point = points[cntr];
+				double distance = ((normal.X * point.X) +					// Ax +
+												(normal.Y * point.Y) +					// Bx +
+												(normal.Z * point.Z)) + originDistance;	// Cz + D
+
+				//	I don't care which side of the triangle the point is on for this initial tetrahedron
+				distance = Math.Abs(distance);
+
+				if (distance > maxDistance)
+				{
+					maxDistance = distance;
+					retVal = cntr;
+				}
+			}
+
+			if (retVal < 0)
+			{
+				throw new ApplicationException("Didn't find a return point, this should never happen");
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+
+		private static List<TriangleWithPoints> ConvertStartingPointsToTriangles(int[] startPoints, Point3D[] allPoints)
+		{
+			if (startPoints.Length != 4)
+			{
+				throw new ArgumentException("This method expects exactly 4 points passed in");
+			}
+
+			List<TriangleWithPoints> retVal = new List<TriangleWithPoints>();
+
+			//	Make triangles
+			retVal.Add(CreateTriangle(startPoints[0], startPoints[1], startPoints[2], allPoints[startPoints[3]], allPoints, null));
+			retVal.Add(CreateTriangle(startPoints[3], startPoints[1], startPoints[0], allPoints[startPoints[2]], allPoints, null));
+			retVal.Add(CreateTriangle(startPoints[3], startPoints[2], startPoints[1], allPoints[startPoints[0]], allPoints, null));
+			retVal.Add(CreateTriangle(startPoints[3], startPoints[0], startPoints[2], allPoints[startPoints[1]], allPoints, null));
+
+			//	Link triangles together
+			TriangleIndexedLinked.LinkTriangles_Edges(retVal.ConvertAll(o => (TriangleIndexedLinked)o).ToList(), true);
+
+			#region Calculate outside points
+
+			//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
+			List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+
+			//	Remove the indicies that are in the return triangles (I ran into a case where 4 points were passed in, but they were nearly coplanar - enough
+			//	that GetOutsideSet's Math3D.IsNearZero included it)
+			foreach(int index in retVal.SelectMany(o => o.IndexArray).Distinct())
+			{
+				allPointIndicies.Remove(index);
+			}
+
+			//	For every triangle, find the points that are outside the polygon (not the points behind the triangle)
+			//	Note that a point will never be shared between triangles
+			foreach (TriangleWithPoints triangle in retVal)
+			{
+				if (allPointIndicies.Count > 0)
+				{
+					triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, allPointIndicies, allPoints));
+				}
+			}
+
+			#endregion
+
+			//	Exit Function
+			return retVal;
+		}
+
+		/// <summary>
+		/// This works on a triangle that contains outside points.  It removes the triangle, and creates new ones connected to
+		/// the outermost outside point
+		/// </summary>
+		private static void ProcessTriangle(List<TriangleWithPoints> hull, int hullIndex, Point3D[] allPoints)
+		{
+			TriangleWithPoints removedTriangle = hull[hullIndex];
+
+			//	Find the farthest point from this triangle
+			int fartherstIndex = ProcessTriangleSprtFarthestPoint(removedTriangle);
+			if (fartherstIndex < 0)
+			{
+				//	The outside points are on the same plane as this triangle (and sitting within the bounds of the triangle).
+				//	Just wipe the points and go away
+				removedTriangle.OutsidePoints.Clear();
+				return;
+				//throw new ApplicationException(string.Format("Couldn't find a farthest point for triangle\r\n{0}\r\n\r\n{1}\r\n",
+				//    removedTriangle.ToString(),
+				//    string.Join("\r\n", removedTriangle.OutsidePoints.Select(o => o.Item1.ToString() + "   |   " + allPoints[o.Item1].ToString(true)).ToArray())));		//	this should never happen
+			}
+
+			//Key=which triangles to remove from the hull
+			//Value=meaningless, I just wanted a sorted list
+			SortedList<TriangleIndexedLinked, int> removedTriangles = new SortedList<TriangleIndexedLinked, int>();
+
+			//Key=triangle on the hull that is a boundry (the new triangles will be added to these boundry triangles)
+			//Value=the key's edges that are exposed to the removed triangles
+			SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim = new SortedList<TriangleIndexedLinked, List<TriangleEdge>>();
+
+			//	Find all the triangles that can see this point (they will need to be removed from the hull)
+			//NOTE:  This method is recursive
+			ProcessTriangleSprtRemove(removedTriangle, removedTriangles, removedRim, allPoints[fartherstIndex].ToVector());
+
+			//	Remove these from the hull
+			ProcessTriangleSprtRemoveFromHull(hull, removedTriangles.Keys, removedRim);
+
+			//	Get all the outside points
+			//List<int> allOutsidePoints = removedTriangles.Keys.SelectMany(o => ((TriangleWithPoints)o).OutsidePoints).Distinct().ToList();		//	if you try to read what SelectMany does, it gets pretty wordy and unclear.  It just does a foreach across all the OutsidePoints lists from all the removedTriangles (treats the list of lists like a single list)
+			List<int> allOutsidePoints = removedTriangles.Keys.SelectMany(o => ((TriangleWithPoints)o).OutsidePoints).ToList();		//	there's no need to call distinct, since the outside points aren't shared between triangles
+
+			//	Create new triangles
+			ProcessTriangleSprtNew(hull, fartherstIndex, removedRim, allPoints, allOutsidePoints);		//	Note that after this method, allOutsidePoints will only be the points left over (the ones that are inside the hull)
+		}
+		private static int ProcessTriangleSprtFarthestPoint(TriangleWithPoints triangle)
+		{
+			//NOTE: This method is nearly a copy of GetOutsideSet
+
+			Vector3D[] polygon = new Vector3D[] { triangle.Point0.ToVector(), triangle.Point1.ToVector(), triangle.Point2.ToVector() };
+
+			List<int> pointIndicies = triangle.OutsidePoints;
+			Point3D[] allPoints = triangle.AllPoints;
+
+			double maxDistance = 0d;
+			int retVal = -1;
+
+			for (int cntr = 0; cntr < pointIndicies.Count; cntr++)
+			{
+				double distance = Math3D.DistanceFromPlane(polygon, allPoints[pointIndicies[cntr]].ToVector());
+
+				//	Distance should never be negative (or the point wouldn't be in the list of outside points).  If for some reason there is one with a negative distance,
+				//	it shouldn't be considered, because it sits inside the hull
+				if (distance > maxDistance)
+				{
+					maxDistance = distance;
+					retVal = pointIndicies[cntr];
+				}
+				else if (Math3D.IsNearZero(distance) && Math3D.IsNearZero(maxDistance))		//	this is for a coplanar point that can have a very slightly negative distance
+				{
+					//	Can't trust the previous bary check, need another one (maybe it's false because it never went through that first check?)
+					Vector bary = Math3D.ToBarycentric(triangle, allPoints[pointIndicies[cntr]]);
+					if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+					{
+						maxDistance = 0d;
+						retVal = pointIndicies[cntr];
+					}
+				}
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+
+		private static void ProcessTriangleSprtRemove(TriangleIndexedLinked triangle, SortedList<TriangleIndexedLinked, int> removedTriangles, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Vector3D farPoint)
+		{
+			//	This triangle will need to be removed.  Keep track of it so it's not processed again (the int means nothing)
+			removedTriangles.Add(triangle, 0);
+
+			//	Try each neighbor
+			ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_01, removedTriangles, removedRim, farPoint, triangle);
+			ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_12, removedTriangles, removedRim, farPoint, triangle);
+			ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_20, removedTriangles, removedRim, farPoint, triangle);
+		}
+		private static void ProcessTriangleSprtRemoveSprtNeighbor(TriangleIndexedLinked triangle, SortedList<TriangleIndexedLinked, int> removedTriangles, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Vector3D farPoint, TriangleIndexedLinked fromTriangle)
+		{
+			if (removedTriangles.ContainsKey(triangle))
+			{
+				return;
+			}
+
+			if (removedRim.ContainsKey(triangle))
+			{
+				//	This triangle is already recognized as part of the hull.  Add a link from it to the from triangle (because two of its edges
+				//	are part of the hull rim)
+				removedRim[triangle].Add(triangle.WhichEdge(fromTriangle));
+				return;
+			}
+
+			//	Need to subtract the far point from some point on this triangle, so that it's a vector from the triangle to the
+			//	far point, and not from the origin
+			double dot = Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector());
+			if (dot >= 0d || Math3D.IsNearZero(dot))		//	0 is coplanar, -1 is the opposite side
+			{
+				//	This triangle is visible to the point.  Remove it (recurse)
+				ProcessTriangleSprtRemove(triangle, removedTriangles, removedRim, farPoint);
+			}
+			else
+			{
+				//	This triangle is invisible to the point, so needs to stay part of the hull.  Store this boundry
+				removedRim.Add(triangle, new List<TriangleEdge>());
+				removedRim[triangle].Add(triangle.WhichEdge(fromTriangle));
+			}
+		}
+
+		private static void ProcessTriangleSprtRemoveFromHull(List<TriangleWithPoints> hull, IList<TriangleIndexedLinked> trianglesToRemove, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim)
+		{
+			//	Remove from the hull list
+			foreach (TriangleIndexedLinked triangle in trianglesToRemove)
+			{
+				hull.Remove((TriangleWithPoints)triangle);
+			}
+
+			//	Break the links from the hull to the removed triangles (there's no need to break links in the other direction.  The removed triangles
+			//	will become orphaned, and eventually garbage collected)
+			foreach (TriangleIndexedLinked triangle in removedRim.Keys)
+			{
+				foreach (TriangleEdge edge in removedRim[triangle])
+				{
+					triangle.SetNeighbor(edge, null);
+				}
+			}
+		}
+
+		private static void ProcessTriangleSprtNew(List<TriangleWithPoints> hull, int fartherstIndex, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Point3D[] allPoints, List<int> outsidePoints)
+		{
+			List<TriangleWithPoints> newTriangles = new List<TriangleWithPoints>();
+
+			//	Run around the rim, and build a triangle between the far point and each edge
+			foreach (TriangleIndexedLinked rimTriangle in removedRim.Keys)
+			{
+				//	Get a point that is toward the hull (the created triangle will be built so its normal points away from this)
+				Point3D insidePoint = ProcessTriangleSprtNewSprtInsidePoint(rimTriangle, removedRim[rimTriangle]);
+
+				foreach (TriangleEdge rimEdge in removedRim[rimTriangle])
+				{
+					//	Get the points for this edge
+					int index1, index2;
+					rimTriangle.GetIndices(out index1, out index2, rimEdge);
+
+					//	Build the triangle
+					TriangleWithPoints triangle = CreateTriangle(fartherstIndex, index1, index2, insidePoint, allPoints, rimTriangle);
+
+					//	Now link this triangle with the boundry triangle (just the one edge, the other edges will be joined later)
+					TriangleIndexedLinked.LinkTriangles_Edges(triangle, rimTriangle);
+
+					//	Store this triangle
+					newTriangles.Add(triangle);
+					hull.Add(triangle);
+				}
+			}
+
+			//	The new triangles are linked to the boundry already.  Now link the other two edges to each other (newTriangles forms a
+			//	triangle fan, but they aren't neccessarily consecutive)
+			TriangleIndexedLinked.LinkTriangles_Edges(newTriangles.ConvertAll(o => (TriangleIndexedLinked)o).ToList(), false);
+
+			//	Distribute the outside points to these new triangles
+			foreach (TriangleWithPoints triangle in newTriangles)
+			{
+				//	Find the points that are outside the polygon (not the points behind the triangle)
+				//	Note that a point will never be shared between triangles
+				triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, outsidePoints, allPoints));
+			}
+		}
+		private static Point3D ProcessTriangleSprtNewSprtInsidePoint(TriangleIndexedLinked rimTriangle, List<TriangleEdge> sharedEdges)
+		{
+			bool[] used = new bool[3];
+
+			//	Figure out which indices are used
+			foreach (TriangleEdge edge in sharedEdges)
+			{
+				switch (edge)
+				{
+					case TriangleEdge.Edge_01:
+						used[0] = true;
+						used[1] = true;
+						break;
+
+					case TriangleEdge.Edge_12:
+						used[1] = true;
+						used[2] = true;
+						break;
+
+					case TriangleEdge.Edge_20:
+						used[2] = true;
+						used[0] = true;
+						break;
+
+					default:
+						throw new ApplicationException("Unknown TriangleEdge: " + edge.ToString());
+				}
+			}
+
+			//	Find one that isn't used
+			for (int cntr = 0; cntr < 3; cntr++)
+			{
+				if (!used[cntr])
+				{
+					return rimTriangle[cntr];
+				}
+			}
+
+			//	Project a point away from this triangle
+			//TODO:  If the hull ends up concave, this is a very likely culprit.  May need to come up with a better way
+			return rimTriangle.GetCenterPoint() + (rimTriangle.Normal * -.001);		//	by not using the unit normal, I'm keeping this scaled roughly to the size of the triangle
+		}
+
+		/// <summary>
+		/// This takes in 3 points that belong to the triangle, and a point that is not on the triangle, but is toward the rest
+		/// of the hull.  It then creates a triangle whose normal points away from the hull (right hand rule)
+		/// </summary>
+		private static TriangleWithPoints CreateTriangle(int point0, int point1, int point2, Point3D pointWithinHull, Point3D[] allPoints, ITriangle neighbor)
+		{
+			//	Try an arbitrary orientation
+			TriangleWithPoints retVal = new TriangleWithPoints(point0, point1, point2, allPoints);
+
+			//	Get a vector pointing from point0 to the inside point
+			Vector3D towardHull = pointWithinHull - allPoints[point0];
+
+			double dot = Vector3D.DotProduct(towardHull, retVal.Normal);
+			if (dot > 0d)
+			{
+				//	When the dot product is greater than zero, that means the normal points in the same direction as the vector that points
+				//	toward the hull.  So buid a triangle that points in the opposite direction
+				retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+			}
+			else if (dot == 0d)
+			{
+				//	This new triangle is coplanar with the neighbor triangle, so pointWithinHull can't be used to figure out if this return
+				//	triangle is facing the correct way.  Instead, make it point the same direction as the neighbor triangle
+				dot = Vector3D.DotProduct(retVal.Normal, neighbor.Normal);
+				if (dot < 0)
+				{
+					retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+				}
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+
+		/// <summary>
+		/// This returns the subset of points that are on the outside facing side of the triangle
+		/// </summary>
+		/// <remarks>
+		/// I got these steps here:
+		/// http://www.gamedev.net/topic/106765-determining-if-a-point-is-in-front-of-or-behind-a-plane/
+		/// </remarks>
+		/// <param name="pointIndicies">
+		/// This method will only look at the points in pointIndicies.
+		/// NOTE: This method will also remove values from here if they are part of an existing triangle, or get added to a triangle's outside list.
+		/// </param>
+		private static List<int> GetOutsideSet(TriangleIndexed triangle, List<int> pointIndicies, Point3D[] allPoints)
+		{
+			List<int> retVal = new List<int>();
+
+			//	Compute D, using a arbitrary point P, that lies on the plane: D = - (Nx*Px + Ny*Py + Nz*Pz); Don't forget the inversion !
+			double D = -((triangle.NormalUnit.X * triangle.Point0.X) + (triangle.NormalUnit.Y * triangle.Point0.Y) + (triangle.NormalUnit.Z * triangle.Point0.Z));
+
+			int cntr = 0;
+			while (cntr < pointIndicies.Count)
+			{
+				int index = pointIndicies[cntr];
+
+				if (index == triangle.Index0 || index == triangle.Index1 || index == triangle.Index2)
+				{
+					pointIndicies.Remove(index);		//	no need to consider this for future calls
+					continue;
+				}
+
+				//	You can test a point (T) with respect to the plane using the plane equation: res = Nx*Tx + Ny*Ty + Nz*Tz + D
+				double res = (triangle.NormalUnit.X * allPoints[index].X) + (triangle.NormalUnit.Y * allPoints[index].Y) + (triangle.NormalUnit.Z * allPoints[index].Z) + D;
+
+				if (res > 0d)		//	anything greater than zero lies outside the plane
+				{
+					retVal.Add(index);
+					pointIndicies.Remove(index);		//	an outside point can only belong to one triangle
+				}
+				else if (Math3D.IsNearZero(res))
+				{
+					//	This point is coplanar.  Only consider it an outside point if it is outside the bounds of this triangle
+					Vector bary = Math3D.ToBarycentric(triangle, allPoints[index]);
+					if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+					{
+						retVal.Add(index);
+						pointIndicies.Remove(index);		//	an outside point can only belong to one triangle
+					}
+					else
+					{
+						cntr++;
+					}
 				}
 				else
 				{

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;		//TODO: This is for save/load, which belongs in the calling window
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -10,16 +11,15 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-using System.Xaml;		//TODO: This is for save/load, which belongs in the calling window
+using System.Xaml;
 
-using Microsoft.Win32;		//TODO: This is for save/load, which belongs in the calling window
+using Microsoft.Win32;
 
 using Game.Newt.AsteroidMiner2;
 using Game.Newt.AsteroidMiner2.ShipEditor;
 using Game.Newt.AsteroidMiner2.ShipParts;
-using System.Text.RegularExpressions;
-using System.Windows.Media.Media3D;
 
 namespace Game.Newt.Testers
 {
@@ -27,7 +27,7 @@ namespace Game.Newt.Testers
 	{
 		#region Declaration Section
 
-		private const string SHIPFOLDER = "Asteroid Miner\\Ships";
+		public const string SHIPFOLDER = "Asteroid Miner\\Ships";
 
 		private List<PartToolItemBase> _partToolItems = new List<PartToolItemBase>();
 
@@ -165,35 +165,10 @@ namespace Game.Newt.Testers
 
 		#endregion
 
-		#region Private Methods
+		#region Public Methods
 
-		private void SaveShip()
+		public static void SaveShip(ShipDNA ship)
 		{
-			//	Get ship from the editor
-			string name;		//	the editor returns this trimmed
-			List<string> layerNames;
-			SortedList<int, List<DesignPart>> partsByLayer;
-			editor1.GetDesign(out name, out layerNames, out partsByLayer);
-
-			if (name == "")
-			{
-				MessageBox.Show("Please give the ship a name first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
-			}
-
-			//	Get the definition of the ship
-			ShipDNA ship = new ShipDNA();
-			ship.ShipName = name;
-			//TODO: Validate the ship
-			//ship.IsValid = 
-			ship.LayerNames = layerNames;
-			ship.PartsByLayer = new SortedList<int, List<PartDNA>>();
-			foreach (int layerIndex in partsByLayer.Keys)
-			{
-				ship.PartsByLayer.Add(layerIndex, partsByLayer[layerIndex].Select(o => o.Part3D.GetDNA()).ToList());
-			}
-
-
 			//TODO: Store these in a database (RavenDB), fail over to storing on file if can't connect to DB
 
 
@@ -233,18 +208,16 @@ namespace Game.Newt.Testers
 					}
 				}
 			}
-
-
 		}
-		private void LoadShip()
+		public static ShipDNA LoadShip(out string errMsg)
 		{
 			string foldername = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 			foldername = System.IO.Path.Combine(foldername, SHIPFOLDER);
 
 			if (!Directory.Exists(foldername) || Directory.GetFiles(foldername).Length == 0)
 			{
-				MessageBox.Show("No existing ships were found", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				errMsg ="No existing ships were found";
+				return null;
 			}
 
 			OpenFileDialog dialog = new OpenFileDialog();
@@ -254,7 +227,8 @@ namespace Game.Newt.Testers
 			bool? result = dialog.ShowDialog();
 			if (result == null || !result.Value)
 			{
-				return;
+				errMsg = "";
+				return null;
 			}
 
 			//	Load the file
@@ -265,7 +239,56 @@ namespace Game.Newt.Testers
 				deserialized = XamlServices.Load(file);
 			}
 
-			ShipDNA ship = deserialized as ShipDNA;
+			ShipDNA retVal = deserialized as ShipDNA;
+
+			//	Exit Function
+			errMsg = "";
+			return retVal;
+		}
+
+		#endregion
+
+		#region Private Methods
+
+		private void SaveShip()
+		{
+			//	Get ship from the editor
+			string name;		//	the editor returns this trimmed
+			List<string> layerNames;
+			SortedList<int, List<DesignPart>> partsByLayer;
+			editor1.GetDesign(out name, out layerNames, out partsByLayer);
+
+			if (name == "")
+			{
+				MessageBox.Show("Please give the ship a name first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
+			//	Get the definition of the ship
+			ShipDNA ship = new ShipDNA();
+			ship.ShipName = name;
+			//TODO: Validate the ship
+			//ship.IsValid = 
+			ship.LayerNames = layerNames;
+			ship.PartsByLayer = new SortedList<int, List<PartDNA>>();
+			foreach (int layerIndex in partsByLayer.Keys)
+			{
+				ship.PartsByLayer.Add(layerIndex, partsByLayer[layerIndex].Select(o => o.Part3D.GetDNA()).ToList());
+			}
+
+			SaveShip(ship);
+		}
+		private void LoadShip()
+		{
+			string errMsg;
+			ShipDNA ship = LoadShip(out errMsg);
+			if (ship == null)
+			{
+				if (!string.IsNullOrEmpty(errMsg))
+				{
+					MessageBox.Show(errMsg, this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+				}
+			}
 
 			//	Convert dna into design parts
 			SortedList<int, List<DesignPart>> partsByLayer = new SortedList<int, List<DesignPart>>();

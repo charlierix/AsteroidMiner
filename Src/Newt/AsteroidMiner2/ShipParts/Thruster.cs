@@ -290,6 +290,103 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 			return _massBreakdown.Item1;
 		}
 
+		public static Vector3D[] GetThrusterDirections(ThrusterType thrusterType)
+		{
+			Vector3D[] retVal = null;
+
+			switch (thrusterType)
+			{
+				case ThrusterType.One:
+					#region OneWay
+
+					//	Directions
+					retVal = new Vector3D[1];
+					retVal[0] = new Vector3D(0, 0, 1);		//	the visual's bottle points down, but the thrust is up
+
+					#endregion
+					break;
+
+				case ThrusterType.Two:
+					#region TwoWay
+
+					//	Directions
+					retVal = new Vector3D[2];
+					retVal[0] = new Vector3D(0, 0, 1);
+					retVal[1] = new Vector3D(0, 0, -1);
+
+					#endregion
+					break;
+
+				case ThrusterType.Two_One:
+					#region Two_One
+
+					//	Directions
+					retVal = new Vector3D[3];
+					retVal[0] = new Vector3D(0, 0, 1);
+					retVal[1] = new Vector3D(0, 0, -1);
+					retVal[2] = new Vector3D(1, 0, 0);
+
+					#endregion
+					break;
+
+				case ThrusterType.Two_Two:
+					#region Two_Two
+
+					//	Directions
+					retVal = new Vector3D[4];
+					retVal[0] = new Vector3D(0, 0, 1);
+					retVal[1] = new Vector3D(0, 0, -1);
+					retVal[2] = new Vector3D(1, 0, 0);
+					retVal[3] = new Vector3D(-1, 0, 0);
+
+					#endregion
+					break;
+
+				case ThrusterType.Two_Two_One:
+					#region Two_Two_One
+
+					//	Directions
+					retVal = new Vector3D[5];
+					retVal[0] = new Vector3D(0, 0, 1);
+					retVal[1] = new Vector3D(0, 0, -1);
+					retVal[2] = new Vector3D(1, 0, 0);
+					retVal[3] = new Vector3D(-1, 0, 0);
+					retVal[4] = new Vector3D(0, 1, 0);
+
+					#endregion
+					break;
+
+				case ThrusterType.Two_Two_Two:
+					#region Two_Two_Two
+
+					//	Directions
+					retVal = new Vector3D[6];
+					retVal[0] = new Vector3D(0, 0, 1);
+					retVal[1] = new Vector3D(0, 0, -1);
+					retVal[2] = new Vector3D(1, 0, 0);
+					retVal[3] = new Vector3D(-1, 0, 0);
+					retVal[4] = new Vector3D(0, 1, 0);
+					retVal[5] = new Vector3D(0, -1, 0);
+
+					#endregion
+					break;
+
+				case ThrusterType.Custom:
+					#region Custom
+
+					throw new ApplicationException("finish implementing custom thrusters");
+
+					#endregion
+					break;
+
+				default:
+					throw new ApplicationException("Unknown ThrusterType: " + thrusterType.ToString());
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+
 		#endregion
 
 		#region Private Methods
@@ -349,10 +446,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 					geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, true, transform);
 					retVal.Children.Add(geometry);
 
-					//	Directions
-					this.ThrusterDirections = new Vector3D[1];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);		//	the visual's bottle points down, but the thrust is up
-
 					#endregion
 					break;
 
@@ -372,11 +465,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, true, transform);
 					retVal.Children.Add(geometry);
-
-					//	Directions
-					this.ThrusterDirections = new Vector3D[2];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
 
 					#endregion
 					break;
@@ -410,12 +498,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					retVal.Children.Add(geometry);
 
-					//	Directions
-					this.ThrusterDirections = new Vector3D[3];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
-
 					#endregion
 					break;
 
@@ -446,13 +528,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 					geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, true, transform);
 
 					retVal.Children.Add(geometry);
-
-					//	Directions
-					this.ThrusterDirections = new Vector3D[4];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
 
 					#endregion
 					break;
@@ -497,14 +572,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					retVal.Children.Add(geometry);
 
-					//	Directions
-					this.ThrusterDirections = new Vector3D[5];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
-					this.ThrusterDirections[4] = new Vector3D(0, 1, 0);
-
 					#endregion
 					break;
 
@@ -546,15 +613,6 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 
 					retVal.Children.Add(geometry);
 
-					//	Directions
-					this.ThrusterDirections = new Vector3D[6];
-					this.ThrusterDirections[0] = new Vector3D(0, 0, 1);
-					this.ThrusterDirections[1] = new Vector3D(0, 0, -1);
-					this.ThrusterDirections[2] = new Vector3D(1, 0, 0);
-					this.ThrusterDirections[3] = new Vector3D(-1, 0, 0);
-					this.ThrusterDirections[4] = new Vector3D(0, 1, 0);
-					this.ThrusterDirections[5] = new Vector3D(0, -1, 0);
-
 					#endregion
 					break;
 
@@ -569,6 +627,9 @@ namespace Game.Newt.AsteroidMiner2.ShipParts
 				default:
 					throw new ApplicationException("Unknown ThrusterType: " + this.ThrusterType.ToString());
 			}
+
+			//	Directions
+			this.ThrusterDirections = GetThrusterDirections(this.ThrusterType);
 
 			//	Remember the points
 			if (isFinal)

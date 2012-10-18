@@ -623,6 +623,8 @@ namespace Game.Newt.AsteroidMiner2.ShipEditor
 
 			foreach (int layerIndex in partsByLayer.Keys)
 			{
+				_parts.Add(new List<DesignPart>());
+
 				foreach (DesignPart part in partsByLayer[layerIndex])
 				{
 					_viewport.Children.Add(part.Model);

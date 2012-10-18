@@ -30,12 +30,12 @@
                                 <Button Click="btnSingleFuel_Click" Name="btnSingleFuel" Content="Fuel Tank"/>
                                 <Button Click="btnSingleEnergy_Click" Name="btnSingleEnergy" Content="Energy Tank"/>
                                 <Button Click="btnMultiEnergy_Click" Name="btnMultiEnergy" Content="Energy Tanks"/>
-                                
+
                                 <Button Click="btnEnergyToAmmo_Click" Name="btnEnergyToAmmo" Content="Energy to Ammo" Margin="0,6,0,2"/>
                                 <Button Click="btnEnergyToFuel_Click" Name="btnEnergyToFuel" Content="Energy to Fuel"/>
                                 <Button Click="btnFuelToEnergy_Click" Name="btnFuelToEnergy" Content="Fuel to Energy"/>
                                 <Button Click="btnSolarPanel_Click" Name="btnSolarPanel" Content="Solar Panel"/>
-                                
+
                                 <Button Click="btnThruster_Click" Name="btnThruster" Content="Thruster" Margin="0,6,0,2"/>
                             </StackPanel>
                         </Border>
@@ -57,7 +57,7 @@
                                 <Button Click="btnStandaloneSolarPanel_Click" Name="btnStandaloneSolarPanel" Content="Solar Panel"/>
 
                                 <Button Click="btnStandaloneThruster_Click" Name="btnStandaloneThruster" Content="Thruster" Margin="0,6,0,2"/>
-                                
+
                                 <CheckBox Name="chkStandaloneRandSize" Content="Random size" Margin="0,8,0,2"/>
                                 <CheckBox Name="chkStandaloneRandOrientation" Content="Random orientation" Margin="0,2"/>
                                 <CheckBox Name="chkStandaloneShowMassBreakdown" Content="Show mass breakdown" Margin="0,2"/>
@@ -66,17 +66,47 @@
                     </Expander>
 
                     <!-- Ships -->
-                    <Expander IsExpanded="True" Header="Ship Tests">
+                    <Expander IsExpanded="False" Header="Ship Tests">
                         <Border>
                             <StackPanel Margin="8,6">
-                                <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic"/>
-                                <Button Click="btnSimplestFlyer_Click" Name="btnSimplestFlyer" Content="Simplest Flyer"/>
-                                <Button Click="btnShip3Thrust_Click" Name="btnShip3Thrust" Content="3 thrust flyer"/>
-                                <Button Click="btnShip3ThrustRand_Click" Name="btnShip3ThrustRand" Content="3 thrust flyer (rand)"/>
-                                <Button Click="btnShipSimpleFlyer_Click" Name="btnShipSimpleFlyer" Content="Simple Flyer"/>
-                                <Button Click="btnShipWackyFlyer_Click" Name="btnShipWackyFlyer" Content="Wacky Flyer"/>
-                                <Button Click="btnShipChallenge1_Click" Name="btnShipChallenge1" Content="Challenge Flyer 1"/>
-                                <Button Click="btnShipChallenge2_Click" Name="btnShipChallenge2" Content="Challenge Flyer 2"/>
+                                <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic (not flyer)"/>
+                                <Button Click="btnSimplestFlyer_Click" Name="btnSimplestFlyer" Content="Simplest"/>
+                                <Button Click="btnShip3Thrust_Click" Name="btnShip3Thrust" Content="3 thrust"/>
+                                <Button Click="btnShip3ThrustY_Click" Name="btnShip3ThrustY" Content="3 thrust Y"/>
+                                <Button Click="btnShip3ThrustRand_Click" Name="btnShip3ThrustRand" Content="3 thrust (rand)"/>
+                                <Button Click="btnShip4ThrustRand_Click" Name="btnShip4ThrustRand" Content="4 thrust (rand)"/>
+                                <Button Click="btnShip4ThrustRand3D_Click" Name="btnShip4ThrustRand3D" Content="4 thrust (rand 3D)"/>
+                                <Button Click="btnShipSimpleFlyer_Click" Name="btnShipSimpleFlyer" Content="Simple"/>
+                                <Button Click="btnShipWackyFlyer_Click" Name="btnShipWackyFlyer" Content="Wacky"/>
+                                <Button Click="btnShipChallenge1_Click" Name="btnShipChallenge1" Content="Challenge 1"/>
+                                <Button Click="btnShipChallenge2_Click" Name="btnShipChallenge2" Content="Challenge 2"/>
+
+                                <CheckBox Name="chkShipDebugVisuals" Content="Show debug visuals" Margin="0,8,0,0"/>
+
+                                <Button Click="btnCalcThrusts_Click" Name="btnCalcThrusts" Content="Calculate Thrusts" Margin="0,8,0,0"/>
+
+                                <UniformGrid Rows="1" Margin="0,8,0,0">
+                                    <Button Click="btnSaveShip_Click" Name="btnSaveShip" Content="Save"/>
+                                    <Button Click="btnLoadShip_Click" Name="btnLoadShip" Content="Load"/>
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Visualize Balance -->
+                    <Expander IsExpanded="True" Header="Visualize Balance">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Slider Name="trkBalanceCount" Minimum="2" Maximum="6" Value="4" TickPlacement="BottomRight" TickFrequency="1" ValueChanged="trkBalanceCount_ValueChanged" IsSnapToTickEnabled="True" />
+                                <CheckBox Name="chkBalance3D" IsChecked="True" Content="3D" Checked="chkBalance3D_Checked" Unchecked="chkBalance3D_Checked"/>
+                                <CheckBox Name="chkBalanceAxiis" IsChecked="True" Content="Show axiis" Checked="chkBalanceAxiis_Checked" Unchecked="chkBalanceAxiis_Checked"/>
+                                <CheckBox Name="chkBalancePossLines" Content="Show possibility lines" Checked="chkBalancePossLines_Checked" Unchecked="chkBalancePossLines_Checked"/>
+                                <CheckBox Name="chkBalancePossHull" Content="Show possibility hull" Checked="chkBalancePossHull_Checked" Unchecked="chkBalancePossHull_Checked"/>
+                                <CheckBox Name="chkBalanceZeroTorqueTest" Content="Zero torque test" Checked="chkBalanceZeroTorqueTest_Checked" Unchecked="chkBalanceZeroTorqueTest_Checked"/>
+                                <Button Name="btnBalanceGenerate" Content="Generate" Click="btnBalanceGenerate_Click"/>
+                                <ComboBox Name="cboBalanceVector" ToolTip="Viewing" SelectionChanged="cboBalanceVector_SelectionChanged"/>
+                                <!--<TextBlock Name="lblBalanceStats"/>-->
+                                <Button Visibility="Collapsed" Name="btnBalanceTest" Content="Test" Margin="0,8,0,0" Click="btnBalanceTest_Click"/>
                             </StackPanel>
                         </Border>
                     </Expander>
@@ -107,7 +137,7 @@
                                 <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSand" Content="Falling Sand"/>
                                 <RadioButton Checked="radFallingSand_Checked" Unchecked="radFallingSand_Checked" Name="radFallingSandPlates" Content="Falling Sand (plates)"/>
                                 <RadioButton IsChecked="True" Name="radNone" Content="None"/>
-                                
+
                                 <Slider Minimum=".01" Maximum="500" Name="trkMass" ToolTip="Mass"/>
                                 <Slider Minimum=".25" Maximum="10" Name="trkSpeed" ToolTip="Speed"/>
                             </StackPanel>
