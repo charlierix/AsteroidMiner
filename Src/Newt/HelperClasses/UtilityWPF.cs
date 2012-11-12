@@ -23,27 +23,55 @@ namespace Game.Newt.HelperClasses
 		/// </remarks>
 		private static class QuickHull2D
 		{
-			public static int[] GetConvexHull(Point3D[] points)
+			public static QuickHull2DResult GetConvexHull(Point3D[] points)
 			{
-				//	Convert to 2D
-				Point[] points2D = new Point[points.Length];
-				for (int cntr = 0; cntr < points.Length; cntr++)
+				Transform3D transform = null;
+
+				//	If there are less than three points, just return everything
+				if (points.Length == 0)
 				{
-					points2D[cntr] = new Point(points[cntr].X, points[cntr].Y);
+					return new QuickHull2DResult(new Point[0], new int[0], null);
+				}
+				else if (points.Length == 1)
+				{
+					return new QuickHull2DResult(new Point[] { new Point(points[0].X, points[0].Y) }, new int[] { 0 }, new TranslateTransform3D(0, 0, -points[0].Z));
+				}
+				else if (points.Length == 2)
+				{
+					Point[] transformedPoints = GetRotatedPoints(out transform, points[0], points[1]);
+					return new QuickHull2DResult(transformedPoints, new int[] { 0, 1 }, transform);
+				}
+
+				Point[] points2D = null;
+				if (points.All(o => Math3D.IsNearZero(o.Z)))
+				{
+					//	There is no Z, so just directly convert the points (leave transform null)
+					points2D = points.Select(o => new Point(o.X, o.Y)).ToArray();
+				}
+				else
+				{
+					//	Rotate the points so that Z drops out (and make sure they are all coplanar)
+					points2D = GetRotatedPoints(out transform, points);
+				}
+
+				if (points2D == null)
+				{
+					return null;
 				}
 
 				//	Call quickhull
-				return GetConvexHull(points2D);
+				QuickHull2DResult retVal = GetConvexHull(points2D);
+				return new QuickHull2DResult(retVal.Points, retVal.PerimiterLines, transform);
 			}
-			public static int[] GetConvexHull(Point[] points)
+			public static QuickHull2DResult GetConvexHull(Point[] points)
 			{
 				if (points.Length < 3)
 				{
-					return UtilityHelper.GetIncrementingArray(points.Length);		//	return all the points
+					return new QuickHull2DResult(points, Enumerable.Range(0, points.Length).ToArray(), null);		//	return all the points
 				}
 
 				List<int> retVal = new List<int>();
-				List<int> remainingPoints = UtilityHelper.GetIncrementingList(points.Length);
+				List<int> remainingPoints = Enumerable.Range(0, points.Length).ToList();
 
 				#region Find two most extreme points
 
@@ -110,7 +138,7 @@ namespace Game.Newt.HelperClasses
 				HullSet(maxIndex, minIndex, leftSet, retVal, points);
 
 				//	Exit Function
-				return retVal.ToArray();
+				return new QuickHull2DResult(points, retVal.ToArray(), null);
 			}
 
 			#region Private Methods
@@ -186,10 +214,18 @@ namespace Game.Newt.HelperClasses
 				HullSet(farIndex, lineStop, leftSet_Far_Stop, hull, allPoints);
 			}
 
-			private static bool IsRightOfLine(int lineStart, int lineStop, int testPoint, Point[] allPoints)
+			internal static bool IsRightOfLine(int lineStart, int lineStop, int testPoint, Point[] allPoints)
 			{
 				double cp1 = ((allPoints[lineStop].X - allPoints[lineStart].X) * (allPoints[testPoint].Y - allPoints[lineStart].Y)) -
 									  ((allPoints[lineStop].Y - allPoints[lineStart].Y) * (allPoints[testPoint].X - allPoints[lineStart].X));
+
+				return cp1 > 0;
+				//return (cp1 > 0) ? 1 : -1;
+			}
+			internal static bool IsRightOfLine(int lineStart, int lineStop, Point testPoint, Point[] allPoints)
+			{
+				double cp1 = ((allPoints[lineStop].X - allPoints[lineStart].X) * (testPoint.Y - allPoints[lineStart].Y)) -
+									  ((allPoints[lineStop].Y - allPoints[lineStart].Y) * (testPoint.X - allPoints[lineStart].X));
 
 				return cp1 > 0;
 				//return (cp1 > 0) ? 1 : -1;
@@ -206,7 +242,192 @@ namespace Game.Newt.HelperClasses
 				return (point - nearestPoint).LengthSquared;
 			}
 
+			/// <summary>
+			/// This overload assumes that there are at least 3 points, or it will just return null
+			/// </summary>
+			private static Point[] GetRotatedPoints(out Transform3D transform, Point3D[] points)
+			{
+				//	Make sure they are coplanar, and get a triangle that represents that plane
+				ITriangle triangle = GetThreeCoplanarPoints(points);
+				if (triangle == null)
+				{
+					transform = null;
+					return null;
+				}
+
+				//	Figure out a transform that will make Z drop out
+				transform = GetTransformTo2D(triangle);
+
+				//	Transform them
+				Point[] retVal = new Point[points.Length];
+				for (int cntr = 0; cntr < points.Length; cntr++)
+				{
+					Point3D transformed = transform.Transform(points[cntr]);
+					retVal[cntr] = new Point(transformed.X, transformed.Y);
+				}
+
+				//	Exit Function
+				return retVal;
+			}
+			/// <summary>
+			/// This overload handles exactly two points
+			/// </summary>
+			private static Point[] GetRotatedPoints(out Transform3D transform, Point3D point1, Point3D point2)
+			{
+				//	Get rotation
+				Quaternion rotation = Quaternion.Identity;
+				if (!Math3D.IsNearValue(point1, point2))
+				{
+					Vector3D line1 = point2 - point1;		//	this line is not along the z plane
+					Vector3D line2 = new Point3D(point2.X, point2.Y, point1.Z) - point1;		//	this line uses point1's z so is in the z plane
+
+					rotation = Math3D.GetRotation(line1, line2);
+				}
+
+				Transform3DGroup group = new Transform3DGroup();
+				group.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+
+				//	Get Translation
+				group.Children.Add(new TranslateTransform3D(0, 0, -point1.Z));
+
+				transform = group;
+
+				//	Transform the points
+				Point[] retVal = new Point[2];
+				Point3D transformedPoint = transform.Transform(point1);
+				retVal[0] = new Point(transformedPoint.X, transformedPoint.Y);
+
+				transformedPoint = transform.Transform(point2);
+				retVal[1] = new Point(transformedPoint.X, transformedPoint.Y);
+
+				//	Exit Function
+				return retVal;
+			}
+
+			//NOTE: This also makes sure that all the points lie in the same plane as the returned triangle (some of the points may still be
+			//colinear or the same, but at least they are on the same plane)
+			private static ITriangle GetThreeCoplanarPoints(Point3D[] points)
+			{
+				Vector3D? line1 = null;
+				Vector3D? line1Unit = null;
+
+				ITriangle retVal = null;
+
+				for (int cntr = 1; cntr < points.Length; cntr++)
+				{
+					if (Math3D.IsNearValue(points[0], points[cntr]))
+					{
+						//	These points are sitting on top of each other
+						continue;
+					}
+
+					Vector3D line = points[cntr] - points[0];
+
+					if (line1 == null)
+					{
+						//	Found the first line
+						line1 = line;
+						line1Unit = line.ToUnit();
+						continue;
+					}
+
+					if (retVal == null)
+					{
+						if (!Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
+						{
+							//	These two lines aren't colinear.  Found the second line
+							retVal = new Triangle(points[0], points[0] + line1.Value, points[cntr]);
+						}
+
+						continue;
+					}
+
+					if (!Math3D.IsNearZero(Vector3D.DotProduct(retVal.Normal, line)))
+					{
+						//	This point isn't coplanar with the triangle
+						return null;
+					}
+				}
+
+				//	Exit Function
+				return retVal;
+			}
+
+			private static Transform3D GetTransformTo2D(ITriangle triangle)
+			{
+				Vector3D line1 = triangle.Point1 - triangle.Point0;
+
+				DoubleVector from = new DoubleVector(line1, Math3D.GetOrthogonal(line1, triangle.Point2 - triangle.Point0));
+				DoubleVector to = new DoubleVector(new Vector3D(1, 0, 0), new Vector3D(0, 1, 0));
+
+				Quaternion rotation = from.GetAngleAroundAxis(to);
+
+				Transform3DGroup retVal = new Transform3DGroup();
+
+				//	Rotate
+				retVal.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+
+				//	Then translate
+				retVal.Children.Add(new TranslateTransform3D(0, 0, -triangle.Point0.Z));
+
+				return retVal;
+			}
+
 			#endregion
+		}
+
+		#endregion
+		#region Class: QuickHull2DResult
+
+		public class QuickHull2DResult
+		{
+			public QuickHull2DResult(Point[] points, int[] perimiterLines, Transform3D transform)
+			{
+				this.Points = points;
+				this.PerimiterLines = perimiterLines;
+				this.Transform = transform;
+			}
+
+			public readonly Point[] Points;
+			public readonly int[] PerimiterLines;
+			private readonly Transform3D Transform;
+
+			public bool IsInside(Point point)
+			{
+				for (int cntr = 0; cntr < this.Points.Length - 1; cntr++)
+				{
+					if (!QuickHull2D.IsRightOfLine(cntr, cntr + 1, point, this.Points))
+					{
+						return false;
+					}
+				}
+
+				if (!QuickHull2D.IsRightOfLine(this.Points.Length - 1, 0, point, this.Points))
+				{
+					return false;
+				}
+
+				return true;
+			}
+			public Point? GetTransformedPoint(Point3D point)
+			{
+				//	Use the transform to rotate/translate the point to the z plane
+				Point3D transformed = point;
+				if (this.Transform != null)
+				{
+					transformed = this.Transform.Transform(point);
+				}
+
+				//	Only return a value if it's now in the z plane, which will only work if the point passed in is in the same plane as this.Points
+				if (Math3D.IsNearZero(transformed.Z))
+				{
+					return new Point(transformed.X, transformed.Y);
+				}
+				else
+				{
+					return null;
+				}
+			}
 		}
 
 		#endregion
@@ -246,7 +467,8 @@ namespace Game.Newt.HelperClasses
 			{
 				if (points.Length < 4)
 				{
-					throw new ArgumentException("There must be at least 4 points", "points");
+					//throw new ArgumentException("There must be at least 4 points", "points");
+					return null;
 				}
 
 				//	Pick 4 points
@@ -273,6 +495,12 @@ namespace Game.Newt.HelperClasses
 						}
 					}
 				} while (foundOne);
+
+				if (retVal.Count == 0)
+				{
+					//	Found a case where the points were nearly coplanar, and adding another point wiped out the whole hull
+					return null;
+				}
 
 				//	Exit Function
 				return retVal.ToArray();
@@ -478,7 +706,7 @@ namespace Game.Newt.HelperClasses
 				#region Calculate outside points
 
 				//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
-				List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+				List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
 
 				//	Remove the indicies that are in the return triangles (I ran into a case where 4 points were passed in, but they were nearly coplanar - enough
 				//	that GetOutsideSet's Math3D.IsNearZero included it)
@@ -2456,14 +2684,14 @@ namespace Game.Newt.HelperClasses
 		/// This returns a convex hull of lines that uses the outermost points (uses the quickhull algorithm)
 		/// NOTE:  Even though the param is Point3D, Z is ignored
 		/// </summary>
-		public static int[] GetConvexHull2D(Point3D[] points)
+		public static QuickHull2DResult GetConvexHull2D(Point3D[] points)
 		{
 			return QuickHull2D.GetConvexHull(points);
 		}
 		/// <summary>
 		/// This returns a convex hull of lines that uses the outermost points (uses the quickhull algorithm)
 		/// </summary>
-		public static int[] GetConvexHull2D(Point[] points)
+		public static QuickHull2DResult GetConvexHull2D(Point[] points)
 		{
 			return QuickHull2D.GetConvexHull(points);
 		}

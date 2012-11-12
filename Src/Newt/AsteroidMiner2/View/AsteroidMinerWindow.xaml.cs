@@ -36,6 +36,7 @@ namespace Game.Newt.AsteroidMiner2.View
 		private Point3D _boundryMax;
 
 		private WorldColors _colors = new WorldColors();
+		private OptionsPanel _optionsPanel = new OptionsPanel();
 
 		private World _world = null;
 		private Map _map = null;
@@ -70,6 +71,8 @@ namespace Game.Newt.AsteroidMiner2.View
 		public AsteroidMinerWindow()
 		{
 			InitializeComponent();
+
+			_optionsPanel.OKClicked += new EventHandler(OptionsPanel_OKClicked);
 		}
 
 		#endregion
@@ -157,14 +160,16 @@ namespace Game.Newt.AsteroidMiner2.View
 				_map.SnapshotFequency_Milliseconds = 125;
 				_map.SnapshotMaxItemsPerNode = 10;
 				_map.ShouldBuildSnapshots = true;
-				//_map.ShouldShowSnapshotLines = true;
-				//_map.ShouldSnapshotCentersDrift = false;
+				_map.ShouldShowSnapshotLines = _optionsPanel.OctreeShowLines;
+				_map.ShouldSnapshotCentersDrift = _optionsPanel.OctreeCentersDrift;
 
 				CreateFields();
 
-				//TODO:  Config the number of startup objects
 				//TODO:  Add these during a timer to minimize the load time
-				CreateStars();
+				if (_optionsPanel.ShowStars)
+				{
+					CreateStars();
+				}
 				CreateAsteroids();
 				CreateMinerals();
 				CreateSpaceStations();		//	creating these last so stuff shows up behind them
@@ -346,7 +351,59 @@ namespace Game.Newt.AsteroidMiner2.View
 
 		private void btnOptions_Click(object sender, RoutedEventArgs e)
 		{
-			MessageBox.Show("finish this");
+			try
+			{
+				_world.Pause();
+
+				darkPlate.Visibility = Visibility.Visible;
+
+				dialogContainer.Content = _optionsPanel;
+				dialogContainer.Visibility = Visibility.Visible;
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void OptionsPanel_OKClicked(object sender, EventArgs e)
+		{
+			try
+			{
+				//	Hide the dialog
+				dialogContainer.Visibility = Visibility.Collapsed;
+				dialogContainer.Content = null;
+
+				darkPlate.Visibility = Visibility.Collapsed;
+
+				//	Resume the world
+				_world.UnPause();
+
+				//	Transfer settings from the options
+				_map.ShouldShowSnapshotLines = _optionsPanel.OctreeShowLines;
+				_map.ShouldSnapshotCentersDrift = _optionsPanel.OctreeCentersDrift;
+
+				#region Stars
+
+				if (_stars.Count > 0 && !_optionsPanel.ShowStars)
+				{
+					foreach (Visual3D star in _stars)
+					{
+						_viewport.Children.Remove(star);
+					}
+
+					_stars.Clear();
+				}
+				else if (_stars.Count == 0 && _optionsPanel.ShowStars)
+				{
+					CreateStars();
+				}
+
+				#endregion
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
 		}
 
 		#endregion
@@ -382,10 +439,34 @@ namespace Game.Newt.AsteroidMiner2.View
 			innerRadius *= 2;
 			double outerRadius = innerRadius * 2d;
 
-			int numStars = Convert.ToInt32(DENSITY * innerRadius * innerRadius);
-			if (numStars > 5000)
+			double ratio;
+			switch (_optionsPanel.NumStartingObjects)
 			{
-				numStars = 5000;
+				case NumberOfStartingObjects.VeryFew:
+					ratio = .1d;
+					break;
+
+				case NumberOfStartingObjects.Few:
+					ratio = .5d;
+					break;
+
+				case NumberOfStartingObjects.Normal:
+					ratio = 1d;
+					break;
+
+				case NumberOfStartingObjects.Many:
+					ratio = 1.5d;
+					break;
+
+				default:
+					throw new ApplicationException("Unknown NumberOfStartingObjects: " + _optionsPanel.NumStartingObjects.ToString());
+			}
+
+			int numStars = Convert.ToInt32(DENSITY * innerRadius * innerRadius * ratio);
+			int maxStars = Convert.ToInt32(5000d * ratio);
+			if (numStars > maxStars)
+			{
+				numStars = maxStars;
 			}
 
 			Random rand = StaticRandom.GetRandomForThread();
@@ -433,7 +514,6 @@ namespace Game.Newt.AsteroidMiner2.View
 			//	Add to the viewport
 			_viewport.Children.Add(model);
 			_stars.Add(model);
-
 		}
 
 		private void CreateSpaceStations()
@@ -510,24 +590,55 @@ namespace Game.Newt.AsteroidMiner2.View
 			Random rand = StaticRandom.GetRandomForThread();
 			double asteroidSize;
 
+			int numSmall, numMedium, numLarge;
+			switch (_optionsPanel.NumStartingObjects)
+			{
+				case NumberOfStartingObjects.VeryFew:
+					numSmall = 20;
+					numMedium = 6;
+					numLarge = 1;
+					break;
+
+				case NumberOfStartingObjects.Few:
+					numSmall = 80;
+					numMedium = 25;
+					numLarge = 3;
+					break;
+
+				case NumberOfStartingObjects.Normal:
+					numSmall = 150;
+					numMedium = 50;
+					numLarge = 7;
+					break;
+
+				case NumberOfStartingObjects.Many:
+					numSmall = 250;
+					numMedium = 84;
+					numLarge = 12;
+					break;
+
+				default:
+					throw new ApplicationException("Unknown NumberOfStartingObjects: " + _optionsPanel.NumStartingObjects.ToString());
+			}
+
 			//CreateAsteroidsSprtBuild(1d, new Point3D(0, 0, 0));
 
 			// Small
-			for (int cntr = 0; cntr < 150; cntr++)
+			for (int cntr = 0; cntr < numSmall; cntr++)
 			{
 				asteroidSize = .5 + (rand.NextDouble() * 2);
 				CreateAsteroidsSprtBuild(asteroidSize, CreateAsteroidsSprtPosition());
 			}
 
 			// Medium
-			for (int cntr = 0; cntr < 50; cntr++)
+			for (int cntr = 0; cntr < numMedium; cntr++)
 			{
 				asteroidSize = 2 + (rand.NextDouble() * 3);
 				CreateAsteroidsSprtBuild(asteroidSize, CreateAsteroidsSprtPosition());
 			}
 
 			// Large
-			for (int cntr = 0; cntr < 7; cntr++)
+			for (int cntr = 0; cntr < numLarge; cntr++)
 			{
 				asteroidSize = 4.5 + (rand.NextDouble() * 5);
 				CreateAsteroidsSprtBuild(asteroidSize, CreateAsteroidsSprtPosition());
@@ -604,52 +715,75 @@ namespace Game.Newt.AsteroidMiner2.View
 
 		private void CreateMinerals()
 		{
-			for (int cntr = 0; cntr < 150; cntr++)
+			double ratio = 1d;
+			switch (_optionsPanel.NumStartingObjects)
+			{
+				case NumberOfStartingObjects.VeryFew:
+					ratio = .13d;
+					break;
+
+				case NumberOfStartingObjects.Few:
+					ratio = .53d;
+					break;
+
+				case NumberOfStartingObjects.Normal:
+					ratio = 1d;
+					break;
+
+				case NumberOfStartingObjects.Many:
+					ratio = 1.667d;
+					break;
+
+				default:
+					throw new ApplicationException("Unknown NumberOfStartingObjects: " + _optionsPanel.NumStartingObjects.ToString());
+			}
+
+			for (int cntr = 0; cntr < Math.Ceiling(150d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Ice, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 25; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(25d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Iron, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 20; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(20d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Graphite, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 8; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(8d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Gold, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 6; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(6d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Platinum, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 5; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(5d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Emerald, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 4; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(4d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Saphire, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 4; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(4d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Ruby, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 3; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(3d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Diamond, CreateMineralsSprtPosition());
 			}
 
-			for (int cntr = 0; cntr < 2; cntr++)
+			for (int cntr = 0; cntr < Math.Ceiling(2d * ratio); cntr++)
 			{
 				CreateMineralsSprtBuild(MineralType.Rixium, CreateMineralsSprtPosition());
 			}

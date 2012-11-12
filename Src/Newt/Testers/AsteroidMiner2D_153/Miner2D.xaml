@@ -83,7 +83,6 @@
         </StackPanel>
 
         <!-- This is a dark plate that appears over the viewers when a dialog box is showing -->
-        <!-- TODO: Make this a gradient -->
         <Rectangle Visibility="Collapsed" Name="darkPlate" Fill="#80000000"/>
 
         <my:SpaceDockPanel Visibility="Collapsed" x:Name="spaceDock" LaunchShip="spaceDock_LaunchShip" />

@@ -69,6 +69,7 @@
                     <Expander IsExpanded="False" Header="Ship Tests">
                         <Border>
                             <StackPanel Margin="8,6">
+                                <Label Content="Fly with arrow keys" FontStyle="Italic" Foreground="#686868"/>
                                 <Button Click="btnShipBasic_Click" Name="btnShipBasic" Content="Basic (not flyer)"/>
                                 <Button Click="btnSimplestFlyer_Click" Name="btnSimplestFlyer" Content="Simplest"/>
                                 <Button Click="btnShip3Thrust_Click" Name="btnShip3Thrust" Content="3 thrust"/>
@@ -100,11 +101,17 @@
                                 <Slider Name="trkBalanceCount" Minimum="2" Maximum="6" Value="4" TickPlacement="BottomRight" TickFrequency="1" ValueChanged="trkBalanceCount_ValueChanged" IsSnapToTickEnabled="True" />
                                 <CheckBox Name="chkBalance3D" IsChecked="True" Content="3D" Checked="chkBalance3D_Checked" Unchecked="chkBalance3D_Checked"/>
                                 <CheckBox Name="chkBalanceAxiis" IsChecked="True" Content="Show axiis" Checked="chkBalanceAxiis_Checked" Unchecked="chkBalanceAxiis_Checked"/>
-                                <CheckBox Name="chkBalancePossLines" Content="Show possibility lines" Checked="chkBalancePossLines_Checked" Unchecked="chkBalancePossLines_Checked"/>
+
+                                <RadioButton IsChecked="True" Name="radBalanceIndividual" Content="Individual tests" Margin="0,8,0,0" Checked="radBalance_Checked"/>
+                                <RadioButton Name="radBalanceZeroTorque1" Content="Zero torque 1" ToolTip="Tests everything at 100%" Checked="radBalance_Checked"/>
+                                <RadioButton Name="radBalanceZeroTorque2" Content="Zero torque 2" ToolTip="Finds the true 100%(s) and stops" Checked="radBalance_Checked"/>
+
+                                <CheckBox Name="chkBalancePossLines" Content="Show possibility lines" Margin="0,8,0,0" Checked="chkBalancePossLines_Checked" Unchecked="chkBalancePossLines_Checked"/>
                                 <CheckBox Name="chkBalancePossHull" Content="Show possibility hull" Checked="chkBalancePossHull_Checked" Unchecked="chkBalancePossHull_Checked"/>
-                                <CheckBox Name="chkBalanceZeroTorqueTest" Content="Zero torque test" Checked="chkBalanceZeroTorqueTest_Checked" Unchecked="chkBalanceZeroTorqueTest_Checked"/>
-                                <Button Name="btnBalanceGenerate" Content="Generate" Click="btnBalanceGenerate_Click"/>
                                 <ComboBox Name="cboBalanceVector" ToolTip="Viewing" SelectionChanged="cboBalanceVector_SelectionChanged"/>
+
+                                <Button Name="btnBalanceGenerate" Content="Generate" Margin="0,8,0,0" Click="btnBalanceGenerate_Click"/>
+
                                 <!--<TextBlock Name="lblBalanceStats"/>-->
                                 <Button Visibility="Collapsed" Name="btnBalanceTest" Content="Test" Margin="0,8,0,0" Click="btnBalanceTest_Click"/>
                             </StackPanel>
@@ -119,6 +126,7 @@
                                 <Button Click="btnCylinderBreakdown_Click" Name="btnCylinderBreakdown" Content="Cylinder Breakdown"/>
                                 <Button Click="btnCapsuleBreakdown_Click" Name="btnCapsuleBreakdown" Content="Capsule Breakdown"/>
                                 <Button Click="btnMassMatrix_Click" Name="btnMassMatrix" Content="Mass Matrix"/>
+                                <Button Click="btnCoplanarTo2D_Click" Content="Coplanar points to xy plane" Name="btnCoplanarTo2D"/>
                             </StackPanel>
                         </Border>
                     </Expander>

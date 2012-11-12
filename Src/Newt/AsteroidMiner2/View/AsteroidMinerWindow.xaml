@@ -44,5 +44,11 @@
                 </Style>
             </Button.Style>
         </Button>
+
+        <!-- This is a dark plate that appears over the viewers when a dialog box is showing -->
+        <Rectangle Visibility="Collapsed" Name="darkPlate" Fill="#80000000"/>
+
+        <!-- This holds the dialog boxes (this should be cleared to close the dialog) -->
+        <ScrollViewer Visibility="Collapsed" Name="dialogContainer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
 </Window>

@@ -65,35 +65,6 @@ namespace Game.HelperClasses
 		}
 
 		/// <summary>
-		/// Element 0=0, element 1=1, etc
-		/// </summary>
-		public static int[] GetIncrementingArray(int size)
-		{
-			int[] retVal = new int[size];
-
-			for (int cntr = 0; cntr < size; cntr++)
-			{
-				retVal[cntr] = cntr;
-			}
-
-			return retVal;
-		}
-		/// <summary>
-		/// Element 0=0, element 1=1, etc
-		/// </summary>
-		public static List<int> GetIncrementingList(int size)
-		{
-			List<int> retVal = new List<int>();
-
-			for (int cntr = 0; cntr < size; cntr++)
-			{
-				retVal.Add(cntr);
-			}
-
-			return retVal;
-		}
-
-		/// <summary>
 		/// This iterates over all combinations of a set of numbers
 		/// NOTE: The number of iterations is (2^inputSize) - 1, so be careful with input sizes over 10 to 15
 		/// </summary>
@@ -167,5 +138,44 @@ namespace Game.HelperClasses
 				}
 			}
 		}
+
+		#region OLD
+
+		//	I made these as helpers before I knew about Enumerable.Range
+
+		///// <summary>
+		///// Element 0=0, element 1=1, etc
+		///// </summary>
+		//public static int[] GetIncrementingArray(int size)
+		//{
+		//    //int[] retVal = new int[size];
+
+		//    //for (int cntr = 0; cntr < size; cntr++)
+		//    //{
+		//    //    retVal[cntr] = cntr;
+		//    //}
+
+		//    //return retVal;
+
+		//    return Enumerable.Range(0, size).ToArray();
+		//}
+		///// <summary>
+		///// Element 0=0, element 1=1, etc
+		///// </summary>
+		//public static List<int> GetIncrementingList(int size)
+		//{
+		//    //List<int> retVal = new List<int>();
+
+		//    //for (int cntr = 0; cntr < size; cntr++)
+		//    //{
+		//    //    retVal.Add(cntr);
+		//    //}
+
+		//    //return retVal;
+
+		//    return Enumerable.Range(0, size).ToList();
+		//}
+
+		#endregion
 	}
 }

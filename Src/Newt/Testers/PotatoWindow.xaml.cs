@@ -441,19 +441,20 @@ namespace Game.Newt.Testers
 				{
 					//	Do a quickhull implementation
 					//int[] lines = QuickHull2a.GetQuickHull2D(points.ToArray());
-					int[] lines = UtilityWPF.GetConvexHull2D(points.ToArray());
+					//int[] lines = UtilityWPF.GetConvexHull2D(points.ToArray());
+					var result = UtilityWPF.GetConvexHull2D(points.ToArray());
 
 					//	Draw the lines
 					ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
 					lineVisual.Thickness = LINETHICKNESS;
 					lineVisual.Color = _colors.DarkSlate;
 
-					for (int cntr = 0; cntr < lines.Length - 1; cntr++)
+					for (int cntr = 0; cntr < result.PerimiterLines.Length - 1; cntr++)
 					{
-						lineVisual.AddLine(points[lines[cntr]], points[lines[cntr + 1]]);
+						lineVisual.AddLine(points[result.PerimiterLines[cntr]], points[result.PerimiterLines[cntr + 1]]);
 					}
 
-					lineVisual.AddLine(points[lines[lines.Length - 1]], points[lines[0]]);
+					lineVisual.AddLine(points[result.PerimiterLines[result.PerimiterLines.Length - 1]], points[result.PerimiterLines[0]]);
 
 					_viewport.Children.Add(lineVisual);
 					_visuals.Add(lineVisual);
@@ -464,6 +465,7 @@ namespace Game.Newt.Testers
 						break;
 					}
 
+					int[] lines = result.PerimiterLines.ToArray();
 					Array.Sort(lines);
 					for (int cntr = lines.Length - 1; cntr >= 0; cntr--)		//	going backward so the index stays lined up
 					{
@@ -780,10 +782,10 @@ namespace Game.Newt.Testers
 					Transform3D transform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 					transform.Transform(localPointsTransformed);		//	not worried about translating to z=0.  quickhull2D ignores z completely
 
-					int[] localOuterPoints = UtilityWPF.GetConvexHull2D(localPointsTransformed);
+					var localOuterPoints = UtilityWPF.GetConvexHull2D(localPointsTransformed);
 
 					//	Swap out all the points with just the outer points for this triangle
-					points[triangleIndex] = localOuterPoints.Select(o => localPoints[o]).ToList();
+					points[triangleIndex] = localOuterPoints.PerimiterLines.Select(o => localPoints[o]).ToList();
 				}
 
 
@@ -915,10 +917,10 @@ namespace Game.Newt.Testers
 					transform.Transform(localPointsTransformed);		//	not worried about translating to z=0.  quickhull2D ignores z completely
 
 					//	Do a 2D quickhull on these points
-					int[] localOuterPoints = UtilityWPF.GetConvexHull2D(localPointsTransformed);
+					var localOuterPoints = UtilityWPF.GetConvexHull2D(localPointsTransformed);
 
 					//	Store only the outer points
-					groupPoints.Add(cntr, localOuterPoints.Select(o => localPoints[o]).ToList());
+					groupPoints.Add(cntr, localOuterPoints.PerimiterLines.Select(o => localPoints[o]).ToList());
 				}
 
 				#endregion
@@ -1010,7 +1012,7 @@ namespace Game.Newt.Testers
 				}
 
 				//	Get the outside set
-				List<int> outsideSet = QuickHull5.GetOutsideSet(triangle, UtilityHelper.GetIncrementingList(allPoints.Length), allPoints);
+				List<int> outsideSet = QuickHull5.GetOutsideSet(triangle, Enumerable.Range(0, allPoints.Length).ToList(), allPoints);
 
 				//	Get the farthest point from the triangle
 				QuickHull5.TriangleWithPoints triangleWrapper = new QuickHull5.TriangleWithPoints(triangle);
@@ -2170,11 +2172,11 @@ namespace Game.Newt.Testers
 		{
 			if (points.Length < 3)
 			{
-				return UtilityHelper.GetIncrementingArray(points.Length);		//	return all the points
+				return Enumerable.Range(0, points.Length).ToArray();		//	return all the points
 			}
 
 			List<int> retVal = new List<int>();
-			List<int> remainingPoints = UtilityHelper.GetIncrementingList(points.Length);
+			List<int> remainingPoints = Enumerable.Range(0, points.Length).ToList();
 
 			#region Find two most extreme points
 
@@ -4525,7 +4527,7 @@ namespace Game.Newt.Testers
 			#region Calculate outside points
 
 			//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
-			List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+			List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
 
 			//	For every triangle, find the points that are outside the polygon (not the points behind the triangle)
 			foreach (TriangleWithPoints triangleWrapper in retVal)
@@ -4712,7 +4714,7 @@ namespace Game.Newt.Testers
 		private static List<int[]> ProcessTriangleSprtGetHorizon(List<TriangleWithPoints> removedTriangles, List<TriangleWithPoints> hull)
 		{
 			List<int[]> retVal = new List<int[]>();
-			List<int> unusedHullPointers = UtilityHelper.GetIncrementingList(hull.Count);
+			List<int> unusedHullPointers = Enumerable.Range(0, hull.Count).ToList();
 
 			foreach (TriangleWithPoints removed in removedTriangles)
 			{
@@ -5152,7 +5154,7 @@ namespace Game.Newt.Testers
 			#region Calculate outside points
 
 			//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
-			List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+			List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
 
 			//	For every triangle, find the points that are outside the polygon (not the points behind the triangle)
 			//	Note that a point will never be shared between triangles
@@ -5746,7 +5748,7 @@ namespace Game.Newt.Testers
 			#region Calculate outside points
 
 			//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
-			List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+			List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
 
 			//	For every triangle, find the points that are outside the polygon (not the points behind the triangle)
 			//	Note that a point will never be shared between triangles
@@ -6465,11 +6467,11 @@ namespace Game.Newt.Testers
 			#region Calculate outside points
 
 			//	GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
-			List<int> allPointIndicies = UtilityHelper.GetIncrementingList(allPoints.Length);
+			List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
 
 			//	Remove the indicies that are in the return triangles (I ran into a case where 4 points were passed in, but they were nearly coplanar - enough
 			//	that GetOutsideSet's Math3D.IsNearZero included it)
-			foreach(int index in retVal.SelectMany(o => o.IndexArray).Distinct())
+			foreach (int index in retVal.SelectMany(o => o.IndexArray).Distinct())
 			{
 				allPointIndicies.Remove(index);
 			}

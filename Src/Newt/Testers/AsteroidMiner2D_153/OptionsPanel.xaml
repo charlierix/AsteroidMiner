@@ -11,17 +11,17 @@
     <Border CornerRadius="8" BorderBrush="#D0D0D0" BorderThickness="2" Background="#B0B0B0">
         <Grid>
             <!-- Camera Up -->
-            <CheckBox Checked="chkCameraAlwaysLooksUp_Checked" Unchecked="chkCameraAlwaysLooksUp_Checked" Margin="16.8,17.6,111.2,0" Name="chkCameraAlwaysLooksUp" VerticalAlignment="Top" Height="15.96">Camera always looks up</CheckBox>
+            <CheckBox Checked="chkCameraAlwaysLooksUp_Checked" Unchecked="chkCameraAlwaysLooksUp_Checked" Margin="16.8,17.6,0,0" Name="chkCameraAlwaysLooksUp" VerticalAlignment="Top" HorizontalAlignment="Left">Camera always looks up</CheckBox>
 
             <!-- Camera Angle -->
             <Slider Height="20.8" Margin="33.2,33.6,0,0" Maximum="90" Minimum="-90" Value="90" Name="trkCameraAngle" ValueChanged="trkCameraAngle_ValueChanged" VerticalAlignment="Top" HorizontalAlignment="Left" Width="129" />
             <TextBlock Height="13.277" Margin="0,38.4,72.8,0" Name="lblCameraAngle" Text="" VerticalAlignment="Top" HorizontalAlignment="Right" Width="59" />
 
             <!-- Debug Visuals -->
-            <CheckBox Checked="chkShowDebugVisuals_Checked" Unchecked="chkShowDebugVisuals_Checked" Height="15.96" Margin="16.8,60.4,111.2,0" Name="chkShowDebugVisuals" VerticalAlignment="Top">Show debug visuals</CheckBox>
+            <CheckBox Checked="chkShowDebugVisuals_Checked" Unchecked="chkShowDebugVisuals_Checked" Margin="16.8,60.4,0,0" Name="chkShowDebugVisuals" VerticalAlignment="Top" HorizontalAlignment="Left">Show debug visuals</CheckBox>
 
             <!-- Gravity -->
-            <CheckBox Checked="chkGravity_Checked" Unchecked="chkGravity_Checked" Height="15.96" Margin="16.8,85.6,0,0" Name="chkGravity" VerticalAlignment="Top" HorizontalAlignment="Left" Width="92.53">Gravity (sort of)</CheckBox>
+            <CheckBox Checked="chkGravity_Checked" Unchecked="chkGravity_Checked" Margin="16.8,85.6,0,0" Name="chkGravity" VerticalAlignment="Top" HorizontalAlignment="Left">Gravity (sort of)</CheckBox>
             <Slider Minimum="0" Maximum="1000" Value="333" ValueChanged="trkGravity_ValueChanged" Margin="0,83.2,13,0" Name="trkGravity" Height="20.8" VerticalAlignment="Top" Visibility="Collapsed" HorizontalAlignment="Right" Width="53" />
 
             <!-- Set Velocities -->
@@ -71,7 +71,7 @@
             </StackPanel>
 
             <!-- Back Button -->
-            <Button Height="23" HorizontalAlignment="Right" Margin="0,0,13,13" Name="btnBack" VerticalAlignment="Bottom" Width="75" Click="btnBack_Click">Back</Button>
+            <Button Height="23" HorizontalAlignment="Right" Margin="0,0,13,13" Name="btnBack" VerticalAlignment="Bottom" Width="75" Click="btnBack_Click">Close</Button>
         </Grid>
     </Border>
 </UserControl>

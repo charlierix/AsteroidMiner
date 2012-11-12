@@ -123,6 +123,16 @@ namespace Game.Newt.Testers
 		}
 
 		#endregion
+		#region Enum: BalanceTestType
+
+		private enum BalanceTestType
+		{
+			Individual,
+			ZeroTorque1,
+			ZeroTorque2
+		}
+
+		#endregion
 		#region Class: BalanceVisualizer
 
 		private class BalanceVisualizer : IDisposable
@@ -169,6 +179,7 @@ namespace Game.Newt.Testers
 			private const string LINE_RED_ANTI = "E38181";
 			private const string LINE_CYAN = "148561";
 			private const string LINE_CYAN_ANTI = "69B89F";
+			private const string LINE_BLUE = "6E87C7";		//	there is no anti for blue, it's a secondary type of line
 
 			private const string HULL_COLOR = "209F9B50";
 			private const string HULL_SPECULAR = "A0EAE375";
@@ -230,6 +241,22 @@ namespace Game.Newt.Testers
 				}
 			}
 
+			private BalanceTestType _testType = BalanceTestType.Individual;
+			public BalanceTestType TestType
+			{
+				get
+				{
+					return _testType;
+				}
+				set
+				{
+					_testType = value;
+
+					Redraw();
+				}
+			}
+
+			//	These are used for the individual test
 			private bool _showPossibilityLines = false;
 			public bool ShowPossibilityLines
 			{
@@ -255,21 +282,6 @@ namespace Game.Newt.Testers
 				set
 				{
 					_showPossibilityHull = value;
-
-					Redraw();
-				}
-			}
-
-			private bool _showZeroTorqueTest = false;
-			public bool ShowZeroTorqueTest
-			{
-				get
-				{
-					return _showZeroTorqueTest;
-				}
-				set
-				{
-					_showZeroTorqueTest = value;
 
 					Redraw();
 				}
@@ -301,49 +313,162 @@ namespace Game.Newt.Testers
 					_viewport.Children.Remove(visual);
 				}
 
-				if (_showAxiis)
+				switch (_testType)
 				{
-					DrawAxiis();
-				}
+					case BalanceTestType.Individual:
+						DrawIndividual();
+						break;
 
-				if (_showZeroTorqueTest)
-				{
-					DrawZeroTorqueTest();
-				}
-				else
-				{
-					DrawVectors();
+					case BalanceTestType.ZeroTorque1:
+						DrawZeroTorqueTest();
+						break;
 
-					if (_selectedIndex >= 0 && (_showPossibilityLines || _showPossibilityHull))
-					{
-						DrawAntiSelected();
-					}
+					case BalanceTestType.ZeroTorque2:
+						DrawZeroTorqueTest2();
+						break;
 
-					if (_selectedIndex >= 0 && _showPossibilityLines)
-					{
-						DrawPossibleLines();
-					}
-
-					//	The hull needs to be done last (transparency)
-					if (_selectedIndex >= 0 && _showPossibilityHull)
-					{
-						DrawPossibleHull();
-					}
+					default:
+						throw new ApplicationException("Unknown BalanceTestType: " + _testType.ToString());
 				}
 			}
 
-			private void DrawAxiis()
+			private void DrawAxiis(Vector3D offset)
 			{
 				ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
 				lines.Thickness = 1d;
 				lines.Color = UtilityWPF.ColorFromHex("C8C8C8");
 
-				lines.AddLine(new Point3D(-5, 0, 0), new Point3D(5, 0, 0));
-				lines.AddLine(new Point3D(0, -5, 0), new Point3D(0, 5, 0));
-				lines.AddLine(new Point3D(0, 0, -5), new Point3D(0, 0, 5));
+				lines.AddLine(new Point3D(offset.X - 5, offset.Y, offset.Z), new Point3D(offset.X + 5, offset.Y, offset.Z));
+				lines.AddLine(new Point3D(offset.X, offset.Y - 5, offset.Z), new Point3D(offset.X, offset.Y + 5, offset.Z));
+				lines.AddLine(new Point3D(offset.X, offset.Y, offset.Z - 5), new Point3D(offset.X, offset.Y, offset.Z + 5));
 
 				_visuals.Add(lines);
 				_viewport.Children.Add(lines);
+			}
+
+			//	These create a convex hull that represents all possible combinations of the vectors passed in (not including the ones to skip)
+			private static TriangleIndexed[] GetHull(Vector3D[] vectors, int skipIndex)
+			{
+				return GetHull(vectors, new int[] { skipIndex });
+			}
+			private static TriangleIndexed[] GetHull(Vector3D[] vectors, int[] skipIndices)
+			{
+				Point3D[] remainExtremes = GetRemainingExtremes(vectors, skipIndices);
+
+				//	Build a convex hull out of them
+				//NOTE: GetConvexHull shouldn't throw any more exceptions, I changed all the cases to return null
+				TriangleIndexed[] retVal = null;
+				try
+				{
+					retVal = UtilityWPF.GetConvexHull(remainExtremes.ToArray());
+				}
+				catch (Exception)
+				{
+					retVal = null;
+				}
+
+				//	Exit Function
+				return retVal;
+			}
+
+			private static Point3D[] GetRemainingExtremes(Vector3D[] vectors, int[] skipIndices)
+			{
+				//	Put the vectors to be worked with in a single list to make them easier to work with
+				List<Vector3D> others = new List<Vector3D>();
+				for (int cntr = 0; cntr < vectors.Length; cntr++)
+				{
+					if (!skipIndices.Contains(cntr))
+					{
+						others.Add(vectors[cntr]);
+					}
+				}
+
+				//	Add up all combos
+				List<Point3D> remainExtremes = new List<Point3D>();
+
+				remainExtremes.Add(new Point3D(0, 0, 0));
+
+				foreach (int[] combo in UtilityHelper.AllCombosEnumerator(others.Count))
+				{
+					//	Add up the vectors that this combo points to
+					Vector3D extremity = others[combo[0]];
+					for (int cntr = 1; cntr < combo.Length; cntr++)
+					{
+						extremity += others[combo[cntr]];
+					}
+
+					Point3D point = extremity.ToPoint();
+					if (!remainExtremes.Contains(point))
+					{
+						remainExtremes.Add(point);
+					}
+				}
+
+				//	Exit Function
+				return remainExtremes.ToArray();
+			}
+
+			private static Vector3D[] GenerateVectors(int numVectors, bool is3D)
+			{
+				const double MAXRADIUS = 5d;
+
+				Vector3D[] retVal = new Vector3D[numVectors];
+
+				for (int cntr = 0; cntr < numVectors; cntr++)
+				{
+					if (is3D)
+					{
+						retVal[cntr] = Math3D.GetRandomVectorSpherical(MAXRADIUS);
+					}
+					else
+					{
+						retVal[cntr] = Math3D.GetRandomVectorSpherical2D(MAXRADIUS);
+					}
+				}
+
+				return retVal;
+			}
+
+			private static bool IsNearZeroTorque(Vector3D testVect)
+			{
+				const double NEARZERO = .05d;
+
+				return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
+			}
+			private static bool IsNearValueTorquesDot(double testValue, double compareTo)
+			{
+				const double NEARZERO = .0005d;
+
+				return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
+			}
+
+			#endregion
+			#region Private Methods - Individual
+
+			private void DrawIndividual()
+			{
+				if (_showAxiis)
+				{
+					DrawAxiis(new Vector3D(0, 0, 0));
+				}
+
+				DrawVectors();
+
+				if (_selectedIndex >= 0 && (_showPossibilityLines || _showPossibilityHull))
+				{
+					DrawAntiSelected();
+				}
+
+				if (_selectedIndex >= 0 && _showPossibilityLines)
+				{
+					DrawPossibleLines();
+				}
+
+				//	The hull needs to be done last (transparency)
+				if (_selectedIndex >= 0 && _showPossibilityHull)
+				{
+					DrawPossibleHull();
+				}
 			}
 
 			/// <summary>
@@ -425,7 +550,7 @@ namespace Game.Newt.Testers
 				//	Get the lines
 				ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
 				lines.Thickness = 1d;
-				lines.Color = UtilityWPF.ColorFromHex("6E87C7");
+				lines.Color = UtilityWPF.ColorFromHex(LINE_BLUE);
 
 				foreach (int[] combo in UtilityHelper.AllCombosEnumerator(others.Count))
 				{
@@ -449,47 +574,54 @@ namespace Game.Newt.Testers
 
 				if (hull != null)
 				{
-					#region Lines
-
-					ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
-					lines.Thickness = 1d;
-					//lines.Color = UtilityWPF.ColorFromHex("373403");
-					lines.Color = UtilityWPF.ColorFromHex("40373403");
-
-					foreach (var triangle in hull)
-					{
-						lines.AddLine(triangle.Point0, triangle.Point1);
-						lines.AddLine(triangle.Point0, triangle.Point2);
-						lines.AddLine(triangle.Point1, triangle.Point2);
-					}
-
-					_visuals.Add(lines);
-					_viewport.Children.Add(lines);
-
-					#endregion
-
-					#region Hull
-
-					//	Material
-					MaterialGroup materials = new MaterialGroup();
-					materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(HULL_COLOR))));
-					materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(HULL_SPECULAR)), HULL_SPECULAR_INTENSITY));
-
-					//	Geometry Model
-					GeometryModel3D geometry = new GeometryModel3D();
-					geometry.Material = materials;
-					geometry.BackMaterial = materials;
-					geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(hull);
-
-					ModelVisual3D model = new ModelVisual3D();
-					model.Content = geometry;
-
-					_visuals.Add(model);
-					_viewport.Children.Add(model);
-
-					#endregion
+					DrawPossibleHull(hull, new Vector3D(0, 0, 0));
 				}
 			}
+			private void DrawPossibleHull(TriangleIndexed[] hull, Vector3D offset)
+			{
+				#region Lines
+
+				ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+				lines.Thickness = 1d;
+				lines.Color = UtilityWPF.ColorFromHex("40373403");
+
+				foreach (var triangle in hull)
+				{
+					lines.AddLine(triangle.Point0 + offset, triangle.Point1 + offset);
+					lines.AddLine(triangle.Point0 + offset, triangle.Point2 + offset);
+					lines.AddLine(triangle.Point1 + offset, triangle.Point2 + offset);
+				}
+
+				_visuals.Add(lines);
+				_viewport.Children.Add(lines);
+
+				#endregion
+
+				#region Hull
+
+				//	Material
+				MaterialGroup materials = new MaterialGroup();
+				materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(HULL_COLOR))));
+				materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(HULL_SPECULAR)), HULL_SPECULAR_INTENSITY));
+
+				//	Geometry Model
+				GeometryModel3D geometry = new GeometryModel3D();
+				geometry.Material = materials;
+				geometry.BackMaterial = materials;
+				geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(hull);
+
+				ModelVisual3D model = new ModelVisual3D();
+				model.Content = geometry;
+				model.Transform = new TranslateTransform3D(offset);
+
+				_visuals.Add(model);
+				_viewport.Children.Add(model);
+
+				#endregion
+			}
+
+			#endregion
+			#region Private Methods - Zero Torque 1
 
 			private void DrawZeroTorqueTest()
 			{
@@ -497,7 +629,10 @@ namespace Game.Newt.Testers
 
 				//bool isPossible = hulls.All(o => o.IsInside != IsInsideResult.Neither);
 
-				#region Draw Lines
+				if (_showAxiis)
+				{
+					DrawAxiis(new Vector3D(0, 0, 0));
+				}
 
 				SortedList<IsInsideResult, Tuple<ScreenSpaceLines3D, ScreenSpaceLines3D>> lines = new SortedList<IsInsideResult, Tuple<ScreenSpaceLines3D, ScreenSpaceLines3D>>();
 				List<Visual3D> intersectPlanes = new List<Visual3D>();
@@ -599,11 +734,10 @@ namespace Game.Newt.Testers
 				//	These need to be done last because of transparency
 				foreach (Visual3D model in intersectPlanes)
 				{
-					_visuals.Add(model);
-					_viewport.Children.Add(model);
+					//	Not drawing them because they are just distracting
+					//_visuals.Add(model);
+					//_viewport.Children.Add(model);
 				}
-
-				#endregion
 			}
 			private HullLineResult[] DrawZeroTorqueTestSprtGetHulls()
 			{
@@ -653,73 +787,252 @@ namespace Game.Newt.Testers
 				return new Tuple<IsInsideResult, ITriangle, Point3D>(IsInsideResult.Neither, null, new Point3D());
 			}
 
-			private static TriangleIndexed[] GetHull(Vector3D[] vectors, int skipIndex)
+			#endregion
+			#region Private Methods - Zero Torque 2
+
+			private void DrawZeroTorqueTest2()
 			{
-				//	Put the vectors to be worked with in a single list to make them easier to work with
-				List<Vector3D> others = new List<Vector3D>();
-				for (int cntr = 0; cntr < vectors.Length; cntr++)
+				//const double MINPERCENT = .005d;
+
+				//	Find 100% thrusters
+				SortedList<int, List<int[]>> fullThrusts = DrawZeroTorqueTest2SprtGetFullThrusts(_vectors);
+
+				if (fullThrusts.Count == 0)
 				{
-					if (cntr != skipIndex)
+					#region Draw them red
+
+					if (_showAxiis)
 					{
-						others.Add(vectors[cntr]);
-					}
-				}
-
-				//	Add up all combos
-				List<Point3D> remainExtremes = new List<Point3D>();
-
-				remainExtremes.Add(new Point3D(0, 0, 0));
-
-				foreach (int[] combo in UtilityHelper.AllCombosEnumerator(others.Count))
-				{
-					//	Add up the vectors that this combo points to
-					Vector3D extremity = others[combo[0]];
-					for (int cntr = 1; cntr < combo.Length; cntr++)
-					{
-						extremity += others[combo[cntr]];
+						DrawAxiis(new Vector3D(0, 0, 0));
 					}
 
-					Point3D point = extremity.ToPoint();
-					if (!remainExtremes.Contains(point))
-					{
-						remainExtremes.Add(point);
-					}
-				}
+					ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+					lines.Thickness = 3d;
+					lines.Color = UtilityWPF.ColorFromHex(LINE_RED);
 
-				//	Build a convex hull out of them
-				TriangleIndexed[] retVal = null;
-				try
-				{
-					retVal = UtilityWPF.GetConvexHull(remainExtremes.ToArray());
+					for (int cntr = 0; cntr < _vectors.Length; cntr++)
+					{
+						lines.AddLine(new Point3D(0, 0, 0), _vectors[cntr].ToPoint());
+					}
+
+					_visuals.Add(lines);
+					_viewport.Children.Add(lines);
+
+					#endregion
 				}
-				catch (Exception)
+				else
 				{
-					retVal = null;
+					#region Draw all
+
+					double maxVectorLength = _vectors.Max(o => o.Length);
+					maxVectorLength *= 2.5d;
+
+					//double offsetX = (fullThrusts.Keys.Count * maxVectorLength) / -2d;
+					double offsetX = 0d;
+
+					ScreenSpaceLines3D linesFull = new ScreenSpaceLines3D();
+					linesFull.Thickness = 3d;
+					linesFull.Color = UtilityWPF.ColorFromHex(LINE_GREEN);
+					_visuals.Add(linesFull);
+					_viewport.Children.Add(linesFull);
+
+					ScreenSpaceLines3D linesCumulative = new ScreenSpaceLines3D();
+					linesCumulative.Thickness = 3d;
+					linesCumulative.Color = Colors.Chartreuse;
+					_visuals.Add(linesCumulative);
+					_viewport.Children.Add(linesCumulative);
+
+					ScreenSpaceLines3D linesCumulativeAnti = new ScreenSpaceLines3D();
+					linesCumulativeAnti.Thickness = 2d;
+					linesCumulativeAnti.Color = UtilityWPF.ColorFromHex(LINE_GREEN_ANTI);
+					_visuals.Add(linesCumulativeAnti);
+					_viewport.Children.Add(linesCumulativeAnti);
+
+					ScreenSpaceLines3D linesOther = new ScreenSpaceLines3D();
+					linesOther.Thickness = 3d;
+					linesOther.Color = UtilityWPF.ColorFromHex(LINE_BLUE);
+					_visuals.Add(linesOther);
+					_viewport.Children.Add(linesOther);
+
+					//NOTE: Only need to grab the key that represents the most number of vectors firing at 100%.  The lower keys are trumped
+					//by the higher key
+					int key = fullThrusts.Keys[fullThrusts.Keys.Count - 1];
+					//foreach (int key in fullThrusts.Keys)
+					//{
+
+					double offsetY = (fullThrusts[key].Count * maxVectorLength) / -2d;
+
+					foreach (int[] fulls in fullThrusts[key])
+					{
+						Vector3D cumulative = new Vector3D(0, 0, 0);
+						Vector3D offset = new Vector3D(offsetX, offsetY, 0);
+
+						for (int cntr = 0; cntr < _vectors.Length; cntr++)
+						{
+							if (_showAxiis)
+							{
+								DrawAxiis(offset);
+							}
+
+							if (fulls.Contains(cntr))
+							{
+								//	Draw the 100%s as green lines (line and anti line)
+								linesFull.AddLine(offset.ToPoint(), (offset + _vectors[cntr]).ToPoint());
+								cumulative += _vectors[cntr];
+								//linesFullAnti.AddLine(offset.ToPoint(), (offset - _vectors[cntr]).ToPoint());
+							}
+							else
+							{
+								//	Draw the remaining lines as blue
+								linesOther.AddLine(offset.ToPoint(), (offset + _vectors[cntr]).ToPoint());
+							}
+
+							//	Draw the hull of the remaining lines
+							TriangleIndexed[] hull = GetHull(_vectors, fulls);
+							if (hull != null)
+							{
+								DrawPossibleHull(hull, offset);
+							}
+						}
+
+						//	Draw the cumulative and anti (it's the anti that was compared to the hull)
+						linesCumulative.AddLine(offset.ToPoint(), (offset + cumulative).ToPoint());
+						linesCumulativeAnti.AddLine(offset.ToPoint(), (offset - cumulative).ToPoint());
+
+						offsetY += maxVectorLength;
+					}
+
+					//    offsetX += maxVectorLength;
+					//}
+
+					#endregion
+				}
+			}
+
+			private static SortedList<int, List<int[]>> DrawZeroTorqueTest2SprtGetFullThrusts(Vector3D[] vectors)
+			{
+				SortedList<int, List<int[]>> retVal = new SortedList<int, List<int[]>>();
+
+				//List<int[]> allCombos = new List<int[]>(UtilityHelper.AllCombosEnumerator(vectors.Length));
+
+				//	See which sets of thrusters can be fired at 100% - in other words, find the weakest link(s)
+				foreach (int[] combo in UtilityHelper.AllCombosEnumerator(vectors.Length))
+				{
+					List<Vector3D> tests = new List<Vector3D>();
+					List<Vector3D> others = new List<Vector3D>();
+
+					//	Split up the torques
+					for (int cntr = 0; cntr < vectors.Length; cntr++)
+					{
+						if (combo.Contains(cntr))
+						{
+							tests.Add(vectors[cntr]);
+						}
+						else
+						{
+							others.Add(vectors[cntr]);
+						}
+					}
+
+					//	See if this combo can fire
+					if (CanCounterVectors(tests.ToArray(), others.ToArray()))
+					{
+						if (!retVal.ContainsKey(combo.Length))
+						{
+							retVal.Add(combo.Length, new List<int[]>());
+						}
+
+						retVal[combo.Length].Add(combo);
+					}
 				}
 
 				//	Exit Function
 				return retVal;
 			}
-
-			private static Vector3D[] GenerateVectors(int numVectors, bool is3D)
+			private static bool CanCounterVectors(Vector3D[] tests, Vector3D[] others)
 			{
-				const double MAXRADIUS = 5d;
-
-				Vector3D[] retVal = new Vector3D[numVectors];
-
-				for (int cntr = 0; cntr < numVectors; cntr++)
+				Vector3D cumulative = new Vector3D();
+				foreach (Vector3D test in tests)
 				{
-					if (is3D)
-					{
-						retVal[cntr] = Math3D.GetRandomVectorSpherical(MAXRADIUS);
-					}
-					else
-					{
-						retVal[cntr] = Math3D.GetRandomVectorSpherical2D(MAXRADIUS);
-					}
+					cumulative += test;
 				}
 
-				return retVal;
+				//	Make the cumulative point the opposite way (that's what all the tests need)
+				cumulative = cumulative * -1d;
+
+				//	Check for 0D, 1D, 2D, 3D opposition
+				if (others.Length == 0)
+				{
+					#region 0D
+
+					//	Nothing to oppose.  The only thing that works is if the test self cancel
+					return Math3D.IsNearZero(cumulative);
+
+					#endregion
+				}
+				else if (others.Length == 1)
+				{
+					#region 1D
+
+					//	Opposition is a single line
+					//	If cumulative's length is longer, then the other is overwhelmed
+					//	If the dot product isn't one, then they aren't lined up (cumulative has already been negated)
+					return cumulative.LengthSquared <= others[0].LengthSquared && Math3D.IsNearValue(Vector3D.DotProduct(cumulative.ToUnit(), others[0].ToUnit()), 1d);
+
+					#endregion
+				}
+				else if (others.Length == 2)
+				{
+					#region 2D
+
+					//	Opposition forms a parallelagram
+					Triangle triangle = new Triangle(new Point3D(0, 0, 0), others[0].ToPoint(), others[1].ToPoint());
+					if (!Math3D.IsNearZero(Vector3D.DotProduct(triangle.Normal, cumulative)))
+					{
+						return false;
+					}
+
+					Vector bary = Math3D.ToBarycentric(triangle, cumulative.ToPoint());
+					return bary.X >= 0d && bary.Y >= 0d && bary.X + bary.Y <= 2d;
+
+					#endregion
+				}
+				else
+				{
+					#region 3D
+
+					//NOTE: The reason there is no need to check for 4D, 5D, etc is because cumulative is a 3D vector
+
+					//	Build the hull out of others
+					Point3D[] extremes = GetRemainingExtremes(others, new int[0]);
+
+					TriangleIndexed[] hull = UtilityWPF.GetConvexHull(extremes);
+					if (hull != null)
+					{
+						return Math3D.IsInside(hull, cumulative.ToPoint());
+					}
+
+					//	If hull is null, the points could be coplanar, so try 2D
+					var perimiter = UtilityWPF.GetConvexHull2D(extremes);
+					if (perimiter != null)
+					{
+						//	These are coplanar, see if the cumulative is inside
+						Point? cumulative2D = perimiter.GetTransformedPoint(cumulative.ToPoint());
+
+						if (cumulative2D == null)
+						{
+							return false;
+						}
+						else
+						{
+							return perimiter.IsInside(cumulative2D.Value);
+						}
+					}
+
+					return false;
+
+					#endregion
+				}
 			}
 
 			#endregion
@@ -4922,6 +5235,43 @@ namespace Game.Newt.Testers
 				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
+		private void radBalance_Checked(object sender, RoutedEventArgs e)
+		{
+			if (!_isInitialized)
+			{
+				return;
+			}
+
+			try
+			{
+				if (_balanceVisualizer == null)
+				{
+					//	If it's null then don't create it
+					//CreateBalanceVisualizer();
+				}
+				else
+				{
+					_balanceVisualizer.TestType = GetBalanceTestType();
+				}
+
+				if (radBalanceIndividual.IsChecked.Value)
+				{
+					cboBalanceVector.Visibility = Visibility.Visible;
+					chkBalancePossLines.Visibility = Visibility.Visible;
+					chkBalancePossHull.Visibility = Visibility.Visible;
+				}
+				else
+				{
+					cboBalanceVector.Visibility = Visibility.Collapsed;
+					chkBalancePossLines.Visibility = Visibility.Collapsed;
+					chkBalancePossHull.Visibility = Visibility.Collapsed;
+				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
 		private void chkBalancePossLines_Checked(object sender, RoutedEventArgs e)
 		{
 			if (!_isInitialized)
@@ -4970,59 +5320,6 @@ namespace Game.Newt.Testers
 				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
 			}
 		}
-		private void chkBalanceZeroTorqueTest_Checked(object sender, RoutedEventArgs e)
-		{
-			if (!_isInitialized)
-			{
-				return;
-			}
-
-			try
-			{
-				if (_balanceVisualizer == null)
-				{
-					//	If it's null then don't create it
-					//CreateBalanceVisualizer();
-				}
-				else
-				{
-					_balanceVisualizer.ShowZeroTorqueTest = chkBalanceZeroTorqueTest.IsChecked.Value;
-				}
-
-				if (chkBalanceZeroTorqueTest.IsChecked.Value)
-				{
-					cboBalanceVector.Visibility = Visibility.Collapsed;
-					chkBalancePossLines.Visibility = Visibility.Collapsed;
-					chkBalancePossHull.Visibility = Visibility.Collapsed;
-				}
-				else
-				{
-					cboBalanceVector.Visibility = Visibility.Visible;
-					chkBalancePossLines.Visibility = Visibility.Visible;
-					chkBalancePossHull.Visibility = Visibility.Visible;
-				}
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
-		private void btnBalanceGenerate_Click(object sender, RoutedEventArgs e)
-		{
-			if (!_isInitialized)
-			{
-				return;
-			}
-
-			try
-			{
-				CreateBalanceVisualizer();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
 		private void cboBalanceVector_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (!_isInitialized)
@@ -5053,6 +5350,22 @@ namespace Game.Newt.Testers
 
 					_balanceVisualizer.SelectedIndex = selectedIndex;
 				}
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+		private void btnBalanceGenerate_Click(object sender, RoutedEventArgs e)
+		{
+			if (!_isInitialized)
+			{
+				return;
+			}
+
+			try
+			{
+				CreateBalanceVisualizer();
 			}
 			catch (Exception ex)
 			{
@@ -5387,6 +5700,104 @@ namespace Game.Newt.Testers
 			}
 		}
 
+		private void btnCoplanarTo2D_Click(object sender, RoutedEventArgs e)
+		{
+			const double MAXRADIUS = 15d;
+
+			try
+			{
+				ClearCurrent();
+
+				#region Generate a bunch of coplanar points
+
+				Triangle triangle = new Triangle(Math3D.GetRandomVector(MAXRADIUS).ToPoint(), Math3D.GetRandomVector(MAXRADIUS).ToPoint(), Math3D.GetRandomVector(MAXRADIUS).ToPoint());
+
+				Point3D[] points3D = new Point3D[200];
+				for (int cntr = 0; cntr < points3D.Length; cntr++)
+				{
+					points3D[cntr] = Math3D.FromBarycentric(triangle, new Vector(Math3D.GetNearZeroValue(2d), Math3D.GetNearZeroValue(2d)));
+				}
+
+				#endregion
+
+				//	Transform them onto the xy plane
+				Point[] points2D = GetRotatedPoints(points3D);
+
+				#region Draw Axiis
+
+				ScreenSpaceLines3D axisLines = new ScreenSpaceLines3D();
+				axisLines.Thickness = 3d;
+				axisLines.Color = Colors.Black;
+
+				axisLines.AddLine(new Point3D(-50, 0, 0), new Point3D(50, 0, 0));
+				axisLines.AddLine(new Point3D(0, -50, 0), new Point3D(0, 50, 0));
+				axisLines.AddLine(new Point3D(0, 0, -50), new Point3D(0, 0, 50));
+
+				_currentVisuals.Add(axisLines);
+				_viewport.Children.Add(axisLines);
+
+				#endregion
+				#region Draw Points
+
+				//	Material
+				MaterialGroup material3D = new MaterialGroup();
+				material3D.Children.Add(new DiffuseMaterial(Brushes.HotPink));
+				material3D.Children.Add(new SpecularMaterial(Brushes.White, 25d));
+
+				MaterialGroup material2D = new MaterialGroup();
+				material2D.Children.Add(new DiffuseMaterial(Brushes.DarkSeaGreen));
+				material2D.Children.Add(new SpecularMaterial(Brushes.Yellow, 25d));
+
+				ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+				lines.Thickness = 1d;
+				lines.Color = UtilityWPF.ColorFromHex("C8C8C8");
+
+				Model3DGroup geometries = new Model3DGroup();
+
+				for (int cntr = 0; cntr < points3D.Length; cntr++)
+				{
+					//	3D Point
+					GeometryModel3D geometry = new GeometryModel3D();
+					geometry.Material = material3D;
+					geometry.BackMaterial = material3D;
+					geometry.Geometry = UtilityWPF.GetSphere(5, .2d);
+					geometry.Transform = new TranslateTransform3D(points3D[cntr].ToVector());
+					geometries.Children.Add(geometry);
+
+					if (points2D != null)
+					{
+						//	2D Point
+						geometry = new GeometryModel3D();
+						geometry.Material = material2D;
+						geometry.BackMaterial = material2D;
+						geometry.Geometry = UtilityWPF.GetSphere(5, .2d);
+						geometry.Transform = new TranslateTransform3D(points2D[cntr].X, points2D[cntr].Y, 0d);
+						geometries.Children.Add(geometry);
+
+						//	Connecting line
+						lines.AddLine(points3D[cntr], new Point3D(points2D[cntr].X, points2D[cntr].Y, 0));
+					}
+				}
+
+				ModelVisual3D visual = new ModelVisual3D();
+				visual.Content = geometries;
+				_viewport.Children.Add(visual);
+				_currentVisuals.Add(visual);
+
+				if (points2D != null)
+				{
+					//_viewport.Children.Add(lines);
+					//_currentVisuals.Add(lines);
+				}
+
+				#endregion
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+			}
+		}
+
 		private void radFallingSand_Checked(object sender, RoutedEventArgs e)
 		{
 			if (!_isInitialized)
@@ -5410,6 +5821,8 @@ namespace Game.Newt.Testers
 
 		private void ClearCurrent()
 		{
+			ClearBalanceVisualizer();
+
 			foreach (Visual3D visual in _currentVisuals)
 			{
 				_viewport.Children.Remove(visual);
@@ -5765,9 +6178,28 @@ namespace Game.Newt.Testers
 			_balanceVisualizer = new BalanceVisualizer(_viewport, Convert.ToInt32(trkBalanceCount.Value), chkBalance3D.IsChecked.Value);
 			_balanceVisualizer.SelectedIndex = selectedIndex;
 			_balanceVisualizer.ShowAxiis = chkBalanceAxiis.IsChecked.Value;
+			_balanceVisualizer.TestType = GetBalanceTestType();
 			_balanceVisualizer.ShowPossibilityLines = chkBalancePossLines.IsChecked.Value;
 			_balanceVisualizer.ShowPossibilityHull = chkBalancePossHull.IsChecked.Value;
-			_balanceVisualizer.ShowZeroTorqueTest = chkBalanceZeroTorqueTest.IsChecked.Value;
+		}
+		private BalanceTestType GetBalanceTestType()
+		{
+			if (radBalanceIndividual.IsChecked.Value)
+			{
+				return BalanceTestType.Individual;
+			}
+			else if (radBalanceZeroTorque1.IsChecked.Value)
+			{
+				return BalanceTestType.ZeroTorque1;
+			}
+			else if (radBalanceZeroTorque2.IsChecked.Value)
+			{
+				return BalanceTestType.ZeroTorque2;
+			}
+			else
+			{
+				throw new ApplicationException("Unknown balance test type");
+			}
 		}
 
 		private void DrawMassBreakdown(UtilityNewt.IObjectMassBreakdown breakdown, double cellSize)
@@ -5817,6 +6249,99 @@ namespace Game.Newt.Testers
 			_currentVisuals.Add(line);
 
 			#endregion
+		}
+
+		//	These 3 methods are copied from QuickHull2D
+		private static Point[] GetRotatedPoints(Point3D[] points)
+		{
+			//	Make sure they are coplanar, and get a triangle that represents that plane
+			ITriangle triangle = GetThreeCoplanarPoints(points);
+			if (triangle == null)
+			{
+				return null;
+			}
+
+			//	Figure out a transform that will make Z drop out
+			Transform3D transform = GetTransformTo2D(triangle);
+
+			//	Transform them
+			Point[] retVal = new Point[points.Length];
+			for (int cntr = 0; cntr < points.Length; cntr++)
+			{
+				Point3D transformed = transform.Transform(points[cntr]);
+				retVal[cntr] = new Point(transformed.X, transformed.Y);
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+		//NOTE: This also makes sure that all the points lie in the same plane as the returned triangle (some of the points may still be
+		//colinear or the same, but at least they are on the same plane)
+		private static ITriangle GetThreeCoplanarPoints(Point3D[] points)
+		{
+			Vector3D? line1 = null;
+			Vector3D? line1Unit = null;
+
+			ITriangle retVal = null;
+
+			for (int cntr = 1; cntr < points.Length; cntr++)
+			{
+				if (Math3D.IsNearValue(points[0], points[cntr]))
+				{
+					//	These points are sitting on top of each other
+					continue;
+				}
+
+				Vector3D line = points[cntr] - points[0];
+
+				if (line1 == null)
+				{
+					//	Found the first line
+					line1 = line;
+					line1Unit = line.ToUnit();
+					continue;
+				}
+
+				if (retVal == null)
+				{
+					if (!Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
+					{
+						//	These two lines aren't colinear.  Found the second line
+						retVal = new Triangle(points[0], points[0] + line1.Value, points[cntr]);
+					}
+
+					continue;
+				}
+
+				double dot = Vector3D.DotProduct(retVal.Normal, line);
+				if (!Math3D.IsNearZero(dot))
+				{
+					//	This point isn't coplanar with the triangle
+					return null;
+				}
+			}
+
+			//	Exit Function
+			return retVal;
+		}
+		private static Transform3D GetTransformTo2D(ITriangle triangle)
+		{
+			Vector3D line1 = triangle.Point1 - triangle.Point0;
+
+			DoubleVector from = new DoubleVector(line1, Math3D.GetOrthogonal(line1, triangle.Point2 - triangle.Point0));
+			DoubleVector to = new DoubleVector(new Vector3D(1, 0, 0), new Vector3D(0, 1, 0));
+
+			Quaternion rotation = from.GetAngleAroundAxis(to);
+
+			Transform3DGroup retVal = new Transform3DGroup();
+
+			//	Rotate
+			retVal.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+
+			//	Then translate
+			retVal.Children.Add(new TranslateTransform3D(0, 0, -triangle.Point0.Z));
+
+			return retVal;
 		}
 
 		private T GetRandomEnum<T>(T excluding)

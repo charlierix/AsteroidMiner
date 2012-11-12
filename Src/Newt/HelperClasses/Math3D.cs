@@ -400,7 +400,7 @@ namespace Game.Newt.HelperClasses
 		}
 		private static void GetRandomPointsOnHullSprtSizes(out int[] trianglePointers, out double[] triangleSizes, ITriangle[] hull)
 		{
-			trianglePointers = UtilityHelper.GetIncrementingArray(hull.Length);
+			trianglePointers = Enumerable.Range(0, hull.Length).ToArray();
 			triangleSizes = new double[hull.Length];
 
 			//	Get the size of each triangle
@@ -883,6 +883,15 @@ namespace Game.Newt.HelperClasses
 			}
 
 			//rotationAxis.BecomeUnitVector();		//	It would be nice to be tidy, but not nessassary, and I don't want slow code
+		}
+
+		/// <summary>
+		/// This returns a vector that is orthogonal to standard, and in the same plane as direction
+		/// </summary>
+		public static Vector3D GetOrthogonal(Vector3D standard, Vector3D direction)
+		{
+			Vector3D cross = Vector3D.CrossProduct(standard, direction);		//	getting an orthogonal of the two vectors passed in
+			return Vector3D.CrossProduct(cross, standard);		//	now get an orthogonal pointing in the same direction as direction
 		}
 
 		// This came from Game.Orig.Math3D.TorqueBall
