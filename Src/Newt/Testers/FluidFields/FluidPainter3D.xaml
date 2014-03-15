@@ -1,0 +1,221 @@
+﻿<Window x:Class="Game.Newt.Testers.FluidFields.FluidPainter3D"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpctrl="clr-namespace:Game.Newt.HelperClasses.Controls2D;assembly=Game.Newt.HelperClasses"
+        Title="Fluid3D" ResizeMode="CanResizeWithGrip" SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Closed="Window_Closed" SizeChanged="Window_SizeChanged">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Stylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Name="expanderRow" Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Test buttons -->
+        <StackPanel Grid.Column="0" Grid.Row="0">
+            <Button Content="Reset 0" Click="Reset0_Click"/>
+            <Button Content="Reset 1" Click="Reset1_Click"/>
+            <Button Content="Reset 2" Click="Reset2_Click"/>
+            <Button Content="Reset 2a" Click="Reset2a_Click"/>
+            <Button Content="Reset 3" Click="Reset3_Click"/>
+
+            <Button Content="Block 0" Margin="0,8,0,0" Click="Block0_Click"/>
+            <Button Content="Block 1" Click="Block1_Click"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Column="0" Grid.Row="1" Name="expanderScrollViewer" VerticalAlignment="Bottom" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" >
+            <StackPanel>
+
+                <!-- Brush -->
+                <Expander  Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Brush" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Brush Size" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="0" Name="trkBrushSize" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="1" Text="Velocity Mult" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="1" Name="trkVelocityMultiplier" IsMultiplier="True" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="2" Text="Depth" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="2" Name="trkBrushDepth" IsMultiplier="True" Style="{StaticResource slider_local}"/>
+                            </Grid>
+
+                            <ToggleButton IsChecked="True" Name="chkVelocityOnLeftDrag" Content="Velocity on left drag" Margin="0,8,0,0" Style="{StaticResource standaloneToggleButton}"/>
+
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Fluid -->
+                <Expander  Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Fluid" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- TODO: NEW: Dissipation (this will fade the layers to zero - multiply the value by some decay constant) -->
+
+                                <TextBlock Grid.Row="0" Text="Diffusion" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="0" Name="trkDiffusion" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="1" Text="Damping" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="1" Name="trkDamping" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="2" Text="Timestep" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="2" Name="trkTimestep" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="3" Text="Iterations" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="3" Name="trkIterations" IsInteger="True" Style="{StaticResource slider_local}"/>
+                            </Grid>
+
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Border Properties -->
+                <Expander Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Border" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel RadioButton.Checked="BoundryType_Checked" RadioButton.Unchecked="BoundryType_Checked">
+                            <RadioButton Name="radBoundryType_ClosedBox" IsChecked="True" Content="Closed Box" Style="{StaticResource expandRadioButton}"/>
+                            <RadioButton Name="radBoundryType_OpenBox" Content="Open Box" Style="{StaticResource expandRadioButton}"/>
+                            <RadioButton Name="radBoundryType_WrapBox" Content="Wrap around Box" Style="{StaticResource expandRadioButton}"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Camera -->
+                <Expander  Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Camera" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+
+                            <UniformGrid Columns="3" HorizontalAlignment="Left" RadioButton.Checked="View_Checked" RadioButton.Unchecked="View_Checked">
+                                <Rectangle/>
+                                <RadioButton Name="radViewTop" ToolTip="Top" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+                                <Rectangle/>
+
+                                <RadioButton Name="radViewLeft" ToolTip="Left" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+                                <RadioButton IsChecked="True" Name="radViewFront" ToolTip="Front" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+                                <RadioButton Name="radViewRight" ToolTip="Right" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+
+                                <Rectangle/>
+                                <RadioButton Name="radViewBottom" ToolTip="Bottom" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+                                <Rectangle/>
+
+                                <Rectangle/>
+                                <RadioButton Name="radViewBack" ToolTip="Back" GroupName="view" Style="{StaticResource toolRadioButton}"/>
+                                <Rectangle/>
+
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Colors -->
+                <Expander  Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Colors" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+
+                            <Label FontWeight="Bold" Content="Background" Margin="0,0,0,-3"/>
+                            <StackPanel RadioButton.Checked="BackgroundColor_Checked" RadioButton.Unchecked="BackgroundColor_Checked">
+                                <RadioButton IsChecked="True" Name="radBackBlack" Content="Black" GroupName="backcolor"/>
+                                <RadioButton Name="radBackGray" Content="Gray" GroupName="backcolor"/>
+                                <RadioButton Name="radBackWhite" Content="White" GroupName="backcolor"/>
+                                <RadioButton Name="radBackGreen" Content="Green" GroupName="backcolor"/>
+                            </StackPanel>
+
+                            <Label FontWeight="Bold" Content="Gas Color" Margin="0,8,0,-3"/>
+                            <StackPanel RadioButton.Checked="GasColor_Checked" RadioButton.Unchecked="GasColor_Checked">
+                                <RadioButton IsChecked="True" Name="radGasRedBlue" Content="Red - Blue" GroupName="gascolor"/>
+                                <RadioButton Name="radGasWhiteBlack" Content="White - Black" GroupName="gascolor"/>
+                                <RadioButton Name="radGasBlack" Content="Black" GroupName="gascolor"/>
+                                <RadioButton Name="radGasWhite" Content="White" GroupName="gascolor"/>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Velocity -->
+                <TextBlock>
+                    <Hyperlink Click="Hyperlink_Velocity">Velocity Viewer</Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Fluid Panel -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" BorderBrush="Black" BorderThickness="1" CornerRadius="4" Margin="10, 0, 0, 0">
+            <Grid Name="grid1" Width="700" Height="700" Background="Black" MouseDown="grid1_MouseDown" MouseMove="grid1_MouseMove" MouseUp="grid1_MouseUp">
+                <Grid Name="grdFluid" ClipToBounds="True"/>
+
+                <!-- TODO: swap in a 3D viewport -->
+
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

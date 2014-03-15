@@ -2,51 +2,141 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Tube Mesh Tester" Width="900" Height="700">
-    <Grid>
+    <Grid Background="#808080">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="auto" />
             <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0" Background="Silver">
-            <Button Height="23" Name="btnTestModel" VerticalAlignment="Top" Margin="11,11,19,0" Click="btnTestModel_Click">Test Model</Button>
-            <Button Height="23" Margin="11,39,19,0" Name="btnCube" VerticalAlignment="Top" Click="btnCube_Click">Cube</Button>
-            <Button Height="23" Margin="11,67,19,0" Name="btnCubeWithNormals" VerticalAlignment="Top" Click="btnCubeWithNormals_Click">Cube with normals</Button>
+        <Border Grid.Column="0" Background="#A0A0A0" CornerRadius="4" BorderThickness="1" BorderBrush="#404040" Margin="8" MaxWidth="400">
+            <StackPanel Margin="8">
 
-            <Button Height="23" Margin="11,120,19,0" Name="btnDissectMessage" VerticalAlignment="Top" Click="btnDissectMessage_Click">Dissect Message</Button>
+                <!-- Fixed -->
+                <Expander>
+                    <Expander.Header>
+                        <TextBlock Text="Fixed" FontSize="16" FontWeight="Bold"/>
+                    </Expander.Header>
 
-            <Button Height="23" Margin="11,173,19,0" Name="btnSinglePolygon" VerticalAlignment="Top" Click="btnSinglePolygon_Click">Single Polygon</Button>
-            <Button Height="23" Margin="11,203,19,0" Name="btnPolygonAndPoint" VerticalAlignment="Top" Click="btnPolygonAndPoint_Click">Polygon and Point</Button>
-            <Button Height="23" Margin="11,233,19,0" Name="btnPointAndPolygon" VerticalAlignment="Top" Click="btnPointAndPolygon_Click">Point and Polygon</Button>
-            <Button Height="23" Margin="11,264,19,0" Name="btnPolygonAndPolygon" VerticalAlignment="Top" Click="btnPolygonAndPolygon_Click">Polygon and Polygon</Button>
-            <Button Height="23" Margin="11,298,19,0" Name="btnJewel" VerticalAlignment="Top" Click="btnJewel_Click">Jewel</Button>
+                    <StackPanel Margin="8">
+                        <Button Name="btnTestModel" Content="Test Model" Click="btnTestModel_Click"/>
+                        <Button Name="btnCube" Content="Cube" Click="btnCube_Click"/>
+                        <Button Name="btnCubeWithNormals" Content="Cube with normals" Click="btnCubeWithNormals_Click"/>
 
-            <CheckBox Height="16" Margin="96,0,0,110" Name="chkSoftSides" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="85">Soft Sides</CheckBox>
+                        <Button Name="btnDissectMessage" Content="Dissect Message" Margin="0,8,0,0" Click="btnDissectMessage_Click"/>
 
-            <Label Height="28" Margin="11,0,0,127" Name="label1" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="71">Num Sides</Label>
-            <TextBox Text="3" Margin="11,0,0,110" Name="txtNumSides" HorizontalAlignment="Left" Width="71" Height="23" VerticalAlignment="Bottom" />
-            
-            <Label FontSize="16" Margin="11,0,0,51" VerticalAlignment="Bottom" HorizontalAlignment="Left">Lights</Label>
-            <RadioButton Checked="radLight_Checked" Unchecked="radLight_Checked" IsChecked="True" Margin="11,0,0,37" Name="radLightStandard" VerticalAlignment="Bottom" HorizontalAlignment="Left">Standard</RadioButton>
-            <RadioButton Checked="radLight_Checked" Unchecked="radLight_Checked" Margin="11,0,0,18" Name="radLightColored" VerticalAlignment="Bottom" HorizontalAlignment="Left">Colored</RadioButton>
-        </Grid>
+                        <Button Name="btnSinglePolygon" Content="Single Polygon" Margin="0,8,0,0" Click="btnSinglePolygon_Click"/>
+                        <Button Name="btnPolygonAndPoint" Content="Polygon and Point" Click="btnPolygonAndPoint_Click"/>
+                        <Button Name="btnPointAndPolygon" Content="Point and Polygon" Click="btnPointAndPolygon_Click"/>
+                        <Button Name="btnPolygonAndPolygon" Content="Polygon and Polygon" Click="btnPolygonAndPolygon_Click"/>
+                        <Button Name="btnJewel" Content="Jewel" Margin="0,8,0,0" Click="btnJewel_Click"/>
+                    </StackPanel>
+                </Expander>
 
-        <Grid Name="grdViewport" Grid.Column="1" Background="#404040">
-            <Viewport3D Name="_viewport" IsHitTestVisible="False">
-                <Viewport3D.Camera>
-                    <PerspectiveCamera x:Name="_camera" Position="0 0 5" LookDirection="0 0 -1" UpDirection="0 1 0"/>
-                </Viewport3D.Camera>
+                <!-- Custom -->
+                <Expander>
+                    <Expander.Header>
+                        <TextBlock Text="Custom" FontSize="16" FontWeight="Bold"/>
+                    </Expander.Header>
 
-                <!-- The lights are now set programatically -->
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <Model3DGroup x:Name="_lightContainer">
-                            
-                            <!--<DirectionalLight Color="White" Direction="1,-1,-1" />
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Rows -->
+                        <Border Grid.Row="0" Background="#C0C0C0" CornerRadius="2" BorderBrush="#909090" MinHeight="10">
+                            <StackPanel Name="pnlCustomEntries">
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Grid.Row="1" Margin="0,8,0,0">
+
+                            <!-- Insert button -->
+                            <StackPanel Orientation="Horizontal">
+                                <Button Name="btnCustomInsert" Content="insert" Click="btnCustomInsert_Click"/>
+
+                                <TextBox Name="txtCustomInsertIndex" Text="1" MinWidth="20"/>
+
+                                <ComboBox Name="cboCustomType" SelectedItem="Poly">
+                                    <ComboBox.Items>
+                                        <TextBlock Text="Poly"/>
+                                        <TextBlock Text="Point"/>
+                                        <TextBlock Text="Dome"/>
+                                    </ComboBox.Items>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <!-- Delete button -->
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                <Button Name="btnCustomDelete" Content="delete" Click="btnCustomDelete_Click"/>
+                                <TextBox Name="txtCustomDeleteIndex" Text="1" MinWidth="20"/>
+                            </StackPanel>
+
+                            <Button Content="clear" Margin="0,2,0,0" Click="ClearCustom_Click"/>
+
+                            <!-- Colors -->
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Label Content="diffuse" VerticalAlignment="Center"/>
+                                <TextBox Name="txtDiffuse" Text="A0A0A0" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox IsChecked="True" Name="chkSpecular" Content="specular" VerticalAlignment="Center"/>
+                                <TextBox Name="txtSpecular" Text="60FF0000" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                <TextBox Name="txtSpecularPower" Text="10" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox Name="chkEmissive" Content="emissive" VerticalAlignment="Center"/>
+                                <TextBox Name="txtEmissive" Text="20FF0000" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <TextBlock FontSize="13" Margin="0,8,0,0">
+                                <Hyperlink Foreground="#E8E8FF" RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="https://kuler.adobe.com/explore/most-popular">kuler</Hyperlink>
+                            </TextBlock>
+
+                            <Button Content="refresh" Margin="0,8,0,0" Click="RefreshCustom_Click"/>
+
+                            <!-- Error label -->
+                            <Border Name="pnlCustomError" Visibility="Collapsed" Background="#600000" CornerRadius="5" Margin="0,8,0,0">
+                                <TextBlock Name="lblCustomError" FontSize="14" Foreground="#FFFFFF" TextWrapping="Wrap"/>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Expander>
+
+                <Label Content="Num Sides" Margin="0,16,0,0"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBox Name="txtNumSides" Text="3" Width="75" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <CheckBox IsChecked="True" Name="chkSoftSides" Content="Soft Sides" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <CheckBox Name="chkShowNormals" Content="Show normals" Margin="0,2,0,0"/>
+
+                <Label Content="Lights" FontSize="16" Margin="0,16,0,0"/>
+                <RadioButton IsChecked="True" Name="radLightStandard" Content="Standard" Checked="radLight_Checked" Unchecked="radLight_Checked"/>
+                <RadioButton Name="radLightColored" Content="Colored" Checked="radLight_Checked" Unchecked="radLight_Checked"/>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Column="1" CornerRadius="4" BorderThickness="1" BorderBrush="#404040" Margin="0,8,8,8">
+            <Grid Name="grdViewport" Background="#404040">
+                <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                    <Viewport3D.Camera>
+                        <PerspectiveCamera x:Name="_camera" Position="0 0 5" LookDirection="0 0 -1" UpDirection="0 1 0"/>
+                    </Viewport3D.Camera>
+
+                    <!-- The lights are now set programatically -->
+                    <ModelVisual3D>
+                        <ModelVisual3D.Content>
+                            <Model3DGroup x:Name="_lightContainer">
+
+                                <!--<DirectionalLight Color="White" Direction="1,-1,-1" />
                             <DirectionalLight Color="#303030" Direction="-1,1,1" />
                             <AmbientLight Color="DimGray"/>-->
 
-                            <!--<SpotLight Color="Green" Position="3, 0, 0" Direction="-1, 0, 0"/>
+                                <!--<SpotLight Color="Green" Position="3, 0, 0" Direction="-1, 0, 0"/>
                             <SpotLight Color="Orange" Position="-3, 0, 0" Direction="1, 0, 0"/>
 
                             <SpotLight Color="Blue" Position="0, 3, 0" Direction="0, -1, 0"/>
@@ -55,12 +145,12 @@
                             <SpotLight Color="Purple" Position="0, 0, 3" Direction="0, 0, -1"/>
                             <SpotLight Color="Yellow" Position="0, 0, -3" Direction="0, 0, 1"/>-->
 
-                        </Model3DGroup>
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
+                            </Model3DGroup>
+                        </ModelVisual3D.Content>
+                    </ModelVisual3D>
 
 
-                <!--<ModelVisual3D x:Name="_mineral">
+                    <!--<ModelVisual3D x:Name="_mineral">
                     <ModelVisual3D.Transform>
                         <RotateTransform3D>
                             <RotateTransform3D.Rotation>
@@ -107,8 +197,8 @@
 
 
 
-            </Viewport3D>
-        </Grid>
-
+                </Viewport3D>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

@@ -59,14 +59,17 @@ namespace Game.Newt.NewtonDynamics_153.Api
             GC.SuppressFinalize(this);
         }
 
-        public virtual void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (m_Handle != IntPtr.Zero)
+            if (disposing)
             {
-                CHashTables.Body.Remove(m_Handle);
-                CHashTables.BodyUserData.Remove(m_Handle);
-                Newton.NewtonDestroyBody(m_Collision.World.Handle, m_Handle);
-                m_Handle = IntPtr.Zero;
+                if (m_Handle != IntPtr.Zero)
+                {
+                    CHashTables.Body.Remove(m_Handle);
+                    CHashTables.BodyUserData.Remove(m_Handle);
+                    Newton.NewtonDestroyBody(m_Collision.World.Handle, m_Handle);
+                    m_Handle = IntPtr.Zero;
+                }
             }
         }
 
@@ -142,9 +145,9 @@ namespace Game.Newt.NewtonDynamics_153.Api
             }
         }
 
-		/// <summary>
-		/// This one should be a method, because it's special use
-		/// </summary>
+        /// <summary>
+        /// This one should be a method, because it's special use
+        /// </summary>
         public Matrix3D MatrixRecursive
         {
             set
@@ -247,9 +250,9 @@ namespace Game.Newt.NewtonDynamics_153.Api
             }
         }
 
-		/// <summary>
-		/// This is in world coords - only valid when called from within ApplyForceAndTorque event.  Newt 2 lets it get called any time
-		/// </summary>
+        /// <summary>
+        /// This is in world coords - only valid when called from within ApplyForceAndTorque event.  Newt 2 lets it get called any time
+        /// </summary>
         public Vector3D Velocity
         {
             get
@@ -265,7 +268,7 @@ namespace Game.Newt.NewtonDynamics_153.Api
             }
         }
 
-		//	these two can only be used from the ApplyForceAndTorque callback
+        // these two can only be used from the ApplyForceAndTorque callback
         public Vector3D Force
         {
             get

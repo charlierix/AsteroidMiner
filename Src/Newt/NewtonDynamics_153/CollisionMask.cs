@@ -35,12 +35,21 @@ namespace Game.Newt.NewtonDynamics_153
 
         #region IDisposable Members
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            if (_collision != null)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
             {
-                _collision.Release();
-                _collision = null;
+                if (_collision != null)
+                {
+                    _collision.Release();
+                    _collision = null;
+                }
             }
         }
 

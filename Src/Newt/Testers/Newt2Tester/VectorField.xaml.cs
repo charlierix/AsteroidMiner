@@ -16,169 +16,174 @@ using Game.HelperClasses;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
-	public partial class VectorField : UserControl
-	{
-		#region Events
+    public partial class VectorField : UserControl
+    {
+        #region Events
 
-		public event EventHandler<ApplyVectorFieldArgs> ApplyVectorField = null;
+        public event EventHandler<ApplyVectorFieldArgs> ApplyVectorField = null;
 
-		#endregion
+        #endregion
 
-		#region Constructor
+        #region Constructor
 
-		public VectorField()
-		{
-			InitializeComponent();
-		}
+        public VectorField()
+        {
+            InitializeComponent();
+        }
 
-		#endregion
+        #endregion
 
-		#region Event Listeners
+        #region Event Listeners
 
-		private void Radio_Checked(object sender, RoutedEventArgs e)
-		{
-			try
-			{
-				FireApplyEvent();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.ToString(), "Radio_Checked", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
+        private void Radio_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                FireApplyEvent();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Radio_Checked", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-		private void trkStrength_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-		{
-			try
-			{
-				FireApplyEvent();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.ToString(), "Strength_ValueChanged", MessageBoxButton.OK, MessageBoxImage.Error);
-			}
-		}
+        private void trkStrength_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                FireApplyEvent();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Strength_ValueChanged", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Private Methods
 
-		private void FireApplyEvent()
-		{
-			if (this.ApplyVectorField == null)
-			{
-				return;
-			}
+        private void FireApplyEvent()
+        {
+            if (this.ApplyVectorField == null)
+            {
+                return;
+            }
 
-			//	Field Type
-			VectorFieldType fieldType;
-			if (radNone.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.None;
-			}
-			else if (radInward.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.Inward;
-			}
-			else if (radOutward.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.Outward;
-			}
-			else if (radSwirlInward.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.SwirlInward;
-			}
-			else if (radSwirl.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.Swirl;
-			}
-			else if (radTowardZ.IsChecked.Value)
-			{
-				fieldType = VectorFieldType.Z0Plane;
-			}
-			else
-			{
-				throw new ApplicationException("Unknown field type");
-			}
+            // Field Type
+            VectorFieldType fieldType;
+            if (radNone.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.None;
+            }
+            else if (radInward.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.Inward;
+            }
+            else if (radInwardRadius.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.Inward_Radius;
+            }
+            else if (radOutward.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.Outward;
+            }
+            else if (radSwirlInward.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.SwirlInward;
+            }
+            else if (radSwirl.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.Swirl;
+            }
+            else if (radTowardZ.IsChecked.Value)
+            {
+                fieldType = VectorFieldType.Z0Plane;
+            }
+            else
+            {
+                throw new ApplicationException("Unknown field type");
+            }
 
-			//	Force/Acceleration
-			bool useForce;
-			if (radForce.IsChecked.Value)
-			{
-				useForce = true;
-			}
-			else if (radAccel.IsChecked.Value)
-			{
-				useForce = false;
-			}
-			else
-			{
-				throw new ApplicationException("Unknown Force/Acceleration type");
-			}
+            // Force/Acceleration
+            bool useForce;
+            if (radForce.IsChecked.Value)
+            {
+                useForce = true;
+            }
+            else if (radAccel.IsChecked.Value)
+            {
+                useForce = false;
+            }
+            else
+            {
+                throw new ApplicationException("Unknown Force/Acceleration type");
+            }
 
-			//	Strength
-			double strength;
-			if (useForce)
-			{
-				strength = UtilityHelper.GetScaledValue_Capped(.5d, 100d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
-			}
-			else
-			{
-				strength = UtilityHelper.GetScaledValue_Capped(.05d, 25d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
-			}
+            // Strength
+            double strength;
+            if (useForce)
+            {
+                strength = UtilityHelper.GetScaledValue_Capped(.5d, 100d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+            }
+            else
+            {
+                strength = UtilityHelper.GetScaledValue_Capped(.05d, 25d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+            }
 
-			//	Fire Event
-			this.ApplyVectorField(this, new ApplyVectorFieldArgs(fieldType, strength, useForce));
-		}
+            // Fire Event
+            this.ApplyVectorField(this, new ApplyVectorFieldArgs(fieldType, strength, useForce));
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#region Enum: VectorFieldType
+    #region Enum: VectorFieldType
 
-	public enum VectorFieldType
-	{
-		None,
-		Inward,
-		Outward,
-		SwirlInward,
-		Swirl,
-		Z0Plane
-	}
+    public enum VectorFieldType
+    {
+        None,
+        Inward,
+        Inward_Radius,
+        Outward,
+        SwirlInward,
+        Swirl,
+        Z0Plane
+    }
 
-	#endregion
+    #endregion
 
-	#region Class: ApplyVectorFieldArgs
+    #region Class: ApplyVectorFieldArgs
 
-	public class ApplyVectorFieldArgs : EventArgs
-	{
-		public ApplyVectorFieldArgs(VectorFieldType fieldType, double strength, bool useForce)
-		{
-			this.FieldType = fieldType;
-			this.Strength = strength;
-			this.UseForce = useForce;
-		}
+    public class ApplyVectorFieldArgs : EventArgs
+    {
+        public ApplyVectorFieldArgs(VectorFieldType fieldType, double strength, bool useForce)
+        {
+            this.FieldType = fieldType;
+            this.Strength = strength;
+            this.UseForce = useForce;
+        }
 
-		public VectorFieldType FieldType
-		{
-			get;
-			private set;
-		}
-		public double Strength
-		{
-			get;
-			private set;
-		}
-		/// <summary>
-		/// True:  Strength is force
-		/// False:  Strength is acceleration
-		/// </summary>
-		public bool UseForce
-		{
-			get;
-			private set;
-		}
-	}
+        public VectorFieldType FieldType
+        {
+            get;
+            private set;
+        }
+        public double Strength
+        {
+            get;
+            private set;
+        }
+        /// <summary>
+        /// True:  Strength is force
+        /// False:  Strength is acceleration
+        /// </summary>
+        public bool UseForce
+        {
+            get;
+            private set;
+        }
+    }
 
-	#endregion
+    #endregion
 }

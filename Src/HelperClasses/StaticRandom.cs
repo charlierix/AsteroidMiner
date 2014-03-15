@@ -4,89 +4,132 @@ using System.Linq;
 using System.Text;
 
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace Game.HelperClasses
 {
-	/// <summary>
-	/// This is a wrapper to unique random classes per thread, each one generated with a random seed
-	/// </summary>
-	/// <remarks>
-	/// Got this here:
-	/// http://blogs.msdn.com/b/pfxteam/archive/2009/02/19/9434171.aspx
-	/// </remarks>
-	public static class StaticRandom
-	{
-		#region Declaration Section
+    /// <summary>
+    /// This is a wrapper to unique random classes per thread, each one generated with a random seed
+    /// </summary>
+    /// <remarks>
+    /// Got this here:
+    /// http://blogs.msdn.com/b/pfxteam/archive/2009/02/19/9434171.aspx
+    /// </remarks>
+    public static class StaticRandom
+    {
+        #region Class: RandomWrapper
 
-		/// <summary>
-		/// This serves as both a lock object and a random number generator whenever a new thread needs its own random class
-		/// </summary>
-		/// <remarks>
-		/// RNGCryptoServiceProvider is slower than Random, but is more random.  So this is used when coming up with a new random
-		/// class (because speed isn't as important for the one time call per thread)
-		/// </remarks>
-		private static RNGCryptoServiceProvider _globalRandom = new RNGCryptoServiceProvider();
+        private class RandomWrapper
+        {
+            /// <summary>
+            /// This way the random instance gets swapped out using a new crypto seed.  This gives a good blend between
+            /// speed and true randomness
+            /// </summary>
+            private int _elapse = -1;
 
-		[ThreadStatic]
-		private static Random _localRandom;
+            private Random _rand = null;
+            public Random Random
+            {
+                get
+                {
+                    _elapse--;
 
-		#endregion
+                    if (_elapse < 0)
+                    {
+                        // Create a unique seed (can't just instantiate Random without a seed, because if a bunch of threads are spun up quickly, and each requests
+                        // its own class, they will all have the same seed - seed is based on tickcount, which is time dependent)
+                        byte[] buffer = new byte[4];
+                        _globalRandom.GetBytes(buffer);
 
-		#region Public Methods
+                        _rand = new Random(BitConverter.ToInt32(buffer, 0));
 
-		/// <summary>
-		/// This is the random class for the current thread.  It is exposed for optimization reasons.
-		/// WARNING: Don't share this instance across thread
-		/// </summary>
-		/// <remarks>
-		/// This is exposed publicly in case many random numbers are needed by the calling function.  The ThreadStatic attribute has a slight expense
-		/// to it, so if you have a loop that needs hundreds of random numbers, it's better to call this method, and use the returned class directly, instead
-		/// of calling this class's static Next method over and over.
-		/// </remarks>
-		public static Random GetRandomForThread()
-		{
-			//	The threadstatic attribute guarantees that each thread gets its own instance (this is faster than using a lock on a single object)
-			Random retVal = _localRandom;
+                        // Figure out how long this should live
+                        _elapse = _rand.Next(400, 1500);
+                    }
 
-			if (retVal == null)
-			{
-				//	This is the first time this thread has requested a random class.  Make a new one
+                    return _rand;
+                }
+            }
+        }
 
-				//	Create a unique seed (can't just instantiate Random without a seed, because if a bunch of threads are spun up quickly, and each requests
-				//	its own class, they will all have the same seed - seed is based on tickcount, which is time dependent)
-				byte[] buffer = new byte[4];
-				_globalRandom.GetBytes(buffer);
+        #endregion
 
-				_localRandom = retVal = new Random(BitConverter.ToInt32(buffer, 0));
-			}
+        #region Declaration Section
 
-			//	Exit Function
-			return retVal;
-		}
+        /// <summary>
+        /// This serves as both a lock object and a random number generator whenever a new thread needs its own random class
+        /// </summary>
+        /// <remarks>
+        /// RNGCryptoServiceProvider is slower than Random, but is more random.  So this is used when coming up with a new random
+        /// class (because speed isn't as important for the one time call per thread)
+        /// </remarks>
+        private static RNGCryptoServiceProvider _globalRandom = new RNGCryptoServiceProvider();
 
-		public static int Next()
-		{
-			return GetRandomForThread().Next();
-		}
-		public static int Next(int maxValue)
-		{
-			return GetRandomForThread().Next(maxValue);
-		}
-		public static int Next(int minValue, int maxValue)
-		{
-			return GetRandomForThread().Next(minValue, maxValue);
-		}
+        private static ThreadLocal<RandomWrapper> _localRandom = new ThreadLocal<RandomWrapper>(() => new RandomWrapper());
 
-		public static void NextBytes(byte[] buffer)
-		{
-			GetRandomForThread().NextBytes(buffer);
-		}
+        #endregion
 
-		public static double NextDouble()
-		{
-			return GetRandomForThread().NextDouble();
-		}
+        #region Public Methods
 
-		#endregion
-	}
+        /// <summary>
+        /// This is the random class for the current thread.  It is exposed for optimization reasons.
+        /// WARNING: Don't share this instance across threads
+        /// </summary>
+        /// <remarks>
+        /// This is exposed publicly in case many random numbers are needed by the calling function.  The ThreadStatic attribute has a slight expense
+        /// to it, so if you have a loop that needs hundreds of random numbers, it's better to call this method, and use the returned class directly, instead
+        /// of calling this class's static Next method over and over.
+        /// </remarks>
+        public static Random GetRandomForThread()
+        {
+            return _localRandom.Value.Random;
+        }
+
+        public static int Next()
+        {
+            return _localRandom.Value.Random.Next();
+        }
+        public static int Next(int maxValue)
+        {
+            return _localRandom.Value.Random.Next(maxValue);
+        }
+        public static int Next(int minValue, int maxValue)
+        {
+            return _localRandom.Value.Random.Next(minValue, maxValue);
+        }
+
+        public static void NextBytes(byte[] buffer)
+        {
+            _localRandom.Value.Random.NextBytes(buffer);
+        }
+
+        public static double NextDouble()
+        {
+            return _localRandom.Value.Random.NextDouble();
+        }
+        public static double NextDouble(double maxValue)
+        {
+            return _localRandom.Value.Random.NextDouble(maxValue);
+        }
+        public static double NextDouble(double minValue, double maxValue)
+        {
+            return _localRandom.Value.Random.NextDouble(minValue, maxValue);
+        }
+
+        public static double NextPercent(double midPoint, double percent, bool useRandomPercent = true)
+        {
+            return _localRandom.Value.Random.NextPercent(midPoint, percent, useRandomPercent);
+        }
+        public static double NextDrift(double midPoint, double drift, bool useRandomDrift = true)
+        {
+            return _localRandom.Value.Random.NextDrift(midPoint, drift, useRandomDrift);
+        }
+
+        public static double NextPow(double power, double maxValue = 1d, bool isPlusMinus = true)
+        {
+            return _localRandom.Value.Random.NextPow(power, maxValue, isPlusMinus);
+        }
+
+        #endregion
+    }
 }

@@ -53,9 +53,9 @@ namespace Game.Orig.HelperClassesGDI.Controls
 
         private List<PieButton> _buttons = new List<PieButton>();
 
-		private int _clickedIndex = 0;
-		private Brush _clickedBrush = null;
-		private Pen _clickedPen = null;
+        private int _clickedIndex = 0;
+        private Brush _clickedBrush = null;
+        private Pen _clickedPen = null;
 
         private int _hotTrack = -1;
         private Brush _hotTrackBrush = null;
@@ -74,21 +74,21 @@ namespace Game.Orig.HelperClassesGDI.Controls
 
         #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public int ButtonSize
-		{
-			get
-			{
-				return _buttonSize;
-			}
-		}
+        public int ButtonSize
+        {
+            get
+            {
+                return _buttonSize;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		/// <summary>
+        /// <summary>
         /// This will add a button.  The buttons will be automatically sized and placed starting at the top left.
         /// The buttons will be made as big as possible to fit the available space (but they will all be the same
         /// size, and always square)
@@ -165,9 +165,9 @@ namespace Game.Orig.HelperClassesGDI.Controls
         {
             if (_hotTrack >= 0)
             {
-				_clickedIndex = _hotTrack;
+                _clickedIndex = _hotTrack;
                 OnButtonClicked(_hotTrack, _buttons[_hotTrack].Name);
-				this.Invalidate();
+                this.Invalidate();
             }
 
             base.OnMouseUp(e);
@@ -177,7 +177,7 @@ namespace Game.Orig.HelperClassesGDI.Controls
             int oldHotTrack = _hotTrack;
             _hotTrack = -1;
 
-            //	See if they are over any of the buttons
+            // See if they are over any of the buttons
             for (int cntr = 0; cntr < _buttons.Count; cntr++)
             {
                 if (_buttons[cntr].Outline.IsVisible(e.X, e.Y))
@@ -227,43 +227,43 @@ namespace Game.Orig.HelperClassesGDI.Controls
             }
             else
             {
-				e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+                e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
 
                 // Draw the buttons
-				for (int cntr = 0; cntr < _buttons.Count; cntr++)
-				{
-					if (_buttons[cntr].Bitmap == null || _buttons[cntr].Outline == null)
-					{
-						continue;
-					}
-					if (!_buttons[cntr].Rectangle.IntersectsWith(e.ClipRectangle))
-					{
-						continue;
-					}
+                for (int cntr = 0; cntr < _buttons.Count; cntr++)
+                {
+                    if (_buttons[cntr].Bitmap == null || _buttons[cntr].Outline == null)
+                    {
+                        continue;
+                    }
+                    if (!_buttons[cntr].Rectangle.IntersectsWith(e.ClipRectangle))
+                    {
+                        continue;
+                    }
 
-					//	Background
-					if (cntr == _clickedIndex && _clickedBrush != null)
-					{
-						e.Graphics.FillPath(_clickedBrush, _buttons[cntr].Outline);
-					}
-					if (cntr == _hotTrack && _hotTrackBrush != null)
-					{
-						e.Graphics.FillPath(_hotTrackBrush, _buttons[cntr].Outline);
-					}
+                    // Background
+                    if (cntr == _clickedIndex && _clickedBrush != null)
+                    {
+                        e.Graphics.FillPath(_clickedBrush, _buttons[cntr].Outline);
+                    }
+                    if (cntr == _hotTrack && _hotTrackBrush != null)
+                    {
+                        e.Graphics.FillPath(_hotTrackBrush, _buttons[cntr].Outline);
+                    }
 
-					// Button Image
-					e.Graphics.DrawImageUnscaled(_buttons[cntr].Bitmap, _buttons[cntr].Rectangle.Location);
+                    // Button Image
+                    e.Graphics.DrawImageUnscaled(_buttons[cntr].Bitmap, _buttons[cntr].Rectangle.Location);
 
-					//	Border
-					if (cntr == _clickedIndex && _clickedPen != null)
-					{
-						e.Graphics.DrawPath(_clickedPen, _buttons[cntr].Outline);
-					}
-					if (cntr == _hotTrack && _hotTrackPen != null)
-					{
-						e.Graphics.DrawPath(_hotTrackPen, _buttons[cntr].Outline);
-					}
-				}
+                    // Border
+                    if (cntr == _clickedIndex && _clickedPen != null)
+                    {
+                        e.Graphics.DrawPath(_clickedPen, _buttons[cntr].Outline);
+                    }
+                    if (cntr == _hotTrack && _hotTrackPen != null)
+                    {
+                        e.Graphics.DrawPath(_hotTrackPen, _buttons[cntr].Outline);
+                    }
+                }
             }
         }
 
@@ -273,22 +273,22 @@ namespace Game.Orig.HelperClassesGDI.Controls
 
         private void ResetHotTrackPens()
         {
-			//	Clicked
-			if (_clickedBrush != null)
-			{
-				_clickedBrush.Dispose();
-				_clickedBrush = null;
-			}
-			if (_clickedPen != null)
-			{
-				_clickedPen.Dispose();
-				_clickedPen = null;
-			}
+            // Clicked
+            if (_clickedBrush != null)
+            {
+                _clickedBrush.Dispose();
+                _clickedBrush = null;
+            }
+            if (_clickedPen != null)
+            {
+                _clickedPen.Dispose();
+                _clickedPen = null;
+            }
 
-			_clickedBrush = new SolidBrush(SystemColors.Window);
-			_clickedPen = new Pen(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .33d));
+            _clickedBrush = new SolidBrush(SystemColors.Window);
+            _clickedPen = new Pen(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .33d));
 
-			//	HotTrack
+            // HotTrack
             if (_hotTrackBrush != null)
             {
                 _hotTrackBrush.Dispose();
@@ -300,8 +300,8 @@ namespace Game.Orig.HelperClassesGDI.Controls
                 _hotTrackPen = null;
             }
 
-			_hotTrackBrush = new SolidBrush(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .05d));
-			_hotTrackPen = new Pen(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .33d));
+            _hotTrackBrush = new SolidBrush(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .05d));
+            _hotTrackPen = new Pen(UtilityGDI.AlphaBlend(SystemColors.HotTrack, this.BackColor, .33d));
         }
 
         private void RepositionButtons()
@@ -349,7 +349,7 @@ namespace Game.Orig.HelperClassesGDI.Controls
                         _buttons[buttonCntr].Outline = null;
                     }
 
-					_buttons[buttonCntr].Outline = UtilityGDI.GetRoundedRectangle(_buttons[buttonCntr].Rectangle, _buttonSize / 3);
+                    _buttons[buttonCntr].Outline = UtilityGDI.GetRoundedRectangle(_buttons[buttonCntr].Rectangle, _buttonSize / 3);
 
                     // Draw the button
                     DrawButton_Private(buttonCntr);
@@ -388,7 +388,7 @@ namespace Game.Orig.HelperClassesGDI.Controls
             using (Graphics graphics = Graphics.FromImage(_buttons[index].Bitmap))
             {
                 graphics.SmoothingMode = SmoothingMode.HighQuality;
-				graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;		//	I can't blit cleartype, it looks like crap
+                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;		// I can't blit cleartype, it looks like crap
                 graphics.Clear(Color.Transparent);
 
                 // Let the parent class draw it

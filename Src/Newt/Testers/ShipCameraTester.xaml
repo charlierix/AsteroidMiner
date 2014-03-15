@@ -1,0 +1,177 @@
+﻿<Window x:Class="Game.Newt.Testers.ShipCameraTester"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Ship Camera Tester" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#E0E0E0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Column="0" Grid.Row="0" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,12,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+
+                    <!-- Scenes -->
+                    <Expander IsExpanded="True" Header="Scenes">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnSimple1" Content="Simple 1" Click="btnSimple1_Click"/>
+                                <RadioButton Name="radSceneBlack" Content="Black" Margin="0,2,0,0"/>
+                                <RadioButton IsChecked="True" Name="radSceneTransparent" Content="Transparent"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Cameras -->
+                    <Expander IsExpanded="True" Header="Cameras">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnRGB" Content="RGB" Click="btnRGB_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Snapshots -->
+                    <Expander IsExpanded="True" Header="Snapshots">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnViewSnapshot" Content="View Snapshot" Click="btnViewSnapshot_Click"/>
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="neurons" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Grid.Row="0" Name="txtSnapshotCones" Text="20"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="1" Text="pixels X" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Grid.Row="1" Name="txtSnapshotPixelsX" Text="80"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="pixels Y" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Grid.Row="2" Name="txtSnapshotPixelsY" Text="80"/>
+                                </Grid>
+
+                                <CheckBox IsChecked="False" Name="chkSnapshotAuto" Content="Auto refresh"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Bells -->
+                    <Expander IsExpanded="False" Header="Bells">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnBells" Content="Bells" Click="btnBells_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Performance -->
+                    <Expander IsExpanded="False" Header="Performance">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnPerfResolution" Content="Resolution" Click="btnPerfResolution_Click"/>
+                                <Button Name="btnThreads1" Content="Threads 1" Click="btnThreads1_Click"/>
+                                <Button Name="btnThreads2" Content="Threads 2" Click="btnThreads2_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="False" Header="Misc">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnOffline1Snapshot" Content="Offline1 Snapshot" Click="btnOffline1Snapshot_Click"/>
+                                <Button Name="btnPolyIntersect" Content="Polygon Intersect" Click="btnPolyIntersect_Click"/>
+                                <Button Name="btnPolyArea" Content="Polygon Area" Click="btnPolyArea_Click"/>
+                                <Button Name="btnAvgColor" Content="Avg Color" Click="btnAvgColor_Click"/>
+
+                                <Button Visibility="Collapsed" Name="btnEmulateCones" Content="Emulate Cones" Click="btnEmulateCones_Click"/>
+                                <Button Name="btnEvenDistrCircle" Content="Even Distribute Circle" Margin="0,12,0,0" Click="btnEvenDistrCircle_Click"/>
+                                <Button Name="btnCenterPackedCircle" Content="Center Packed Circle" Margin="0,0,0,0" Click="btnCenterPackedCircle_Click"/>
+                                <TextBox Name="txtNumPointsCircle" Text="10"/>
+                                <CheckBox IsChecked="True" Name="chkControlDots" Content="Show control dots"/>
+                                <CheckBox IsChecked="True" Name="chkVoronoi" Content="Show voronoi"/>
+                                <CheckBox IsChecked="True" Name="chkCapVoronoi" Content="Cap voronoi"/>
+                                <CheckBox IsChecked="False" Name="chkDelaunay" Content="Show delaunay lines"/>
+                                <CheckBox IsChecked="False" Name="chkCenters" Content="Show centers"/>
+                                <CheckBox Visibility="Collapsed" IsChecked="False" Name="chkReconstructTriangles" Content="Reconstruct triangles"/>
+                                <CheckBox IsChecked="False" Name="chkPlate" Content="Show plate"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Name="btnTestTileOverlap" Content="test" Width="50" HorizontalAlignment="Left" Click="btnTestTileOverlap_Click"/>
+                                    <TextBox Name="txtPixels" Text="5, 5" MinWidth="60"/>
+                                </StackPanel>
+                                <CheckBox IsChecked="False" Name="chkTestLines" Content="Show as lines"/>
+
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Visibility="Collapsed" Grid.Column="0" Grid.Row="1" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,0,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+
+                    <!--<Expander IsExpanded="False" Header="Solver">
+                        <Border RadioButton.Checked="Solver_Checked" RadioButton.Unchecked="Solver_Checked">
+                            <StackPanel Margin="8,6">
+                                <RadioButton Name="radSolver1" Content="Attempt 1"/>
+                                <RadioButton IsChecked="True" Name="radSolver2" Content="Attempt 2"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <Label Content="Simulation Speed" Margin="0,8,0,0"/>
+                    <Slider Name="trkSimSpeed" Minimum="0" Maximum="2000" Value="500" ValueChanged="trkSimSpeed_ValueChanged"/>
+
+                    <Button Name="btnClearDebugVisuals" Content="Clear debug visuals" Margin="0,8,0,0" Click="btnClearDebugVisuals_Click"/>-->
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,25" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="#808080" />
+                            <DirectionalLight Color="#FFFFFF" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+    </Grid>
+</Window>

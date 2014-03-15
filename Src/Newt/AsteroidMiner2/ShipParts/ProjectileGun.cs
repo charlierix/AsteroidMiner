@@ -11,259 +11,252 @@ using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	#region Class: ProjectileGunToolItem
+    #region Class: ProjectileGunToolItem
 
-	public class ProjectileGunToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class ProjectileGunToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public ProjectileGunToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public ProjectileGunToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Projectile Weapon";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Fires projectiles from ammo box";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_WEAPON;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Projectile Weapon";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Fires projectiles from ammo box";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_WEAPON;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new ProjectileGunDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new ProjectileGunDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: ProjectileGunDesign
+    #endregion
+    #region Class: ProjectileGunDesign
 
-	public class ProjectileGunDesign : PartDesignBase
-	{
-		#region Constructor
+    public class ProjectileGunDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public ProjectileGunDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public ProjectileGunDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometries;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometries;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			Model3DGroup retVal = new Model3DGroup();
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-			GeometryModel3D geometry;
-			MaterialGroup material;
-			DiffuseMaterial diffuse;
-			SpecularMaterial specular;
+        #endregion
 
-			//int domeSegments = isFinal ? 2 : 10;
-			int cylinderSegments = isFinal ? 6 : 35;
+        #region Private Methods
 
-			#region Mount Box
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            Model3DGroup retVal = new Model3DGroup();
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.GunBase));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.GunBase));
-			material.Children.Add(diffuse);
-			specular = this.Options.WorldColors.GunBaseSpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            GeometryModel3D geometry;
+            MaterialGroup material;
+            DiffuseMaterial diffuse;
+            SpecularMaterial specular;
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				this.SelectionEmissives.Add(selectionEmissive);
-			}
+            //int domeSegments = isFinal ? 2 : 10;
+            int cylinderSegments = isFinal ? 6 : 35;
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Mount Box
 
-			geometry.Geometry = UtilityWPF.GetCube(new Point3D(-.115, -.1, -.5), new Point3D(.115, .1, -.1));
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBase));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBase));
+            material.Children.Add(diffuse);
+            specular = WorldColors.GunBaseSpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                this.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			#region Barrel
+            geometry.Geometry = UtilityWPF.GetCube(new Point3D(-.115, -.1, -.5), new Point3D(.115, .1, -.1));
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.GunBarrel));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.GunBarrel));
-			material.Children.Add(diffuse);
-			specular = this.Options.WorldColors.GunBarrelSpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            retVal.Children.Add(geometry);
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				this.SelectionEmissives.Add(selectionEmissive);
-			}
+            #endregion
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Barrel
 
-			const double OUTERRADIUS = .045;
-			const double INNERRADIUS = .04;
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBarrel));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBarrel));
+            material.Children.Add(diffuse);
+            specular = WorldColors.GunBarrelSpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			List<TubeRingBase> rings = new List<TubeRingBase>();
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                this.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			rings.Add(new TubeRingRegularPolygon(0, false, OUTERRADIUS * 1.75d, OUTERRADIUS * 1.75d, false));		//	Start at the base of the barrel
-			rings.Add(new TubeRingRegularPolygon(.49, false, OUTERRADIUS * 1.75d, OUTERRADIUS * 1.75d, false));
-			rings.Add(new TubeRingRegularPolygon(.01, false, OUTERRADIUS, OUTERRADIUS, false));
-			rings.Add(new TubeRingRegularPolygon(.4, false, OUTERRADIUS, OUTERRADIUS, false));
-			rings.Add(new TubeRingRegularPolygon(.01, false, OUTERRADIUS * 1.25d, OUTERRADIUS * 1.25d, false));
-			rings.Add(new TubeRingRegularPolygon(.08, false, OUTERRADIUS * 1.25d, OUTERRADIUS * 1.25d, false));		//	This is the tip of the barrel
-			rings.Add(new TubeRingRegularPolygon(0, false, INNERRADIUS, INNERRADIUS, false));		//	Curl to the inside
-			rings.Add(new TubeRingRegularPolygon(-.95d, false, INNERRADIUS, INNERRADIUS, false));		//	Loop back to the base
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, false, new TranslateTransform3D(0, 0, -.49d));
+            const double OUTERRADIUS = .045;
+            const double INNERRADIUS = .04;
 
-			retVal.Children.Add(geometry);
+            List<TubeRingBase> rings = new List<TubeRingBase>();
 
-			#endregion
+            rings.Add(new TubeRingRegularPolygon(0, false, OUTERRADIUS * 1.75d, OUTERRADIUS * 1.75d, false));		// Start at the base of the barrel
+            rings.Add(new TubeRingRegularPolygon(.49, false, OUTERRADIUS * 1.75d, OUTERRADIUS * 1.75d, false));
+            rings.Add(new TubeRingRegularPolygon(.01, false, OUTERRADIUS, OUTERRADIUS, false));
+            rings.Add(new TubeRingRegularPolygon(.4, false, OUTERRADIUS, OUTERRADIUS, false));
+            rings.Add(new TubeRingRegularPolygon(.01, false, OUTERRADIUS * 1.25d, OUTERRADIUS * 1.25d, false));
+            rings.Add(new TubeRingRegularPolygon(.08, false, OUTERRADIUS * 1.25d, OUTERRADIUS * 1.25d, false));		// This is the tip of the barrel
+            rings.Add(new TubeRingRegularPolygon(0, false, INNERRADIUS, INNERRADIUS, false));		// Curl to the inside
+            rings.Add(new TubeRingRegularPolygon(-.95d, false, INNERRADIUS, INNERRADIUS, false));		// Loop back to the base
 
-			#region Trim
+            geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, false, new TranslateTransform3D(0, 0, -.49d));
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.GunTrim));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.GunTrim));
-			material.Children.Add(diffuse);
-			specular = this.Options.WorldColors.GunTrimSpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            retVal.Children.Add(geometry);
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				this.SelectionEmissives.Add(selectionEmissive);
-			}
+            #endregion
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Trim
 
-			geometry.Geometry = UtilityWPF.GetCube(new Point3D(-.095, -.11, -.45), new Point3D(.095, .11, -.15));
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunTrim));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunTrim));
+            material.Children.Add(diffuse);
+            specular = WorldColors.GunTrimSpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                this.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			//	Transform
-			Transform3DGroup transformGlobal = new Transform3DGroup();
-			if (isFinal)
-			{
-				transformGlobal.Children.Add(_scaleTransform.Clone());
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform.Clone()));
-				transformGlobal.Children.Add(_translateTransform.Clone());
-			}
-			else
-			{
-				transformGlobal.Children.Add(_scaleTransform);
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform));
-				transformGlobal.Children.Add(_translateTransform);
-			}
-			retVal.Transform = transformGlobal;
+            geometry.Geometry = UtilityWPF.GetCube(new Point3D(-.095, -.11, -.45), new Point3D(.095, .11, -.15));
 
-			//	Exit Function
-			return retVal;
-		}
+            retVal.Children.Add(geometry);
 
-		#endregion
-	}
+            #endregion
 
-	#endregion
-	#region Class: ProjectileGun
+            // Transform
+            retVal.Transform = GetTransformForGeometry(isFinal);
 
-	public class ProjectileGun
-	{
-		public const string PARTTYPE = "ProjectileGun";
-	}
+            // Exit Function
+            return retVal;
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: ProjectileGun
+
+    public class ProjectileGun
+    {
+        public const string PARTTYPE = "ProjectileGun";
+    }
+
+    #endregion
 }

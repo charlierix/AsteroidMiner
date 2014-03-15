@@ -74,7 +74,7 @@ namespace Game.Orig.HelperClassesOrig
 
         private ProjectileState _state = ProjectileState.Flying;
 
-        //	These will stay null if that feature is unused
+        // These will stay null if that feature is unused
         private ExplosionProps _explosion = null;
         private FuseProps _fuse = null;
 
@@ -154,7 +154,7 @@ namespace Game.Orig.HelperClassesOrig
                 return;
             }
 
-            long token = this.Token;		//	cache the property
+            long token = this.Token;		// cache the property
 
             for (int cntr = 0; cntr < collisions.Length; cntr++)
             {
@@ -162,7 +162,7 @@ namespace Game.Orig.HelperClassesOrig
                 {
                     if (_ignoreOtherProjectiles && (collisions[cntr].Blip1 is Projectile) && (collisions[cntr].Blip2 is Projectile))
                     {
-                        //	I don't explode against other projectiles
+                        // I don't explode against other projectiles
                         continue;
                     }
 
@@ -180,7 +180,7 @@ namespace Game.Orig.HelperClassesOrig
 
                     if (_state == ProjectileState.Flying)
                     {
-                        //	I only want to explode once
+                        // I only want to explode once
                         Explode();
                     }
                 }
@@ -192,7 +192,7 @@ namespace Game.Orig.HelperClassesOrig
 
         public override void TimerTestPosition(double elapsedTime)
         {
-            //	Test position may get called several times.  I just need to remember the elapsed time from the last call
+            // Test position may get called several times.  I just need to remember the elapsed time from the last call
             _curTickElapsedTime = elapsedTime;
 
             base.TimerTestPosition(elapsedTime);
@@ -211,7 +211,7 @@ namespace Game.Orig.HelperClassesOrig
                     break;
 
                 case ProjectileState.Dying:
-                    //	Nothing to do
+                    // Nothing to do
                     break;
 
                 default:
@@ -240,10 +240,10 @@ namespace Game.Orig.HelperClassesOrig
 
         private void Exploding()
         {
-            //	Keep setting my velocity back to zero
+            // Keep setting my velocity back to zero
             base.Ball.Velocity.StoreNewValues(new MyVector());
 
-            //	See if enough time has gone by
+            // See if enough time has gone by
             bool isExpired = false;
             if (_explosion == null)
             {
@@ -251,7 +251,7 @@ namespace Game.Orig.HelperClassesOrig
             }
             else
             {
-                //	Bump up my elapsed time
+                // Bump up my elapsed time
                 _explosion.ElapsedTime += _curTickElapsedTime;
 
                 if (_explosion.ElapsedTime > _explosion.Duration)
@@ -262,10 +262,10 @@ namespace Game.Orig.HelperClassesOrig
 
             if (isExpired)
             {
-                //	Let myself know that I am in the process of dying
+                // Let myself know that I am in the process of dying
                 _state = ProjectileState.Dying;
 
-                //	Tell the map to drop me, and drop reference to the map.
+                // Tell the map to drop me, and drop reference to the map.
                 _map.Remove(this.Token);
                 _map.Collisions -= new CollisionsDelegate(Map_Collisions);
                 _map = null;
@@ -279,26 +279,26 @@ namespace Game.Orig.HelperClassesOrig
                 throw new InvalidOperationException("Explode was called when not in a flying state: " + _state.ToString());
             }
 
-            //	Drop my velocity to zero (In case somebody asks what my velocity is)
+            // Drop my velocity to zero (In case somebody asks what my velocity is)
             //TODO:  May want to go into a ghost state, but if I do, the map won't do any collision detection, and nothing will know
-            //	to add more pain
+            // to add more pain
             base.Ball.Velocity.StoreNewValues(new MyVector());
 
-            //	Explode myself
+            // Explode myself
             if (_explosion != null)
             {
                 base.Ball.Radius = _explosion.Radius;
             }
 
-            //	Store my new state
+            // Store my new state
             _state = ProjectileState.Exploding;
 
-            //	Don't do any other collision physics
+            // Don't do any other collision physics
             base.CollisionStyle = CollisionStyle.Ghost;
 
             if (_explosion == null)
             {
-                //	This will put me straight into a dying state (after removing me from the map)
+                // This will put me straight into a dying state (after removing me from the map)
                 Exploding();
             }
         }
@@ -316,10 +316,10 @@ namespace Game.Orig.HelperClassesOrig
             force.BecomeUnitVector();
             force.Multiply(_explosion.Force);
 
-            //	Setting the force does no good, because PrepareForNewTick is called before it can take affect
+            // Setting the force does no good, because PrepareForNewTick is called before it can take affect
             //castBlip.Ball.ExternalForce.Add(force);
 
-            force.Divide(castBlip.Ball.Mass);		//	F=MA
+            force.Divide(castBlip.Ball.Mass);		// F=MA
             castBlip.Ball.Velocity.Add(force);
         }
 

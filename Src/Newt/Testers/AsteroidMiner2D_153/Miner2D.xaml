@@ -78,8 +78,8 @@
 
         <!-- Progress Bars -->
         <StackPanel Margin="0,0,10,10" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <ast:ProgressBarGame1 Name="progressBarFuel" Text="fuel" BarColor="#BA9122" />
-            <ast:ProgressBarGame1 Name="progressBarCargo" Text="cargo" BarColor="Gray" />
+            <ast:ProgressBarGame Name="progressBarFuel" Text="fuel" BarColor="#BA9122" />
+            <ast:ProgressBarGame Name="progressBarCargo" Text="cargo" BarColor="Gray" />
         </StackPanel>
 
         <!-- This is a dark plate that appears over the viewers when a dialog box is showing -->

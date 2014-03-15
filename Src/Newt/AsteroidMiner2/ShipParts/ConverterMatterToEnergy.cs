@@ -6,143 +6,372 @@ using System.Windows;
 using System.Windows.Media.Media3D;
 
 using Game.Newt.AsteroidMiner2.ShipEditor;
+using Game.Newt.HelperClasses;
+using Game.Newt.NewtonDynamics;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	#region Class: ConverterMatterToEnergyToolItem
+    #region Class: ConverterMatterToEnergyToolItem
 
-	public class ConverterMatterToEnergyToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class ConverterMatterToEnergyToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public ConverterMatterToEnergyToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public ConverterMatterToEnergyToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Matter to Energy Converter";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Pulls matter out of the cargo bay, and recharges the energy tank";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_CONVERTERS;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Matter to Energy Converter";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Pulls matter out of the cargo bay, and recharges the energy tank";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_CONVERTERS;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new ConverterMatterToEnergyDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new ConverterMatterToEnergyDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: ConverterMatterToEnergyDesign
+    #endregion
+    #region Class: ConverterMatterToEnergyDesign
 
-	public class ConverterMatterToEnergyDesign : PartDesignBase
-	{
-		#region Constructor
+    public class ConverterMatterToEnergyDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public ConverterMatterToEnergyDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
-		#region Public Properties
+        #endregion
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        #region Constructor
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        public ConverterMatterToEnergyDesign(EditorOptions options)
+            : base(options) { }
 
-				return _geometries;
-			}
-		}
+        #endregion
 
-		#endregion
+        #region Public Properties
 
-		#region Public Methods
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		#endregion
+                return _geometries;
+            }
+        }
 
-		#region Private Methods
+        #endregion
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			return ConverterMatterToFuelDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
-				_scaleTransform, _rotateTransform, _translateTransform,
-				this.Options.WorldColors.ConverterBase, this.Options.WorldColors.ConverterBaseSpecular, this.Options.WorldColors.ConverterEnergy, this.Options.WorldColors.ConverterEnergySpecular,
-				isFinal);
-		}
+        #region Public Methods
 
-		#endregion
-	}
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-	#endregion
-	#region Class: ConverterMatterToEnergy
+        public override CollisionHull CreateCollisionHull(WorldBase world)
+        {
+            Transform3DGroup transform = new Transform3DGroup();
+            //transform.Children.Add(new ScaleTransform3D(this.Scale));		// it ignores scale
+            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(this.Orientation)));
+            transform.Children.Add(new TranslateTransform3D(this.Position.ToVector()));
 
-	public class ConverterMatterToEnergy
-	{
-		public const string PARTTYPE = "ConverterMatterToEnergy";
-	}
+            return CollisionHull.CreateBox(world, 0, this.Scale * ConverterMatterToFuelDesign.SCALE, transform.Value);
+        }
+        public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
+        {
+            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            {
+                // This has already been built for this size
+                return _massBreakdown.Item1;
+            }
 
-	#endregion
+            // Convert this.Scale into a size that the mass breakdown will use
+            Vector3D size = this.Scale * ConverterMatterToFuelDesign.SCALE;
+
+            var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+
+            // Store this
+            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+
+            // Exit Function
+            return _massBreakdown.Item1;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            return ConverterMatterToFuelDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
+                GetTransformForGeometry(isFinal),
+                WorldColors.ConverterBase, WorldColors.ConverterBaseSpecular, WorldColors.ConverterEnergy, WorldColors.ConverterEnergySpecular,
+                isFinal);
+        }
+
+        #endregion
+    }
+
+    #endregion
+    #region Class: ConverterMatterToEnergy
+
+    public class ConverterMatterToEnergy : PartBase, IPartUpdatable, IContainer, IConverterMatter
+    {
+        #region Declaration Section
+
+        public const string PARTTYPE = "ConverterMatterToEnergy";
+
+        private ItemOptions _itemOptions = null;
+
+        private IContainer _energyTanks = null;
+
+        // This stays sorted from low to high density
+        private List<Cargo> _cargo = new List<Cargo>();
+
+        private Converter _converter = null;
+
+        #endregion
+
+        #region Constructor
+
+        public ConverterMatterToEnergy(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks)
+            : base(options, dna)
+        {
+            _itemOptions = itemOptions;
+            _energyTanks = energyTanks;
+
+            this.Design = new ConverterMatterToEnergyDesign(options);
+            this.Design.SetDNA(dna);
+
+            double volume;
+            ConverterMatterToFuel.GetMass(out _dryMass, out volume, out _scaleActual, _itemOptions, dna);
+
+            this.MaxVolume = volume;
+
+            if (_energyTanks != null)
+            {
+                double scaleVolume = _scaleActual.X * _scaleActual.Y * _scaleActual.Z;      // can't use volume from above, because that is the amount of matter that can be held.  This is to get conversion ratios
+                _converter = new Converter(this, _energyTanks, _itemOptions.MatterToEnergyConversionRate, _itemOptions.MatterToEnergyAmountToDraw * scaleVolume);
+            }
+        }
+
+        #endregion
+
+        #region IPartUpdatable Members
+
+        public void Update(double elapsedTime)
+        {
+            if (_converter != null && _cargo.Count > 0)
+            {
+                _converter.Transfer(elapsedTime);
+            }
+        }
+
+        #endregion
+        #region IContainer Members
+
+        // IContainer was only implemented so that _converter could pull from this class's cargo
+        //NOTE: The converter only cares about mass, so the quantities that these IContainer methods deal with are mass.  The other methods in this class are more worried about volume
+
+        public double QuantityCurrent
+        {
+            get
+            {
+                return _cargo.Sum(o => o.Density * o.Volume);
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public double QuantityMax
+        {
+            get
+            {
+                // This class isn't constrained by mass, only volume, so this property has no meaning
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public double QuantityMaxMinusCurrent
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool OnlyRemoveMultiples
+        {
+            get
+            {
+                return false;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public double RemovalMultiple
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public double AddQuantity(double amount, bool exactAmountOnly)
+        {
+            throw new NotImplementedException();
+        }
+        public double AddQuantity(IContainer pullFrom, double amount, bool exactAmountOnly)
+        {
+            throw new NotImplementedException();
+        }
+        public double AddQuantity(IContainer pullFrom, bool exactAmountOnly)
+        {
+            throw new NotImplementedException();
+        }
+
+        public double RemoveQuantity(double amount, bool exactAmountOnly)
+        {
+            if (exactAmountOnly)
+            {
+                throw new ArgumentException("exactAmountOnly cannot be true");
+            }
+
+            return ConverterMatterToFuel.RemoveQuantity(amount, _cargo);
+        }
+
+        #endregion
+        #region IConverterMatter Members
+
+        //NOTE: There is only an add method.  Any cargo added to this converter is burned off over time
+        public bool Add(Cargo cargo)
+        {
+            double sumVolume = this.UsedVolume + cargo.Volume;
+            if (sumVolume <= this.MaxVolume || Math3D.IsNearValue(sumVolume, this.MaxVolume))
+            {
+                ConverterMatterToFuel.Add(_cargo, cargo);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public double UsedVolume
+        {
+            get
+            {
+                return _cargo.Sum(o => o.Volume);
+            }
+        }
+        public double MaxVolume
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        private readonly double _dryMass;
+        public override double DryMass
+        {
+            get
+            {
+                return _dryMass;
+            }
+        }
+        public override double TotalMass
+        {
+            get
+            {
+                return _dryMass + _cargo.Sum(o => o.Density * o.Volume);
+            }
+        }
+
+        private readonly Vector3D _scaleActual;
+        public override Vector3D ScaleActual
+        {
+            get
+            {
+                return _scaleActual;
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
 }

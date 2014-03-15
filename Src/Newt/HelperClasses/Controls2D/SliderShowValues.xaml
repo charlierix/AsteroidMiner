@@ -1,0 +1,53 @@
+﻿<UserControl x:Class="Game.Newt.HelperClasses.Controls2D.SliderShowValues"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" d:DesignWidth="300"
+             xmlns:local="clr-namespace:Game.Newt.HelperClasses.Controls2D"
+             x:Name="thisControl" SizeChanged="Control_SizeChanged">
+    <UserControl.Resources>
+        <Style x:Key="minmaxTextbox" TargetType="TextBox">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="MaxWidth" Value="{Binding Path=TextBoxMaxWidth, ElementName=thisControl}"/>
+            <Setter Property="Foreground" Value="{Binding Path=Foreground, ElementName=thisControl}"/>
+        </Style>
+
+        <local:MultiplierValueConverter x:Key="logConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <TextBox Grid.Column="0" Grid.Row="1" Name="txtMin"
+                 Text="{Binding Path=Minimum, ElementName=thisControl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                 Style="{StaticResource minmaxTextbox}"/>
+        <TextBox Grid.Column="2" Grid.Row="1" Name="txtMax"
+                 Text="{Binding Path=Maximum, ElementName=thisControl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                 Style="{StaticResource minmaxTextbox}"/>
+
+        <!-- TODO: Don't bind this directly to the public value, or if so, run it through a value converter -->
+        <Slider Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" Name="slider1" Margin="0,0,0,-3" TickPlacement="None"
+                Minimum="{Binding Path=Minimum, ElementName=thisControl, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                Maximum="{Binding Path=Maximum, ElementName=thisControl, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                Value="{Binding Path=Value, Converter={StaticResource ResourceKey=logConverter}, ElementName=thisControl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <TextBox Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="3" Name="txtValue" FontSize="14" HorizontalAlignment="Center" BorderThickness="0" BorderBrush="Transparent" Background="Transparent"
+               Text="{Binding Path=ValueDisplay, ElementName=thisControl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+               Foreground="{Binding Path=Foreground, ElementName=thisControl}"/>
+    </Grid>
+</UserControl>

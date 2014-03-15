@@ -11,261 +11,254 @@ using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	#region Class: ShieldEnergyToolItem
+    #region Class: ShieldEnergyToolItem
 
-	public class ShieldEnergyToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class ShieldEnergyToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public ShieldEnergyToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public ShieldEnergyToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Energy shields";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Blocks radiation and energy weapons (consumes energy)";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_SHIELD;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Energy shields";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Blocks radiation and energy weapons (consumes energy)";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_SHIELD;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new ShieldEnergyDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new ShieldEnergyDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: ShieldEnergyDesign
+    #endregion
+    #region Class: ShieldEnergyDesign
 
-	public class ShieldEnergyDesign : PartDesignBase
-	{
-		#region Constructor
+    public class ShieldEnergyDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public ShieldEnergyDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public ShieldEnergyDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometries;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometries;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			return CreateGeometry(this.MaterialBrushes, this.SelectionEmissives,
-				_scaleTransform, _rotateTransform, _translateTransform,
-				this.Options.WorldColors.ShieldBase, this.Options.WorldColors.ShieldBaseSpecular, this.Options.WorldColors.ShieldBaseEmissive, this.Options.WorldColors.ShieldEnergy, this.Options.WorldColors.ShieldEnergySpecular,
-				isFinal);
-		}
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-		internal static Model3DGroup CreateGeometry(List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, ScaleTransform3D scaleTransform, QuaternionRotation3D rotateTransform, TranslateTransform3D translateTransform, Color baseColor, SpecularMaterial baseSpecular, EmissiveMaterial baseEmissive, Color colorColor, SpecularMaterial colorSpecular, bool isFinal)
-		{
-			const double SCALE = .5d;
+        #endregion
 
-			Model3DGroup retVal = new Model3DGroup();
+        #region Private Methods
 
-			GeometryModel3D geometry;
-			MaterialGroup material;
-			DiffuseMaterial diffuse;
-			SpecularMaterial specular;
-			EmissiveMaterial emissive;
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            return CreateGeometry(this.MaterialBrushes, this.SelectionEmissives,
+                GetTransformForGeometry(isFinal),
+                WorldColors.ShieldBase, WorldColors.ShieldBaseSpecular, WorldColors.ShieldBaseEmissive, WorldColors.ShieldEnergy, WorldColors.ShieldEnergySpecular,
+                isFinal);
+        }
 
-			int numSegments = isFinal ? 3 : 20;
+        internal static Model3DGroup CreateGeometry(List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, Transform3D transform, Color baseColor, SpecularMaterial baseSpecular, EmissiveMaterial baseEmissive, Color colorColor, SpecularMaterial colorSpecular, bool isFinal)
+        {
+            const double SCALE = .5d;
 
-			#region Main Sphere
+            Model3DGroup retVal = new Model3DGroup();
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(colorColor));
-			materialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, colorColor));
-			material.Children.Add(diffuse);
-			specular = colorSpecular;
-			materialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            GeometryModel3D geometry;
+            MaterialGroup material;
+            DiffuseMaterial diffuse;
+            SpecularMaterial specular;
+            EmissiveMaterial emissive;
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				selectionEmissives.Add(selectionEmissive);
-			}
+            int numSegments = isFinal ? 3 : 20;
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Main Sphere
 
-			geometry.Geometry = UtilityWPF.GetSphere(numSegments, .9 * SCALE, .9 * SCALE, .65d * SCALE);
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(colorColor));
+            materialBrushes.Add(new MaterialColorProps(diffuse, colorColor));
+            material.Children.Add(diffuse);
+            specular = colorSpecular;
+            materialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                selectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			#region Ring
+            geometry.Geometry = UtilityWPF.GetSphere(numSegments, .9 * SCALE, .9 * SCALE, .65d * SCALE);
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(baseColor));
-			materialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, baseColor));
-			material.Children.Add(diffuse);
-			specular = baseSpecular;
-			materialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
-			emissive = baseEmissive;
-			materialBrushes.Add(new MaterialColorProps(emissive));
-			material.Children.Add(emissive);
+            retVal.Children.Add(geometry);
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				selectionEmissives.Add(selectionEmissive);
-			}
+            #endregion
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Ring
 
-			geometry.Geometry = UtilityWPF.GetSphere(numSegments, 1d * SCALE, 1d * SCALE, .15d * SCALE);
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(baseColor));
+            materialBrushes.Add(new MaterialColorProps(diffuse, baseColor));
+            material.Children.Add(diffuse);
+            specular = baseSpecular;
+            materialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
+            emissive = baseEmissive;
+            materialBrushes.Add(new MaterialColorProps(emissive));
+            material.Children.Add(emissive);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                selectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			#region Axis
+            geometry.Geometry = UtilityWPF.GetSphere(numSegments, 1d * SCALE, 1d * SCALE, .15d * SCALE);
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(baseColor));
-			materialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, baseColor));
-			material.Children.Add(diffuse);
-			specular = baseSpecular;
-			materialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
-			emissive = baseEmissive;
-			materialBrushes.Add(new MaterialColorProps(emissive));
-			material.Children.Add(emissive);
+            retVal.Children.Add(geometry);
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				selectionEmissives.Add(selectionEmissive);
-			}
+            #endregion
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Axis
 
-			geometry.Geometry = UtilityWPF.GetSphere(numSegments, .25d * SCALE, .25d * SCALE, 1d * SCALE);
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(baseColor));
+            materialBrushes.Add(new MaterialColorProps(diffuse, baseColor));
+            material.Children.Add(diffuse);
+            specular = baseSpecular;
+            materialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
+            emissive = baseEmissive;
+            materialBrushes.Add(new MaterialColorProps(emissive));
+            material.Children.Add(emissive);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                selectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			//	Transform
-			Transform3DGroup transformGlobal = new Transform3DGroup();
-			if (isFinal)
-			{
-				transformGlobal.Children.Add(scaleTransform.Clone());
-				transformGlobal.Children.Add(new RotateTransform3D(rotateTransform.Clone()));
-				transformGlobal.Children.Add(translateTransform.Clone());
-			}
-			else
-			{
-				transformGlobal.Children.Add(scaleTransform);
-				transformGlobal.Children.Add(new RotateTransform3D(rotateTransform));
-				transformGlobal.Children.Add(translateTransform);
-			}
-			retVal.Transform = transformGlobal;
+            geometry.Geometry = UtilityWPF.GetSphere(numSegments, .25d * SCALE, .25d * SCALE, 1d * SCALE);
 
-			//	Exit Function
-			return retVal;
-		}
+            retVal.Children.Add(geometry);
 
-		#endregion
-	}
+            #endregion
 
-	#endregion
-	#region Class: ShieldEnergy
+            // Transform
+            retVal.Transform = transform;
 
-	public class ShieldEnergy
-	{
-		public const string PARTTYPE = "ShieldEnergy";
-	}
+            // Exit Function
+            return retVal;
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: ShieldEnergy
+
+    public class ShieldEnergy
+    {
+        public const string PARTTYPE = "ShieldEnergy";
+    }
+
+    #endregion
 }

@@ -6,7 +6,6 @@
         <Style TargetType="Button">
             <Setter Property="Margin" Value="0,2"/>
         </Style>
-
     </Window.Resources>
 
     <Grid Background="#E0E0E0">
@@ -81,6 +80,7 @@
                                 <Button Click="btnShipWackyFlyer_Click" Name="btnShipWackyFlyer" Content="Wacky"/>
                                 <Button Click="btnShipChallenge1_Click" Name="btnShipChallenge1" Content="Challenge 1"/>
                                 <Button Click="btnShipChallenge2_Click" Name="btnShipChallenge2" Content="Challenge 2"/>
+                                <Button Click="btnShipBoston_Click" Name="btnShipBoston" Content="Boston"/>
 
                                 <CheckBox Name="chkShipDebugVisuals" Content="Show debug visuals" Margin="0,8,0,0"/>
 
@@ -95,7 +95,7 @@
                     </Expander>
 
                     <!-- Visualize Balance -->
-                    <Expander IsExpanded="True" Header="Visualize Balance">
+                    <Expander IsExpanded="False" Header="Visualize Balance">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Slider Name="trkBalanceCount" Minimum="2" Maximum="6" Value="4" TickPlacement="BottomRight" TickFrequency="1" ValueChanged="trkBalanceCount_ValueChanged" IsSnapToTickEnabled="True" />
@@ -105,6 +105,8 @@
                                 <RadioButton IsChecked="True" Name="radBalanceIndividual" Content="Individual tests" Margin="0,8,0,0" Checked="radBalance_Checked"/>
                                 <RadioButton Name="radBalanceZeroTorque1" Content="Zero torque 1" ToolTip="Tests everything at 100%" Checked="radBalance_Checked"/>
                                 <RadioButton Name="radBalanceZeroTorque2" Content="Zero torque 2" ToolTip="Finds the true 100%(s) and stops" Checked="radBalance_Checked"/>
+                                <!-- TODO: Finish this -->
+                                <RadioButton Visibility="Collapsed" Name="radBalanceZeroTorque3" Content="Zero torque 3" ToolTip="Finds 100%(s), then finds next highest %" Checked="radBalance_Checked"/>
 
                                 <CheckBox Name="chkBalancePossLines" Content="Show possibility lines" Margin="0,8,0,0" Checked="chkBalancePossLines_Checked" Unchecked="chkBalancePossLines_Checked"/>
                                 <CheckBox Name="chkBalancePossHull" Content="Show possibility hull" Checked="chkBalancePossHull_Checked" Unchecked="chkBalancePossHull_Checked"/>
@@ -114,6 +116,17 @@
 
                                 <!--<TextBlock Name="lblBalanceStats"/>-->
                                 <Button Visibility="Collapsed" Name="btnBalanceTest" Content="Test" Margin="0,8,0,0" Click="btnBalanceTest_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Intersecting Parts -->
+                    <Expander IsExpanded="True" Header="Intersecting Parts">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnIntersectingCubes" Content="Two Cubes (1)" Click="btnIntersectingCubes_Click"/>
+                                <Button Name="btnIntersectingCubes2" Content="Two Cubes (2)" Click="btnIntersectingCubes2_Click"/>
+                                <Button Name="btnIntersectingCubes3" Content="Two Cubes (3)" Click="btnIntersectingCubes3_Click"/>
                             </StackPanel>
                         </Border>
                     </Expander>
@@ -137,7 +150,7 @@
         <Border Grid.Column="0" Grid.Row="1" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,0,0,12">
             <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
                 <StackPanel>
-                    <!-- Unit Tests -->
+                    <!-- Environment -->
                     <Expander IsExpanded="False" Header="Environment">
                         <Border>
                             <StackPanel Margin="8,6">

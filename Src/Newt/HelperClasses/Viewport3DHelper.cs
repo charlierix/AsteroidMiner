@@ -8,8 +8,10 @@ using System.Collections.Generic;
 namespace Game.Newt.HelperClasses
 {
     public static class Viewport3DHelper
-    {
-        public class FindResult<T>
+	{
+		#region Class: FindResult<T>
+
+		public class FindResult<T>
         {
             private readonly Visual3D _visual;
             private readonly T _item;
@@ -31,7 +33,9 @@ namespace Game.Newt.HelperClasses
             }
         }
 
-        public static Viewport3DVisual GetViewportVisual(DependencyObject visual)
+		#endregion
+
+		public static Viewport3DVisual GetViewportVisual(DependencyObject visual)
         {
             if (!(visual is Visual3D))
             {
@@ -67,7 +71,6 @@ namespace Game.Newt.HelperClasses
             else
                 return null;
         }
-
         public static Viewport3DVisual GetViewportVisual(Viewport3D viewport)
         {
             int count =  VisualTreeHelper.GetChildrenCount(viewport);
@@ -87,7 +90,6 @@ namespace Game.Newt.HelperClasses
             if (clearChildren)
                 items.Clear();
         }
-
         public static void Dispose(DependencyObject item, bool removeSelf, bool clearChildren)
         {
             if (item is ModelVisual3D)
@@ -120,7 +122,6 @@ namespace Game.Newt.HelperClasses
             if (disposable != null)
                 disposable.Dispose();
         }
-
         public static void Dispose(DependencyObject item)
         {
             Dispose(item, true, false);
@@ -247,12 +248,10 @@ namespace Game.Newt.HelperClasses
         {
             CopyChildren(targetViewport.Children, sourceViewport.Children);
         }
-
         public static void CopyChildren(Viewport3DVisual targetViewport, Viewport3DVisual sourceViewport)
         {
             CopyChildren(targetViewport.Children, sourceViewport.Children);
         }
-
         public static void CopyChildren(Visual3DCollection targetCollection, Visual3DCollection sourceCollection)
         {
             foreach (Visual3D item in sourceCollection)
@@ -271,4 +270,29 @@ namespace Game.Newt.HelperClasses
             }
         }
     }
+
+	//public class Viewport3D : System.Windows.Controls.Viewport3D
+	//{
+	//    protected override void OnRender(System.Windows.Media.DrawingContext drawingContext)
+	//    {
+	//        ProcessChildren(this.Children);
+
+	//        base.OnRender(drawingContext);
+	//    }
+
+	//    private void ProcessChildren(Visual3DCollection items)
+	//    {
+	//        foreach (Visual3D item in items)
+	//        {
+	//            IRenderNotify render = (item as IRenderNotify);
+	//            if (render != null)
+	//                render.Render();
+
+	//            ModelVisual3D visual = (item as ModelVisual3D);
+	//            if (visual != null)
+	//                ProcessChildren(visual.Children);
+	//        }
+	//    }
+	//}
+
 }

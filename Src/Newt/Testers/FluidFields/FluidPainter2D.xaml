@@ -1,0 +1,251 @@
+﻿<Window x:Class="Game.Newt.Testers.FluidFields.FluidPainter2D"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpctrl="clr-namespace:Game.Newt.HelperClasses.Controls2D;assembly=Game.Newt.HelperClasses"
+        Title="Fluid Painter" ResizeMode="CanResizeWithGrip" SizeToContent="WidthAndHeight" Loaded="Window_Loaded" Closed="Window_Closed" SizeChanged="Window_SizeChanged">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Stylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Name="expanderRow" Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Tool Buttons -->
+        <Border Grid.Column="0" Grid.Row="0" VerticalAlignment="Top" Style="{StaticResource toolBorder}">
+            <StackPanel RadioButton.Checked="ToolButton_Checked" RadioButton.Unchecked="ToolButton_Unchecked">
+                <UniformGrid Style="{StaticResource toolGroup}">
+                    <RadioButton IsChecked="True" Name="radColorBrush" ToolTip="Color brush" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                    <RadioButton Name="radWall" ToolTip="Wall" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                </UniformGrid>
+
+                <!-- TODO: Implement more of these -->
+                
+                <!--<UniformGrid Visibility="Collapsed" Style="{StaticResource toolGroup}">
+                    <RadioButton ToolTip="Selector" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                </UniformGrid>
+
+                <UniformGrid Style="{StaticResource toolGroup}">
+                    <RadioButton IsChecked="True" Name="radColorBrush" ToolTip="Color brush" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                    <RadioButton Visibility="Collapsed" ToolTip="Vortex brush" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                </UniformGrid>
+
+                <UniformGrid Visibility="Collapsed" Style="{StaticResource toolGroup}">
+                    <RadioButton ToolTip="Color emitter" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                    <RadioButton ToolTip="Velocity emitter" GroupName="tools" Style="{StaticResource toolRadioButton}"/>-->
+                    <!-- The field doesn't have a separate pressure property, but a small outward or inward velocity could be applied each tick -->
+                    <!--<RadioButton ToolTip="Pressure emitter" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                    <RadioButton ToolTip="Vortex emitter" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                </UniformGrid>
+
+                <UniformGrid Style="{StaticResource toolGroup}">
+                    <RadioButton Name="radWall" ToolTip="Wall" GroupName="tools" Style="{StaticResource toolRadioButton}"/>
+                </UniformGrid>-->
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Column="0" Grid.Row="1" Name="expanderScrollViewer" VerticalAlignment="Bottom" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" >
+            <StackPanel>
+                <!-- Brush Properties -->
+                <Expander  Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Brush" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+
+                            <!-- TODO: Swap out dedicated panels based on the currently selected brush -->
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Brush Size" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="0" Name="trkBrushSize" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="1" Name="lblVelocityMultiplier" Text="Velocity Mult" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="1" Name="trkVelocityMultiplier" IsMultiplier="True" Style="{StaticResource slider_local}"/>
+                            </Grid>
+
+                            <ToggleButton IsChecked="True" Name="chkVelocityOnLeftDrag" Content="Velocity on left drag" Margin="0,8,0,0" Style="{StaticResource standaloneToggleButton}"/>
+
+                            <ToggleButton Name="chkRandColorPerPixel" Content="Random per pixel" Margin="0,8,0,0" Style="{StaticResource standaloneToggleButton}"/>
+
+                            <ComboBox Name="cboBrushColorType" Margin="0,8,0,0" SelectionChanged="ColorType_SelectionChanged"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Fluid Properties -->
+                <Expander Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Fluid" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- TODO: NEW: Dissipation (this will fade the layers to zero - multiply the value by some decay constant) -->
+
+                                <TextBlock Grid.Row="0" Text="Diffusion" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="0" Name="trkDiffusion" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="1" Text="Viscocity" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="1" Name="trkViscocity" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="2" Text="Wall Reflection" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="2" Name="trkWallReflection" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Visibility="Collapsed" Grid.Row="3" Text="Vorticity" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Visibility="Collapsed" Grid.Row="3" Name="trkVorticity" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="4" Text="Timestep" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="4" Name="trkTimestep" Style="{StaticResource slider_local}"/>
+
+                                <TextBlock Grid.Row="5" Text="Iterations" Style="{StaticResource labelLeft_local}"/>
+                                <helpctrl:SliderShowValues Grid.Row="5" Name="trkIterations" IsInteger="True" Style="{StaticResource slider_local}"/>
+                            </Grid>
+
+                            <!-- Toggle: Use cheap diffusion -->
+                            <ToggleButton IsChecked="False" Name="chkUseStandardDiffusion" Margin="0,8,0,0" Checked="chkUseStandardDiffusion_Checked" Unchecked="chkUseStandardDiffusion_Checked">
+                                <ToggleButton.Style>
+                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource standaloneToggleButton}">
+                                        <Setter Property="Content" Value="Standard Diffusion" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter Property="Content" Value="Cheap Diffusion" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
+
+                            <!-- Toggle: Pause/Resume -->
+                            <ToggleButton IsChecked="True" Name="chkPauseResume" Margin="0,8,0,0">
+                                <ToggleButton.Style>
+                                    <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource standaloneToggleButton}">
+                                        <Setter Property="Content" Value="Running" />
+                                        <Style.Triggers>
+                                            <Trigger Property="IsChecked" Value="False">
+                                                <Setter Property="Content" Value="Paused" />
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
+
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Border Properties -->
+                <Expander Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Border" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <!-- TODO: Sliders for width, height.  Checkbox for keeping them coupled -->
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel RadioButton.Checked="BoundryType_Checked" RadioButton.Unchecked="BoundryType_Checked">
+                            <RadioButton Name="radBoundryType_ClosedBox" IsChecked="True" Content="Closed Box" Style="{StaticResource expandRadioButton}"/>
+                            <RadioButton Name="radBoundryType_OpenBox" Content="Open Box" Style="{StaticResource expandRadioButton}"/>
+                            <RadioButton Name="radBoundryType_WrapBox" Content="Wrap around Box" Style="{StaticResource expandRadioButton}"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <!-- Misc Properties -->
+                <Expander Style="{StaticResource sideExpander}">
+                    <Expander.Header>
+                        <Border Style="{StaticResource sideExpanderHeaderBorder}">
+                            <TextBlock Text="Misc" Style="{StaticResource sideExpanderHeader}"/>
+                        </Border>
+                    </Expander.Header>
+
+                    <Border Style="{StaticResource sideExpanderBorder}">
+                        <StackPanel>
+                            <!-- These aren't very useful anymore -->
+                            <CheckBox Visibility="Collapsed" Name="chkFlagColor" Content="Flag Color"/>
+                            <CheckBox Visibility="Collapsed" Name="chkFlagVelocity" Content="Flag Velocity" Margin="0,2,0,0"/>
+
+                            <!-- Velocity -->
+                            <TextBlock>
+                                <Hyperlink Click="Hyperlink_Velocity">Velocity Viewer</Hyperlink>
+                            </TextBlock>
+
+                            <ToggleButton Name="chkVelocityOverlay" Content="Velocity Overlay" Margin="0,2,0,0" Padding="6,2" Checked="chkVelocityOverlay_Checked" Unchecked="chkVelocityOverlay_Checked"/>
+
+                            <CheckBox IsChecked="True" Name="chkShowWalls" Content="Show Walls" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <ComboBox Name="cboRandColorType" Margin="0,12,0,0" SelectionChanged="ColorType_SelectionChanged"/>
+                <Button Content="Reset" Name="btnReset" Margin="0,4,0,0" Click="btnReset_Click"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Fluid Panel -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" BorderBrush="Black" BorderThickness="1" CornerRadius="4" Margin="10, 0, 0, 0">
+            <Grid Name="grid1" Width="700" Height="700" Background="Transparent" MouseDown="grid1_MouseDown" MouseMove="grid1_MouseMove" MouseUp="grid1_MouseUp">
+                <Grid Name="grdFluid" ClipToBounds="True"/>
+                <Grid Visibility="Collapsed" Name="grdVelocities"/>
+            </Grid>
+        </Border>
+
+        <!-- Status Bar -->
+        <StackPanel Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4,0,-6">
+            <TextBlock Visibility="Collapsed" Name="lblReport"/>
+
+            <TextBlock>
+            This is ported from
+            <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://icosahedral.net/java/fluidsim.html">here</Hyperlink>
+            , which is based off of
+            <Hyperlink RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="http://www.dgp.toronto.edu/people/stam/reality/Research/pdf/GDC03.pdf">this</Hyperlink>
+            paper
+            </TextBlock>
+        </StackPanel>
+    </Grid>
+</Window>

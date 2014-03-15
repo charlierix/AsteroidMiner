@@ -84,6 +84,7 @@
             <CheckBox Visibility="Collapsed" Checked="chkSnap45Degrees_Checked" Unchecked="chkSnap45Degrees_Checked" Name="chkSnap45Degrees" Content="Snap to 45 degrees" Margin="0,12,0,0"/>
 
             <Button Click="btnTestIt_Click" Name="btnTestIt" Content="DoubleVector.GetAngleAroundAxis" FontWeight="bold" Padding="12" Margin="0,12,0,0"/>
+            <Button Click="btnGetRotation_Click" Name="btnGetRotation" Content="Math3D.GetRotation" FontWeight="bold" Padding="12"/>
         </StackPanel>
 
         <!-- Viewport -->
@@ -105,5 +106,7 @@
                 </ModelVisual3D>
             </Viewport3D>
         </Border>
+
+        <StackPanel Name="pnlReport" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20"/>
     </Grid>
 </Window>

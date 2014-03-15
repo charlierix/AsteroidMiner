@@ -11,231 +11,224 @@ using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	#region Class: SelfRepairToolItem
+    #region Class: SelfRepairToolItem
 
-	public class SelfRepairToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class SelfRepairToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public SelfRepairToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public SelfRepairToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Self Repair";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Consumes energy and repairs broken parts";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_EQUIPMENT;		//	in a way, this is a converter
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Self Repair";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Consumes energy and repairs broken parts";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_EQUIPMENT;		// in a way, this is a converter
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new SelfRepairDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new SelfRepairDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: SelfRepairDesign
+    #endregion
+    #region Class: SelfRepairDesign
 
-	public class SelfRepairDesign : PartDesignBase
-	{
-		#region Constructor
+    public class SelfRepairDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public SelfRepairDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public SelfRepairDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometries;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometries;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			double SQRT2 = Math.Sqrt(2d);
-			double SCALE = .5d / (SQRT2 * .5d);
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-			Model3DGroup retVal = new Model3DGroup();
+        #endregion
 
-			GeometryModel3D geometry;
-			MaterialGroup material;
-			DiffuseMaterial diffuse;
-			SpecularMaterial specular;
+        #region Private Methods
 
-			#region Main Box
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            double SQRT2 = Math.Sqrt(2d);
+            double SCALE = .5d / (SQRT2 * .5d);
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.SelfRepairBase));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.SelfRepairBase));
-			material.Children.Add(diffuse);
-			specular = this.Options.WorldColors.SelfRepairBaseSpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            Model3DGroup retVal = new Model3DGroup();
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				this.SelectionEmissives.Add(selectionEmissive);
-			}
+            GeometryModel3D geometry;
+            MaterialGroup material;
+            DiffuseMaterial diffuse;
+            SpecularMaterial specular;
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Main Box
 
-			List<TubeRingBase> rings = new List<TubeRingBase>();
-			rings.Add(new TubeRingRegularPolygon(0d, false, SQRT2 * .35d * SCALE, .4d * SCALE, true));
-			rings.Add(new TubeRingRegularPolygon(.18d * SCALE, false, SQRT2 * .5d * SCALE, .5d * SCALE, true));
-			rings.Add(new TubeRingRegularPolygon(.24d * SCALE, false, SQRT2 * .5d * SCALE, .5d * SCALE, true));
-			rings.Add(new TubeRingRegularPolygon(.18d * SCALE, false, SQRT2 * .35d * SCALE, .4d * SCALE, true));
-			geometry.Geometry = UtilityWPF.GetMultiRingedTube(7, rings, true, true);
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairBase));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairBase));
+            material.Children.Add(diffuse);
+            specular = WorldColors.SelfRepairBaseSpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                this.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			#region Cross
+            List<TubeRingBase> rings = new List<TubeRingBase>();
+            rings.Add(new TubeRingRegularPolygon(0d, false, SQRT2 * .35d * SCALE, .4d * SCALE, true));
+            rings.Add(new TubeRingRegularPolygon(.18d * SCALE, false, SQRT2 * .5d * SCALE, .5d * SCALE, true));
+            rings.Add(new TubeRingRegularPolygon(.24d * SCALE, false, SQRT2 * .5d * SCALE, .5d * SCALE, true));
+            rings.Add(new TubeRingRegularPolygon(.18d * SCALE, false, SQRT2 * .35d * SCALE, .4d * SCALE, true));
+            geometry.Geometry = UtilityWPF.GetMultiRingedTube(7, rings, true, true);
 
-			for (int cntr = 0; cntr <= 1; cntr++)
-			{
-				geometry = new GeometryModel3D();
-				material = new MaterialGroup();
-				diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.SelfRepairCross));
-				this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.SelfRepairCross));
-				material.Children.Add(diffuse);
-				specular = this.Options.WorldColors.SelfRepairCrossSpecular;
-				this.MaterialBrushes.Add(new MaterialColorProps(specular));
-				material.Children.Add(specular);
+            retVal.Children.Add(geometry);
 
-				if (!isFinal)
-				{
-					EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-					material.Children.Add(selectionEmissive);
-					this.SelectionEmissives.Add(selectionEmissive);
-				}
+            #endregion
 
-				geometry.Material = material;
-				geometry.BackMaterial = material;
+            #region Cross
 
-				double halfWidth = cntr == 0 ? .1d : .3d;
-				double halfHeight = cntr == 0 ? .3d : .1d;
-				halfWidth *= SCALE;
-				halfHeight *= SCALE;
+            for (int cntr = 0; cntr <= 1; cntr++)
+            {
+                geometry = new GeometryModel3D();
+                material = new MaterialGroup();
+                diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairCross));
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairCross));
+                material.Children.Add(diffuse);
+                specular = WorldColors.SelfRepairCrossSpecular;
+                this.MaterialBrushes.Add(new MaterialColorProps(specular));
+                material.Children.Add(specular);
 
-				geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-halfWidth, -halfHeight, -.32d * SCALE), new Point3D(halfWidth, halfHeight, .32d * SCALE));
+                if (!isFinal)
+                {
+                    EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                    material.Children.Add(selectionEmissive);
+                    this.SelectionEmissives.Add(selectionEmissive);
+                }
 
-				retVal.Children.Add(geometry);
-			}
+                geometry.Material = material;
+                geometry.BackMaterial = material;
 
-			#endregion
+                double halfWidth = cntr == 0 ? .1d : .3d;
+                double halfHeight = cntr == 0 ? .3d : .1d;
+                halfWidth *= SCALE;
+                halfHeight *= SCALE;
 
-			//	Transform
-			Transform3DGroup transformGlobal = new Transform3DGroup();
-			if (isFinal)
-			{
-				transformGlobal.Children.Add(_scaleTransform.Clone());
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform.Clone()));
-				transformGlobal.Children.Add(_translateTransform.Clone());
-			}
-			else
-			{
-				transformGlobal.Children.Add(_scaleTransform);
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform));
-				transformGlobal.Children.Add(_translateTransform);
-			}
-			retVal.Transform = transformGlobal;
+                geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-halfWidth, -halfHeight, -.32d * SCALE), new Point3D(halfWidth, halfHeight, .32d * SCALE));
 
-			//	Exit Function
-			return retVal;
-		}
+                retVal.Children.Add(geometry);
+            }
 
-		#endregion
-	}
+            #endregion
 
-	#endregion
-	#region Class: SelfRepair
+            // Transform
+            retVal.Transform = GetTransformForGeometry(isFinal);
 
-	public class SelfRepair
-	{
-		public const string PARTTYPE = "SelfRepair";
-	}
+            // Exit Function
+            return retVal;
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: SelfRepair
+
+    public class SelfRepair
+    {
+        public const string PARTTYPE = "SelfRepair";
+    }
+
+    #endregion
 }

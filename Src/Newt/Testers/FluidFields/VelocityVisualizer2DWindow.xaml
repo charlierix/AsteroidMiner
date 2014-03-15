@@ -1,0 +1,18 @@
+﻿<Window x:Class="Game.Newt.Testers.FluidFields.VelocityVisualizer2DWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Game.Newt.Testers.FluidFields"
+        Title="Velocity" Width="500" Height="500">
+    <Grid Background="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Name="grdVelocities" ClipToBounds="True"/>
+
+
+        <!-- TODO: Slider for refresh rate (this visualizer currently relies on the caller to call update, instead of having its own timer) -->
+
+    </Grid>
+</Window>

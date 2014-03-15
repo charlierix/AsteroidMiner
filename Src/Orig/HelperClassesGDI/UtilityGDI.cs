@@ -20,58 +20,58 @@ namespace Game.Orig.HelperClassesGDI
             Application.SetCompatibleTextRenderingDefault(false);
         }
 
-		/// <summary>
-		/// This returns a color that is the result of the two colors blended
-		/// </summary>
-		/// <param name="alpha">0 is all back color, 1 is all fore color, .5 is half way between</param>
-		public static Color AlphaBlend(Color foreColor, Color backColor, double alpha)
+        /// <summary>
+        /// This returns a color that is the result of the two colors blended
+        /// </summary>
+        /// <param name="alpha">0 is all back color, 1 is all fore color, .5 is half way between</param>
+        public static Color AlphaBlend(Color foreColor, Color backColor, double alpha)
         {
-			//	Figure out the new color
-			int intANew = Convert.ToInt32(Convert.ToDouble(backColor.A) + (((Convert.ToDouble(foreColor.A) - Convert.ToDouble(backColor.A)) / 255) * alpha * 255));
-			int intRNew = Convert.ToInt32(Convert.ToDouble(backColor.R) + (((Convert.ToDouble(foreColor.R) - Convert.ToDouble(backColor.R)) / 255) * alpha * 255));
-			int intGNew = Convert.ToInt32(Convert.ToDouble(backColor.G) + (((Convert.ToDouble(foreColor.G) - Convert.ToDouble(backColor.G)) / 255) * alpha * 255));
-			int intBNew = Convert.ToInt32(Convert.ToDouble(backColor.B) + (((Convert.ToDouble(foreColor.B) - Convert.ToDouble(backColor.B)) / 255) * alpha * 255));
+            // Figure out the new color
+            int intANew = Convert.ToInt32(Convert.ToDouble(backColor.A) + (((Convert.ToDouble(foreColor.A) - Convert.ToDouble(backColor.A)) / 255) * alpha * 255));
+            int intRNew = Convert.ToInt32(Convert.ToDouble(backColor.R) + (((Convert.ToDouble(foreColor.R) - Convert.ToDouble(backColor.R)) / 255) * alpha * 255));
+            int intGNew = Convert.ToInt32(Convert.ToDouble(backColor.G) + (((Convert.ToDouble(foreColor.G) - Convert.ToDouble(backColor.G)) / 255) * alpha * 255));
+            int intBNew = Convert.ToInt32(Convert.ToDouble(backColor.B) + (((Convert.ToDouble(foreColor.B) - Convert.ToDouble(backColor.B)) / 255) * alpha * 255));
 
-			//	Make sure the values are in range
-			if (intANew < 0)
-			{
-				intANew = 0;
-			}
-			else if (intANew > 255)
-			{
-				intANew = 255;
-			}
+            // Make sure the values are in range
+            if (intANew < 0)
+            {
+                intANew = 0;
+            }
+            else if (intANew > 255)
+            {
+                intANew = 255;
+            }
 
-			if (intRNew < 0)
-			{
-				intRNew = 0;
-			}
-			else if (intRNew > 255)
-			{
-				intRNew = 255;
-			}
+            if (intRNew < 0)
+            {
+                intRNew = 0;
+            }
+            else if (intRNew > 255)
+            {
+                intRNew = 255;
+            }
 
-			if (intGNew < 0)
-			{
-				intGNew = 0;
-			}
-			else if (intGNew > 255)
-			{
-				intGNew = 255;
-			}
+            if (intGNew < 0)
+            {
+                intGNew = 0;
+            }
+            else if (intGNew > 255)
+            {
+                intGNew = 255;
+            }
 
-			if (intBNew < 0)
-			{
-				intBNew = 0;
-			}
-			else if (intBNew > 255)
-			{
-				intBNew = 255;
-			}
+            if (intBNew < 0)
+            {
+                intBNew = 0;
+            }
+            else if (intBNew > 255)
+            {
+                intBNew = 255;
+            }
 
-			//	Exit Function
-			return Color.FromArgb(intANew, intRNew, intGNew, intBNew);
-		}
+            // Exit Function
+            return Color.FromArgb(intANew, intRNew, intGNew, intBNew);
+        }
 
         public static GraphicsPath GetRoundedRectangle(Rectangle rectangle, int cornerRadius)
         {
@@ -108,7 +108,7 @@ namespace Game.Orig.HelperClassesGDI
 
             retVal.CloseAllFigures();
 
-            //	Exit Function
+            // Exit Function
             return retVal;
         }
     }

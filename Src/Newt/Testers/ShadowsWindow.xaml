@@ -1,0 +1,165 @@
+﻿<Window x:Class="Game.Newt.Testers.ShadowsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Shadows" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#E0E0E0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Column="0" Grid.Row="0" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,12,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+
+                    <!-- Bodies -->
+                    <Expander IsExpanded="False" Header="Bodies">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnRandom5" Content="Random 5" Click="btnRandom5_Click"/>
+                                <Button Visibility="Collapsed" Content="Ship 1"/>
+                                <Button Visibility="Collapsed" Name="btnLoadShip" Content="Load from file..."/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Calculations -->
+                    <Expander Visibility="Collapsed" IsExpanded="True" Header="Calculations">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Content="Sphere of rays"/>
+                                <!-- This plate will come from the current position of the camera -->
+                                <Button Content="Plate of rays"/>
+                                <Button Content="Sphere of plates"/>
+
+                                <!-- This one isn't meant for production.  Just a way to compare ray results with physics -->
+                                <Button Content="Sphere pellets" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="True" Header="Misc">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnSlice1" Content="Slice Triangles" Click="btnSlice1_Click"/>
+                                <Button Name="btnPlaneDist" Content="Order by plane distance" Click="btnPlaneDist_Click"/>
+
+                                <Button Name="btnShadowSingleStep" Content="Shadow single step" Margin="0,8,0,0" Click="btnShadowSingleStep_Click"/>
+                                <Button Name="btnShadowMultiStep" Content="Shadow multi step" Click="btnShadowMultiStep_Click"/>
+                                <Button Name="btnShadowMultiStep2" Content="Shadow multi step (no slicing)" Click="btnShadowMultiStep2_Click"/>
+
+                                <Button Name="btnPolyUnion2" Content="Polygon Union" Margin="0,8,0,0" Click="btnPolyUnion2_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Other -->
+                    <Expander IsExpanded="False" Header="Other">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnPointOnTriangleEdge" Content="Point on triangle edge" Click="btnPointOnTriangleEdge_Click"/>
+                                <Button Name="btnPointOnTriangleEdge2" Content="Point on triangle edge 2" Click="btnPointOnTriangleEdge2_Click"/>
+
+                                <Button Name="btnShadowFixed1" Content="Shadow Fixed 1" Margin="0,8,0,0" Click="btnShadowFixed1_Click"/>
+                                <Button Name="btnShadowFixed2" Content="Shadow Fixed 2" Click="btnShadowFixed2_Click"/>
+                                <Button Name="btnShadowFixed2a" Content="Shadow Fixed 2a" Click="btnShadowFixed2a_Click"/>
+                                <Button Name="btnShadowFixed3" Content="Shadow Fixed 3" Click="btnShadowFixed3_Click"/>
+                                <Button Name="btnShadowFixed4" Content="Shadow Fixed 4" Click="btnShadowFixed4_Click"/>
+                                <Button Name="btnShadowFixed5" Content="Shadow Fixed 5" Click="btnShadowFixed5_Click"/>
+                                <Button Name="btnShadowFixed5a" Content="Shadow Fixed 5a" Click="btnShadowFixed5a_Click"/>
+                                <Button Name="btnShadowFixed6" Content="Shadow Fixed 6" Click="btnShadowFixed6_Click"/>
+
+                                <Button Name="btnClipPolyFixed1" Content="Clip polygon fixed 1" Margin="0,8,0,0" Click="btnClipPolyFixed1_Click"/>
+                                <Button Name="btnClipPolyFixed2" Content="Clip polygon fixed 2" Click="btnClipPolyFixed2_Click"/>
+                                <Button Name="btnClipPolyFixed3" Content="Clip polygon fixed 3" Click="btnClipPolyFixed3_Click"/>
+
+                                <Button Name="btnPolyUnion" Content="Polygon Union" Margin="0,8,0,0" Click="btnPolyUnion_Click"/>
+                                <Button Name="btnPolyUnionTest1" Content="Polygon Union Test1" Click="btnPolyUnionTest1_Click"/>
+                                <Button Name="btnPolyUnionTest2" Content="Polygon Union Test2" Click="btnPolyUnionTest2_Click"/>
+                                <Button Name="btnPolyUnionTest3a" Content="Polygon Union Test3a" Click="btnPolyUnionTest3a_Click"/>
+                                <Button Name="btnPolyUnionTest3b" Content="Polygon Union Test3b" Click="btnPolyUnionTest3b_Click"/>
+                                <Button Name="btnPolyUnionTest4" Content="Polygon Union Test4" Click="btnPolyUnionTest4_Click"/>
+                                <Button Name="btnPolyUnionTest5" Content="Polygon Union Test5" Click="btnPolyUnionTest5_Click"/>
+
+                                <!-- These are pretty much throw away.  I ended up downloading that clipper util -->
+                                <StackPanel Visibility="Collapsed">
+                                    <Button Name="btnChainTest1" Content="Chain Test1" Margin="0,8,0,0" Click="btnChainTest1_Click"/>
+                                    <Button Name="btnChainTest2" Content="Chain Test2" Click="btnChainTest2_Click"/>
+                                    <Button Name="btnChainTest3" Content="Chain Test3" Click="btnChainTest3_Click"/>
+                                    <Button Name="btnChainTest4" Content="Chain Test4" Click="btnChainTest4_Click"/>
+                                    <Button Name="btnChainTest5a" Content="Chain Test5a" Click="btnChainTest5a_Click"/>
+                                    <Button Name="btnChainTest5b" Content="Chain Test5b" Click="btnChainTest5b_Click"/>
+                                    <Button Name="btnChainTest5c" Content="Chain Test5c" Click="btnChainTest5c_Click"/>
+                                    <Button Name="btnChainTest6" Content="Chain Test6" Click="btnChainTest6_Click"/>
+                                    <Button Name="btnChainTest7a" Content="Chain Test7a" Click="btnChainTest7a_Click"/>
+                                    <Button Name="btnChainTest7b" Content="Chain Test7b" Click="btnChainTest7b_Click"/>
+                                    <Button Name="btnChainTest7c" Content="Chain Test7c" Click="btnChainTest7c_Click"/>
+                                    <Button Name="btnChainTest7d" Content="Chain Test7d" Click="btnChainTest7d_Click"/>
+                                    <Button Name="btnChainTest8a" Content="Chain Test8a" Click="btnChainTest8a_Click"/>
+                                    <Button Name="btnChainTest8b" Content="Chain Test8b" Click="btnChainTest8b_Click"/>
+                                    <Button Name="btnChainTest9" Content="Chain Test9" Click="btnChainTest9_Click"/>
+                                </StackPanel>
+
+                                <Button Name="btnIsInsidePolygon1" Content="IsInside Polygon 1" Margin="0,8,0,0" Click="btnIsInsidePolygon1_Click"/>
+                                <Button Name="btnIsInsidePolygon2" Content="IsInside Polygon 2" Click="btnIsInsidePolygon2_Click"/>
+
+                                <Button Name="btnIntersectTriangles1" Content="Intersect Triangles 1" Margin="0,8,0,0" Click="btnIntersectTriangles1_Click"/>
+                                <Button Name="btnIntersectTriangles2" Content="Intersect Triangles 2" Click="btnIntersectTriangles2_Click"/>
+                                <Button Name="btnIntersectTriangles3" Content="Intersect Triangles 3" Click="btnIntersectTriangles3_Click"/>
+                                <Button Name="btnIntersectTriangles3a" Content="Intersect Triangles 3a" Click="btnIntersectTriangles3a_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="0" Grid.Row="1" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,0,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+                    <Label Content="Union Algorithm" HorizontalAlignment="Center"/>
+                    <RadioButton Name="radUnion1" Content="Attempt 1"/>
+                    <RadioButton Name="radUnion2" Content="Attempt 2"/>
+                    <RadioButton Name="radUnionFinal" IsChecked="True" Content="Final"/>
+
+                    <Label Content="Show" HorizontalAlignment="Center"/>
+                    <CheckBox Name="chkShowInitial" IsChecked="True" Content="Initial hull"/>
+                    <CheckBox Name="chkShowCollisions" IsChecked="True" Content="Hit triangles"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,25" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="#808080" />
+                            <DirectionalLight Color="#FFFFFF" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+    </Grid>
+</Window>

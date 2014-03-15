@@ -35,7 +35,7 @@ namespace Game.Newt.NewtonDynamics_153
                 "Direction",
                 typeof(Vector3D),
                 typeof(HingeJoint),
-                new PropertyMetadata(new Vector3D(0,0,1), OnDirectionChanged));
+                new PropertyMetadata(new Vector3D(0, 0, 1), OnDirectionChanged));
 
         private static void OnDirectionChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -108,12 +108,15 @@ namespace Game.Newt.NewtonDynamics_153
             get { return (CJointBallSocket)base.NewtonJoint; }
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            if (IsInitialised)
-                NewtonJoint.Ball -= InternalUserCallback;
+            if (disposing)
+            {
+                if (IsInitialised)
+                    NewtonJoint.Ball -= InternalUserCallback;
+            }
 
-            base.Dispose();
+            base.Dispose(disposing);
         }
 
         protected override CJoint OnInitialise()
@@ -121,13 +124,13 @@ namespace Game.Newt.NewtonDynamics_153
 
             CJointBallSocket joint = new CJointBallSocket(this.World.NewtonWorld);
             joint.NewtonConstraintCreateBall(
-                (Vector3D)BodyToWorld(this.ChildBody, this.PivotPoint), 
-                this.ChildBody.NewtonBody, 
+                (Vector3D)BodyToWorld(this.ChildBody, this.PivotPoint),
+                this.ChildBody.NewtonBody,
                 this.ParentBody.NewtonBody);
 
             joint.BallSetConeLimits(
-                BodyToWorld(this.ChildBody, Direction), 
-                (float)Math3D.DegreesToRadians(MaxConeAngle), 
+                BodyToWorld(this.ChildBody, Direction),
+                (float)Math3D.DegreesToRadians(MaxConeAngle),
                 (float)Math3D.DegreesToRadians(MaxTwistAngle));
 
             joint.Ball += InternalUserCallback;

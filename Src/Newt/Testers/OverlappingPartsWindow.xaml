@@ -1,0 +1,114 @@
+﻿<Window x:Class="Game.Newt.Testers.OverlappingPartsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="OverlappingPartsWindow" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#E0E0E0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Column="0" Grid.Row="0" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,12,0,6">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+                    <!-- 2 Objects -->
+                    <Expander IsExpanded="False" Header="2 Objects">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnTwoCubes1" Content="Cubes 1" Click="btnTwoCubes1_Click"/>
+                                <Button Name="btnTwoCubes2" Content="Cubes 2" Click="btnTwoCubes2_Click"/>
+                                <Button Name="btnTwoCubes3" Content="Cubes 3" Click="btnTwoCubes3_Click"/>
+                                <Button Name="btnTwoCubesRand" Content="Cubes rand" Click="btnTwoCubesRand_Click"/>
+                                <Button Name="btnTwoCubeCylinder" Content="Cube-Cylinder" Click="btnTwoCubeCylinder_Click" Margin="0,8,0,0"/>
+                                <Button Name="btnTwoCylinderCylinder" Content="Cylinder-Cylinder" Click="btnTwoCylinderCylinder_Click"/>
+                                <Button Name="btnTwoOdd1" Content="Odd 1" Margin="0,8,0,0" Click="btnTwoOdd1_Click"/>
+                                <Button Name="btnTwoOdd2" Content="Odd 2" Click="btnTwoOdd2_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- 3 Objects -->
+                    <Expander IsExpanded="True" Header="Many Objects">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Name="btnThreeCubesRand" Content="3 Cubes rand" Click="btnThreeCubesRand_Click"/>
+                                <Button Name="btnThreeAnyRand" Content="3 Random" Click="btnThreeAnyRand_Click"/>
+                                <Button Name="btnFiveAnyRand" Content="5 Random" Click="btnFiveAnyRand_Click"/>
+                                <Button Name="btnTenAnyRand" Content="10 Random" Click="btnTenAnyRand_Click"/>
+                                <Button Name="btnTwentyAnyRand" Content="20 Random" Click="btnTwentyAnyRand_Click"/>
+                                <Button Name="btnFiftyAnyRand" Content="50 Random" Click="btnFiftyAnyRand_Click"/>
+                                <Button Name="btnHundredAnyRand" Content="100 Random" Click="btnHundredAnyRand_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="False" Header="Misc">
+                        <Border>
+                            <StackPanel Margin="8,6">
+                                <Button Visibility="Collapsed"  Name="btnCollisionOffset" Content="Collision Offset" Click="btnCollisionOffset_Click"/>
+                                <Button Name="btnHullBodyDispose" Content="Hull/Body Dispose" Click="btnHullBodyDispose_Click"/>
+                                <Button Name="btnHullBodyDispose2" Click="btnHullBodyDispose2_Click">
+                                    <TextBlock>Hull Dispose<LineBreak/>(newt only)</TextBlock>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="0" Grid.Row="1" Background="Silver" BorderBrush="DimGray" BorderThickness="1" CornerRadius="5" Padding="4,4,1,4" Margin="12,0,0,12">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                <StackPanel>
+                    <!-- Solver -->
+                    <Expander IsExpanded="False" Header="Solver">
+                        <Border RadioButton.Checked="Solver_Checked" RadioButton.Unchecked="Solver_Checked">
+                            <StackPanel Margin="8,6">
+                                <RadioButton Name="radSolver1" Content="Attempt 1"/>
+                                <RadioButton IsChecked="True" Name="radSolver2" Content="Attempt 2"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <Label Content="Simulation Speed" Margin="0,8,0,0"/>
+                    <Slider Name="trkSimSpeed" Minimum="0" Maximum="2000" Value="500" ValueChanged="trkSimSpeed_ValueChanged"/>
+
+                    <Button Name="btnClearDebugVisuals" Content="Clear debug visuals" Margin="0,8,0,0" Click="btnClearDebugVisuals_Click"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Viewport -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,25" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+        <TextBlock Grid.Column="1" Grid.Row="1" Name="lblNumTicks" FontSize="48" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="18, 20, 20, 20"/>
+    </Grid>
+</Window>

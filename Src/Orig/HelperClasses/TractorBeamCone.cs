@@ -30,7 +30,7 @@ namespace Game.Orig.HelperClassesOrig
         private class Interaction
         {
             public BallBlip Blip = null;
-            public MyVector ForceDirection = null;		//	this is expected to be a unit vector
+            public MyVector ForceDirection = null;		// this is expected to be a unit vector
             public double Force = 0d;
 
             public Interaction(BallBlip blip, MyVector forceDirection, double force)
@@ -354,12 +354,12 @@ namespace Game.Orig.HelperClassesOrig
                     switch (_mode)
                     {
                         case BeamMode.PushPull:
-                            //	Apply the force at the location of the tractor beam on the ship
+                            // Apply the force at the location of the tractor beam on the ship
                             _ship.TorqueBall.ApplyExternalForce(centerLocal, interaction.ForceDirection);
                             break;
 
                         case BeamMode.LeftRight:
-                            //	Apply the force at the location of the blip
+                            // Apply the force at the location of the blip
                             _ship.TorqueBall.ApplyExternalForce(interaction.Blip.Ball.Position - _ship.Ball.Position, interaction.ForceDirection);
                             break;
 
@@ -369,7 +369,7 @@ namespace Game.Orig.HelperClassesOrig
                 }
                 else
                 {
-                    //	Apply the force at the center of the ball
+                    // Apply the force at the center of the ball
                     _ship.Ball.ExternalForce.Add(interaction.ForceDirection);
                 }
 
@@ -433,15 +433,15 @@ namespace Game.Orig.HelperClassesOrig
                     case BeamMode.LeftRight:
                         #region Left Right
 
-                        //	Only do something if the lines aren't sitting directly on top of each other (even if they want to repel,
-                        //	I'd be hesitant to just repel in any random direction)
+                        // Only do something if the lines aren't sitting directly on top of each other (even if they want to repel,
+                        // I'd be hesitant to just repel in any random direction)
                         if (!Utility3D.IsNearValue(MyVector.Dot(lineBetween, dirFacingWorld, true), 1d))
                         {
-                            //	Get a line that's orthogonal to lineBetween, and always points toward the dirFacingWorld vector
+                            // Get a line that's orthogonal to lineBetween, and always points toward the dirFacingWorld vector
                             MyVector dirToCenterLine = MyVector.Cross(lineBetween, MyVector.Cross(lineBetween, dirFacingWorld));
                             dirToCenterLine.BecomeUnitVector();
 
-                            //	Add to the return list
+                            // Add to the return list
                             retVal.Add(new Interaction(blip, dirToCenterLine, force));
                             totalForce += Math.Abs(force);  // percent is negative when in repulse mode
                         }
@@ -463,7 +463,7 @@ namespace Game.Orig.HelperClassesOrig
             List<Interaction> retVal = new List<Interaction>();
 
 
-            //	This is only used for left/right modes (lazy initialization)
+            // This is only used for left/right modes (lazy initialization)
             AngularVelocityInfo angularInfo = null;
 
 
@@ -486,7 +486,7 @@ namespace Game.Orig.HelperClassesOrig
 
                             double relativeVelocity = MyVector.Dot(lineBetween, blip.Ball.Velocity - _ship.Ball.Velocity);
 
-                            //	Figure out how much force is required to make this relative velocity equal zero
+                            // Figure out how much force is required to make this relative velocity equal zero
                             double force = relativeVelocity * blip.Ball.Mass;   // Velocity * Mass is impulse force
 
                             // See if force needs to be limited by the tractor's max force
@@ -503,7 +503,7 @@ namespace Game.Orig.HelperClassesOrig
                                 }
                             }
 
-                            //	Add to results
+                            // Add to results
                             retVal.Add(new Interaction(blip, lineBetween, force));
                             totalForce += Math.Abs(force);
                         }
@@ -514,18 +514,18 @@ namespace Game.Orig.HelperClassesOrig
                     case BeamMode.LeftRight:
                         #region Left Right
 
-                        //	Only do something if the lines aren't sitting directly on top of each other (even if they want to repel,
-                        //	I'd be hesitant to just repel in any random direction)
+                        // Only do something if the lines aren't sitting directly on top of each other (even if they want to repel,
+                        // I'd be hesitant to just repel in any random direction)
                         if (!Utility3D.IsNearValue(MyVector.Dot(lineBetween, dirFacingWorld, true), 1d))
                         {
                             // Figure out how fast the ship is spinning where the blip is
                             MyVector dirToCenterLine;
                             MyVector spinVelocity = GetSpinVelocityAtPoint(ref angularInfo, out dirToCenterLine, dirFacingWorld, lineBetween, blip.Ball.Position);
 
-                            //	Figure out the relative velocity (between blip and my spin)
+                            // Figure out the relative velocity (between blip and my spin)
                             double relativeVelocity1 = MyVector.Dot(dirToCenterLine, blip.Ball.Velocity - spinVelocity);
 
-                            //	Figure out how much force is required to make this relative velocity equal zero
+                            // Figure out how much force is required to make this relative velocity equal zero
                             double force1 = relativeVelocity1 * blip.Ball.Mass;   // Velocity * Mass is impulse force
 
                             // See if force needs to be limited by the tractor's max force
@@ -542,7 +542,7 @@ namespace Game.Orig.HelperClassesOrig
                                 }
                             }
 
-                            //	Add to results
+                            // Add to results
                             retVal.Add(new Interaction(blip, dirToCenterLine, force1));
                             totalForce += force1;
                         }
@@ -626,7 +626,7 @@ namespace Game.Orig.HelperClassesOrig
                 //}
 
 
-                //	Figure out how much force is required to make this relative velocity equal MINVELOCITY
+                // Figure out how much force is required to make this relative velocity equal MINVELOCITY
                 //retVal = (relativeVelocity - MINVELOCITY) * ball.Mass;   // Velocity * Mass is impulse force
 
                 #endregion
@@ -651,7 +651,7 @@ namespace Game.Orig.HelperClassesOrig
 
         private MyVector GetSpinVelocityAtPoint(ref AngularVelocityInfo angularInfo, out MyVector dirToCenterLine, MyVector dirFacingWorld, MyVector lineBetween, MyVector blipPosition)
         {
-            //	Get a line that's orthogonal to lineBetween, and always points toward the dirFacingWorld vector
+            // Get a line that's orthogonal to lineBetween, and always points toward the dirFacingWorld vector
             dirToCenterLine = MyVector.Cross(MyVector.Cross(lineBetween, dirFacingWorld), lineBetween);
             dirToCenterLine.BecomeUnitVector();
 
@@ -664,7 +664,7 @@ namespace Game.Orig.HelperClassesOrig
                 if (_ship.TorqueBall != null)
                 {
                     angularInfo.AngularVelocity = _ship.TorqueBall.AngularVelocity.GetMagnitude();
-                    
+
                     angularInfo.SpinDirection = MyVector.Cross(_ship.TorqueBall.AngularVelocity, _ship.TorqueBall.DirectionFacing.Standard);
                     angularInfo.SpinDirection.BecomeUnitVector();
 
@@ -681,10 +681,10 @@ namespace Game.Orig.HelperClassesOrig
                 #endregion
             }
 
-            //	Get the line between the blip and the center of mass
+            // Get the line between the blip and the center of mass
             MyVector lineBetweenCM = blipPosition - angularInfo.CenterMass;
 
-            //	Figure out my velocity of spin where the blip is
+            // Figure out my velocity of spin where the blip is
             return angularInfo.SpinDirection * (angularInfo.AngularVelocity * lineBetweenCM.GetMagnitude());
         }
 

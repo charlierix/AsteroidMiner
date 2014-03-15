@@ -14,9 +14,7 @@ namespace Game.Newt.NewtonDynamics_153
     }
 
     //TODO: add destroy notifications to attached bodies
-    public abstract class Joint : DependencyObject,
-        IDisposable,
-        ISupportInitialize
+    public abstract class Joint : DependencyObject, IDisposable, ISupportInitialize
     {
         protected static void OnConstructorPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -99,7 +97,7 @@ namespace Game.Newt.NewtonDynamics_153
                 if ((joint._parentBody != null) && joint._parentBody.IsInitialised)
                     joint._parentBody.UnPause();
                  */
-            }   
+            }
         }
 
         private World _world;
@@ -121,18 +119,27 @@ namespace Game.Newt.NewtonDynamics_153
 
         #region IDisposable Members
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            if (_joint != null)
-            {
-                if (_isInitialised)
-                {
-                    _joint.UserData = null;
-                    _joint.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-                    _isInitialised = false;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_joint != null)
+                {
+                    if (_isInitialised)
+                    {
+                        _joint.UserData = null;
+                        _joint.Dispose();
+
+                        _isInitialised = false;
+                    }
+                    _joint = null;
                 }
-                _joint = null;
             }
         }
 

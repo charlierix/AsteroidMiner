@@ -54,7 +54,7 @@ namespace Game.Orig.TestersGDI
         private const double MINSHIPRADIUS = .1d;
 
         private GlobalState _state;
-        private ThrusterKey _addThrusterTo;		//	This only has meaning when _state is AddingThruster
+        private ThrusterKey _addThrusterTo;		// This only has meaning when _state is AddingThruster
 
         #region Keyboard/Mouse
 
@@ -77,7 +77,7 @@ namespace Game.Orig.TestersGDI
         private MyVector _boundryLower = null;
         private MyVector _boundryUpper = null;
 
-        //	These are used during design mode
+        // These are used during design mode
         private Bitmap _bitmap = null;
         private Graphics _graphics = null;
 
@@ -87,12 +87,12 @@ namespace Game.Orig.TestersGDI
         private RigidBody _ship;
         private MyVector _centerMassWorld;
 
-        //	The keyboard is the key, the value is a list of offset/force vectors
-        private SortedList<ThrusterKey, List<MyVector[]>> _thrustersCustom = new SortedList<ThrusterKey, List<MyVector[]>>();		//	vector[0] - offset, vector[1] - force
-        private SortedList<ThrusterKey, List<MyVector[]>> _thrustersStandard = new SortedList<ThrusterKey, List<MyVector[]>>();		//	vector[0] - offset, vector[1] - force
+        // The keyboard is the key, the value is a list of offset/force vectors
+        private SortedList<ThrusterKey, List<MyVector[]>> _thrustersCustom = new SortedList<ThrusterKey, List<MyVector[]>>();		// vector[0] - offset, vector[1] - force
+        private SortedList<ThrusterKey, List<MyVector[]>> _thrustersStandard = new SortedList<ThrusterKey, List<MyVector[]>>();		// vector[0] - offset, vector[1] - force
         private SortedList<ThrusterKey, Color> _thrusterColors = new SortedList<ThrusterKey, Color>();
 
-        //	This controls the force of the thrusters (it's tied to direction radio buttons)
+        // This controls the force of the thrusters (it's tied to direction radio buttons)
         private double _thrustForceMultiplier = 1d;
 
         private List<Ball> _gravityBalls = new List<Ball>();
@@ -137,42 +137,42 @@ namespace Game.Orig.TestersGDI
             #endregion
             #region Define Standard Thrusters
 
-            //	Up
+            // Up
             _thrustersStandard.Add(ThrusterKey.Up, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.Up].Add(new MyVector[] { new MyVector(200, 0, 0), new MyVector(0, THRUST, 0) });
             _thrustersStandard[ThrusterKey.Up].Add(new MyVector[] { new MyVector(-200, 0, 0), new MyVector(0, THRUST, 0) });
 
-            //	Down
+            // Down
             _thrustersStandard.Add(ThrusterKey.Down, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.Down].Add(new MyVector[] { new MyVector(200, 0, 0), new MyVector(0, THRUST * -1d, 0) });
             _thrustersStandard[ThrusterKey.Down].Add(new MyVector[] { new MyVector(-200, 0, 0), new MyVector(0, THRUST * -1d, 0) });
 
-            //	Left
+            // Left
             _thrustersStandard.Add(ThrusterKey.Left, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.Left].Add(new MyVector[] { new MyVector(200, 0, 0), new MyVector(0, THRUST * .33d, 0) });
             _thrustersStandard[ThrusterKey.Left].Add(new MyVector[] { new MyVector(-200, 0, 0), new MyVector(0, THRUST * -.33d, 0) });
 
-            //	Right
+            // Right
             _thrustersStandard.Add(ThrusterKey.Right, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.Right].Add(new MyVector[] { new MyVector(200, 0, 0), new MyVector(0, THRUST * -.33d, 0) });
             _thrustersStandard[ThrusterKey.Right].Add(new MyVector[] { new MyVector(-200, 0, 0), new MyVector(0, THRUST * .33d, 0) });
 
-            //	W
+            // W
             _thrustersStandard.Add(ThrusterKey.W, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.W].Add(new MyVector[] { new MyVector(150, 0, 0), new MyVector(0, THRUST, 0) });
             _thrustersStandard[ThrusterKey.W].Add(new MyVector[] { new MyVector(-150, 0, 0), new MyVector(0, THRUST, 0) });
 
-            //	S
+            // S
             _thrustersStandard.Add(ThrusterKey.S, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.S].Add(new MyVector[] { new MyVector(150, 0, 0), new MyVector(0, THRUST * -1d, 0) });
             _thrustersStandard[ThrusterKey.S].Add(new MyVector[] { new MyVector(-150, 0, 0), new MyVector(0, THRUST * -1d, 0) });
 
-            //	A
+            // A
             _thrustersStandard.Add(ThrusterKey.A, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.A].Add(new MyVector[] { new MyVector(0, 150, 0), new MyVector(THRUST, 0, 0) });
             _thrustersStandard[ThrusterKey.A].Add(new MyVector[] { new MyVector(0, -150, 0), new MyVector(THRUST, 0, 0) });
 
-            //	D
+            // D
             _thrustersStandard.Add(ThrusterKey.D, new List<MyVector[]>());
             _thrustersStandard[ThrusterKey.D].Add(new MyVector[] { new MyVector(0, 150, 0), new MyVector(THRUST * -1, 0, 0) });
             _thrustersStandard[ThrusterKey.D].Add(new MyVector[] { new MyVector(0, -150, 0), new MyVector(THRUST * -1, 0, 0) });
@@ -181,10 +181,10 @@ namespace Game.Orig.TestersGDI
             #region Define Twin Thrusters
             #endregion
 
-            //	Pretend they clicked create new ship
+            // Pretend they clicked create new ship
             btnResetShip_Click(this, new EventArgs());
 
-            //	Now I can let the timer go.  It won't stop until the form goes away
+            // Now I can let the timer go.  It won't stop until the form goes away
             timer1.Enabled = true;
         }
 
@@ -332,19 +332,19 @@ namespace Game.Orig.TestersGDI
 
         private void btnResetShip_Click(object sender, EventArgs e)
         {
-            //	Make sure the simulation isn't running (allow it to run when they've added 3 masses)
+            // Make sure the simulation isn't running (allow it to run when they've added 3 masses)
             chkRunning.Enabled = false;
             chkRunning.Checked = false;
 
-            //	Create a blank ship
+            // Create a blank ship
             _ship = new RigidBody(new MyVector(0, 0, 0), new DoubleVector(0, -1, 0, -1, 0, 0), MINSHIPRADIUS, _boundryLower, _boundryUpper);
 
-            //	Tell the viewer to chase the center of mass
+            // Tell the viewer to chase the center of mass
             _centerMassWorld = new MyVector();
             CalculateCenterMassWorld();
             pictureBox1.ChasePoint(_centerMassWorld);
 
-            //	Finally, put myself into a ship building state
+            // Finally, put myself into a ship building state
             SetState(GlobalState.AddingMass);
         }
 
@@ -461,7 +461,7 @@ namespace Game.Orig.TestersGDI
             {
                 _gravityMode = GravityMode.Ball;
 
-                //	Insure that there are gravity balls
+                // Insure that there are gravity balls
                 numericUpDown1_ValueChanged(this, new EventArgs());
             }
             else
@@ -501,12 +501,12 @@ namespace Game.Orig.TestersGDI
 
             if (_gravityBalls.Count == numBalls)
             {
-                //	Nothing to do
+                // Nothing to do
                 return;
             }
             else if (_gravityBalls.Count < numBalls)
             {
-                //	Make balls
+                // Make balls
                 Random rand = new Random();
 
                 while (_gravityBalls.Count < numBalls)
@@ -516,7 +516,7 @@ namespace Game.Orig.TestersGDI
             }
             else  //if (_gravityBalls.Count > numBalls)
             {
-                //	Remove balls
+                // Remove balls
                 _gravityBalls.RemoveRange(numBalls, _gravityBalls.Count - numBalls);
                 _gravityBallColors.RemoveRange(numBalls, _gravityBalls.Count - numBalls);
             }
@@ -545,13 +545,13 @@ namespace Game.Orig.TestersGDI
         {
             if (_ship == null)
             {
-                //	I should never have this case, but I'd rather be safe
+                // I should never have this case, but I'd rather be safe
                 return;
             }
 
             ColorArrowKeys();
 
-            //	Figure out what to do
+            // Figure out what to do
             switch (_state)
             {
                 case GlobalState.AddingMass:
@@ -572,9 +572,9 @@ namespace Game.Orig.TestersGDI
 
                 case GlobalState.Running:
                     pictureBox1.PrepareForNewDraw();
-                    CalculateCenterMassWorld();		//	I want this always up to date, so I do it before and after physics are called
+                    CalculateCenterMassWorld();		// I want this always up to date, so I do it before and after physics are called
 
-                    //	Draw the ship
+                    // Draw the ship
                     DrawShipRunning(Color.MediumSlateBlue, Color.White);
 
                     if (chkRunning.Checked)
@@ -601,7 +601,7 @@ namespace Game.Orig.TestersGDI
 
             MyVector centerPoint = GetMiddlePoint();
 
-            //	If there is a new mass, add it before drawing the ship
+            // If there is a new mass, add it before drawing the ship
             if (_isMouseJustReleased)
             {
                 _isMouseJustReleased = false;
@@ -609,9 +609,9 @@ namespace Game.Orig.TestersGDI
 
                 double mass = MyVector.Subtract(new MyVector(_curMousePoint), new MyVector(_mouseDownPoint)).GetMagnitude();
 
-                if (mass > 0)		//	it was erroring out when I clicked without moving the mouse
+                if (mass > 0)		// it was erroring out when I clicked without moving the mouse
                 {
-                    //	They just added a new mass
+                    // They just added a new mass
                     MyVector massPos = new MyVector(_mouseDownPoint) - centerPoint;
 
                     _ship.AddPointMass(massPos.X, massPos.Y, massPos.Z, mass);
@@ -627,13 +627,13 @@ namespace Game.Orig.TestersGDI
                 #endregion
             }
 
-            //	Draw the ship
+            // Draw the ship
             DrawShipDesign(Color.MediumSlateBlue, Color.White);
             DrawThrustDesign(Color.DimGray, .5d);
 
             if (_isMouseDown)
             {
-                //	They are in the middle of adding a mass
+                // They are in the middle of adding a mass
                 DrawDot(new MyVector(_mouseDownPoint), MyVector.Subtract(new MyVector(_curMousePoint), new MyVector(_mouseDownPoint)).GetMagnitude(), Color.Gray);
                 DrawVector(new MyVector(_curMousePoint), new MyVector(_mouseDownPoint), Color.Yellow);
             }
@@ -654,7 +654,7 @@ namespace Game.Orig.TestersGDI
 
             foreach (PointMass pointMass in _ship.PointMasses)
             {
-                curRadius = pointMass.Position.GetMagnitude() + pointMass.Mass;		//	I assume that the pointmass's mass is the same as its radius
+                curRadius = pointMass.Position.GetMagnitude() + pointMass.Mass;		// I assume that the pointmass's mass is the same as its radius
 
                 if (curRadius > retVal)
                 {
@@ -662,7 +662,7 @@ namespace Game.Orig.TestersGDI
                 }
             }
 
-            return retVal * 1.1d;		//	make it slightly bigger
+            return retVal * 1.1d;		// make it slightly bigger
         }
 
         #endregion
@@ -679,7 +679,7 @@ namespace Game.Orig.TestersGDI
             {
                 _isMouseJustReleased = false;
 
-                //	They just created a thruster.  Add it to the list
+                // They just created a thruster.  Add it to the list
                 MyVector offset = new MyVector(_mouseDownPoint) - centerPoint;
                 MyVector force = new MyVector(_curMousePoint) - new MyVector(_mouseDownPoint);
 
@@ -884,7 +884,7 @@ namespace Game.Orig.TestersGDI
             const int MAXMASS = 5000;
             const int MINCOLOR = 75;
 
-            //	Figure out ball properties
+            // Figure out ball properties
             int radius = rand.Next(100, 500);
             MyVector position = Utility3D.GetRandomVector(_boundryLower, _boundryUpper);
             DoubleVector dirFacing = new DoubleVector(new MyVector(1, 0, 0), new MyVector(0, 1, 0));
@@ -893,7 +893,7 @@ namespace Game.Orig.TestersGDI
             double massPercent = Convert.ToDouble(mass - MINMASS) / Convert.ToDouble(MAXMASS - MINMASS);
             int colorValue = MINCOLOR + Convert.ToInt32((255 - MINCOLOR) * massPercent);
 
-            //	Make the ball
+            // Make the ball
             _gravityBalls.Add(new Ball(position, dirFacing, radius, mass, _boundryLower, _boundryUpper));
             _gravityBallColors.Add(Color.FromArgb(colorValue, colorValue, colorValue));
 
@@ -982,23 +982,23 @@ namespace Game.Orig.TestersGDI
 
             MyVector centerPoint = GetMiddlePoint();
 
-            //	Draw Masses
+            // Draw Masses
             foreach (PointMass pointMass in _ship.PointMasses)
             {
                 DrawDot(centerPoint + pointMass.Position, pointMass.Mass, massColor, massOutlineColor);
             }
 
-            //	Orientation
+            // Orientation
             DrawVector(centerPoint, centerPoint + (_ship.OriginalDirectionFacing.Standard * 100d), Color.Silver);
             DrawVector(centerPoint, centerPoint + (_ship.OriginalDirectionFacing.Orth * 100d), Color.DimGray);
 
-            //	Line from centerpoint to centermass
+            // Line from centerpoint to centermass
             DrawVector(centerPoint, centerPoint + _ship.CenterOfMass, Color.DarkMagenta);
 
-            //	Center Point
+            // Center Point
             DrawDot(centerPoint, 3, Color.DarkMagenta);
 
-            //	Center Mass
+            // Center Mass
             DrawDot(centerPoint + _ship.CenterOfMass, 3, Color.HotPink);
 
         }
@@ -1007,7 +1007,7 @@ namespace Game.Orig.TestersGDI
 
             MyVector centerPoint = GetMiddlePoint();
 
-            //	Draw all the thrusters
+            // Draw all the thrusters
             foreach (ThrusterKey thrusterKey in _thrustersCustom.Keys)
             {
                 foreach (MyVector[] thruster in _thrustersCustom[thrusterKey])
@@ -1015,7 +1015,7 @@ namespace Game.Orig.TestersGDI
                     MyVector offset = centerPoint + thruster[0];
                     MyVector toPoint = offset + thruster[1];
 
-					Color finalColor = UtilityGDI.AlphaBlend(_thrusterColors[thrusterKey], fromColor, alpha);
+                    Color finalColor = UtilityGDI.AlphaBlend(_thrusterColors[thrusterKey], fromColor, alpha);
 
                     DrawDot(offset, 5, finalColor);
                     DrawVector(offset, toPoint, finalColor);
@@ -1027,10 +1027,10 @@ namespace Game.Orig.TestersGDI
         private void DrawShipRunning(Color massColor, Color massOutlineColor)
         {
 
-            //	Radius
-			pictureBox1.DrawCircle(UtilityGDI.AlphaBlend(Color.DarkCyan, Color.Black, .5d), .5d, _ship.Position, _ship.Radius);
+            // Radius
+            pictureBox1.DrawCircle(UtilityGDI.AlphaBlend(Color.DarkCyan, Color.Black, .5d), .5d, _ship.Position, _ship.Radius);
 
-            //	Point Masses
+            // Point Masses
             SolidBrush massBrush = new SolidBrush(massColor);
 
             foreach (PointMass pointMass in _ship.PointMasses)
@@ -1043,19 +1043,19 @@ namespace Game.Orig.TestersGDI
 
             massBrush.Dispose();
 
-            //	Orientation
+            // Orientation
             pictureBox1.DrawLine(Color.FromArgb(64, 64, 64), 1, _ship.Position, _ship.Position + (_ship.DirectionFacing.Standard * 100d));
             pictureBox1.DrawLine(Color.FromArgb(32, 32, 32), 1, _ship.Position, _ship.Position + (_ship.DirectionFacing.Orth * 100d));
 
             MyVector rotatedCenterMass = _ship.Rotation.GetRotatedVector(_ship.CenterOfMass, true);
 
-            //	Line from centerpoint to centermass
-			pictureBox1.DrawLine(UtilityGDI.AlphaBlend(Color.DarkMagenta, Color.Black, .4d), 1, _ship.Position, _ship.Position + rotatedCenterMass);
+            // Line from centerpoint to centermass
+            pictureBox1.DrawLine(UtilityGDI.AlphaBlend(Color.DarkMagenta, Color.Black, .4d), 1, _ship.Position, _ship.Position + rotatedCenterMass);
 
-            //	Center Point
+            // Center Point
             pictureBox1.FillCircle(Color.DarkMagenta, _ship.Position, 2);
 
-            //	Center Mass
+            // Center Mass
             pictureBox1.FillCircle(Color.HotPink, _ship.Position + rotatedCenterMass, 2);
 
         }
@@ -1098,7 +1098,7 @@ namespace Game.Orig.TestersGDI
 
             if (_thrustersCustom.ContainsKey(key))
             {
-				pctBox.BackColor = UtilityGDI.AlphaBlend(_thrusterColors[key], pressedColor, alpha);
+                pctBox.BackColor = UtilityGDI.AlphaBlend(_thrusterColors[key], pressedColor, alpha);
             }
             else
             {

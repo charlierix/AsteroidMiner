@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Game.Newt.AsteroidMiner2</RootNamespace>
     <AssemblyName>Game.Newt.AsteroidMiner2</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,7 +31,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,6 +43,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,6 +53,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore">
@@ -63,6 +66,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -80,22 +84,39 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CameraPool.cs" />
+    <Compile Include="Controls\ProgressBarGame.xaml.cs">
+      <DependentUpon>ProgressBarGame.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ShipSelectorWindow.xaml.cs">
+      <DependentUpon>ShipSelectorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ShipIcon.xaml.cs">
+      <DependentUpon>ShipIcon.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ShipViewerWindow.xaml.cs">
+      <DependentUpon>ShipViewerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Converter.cs" />
+    <Compile Include="Explosion.cs" />
     <Compile Include="Fields.cs" />
+    <Compile Include="ItemSelectDragLogic.cs" />
     <Compile Include="MapParts\Asteroid.cs" />
     <Compile Include="Container.cs" />
     <Compile Include="IMapObject.cs" />
-    <Compile Include="ItemColors.cs" />
+    <Compile Include="WorldColors.cs" />
     <Compile Include="ItemOptions.cs" />
     <Compile Include="Map.cs" />
+    <Compile Include="MapParts\Egg.cs" />
     <Compile Include="MapParts\Mineral.cs" />
+    <Compile Include="MutateUtility.cs" />
+    <Compile Include="Neural.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SharedVisuals.cs" />
     <Compile Include="Ship.cs" />
     <Compile Include="ShipEditor\DesignPart.cs" />
     <Compile Include="ShipEditor\DraggableModifier.cs" />
     <Compile Include="ShipEditor\DraggingDropPart.cs" />
-    <Compile Include="ShipEditor\DragHitShape.cs" />
     <Compile Include="ShipEditor\EditorColors.cs" />
     <Compile Include="ShipEditor\EditorOptions.cs" />
     <Compile Include="ShipEditor\InfoWindow.xaml.cs">
@@ -109,6 +130,7 @@
     <Compile Include="ShipParts\AmmoBox.cs" />
     <Compile Include="ShipParts\BeamGun.cs" />
     <Compile Include="ShipParts\Brain.cs" />
+    <Compile Include="ShipParts\CameraColorRGB.cs" />
     <Compile Include="ShipParts\CargoBay.cs" />
     <Compile Include="ShipParts\ConverterEnergyToAmmo.cs" />
     <Compile Include="ShipParts\ConverterEnergyToFuel.cs" />
@@ -123,25 +145,51 @@
     <Compile Include="ShipParts\GrappleGun.cs" />
     <Compile Include="ShipParts\HangarBay.cs" />
     <Compile Include="PartBase.cs" />
+    <Compile Include="ShipParts\PlasmaTank.cs" />
     <Compile Include="ShipParts\ProjectileGun.cs" />
     <Compile Include="ShipParts\SelfRepair.cs" />
+    <Compile Include="ShipParts\SensorCollision.cs" />
+    <Compile Include="ShipParts\SensorFluid.cs" />
+    <Compile Include="ShipParts\SensorGravity.cs" />
+    <Compile Include="ShipParts\SensorInternalForce.cs" />
+    <Compile Include="ShipParts\SensorNetForce.cs" />
+    <Compile Include="ShipParts\SensorRadiation.cs" />
+    <Compile Include="ShipParts\SensorSpin.cs" />
+    <Compile Include="ShipParts\SensorTractor.cs" />
+    <Compile Include="ShipParts\SensorVelocity.cs" />
     <Compile Include="ShipParts\ShieldEnergy.cs" />
     <Compile Include="ShipParts\ShieldKinetic.cs" />
     <Compile Include="ShipParts\ShieldTractor.cs" />
     <Compile Include="ShipParts\Thruster.cs" />
     <Compile Include="ShipParts\TractorBeam.cs" />
     <Compile Include="MapParts\SpaceStation.cs" />
-    <Compile Include="View\AsteroidMinerWindow.xaml.cs">
-      <DependentUpon>AsteroidMinerWindow.xaml</DependentUpon>
+    <Compile Include="AstField\AsteroidFieldWindow.xaml.cs">
+      <DependentUpon>AsteroidFieldWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ShipEditor\Editor.xaml.cs">
       <DependentUpon>Editor.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\OptionsPanel.xaml.cs">
+    <Compile Include="AstField\OptionsPanel.xaml.cs">
       <DependentUpon>OptionsPanel.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Controls\ProgressBarGame.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ShipSelectorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ShipIcon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ShipViewerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ShipEditor\InfoWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -154,7 +202,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\AsteroidMinerWindow.xaml">
+    <Page Include="AstField\AsteroidFieldWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
@@ -166,7 +214,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\OptionsPanel.xaml">
+    <Page Include="AstField\OptionsPanel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

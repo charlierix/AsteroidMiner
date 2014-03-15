@@ -26,12 +26,12 @@ namespace Game.Orig.TestersWPF
     public partial class ThreeDTester1 : Window
     {
         #region Declaration Section
-        
+
         // Global
         private const double BOUNDRY = 12d;
         private const double ELAPSEDTIME = 1d;
         private const double PENETRATIONTHRESHOLDPERCENT = .02d;
-        
+
         // Ball
         private const double MAXVELOCITY = .04;
         private const double RADIUS = .5d;
@@ -56,7 +56,7 @@ namespace Game.Orig.TestersWPF
         private MyVector _boundryUpper = new MyVector(BOUNDRY, BOUNDRY, BOUNDRY);
         //private GravityController _gravController = null;
 
-		private Game.Newt.HelperClasses.TrackBallRoam _trackball = null;
+        private Game.Newt.HelperClasses.TrackBallRoam _trackball = null;
 
         #endregion
 
@@ -66,13 +66,13 @@ namespace Game.Orig.TestersWPF
         {
             InitializeComponent();
 
-			//	Trackball
-			_trackball = new Game.Newt.HelperClasses.TrackBallRoam(_camera);
-			_trackball.EventSource = grid1;
-			_trackball.AllowZoomOnMouseWheel = true;
-			_trackball.Mappings.AddRange(Game.Newt.HelperClasses.TrackBallMapping.GetPrebuilt(Game.Newt.HelperClasses.TrackBallMapping.PrebuiltMapping.MouseComplete));
+            // Trackball
+            _trackball = new Game.Newt.HelperClasses.TrackBallRoam(_camera);
+            _trackball.EventSource = grid1;
+            _trackball.AllowZoomOnMouseWheel = true;
+            _trackball.Mappings.AddRange(Game.Newt.HelperClasses.TrackBallMapping.GetPrebuilt(Game.Newt.HelperClasses.TrackBallMapping.PrebuiltMapping.MouseComplete));
 
-            //	Setup the map
+            // Setup the map
             _map.CollisionHandler = new CollisionHandler();
             _map.CollisionHandler.PenetrationThresholdPercent = PENETRATIONTHRESHOLDPERCENT;
             _map.TimerPullApartType = PullApartType.Force;
@@ -94,10 +94,10 @@ namespace Game.Orig.TestersWPF
 
         private void viewport3D1_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-			if (!_trackball.IsActive)		//	if it's active, I'll let it do the zooming
-			{
-				_camera.Position = new Point3D(_camera.Position.X, _camera.Position.Y, _camera.Position.Z - e.Delta / 100D);
-			}
+            if (!_trackball.IsActive)		// if it's active, I'll let it do the zooming
+            {
+                _camera.Position = new Point3D(_camera.Position.X, _camera.Position.Y, _camera.Position.Z - e.Delta / 100D);
+            }
         }
 
         #region Single Ball
@@ -105,7 +105,7 @@ namespace Game.Orig.TestersWPF
         private void btnSingleBall_Click(object sender, RoutedEventArgs e)
         {
             ClearEverything();
-			_trackball.IsActive = false;
+            _trackball.IsActive = false;
 
             int separators;
             if (!int.TryParse(textBox1.Text, out separators))
@@ -192,10 +192,10 @@ namespace Game.Orig.TestersWPF
         private void btnMultiBalls_Click(object sender, RoutedEventArgs e)
         {
             ClearEverything();
-			_trackball.IsActive = true;
+            _trackball.IsActive = true;
 
             int numBalls;
-            if(!int.TryParse(textBox2.Text, out numBalls))
+            if (!int.TryParse(textBox2.Text, out numBalls))
             {
                 MessageBox.Show("Couldn't parse the textbox", this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
@@ -243,12 +243,12 @@ namespace Game.Orig.TestersWPF
             SetRandomVelocities(MAXVELOCITY * 3d);
         }
 
-		private void btnResetCamera_Click(object sender, RoutedEventArgs e)
-		{
-			_camera.Position = new Point3D(0, 0, 5);
-			_camera.UpDirection = new Vector3D(0, 1, 0);
-			_camera.LookDirection = new Vector3D(0, 0, -10);
-		}
+        private void btnResetCamera_Click(object sender, RoutedEventArgs e)
+        {
+            _camera.Position = new Point3D(0, 0, 5);
+            _camera.UpDirection = new Vector3D(0, 1, 0);
+            _camera.LookDirection = new Vector3D(0, 0, -10);
+        }
 
         private void MultiBallTimer_Tick(object sender, EventArgs e)
         {
@@ -408,10 +408,10 @@ namespace Game.Orig.TestersWPF
         /// <returns>Somewhere between minReturn and maxReturn</returns>
         public static double GetScaledValue(double minReturn, double maxReturn, double minRange, double maxRange, double valueRange)
         {
-            //	Get the percent of value within the range
+            // Get the percent of value within the range
             double percent = (valueRange - minRange) / (maxRange - minRange);
 
-            //	Get the lerp between the return range
+            // Get the lerp between the return range
             return minReturn + (percent * (maxReturn - minReturn));
         }
 

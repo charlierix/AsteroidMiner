@@ -5,158 +5,157 @@ using System.Windows.Media.Media3D;
 
 namespace Game.Newt.NewtonDynamics_153
 {
-	public class CJointVehicle : CJoint
-	{
-		#region Members
+    public class CJointVehicle : CJoint
+    {
+        #region Members
 
-		private EventHandler<CVehicleTireUpdateEventArgs> m_VehicleTireUpdate;
-		private Newton.NewtonVehicleTireUpdate m_NewtonVehicleTireUpdate;
+        private EventHandler<CVehicleTireUpdateEventArgs> m_VehicleTireUpdate;
+        private Newton.NewtonVehicleTireUpdate m_NewtonVehicleTireUpdate;
 
-		#endregion
+        #endregion
 
+        #region Constructor
 
-		#region Constructor
+        public CJointVehicle(CWorld pWorld)
+            : base(pWorld)
+        {
+        }
 
-		public CJointVehicle(CWorld pWorld)
-			: base(pWorld)
-		{
-		}
+        #endregion
 
-		#endregion
+        #region Methods
 
+        public void CreateVehicle(Vector3D pUpDir, CBody pNewtonBody)
+        {
+            m_Handle = Newton.NewtonConstraintCreateVehicle(m_World.Handle,
+                new NewtonVector3(pUpDir).NWVector3,
+                pNewtonBody.Handle);
 
-		#region Methods
+            CHashTables.Joint.Add(m_Handle, this);
+        }
 
-		public void CreateVehicle(Vector3D pUpDir, CBody pNewtonBody)
-		{
-			m_Handle = Newton.NewtonConstraintCreateVehicle(m_World.Handle,
-				new NewtonVector3(pUpDir).NWVector3,
-				pNewtonBody.Handle);
+        public void VehicleReset()
+        {
+            Newton.NewtonVehicleReset(m_Handle);
+        }
 
-			CHashTables.Joint.Add(m_Handle, this);
-		}
+        public CTire VehicleAddTire(Matrix3D pLocalMatrix,
+            Vector3D pPin,
+            float pMass,
+            float pWidth,
+            float pRadius,
+            float pSuspesionShock,
+            float pSuspesionSpring,
+            float pSuspesionLength,
+            object pUserData,
+            int pCollisionID)
+        {
+            IntPtr aTireHandle = Newton.NewtonVehicleAddTire(m_Handle,
+                        new NewtonMatrix(pLocalMatrix).NWMatrix,
+                        new NewtonVector3(pPin).NWVector3,
+                        pMass,
+                        pWidth,
+                        pRadius,
+                        pSuspesionShock,
+                        pSuspesionSpring,
+                        pSuspesionLength,
+                        (IntPtr)0, //pUserData.GetHashCode(),
+                        pCollisionID);
 
-		public void VehicleReset()
-		{
-			Newton.NewtonVehicleReset(m_Handle);
-		}
+            CTire aTire = new CTire(this, aTireHandle);
+            aTire.UserData = pUserData;
 
-		public CTire VehicleAddTire(Matrix3D pLocalMatrix,
-			Vector3D pPin,
-			float pMass,
-			float pWidth,
-			float pRadius,
-			float pSuspesionShock,
-			float pSuspesionSpring,
-			float pSuspesionLength,
-			object pUserData,
-			int pCollisionID)
-		{
-			IntPtr aTireHandle = Newton.NewtonVehicleAddTire(m_Handle,
-						new NewtonMatrix(pLocalMatrix).NWMatrix,
-						new NewtonVector3(pPin).NWVector3,
-						pMass,
-						pWidth,
-						pRadius,
-						pSuspesionShock,
-						pSuspesionSpring,
-						pSuspesionLength,
-						(IntPtr)0, //pUserData.GetHashCode(),
-						pCollisionID);
+            return aTire;
+        }
 
-			CTire aTire = new CTire(this, aTireHandle);
-			aTire.UserData = pUserData;
+        public void VehicleRemoveTire(CTire pTire)
+        {
+            pTire.Remove();
+        }
 
-			return aTire;
-		}
+        #endregion
 
-		public void VehicleRemoveTire(CTire pTire)
-		{
-			pTire.Remove();
-		}
+        #region Properties
 
-		#endregion
+        public CTire VehicleFirstTire
+        {
+            get
+            {
+                IntPtr aHandle = Newton.NewtonVehicleGetFirstTireID(m_Handle);
+                return (CTire)CHashTables.Tire[aHandle];
+            }
+        }
 
+        #endregion
 
-		#region Properties
+        #region Events
 
-		public CTire VehicleFirstTire
-		{
-			get
-			{
-				IntPtr aHandle = Newton.NewtonVehicleGetFirstTireID(m_Handle);
-				return (CTire)CHashTables.Tire[aHandle];
-			}
-		}
+        public event EventHandler<CVehicleTireUpdateEventArgs> VehicleTireUpdate
+        {
+            add
+            {
+                if (m_VehicleTireUpdate == null)
+                {
+                    m_NewtonVehicleTireUpdate = new Newton.NewtonVehicleTireUpdate(InvokeVehicleTireUpdate);
+                    Newton.NewtonVehicleSetTireCallback(m_Handle, m_NewtonVehicleTireUpdate);
+                }
 
-		#endregion
+                m_VehicleTireUpdate += value;
+            }
 
+            remove
+            {
+                m_VehicleTireUpdate -= value;
 
-		#region Events
+                if (m_VehicleTireUpdate == null)
+                {
+                    m_NewtonVehicleTireUpdate = null;
+                    Newton.NewtonVehicleSetTireCallback(m_Handle, m_NewtonVehicleTireUpdate);
+                }
+            }
+        }
 
-		public event EventHandler<CVehicleTireUpdateEventArgs> VehicleTireUpdate
-		{
-			add
-			{
-				if (m_VehicleTireUpdate == null)
-				{
-					m_NewtonVehicleTireUpdate = new Newton.NewtonVehicleTireUpdate(InvokeVehicleTireUpdate);
-					Newton.NewtonVehicleSetTireCallback(m_Handle, m_NewtonVehicleTireUpdate);
-				}
+        #endregion
 
-				m_VehicleTireUpdate += value;
-			}
+        #region Invokes
 
-			remove
-			{
-				m_VehicleTireUpdate -= value;
+        private void InvokeVehicleTireUpdate(IntPtr pNewtonJoint)
+        {
+            OnVehicleTireUpdate(new CVehicleTireUpdateEventArgs());
+        }
 
-				if (m_VehicleTireUpdate == null)
-				{
-					m_NewtonVehicleTireUpdate = null;
-					Newton.NewtonVehicleSetTireCallback(m_Handle, m_NewtonVehicleTireUpdate);
-				}
-			}
-		}
+        #endregion
 
-		#endregion
+        #region Virtuals
 
+        protected virtual void OnVehicleTireUpdate(CVehicleTireUpdateEventArgs pEventArgs)
+        {
+            if (m_VehicleTireUpdate != null)
+            {
+                m_VehicleTireUpdate(this, pEventArgs);
+            }
+        }
 
-		#region Invokes
+        #endregion
 
-		private void InvokeVehicleTireUpdate(IntPtr pNewtonJoint)
-		{
-			OnVehicleTireUpdate(new CVehicleTireUpdateEventArgs());
-		}
+        #region IDisposable Members
 
-		#endregion
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                List<CTire> tires = new List<CTire>();
 
+                for (CTire tire = VehicleFirstTire; tire != null; tire = tire.NextTire)
+                    tires.Add(tire);
 
-		#region Virtuals
+                foreach (CTire tire in tires)
+                    tire.Dispose();
+            }
 
-		protected virtual void OnVehicleTireUpdate(CVehicleTireUpdateEventArgs pEventArgs)
-		{
-			if (m_VehicleTireUpdate != null)
-			{
-				m_VehicleTireUpdate(this, pEventArgs);
-			}
-		}
+            base.Dispose(disposing);
+        }
 
-		#endregion
-
-		#region IDisposable Members
-
-		public override void Dispose()
-		{
-			List<CTire> tires = new List<CTire>();
-
-			for ( CTire tire = VehicleFirstTire; tire != null; tire = tire.NextTire ) tires.Add( tire );
-
-			foreach ( CTire tire in tires ) tire.Dispose();
-
-			base.Dispose();
-		}
-
-		#endregion
-	}
+        #endregion
+    }
 }

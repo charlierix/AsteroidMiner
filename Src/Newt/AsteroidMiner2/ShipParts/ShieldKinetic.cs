@@ -9,141 +9,147 @@ using Game.Newt.AsteroidMiner2.ShipEditor;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	//TODO: Add an extended description
-	#region Class: ShieldKineticToolItem
+    //TODO: Add an extended description
+    #region Class: ShieldKineticToolItem
 
-	public class ShieldKineticToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class ShieldKineticToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public ShieldKineticToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public ShieldKineticToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Kinetic shields";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Blocks against kinetic weapons/impacts (consumes energy)";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_SHIELD;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Kinetic shields";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Blocks against kinetic weapons/impacts (consumes energy)";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_SHIELD;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new ShieldKineticDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new ShieldKineticDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: ShieldKineticDesign
+    #endregion
+    #region Class: ShieldKineticDesign
 
-	public class ShieldKineticDesign : PartDesignBase
-	{
-		#region Constructor
+    public class ShieldKineticDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public ShieldKineticDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public ShieldKineticDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometries;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometries;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			return ShieldEnergyDesign.CreateGeometry(this.MaterialBrushes, this.SelectionEmissives,
-				_scaleTransform, _rotateTransform, _translateTransform,
-				this.Options.WorldColors.ShieldBase, this.Options.WorldColors.ShieldBaseSpecular, this.Options.WorldColors.ShieldBaseEmissive, this.Options.WorldColors.ShieldKinetic, this.Options.WorldColors.ShieldKineticSpecular,
-				isFinal);
-		}
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-		#endregion
-	}
+        #endregion
 
-	#endregion
-	#region Class: ShieldKinetic
+        #region Private Methods
 
-	public class ShieldKinetic
-	{
-		public const string PARTTYPE = "ShieldKinetic";
-	}
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            return ShieldEnergyDesign.CreateGeometry(this.MaterialBrushes, this.SelectionEmissives,
+                GetTransformForGeometry(isFinal),
+                WorldColors.ShieldBase, WorldColors.ShieldBaseSpecular, WorldColors.ShieldBaseEmissive, WorldColors.ShieldKinetic, WorldColors.ShieldKineticSpecular,
+                isFinal);
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: ShieldKinetic
+
+    public class ShieldKinetic
+    {
+        public const string PARTTYPE = "ShieldKinetic";
+    }
+
+    #endregion
 }

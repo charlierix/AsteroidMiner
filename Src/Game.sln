@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Newt", "Newt", "{AF64F442-6C64-420F-9319-EB0A14A25C1B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Orig", "Orig", "{40030C7C-57FF-420D-9407-80D84DD6AF1E}"
@@ -34,6 +34,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testers", "Newt\Testers\Testers.csproj", "{713AC9D0-DA1D-40D3-8002-70D2CC5C4D6F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsteroidMiner2", "Newt\AsteroidMiner2\AsteroidMiner2.csproj", "{A80968C6-78CD-4D22-BFE9-364991784478}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7EA27D92-721D-4222-AA1D-49923275C0E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

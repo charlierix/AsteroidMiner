@@ -10,7 +10,7 @@
     <OutputType>library</OutputType>
     <!-- Most people will use Publish dialog in Visual Studio to increment this -->
     <MinFrameworkVersionRequired>3.0</MinFrameworkVersionRequired>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -43,6 +43,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -50,6 +51,7 @@
     <OutputPath>.\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,6 +60,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase">
@@ -83,21 +86,28 @@
     <Compile Include="AutoScrollEmulator.cs" />
     <Compile Include="BindingHelper.cs" />
     <Compile Include="CameraHelper.cs" />
-    <Compile Include="Controls\GlassButton_Circle.xaml.cs">
+    <Compile Include="Clipper\Clipper.cs" />
+    <Compile Include="Controls2D\OutlinedTextBlock.cs" />
+    <Compile Include="Controls2D\GlassButton_Circle.xaml.cs">
       <DependentUpon>GlassButton_Circle.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\UndoRedo.xaml.cs">
+    <Compile Include="Controls2D\SliderShowValues.xaml.cs">
+      <DependentUpon>SliderShowValues.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls2D\UndoRedo.xaml.cs">
       <DependentUpon>UndoRedo.xaml</DependentUpon>
     </Compile>
     <Compile Include="DoubleVector.cs" />
+    <Compile Include="DragHitShape.cs" />
     <Compile Include="Extenders.cs" />
     <Compile Include="Gizmos3D\Arrow.xaml.cs">
       <DependentUpon>Arrow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Gizmos3D\VisualToVisualLine3D.cs" />
     <Compile Include="Gizmos3D\VisualToVisualLine3D.Properties.cs" />
-    <Compile Include="IRenderNotify.cs" />
+    <Compile Include="Math2D.cs" />
     <Compile Include="Primitives3D\ArcScreenSpaceLines3D.cs" />
+    <Compile Include="Primitives3D\BillboardLine3D.cs" />
     <Compile Include="Primitives3D\CompoundVisual3D.cs" />
     <Compile Include="Math3D.cs" />
     <Compile Include="MathUtils.cs" />
@@ -130,12 +140,12 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ScreenSpaceLines3DHelper.cs" />
+    <Compile Include="Primitives3D\ScreenSpaceLines3DHelper.cs" />
+    <Compile Include="Rectangle3DIndexed.cs" />
     <Compile Include="SoundPool.cs" />
+    <Compile Include="StaTaskScheduler.cs" />
     <Compile Include="TrackBall.cs" />
     <Compile Include="TrackballGrabber.cs" />
-    <Compile Include="Transform3DHelper.cs" />
-    <None Include="Viewport3D.cs" />
     <Compile Include="Triangle.cs" />
     <Compile Include="UIElementHelper.cs" />
     <Compile Include="UtilityWPF.cs" />
@@ -146,13 +156,17 @@
     <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Controls\GlassButton_Circle.xaml">
+    <Page Include="Controls2D\GlassButton_Circle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\UndoRedo.xaml">
+    <Page Include="Controls2D\SliderShowValues.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls2D\UndoRedo.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
@@ -188,5 +202,6 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

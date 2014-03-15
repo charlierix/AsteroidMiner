@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="Game.Newt.AsteroidMiner2.Controls.ProgressBarGame"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             x:Name="thisControl" Height="13">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto" SharedSizeGroup="FirstColumn"/>
+            <ColumnDefinition Width="1*" MinWidth="50"/>
+            <ColumnDefinition Width="auto" SharedSizeGroup="ThirdColumn"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Text -->
+        <TextBlock Grid.Column="0" Name="lblLeft" Text="{Binding Path=LeftLabelText, ElementName=thisControl}" Visibility="{Binding Path=LeftLabelVisibility, ElementName=thisControl}" Margin="0,0,4,0" Foreground="{Binding Path=Foreground, ElementName=thisControl}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" />
+
+        <!-- Progress Bar Background -->
+        <Border Grid.Column="1" CornerRadius="3" BorderThickness="1" BorderBrush="{Binding Path=ProgressBackBorderBrush, ElementName=thisControl}" Background="{Binding Path=ProgressBackBrush, ElementName=thisControl}" Margin="0,2,0,2">
+
+            <Grid>
+                <!-- I can't know what my parent border's width is, but I can set these two to get the bar to any percent I want -->
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Name="barWidth" Width="1*"/>
+                    <ColumnDefinition Name="remainderWidth" Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Color Part -->
+                <Border Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{Binding Path=ProgressBrush, ElementName=thisControl}" BorderThickness="0" BorderBrush="Transparent" CornerRadius="3"/>
+            </Grid>
+
+
+
+        </Border>
+
+
+
+        <!-- Right Text -->
+        <TextBlock Grid.Column="2" Name="lblRight" Text="{Binding Path=RightLabelText, ElementName=thisControl}" Visibility="{Binding Path=RightLabelVisibility, ElementName=thisControl}" Margin="4,0,0,0" Foreground="{Binding Path=Foreground, ElementName=thisControl}" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Center" />
+    </Grid>
+</UserControl>

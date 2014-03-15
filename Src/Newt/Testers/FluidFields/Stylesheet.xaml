@@ -1,0 +1,121 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:helpctrl="clr-namespace:Game.Newt.HelperClasses.Controls2D;assembly=Game.Newt.HelperClasses">
+
+    <Style x:Key="contentBorder" TargetType="Border">
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#70000000"/>
+        <Setter Property="Background" Value="#30FFFFFF"/>
+    </Style>
+
+    <Style x:Key="sideExpander" TargetType="Expander">
+        <Setter Property="ExpandDirection" Value="Down"/>
+        <Setter Property="Margin" Value="0,-3"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsExpanded" Value="True">
+                <Setter Property="ExpandDirection" Value="Right"/>
+                <Setter Property="Margin" Value="0,4"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="sideExpanderBorder" BasedOn="{StaticResource contentBorder}" TargetType="Border">
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style x:Key="sideExpanderHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+
+        <Style.Triggers>
+            <DataTrigger  Binding="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Expander}}, Path=IsExpanded}" Value="True">
+                <Setter Property="LayoutTransform">
+                    <Setter.Value>
+                        <RotateTransform Angle="-90"/>
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="sideExpanderHeaderBorder" TargetType="Border">
+        <Setter Property="Padding" Value="4,4,1,4"/>
+    </Style>
+
+    <Style x:Key="toolBorder" BasedOn="{StaticResource contentBorder}" TargetType="Border">
+        <Setter Property="Padding" Value="2"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+
+    <Style x:Key="toolGroup" TargetType="UniformGrid">
+        <Setter Property="Columns" Value="2"/>
+        <Setter Property="Margin" Value="4"/>
+    </Style>
+
+    <Style x:Key="toolButton" TargetType="ContentControl">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Margin" Value="2"/>
+    </Style>
+
+    <Style x:Key="toolRadioButton" TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Margin" Value="2"/>
+    </Style>
+
+    <Style x:Key="expandRadioButton" TargetType="RadioButton" BasedOn="{StaticResource {x:Type ToggleButton}}">
+        <Setter Property="Height" Value="23"/>
+        <Setter Property="Margin" Value="2"/>
+        <Setter Property="Padding" Value="6,2"/>
+    </Style>
+
+    <Style x:Key="standaloneToggleButton" TargetType="ToggleButton">
+        <!--<Setter Property="Height" Value="23"/>-->
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="MaxWidth" Value="150"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="labelLeft" TargetType="TextBlock">
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="Margin" Value="2,0,0,0"/>
+    </Style>
+
+    <Style x:Key="slider" TargetType="helpctrl:SliderShowValues">
+        <Setter Property="Margin" Value="0,2"/>
+        <!--<Setter Property="MinWidth" Value="175"/>-->
+        <!-- NOTE: Without this being set, the mouseover trigger only works intermittantly, and leaves multiple sliders visible at a time -->
+        <Setter Property="Background" Value="Transparent"/>
+
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="False">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type helpctrl:SliderShowValues}">
+                            <TextBlock Text="{TemplateBinding ValueDisplay}" FontSize="16" FontWeight="SemiBold" MinWidth="60" Margin="3,0,0,0" Background="Transparent" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="MinWidth" Value="120"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- NOTE: These two expect to be in a grid with 3 columns (2nd column is just padding) -->
+    <Style x:Key="labelLeft_local" TargetType="TextBlock" BasedOn="{StaticResource labelLeft}">
+        <Setter Property="Grid.Column" Value="0"/>
+    </Style>
+
+    <Style x:Key="slider_local" TargetType="helpctrl:SliderShowValues" BasedOn="{StaticResource slider}">
+        <Setter Property="Grid.Column" Value="2"/>
+    </Style>
+
+</ResourceDictionary>

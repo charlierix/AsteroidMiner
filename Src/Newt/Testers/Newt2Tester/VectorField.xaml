@@ -13,6 +13,7 @@
 
         <RadioButton Name="radNone" Content="None" IsChecked="True"/>
         <RadioButton Name="radInward" Content="Inward"/>
+        <RadioButton Name="radInwardRadius" Content="Inward (F=radius)"/>
         <RadioButton Name="radOutward" Content="Outward"/>
         <RadioButton Name="radSwirlInward" Content="Swirl Inward"/>
         <RadioButton Name="radSwirl" Content="Swirl"/>

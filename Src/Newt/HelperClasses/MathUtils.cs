@@ -198,7 +198,7 @@ namespace Game.Newt.HelperClasses
 
             if (success)
             {
-                result.Append(GetProjectionMatrix(visual.Camera, Math3D.GetAspectRatio(visual.Viewport.Size)));
+                result.Append(GetProjectionMatrix(visual.Camera, Math2D.GetAspectRatio(visual.Viewport.Size)));
                 result.Append(GetHomogeneousToViewportTransform(visual.Viewport));
                 success = true;
             }
@@ -242,24 +242,22 @@ namespace Game.Newt.HelperClasses
         public static Matrix3D TryWorldToCameraTransform(Viewport3DVisual visual, out bool success)
         {
             success = false;
-            Matrix3D result = Matrix3D.Identity;
 
             Camera camera = (visual != null) ? visual.Camera : null;
-
             if (camera == null)
             {
                 return ZeroMatrix;
             }
 
             Rect viewport = visual.Viewport;
-
             if (viewport == Rect.Empty)
             {
                 return ZeroMatrix;
             }
 
-            Transform3D cameraTransform = camera.Transform;
+            Matrix3D result = Matrix3D.Identity;
 
+            Transform3D cameraTransform = camera.Transform;
             if (cameraTransform != null)
             {
                 Matrix3D m = cameraTransform.Value;

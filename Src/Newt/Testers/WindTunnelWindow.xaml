@@ -48,6 +48,12 @@
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Foreground" Value="#8A7B71"/>
         </Style>
+        
+        <Style x:Key="buttonGrid2" TargetType="UniformGrid">
+            <Setter Property="Columns" Value="2"/>
+            <Setter Property="Margin" Value="8,28,8,8"/>
+            <Setter Property="Width" Value="150"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -71,11 +77,11 @@
 
         <StackPanel Grid.Column="0" Grid.Row="0">
             <!-- Static Objects -->
-            <Border Style="{StaticResource controlsPanelTop}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,12">
+            <Border Style="{StaticResource controlsPanelTop}" Margin="12,12,0,12">
                 <Grid>
                     <TextBlock Text="Static Objects" Style="{StaticResource controlPanelLabel}"/>
 
-                    <UniformGrid Columns="2" Margin="8,28,8,8" Width="150">
+                    <UniformGrid Style="{StaticResource buttonGrid2}">
                         <Button Name="btnStaticTriangle" Click="btnStaticTriangle_Click" Margin="2" Content="Triangle"/>
                         <Button Name="btnStaticSphere1" Click="btnStaticSphere1_Click" Margin="2" Content="Sphere 1"/>
                         <Button Name="btnStaticSphere2" Click="btnStaticSphere2_Click" Margin="2" Content="Sphere 2"/>
@@ -85,11 +91,11 @@
             </Border>
 
             <!-- Physics Bodies -->
-            <Border Style="{StaticResource controlsPanelTop}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,12,0,12">
+            <Border Style="{StaticResource controlsPanelTop}" Margin="12,12,0,12">
                 <Grid>
                     <TextBlock Text="Physics Bodies" Style="{StaticResource controlPanelLabel}"/>
 
-                    <UniformGrid Columns="2" Margin="8,28,8,8" Width="150">
+                    <UniformGrid Style="{StaticResource buttonGrid2}">
                         <Button Name="btnBodyPlate" Click="btnBodyPlate_Click" Margin="2" Content="Plate"/>
                         <Button Name="btnBodyPropeller2" Click="btnBodyPropeller2_Click" Margin="2" Content="Propeller 2"/>
                         <Button Name="btnBodyPropeller3" Click="btnBodyPropeller3_Click" Margin="2" Content="Propeller 3"/>
@@ -138,8 +144,8 @@
                                     <ModelVisual3D.Content>
                                         <Model3DGroup>
                                             <AmbientLight Color="DimGray" />
-                                            <DirectionalLight x:Name="_cameraModelRotateLight1" Color="White" Direction="1,-1,-1" />
-                                            <!--<DirectionalLight x:Name="_cameraModelRotateLight2" Color="#303030" Direction="-1,1,1" />-->
+                                            <DirectionalLight x:Name="_lightModel1" Color="White" Direction="1,-1,-1" />
+                                            <!--<DirectionalLight x:Name="_lightModel2" Color="#303030" Direction="-1,1,1" />-->
                                         </Model3DGroup>
                                     </ModelVisual3D.Content>
                                 </ModelVisual3D>
@@ -162,8 +168,8 @@
                                     <ModelVisual3D.Content>
                                         <Model3DGroup>
                                             <AmbientLight Color="DimGray" />
-                                            <DirectionalLight x:Name="_cameraFlowRotateLight1" Color="White" Direction="1,-1,-1" />
-                                            <!--<DirectionalLight x:Name="_cameraFlowRotateLight2" Color="#303030" Direction="-1,1,1" />-->
+                                            <DirectionalLight x:Name="_lightFlow1" Color="White" Direction="1,-1,-1" />
+                                            <!--<DirectionalLight x:Name="_lightFlow2" Color="#303030" Direction="-1,1,1" />-->
                                         </Model3DGroup>
                                     </ModelVisual3D.Content>
                                 </ModelVisual3D>

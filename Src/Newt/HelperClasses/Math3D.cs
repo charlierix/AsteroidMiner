@@ -113,2628 +113,4504 @@ using Game.HelperClasses;
 
 namespace Game.Newt.HelperClasses
 {
-	public static class Math3D
-	{
-		#region Enum: RayCastReturn
-
-		public enum RayCastReturn
-		{
-			AllPoints,
-			ClosestToRayOrigin,
-			ClosestToRay
-		}
-
-		#endregion
-
-		#region Declaration Section
-
-		private const double _180_over_PI = (180 / Math.PI);
-		private const double _PI_over_180 = (Math.PI / 180);
-
-		private const float _180_over_PI_FLOAT = (180 / (float)Math.PI);
-		private const float _PI_over_180_FLOAT = ((float)Math.PI / 180);
-
-		public static readonly Matrix3D ZeroMatrix = new Matrix3D(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-		public static readonly Vector3D ScaleIdentity = new Vector3D(1, 1, 1);
-
-		public const double Radian360 = 360 * _PI_over_180;
-
-		//public const double NEARZERO = .000001d;
-		public const double NEARZERO = .000000001d;
-
-		#endregion
-
-		#region Simple Math
-
-		public static Point3D Add(Point3D p1, Point3D p2)
-		{
-			return new Point3D(p1.X + p2.X, p1.Y + p2.Y, p1.Z + p2.Z);
-		}
-		public static Point3D Subtract(Point3D p1, Point3D p2)
-		{
-			return new Point3D(p1.X - p2.X, p1.Y - p2.Y, p1.Z - p2.Z);
-		}
-
-		#endregion
-
-		#region Random
-
-		/// <summary>
-		/// Get a random vector between boundry lower and boundry upper
-		/// </summary>
-		public static Vector3D GetRandomVector(Vector3D boundryLower, Vector3D boundryUpper)
-		{
-			Vector3D retVal = new Vector3D();
-
-			Random rand = StaticRandom.GetRandomForThread();
-
-			retVal.X = boundryLower.X + (rand.NextDouble() * (boundryUpper.X - boundryLower.X));
-			retVal.Y = boundryLower.Y + (rand.NextDouble() * (boundryUpper.Y - boundryLower.Y));
-			retVal.Z = boundryLower.Z + (rand.NextDouble() * (boundryUpper.Z - boundryLower.Z));
-
-			return retVal;
-		}
-		/// <summary>
-		/// Get a random vector between maxValue*-1 and maxValue
-		/// </summary>
-		public static Vector3D GetRandomVector(double maxValue)
-		{
-			Vector3D retVal = new Vector3D();
-
-			retVal.X = GetNearZeroValue(maxValue);
-			retVal.Y = GetNearZeroValue(maxValue);
-			retVal.Z = GetNearZeroValue(maxValue);
-
-			return retVal;
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube)
-		/// </summary>
-		public static Vector3D GetRandomVectorSpherical(double maxRadius)
-		{
-			return GetRandomVectorSpherical(0d, maxRadius);
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube).  The radius will never be inside minRadius
-		/// </summary>
-		/// <remarks>
-		/// The sqrt idea came from here:
-		/// http://dzindzinovic.blogspot.com/2010/05/xna-random-point-in-circle.html
-		/// </remarks>
-		public static Vector3D GetRandomVectorSpherical(double minRadius, double maxRadius)
-		{
-			//	A sqrt, sin and cos  :(           can it be made cheaper?
-			double radius = minRadius + ((maxRadius - minRadius) * Math.Sqrt(StaticRandom.NextDouble()));		//	without the square root, there is more chance at the center than the edges
-
-			return GetRandomVectorSphericalShell(radius);
-		}
-		/// <summary>
-		/// Gets a random vector with the radius passed in (bounds are spherical, rather than cube)
-		/// </summary>
-		public static Vector3D GetRandomVectorSphericalShell(double radius)
-		{
-			Random rand = StaticRandom.GetRandomForThread();
-
-			double theta = rand.NextDouble() * Math.PI * 2d;
-
-			//	z is cos of phi, which isn't linear.  So the probability is higher that more will be at the poles.  Which means if I want
-			//	a linear probability of z, I need to feed the cosine something that will flatten it into a line.  The curve that will do that
-			//	is arccos (which basically rotates the cosine wave 90 degrees).  This means that it is undefined for any x outside the range
-			//	of -1 to 1.  So I have to shift the random statement to go between -1 to 1, run it through the curve, then shift the result
-			//	to go between 0 and pi.
-			//double phi = rand.NextDouble() * Math.PI;
-
-			double phi = (rand.NextDouble() * 2d) - 1d;		//	value from -1 to 1
-			phi = -Math.Asin(phi) / (Math.PI * .5d);		//	another value from -1 to 1
-			phi = (1d + phi) * Math.PI * .5d;		//	from 0 to pi
-
-			double sinPhi = Math.Sin(phi);
-
-			double x = radius * Math.Cos(theta) * sinPhi;
-			double y = radius * Math.Sin(theta) * sinPhi;
-			double z = radius * Math.Cos(phi);
-
-			return new Vector3D(x, y, z);
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube).  Z will always be zero.
-		/// </summary>
-		public static Vector3D GetRandomVectorSpherical2D(double maxRadius)
-		{
-			return GetRandomVectorSpherical2D(0d, maxRadius);
-		}
-		/// <summary>
-		/// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
-		/// rather than cube).  The radius will never be inside minRadius.  Z will always be zero.
-		/// </summary>
-		/// <remarks>
-		/// The sqrt idea came from here:
-		/// http://dzindzinovic.blogspot.com/2010/05/xna-random-point-in-circle.html
-		/// </remarks>
-		public static Vector3D GetRandomVectorSpherical2D(double minRadius, double maxRadius)
-		{
-			double radius = minRadius + ((maxRadius - minRadius) * Math.Sqrt(StaticRandom.NextDouble()));		//	without the square root, there is more chance at the center than the edges
-
-			return GetRandomVectorSphericalShell2D(radius);
-		}
-		/// <summary>
-		/// Gets a random vector with the radius passed in (bounds are spherical, rather than cube).  Z will always be zero.
-		/// </summary>
-		public static Vector3D GetRandomVectorSphericalShell2D(double radius)
-		{
-			double angle = StaticRandom.NextDouble() * Math.PI * 2d;
-
-			double x = radius * Math.Cos(angle);
-			double y = radius * Math.Sin(angle);
-
-			return new Vector3D(x, y, 0d);
-		}
-
-		public static Quaternion GetRandomRotation()
-		{
-			return new Quaternion(GetRandomVectorSphericalShell(1d), GetNearZeroValue(360d));
-		}
-
-		/// <remarks>
-		/// Got this here:
-		/// http://adamswaab.wordpress.com/2009/12/11/random-point-in-a-triangle-barycentric-coordinates/
-		/// </remarks>
-		public static Point3D GetRandomPointInTriangle(Point3D a, Point3D b, Point3D c)
-		{
-			Vector3D ab = b - a;
-			Vector3D ac = c - a;
-
-			Random rand = StaticRandom.GetRandomForThread();
-			double percentAB = rand.NextDouble();		//	% along ab
-			double percentAC = rand.NextDouble();		//	% along ac
-
-			if (percentAB + percentAC >= 1d)
-			{
-				//	Mirror back onto the triangle (otherwise this would make a parallelogram)
-				percentAB = 1d - percentAB;
-				percentAC = 1d - percentAC;
-			}
-
-			//	Now add the two weighted vectors to a
-			return a + ((ab * percentAB) + (ac * percentAC));
-		}
-		public static Point3D GetRandomPointInTriangle(ITriangle triangle)
-		{
-			//Vector3D ab = b - a;
-			//Vector3D ac = c - a;
-			Vector3D ab = triangle.Point1 - triangle.Point0;
-			Vector3D ac = triangle.Point2 - triangle.Point0;
-
-			Random rand = StaticRandom.GetRandomForThread();
-			double percentAB = rand.NextDouble();		//	% along ab
-			double percentAC = rand.NextDouble();		//	% along ac
-
-			if (percentAB + percentAC >= 1d)
-			{
-				//	Mirror back onto the triangle (otherwise this would make a parallelogram)
-				percentAB = 1d - percentAB;
-				percentAC = 1d - percentAC;
-			}
-
-			//	Now add the two weighted vectors to a
-			return triangle.Point0 + ((ab * percentAB) + (ac * percentAC));
-		}
-
-		/// <summary>
-		/// This returns a list of points evenly distributed across the surface of the hull passed in
-		/// </summary>
-		/// <remarks>
-		/// Note that the triangles within hull don't need to actually be a continuous hull.  They can be a scattered mess of triangles, and
-		/// the returned points will still be constrained to the surface of those triangles (evenly distributed across those triangles)
-		/// </remarks>
-		public static Point3D[] GetRandomPointsOnHull(ITriangle[] hull, int numPoints)
-		{
-			//	Calculate each triangle's % of the total area of the hull (sorted smallest to largest)
-			int[] trianglePointers;
-			double[] triangleSizes;
-			GetRandomPointsOnHullSprtSizes(out trianglePointers, out triangleSizes, hull);
-
-			Random rand = StaticRandom.GetRandomForThread();
-
-			Point3D[] retVal = new Point3D[numPoints];
-
-			for (int cntr = 0; cntr < numPoints; cntr++)
-			{
-				//	Pick a random location on the hull (a percent of the hull's size from 0% to 100%)
-				double percent = rand.NextDouble();
-
-				//	Find the triangle that straddles this percent
-				int index = GetRandomPointsOnHullSprtFindTriangle(trianglePointers, triangleSizes, percent);
-
-				//	Create a point somewhere on this triangle
-				retVal[cntr] = GetRandomPointInTriangle(hull[index]);
-			}
-
-			//	Exit Function
-			return retVal;
-		}
-		/// <summary>
-		/// Instead of just returning the list of points, it returns which triangle contains which points
-		/// </summary>
-		/// <remarks>
-		/// The code is copied from the other overload for efficiency reasons
-		/// This is a little more expensive than the other overload
-		/// </remarks>
-		/// <returns>
-		/// Key=index into hull
-		/// Value=points belonging to that triangle
-		/// </returns>
-		public static SortedList<int, List<Point3D>> GetRandomPointsOnHull_Structured(ITriangle[] hull, int numPoints)
-		{
-			//	Calculate each triangle's % of the total area of the hull (sorted smallest to largest)
-			int[] trianglePointers;
-			double[] triangleSizes;
-			GetRandomPointsOnHullSprtSizes(out trianglePointers, out triangleSizes, hull);
-
-			Random rand = StaticRandom.GetRandomForThread();
-
-			SortedList<int, List<Point3D>> retVal = new SortedList<int, List<Point3D>>();
-
-			for (int cntr = 0; cntr < numPoints; cntr++)
-			{
-				//	Pick a random location on the hull (a percent of the hull's size from 0% to 100%)
-				double percent = rand.NextDouble();
-
-				//	Find the triangle that straddles this percent
-				int index = GetRandomPointsOnHullSprtFindTriangle(trianglePointers, triangleSizes, percent);
-
-				if (!retVal.ContainsKey(index))
-				{
-					retVal.Add(index, new List<Point3D>());
-				}
-
-				//	Create a point somewhere on this triangle
-				retVal[index].Add(GetRandomPointInTriangle(hull[index]));
-			}
-
-			//	Exit Function
-			return retVal;
-		}
-		private static void GetRandomPointsOnHullSprtSizes(out int[] trianglePointers, out double[] triangleSizes, ITriangle[] hull)
-		{
-			trianglePointers = Enumerable.Range(0, hull.Length).ToArray();
-			triangleSizes = new double[hull.Length];
-
-			//	Get the size of each triangle
-			for (int cntr = 0; cntr < hull.Length; cntr++)
-			{
-				triangleSizes[cntr] = hull[cntr].NormalLength;
-			}
-
-			//	Sort them (I'd sort descending if I could.  That would make the find method easier to read, but the call to reverse
-			//	is an unnecessary expense)
-			Array.Sort(triangleSizes, trianglePointers);
-
-			//	Normalize them so the sum is 1.  Note that after this, each item in sizes will be that item's percent of the whole
-			double totalSize = triangleSizes.Sum();
-			for (int cntr = 0; cntr < triangleSizes.Length; cntr++)
-			{
-				triangleSizes[cntr] = triangleSizes[cntr] / totalSize;
-			}
-		}
-		private static int GetRandomPointsOnHullSprtFindTriangle(int[] trianglePointers, double[] triangleSizes, double percent)
-		{
-			double accumSize = 1d;
-
-			//	Find the triangle that is this occupying this percent of the total size (walking backward will cut down on
-			//	the number of triangles that need to be searched through)
-			for (int cntr = triangleSizes.Length - 1; cntr > 0; cntr--)
-			{
-				if (accumSize - triangleSizes[cntr] < percent)
-				{
-					return trianglePointers[cntr];
-				}
-
-				accumSize -= triangleSizes[cntr];
-			}
-
-			//	This should only happen if the requested percent is zero
-			return trianglePointers[0];
-		}
-
-		/// <summary>
-		/// Gets a value between -maxValue and maxValue
-		/// </summary>
-		public static double GetNearZeroValue(double maxValue)
-		{
-			Random rand = StaticRandom.GetRandomForThread();
-
-			double retVal = rand.NextDouble() * maxValue;
-
-			if (rand.Next(0, 2) == 1)
-			{
-				retVal *= -1d;
-			}
-
-			return retVal;
-		}
-		/// <summary>
-		/// This gets a value between minValue and maxValue, and has a 50/50 chance of negating that
-		/// </summary>
-		public static double GetNearZeroValue(double minValue, double maxValue)
-		{
-			Random rand = StaticRandom.GetRandomForThread();
-
-			double retVal = minValue + (rand.NextDouble() * (maxValue - minValue));
-
-			if (rand.Next(0, 2) == 1)
-			{
-				retVal *= -1d;
-			}
-
-			return retVal;
-		}
-
-		/// <summary>
-		/// This function will pick an arbitrary orthogonal to the vector passed in.  This will only be useful if you are going
-		/// to rotate 180
-		/// </summary>
-		public static Vector3D GetArbitraryOrhonganal(Vector3D vector)
-		{
-			//	Clone the vector passed in
-			Vector3D retVal = new Vector3D(vector.X, vector.Y, vector.Z);
-
-			//	Make sure that none of the values are equal to zero.
-			if (retVal.X == 0) retVal.X = 0.000000001d;
-			if (retVal.Y == 0) retVal.Y = 0.000000001d;
-			if (retVal.Z == 0) retVal.Z = 0.000000001d;
-
-			//	Figure out the orthogonal X and Y slopes
-			double orthM = (retVal.X * -1) / retVal.Y;
-			double orthN = (retVal.Y * -1) / retVal.Z;
-
-			//	When calculating the new coords, I will default Y to 1, and find an X and Z that satisfy that.  I will go ahead and reuse the retVal
-			retVal.Y = 1;
-			retVal.X = 1 / orthM;
-			retVal.Z = orthN;
-
-			//	Exit Function
-			return retVal;
-		}
-
-		#endregion
-
-		#region Misc
-
-		public static bool IsNearZero(double testValue)
-		{
-			return Math.Abs(testValue) <= NEARZERO;
-		}
-		public static bool IsNearZero(Vector3D testVect)
-		{
-			return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
-		}
-		public static bool IsNearZero(Point3D testPoint)
-		{
-			return Math.Abs(testPoint.X) <= NEARZERO && Math.Abs(testPoint.Y) <= NEARZERO && Math.Abs(testPoint.Z) <= NEARZERO;
-		}
-		public static bool IsNearValue(double testValue, double compareTo)
-		{
-			return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
-		}
-		public static bool IsNearValue(Vector3D testVect, Vector3D compareTo)
-		{
-			return testVect.X >= compareTo.X - NEARZERO && testVect.X <= compareTo.X + NEARZERO &&
-						testVect.Y >= compareTo.Y - NEARZERO && testVect.Y <= compareTo.Y + NEARZERO &&
-						testVect.Z >= compareTo.Z - NEARZERO && testVect.Z <= compareTo.Z + NEARZERO;
-		}
-		public static bool IsNearValue(Point3D testPoint, Point3D compareTo)
-		{
-			return testPoint.X >= compareTo.X - NEARZERO && testPoint.X <= compareTo.X + NEARZERO &&
-						testPoint.Y >= compareTo.Y - NEARZERO && testPoint.Y <= compareTo.Y + NEARZERO &&
-						testPoint.Z >= compareTo.Z - NEARZERO && testPoint.Z <= compareTo.Z + NEARZERO;
-		}
-
-		public static bool IsDivisible(double larger, double smaller)
-		{
-			if (Math3D.IsNearZero(smaller))
-			{
-				//	Divide by zero.  Nothing is divisible by zero, not even zero.  (I looked up "is zero divisible by zero", and got very
-				//	technical reasons why it's not.  It would be cool to be able to view the world the way math people do.  Visualizing
-				//	complex equations, etc)
-				return false;
-			}
-
-			//	Divide the larger by the smaller.  If the result is an integer (or very close to an integer), then they are divisible
-			double division = larger / smaller;
-			double divisionInt = Math.Round(division);
-
-			return Math3D.IsNearValue(division, divisionInt);
-		}
-
-		/// <summary>
-		/// This returns whether the point is inside all the planes (the triangles don't define finite triangles, but whole planes)
-		/// NOTE: Make sure the normals point outward, or there will be odd results
-		/// </summary>
-		/// <remarks>
-		/// This is a reworked copy of QuickHull3D.GetOutsideSet, which was inspired by:
-		/// http://www.gamedev.net/topic/106765-determining-if-a-point-is-in-front-of-or-behind-a-plane/
-		/// </remarks>
-		public static bool IsInside(IEnumerable<ITriangle> planes, Point3D testPoint)
-		{
-			foreach(ITriangle plane in planes)
-			{
-				//	Compute D, using a arbitrary point P, that lies on the plane: D = - (Nx*Px + Ny*Py + Nz*Pz); Don't forget the inversion !
-				double d = -((plane.NormalUnit.X * plane.Point0.X) + (plane.NormalUnit.Y * plane.Point0.Y) + (plane.NormalUnit.Z * plane.Point0.Z));
-
-				//	You can test a point (T) with respect to the plane using the plane equation: res = Nx*Tx + Ny*Ty + Nz*Tz + D
-				double res = (plane.NormalUnit.X * testPoint.X) + (plane.NormalUnit.Y * testPoint.Y) + (plane.NormalUnit.Z * testPoint.Z) + d;
-
-				if (res >= 0)		//	greater than zero is outside the plane
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-		public static bool IsInside(Point3D min, Point3D max, Point3D testPoint)
-		{
-			if (testPoint.X < min.X)
-			{
-				return false;
-			}
-			else if (testPoint.X > max.X)
-			{
-				return false;
-			}
-			else if (testPoint.Y < min.Y)
-			{
-				return false;
-			}
-			else if (testPoint.Y > max.Y)
-			{
-				return false;
-			}
-			else if (testPoint.Z < min.Z)
-			{
-				return false;
-			}
-			else if (testPoint.Z > max.Z)
-			{
-				return false;
-			}
-
-			return true;
-		}
-		public static bool IsInside(Vector3D min, Vector3D max, Vector3D testPoint)
-		{
-			if (testPoint.X < min.X)
-			{
-				return false;
-			}
-			else if (testPoint.X > max.X)
-			{
-				return false;
-			}
-			else if (testPoint.Y < min.Y)
-			{
-				return false;
-			}
-			else if (testPoint.Y > max.Y)
-			{
-				return false;
-			}
-			else if (testPoint.Z < min.Z)
-			{
-				return false;
-			}
-			else if (testPoint.Z > max.Z)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// This returns true if any part of the sphere intersects any part of the AABB
-		/// (also returns true if one is inside the other)
-		/// </summary>
-		/// <remarks>
-		/// Got this here:
-		/// http://stackoverflow.com/questions/4578967/cube-sphere-intersection-test
-		/// 
-		/// Which referenced:
-		/// http://www.ics.uci.edu/~arvo/code/BoxSphereIntersect.c
-		/// </remarks>
-		public static bool Intersects(Point3D min, Point3D max, Point3D center, double radius)
-		{
-			double r2 = radius * radius;
-			double dmin = 0d;
-
-			if (center.X < min.X)
-			{
-				dmin += (center.X - min.X) * (center.X - min.X);
-			}
-			else if (center.X > max.X)
-			{
-				dmin += (center.X - max.X) * (center.X - max.X);
-			}
-
-			if (center.Y < min.Y)
-			{
-				dmin += (center.Y - min.Y) * (center.Y - min.Y);
-			}
-			else if (center.Y > max.Y)
-			{
-				dmin += (center.Y - max.Y) * (center.Y - max.Y);
-			}
-
-			if (center.Z < min.Z)
-			{
-				dmin += (center.Z - min.Z) * (center.Z - min.Z);
-			}
-			else if (center.Z > max.Z)
-			{
-				dmin += (center.Z - max.Z) * (center.Z - max.Z);
-			}
-
-			return dmin <= r2;
-		}
-		/// <summary>
-		/// This returns true if any part of AABB1 intersects any part of the AABB2
-		/// (also returns true if one is inside the other)
-		/// </summary>
-		public static bool Intersects(Point3D min1, Point3D max1, Point3D min2, Point3D max2)
-		{
-			if (min1.X > max2.X || min2.X > max1.X)
-			{
-				return false;
-			}
-			else if (min1.Y > max2.Y || min2.Y > max1.Y)
-			{
-				return false;
-			}
-			else if (min1.Z > max2.Z || min2.Z > max1.Z)
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// This returns the location of the point relative to the triangle
-		/// </summary>
-		/// <remarks>
-		/// The term Barycentric for a triangle seems to be 3 positions, so I'm not sure if this method is named right
-		/// 
-		/// This is useful if you want to store a point's location relative to a triangle when that triangle will move all
-		/// around.  You don't need to know the transform used to move that triangle, just the triangle's final position
-		/// 
-		/// This is also useful to see if the point is inside the triangle.  If x or y is negative, or they add up to > 1, then it
-		/// is outside the triangle:
-		///		if x is zero, it's on the 0_1 edge
-		///		if y is zero, it's on the 0_2 edge
-		///		if x+y is one, it's on the 1_2 edge
-		/// 
-		/// Got this here (good flash visualization too):
-		/// http://www.blackpawn.com/texts/pointinpoly/default.html
-		/// </remarks>
-		/// <returns>
-		/// X = % along the line triangle.P0 to triangle.P1
-		/// Y = % along the line triangle.P0 to triangle.P2
-		/// </returns>
-		public static Vector ToBarycentric(ITriangle triangle, Point3D point)
-		{
-			return ToBarycentric(triangle.Point0, triangle.Point1, triangle.Point2, point);
-		}
-		public static Vector ToBarycentric(Point3D p0, Point3D p1, Point3D p2, Point3D testPoint)
-		{
-			// Compute vectors        
-			Vector3D v0 = p2 - p0;
-			Vector3D v1 = p1 - p0;
-			Vector3D v2 = testPoint - p0;
-
-			// Compute dot products
-			double dot00 = Vector3D.DotProduct(v0, v0);
-			double dot01 = Vector3D.DotProduct(v0, v1);
-			double dot02 = Vector3D.DotProduct(v0, v2);
-			double dot11 = Vector3D.DotProduct(v1, v1);
-			double dot12 = Vector3D.DotProduct(v1, v2);
-
-			// Compute barycentric coordinates
-			double invDenom = 1d / (dot00 * dot11 - dot01 * dot01);
-			double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
-			double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
-
-			//	Exit Function
-			return new Vector(u, v);
-		}
-		/// <summary>
-		/// This projects the barycentric back into cartesian coords
-		/// </summary>
-		/// <param name="bary">Save me Bary!!! (Misfits)</param>
-		public static Point3D FromBarycentric(ITriangle triangle, Vector bary)
-		{
-			return FromBarycentric(triangle.Point0, triangle.Point1, triangle.Point2, bary);
-		}
-		public static Point3D FromBarycentric(Point3D p0, Point3D p1, Point3D p2, Vector bary)
-		{
-			//Vector3D line01 = p1 - p0;
-			//Vector3D line02 = p2 - p0;
-			Vector3D line01 = p2 - p0;		//	ToBarycentric has x as p2
-			Vector3D line02 = p1 - p0;
-
-			return p0 + (line01 * bary.X) + (line02 * bary.Y);
-		}
-
-		public static double GetAspectRatio(Size size)
-		{
-			return size.Width / size.Height;
-		}
-
-		public static double DegreesToRadians(double degrees)
-		{
-			return degrees * _PI_over_180;
-		}
-		public static float DegreesToRadians(float degrees)
-		{
-			return degrees * _PI_over_180_FLOAT;
-		}
-
-		public static double RadiansToDegrees(double radians)
-		{
-			return radians * _180_over_PI;
-		}
-		public static float RadiansToDegrees(float radians)
-		{
-			return radians * _180_over_PI_FLOAT;
-		}
-
-		/// <summary>
-		/// This function will rotate the vector around any arbitrary axis
-		/// </summary>
-		/// <param name="vector">The vector to get rotated</param>
-		/// <param name="rotateAround">Any vector to rotate around</param>
-		/// <param name="radians">How far to rotate</param>
-		public static Vector3D RotateAroundAxis(Vector3D vector, Vector3D rotateAround, double radians)
-		{
-			//	Create a quaternion that represents the axis and angle passed in
-			Quaternion rotationQuat = new Quaternion(rotateAround, RadiansToDegrees(radians));
-
-			Matrix3D matrix = new Matrix3D();
-			matrix.Rotate(rotationQuat);
-
-			//	Get a vector that represents me rotated by the quaternion
-			Vector3D retVal = matrix.Transform(vector);
-
-			//	Exit Function
-			return retVal;
-		}
-
-		/// <summary>
-		/// This overload returns a quaternion
-		/// </summary>
-		/// <remarks>
-		/// I decided to copy the other method, so it's a bit more optimized
-		/// </remarks>
-		public static Quaternion GetRotation(Vector3D from, Vector3D to)
-		{
-			//	Grab the angle
-			double angle = Vector3D.AngleBetween(from, to);
-			if (Double.IsNaN(angle))
-			{
-				return Quaternion.Identity;
-			}
-
-			//	I need to pull the cross product from me to the vector passed in
-			Vector3D axis = Vector3D.CrossProduct(from, to);
-
-			//	If the cross product is zero, then there are two possibilities.  The vectors point in the same direction, or opposite directions.
-			if (axis.IsZero())
-			{
-				//	If I am here, then the angle will either be 0 or 180.
-				if (angle == 0)
-				{
-					//	The vectors sit on top of each other.  I will set the orthoganal to an arbitrary value, and return zero for the radians
-					return Quaternion.Identity;
-				}
-				else
-				{
-					//	The vectors are pointing directly away from each other, so I will need to be more careful when I create my orthoganal.
-					axis = GetArbitraryOrhonganal(from);
-				}
-			}
-
-			//	Exit Function
-			return new Quaternion(axis, angle);
-		}
-		/// <summary>
-		/// This returns how much from should be rotated (and through what axis) to line up with to
-		/// NOTE:  To rotate a vector pair (standard and orthogonal), see DoubleVector.GetAngleAroundAxis)
-		/// </summary>
-		public static void GetRotation(out Vector3D axis, out double radians, Vector3D from, Vector3D to)
-		{
-			//	Grab the angle
-			radians = DegreesToRadians(Vector3D.AngleBetween(from, to));
-			if (Double.IsNaN(radians))
-			{
-				radians = 0;
-			}
-
-			//	I need to pull the cross product from me to the vector passed in
-			axis = Vector3D.CrossProduct(from, to);
-
-			//	If the cross product is zero, then there are two possibilities.  The vectors point in the same direction, or opposite directions.
-			if (axis.IsZero())
-			{
-				//	If I am here, then the angle will either be 0 or PI.
-				if (radians == 0)
-				{
-					//	The vectors sit on top of each other.  I will set the orthoganal to an arbitrary value, and return zero for the radians
-					axis.X = 1;
-					radians = 0;
-				}
-				else
-				{
-					//	The vectors are pointing directly away from each other, so I will need to be more careful when I create my orthoganal.
-					axis = GetArbitraryOrhonganal(from);
-				}
-			}
-
-			//rotationAxis.BecomeUnitVector();		//	It would be nice to be tidy, but not nessassary, and I don't want slow code
-		}
-
-		/// <summary>
-		/// This returns a vector that is orthogonal to standard, and in the same plane as direction
-		/// </summary>
-		public static Vector3D GetOrthogonal(Vector3D standard, Vector3D direction)
-		{
-			Vector3D cross = Vector3D.CrossProduct(standard, direction);		//	getting an orthogonal of the two vectors passed in
-			return Vector3D.CrossProduct(cross, standard);		//	now get an orthogonal pointing in the same direction as direction
-		}
-
-		// This came from Game.Orig.Math3D.TorqueBall
-		public static void SplitForceIntoTranslationAndTorque(out Vector3D translationForce, out Vector3D torque, Vector3D offsetFromCenterMass, Vector3D force)
-		{
-			//	Torque is how much of the force is applied perpendicular to the radius
-			torque = Vector3D.CrossProduct(offsetFromCenterMass, force);
-
-			//	I'm still not convinced this is totally right, but none of the articles I've read seem to do anything different
-			translationForce = force;
-		}
-
-		//	I got tired of nesting min/max statements
-		public static int Min(int v1, int v2, int v3)
-		{
-			return Math.Min(Math.Min(v1, v2), v3);
-		}
-		public static int Min(int v1, int v2, int v3, int v4)
-		{
-			return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-		}
-		public static int Min(int v1, int v2, int v3, int v4, int v5)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-		}
-		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-		}
-		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-		}
-		public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
-		}
-
-		public static double Min(double v1, double v2, double v3)
-		{
-			return Math.Min(Math.Min(v1, v2), v3);
-		}
-		public static double Min(double v1, double v2, double v3, double v4)
-		{
-			return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-		}
-		public static double Min(double v1, double v2, double v3, double v4, double v5)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-		}
-		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-		}
-		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-		}
-		public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-		{
-			return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
-		}
-
-		public static int Max(int v1, int v2, int v3)
-		{
-			return Math.Max(Math.Max(v1, v2), v3);
-		}
-		public static int Max(int v1, int v2, int v3, int v4)
-		{
-			return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-		}
-		public static int Max(int v1, int v2, int v3, int v4, int v5)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-		}
-		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-		}
-		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-		}
-		public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-		}
-
-		public static double Max(double v1, double v2, double v3)
-		{
-			return Math.Max(Math.Max(v1, v2), v3);
-		}
-		public static double Max(double v1, double v2, double v3, double v4)
-		{
-			return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-		}
-		public static double Max(double v1, double v2, double v3, double v4, double v5)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-		}
-		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-		}
-		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-		}
-		public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-		{
-			return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-		}
-
-		#endregion
-
-		#region Plane/Line Intersections
-
-		//TODO: Rework the methods to take in triangles as plane
-
-		/// <summary>
-		/// This returns a point along the line that is the shortest distance to the test point
-		/// NOTE:  The line passed in is assumed to be infinite, not a line segment
-		/// </summary>
-		/// <param name="pointOnLine">Any arbitrary point along the line</param>
-		/// <param name="lineDirection">The direction of the line (slope in x,y,z)</param>
-		/// <param name="testPoint">The point that is not on the line</param>
-		public static Point3D GetNearestPointAlongLine(Point3D pointOnLine, Vector3D lineDirection, Point3D testPoint)
-		{
-			Vector3D dirToPoint = testPoint - pointOnLine;
-
-			double dot1 = Vector3D.DotProduct(dirToPoint, lineDirection);
-			double dot2 = Vector3D.DotProduct(lineDirection, lineDirection);
-			double ratio = dot1 / dot2;
-
-			Point3D retVal = pointOnLine + (ratio * lineDirection);
-
-			return retVal;
-		}
-		/// <summary>
-		/// This is a wrapper to GetNearestPointAlongLine that just returns the distance
-		/// </summary>
-		public static double GetClosestDistanceBetweenPointAndLine(Point3D pointOnLine, Vector3D lineDirection, Point3D testPoint)
-		{
-			return (testPoint - GetNearestPointAlongLine(pointOnLine, lineDirection, testPoint)).Length;
-		}
-
-		/// <summary>
-		/// This returns the distance beween two skew lines at their closest point
-		/// </summary>
-		/// <remarks>
-		/// http://2000clicks.com/mathhelp/GeometryPointsAndLines3D.aspx
-		/// </remarks>
-		public static double GetClosestDistanceBetweenLines(Point3D point1, Vector3D dir1, Point3D point2, Vector3D dir2)
-		{
-			//g = (a-c) · (b×d) / |b×d|
-			//dist = (a - c) dot (b cross d).ToUnit
-			//dist = (point1 - point2) dot (dir1 cross dir2).ToUnit
-
-			//TODO: Detect if they are parallel and return the distance
-
-			Vector3D cross1_2 = Vector3D.CrossProduct(dir1, dir2).ToUnit();
-			Vector3D sub1_2 = point1 - point2;
-
-			double retVal = Vector3D.DotProduct(sub1_2, cross1_2);
-
-			return retVal;
-		}
-
-		/// <summary>
-		/// Calculates the intersection line segment between 2 lines (not segments).
-		/// Returns false if no solution can be found.
-		/// </summary>
-		/// <remarks>
-		/// Got this here:
-		/// http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/calclineline.cs
-		/// 
-		/// Which was ported from the C algorithm of Paul Bourke:
-		/// http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/
-		/// </remarks>
-		public static bool GetClosestPointsBetweenLines(out Point3D? resultPoint1, out Point3D? resultPoint2, Point3D point1, Vector3D dir1, Point3D point2, Vector3D dir2)
-		{
-			return GetClosestPointsBetweenLines(out resultPoint1, out resultPoint2, point1, point1 + dir1, point2, point2 + dir2);
-		}
-		public static bool GetClosestPointsBetweenLines(out Point3D? resultPoint1, out Point3D? resultPoint2, Point3D line1Point1, Point3D line1Point2, Point3D line2Point1, Point3D line2Point2)
-		{
-			resultPoint1 = null;
-			resultPoint2 = null;
-
-			Point3D p1 = line1Point1;
-			Point3D p2 = line1Point2;
-			Point3D p3 = line2Point1;
-			Point3D p4 = line2Point2;
-			Vector3D p13 = p1 - p3;
-			Vector3D p43 = p4 - p3;
-
-			//if (IsNearZero(p43.LengthSquared))
-			//{
-			//    return false;
-			//}
-
-			Vector3D p21 = p2 - p1;
-			//if (IsNearZero(p21.LengthSquared))
-			//{
-			//    return false;
-			//}
-
-			double d1343 = (p13.X * p43.X) + (p13.Y * p43.Y) + (p13.Z * p43.Z);
-			double d4321 = (p43.X * p21.X) + (p43.Y * p21.Y) + (p43.Z * p21.Z);
-			double d1321 = (p13.X * p21.X) + (p13.Y * p21.Y) + (p13.Z * p21.Z);
-			double d4343 = (p43.X * p43.X) + (p43.Y * p43.Y) + (p43.Z * p43.Z);
-			double d2121 = (p21.X * p21.X) + (p21.Y * p21.Y) + (p21.Z * p21.Z);
-
-			double denom = (d2121 * d4343) - (d4321 * d4321);
-			//if (IsNearZero(denom))
-			//{
-			//    return false;
-			//}
-			double numer = (d1343 * d4321) - (d1321 * d4343);
-
-			double mua = numer / denom;
-			if (double.IsNaN(mua))
-			{
-				return false;
-			}
-
-			double mub = (d1343 + d4321 * (mua)) / d4343;
-
-			resultPoint1 = new Point3D(p1.X + mua * p21.X, p1.Y + mua * p21.Y, p1.Z + mua * p21.Z);
-			resultPoint2 = new Point3D(p3.X + mub * p43.X, p3.Y + mub * p43.Y, p3.Z + mub * p43.Z);
-
-			if (double.IsNaN(resultPoint1.Value.X) || double.IsNaN(resultPoint1.Value.Y) || double.IsNaN(resultPoint1.Value.Z) ||
-				double.IsNaN(resultPoint2.Value.X) || double.IsNaN(resultPoint2.Value.Y) || double.IsNaN(resultPoint2.Value.Z))
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
-
-		/// <summary>
-		/// This will figure out the nearest points between a circle and line
-		/// </summary>
-		/// <remarks>
-		/// circlePoints will be the nearest point on the circle to the line, and linePoints will hold the closest point on the line to
-		/// the corresponding element of circlePoints
-		/// 
-		/// The only time false is returned is if the line is perpendicular to the circle and goes through the center of the circle (in
-		/// that case, linePoints will hold the circle's center point
-		/// 
-		/// Most of the time, only one output point will be returned, but there are some cases where two are returned
-		/// 
-		/// If onlyReturnSinglePoint is true, then the arrays will never be larger than one (the point in linePoints that is closest to
-		/// pointOnLine is chosen)
-		/// </remarks>
-		public static bool GetClosestPointsBetweenLineCircle(out Point3D[] circlePoints, out Point3D[] linePoints, ITriangle circlePlane, Point3D circleCenter, double circleRadius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
-		{
-			//	There are too many loose variables, so package them up
-			CircleLineArgs args = new CircleLineArgs()
-			{
-				CirclePlane = circlePlane,
-				CircleCenter = circleCenter,
-				CircleRadius = circleRadius,
-				PointOnLine = pointOnLine,
-				LineDirection = lineDirection
-			};
-
-			//	Call the overload
-			bool retVal = GetClosestPointsBetweenLineCircle(out circlePoints, out linePoints, args);
-			if (returnWhich == RayCastReturn.AllPoints || !retVal || circlePoints.Length == 1)
-			{
-				return retVal;
-			}
-
-			switch (returnWhich)
-			{
-				case RayCastReturn.ClosestToRay:
-					GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref circlePoints, ref linePoints, pointOnLine);
-					break;
-
-				case RayCastReturn.ClosestToRayOrigin:
-					GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref circlePoints, ref linePoints, pointOnLine);
-					break;
-
-				default:
-					throw new ApplicationException("Unexpected RayCastReturn: " + returnWhich.ToString());
-			}
-
-			return true;
-
-			#region OLD
-
-			//#region Find closest point
-
-			////	There is more than one point, and they want a single point
-			//double minDistance = double.MaxValue;
-			//int minIndex = -1;
-
-			//for (int cntr = 0; cntr < circlePoints.Length; cntr++)
-			//{
-			//    double distance = (linePoints[cntr] - pointOnLine).Length;
-
-			//    if (distance < minDistance)
-			//    {
-			//        minDistance = distance;
-			//        minIndex = cntr;
-			//    }
-			//}
-
-			//if (minIndex < 0)
-			//{
-			//    throw new ApplicationException("Should always find a closest point");
-			//}
-
-			//#endregion
-
-			////	Return only the closest point
-			//circlePoints = new Point3D[] { circlePoints[minIndex] };
-			//linePoints = new Point3D[] { linePoints[minIndex] };
-			//return true;
-
-			#endregion
-		}
-
-		public static bool GetClosestPointsBetweenLineCylinder(out Point3D[] cylinderPoints, out Point3D[] linePoints, Point3D pointOnAxis, Vector3D axisDirection, double radius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
-		{
-			//	Get the shortest point between the cylinder's axis and the line
-			Point3D? nearestAxisPoint, nearestLinePoint;
-			if (!GetClosestPointsBetweenLines(out nearestAxisPoint, out nearestLinePoint, pointOnAxis, axisDirection, pointOnLine, lineDirection))
-			{
-				//	The axis and line are parallel
-				cylinderPoints = null;
-				linePoints = null;
-				return false;
-			}
-
-			Vector3D nearestLine = nearestLinePoint.Value - nearestAxisPoint.Value;
-			double nearestDistance = nearestLine.Length;
-
-			if (nearestDistance >= radius)
-			{
-				//	Sitting outside the cylinder, so just project the line to the cylinder wall
-				cylinderPoints = new Point3D[] { nearestAxisPoint.Value + (nearestLine.ToUnit() * radius) };
-				linePoints = new Point3D[] { nearestLinePoint.Value };
-				return true;
-			}
-
-			//	The rest of this function is for a line intersect inside the cylinder (there's always two intersect points)
-
-			//	Make a plane that the circle sits in (this is used by code shared with the circle/line intersect)
-			//NOTE: The plane is using nearestAxisPoint, and not the arbitrary point that was passed in (this makes later logic easier)
-			Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? GetArbitraryOrhonganal(axisDirection) : nearestLine;
-			Vector3D circlePlaneLine2 = Vector3D.CrossProduct(axisDirection, circlePlaneLine1);
-			ITriangle circlePlane = new Triangle(nearestAxisPoint.Value, nearestAxisPoint.Value + circlePlaneLine1, nearestAxisPoint.Value + circlePlaneLine2);
-
-			CircleLineArgs args = new CircleLineArgs()
-			{
-				CircleCenter = nearestAxisPoint.Value,
-				CirclePlane = circlePlane,
-				CircleRadius = radius,
-				PointOnLine = pointOnLine,
-				LineDirection = lineDirection
-			};
-
-			CirclePlaneIntersectProps intersectArgs = GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(args, nearestLinePoint.Value, nearestLine, nearestDistance);
-
-			GetClosestPointsBetweenLineCylinderSprtFinish(out cylinderPoints, out linePoints, args, intersectArgs);
-
-			switch (returnWhich)
-			{
-				case RayCastReturn.AllPoints:
-					//	Nothing more to do
-					break;
-
-				case RayCastReturn.ClosestToRay:
-					GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref cylinderPoints, ref linePoints, pointOnLine);
-					break;
-
-				case RayCastReturn.ClosestToRayOrigin:
-					GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref cylinderPoints, ref linePoints, pointOnLine);
-					break;
-
-				default:
-					throw new ApplicationException("Unknown RayCastReturn: " + returnWhich.ToString());
-			}
-
-			return true;
-		}
-
-		public static void GetClosestPointsBetweenLineSphere(out Point3D[] spherePoints, out Point3D[] linePoints, Point3D centerPoint, double radius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
-		{
-			//	Get the shortest point between the sphere's center and the line
-			Point3D nearestLinePoint = GetNearestPointAlongLine(pointOnLine, lineDirection, centerPoint);
-
-			Vector3D nearestLine = nearestLinePoint - centerPoint;
-			double nearestDistance = nearestLine.Length;
-
-			if (nearestDistance >= radius)
-			{
-				//	Sitting outside the sphere, so just project the line to the sphere wall
-				spherePoints = new Point3D[] { centerPoint + (nearestLine.ToUnit() * radius) };
-				linePoints = new Point3D[] { nearestLinePoint };
-				return;
-			}
-
-			//	The rest of this function is for a line intersect inside the sphere (there's always two intersect points)
-
-			//	Make a plane that the circle sits in (this is used by code shared with the circel/line intersect)
-			//NOTE: The plane is oriented along the shortest path line
-			Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? new Vector3D(1, 0, 0) : nearestLine;
-			Vector3D circlePlaneLine2 = lineDirection;
-			ITriangle circlePlane = new Triangle(centerPoint, centerPoint + circlePlaneLine1, centerPoint + circlePlaneLine2);
-
-			CircleLineArgs args = new CircleLineArgs()
-			{
-				CircleCenter = centerPoint,
-				CirclePlane = circlePlane,
-				CircleRadius = radius,
-				PointOnLine = pointOnLine,
-				LineDirection = lineDirection
-			};
-
-			CirclePlaneIntersectProps intersectArgs = new CirclePlaneIntersectProps()
-			{
-				PointOnLine = pointOnLine,
-				LineDirection = lineDirection,
-				NearestToCenter = nearestLinePoint,
-				CenterToNearest = nearestLine,
-				CenterToNearestLength = nearestDistance,
-				IsInsideCircle = true
-			};
-
-			//	Get the circle intersects (since the line is on the circle's plane, this is the final answer)
-			GetClosestPointsBetweenLineCircleSprtInsidePerps(out spherePoints, out linePoints, args, intersectArgs);
-
-			switch (returnWhich)
-			{
-				case RayCastReturn.AllPoints:
-					//	Nothing more to do
-					break;
-
-				case RayCastReturn.ClosestToRay:
-					GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref spherePoints, ref linePoints, pointOnLine);
-					break;
-
-				case RayCastReturn.ClosestToRayOrigin:
-					GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref spherePoints, ref linePoints, pointOnLine);
-					break;
-
-				default:
-					throw new ApplicationException("Unknown RayCastReturn: " + returnWhich.ToString());
-			}
-		}
-
-		/// <summary>
-		/// This finds the intersection point of two lines.  If they are parallel or skew, null is returned
-		/// </summary>
-		/// <remarks>
-		/// Got this here:
-		/// http://stackoverflow.com/questions/2316490/the-algorithm-to-find-the-point-of-intersection-of-two-3d-line-segment
-		/// 
-		/// Which references here:
-		/// http://mathforum.org/library/drmath/view/62814.html
-		/// 
-		/// Thanks for writing to Doctor Math.
-		/// 
-		/// Let's try this with vector algebra. First write the two equations like 
-		/// this.
-		/// 
-		///   L1 = P1 + a V1
-		/// 
-		///   L2 = P2 + b V2
-		/// 
-		/// P1 and P2 are points on each line. V1 and V2 are the direction vectors 
-		/// for each line.
-		/// 
-		/// If we assume that the lines intersect, we can look for the point on L1 
-		/// that satisfies the equation for L2. This gives us this equation to 
-		/// solve.
-		/// 
-		///   P1 + a V1 = P2 + b V2
-		/// 
-		/// Now rewrite it like this.
-		/// 
-		///   a V1 = (P2 - P1) + b V2
-		/// 
-		/// Now take the cross product of each side with V2. This will make the 
-		/// term with 'b' drop out.
-		/// 
-		///   a (V1 X V2) = (P2 - P1) X V2
-		/// 
-		/// If the lines intersect at a single point, then the resultant vectors 
-		/// on each side of this equation must be parallel, and the left side must 
-		/// not be the zero vector. We should check to make sure that this is 
-		/// true. Once we have checked this, we can solve for 'a' by taking the 
-		/// magnitude of each side and dividing. If the resultant vectors are 
-		/// parallel, but in opposite directions, then 'a' is the negative of the 
-		/// ratio of magnitudes. Once we have 'a' we can go back to the equation 
-		/// for L1 to find the intersection point.
-		/// 
-		/// Write back if you need more help with this.
-		/// 
-		/// - Doctor George, The Math Forum
-		///   http://mathforum.org/dr.math/ 		
-		/// </remarks>
-		private static Point3D? GetIntersectionOfTwoLines_BAD(Point3D pointOnLine1, Vector3D lineDirection1, Point3D pointOnLine2, Vector3D lineDirection2)
-		{
-			throw new ApplicationException("This method is broken, finish the alternate (it looks like it's cheaper)");
-
-			//	a (V1 X V2) = (P2 - P1) X V2
-			//	and solve for a
-
-			//	Convert to unit vectors
-			//Vector3D v1 = lineDirection1.ToUnit();
-			//Vector3D v2 = lineDirection2.ToUnit();
-
-			Vector3D p2_p1 = pointOnLine2 - pointOnLine1;
-
-			//Vector3D leftCross = Vector3D.CrossProduct(v1, v2);
-			//Vector3D rightCross = Vector3D.CrossProduct(p2_p1, v2);
-			Vector3D leftCross = Vector3D.CrossProduct(lineDirection1, lineDirection2);
-			Vector3D rightCross = Vector3D.CrossProduct(p2_p1, lineDirection2);
-
-			//	Make sure they are parallel
-			//double dot = Vector3D.DotProduct(leftCross, rightCross.ToUnit());		//	left cross is the cross of 2 units, so is also a unit vector
-			double dot = Vector3D.DotProduct(leftCross.ToUnit(), rightCross.ToUnit());
-			if (!IsNearValue(Math.Abs(dot), 1d))
-			{
-				return null;
-			}
-
-			//	Figure out the length
-			//double lengthA = 1d / p2_p1.Length;
-			double lengthA = leftCross.Length / rightCross.Length;
-			if (dot < 0)
-			{
-				lengthA *= -1;
-			}
-
-			return (lineDirection1 * lengthA).ToPoint();
-		}
-		/// <summary>
-		/// 
-		/// </summary>
-		/// <remarks>
-		/// Got this here:
-		/// http://mathforum.org/library/drmath/view/63719.html
-		/// 
-		/// Define line 1 to contain point (x1,y1,z1) with vector (a1,b1,c1).
-		/// Define line 2 to contain point (x2,y2,z2) with vector (a2,b2,c2).
-		/// 
-		/// We can write these parametric equations for the lines.
-		/// 
-		///       Line1                         Line2
-		///       -----                         -----
-		///   x = x1 + a1 * t1              x = x2 + a2 * t2
-		///   y = y1 + b1 * t1              y = y2 + b2 * t2
-		///   z = z1 + c1 * t1              z = z2 + c2 * t2
-		/// 
-		/// If we set the two x values equal, and the two y values equal we get
-		/// these two equations.
-		/// 
-		///   x1 + a1 * t1 = x2 + a2 * t2
-		///   y1 + b1 * t1 = y2 + b2 * t2
-		/// 
-		/// You can solve these equations for t1 and t2. Then put those values
-		/// back into the parametric equations to solve for the intersection 
-		/// point.
-		/// 
-		/// If you have done the arithmetic correctly, you only need to use one of
-		/// the equations for each of x and y. You should check both equations for
-		/// z to make sure they give the same result. If they give different
-		/// results then the lines are skew.
-		/// 
-		/// 
-		/// 
-		/// 
-		/// Now try Dr. George's method. The lines are
-		/// 
-		///      Line1                    Line2
-		///      -----                    -----
-		///   x = 1 + 2t1              x = 0 + 5t2
-		///   y = 0 + 3t1              y = 5 + 1t2
-		///   z = 0 + 1t1              z = 5 - 3t2
-		/// 
-		/// Setting the x's and y's equal, we have to solve
-		/// 
-		///   1 + 2t1 = 0 + 5t2
-		///   0 + 3t1 = 5 + 1t2
-		/// 
-		/// This reduces to
-		/// 
-		///   2t1 - 5t2 = -1
-		///   3t1 - 1t2 = 5
-		/// 
-		/// We can multiply the first equation by -1 and the second equation by
-		/// 5 and add:
-		/// 
-		///   -2t1 + 5t2 =  1
-		///   15t1 - 5t2 = 25
-		///   ---------------
-		///   13t1       = 26
-		/// 
-		///   t1 = 2
-		/// 
-		/// Plugging that into the second of our pair, we get
-		/// 
-		///   3*2 - t2 = 5
-		/// 
-		/// which gives
-		/// 
-		///   t2 = 1
-		/// 
-		/// Plugging those into all six equations for x, y, and z, we get
-		/// 
-		///   x = 1 + 2*2 = 5     x = 0 + 5*1 = 5
-		///   y = 0 + 3*2 = 6     y = 5 + 1*1 = 6
-		///   z = 0 + 1*2 = 2     z = 5 - 3*1 = 2
-		/// 
-		/// So this is indeed the intersection of the lines.
-		/// </remarks>
-		private static Point3D? GetIntersectionOfTwoLines(Point3D pointOnLine1, Vector3D lineDirection1, Point3D pointOnLine2, Vector3D lineDirection2)
-		{
-			throw new ApplicationException("finish this");
-		}
-
-		/// <summary>
-		/// This gets the line of intersection between two planes (returns false if they are parallel)
-		/// </summary>
-		/// <remarks>
-		/// Got this here:
-		/// http://forums.create.msdn.com/forums/t/40119.aspx
-		/// </remarks>
-		public static bool GetIntersectingLine(out Point3D point, out Vector3D direction, ITriangle plane1, ITriangle plane2)
-		{
-			Vector3D normal1 = plane1.NormalUnit;
-			Vector3D normal2 = plane2.NormalUnit;
-
-			//	Find a point that satisfies both plane equations
-			double distance1 = -plane1.PlaneDistance;		// Math3D.PlaneDistance uses "normal + d = 0", but the equation below uses "normal = d", so the distances need to be negated
-			double distance2 = -plane2.PlaneDistance;
-
-			double offDiagonal = Vector3D.DotProduct(normal1, normal2);
-			if (IsNearValue(Math.Abs(offDiagonal), 1d))
-			{
-				//	The planes are parallel
-				point = new Point3D();
-				direction = new Vector3D();
-				return false;
-			}
-
-			double det = 1d - offDiagonal * offDiagonal;
-
-			double a = (distance1 - distance2 * offDiagonal) / det;
-			double b = (distance2 - distance1 * offDiagonal) / det;
-			point = (a * normal1 + b * normal2).ToPoint();
-
-			//	The line is perpendicular to both normals
-			direction = Vector3D.CrossProduct(normal1, normal2);
-
-			return true;
-		}
-
-		/// <summary>
-		/// This returns the distance between a plane and the origin
-		/// NOTE: Normal must be a unit vector
-		/// </summary>
-		public static double GetPlaneDistance(Vector3D normal, Point3D point)
-		{
-			double distance = 0;	// This variable holds the distance from the plane to the origin
-
-			// Use the plane equation to find the distance (Ax + By + Cz + D = 0)  We want to find D.
-			// So, we come up with D = -(Ax + By + Cz)
-			// Basically, the negated dot product of the normal of the plane and the point. (More about the dot product in another tutorial)
-			distance = -((normal.X * point.X) + (normal.Y * point.Y) + (normal.Z * point.Z));
-
-			return distance; // Return the distance
-		}
-
-		// Math.Since the last tutorial, we added 2 more parameters for the normal and the distance
-		// from the origin.  This is so we don't have to recalculate it 3 times in our IntersectionPoint() 
-		// IntersectedPolygon() functions.  We would probably make 2 different functions for
-		// this so we have the choice of getting the normal and distance back, or not.
-		// I also changed the vTriangle to "vPoly" because it isn't always a triangle.
-		// The code doesn't change, it's just more correct (though we only need 3 points anyway).
-		// For C programmers, the '&' is called a reference and is the same concept as the '*' for addresMath.Sing.
-
-		/// <summary>
-		/// This checks to see if a line intersects a plane
-		/// </summary>
-		public static bool IntersectedPlane(Vector3D[] polygon, Vector3D[] line, out Vector3D normal, out double originDistance)
-		{
-			if (line.Length != 2) throw new ArgumentException("A line vector can only be 2 verticies.", "vLine");
-
-			double distance1 = 0, distance2 = 0;						// The distances from the 2 points of the line from the plane
-
-			normal = Normal(polygon);							// We need to get the normal of our plane to go any further
-
-			// Let's find the distance our plane is from the origin.  We can find this value
-			// from the normal to the plane (polygon) and any point that lies on that plane (Any vertice)
-			originDistance = GetPlaneDistance(normal, polygon[0].ToPoint());
-
-			// Get the distance from point1 from the plane uMath.Sing: Ax + By + Cz + D = (The distance from the plane)
-
-			distance1 = ((normal.X * line[0].X) +					// Ax +
-						 (normal.Y * line[0].Y) +					// Bx +
-						 (normal.Z * line[0].Z)) + originDistance;	// Cz + D
-
-			// Get the distance from point2 from the plane uMath.Sing Ax + By + Cz + D = (The distance from the plane)
-
-			distance2 = ((normal.X * line[1].X) +					// Ax +
-						 (normal.Y * line[1].Y) +					// Bx +
-						 (normal.Z * line[1].Z)) + originDistance;	// Cz + D
-
-			// Now that we have 2 distances from the plane, if we times them together we either
-			// get a positive or negative number.  If it's a negative number, that means we collided!
-			// This is because the 2 points must be on either side of the plane (IE. -1 * 1 = -1).
-
-			if (distance1 * distance2 >= 0)			// Check to see if both point's distances are both negative or both positive
-				return false;						// Return false if each point has the same sign.  -1 and 1 would mean each point is on either side of the plane.  -1 -2 or 3 4 wouldn't...
-
-			return true;							// The line intersected the plane, Return TRUE
-		}
-
-		/// <summary>
-		/// This returns the intersection point of the line that intersects the plane
-		/// </summary>
-		public static Point3D? GetIntersectionOfPlaneAndLine(ITriangle plane, Point3D pointOnLine, Vector3D lineDir)
-		{
-			Vector3D? retVal = GetIntersectionOfPlaneAndLine(plane.NormalUnit, new Vector3D[] { pointOnLine.ToVector(), (pointOnLine + lineDir).ToVector() }, plane.PlaneDistance);
-			if (retVal == null)
-			{
-				return null;
-			}
-			else
-			{
-				return retVal.Value.ToPoint();
-			}
-		}
-		private static Vector3D? GetIntersectionOfPlaneAndLine(Vector3D normal, Vector3D[] line, double originDistance)
-		{
-			Vector3D result = new Vector3D();
-
-			// Here comes the confuMath.Sing part.  We need to find the 3D point that is actually
-			// on the plane.  Here are some steps to do that:
-
-			// 1)  First we need to get the vector of our line, Then normalize it so it's a length of 1
-			Vector3D lineDir = line[1] - line[0];		// Get the Vector of the line
-			lineDir.Normalize();				// Normalize the lines vector
-
-
-			// 2) Use the plane equation (distance = Ax + By + Cz + D) to find the distance from one of our points to the plane.
-			//    Here I just chose a arbitrary point as the point to find that distance.  You notice we negate that
-			//    distance.  We negate the distance because we want to eventually go BACKWARDS from our point to the plane.
-			//    By doing this is will basically bring us back to the plane to find our intersection point.
-			double numerator = -(normal.X * line[0].X +		// Use the plane equation with the normal and the line
-											   normal.Y * line[0].Y +
-											   normal.Z * line[0].Z + originDistance);
-
-			// 3) If we take the dot product between our line vector and the normal of the polygon,
-			//    this will give us the Math.CoMath.Sine of the angle between the 2 (Math.Since they are both normalized - length 1).
-			//    We will then divide our Numerator by this value to find the offset towards the plane from our arbitrary point.
-			double denominator = Vector3D.DotProduct(normal, lineDir);		// Get the dot product of the line's vector and the normal of the plane
-
-			// Math.Since we are uMath.Sing division, we need to make sure we don't get a divide by zero error
-			// If we do get a 0, that means that there are INFINATE points because the the line is
-			// on the plane (the normal is perpendicular to the line - (Normal.Vector = 0)).  
-			// In this case, we should just return any point on the line.
-
-			if (denominator == 0.0)						// Check so we don't divide by zero
-				return null;		//	line is parallel to plane
-
-			// We divide the (distance from the point to the plane) by (the dot product)
-			// to get the distance (dist) that we need to move from our arbitrary point.  We need
-			// to then times this distance (dist) by our line's vector (direction).  When you times
-			// a scalar (Math.Single number) by a vector you move along that vector.  That is what we are
-			// doing.  We are moving from our arbitrary point we chose from the line BACK to the plane
-			// along the lines vector.  It seems logical to just get the numerator, which is the distance
-			// from the point to the line, and then just move back that much along the line's vector.
-			// Well, the distance from the plane means the SHORTEST distance.  What about in the case that
-			// the line is almost parallel with the polygon, but doesn't actually intersect it until half
-			// way down the line's length.  The distance from the plane is short, but the distance from
-			// the actual intersection point is pretty long.  If we divide the distance by the dot product
-			// of our line vector and the normal of the plane, we get the correct length.  Cool huh?
-
-			double dist = numerator / denominator;				// Divide to get the multiplying (percentage) factor
-
-			// Now, like we said above, we times the dist by the vector, then add our arbitrary point.
-			// This essentially moves the point along the vector to a certain distance.  This now gives
-			// us the intersection point.  Yay!
-
-			result.X = line[0].X + (lineDir.X * dist);
-			result.Y = line[0].Y + (lineDir.Y * dist);
-			result.Z = line[0].Z + (lineDir.Z * dist);
-
-			return result;								// Return the intersection point
-		}
-
-		/// <summary>
-		/// This checks to see if a point is inside the ranges of a polygon
-		/// </summary>
-		public static bool InsidePolygon(Vector3D intersectionPoint, Vector3D[] polygon, long verticeCount)
-		{
-			const double MATCH_FACTOR = 0.9999;		// Used to cover up the error in floating point
-			double Angle = 0.0;						// Initialize the angle
-
-			// Just because we intersected the plane, doesn't mean we were anywhere near the polygon.
-			// This functions checks our intersection point to make sure it is inside of the polygon.
-			// This is another tough function to grasp at first, but let me try and explain.
-			// It's a brilliant method really, what it does is create triangles within the polygon
-			// from the intersection point.  It then adds up the inner angle of each of those triangles.
-			// If the angles together add up to 360 degrees (or 2 * PI in radians) then we are inside!
-			// If the angle is under that value, we must be outside of polygon.  To further
-			// understand why this works, take a pencil and draw a perfect triangle.  Draw a dot in
-			// the middle of the triangle.  Now, from that dot, draw a line to each of the vertices.
-			// Now, we have 3 triangles within that triangle right?  Now, we know that if we add up
-			// all of the angles in a triangle we get 360 right?  Well, that is kinda what we are doing,
-			// but the inverse of that.  Say your triangle is an isosceles triangle, so add up the angles
-			// and you will get 360 degree angles.  90 + 90 + 90 is 360.
-
-			for (int i = 0; i < verticeCount; i++)		// Go in a circle to each vertex and get the angle between
-			{
-				Vector3D vA = polygon[i] - intersectionPoint;	// Subtract the intersection point from the current vertex
-				// Subtract the point from the next vertex
-				Vector3D vB = polygon[(i + 1) % verticeCount] - intersectionPoint;
-
-				Angle += DegreesToRadians(Vector3D.AngleBetween(vA, vB));	// Find the angle between the 2 vectors and add them all up as we go along
-			}
-
-			// Now that we have the total angles added up, we need to check if they add up to 360 degrees.
-			// Math.Since we are uMath.Sing the dot product, we are working in radians, so we check if the angles
-			// equals 2*PI.  We defined PI in 3DMath.h.  You will notice that we use a MATCH_FACTOR
-			// in conjunction with our desired degree.  This is because of the inaccuracy when working
-			// with floating point numbers.  It usually won't always be perfectly 2 * PI, so we need
-			// to use a little twiddling.  I use .9999, but you can change this to fit your own desired accuracy.
-
-			if (Angle >= (MATCH_FACTOR * (2.0 * Math.PI)))	// If the angle is greater than 2 PI, (360 degrees)
-				return true;							// The point is inside of the polygon
-
-			return false;								// If you get here, it obviously wasn't inside the polygon, so Return FALSE
-		}
-
-		/// <summary>
-		/// This checks if a line is intersecting a polygon
-		/// </summary>
-		public static bool IntersectedPolygon(Vector3D[] polygon, Vector3D[] line, int verticeCount, out Vector3D normal, out double originDistance, out Vector3D? intersectionPoint)
-		{
-			intersectionPoint = null;
-
-			// First we check to see if our line intersected the plane.  If this isn't true
-			// there is no need to go on, so return false immediately.
-			// We pass in address of vNormal and originDistance so we only calculate it once
-
-			// Reference
-			if (!IntersectedPlane(polygon, line, out normal, out originDistance))
-				return false;
-
-			// Now that we have our normal and distance passed back from IntersectedPlane(), 
-			// we can use it to calculate the intersection point.  The intersection point
-			// is the point that actually is ON the plane.  It is between the line.  We need
-			// this point test next, if we are inside the polygon.  To get the I-Point, we
-			// give our function the normal of the plan, the points of the line, and the originDistance.
-
-			intersectionPoint = GetIntersectionOfPlaneAndLine(normal, line, originDistance);
-			if (intersectionPoint == null)
-				return false;
-
-			// Now that we have the intersection point, we need to test if it's inside the polygon.
-			// To do this, we pass in :
-			// (our intersection point, the polygon, and the number of vertices our polygon has)
-
-			if (InsidePolygon(intersectionPoint.Value, polygon, verticeCount))
-				return true;							// We collided!	  Return success
-
-
-			// If we get here, we must have NOT collided
-
-			return false;								// There was no collision, so return false
-		}
-		/// <summary>
-		/// This checks if a line is intersecting a polygon
-		/// </summary>
-		public static bool IntersectedPolygon(Vector3D[] polygon, Vector3D[] line)
-		{
-			Vector3D normal;
-			double originDistance;
-			Vector3D? intersectionPoint;
-
-			return IntersectedPolygon(polygon, line, polygon.Length, out normal, out originDistance, out intersectionPoint);
-		}
-
-		public static double DistanceFromPlane(Vector3D[] polygon, Vector3D point)
-		{
-			Vector3D normal = Normal(polygon); // We need to get the normal of our plane to go any further
-
-			// Let's find the distance our plane is from the origin.  We can find this value
-			// from the normal to the plane (polygon) and any point that lies on that plane (Any vertice)
-			double originDistance = GetPlaneDistance(normal, polygon[0].ToPoint());
-
-			// Get the distance from point1 from the plane uMath.Sing: Ax + By + Cz + D = (The distance from the plane)
-			return DistanceFromPlane(normal, originDistance, point);
-		}
-		public static double DistanceFromPlane(Vector3D normal, double originDistance, Vector3D point)
-		{
-			return ((normal.X * point.X) +					// Ax +
-					(normal.Y * point.Y) +					// Bx +
-					(normal.Z * point.Z)) + originDistance;	// Cz + D
-		}
-
-		/// <summary>
-		/// This returns the normal of a polygon (The direction the polygon is facing)
-		/// </summary>
-		public static Vector3D Normal(Vector3D[] triangle)
-		{
-			//	This is the original, but was returning a left handed normal
-			//Vector3D vVector1 = triangle[2] - triangle[0];
-			//Vector3D vVector2 = triangle[1] - triangle[0];
-
-			//Vector3D vNormal = Vector3D.CrossProduct(vVector1, vVector2);		// Take the cross product of our 2 vectors to get a perpendicular vector
-
-
-			Vector3D dir1 = triangle[0] - triangle[1];
-			Vector3D dir2 = triangle[2] - triangle[1];
-
-			Vector3D normal = Vector3D.CrossProduct(dir2, dir1);
-
-
-			// Now we have a normal, but it's at a strange length, so let's make it length 1.
-			normal.Normalize();
-
-			return normal;										// Return our normal at our desired length
-		}
-
-		#region Circle/Line Intersect Helpers
-
-		private struct CircleLineArgs
-		{
-			public ITriangle CirclePlane;
-			public Point3D CircleCenter;
-			public double CircleRadius;
-			public Point3D PointOnLine;
-			public Vector3D LineDirection;
-		}
-
-		private struct CirclePlaneIntersectProps
-		{
-			//	This is the line that the planes intersect along
-			public Point3D PointOnLine;
-			public Vector3D LineDirection;
-
-			//	This is a line from the circle's center to the intersect line
-			public Point3D NearestToCenter;
-			public Vector3D CenterToNearest;
-			public double CenterToNearestLength;
-
-			//	This is whether NearestToCenter is within the circle or outside of it
-			public bool IsInsideCircle;
-		}
-
-		private static bool GetClosestPointsBetweenLineCircle(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
-		{
-			#region Scenarios
-
-			//	Line intersects plane inside circle:
-			//		Calculate intersect point to circle rim
-			//		Calculate two perps to circle rim
-			//
-			//	Take the closest of those three points
-
-			//	Line intersects plane outside circle, but passes over circle:
-			//		Calculate intersect point to circle rim
-			//		Calculate two perps to circle rim
-			//
-			//	Take the closest of those three points
-
-			//	Line is parallel to the plane, passes over circle
-			//		Calculate two perps to circle rim
-
-			//	Line is parallel to the plane, does not pass over circle
-			//		Get closest point between center and line, project onto plane, find point along the circle
-
-			//	Line does not pass over the circle
-			//		Calculate intersect point to circle rim
-			//		Get closest point between plane intersect line and circle center
-			//
-			//	Take the closest of those two points
-
-			//	Line is perpendicular to the plane
-			//		Calculate intersect point to circle rim
-
-			#endregion
-
-			//	Detect perpendicular
-			double dot = Vector3D.DotProduct(args.CirclePlane.NormalUnit, args.LineDirection.ToUnit());
-			if (IsNearValue(Math.Abs(dot), 1d))
-			{
-				return GetClosestPointsBetweenLineCircleSprtPerpendicular(out circlePoints, out linePoints, args);
-			}
-
-			//	Project the line onto the circle's plane
-			CirclePlaneIntersectProps planeIntersect = GetClosestPointsBetweenLineCircleSprtPlaneIntersect(args);
-
-			//	There's less to do if the line is parallel
-			if (IsNearZero(dot))
-			{
-				GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
-			}
-			else
-			{
-				GetClosestPointsBetweenLineCircleSprtOther(out circlePoints, out linePoints, args, planeIntersect);
-			}
-
-			return true;
-		}
-		private static bool GetClosestPointsBetweenLineCircleSprtPerpendicular(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
-		{
-			Point3D planeIntersect = GetNearestPointAlongLine(args.PointOnLine, args.LineDirection, args.CircleCenter);
-
-			if (IsNearValue(planeIntersect, args.CircleCenter))
-			{
-				//	This is a perpendicular ray shot straight through the center.  All circle points are closest to the line
-				circlePoints = null;
-				linePoints = new Point3D[] { args.CircleCenter };
-				return false;
-			}
-
-			GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints, out linePoints, args, planeIntersect);
-			return true;
-		}
-		private static void GetClosestPointsBetweenLineCircleSprtParallel(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
-		{
-			if (planeIntersect.IsInsideCircle)
-			{
-				GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints, out linePoints, args, planeIntersect);
-			}
-			else
-			{
-				circlePoints = new Point3D[] { args.CircleCenter + (planeIntersect.CenterToNearest * (args.CircleRadius / planeIntersect.CenterToNearestLength)) };
-				linePoints = new Point3D[] { GetNearestPointAlongLine(args.PointOnLine, args.LineDirection, circlePoints[0]) };
-			}
-		}
-		private static void GetClosestPointsBetweenLineCircleSprtOther(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
-		{
-			//	See where the line intersects the circle's plane
-			Point3D? lineIntersect = GetIntersectionOfPlaneAndLine(args.CirclePlane, args.PointOnLine, args.LineDirection);
-			if (lineIntersect == null)		//	this should never happen, since an IsParallel check was already done (but one might be stricter than the other)
-			{
-				GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
-				return;
-			}
-
-			if (planeIntersect.IsInsideCircle)
-			{
-				#region Line is over circle
-
-				//	Line intersects plane inside circle:
-				//		Calculate intersect point to circle rim
-				//		Calculate two perps to circle rim
-				//
-				//	Take the closest of those three points
-
-				Point3D[] circlePoints1;
-				Point3D[] linePoints1;
-				GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints1, out linePoints1, args, lineIntersect.Value);
-
-				Point3D[] circlePoints2;
-				Point3D[] linePoints2;
-				GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints2, out linePoints2, args, planeIntersect);
-
-				GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints1, linePoints1, circlePoints2, linePoints2);
-
-				#endregion
-			}
-			else
-			{
-				#region Line is outside circle
-
-				//	Line does not pass over the circle
-				//		Calculate intersect point to circle rim
-				//		Get closest point between plane intersect line and circle center
-				//
-				//	Take the closest of those two points
-
-				Point3D[] circlePoints3;
-				Point3D[] linePoints3;
-				GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints3, out linePoints3, args, lineIntersect.Value);
-
-				Point3D[] circlePoints4;
-				Point3D[] linePoints4;
-				GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints4, out linePoints4, args, planeIntersect.NearestToCenter);
-
-				GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints3, linePoints3, circlePoints4, linePoints4);
-
-				#endregion
-			}
-		}
-		private static void GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out Point3D[] circlePoints, out Point3D[] linePoints, Point3D[] circlePoints1, Point3D[] linePoints1, Point3D[] circlePoints2, Point3D[] linePoints2)
-		{
-			List<Point3D> circlePointList = new List<Point3D>();
-			List<Point3D> linePointList = new List<Point3D>();
-			double distance = double.MaxValue;
-
-			//	Find the shortest distance across the pairs
-			if (circlePoints1 != null)
-			{
-				for (int cntr = 0; cntr < circlePoints1.Length; cntr++)
-				{
-					double localDistance = (linePoints1[cntr] - circlePoints1[cntr]).Length;
-
-					if (IsNearValue(localDistance, distance))
-					{
-						circlePointList.Add(circlePoints1[cntr]);
-						linePointList.Add(linePoints1[cntr]);
-					}
-					else if (localDistance < distance)
-					{
-						circlePointList.Clear();
-						linePointList.Clear();
-						circlePointList.Add(circlePoints1[cntr]);
-						linePointList.Add(linePoints1[cntr]);
-						distance = localDistance;
-					}
-				}
-			}
-
-			if (circlePoints2 != null)
-			{
-				for (int cntr = 0; cntr < circlePoints2.Length; cntr++)
-				{
-					double localDistance = (linePoints2[cntr] - circlePoints2[cntr]).Length;
-
-					if (IsNearValue(localDistance, distance))
-					{
-						circlePointList.Add(circlePoints2[cntr]);
-						linePointList.Add(linePoints2[cntr]);
-					}
-					else if (localDistance < distance)
-					{
-						circlePointList.Clear();
-						linePointList.Clear();
-						circlePointList.Add(circlePoints2[cntr]);
-						linePointList.Add(linePoints2[cntr]);
-						distance = localDistance;
-					}
-				}
-			}
-
-			if (circlePointList.Count == 0)
-			{
-				throw new ApplicationException("Couldn't find a return point");
-			}
-
-			//	Return the result
-			circlePoints = circlePointList.ToArray();
-			linePoints = linePointList.ToArray();
-		}
-		private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCircleSprtPlaneIntersect(CircleLineArgs args)
-		{
-			CirclePlaneIntersectProps retVal;
-
-			//	The slice plane runs perpendicular to the circle's plane
-			Triangle slicePlane = new Triangle(args.PointOnLine, args.PointOnLine + args.LineDirection, args.PointOnLine + args.CirclePlane.Normal);
-
-			//	Use that slice plane to project the line onto the circle's plane
-			if (!GetIntersectingLine(out retVal.PointOnLine, out retVal.LineDirection, args.CirclePlane, slicePlane))
-			{
-				throw new ApplicationException("The slice plane should never be parallel to the circle's plane");		//	it was defined as perpendicular
-			}
-
-			//	Find the closest point between the circle's center to this intersection line
-			retVal.NearestToCenter = GetNearestPointAlongLine(retVal.PointOnLine, retVal.LineDirection, args.CircleCenter);
-			retVal.CenterToNearest = retVal.NearestToCenter - args.CircleCenter;
-			retVal.CenterToNearestLength = retVal.CenterToNearest.Length;
-
-			retVal.IsInsideCircle = retVal.CenterToNearestLength <= args.CircleRadius;
-
-			//	Exit Function
-			return retVal;
-		}
-		private static void GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, Point3D planeIntersect)
-		{
-			Vector3D centerToIntersect = planeIntersect - args.CircleCenter;
-			double centerToIntersectLength = centerToIntersect.Length;
-
-			if (IsNearZero(centerToIntersectLength))
-			{
-				circlePoints = null;
-				linePoints = null;
-			}
-			else
-			{
-				circlePoints = new Point3D[] { args.CircleCenter + (centerToIntersect * (args.CircleRadius / centerToIntersectLength)) };
-				linePoints = new Point3D[] { GetNearestPointAlongLine(args.PointOnLine, args.LineDirection, circlePoints[0]) };
-			}
-		}
-		private static void GetClosestPointsBetweenLineCircleSprtInsidePerps(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
-		{
-			//	See if the line passes through the center
-			if (IsNearZero(planeIntersect.CenterToNearestLength))
-			{
-				//Vector3D lineDirUnit = args.LineDirection.ToUnit();
-				Vector3D lineDirUnit = planeIntersect.LineDirection.ToUnit();
-
-				//	The line passes over the circle's center, so the nearest points will shoot straight from the center in the direction of the line
-				circlePoints = new Point3D[2];
-				circlePoints[0] = args.CircleCenter + (lineDirUnit * args.CircleRadius);
-				circlePoints[1] = args.CircleCenter - (lineDirUnit * args.CircleRadius);
-			}
-			else
-			{
-				//	The two points are perpendicular to this line.  Use A^2 + B^2 = C^2 to get the length of the perpendiculars
-				double perpLength = Math.Sqrt((args.CircleRadius * args.CircleRadius) - (planeIntersect.CenterToNearestLength * planeIntersect.CenterToNearestLength));
-				Vector3D perpDirection = Vector3D.CrossProduct(planeIntersect.CenterToNearest, args.CirclePlane.Normal).ToUnit();
-
-				circlePoints = new Point3D[2];
-				circlePoints[0] = planeIntersect.NearestToCenter + (perpDirection * perpLength);
-				circlePoints[1] = planeIntersect.NearestToCenter - (perpDirection * perpLength);
-			}
-
-			//	Get corresponding points along the line
-			linePoints = new Point3D[2];
-			linePoints[0] = GetNearestPointAlongLine(args.PointOnLine, args.LineDirection, circlePoints[0]);
-			linePoints[1] = GetNearestPointAlongLine(args.PointOnLine, args.LineDirection, circlePoints[1]);
-		}
-
-		/// <summary>
-		/// This one returns the one that is closest to pointOnLine
-		/// </summary>
-		private static void GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
-		{
-			#region Find closest point
-
-			//	There is more than one point, and they want a single point
-			double minDistance = double.MaxValue;
-			int minIndex = -1;
-
-			for (int cntr = 0; cntr < circlePoints.Length; cntr++)
-			{
-				double distance = (linePoints[cntr] - rayOrigin).LengthSquared;
-
-				if (distance < minDistance)
-				{
-					minDistance = distance;
-					minIndex = cntr;
-				}
-			}
-
-			if (minIndex < 0)
-			{
-				throw new ApplicationException("Should always find a closest point");
-			}
-
-			#endregion
-
-			//	Return only the closest point
-			circlePoints = new Point3D[] { circlePoints[minIndex] };
-			linePoints = new Point3D[] { linePoints[minIndex] };
-		}
-		/// <summary>
-		/// This one returns the one that is closest between the two hits
-		/// </summary>
-		private static void GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
-		{
-			#region Find closest point
-
-			//	There is more than one point, and they want a single point
-			double minDistance = double.MaxValue;
-			double minOriginDistance = double.MaxValue;		//	use this as a secondary sort (really important if the collision shape is a cylinder or sphere.  The line will have two exact matches, so return the one closest to the ray cast origin)
-			int minIndex = -1;
-
-			for (int cntr = 0; cntr < circlePoints.Length; cntr++)
-			{
-				double distance = (linePoints[cntr] - circlePoints[cntr]).LengthSquared;
-				double originDistance = (linePoints[cntr] - rayOrigin).LengthSquared;
-
-				bool isEqualDistance = IsNearValue(distance, minDistance);
-
-				//NOTE: I can't just say distance < minDistance, because for a sphere, it kept jittering between the near
-				//	side and far side, so it has to be closer by a decisive amount
-				if ((!isEqualDistance && distance < minDistance) || (isEqualDistance && originDistance < minOriginDistance))
-				{
-					minDistance = distance;
-					minOriginDistance = originDistance;
-					minIndex = cntr;
-				}
-			}
-
-			if (minIndex < 0)
-			{
-				throw new ApplicationException("Should always find a closest point");
-			}
-
-			#endregion
-
-			//	Return only the closest point
-			circlePoints = new Point3D[] { circlePoints[minIndex] };
-			linePoints = new Point3D[] { linePoints[minIndex] };
-		}
-
-		#endregion
-		#region Cylinder/Line Intersect Helpers
-
-		private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(CircleLineArgs args, Point3D nearestLinePoint, Vector3D nearestLine, double nearestLineDistance)
-		{
-			//NOTE: This is nearly identical to GetClosestPointsBetweenLineCircleSprtPlaneIntersect, but since some stuff was already done,
-			//	it's more just filling out the struct
-
-			CirclePlaneIntersectProps retVal;
-
-			//	The slice plane runs perpendicular to the circle's plane
-			Triangle slicePlane = new Triangle(args.PointOnLine, args.PointOnLine + args.LineDirection, args.PointOnLine + args.CirclePlane.Normal);
-
-			//	Use that slice plane to project the line onto the circle's plane
-			if (!GetIntersectingLine(out retVal.PointOnLine, out retVal.LineDirection, args.CirclePlane, slicePlane))
-			{
-				throw new ApplicationException("The slice plane should never be parallel to the circle's plane");		//	it was defined as perpendicular
-			}
-
-			//	Store what was passed in (the circle/line intersect waits till now to do this, but for cylinder, this was done previously)
-			retVal.NearestToCenter = nearestLinePoint;
-			retVal.CenterToNearest = nearestLine;
-			retVal.CenterToNearestLength = nearestLineDistance;
-
-			retVal.IsInsideCircle = true;		//	this method is only called when true
-
-			//	Exit Function
-			return retVal;
-		}
-
-		private static void GetClosestPointsBetweenLineCylinderSprtFinish(out Point3D[] cylinderPoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps intersectArgs)
-		{
-			//	Get the circle intersects
-			Point3D[] circlePoints2D, linePoints2D;
-			GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints2D, out linePoints2D, args, intersectArgs);
-
-			//	Project the circle hits onto the original line
-			Point3D? p1, p2, p3, p4;
-			GetClosestPointsBetweenLines(out p1, out p2, args.PointOnLine, args.LineDirection, circlePoints2D[0], args.CirclePlane.Normal);
-			GetClosestPointsBetweenLines(out p3, out p4, args.PointOnLine, args.LineDirection, circlePoints2D[1], args.CirclePlane.Normal);
-
-			//	p1 and p2 are the same, p3 and p4 are the same
-			if (p1 == null || p3 == null)
-			{
-				cylinderPoints = new Point3D[] { circlePoints2D[0], circlePoints2D[1] };
-			}
-			else
-			{
-				cylinderPoints = new Point3D[] { p1.Value, p3.Value };
-			}
-			linePoints = cylinderPoints;
-		}
-
-		#endregion
-
-		#endregion
-
-		#region Matrix Logic
-
-		public static void MatrixDecompose(Matrix3D mat, out Vector3D vTrans, out Vector3D vScale, out Vector3D vRot, bool scaleTransform)
-		{
-			vTrans = new Vector3D();
-			vScale = new Vector3D();
-
-			Vector3D[] vCols = new Vector3D[]{
+    public static class Math3D
+    {
+        #region Enum: RayCastReturn
+
+        public enum RayCastReturn
+        {
+            AllPoints,
+            ClosestToRayOrigin,
+            ClosestToRay
+        }
+
+        #endregion
+        #region Class: EvenDistribution
+
+        /// <summary>
+        /// This class has several methods that have a similar behavior.  The method will place random points, then shift them around until a
+        /// threshold is met
+        /// </summary>
+        /// <remarks>
+        /// NOTE: The code was copied from the EvenDistributionSphere tester
+        /// TODO: Make another one that is SphericalShell (store the repulsive forces as quaternions)
+        /// 
+        /// There's a bit too much custom logic to put directly into Math3D, but I want it to appear from the outside that Math3D is doing
+        /// all the work (so that consumers have just one util class to go to)
+        /// </remarks>
+        private class EvenDistribution
+        {
+            #region Class: Dot
+
+            private class Dot
+            {
+                public Dot(bool isStatic, Vector3D position, double repulseMultiplier)
+                {
+                    this.IsStatic = isStatic;
+                    this.Position = position;
+                    this.RepulseMultiplier = repulseMultiplier;
+                }
+
+                public readonly bool IsStatic;
+                public Vector3D Position;
+                public readonly double RepulseMultiplier;
+            }
+
+            #endregion
+
+            // These return points that are evenly distributed
+            public static Vector3D[] GetSpherical(int returnCount, Vector3D[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Start with randomly placed dots
+                Dot[] dots = GetDots(returnCount, existingStaticPoints, radius, movableRepulseMultipliers, staticRepulseMultipliers, true);
+
+                return GetSpherical_Finish(dots, returnCount, radius, stopRadiusPercent, stopIterationCount);
+            }
+            public static Vector3D[] GetSpherical(Vector3D[] movable, Vector3D[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                Dot[] dots = GetDots(movable, existingStaticPoints, radius, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                return GetSpherical_Finish(dots, movable.Length, radius, stopRadiusPercent, stopIterationCount);
+            }
+
+            // These return points that are randomly clustered, but points won't be closer than a certain distance
+            public static Vector3D[] GetSpherical_ClusteredMinDist(int returnCount, Vector3D[] existingStaticPoints, double radius, double minDist, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Start with randomly placed dots
+                Dot[] dots = GetDots(returnCount, existingStaticPoints, radius, movableRepulseMultipliers, staticRepulseMultipliers, true);
+
+                return GetSpherical_ClusteredMinDist_Finish(dots, returnCount, radius, minDist, stopRadiusPercent, stopIterationCount);
+            }
+            public static Vector3D[] GetSpherical_ClusteredMinDist(Vector3D[] movable, Vector3D[] existingStaticPoints, double radius, double minDist, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                Dot[] dots = GetDots(movable, existingStaticPoints, radius, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                return GetSpherical_ClusteredMinDist_Finish(dots, movable.Length, radius, minDist, stopRadiusPercent, stopIterationCount);
+            }
+
+            public static Vector[] GetCircular(int returnCount, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Convert to 3D
+                Vector3D[] existingStaticCast = null;
+                if (existingStaticPoints != null)
+                {
+                    existingStaticCast = existingStaticPoints.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                // Start with randomly placed dots
+                Dot[] dots = GetDots(returnCount, existingStaticCast, radius, movableRepulseMultipliers, staticRepulseMultipliers, false);
+
+                Vector3D[] retVal = GetCircular_Finish(dots, returnCount, radius, stopRadiusPercent, stopIterationCount);
+
+                // Convert to 2D
+                return retVal.Select(o => new Vector(o.X, o.Y)).ToArray();
+            }
+            public static Vector[] GetCircular(Vector[] movable, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Convert to 3D
+                Vector3D[] movableCast = null;
+                if (movable != null)
+                {
+                    movableCast = movable.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                Vector3D[] existingStaticCast = null;
+                if (existingStaticPoints != null)
+                {
+                    existingStaticCast = existingStaticPoints.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                // Convert to dots
+                Dot[] dots = GetDots(movableCast, existingStaticCast, radius, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                Vector3D[] retVal = GetCircular_Finish(dots, movable.Length, radius, stopRadiusPercent, stopIterationCount);
+
+                // Convert to 2D
+                return retVal.Select(o => new Vector(o.X, o.Y)).ToArray();
+            }
+
+            public static Vector[] GetCircular_CenterPacked(int returnCount, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Convert to 3D
+                Vector3D[] existingStaticCast = null;
+                if (existingStaticPoints != null)
+                {
+                    existingStaticCast = existingStaticPoints.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                // Start with randomly placed dots
+                Dot[] dots = GetDots(returnCount, existingStaticCast, radius, movableRepulseMultipliers, staticRepulseMultipliers, false);
+
+                Vector3D[] retVal = GetCircular_CenterPacked_Finish(dots, returnCount, radius, stopRadiusPercent, stopIterationCount);
+
+                // Convert to 2D
+                return retVal.Select(o => new Vector(o.X, o.Y)).ToArray();
+            }
+            public static Vector[] GetCircular_CenterPacked(Vector[] movable, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Convert to 3D
+                Vector3D[] movableCast = null;
+                if (movable != null)
+                {
+                    movableCast = movable.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                Vector3D[] existingStaticCast = null;
+                if (existingStaticPoints != null)
+                {
+                    existingStaticCast = existingStaticPoints.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                }
+
+                // Convert to dots
+                Dot[] dots = GetDots(movableCast, existingStaticCast, radius, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                Vector3D[] retVal = GetCircular_CenterPacked_Finish(dots, movable.Length, radius, stopRadiusPercent, stopIterationCount);
+
+                // Convert to 2D
+                return retVal.Select(o => new Vector(o.X, o.Y)).ToArray();
+            }
+
+            #region Private Methods
+
+            private static Vector3D[] GetSpherical_Finish(Dot[] dots, int returnCount, double radius, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double PERCENT = .1d;		// 10% seems to give good results
+
+                //TODO: This is a good starting point, but make small adjustments to this each step to let the radius get closer
+                double calcDist = GetCalcDistance(GetApproximateCount(dots, radius), radius);
+                double smallestAllowed = calcDist * .5d;
+
+                double stopDist = radius * stopRadiusPercent;
+                int numIterations = 0;
+                double smallestLength = 0d;
+
+                Vector3D[] forces = new Vector3D[dots.Length];
+
+                do
+                {
+                    // Calculate forces
+                    GetInwardForces(forces, dots);
+                    smallestLength = GetRepulsionForces(forces, dots, calcDist);
+
+                    // Move one step
+                    numIterations++;
+                } while (MovePoints(returnCount, dots, forces, PERCENT, stopDist, numIterations, stopIterationCount, smallestLength < smallestAllowed));
+
+                // Exit Function
+                return BuildReturn(dots, returnCount);
+            }
+            private static Vector3D[] GetSpherical_ClusteredMinDist_Finish(Dot[] dots, int returnCount, double radius, double minDist, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double PERCENT = .5d;		// This method can afford to be more aggressive.  It is assumed that minDist is quite a bit smaller than radius
+
+                double stopDist = radius * stopRadiusPercent;
+                int numIterations = 0;
+                double smallestLength = 0d;
+                double smallestAllowed = minDist * .5d;
+
+                Vector3D[] forces = new Vector3D[dots.Length];
+
+                do
+                {
+                    // Calculate forces
+                    GetInwardForces_ExceedOnly(forces, dots, radius);
+                    smallestLength = GetRepulsionForces(forces, dots, minDist);
+
+                    // Move one step
+                    numIterations++;
+                } while (MovePoints(returnCount, dots, forces, PERCENT, stopDist, numIterations, stopIterationCount, smallestLength < smallestAllowed));
+
+                // Exit Function
+                return BuildReturn(dots, returnCount);
+            }
+
+            private static Vector3D[] GetCircular_Finish(Dot[] dots, int returnCount, double radius, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double PERCENT = .1d;		// 10% seems to give good results
+
+                //TODO: This is a good starting point, but make small adjustments to this each step to let the radius get closer
+                double calcDist = GetCalcDistance(GetApproximateCount(dots, radius), radius);
+                double smallestAllowed = calcDist * .5d;
+
+                double stopDist = radius * stopRadiusPercent;
+                int numIterations = 0;
+                double smallestLength = 0d;
+
+                Vector3D[] forces = new Vector3D[dots.Length];
+
+                do
+                {
+                    // Calculate forces
+                    GetInwardForces(forces, dots);
+                    smallestLength = GetRepulsionForces_Continuous(forces, dots, calcDist);
+
+                    // While testing, I didn't see any nonzeros
+                    //double[] nonZero = forces.Where(o => !Math3D.IsNearZero(o.Z)).Select(o => o.Z).ToArray();
+
+                    // Don't allow any Z movement - there shouldn't be any anyway
+                    for (int cntr = 0; cntr < forces.Length; cntr++)
+                    {
+                        forces[cntr].Z = 0;
+                    }
+
+                    // Move one step
+                    numIterations++;
+                } while (MovePoints(returnCount, dots, forces, PERCENT, stopDist, numIterations, stopIterationCount, smallestLength < smallestAllowed));
+
+                // Circular produces a radius that's way off, so this method will fix scale the outputs to the appropriate radius, but can only be
+                // called when all points are movable
+                if (returnCount == dots.Length)
+                {
+                    FixRadius(dots, radius);
+                }
+
+                // Exit Function
+                return BuildReturn(dots, returnCount);
+            }
+            private static Vector3D[] GetCircular_CenterPacked_Finish(Dot[] dots, int returnCount, double radius, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double PERCENT = .1d;		// 10% seems to give good results
+
+                //TODO: This is a good starting point, but make small adjustments to this each step to let the radius get closer
+                double calcDist = GetCalcDistance(GetApproximateCount(dots, radius), radius);
+                double smallestAllowed = calcDist * .5d;
+
+                double stopDist = radius * stopRadiusPercent;
+                int numIterations = 0;
+                double smallestLength = 0d;
+
+                double calcDistAtZero = calcDist * .25d;
+                double calcDistAtRadius = calcDist * 1.1d;
+
+                Vector3D[] forces = new Vector3D[dots.Length];
+
+                do
+                {
+                    // Calculate forces
+                    GetInwardForces(forces, dots);
+                    smallestLength = GetRepulsionForces_Continuous_CenterPacked(forces, dots, calcDistAtZero, calcDistAtRadius, radius);
+
+                    // While testing, I didn't see any nonzeros
+                    //double[] nonZero = forces.Where(o => !Math3D.IsNearZero(o.Z)).Select(o => o.Z).ToArray();
+
+                    // Don't allow any Z movement - there shouldn't be any anyway
+                    for (int cntr = 0; cntr < forces.Length; cntr++)
+                    {
+                        forces[cntr].Z = 0;
+                    }
+
+                    // Move one step
+                    numIterations++;
+                } while (MovePoints(returnCount, dots, forces, PERCENT, stopDist, numIterations, stopIterationCount, smallestLength < smallestAllowed));
+
+                // Circular produces a radius that's way off, so this method will fix scale the outputs to the appropriate radius, but can only be
+                // called when all points are movable
+                if (returnCount == dots.Length)
+                {
+                    FixRadius(dots, radius);
+                }
+
+                // Exit Function
+                return BuildReturn(dots, returnCount);
+            }
+
+            private static bool MovePoints(int returnCount, Dot[] dots, Vector3D[] forces, double movePercent, double stopDist, int numIterations, int stopIterationCount, bool areTooClose)
+            {
+                double maxLength = 0d;
+
+                #region Move points
+
+                for (int cntr = 0; cntr < returnCount; cntr++)		// only need to iterate up to returnCount.  All the rest in dots are immoble ones
+                {
+                    // Move point
+                    dots[cntr].Position += forces[cntr] * movePercent;
+
+                    // Find the dot that needs to move the farthest
+                    double curLength = forces[cntr].LengthSquared;
+                    if (curLength > maxLength)
+                    {
+                        maxLength = curLength;
+                    }
+                }
+
+                #endregion
+
+                #region Exit condition
+
+                // See if this is good enough
+                maxLength = Math.Sqrt(maxLength);
+                if ((maxLength < stopDist && !areTooClose) || numIterations > stopIterationCount)
+                {
+                    return false;
+                }
+
+                #endregion
+
+                #region Clear the forces
+
+                for (int cntr = 0; cntr < forces.Length; cntr++)
+                {
+                    forces[cntr] = new Vector3D(0, 0, 0);
+                }
+
+                #endregion
+
+                // The exit condition hasn't been hit yet
+                return true;
+            }
+
+            private static Vector3D[] BuildReturn(Dot[] dots, int returnCount)
+            {
+                Vector3D[] retVal = new Vector3D[returnCount];
+
+                for (int cntr = 0; cntr < returnCount; cntr++)		// The movable vectors are always the first items in the dots array
+                {
+                    retVal[cntr] = dots[cntr].Position;
+                }
+
+                return retVal;
+            }
+
+            private static Dot[] GetDots(int movableCount, Vector3D[] staticPoints, double radius, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers, bool isSpherical)
+            {
+                // Seed the movable ones with random spherical locations (that's the best that can be done right now)
+                Vector3D[] movable = new Vector3D[movableCount];
+                for (int cntr = 0; cntr < movableCount; cntr++)
+                {
+                    if (isSpherical)
+                    {
+                        movable[cntr] = Math3D.GetRandomVectorSpherical(radius);
+                    }
+                    else
+                    {
+                        movable[cntr] = Math3D.GetRandomVectorSpherical2D(radius);
+                    }
+                }
+
+                // Call the other overload
+                return GetDots(movable, staticPoints, radius, movableRepulseMultipliers, staticRepulseMultipliers);
+            }
+            private static Dot[] GetDots(Vector3D[] movable, Vector3D[] staticPoints, double radius, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                int movableCount = movable.Length;
+
+                if (movableRepulseMultipliers != null && movableRepulseMultipliers.Length != movableCount)
+                {
+                    throw new ArgumentOutOfRangeException("movableRepulseMultipliers", "When movableRepulseMultipliers is nonnull, it must be the same length as the number of movable points");
+                }
+
+                // Figure out how big to make the return array
+                int length = movableCount;
+                if (staticPoints != null)
+                {
+                    length += staticPoints.Length;
+
+                    if (staticRepulseMultipliers != null && staticRepulseMultipliers.Length != staticPoints.Length)
+                    {
+                        throw new ArgumentOutOfRangeException("staticRepulseMultipliers", "When staticRepulseMultipliers is nonnull, it must be the same length as the number of static points");
+                    }
+                }
+
+                Dot[] retVal = new Dot[length];
+
+                // Copy the moveable ones
+                for (int cntr = 0; cntr < movableCount; cntr++)
+                {
+                    retVal[cntr] = new Dot(false, movable[cntr], movableRepulseMultipliers == null ? 1d : movableRepulseMultipliers[cntr]);
+                }
+
+                // Add the static points to the end
+                if (staticPoints != null)
+                {
+                    for (int cntr = 0; cntr < staticPoints.Length; cntr++)
+                    {
+                        retVal[movableCount + cntr] = new Dot(true, staticPoints[cntr], staticRepulseMultipliers == null ? 1d : staticRepulseMultipliers[cntr]);
+                    }
+                }
+
+                // Exit Function
+                return retVal;
+            }
+
+            private static double GetApproximateCount(Dot[] dots, double radius)
+            {
+                if (dots.All(o => !o.IsStatic))
+                {
+                    return dots.Length;
+                }
+
+                double[] rads = dots.Select(o => o.Position.Length).ToArray();
+                double maxRadius = radius * .15d;
+                double retVal = 0d;
+
+                for (int cntr = 0; cntr < dots.Length; cntr++)
+                {
+                    if (!dots[cntr].IsStatic)
+                    {
+                        // The movable dots are always counted
+                        retVal += 1d;
+                    }
+                    else if (rads[cntr] <= radius)
+                    {
+                        // Fully include everything that's <= radius
+                        retVal += 1d;
+                    }
+                    else
+                    {
+                        // Scale out the ones that are > radius
+                        double percent = (rads[cntr] - radius) / maxRadius;
+                        if (percent < 1d && percent > 0d)
+                        {
+                            retVal += percent;
+                        }
+                    }
+                }
+
+                // Exit Function
+                return retVal;
+            }
+            /// <summary>
+            /// I used this website to curve fit:
+            /// http://zunzun.com/
+            /// </summary>
+            private static double GetCalcDistance(double count, double radius)
+            {
+                //TODO: These values are good for count <= 20.  Need different values for a larger count
+
+                const double A = .013871652011048237d;
+                const double B = .50644756797276580d;
+                const double C = -.15228176942968946d;
+                const double D = .026504677205836713d;
+
+                if (count <= 1)
+                {
+                    return 0d;
+                }
+
+                double ln = Math.Log(count, Math.E);
+
+                double resultRadius = A + B * ln + C * Math.Pow(ln, 2d) + D * Math.Pow(ln, 3d);
+
+                return radius / resultRadius;
+            }
+
+            private static void GetInwardForces(Vector3D[] forces, Dot[] dots)
+            {
+                const double INWARDFORCE = 1d;
+
+                for (int cntr = 0; cntr < dots.Length; cntr++)
+                {
+                    if (dots[cntr].IsStatic)
+                    {
+                        continue;
+                    }
+
+                    Vector3D direction = dots[cntr].Position;
+                    direction = direction.ToUnit() * (direction.Length * INWARDFORCE * -1d);
+
+                    forces[cntr] += direction;
+                }
+            }
+            private static void GetInwardForces_ExceedOnly(Vector3D[] forces, Dot[] dots, double radius)
+            {
+                // This only has an inward force if the dots are sitting outside the radius
+
+                const double INWARDFORCE = 1d;
+                double radSquared = radius * radius;
+
+                for (int cntr = 0; cntr < dots.Length; cntr++)
+                {
+                    if (dots[cntr].IsStatic)
+                    {
+                        continue;
+                    }
+
+                    Vector3D direction = dots[cntr].Position;
+                    if (direction.LengthSquared < radSquared)
+                    {
+                        continue;
+                    }
+
+                    direction = direction.ToUnit() * (direction.Length * INWARDFORCE * -1d);
+
+                    forces[cntr] += direction;
+                }
+            }
+
+            private static double GetRepulsionForces(Vector3D[] forces, Dot[] dots, double maxDist)
+            {
+                const double STRENGTH = 1d;
+
+
+                //NOTE: This method fails with large numbers of dots - it takes many more dots to be noticable in 3D than 2D, that's why 2D uses
+                //the continuous method, but the continuous method is bad at making a fixed radius (radius grows when you have more dots)
+
+
+                // This returns the smallest distance between any two nodes
+                double retVal = double.MaxValue;
+
+                for (int outer = 0; outer < dots.Length - 1; outer++)
+                {
+                    for (int inner = outer + 1; inner < dots.Length; inner++)
+                    {
+                        Vector3D link = dots[outer].Position - dots[inner].Position;
+
+                        double linkLength = link.Length;
+                        if (linkLength < retVal)
+                        {
+                            retVal = linkLength;
+                        }
+
+                        // Force should be max when distance is zero, and linearly drop off to nothing
+                        double inverseDistance = maxDist - linkLength;
+
+                        double? force = 0d;
+                        if (inverseDistance > 0d)
+                        {
+                            force = STRENGTH * inverseDistance * ((dots[outer].RepulseMultiplier + dots[inner].RepulseMultiplier) * .5d);
+                        }
+
+                        if (force != null && !double.IsNaN(force.Value) && !double.IsInfinity(force.Value))
+                        {
+                            link.Normalize();
+                            link *= force.Value;
+
+                            if (!dots[inner].IsStatic)
+                            {
+                                forces[inner] -= link;
+                            }
+
+                            if (!dots[outer].IsStatic)
+                            {
+                                forces[outer] += link;
+                            }
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+            private static double GetRepulsionForces_Continuous(Vector3D[] forces, Dot[] dots, double maxDist)
+            {
+                const double STRENGTH = 1d;
+
+                // This returns the smallest distance between any two nodes
+                double retVal = double.MaxValue;
+
+                for (int outer = 0; outer < dots.Length - 1; outer++)
+                {
+                    for (int inner = outer + 1; inner < dots.Length; inner++)
+                    {
+                        Vector3D link = dots[outer].Position - dots[inner].Position;
+
+                        double linkLength = link.Length;
+                        if (linkLength < retVal)
+                        {
+                            retVal = linkLength;
+                        }
+
+                        double force = STRENGTH * (maxDist / linkLength);
+                        if (double.IsNaN(force) || double.IsInfinity(force))
+                        {
+                            force = .0001d;
+                        }
+
+                        link.Normalize();
+                        link *= force;
+
+                        if (!dots[inner].IsStatic)
+                        {
+                            forces[inner] -= link;
+                        }
+
+                        if (!dots[outer].IsStatic)
+                        {
+                            forces[outer] += link;
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+            private static double GetRepulsionForces_Continuous_CenterPacked(Vector3D[] forces, Dot[] dots, double maxDistAtZero, double maxDistAtRadius, double radius)
+            {
+                const double STRENGTH = 1d;
+
+                // This returns the smallest distance between any two nodes
+                double retVal = double.MaxValue;
+
+                for (int outer = 0; outer < dots.Length - 1; outer++)
+                {
+                    for (int inner = outer + 1; inner < dots.Length; inner++)
+                    {
+                        Vector3D link = dots[outer].Position - dots[inner].Position;
+
+                        double linkLength = link.Length;
+                        if (linkLength < retVal)
+                        {
+                            retVal = linkLength;
+                        }
+
+                        // Figure out distance
+                        double dist1 = UtilityHelper.GetScaledValue(maxDistAtZero, maxDistAtRadius, 0d, radius, dots[outer].Position.Length);
+                        double dist2 = UtilityHelper.GetScaledValue(maxDistAtZero, maxDistAtRadius, 0d, radius, dots[inner].Position.Length);
+
+                        double avgDist = ((dist1 + dist2) * .5d);
+
+                        // Turn that into a force
+                        double force = STRENGTH * (avgDist / linkLength);
+                        if (double.IsNaN(force) || double.IsInfinity(force))
+                        {
+                            force = .0001d;
+                        }
+
+                        // Apply the force
+                        link.Normalize();
+                        link *= force;
+
+                        if (!dots[inner].IsStatic)
+                        {
+                            forces[inner] -= link;
+                        }
+
+                        if (!dots[outer].IsStatic)
+                        {
+                            forces[outer] += link;
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static void FixRadius(Dot[] dots, double radius)
+            {
+                if (dots.Length < 2)
+                {
+                    return;
+                }
+
+                // Get the largest radius of all the points
+                double maxLength = dots.Max(o => o.Position.Length);
+
+                if (Math3D.IsNearValue(maxLength, radius) || Math3D.IsNearZero(maxLength))
+                {
+                    // Nothing to fix (or divisor would be zero which is bad)
+                    return;
+                }
+
+                double multiplier = radius / maxLength;
+                if (double.IsInfinity(multiplier) || double.IsNaN(multiplier))
+                {
+                    return;
+                }
+
+                for (int cntr = 0; cntr < dots.Length; cntr++)
+                {
+                    dots[cntr].Position *= multiplier;
+                }
+            }
+
+            #endregion;
+        }
+
+        #endregion
+        #region Class: QuickHull3D
+
+        private static class QuickHull3D
+        {
+            #region Class: TriangleWithPoints
+
+            /// <summary>
+            /// This links a triangle with a set of points that sit "outside" the triangle
+            /// </summary>
+            public class TriangleWithPoints : TriangleIndexedLinked
+            {
+                public TriangleWithPoints()
+                    : base()
+                {
+                    this.OutsidePoints = new List<int>();
+                }
+
+                public TriangleWithPoints(int index0, int index1, int index2, Point3D[] allPoints)
+                    : base(index0, index1, index2, allPoints)
+                {
+                    this.OutsidePoints = new List<int>();
+                }
+
+                public List<int> OutsidePoints
+                {
+                    get;
+                    private set;
+                }
+            }
+
+            #endregion
+
+            public static TriangleIndexed[] GetConvexHull(Point3D[] points)
+            {
+                if (points.Length < 4)
+                {
+                    //throw new ArgumentException("There must be at least 4 points", "points");
+                    return null;
+                }
+
+                // Pick 4 points
+                int[] startPoints = GetStartingTetrahedron(points);
+                List<TriangleWithPoints> retVal = ConvertStartingPointsToTriangles(startPoints, points);
+
+                // If any triangle has any points outside the hull, then remove that triangle, and replace it with triangles connected to the
+                // farthest out point (relative to the triangle that got removed)
+                bool foundOne;
+                do
+                {
+                    foundOne = false;
+                    int index = 0;
+                    while (index < retVal.Count)
+                    {
+                        if (retVal[index].OutsidePoints.Count > 0)
+                        {
+                            foundOne = true;
+                            ProcessTriangle(retVal, index, points);
+                        }
+                        else
+                        {
+                            index++;
+                        }
+                    }
+                } while (foundOne);
+
+                if (retVal.Count == 0)
+                {
+                    // Found a case where the points were nearly coplanar, and adding another point wiped out the whole hull
+                    return null;
+                }
+
+                // Exit Function
+                return retVal.ToArray();
+            }
+
+            #region Private Methods
+
+            /// <summary>
+            /// I've seen various literature call this initial tetrahedron a simplex
+            /// </summary>
+            private static int[] GetStartingTetrahedron(Point3D[] points)
+            {
+                int[] retVal = new int[4];
+
+                // Validate the point cloud is 3D, also get the points that have the smallest and largest X (an exception is thrown if they are the same point)
+                int minXIndex, maxXIndex;
+                GetStartingTetrahedronSprtGetMinMaxX(out minXIndex, out maxXIndex, points);
+
+                // The first two return points will be the ones with the min and max X values
+                retVal[0] = minXIndex;
+                retVal[1] = maxXIndex;
+
+                // The third point will be the one that is farthest from the line defined by the first two
+                int thirdIndex = GetStartingTetrahedronSprtFarthestFromLine(minXIndex, maxXIndex, points);
+                retVal[2] = thirdIndex;
+
+                // The fourth point will be the one that is farthest from the plane defined by the first three
+                int fourthIndex = GetStartingTetrahedronSprtFarthestFromPlane(minXIndex, maxXIndex, thirdIndex, points);
+                retVal[3] = fourthIndex;
+
+                // Exit Function
+                return retVal;
+            }
+            /// <summary>
+            /// This does more than just look at X.  It looks at Y and Z as well to verify the point cloud has points in all 3 dimensions
+            /// </summary>
+            private static void GetStartingTetrahedronSprtGetMinMaxX(out int minXIndex, out int maxXIndex, Point3D[] points)
+            {
+                // Create arrays to hold the min and max along each axis (0=X, 1=Y, 2=Z) - using the first point
+                double[] minValues = new double[] { points[0].X, points[0].Y, points[0].Z };
+                double[] maxValues = new double[] { points[0].X, points[0].Y, points[0].Z };
+                int[] minIndicies = new int[] { 0, 0, 0 };
+                int[] maxIndicies = new int[] { 0, 0, 0 };
+
+                for (int cntr = 1; cntr < points.Length; cntr++)
+                {
+                    #region Examine Point
+
+                    // Min
+                    if (points[cntr].X < minValues[0])
+                    {
+                        minValues[0] = points[cntr].X;
+                        minIndicies[0] = cntr;
+                    }
+
+                    if (points[cntr].Y < minValues[1])
+                    {
+                        minValues[1] = points[cntr].Y;
+                        minIndicies[1] = cntr;
+                    }
+
+                    if (points[cntr].Z < minValues[2])
+                    {
+                        minValues[2] = points[cntr].Z;
+                        minIndicies[2] = cntr;
+                    }
+
+                    // Max
+                    if (points[cntr].X > maxValues[0])
+                    {
+                        maxValues[0] = points[cntr].X;
+                        maxIndicies[0] = cntr;
+                    }
+
+                    if (points[cntr].Y > maxValues[1])
+                    {
+                        maxValues[1] = points[cntr].Y;
+                        maxIndicies[1] = cntr;
+                    }
+
+                    if (points[cntr].Z > maxValues[2])
+                    {
+                        maxValues[2] = points[cntr].Z;
+                        maxIndicies[2] = cntr;
+                    }
+
+                    #endregion
+                }
+
+                #region Validate
+
+                for (int cntr = 0; cntr < 3; cntr++)
+                {
+                    if (maxValues[cntr] == minValues[cntr])
+                    {
+                        throw new ApplicationException("The points passed in aren't in 3D - they are either all on the same point (0D), or colinear (1D), or coplanar (2D)");
+                    }
+                }
+
+                #endregion
+
+                // Return the two points that are the min/max X
+                minXIndex = minIndicies[0];
+                maxXIndex = maxIndicies[0];
+            }
+            /// <summary>
+            /// Finds the point that is farthest from the line
+            /// </summary>
+            private static int GetStartingTetrahedronSprtFarthestFromLine(int index1, int index2, Point3D[] points)
+            {
+                Vector3D lineDirection = points[index2] - points[index1];		// The nearest point method wants a vector, so calculate it once
+                Point3D startPoint = points[index1];		// not sure if there is much of a penalty to referencing a list by index, but I figure I'll just cache this point once
+
+                double maxDistance = -1d;
+                int retVal = -1;
+
+                for (int cntr = 0; cntr < points.Length; cntr++)
+                {
+                    if (cntr == index1 || cntr == index2)
+                    {
+                        continue;
+                    }
+
+                    // Calculate the distance from the line
+                    Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                    double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
+
+                    if (distanceSquared > maxDistance)
+                    {
+                        maxDistance = distanceSquared;
+                        retVal = cntr;
+                    }
+                }
+
+                if (retVal < 0)
+                {
+                    throw new ApplicationException("Didn't find a return point, this should never happen");
+                }
+
+                // Exit Function
+                return retVal;
+            }
+            private static int GetStartingTetrahedronSprtFarthestFromPlane(int index1, int index2, int index3, Point3D[] points)
+            {
+                //NOTE:  I'm copying bits of Math3D.DistanceFromPlane here for optimization reasons
+                Vector3D[] triangle = new Vector3D[] { points[index1].ToVector(), points[index2].ToVector(), points[index3].ToVector() };
+                Vector3D normal = Math3D.GetTriangleNormal(triangle);
+                double originDistance = Math3D.GetPlaneOriginDistance(normal, triangle[0].ToPoint());
+
+                double maxDistance = 0d;
+                int retVal = -1;
+
+                for (int cntr = 0; cntr < points.Length; cntr++)
+                {
+                    if (cntr == index1 || cntr == index2 || cntr == index3)
+                    {
+                        continue;
+                    }
+
+                    //NOTE:  This is Math3D.DistanceFromPlane copied inline to speed things up
+                    Point3D point = points[cntr];
+                    double distance = ((normal.X * point.X) +					// Ax +
+                                                    (normal.Y * point.Y) +					// Bx +
+                                                    (normal.Z * point.Z)) + originDistance;	// Cz + D
+
+                    // I don't care which side of the triangle the point is on for this initial tetrahedron
+                    distance = Math.Abs(distance);
+
+                    if (distance > maxDistance)
+                    {
+                        maxDistance = distance;
+                        retVal = cntr;
+                    }
+                }
+
+                if (retVal < 0)
+                {
+                    throw new ApplicationException("Didn't find a return point, this should never happen");
+                }
+
+                // Exit Function
+                return retVal;
+            }
+
+            private static List<TriangleWithPoints> ConvertStartingPointsToTriangles(int[] startPoints, Point3D[] allPoints)
+            {
+                if (startPoints.Length != 4)
+                {
+                    throw new ArgumentException("This method expects exactly 4 points passed in");
+                }
+
+                List<TriangleWithPoints> retVal = new List<TriangleWithPoints>();
+
+                // Make triangles
+                retVal.Add(CreateTriangle(startPoints[0], startPoints[1], startPoints[2], allPoints[startPoints[3]], allPoints, null));
+                retVal.Add(CreateTriangle(startPoints[3], startPoints[1], startPoints[0], allPoints[startPoints[2]], allPoints, null));
+                retVal.Add(CreateTriangle(startPoints[3], startPoints[2], startPoints[1], allPoints[startPoints[0]], allPoints, null));
+                retVal.Add(CreateTriangle(startPoints[3], startPoints[0], startPoints[2], allPoints[startPoints[1]], allPoints, null));
+
+                // Link triangles together
+                TriangleIndexedLinked.LinkTriangles_Edges(retVal.ConvertAll(o => (TriangleIndexedLinked)o).ToList(), true);
+
+                #region Calculate outside points
+
+                // GetOutsideSet wants indicies to the points it needs to worry about.  This initial call needs all points
+                List<int> allPointIndicies = Enumerable.Range(0, allPoints.Length).ToList();
+
+                // Remove the indicies that are in the return triangles (I ran into a case where 4 points were passed in, but they were nearly coplanar - enough
+                // that GetOutsideSet's Math3D.IsNearZero included it)
+                foreach (int index in retVal.SelectMany(o => o.IndexArray).Distinct())
+                {
+                    allPointIndicies.Remove(index);
+                }
+
+                // For every triangle, find the points that are outside the polygon (not the points behind the triangle)
+                // Note that a point will never be shared between triangles
+                foreach (TriangleWithPoints triangle in retVal)
+                {
+                    if (allPointIndicies.Count > 0)
+                    {
+                        triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, allPointIndicies, allPoints));
+                    }
+                }
+
+                #endregion
+
+                // Exit Function
+                return retVal;
+            }
+
+            /// <summary>
+            /// This works on a triangle that contains outside points.  It removes the triangle, and creates new ones connected to
+            /// the outermost outside point
+            /// </summary>
+            private static void ProcessTriangle(List<TriangleWithPoints> hull, int hullIndex, Point3D[] allPoints)
+            {
+                TriangleWithPoints removedTriangle = hull[hullIndex];
+
+                // Find the farthest point from this triangle
+                int fartherstIndex = ProcessTriangleSprtFarthestPoint(removedTriangle);
+                if (fartherstIndex < 0)
+                {
+                    // The outside points are on the same plane as this triangle (and sitting within the bounds of the triangle).
+                    // Just wipe the points and go away
+                    removedTriangle.OutsidePoints.Clear();
+                    return;
+                    //throw new ApplicationException(string.Format("Couldn't find a farthest point for triangle\r\n{0}\r\n\r\n{1}\r\n",
+                    //    removedTriangle.ToString(),
+                    //    string.Join("\r\n", removedTriangle.OutsidePoints.Select(o => o.Item1.ToString() + "   |   " + allPoints[o.Item1].ToString(true)).ToArray())));		// this should never happen
+                }
+
+                //Key=which triangles to remove from the hull
+                //Value=meaningless, I just wanted a sorted list
+                SortedList<TriangleIndexedLinked, int> removedTriangles = new SortedList<TriangleIndexedLinked, int>();
+
+                //Key=triangle on the hull that is a boundry (the new triangles will be added to these boundry triangles)
+                //Value=the key's edges that are exposed to the removed triangles
+                SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim = new SortedList<TriangleIndexedLinked, List<TriangleEdge>>();
+
+                // Find all the triangles that can see this point (they will need to be removed from the hull)
+                //NOTE:  This method is recursive
+                ProcessTriangleSprtRemove(removedTriangle, removedTriangles, removedRim, allPoints[fartherstIndex].ToVector());
+
+                // Remove these from the hull
+                ProcessTriangleSprtRemoveFromHull(hull, removedTriangles.Keys, removedRim);
+
+                // Get all the outside points
+                //List<int> allOutsidePoints = removedTriangles.Keys.SelectMany(o => ((TriangleWithPoints)o).OutsidePoints).Distinct().ToList();		// if you try to read what SelectMany does, it gets pretty wordy and unclear.  It just does a foreach across all the OutsidePoints lists from all the removedTriangles (treats the list of lists like a single list)
+                List<int> allOutsidePoints = removedTriangles.Keys.SelectMany(o => ((TriangleWithPoints)o).OutsidePoints).ToList();		// there's no need to call distinct, since the outside points aren't shared between triangles
+
+                // Create new triangles
+                ProcessTriangleSprtNew(hull, fartherstIndex, removedRim, allPoints, allOutsidePoints);		// Note that after this method, allOutsidePoints will only be the points left over (the ones that are inside the hull)
+            }
+            private static int ProcessTriangleSprtFarthestPoint(TriangleWithPoints triangle)
+            {
+                //NOTE: This method is nearly a copy of GetOutsideSet
+
+                Vector3D[] polygon = new Vector3D[] { triangle.Point0.ToVector(), triangle.Point1.ToVector(), triangle.Point2.ToVector() };
+
+                List<int> pointIndicies = triangle.OutsidePoints;
+                Point3D[] allPoints = triangle.AllPoints;
+
+                double maxDistance = 0d;
+                int retVal = -1;
+
+                for (int cntr = 0; cntr < pointIndicies.Count; cntr++)
+                {
+                    double distance = Math3D.DistanceFromPlane(polygon, allPoints[pointIndicies[cntr]].ToVector());
+
+                    // Distance should never be negative (or the point wouldn't be in the list of outside points).  If for some reason there is one with a negative distance,
+                    // it shouldn't be considered, because it sits inside the hull
+                    if (distance > maxDistance)
+                    {
+                        maxDistance = distance;
+                        retVal = pointIndicies[cntr];
+                    }
+                    else if (Math3D.IsNearZero(distance) && Math3D.IsNearZero(maxDistance))		// this is for a coplanar point that can have a very slightly negative distance
+                    {
+                        // Can't trust the previous bary check, need another one (maybe it's false because it never went through that first check?)
+                        Vector bary = Math3D.ToBarycentric(triangle, allPoints[pointIndicies[cntr]]);
+                        if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+                        {
+                            maxDistance = 0d;
+                            retVal = pointIndicies[cntr];
+                        }
+                    }
+                }
+
+                // Exit Function
+                return retVal;
+            }
+
+            private static void ProcessTriangleSprtRemove(TriangleIndexedLinked triangle, SortedList<TriangleIndexedLinked, int> removedTriangles, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Vector3D farPoint)
+            {
+                // This triangle will need to be removed.  Keep track of it so it's not processed again (the int means nothing)
+                removedTriangles.Add(triangle, 0);
+
+                // Try each neighbor
+                ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_01, removedTriangles, removedRim, farPoint, triangle);
+                ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_12, removedTriangles, removedRim, farPoint, triangle);
+                ProcessTriangleSprtRemoveSprtNeighbor(triangle.Neighbor_20, removedTriangles, removedRim, farPoint, triangle);
+            }
+            private static void ProcessTriangleSprtRemoveSprtNeighbor(TriangleIndexedLinked triangle, SortedList<TriangleIndexedLinked, int> removedTriangles, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Vector3D farPoint, TriangleIndexedLinked fromTriangle)
+            {
+                if (removedTriangles.ContainsKey(triangle))
+                {
+                    return;
+                }
+
+                if (removedRim.ContainsKey(triangle))
+                {
+                    // This triangle is already recognized as part of the hull.  Add a link from it to the from triangle (because two of its edges
+                    // are part of the hull rim)
+                    removedRim[triangle].Add(triangle.WhichEdge(fromTriangle));
+                    return;
+                }
+
+                // Need to subtract the far point from some point on this triangle, so that it's a vector from the triangle to the
+                // far point, and not from the origin
+                double dot = Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector());
+                if (dot >= 0d || Math3D.IsNearZero(dot))		// 0 is coplanar, -1 is the opposite side
+                {
+                    // This triangle is visible to the point.  Remove it (recurse)
+                    ProcessTriangleSprtRemove(triangle, removedTriangles, removedRim, farPoint);
+                }
+                else
+                {
+                    // This triangle is invisible to the point, so needs to stay part of the hull.  Store this boundry
+                    removedRim.Add(triangle, new List<TriangleEdge>());
+                    removedRim[triangle].Add(triangle.WhichEdge(fromTriangle));
+                }
+            }
+
+            private static void ProcessTriangleSprtRemoveFromHull(List<TriangleWithPoints> hull, IList<TriangleIndexedLinked> trianglesToRemove, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim)
+            {
+                // Remove from the hull list
+                foreach (TriangleIndexedLinked triangle in trianglesToRemove)
+                {
+                    hull.Remove((TriangleWithPoints)triangle);
+                }
+
+                // Break the links from the hull to the removed triangles (there's no need to break links in the other direction.  The removed triangles
+                // will become orphaned, and eventually garbage collected)
+                foreach (TriangleIndexedLinked triangle in removedRim.Keys)
+                {
+                    foreach (TriangleEdge edge in removedRim[triangle])
+                    {
+                        triangle.SetNeighbor(edge, null);
+                    }
+                }
+            }
+
+            private static void ProcessTriangleSprtNew(List<TriangleWithPoints> hull, int fartherstIndex, SortedList<TriangleIndexedLinked, List<TriangleEdge>> removedRim, Point3D[] allPoints, List<int> outsidePoints)
+            {
+                List<TriangleWithPoints> newTriangles = new List<TriangleWithPoints>();
+
+                // Run around the rim, and build a triangle between the far point and each edge
+                foreach (TriangleIndexedLinked rimTriangle in removedRim.Keys)
+                {
+                    // Get a point that is toward the hull (the created triangle will be built so its normal points away from this)
+                    Point3D insidePoint = ProcessTriangleSprtNewSprtInsidePoint(rimTriangle, removedRim[rimTriangle]);
+
+                    foreach (TriangleEdge rimEdge in removedRim[rimTriangle])
+                    {
+                        // Get the points for this edge
+                        int index1, index2;
+                        rimTriangle.GetIndices(out index1, out index2, rimEdge);
+
+                        // Build the triangle
+                        TriangleWithPoints triangle = CreateTriangle(fartherstIndex, index1, index2, insidePoint, allPoints, rimTriangle);
+
+                        // Now link this triangle with the boundry triangle (just the one edge, the other edges will be joined later)
+                        TriangleIndexedLinked.LinkTriangles_Edges(triangle, rimTriangle);
+
+                        // Store this triangle
+                        newTriangles.Add(triangle);
+                        hull.Add(triangle);
+                    }
+                }
+
+                // The new triangles are linked to the boundry already.  Now link the other two edges to each other (newTriangles forms a
+                // triangle fan, but they aren't neccessarily consecutive)
+                TriangleIndexedLinked.LinkTriangles_Edges(newTriangles.ConvertAll(o => (TriangleIndexedLinked)o).ToList(), false);
+
+                // Distribute the outside points to these new triangles
+                foreach (TriangleWithPoints triangle in newTriangles)
+                {
+                    // Find the points that are outside the polygon (not the points behind the triangle)
+                    // Note that a point will never be shared between triangles
+                    triangle.OutsidePoints.AddRange(GetOutsideSet(triangle, outsidePoints, allPoints));
+                }
+            }
+            private static Point3D ProcessTriangleSprtNewSprtInsidePoint(TriangleIndexedLinked rimTriangle, List<TriangleEdge> sharedEdges)
+            {
+                bool[] used = new bool[3];
+
+                // Figure out which indices are used
+                foreach (TriangleEdge edge in sharedEdges)
+                {
+                    switch (edge)
+                    {
+                        case TriangleEdge.Edge_01:
+                            used[0] = true;
+                            used[1] = true;
+                            break;
+
+                        case TriangleEdge.Edge_12:
+                            used[1] = true;
+                            used[2] = true;
+                            break;
+
+                        case TriangleEdge.Edge_20:
+                            used[2] = true;
+                            used[0] = true;
+                            break;
+
+                        default:
+                            throw new ApplicationException("Unknown TriangleEdge: " + edge.ToString());
+                    }
+                }
+
+                // Find one that isn't used
+                for (int cntr = 0; cntr < 3; cntr++)
+                {
+                    if (!used[cntr])
+                    {
+                        return rimTriangle[cntr];
+                    }
+                }
+
+                // Project a point away from this triangle
+                //TODO:  If the hull ends up concave, this is a very likely culprit.  May need to come up with a better way
+                return rimTriangle.GetCenterPoint() + (rimTriangle.Normal * -.001);		// by not using the unit normal, I'm keeping this scaled roughly to the size of the triangle
+            }
+
+            /// <summary>
+            /// This takes in 3 points that belong to the triangle, and a point that is not on the triangle, but is toward the rest
+            /// of the hull.  It then creates a triangle whose normal points away from the hull (right hand rule)
+            /// </summary>
+            private static TriangleWithPoints CreateTriangle(int point0, int point1, int point2, Point3D pointWithinHull, Point3D[] allPoints, ITriangle neighbor)
+            {
+                // Try an arbitrary orientation
+                TriangleWithPoints retVal = new TriangleWithPoints(point0, point1, point2, allPoints);
+
+                // Get a vector pointing from point0 to the inside point
+                Vector3D towardHull = pointWithinHull - allPoints[point0];
+
+                double dot = Vector3D.DotProduct(towardHull, retVal.Normal);
+                if (dot > 0d)
+                {
+                    // When the dot product is greater than zero, that means the normal points in the same direction as the vector that points
+                    // toward the hull.  So buid a triangle that points in the opposite direction
+                    retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+                }
+                else if (dot == 0d)
+                {
+                    // This new triangle is coplanar with the neighbor triangle, so pointWithinHull can't be used to figure out if this return
+                    // triangle is facing the correct way.  Instead, make it point the same direction as the neighbor triangle
+                    dot = Vector3D.DotProduct(retVal.Normal, neighbor.Normal);
+                    if (dot < 0)
+                    {
+                        retVal = new TriangleWithPoints(point0, point2, point1, allPoints);
+                    }
+                }
+
+                // Exit Function
+                return retVal;
+            }
+
+            /// <summary>
+            /// This returns the subset of points that are on the outside facing side of the triangle
+            /// </summary>
+            /// <remarks>
+            /// I got these steps here:
+            /// http://www.gamedev.net/topic/106765-determining-if-a-point-is-in-front-of-or-behind-a-plane/
+            /// </remarks>
+            /// <param name="pointIndicies">
+            /// This method will only look at the points in pointIndicies.
+            /// NOTE: This method will also remove values from here if they are part of an existing triangle, or get added to a triangle's outside list.
+            /// </param>
+            private static List<int> GetOutsideSet(TriangleIndexed triangle, List<int> pointIndicies, Point3D[] allPoints)
+            {
+                List<int> retVal = new List<int>();
+
+                // Compute D, using a arbitrary point P, that lies on the plane: D = - (Nx*Px + Ny*Py + Nz*Pz); Don't forget the inversion !
+                double D = -((triangle.NormalUnit.X * triangle.Point0.X) + (triangle.NormalUnit.Y * triangle.Point0.Y) + (triangle.NormalUnit.Z * triangle.Point0.Z));
+
+                int cntr = 0;
+                while (cntr < pointIndicies.Count)
+                {
+                    int index = pointIndicies[cntr];
+
+                    if (index == triangle.Index0 || index == triangle.Index1 || index == triangle.Index2)
+                    {
+                        pointIndicies.Remove(index);		// no need to consider this for future calls
+                        continue;
+                    }
+
+                    // You can test a point (T) with respect to the plane using the plane equation: res = Nx*Tx + Ny*Ty + Nz*Tz + D
+                    double res = (triangle.NormalUnit.X * allPoints[index].X) + (triangle.NormalUnit.Y * allPoints[index].Y) + (triangle.NormalUnit.Z * allPoints[index].Z) + D;
+
+                    if (res > 0d)		// anything greater than zero lies outside the plane
+                    {
+                        retVal.Add(index);
+                        pointIndicies.Remove(index);		// an outside point can only belong to one triangle
+                    }
+                    else if (Math3D.IsNearZero(res))
+                    {
+                        // This point is coplanar.  Only consider it an outside point if it is outside the bounds of this triangle
+                        Vector bary = Math3D.ToBarycentric(triangle, allPoints[index]);
+                        if (bary.X < 0d || bary.Y < 0d || bary.X + bary.Y > 1d)
+                        {
+                            retVal.Add(index);
+                            pointIndicies.Remove(index);		// an outside point can only belong to one triangle
+                        }
+                        else
+                        {
+                            cntr++;
+                        }
+                    }
+                    else
+                    {
+                        cntr++;
+                    }
+                }
+
+                return retVal;
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: SliceTriangles
+
+        private static class SliceTriangles
+        {
+            public static ITriangle[] Slice(ITriangle[] triangles, double maxEdgeLength)
+            {
+                List<ITriangle> retVal = new List<ITriangle>();
+
+                bool foundLarger = false;
+                TriangleEdge[] edges = Enum.GetValues(typeof(TriangleEdge)).Cast<TriangleEdge>().ToArray();
+
+                for (int cntr = 0; cntr < triangles.Length; cntr++)
+                {
+                    // Get the length of the longest edge
+                    Tuple<TriangleEdge, double>[] edgeLengths = edges.Select(o => Tuple.Create(o, triangles[cntr].GetEdgeLength(o))).OrderBy(o => o.Item2).ToArray();
+                    double maxLength = edgeLengths.Max(o => o.Item2);
+
+                    if (maxLength > maxEdgeLength)
+                    {
+                        // This is too big.  Cut it up
+                        retVal.AddRange(Divide(triangles[cntr], edgeLengths));
+                        foundLarger = true;
+                    }
+                    else
+                    {
+                        // Keep as is
+                        retVal.Add(triangles[cntr]);
+                    }
+                }
+
+                if (foundLarger)
+                {
+                    ITriangle[] newTriangles = retVal.ToArray();
+                    retVal.Clear();
+
+                    // Recurse
+                    retVal.AddRange(Slice(newTriangles, maxEdgeLength));
+                }
+
+                // Exit Function
+                return retVal.ToArray();
+            }
+
+            #region Private Methods
+
+            private static ITriangle[] Divide(ITriangle triangle, Tuple<TriangleEdge, double>[] edgeLengths)
+            {
+                // Take the shortest length divided by the longest (the array is sorted)
+                double ratio = edgeLengths[0].Item2 / edgeLengths[2].Item2;
+
+                TriangleIndexed[] retVal = null;
+
+                if (ratio > .75d)
+                {
+                    // The 3 egde lengths are roughly equal.  Divide into 4
+                    retVal = Divide_4(triangle);
+                }
+                else if (ratio < .33d)
+                {
+                    // Skinny base, and two large sides
+                    retVal = Divide_SkinnyBase(triangle, edgeLengths);
+                }
+                else
+                {
+                    // Wide base, and two smaller sides
+                    retVal = Divide_WideBase(triangle, edgeLengths);
+                }
+
+                // Make sure the normals point in the same direction
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    if (Vector3D.DotProduct(retVal[cntr].Normal, triangle.Normal) < 0)
+                    {
+                        // Reverse it
+                        retVal[cntr] = new TriangleIndexed(retVal[cntr].Index0, retVal[cntr].Index2, retVal[cntr].Index1, retVal[cntr].AllPoints);
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static TriangleIndexed[] Divide_4(ITriangle triangle)
+            {
+                Point3D[] points = new Point3D[6];
+                points[0] = triangle.Point0;
+                points[1] = triangle.Point1;
+                points[2] = triangle.Point2;
+                points[3] = triangle.GetEdgeMidpoint(TriangleEdge.Edge_01);
+                points[4] = triangle.GetEdgeMidpoint(TriangleEdge.Edge_12);
+                points[5] = triangle.GetEdgeMidpoint(TriangleEdge.Edge_20);
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(new TriangleIndexed(0, 3, 5, points));       // Bottom Left
+                retVal.Add(new TriangleIndexed(1, 4, 3, points));       // Top
+                retVal.Add(new TriangleIndexed(2, 5, 4, points));       // Bottom Right
+                retVal.Add(new TriangleIndexed(3, 4, 5, points));       // Center
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] Divide_SkinnyBase(ITriangle triangle, Tuple<TriangleEdge, double>[] edgeLengths)
+            {
+                Point3D[] points = new Point3D[5];
+                points[0] = triangle.GetCommonPoint(edgeLengths[0].Item1, edgeLengths[1].Item1);        // Bottom Left
+                points[1] = triangle.GetCommonPoint(edgeLengths[1].Item1, edgeLengths[2].Item1);        // Top
+                points[2] = triangle.GetCommonPoint(edgeLengths[0].Item1, edgeLengths[2].Item1);        // Bottom Right
+                points[3] = triangle.GetEdgeMidpoint(edgeLengths[1].Item1);        // Mid Left
+                points[4] = triangle.GetEdgeMidpoint(edgeLengths[2].Item1);        // Mid Right
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(new TriangleIndexed(1, 4, 3, points));       // Top
+                retVal.Add(new TriangleIndexed(0, 4, 2, points));       // Bottom Right
+                retVal.Add(new TriangleIndexed(0, 3, 4, points));       // Middle Left
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] Divide_WideBase(ITriangle triangle, Tuple<TriangleEdge, double>[] edgeLengths)
+            {
+                Point3D[] points = new Point3D[4];
+                points[0] = triangle.GetCommonPoint(edgeLengths[2].Item1, edgeLengths[0].Item1);        // Bottom Left
+                points[1] = triangle.GetCommonPoint(edgeLengths[0].Item1, edgeLengths[1].Item1);        // Top
+                points[2] = triangle.GetCommonPoint(edgeLengths[2].Item1, edgeLengths[1].Item1);        // Bottom Right
+                points[3] = triangle.GetEdgeMidpoint(edgeLengths[2].Item1);        // Mid Bottom
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(new TriangleIndexed(0, 1, 3, points));       // Left
+                retVal.Add(new TriangleIndexed(1, 2, 3, points));       // Right
+
+                return retVal.ToArray();
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: HullTriangleIntersect
+
+        private static class HullTriangleIntersect
+        {
+            //NOTE: This will only return a proper polygon, or null (will return null if the triangle is only touching the hull, but not intersecting)
+            public static Point3D[] GetIntersection_Hull_Triangle(ITriangleIndexed[] hull, ITriangle triangle)
+            {
+                // Think of the triangle as a plane, and get a polygon of it slicing through the hull
+                Point3D[] planePoly = GetIntersection_Hull_Plane(hull, triangle);
+                if (planePoly == null || planePoly.Length < 3)
+                {
+                    return null;
+                }
+
+                // Now intersect that polygon with the triangle (could return null)
+                return Math2D.GetIntersection_Polygon_Triangle(planePoly, triangle);
+            }
+
+            #region Private Methods
+
+            private static Point3D[] GetIntersection_Hull_Plane(ITriangleIndexed[] hull, ITriangle plane)
+            {
+                // Shoot through all the triangles in the hull, and get line segment intersections
+                List<Tuple<Point3D, Point3D>> lineSegments = null;
+
+                if (hull.Length > 100)
+                {
+                    lineSegments = hull.
+                        AsParallel().
+                        Select(o => Math3D.GetIntersection_Plane_Triangle(plane, o)).
+                        Where(o => o != null).
+                        ToList();
+                }
+                else
+                {
+                    lineSegments = hull.
+                        Select(o => Math3D.GetIntersection_Plane_Triangle(plane, o)).
+                        Where(o => o != null).
+                        ToList();
+                }
+
+                if (lineSegments.Count < 2)
+                {
+                    // length of 0 is a clear miss, 1 is just touching
+                    //NOTE: All the points could be colinear, and just touching the hull, but deeper analysis is needed
+                    return null;
+                }
+
+                // Stitch the line segments together
+                Point3D[] retVal = GetIntersection_Hull_PlaneSprtStitchSegments(lineSegments);
+
+                if (retVal == null)
+                {
+                    // In some cases, the above method fails, so call the more generic 2D convex hull method
+                    //NOTE: This assumes the hull is convex
+                    retVal = GetIntersection_Hull_PlaneSprtConvexHull(lineSegments);
+                }
+
+                // Exit Function
+                return retVal;      // could still be null
+            }
+            private static Point3D[] GetIntersection_Hull_PlaneSprtStitchSegments(List<Tuple<Point3D, Point3D>> lineSegments)
+            {
+                // Need to remove single vertex matches, or the loop below will have problems
+                var fixedSegments = lineSegments.Where(o => !Math3D.IsNearValue(o.Item1, o.Item2)).ToList();
+                if (fixedSegments.Count == 0)
+                {
+                    return null;
+                }
+
+                List<Point3D> retVal = new List<Point3D>();
+
+                // Stitch the segments together into a polygon
+                retVal.Add(fixedSegments[0].Item1);
+                Point3D currentPoint = fixedSegments[0].Item2;
+                fixedSegments.RemoveAt(0);
+
+                while (fixedSegments.Count > 0)
+                {
+                    var match = FindAndRemoveMatchingSegment(fixedSegments, currentPoint);
+                    if (match == null)
+                    {
+                        //TODO: If this becomes an issue, make a method that builds fragments, then the final polygon will hop from fragment to fragment
+                        //TODO: Or, use Math2D.GetConvexHull - make an overload that rotates the points into the xy plane
+                        //throw new ApplicationException("The hull passed in has holes in it");
+                        return null;
+                    }
+
+                    retVal.Add(match.Item1);
+                    currentPoint = match.Item2;
+                }
+
+                if (!Math3D.IsNearValue(retVal[0], currentPoint))
+                {
+                    //throw new ApplicationException("The hull passed in has holes in it");
+                    return null;
+                }
+
+                if (retVal.Count < 3)
+                {
+                    return null;
+                }
+
+                // Exit Function
+                return retVal.ToArray();
+            }
+            private static Point3D[] GetIntersection_Hull_PlaneSprtConvexHull(List<Tuple<Point3D, Point3D>> lineSegments)
+            {
+                // Convert the line segments into single points (deduped)
+                List<Point3D> points = new List<Point3D>();
+                foreach (var segment in lineSegments)
+                {
+                    if (!points.Any(o => Math3D.IsNearValue(o, segment.Item1)))
+                    {
+                        points.Add(segment.Item1);
+                    }
+
+                    if (!points.Any(o => Math3D.IsNearValue(o, segment.Item2)))
+                    {
+                        points.Add(segment.Item2);
+                    }
+                }
+
+                // Build a polygon out of the outermost points
+                var hull2D = Math2D.GetConvexHull(points.ToArray());
+                if (hull2D == null || hull2D.PerimiterLines.Length == 0)
+                {
+                    return null;
+                }
+
+                // Transform to 3D
+                return hull2D.PerimiterLines.Select(o => hull2D.GetTransformedPoint(hull2D.Points[o])).ToArray();
+            }
+
+            /// <summary>
+            /// This compares the test point to each end of each line segment.  Then removes that matching segment from the list
+            /// </summary>
+            /// <returns>
+            /// null, or:
+            /// Item1=Common Point
+            /// Item2=Other Point
+            /// </returns>
+            private static Tuple<Point3D, Point3D> FindAndRemoveMatchingSegment(List<Tuple<Point3D, Point3D>> lineSegments, Point3D testPoint)
+            {
+                for (int cntr = 0; cntr < lineSegments.Count; cntr++)
+                {
+                    if (Math3D.IsNearValue(lineSegments[cntr].Item1, testPoint))
+                    {
+                        Tuple<Point3D, Point3D> retVal = lineSegments[cntr];
+                        lineSegments.RemoveAt(cntr);
+                        return retVal;
+                    }
+
+                    if (Math3D.IsNearValue(lineSegments[cntr].Item2, testPoint))
+                    {
+                        Tuple<Point3D, Point3D> retVal = Tuple.Create(lineSegments[cntr].Item2, lineSegments[cntr].Item1);
+                        lineSegments.RemoveAt(cntr);
+                        return retVal;
+                    }
+                }
+
+                // No match found
+                return null;
+            }
+
+            #endregion
+        }
+
+        #endregion
+
+        #region Declaration Section
+
+        private const double _180_over_PI = (180d / Math.PI);
+        private const double _PI_over_180 = (Math.PI / 180d);
+
+        private const float _180_over_PI_FLOAT = (180f / (float)Math.PI);
+        private const float _PI_over_180_FLOAT = ((float)Math.PI / 180f);
+
+        public static readonly Matrix3D ZeroMatrix = new Matrix3D(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        public static readonly Vector3D ScaleIdentity = new Vector3D(1, 1, 1);
+
+        public const double Radian360 = 360 * _PI_over_180;
+
+        //public const double NEARZERO = .000001d;
+        public const double NEARZERO = .000000001d;
+
+        #endregion
+
+        #region Random
+
+        /// <summary>
+        /// Get a random vector between boundry lower and boundry upper
+        /// </summary>
+        public static Vector3D GetRandomVector(Vector3D boundryLower, Vector3D boundryUpper)
+        {
+            Vector3D retVal = new Vector3D();
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            retVal.X = boundryLower.X + (rand.NextDouble() * (boundryUpper.X - boundryLower.X));
+            retVal.Y = boundryLower.Y + (rand.NextDouble() * (boundryUpper.Y - boundryLower.Y));
+            retVal.Z = boundryLower.Z + (rand.NextDouble() * (boundryUpper.Z - boundryLower.Z));
+
+            return retVal;
+        }
+        /// <summary>
+        /// Get a random vector between maxValue*-1 and maxValue
+        /// </summary>
+        public static Vector3D GetRandomVector(double maxValue)
+        {
+            Vector3D retVal = new Vector3D();
+
+            retVal.X = GetNearZeroValue(maxValue);
+            retVal.Y = GetNearZeroValue(maxValue);
+            retVal.Z = GetNearZeroValue(maxValue);
+
+            return retVal;
+        }
+        /// <summary>
+        /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
+        /// rather than cube)
+        /// </summary>
+        public static Vector3D GetRandomVectorSpherical(double maxRadius)
+        {
+            return GetRandomVectorSpherical(0d, maxRadius);
+        }
+        /// <summary>
+        /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
+        /// rather than cube).  The radius will never be inside minRadius
+        /// </summary>
+        /// <remarks>
+        /// The sqrt idea came from here:
+        /// http://dzindzinovic.blogspot.com/2010/05/xna-random-point-in-circle.html
+        /// </remarks>
+        public static Vector3D GetRandomVectorSpherical(double minRadius, double maxRadius)
+        {
+            // A sqrt, sin and cos  :(           can it be made cheaper?
+            double radius = minRadius + ((maxRadius - minRadius) * Math.Sqrt(StaticRandom.NextDouble()));		// without the square root, there is more chance at the center than the edges
+
+            return GetRandomVectorSphericalShell(radius);
+        }
+        /// <summary>
+        /// Gets a random vector with the radius passed in (bounds are spherical, rather than cube)
+        /// </summary>
+        public static Vector3D GetRandomVectorSphericalShell(double radius)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double theta = rand.NextDouble() * Math.PI * 2d;
+
+            // z is cos of phi, which isn't linear.  So the probability is higher that more will be at the poles.  Which means if I want
+            // a linear probability of z, I need to feed the cosine something that will flatten it into a line.  The curve that will do that
+            // is arccos (which basically rotates the cosine wave 90 degrees).  This means that it is undefined for any x outside the range
+            // of -1 to 1.  So I have to shift the random statement to go between -1 to 1, run it through the curve, then shift the result
+            // to go between 0 and pi.
+            //double phi = rand.NextDouble() * Math.PI;
+
+            double phi = (rand.NextDouble() * 2d) - 1d;		// value from -1 to 1
+            phi = -Math.Asin(phi) / (Math.PI * .5d);		// another value from -1 to 1
+            phi = (1d + phi) * Math.PI * .5d;		// from 0 to pi
+
+            double sinPhi = Math.Sin(phi);
+
+            double x = radius * Math.Cos(theta) * sinPhi;
+            double y = radius * Math.Sin(theta) * sinPhi;
+            double z = radius * Math.Cos(phi);
+
+            return new Vector3D(x, y, z);
+        }
+        /// <summary>
+        /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
+        /// rather than cube).  Z will always be zero.
+        /// </summary>
+        public static Vector3D GetRandomVectorSpherical2D(double maxRadius)
+        {
+            return GetRandomVectorSpherical2D(0d, maxRadius);
+        }
+        /// <summary>
+        /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
+        /// rather than cube).  The radius will never be inside minRadius.  Z will always be zero.
+        /// </summary>
+        /// <remarks>
+        /// The sqrt idea came from here:
+        /// http://dzindzinovic.blogspot.com/2010/05/xna-random-point-in-circle.html
+        /// </remarks>
+        public static Vector3D GetRandomVectorSpherical2D(double minRadius, double maxRadius)
+        {
+            double radius = minRadius + ((maxRadius - minRadius) * Math.Sqrt(StaticRandom.NextDouble()));		// without the square root, there is more chance at the center than the edges
+
+            return GetRandomVectorSphericalShell2D(radius);
+        }
+        /// <summary>
+        /// Gets a random vector with the radius passed in (bounds are spherical, rather than cube).  Z will always be zero.
+        /// </summary>
+        public static Vector3D GetRandomVectorSphericalShell2D(double radius)
+        {
+            double angle = StaticRandom.NextDouble() * Math.PI * 2d;
+
+            double x = radius * Math.Cos(angle);
+            double y = radius * Math.Sin(angle);
+
+            return new Vector3D(x, y, 0d);
+        }
+
+        /// <summary>
+        /// This returns points evenly distributed within a sphere
+        /// </summary>
+        /// <param name="returnCount">How many points to return</param>
+        /// <param name="existingStaticPoints">
+        /// The static points won't be moved, but the return points will be repelled from them.
+        /// NOTE: Pass in null if there are no static points
+        /// </param>
+        /// <param name="radius">
+        /// The radius of the sphere the points should be contained in
+        /// NOTE: The final output won't be exact it could be +- about 10% of this value
+        /// </param>
+        /// <param name="stopRadiusPercent">
+        /// Each step, the return points are shifted a bit more into position.  When the max shift length is less than this (radius * stopRadiusPercent), then that's
+        /// considered good enough, and the method stops
+        /// NOTE: Somewhere between 5% to 1% seem to give pretty good results (the smaller the percent, the more exact the final result)
+        /// </param>
+        /// <param name="stopIterationCount">
+        /// If the number of steps has gone past this count, the method stops (even though stopRadiusPercent hasn't been met yet).  This count acts like a
+        /// safety to avoid taking way too long
+        /// </param>
+        /// <param name="movableRepulseMultipliers">
+        /// This is useful if some points should be more repulsive than others (1 is a standard multiplier, 2 is twice, etc).
+        /// NOTE: Only the force is multiplied, the distance calculation stays the same
+        /// NOTE: Pass in null if they are all the same
+        /// </param>
+        public static Vector3D[] GetRandomVectorsSphericalEvenDist(int returnCount, Vector3D[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetSpherical(returnCount, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+        public static Vector3D[] GetRandomVectorsSphericalEvenDist(Vector3D[] movable, Vector3D[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetSpherical(movable, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+
+        public static Vector3D[] GetRandomVectorsSphericalClusteredMinDist(int returnCount, Vector3D[] existingStaticPoints, double radius, double minDist, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetSpherical_ClusteredMinDist(returnCount, existingStaticPoints, radius, minDist, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+        public static Vector3D[] GetRandomVectorsSphericalClusteredMinDist(Vector3D[] movable, Vector3D[] existingStaticPoints, double radius, double minDist, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetSpherical_ClusteredMinDist(movable, existingStaticPoints, radius, minDist, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+
+        public static Vector[] GetRandomVectorsCircularEvenDist(int returnCount, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetCircular(returnCount, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+        public static Vector[] GetRandomVectorsCircularEvenDist(Vector[] movable, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetCircular(movable, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+
+        public static Vector[] GetRandomVectorsCircularCenterPacked(int returnCount, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetCircular_CenterPacked(returnCount, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+        public static Vector[] GetRandomVectorsCircularCenterPacked(Vector[] movable, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+        {
+            return EvenDistribution.GetCircular_CenterPacked(movable, existingStaticPoints, radius, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, staticRepulseMultipliers);
+        }
+
+        public static Vector3D GetRandomVectorCone(Vector3D center, double maxAngle)
+        {
+            // Get a rotate axis that is always orthogonal to the center axis
+            Vector3D rotateAxis = Vector3D.CrossProduct(center, GetRandomVectorSphericalShell(1));
+
+            return center.GetRotatedVector(rotateAxis, StaticRandom.NextDouble(maxAngle));
+        }
+
+        public static Quaternion GetRandomRotation()
+        {
+            return new Quaternion(GetRandomVectorSphericalShell(1d), GetNearZeroValue(360d));
+        }
+
+        /// <remarks>
+        /// Got this here:
+        /// http://adamswaab.wordpress.com/2009/12/11/random-point-in-a-triangle-barycentric-coordinates/
+        /// </remarks>
+        public static Point3D GetRandomPointInTriangle(Point3D a, Point3D b, Point3D c)
+        {
+            Vector3D ab = b - a;
+            Vector3D ac = c - a;
+
+            Random rand = StaticRandom.GetRandomForThread();
+            double percentAB = rand.NextDouble();		// % along ab
+            double percentAC = rand.NextDouble();		// % along ac
+
+            if (percentAB + percentAC >= 1d)
+            {
+                // Mirror back onto the triangle (otherwise this would make a parallelogram)
+                percentAB = 1d - percentAB;
+                percentAC = 1d - percentAC;
+            }
+
+            // Now add the two weighted vectors to a
+            return a + ((ab * percentAB) + (ac * percentAC));
+        }
+        public static Point3D GetRandomPointInTriangle(ITriangle triangle)
+        {
+            //Vector3D ab = b - a;
+            //Vector3D ac = c - a;
+            Vector3D ab = triangle.Point1 - triangle.Point0;
+            Vector3D ac = triangle.Point2 - triangle.Point0;
+
+            Random rand = StaticRandom.GetRandomForThread();
+            double percentAB = rand.NextDouble();		// % along ab
+            double percentAC = rand.NextDouble();		// % along ac
+
+            if (percentAB + percentAC >= 1d)
+            {
+                // Mirror back onto the triangle (otherwise this would make a parallelogram)
+                percentAB = 1d - percentAB;
+                percentAC = 1d - percentAC;
+            }
+
+            // Now add the two weighted vectors to a
+            return triangle.Point0 + ((ab * percentAB) + (ac * percentAC));
+        }
+
+        /// <summary>
+        /// This returns a list of points evenly distributed across the surface of the hull passed in
+        /// </summary>
+        /// <remarks>
+        /// Note that the triangles within hull don't need to actually be a continuous hull.  They can be a scattered mess of triangles, and
+        /// the returned points will still be constrained to the surface of those triangles (evenly distributed across those triangles)
+        /// </remarks>
+        public static Point3D[] GetRandomPointsOnHull(ITriangle[] hull, int numPoints)
+        {
+            // Calculate each triangle's % of the total area of the hull (sorted smallest to largest)
+            int[] trianglePointers;
+            double[] triangleSizes;
+            GetRandomPointsOnHullSprtSizes(out trianglePointers, out triangleSizes, hull);
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            Point3D[] retVal = new Point3D[numPoints];
+
+            for (int cntr = 0; cntr < numPoints; cntr++)
+            {
+                // Pick a random location on the hull (a percent of the hull's size from 0% to 100%)
+                double percent = rand.NextDouble();
+
+                // Find the triangle that straddles this percent
+                int index = GetRandomPointsOnHullSprtFindTriangle(trianglePointers, triangleSizes, percent);
+
+                // Create a point somewhere on this triangle
+                retVal[cntr] = GetRandomPointInTriangle(hull[index]);
+            }
+
+            // Exit Function
+            return retVal;
+        }
+        /// <summary>
+        /// Instead of just returning the list of points, it returns which triangle contains which points
+        /// </summary>
+        /// <remarks>
+        /// The code is copied from the other overload for efficiency reasons
+        /// This is a little more expensive than the other overload
+        /// </remarks>
+        /// <returns>
+        /// Key=index into hull
+        /// Value=points belonging to that triangle
+        /// </returns>
+        public static SortedList<int, List<Point3D>> GetRandomPointsOnHull_Structured(ITriangle[] hull, int numPoints)
+        {
+            // Calculate each triangle's % of the total area of the hull (sorted smallest to largest)
+            int[] trianglePointers;
+            double[] triangleSizes;
+            GetRandomPointsOnHullSprtSizes(out trianglePointers, out triangleSizes, hull);
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            SortedList<int, List<Point3D>> retVal = new SortedList<int, List<Point3D>>();
+
+            for (int cntr = 0; cntr < numPoints; cntr++)
+            {
+                // Pick a random location on the hull (a percent of the hull's size from 0% to 100%)
+                double percent = rand.NextDouble();
+
+                // Find the triangle that straddles this percent
+                int index = GetRandomPointsOnHullSprtFindTriangle(trianglePointers, triangleSizes, percent);
+
+                if (!retVal.ContainsKey(index))
+                {
+                    retVal.Add(index, new List<Point3D>());
+                }
+
+                // Create a point somewhere on this triangle
+                retVal[index].Add(GetRandomPointInTriangle(hull[index]));
+            }
+
+            // Exit Function
+            return retVal;
+        }
+        private static void GetRandomPointsOnHullSprtSizes(out int[] trianglePointers, out double[] triangleSizes, ITriangle[] hull)
+        {
+            trianglePointers = Enumerable.Range(0, hull.Length).ToArray();
+            triangleSizes = new double[hull.Length];
+
+            // Get the size of each triangle
+            for (int cntr = 0; cntr < hull.Length; cntr++)
+            {
+                triangleSizes[cntr] = hull[cntr].NormalLength;
+            }
+
+            // Sort them (I'd sort descending if I could.  That would make the find method easier to read, but the call to reverse
+            // is an unnecessary expense)
+            Array.Sort(triangleSizes, trianglePointers);
+
+            // Normalize them so the sum is 1.  Note that after this, each item in sizes will be that item's percent of the whole
+            double totalSize = triangleSizes.Sum();
+            for (int cntr = 0; cntr < triangleSizes.Length; cntr++)
+            {
+                triangleSizes[cntr] = triangleSizes[cntr] / totalSize;
+            }
+        }
+        private static int GetRandomPointsOnHullSprtFindTriangle(int[] trianglePointers, double[] triangleSizes, double percent)
+        {
+            double accumSize = 1d;
+
+            // Find the triangle that is this occupying this percent of the total size (walking backward will cut down on
+            // the number of triangles that need to be searched through)
+            for (int cntr = triangleSizes.Length - 1; cntr > 0; cntr--)
+            {
+                if (accumSize - triangleSizes[cntr] < percent)
+                {
+                    return trianglePointers[cntr];
+                }
+
+                accumSize -= triangleSizes[cntr];
+            }
+
+            // This should only happen if the requested percent is zero
+            return trianglePointers[0];
+        }
+
+        /// <summary>
+        /// Gets a value between -maxValue and maxValue
+        /// </summary>
+        public static double GetNearZeroValue(double maxValue)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double retVal = rand.NextDouble() * maxValue;
+
+            if (rand.Next(0, 2) == 1)
+            {
+                retVal *= -1d;
+            }
+
+            return retVal;
+        }
+        /// <summary>
+        /// This gets a value between minValue and maxValue, and has a 50/50 chance of negating that
+        /// </summary>
+        public static double GetNearZeroValue(double minValue, double maxValue)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double retVal = minValue + (rand.NextDouble() * (maxValue - minValue));
+
+            if (rand.Next(0, 2) == 1)
+            {
+                retVal *= -1d;
+            }
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// This function will pick an arbitrary orthogonal to the vector passed in
+        /// </summary>
+        public static Vector3D GetArbitraryOrhonganal(Vector3D vector)
+        {
+            // Clone the vector passed in
+            Vector3D retVal = new Vector3D(vector.X, vector.Y, vector.Z);
+
+            // Make sure that none of the values are equal to zero.
+            if (retVal.X == 0) retVal.X = 0.000000001d;
+            if (retVal.Y == 0) retVal.Y = 0.000000001d;
+            if (retVal.Z == 0) retVal.Z = 0.000000001d;
+
+            // Figure out the orthogonal X and Y slopes
+            double orthM = (retVal.X * -1) / retVal.Y;
+            double orthN = (retVal.Y * -1) / retVal.Z;
+
+            // When calculating the new coords, I will default Y to 1, and find an X and Z that satisfy that.  I will go ahead and reuse the retVal
+            retVal.Y = 1;
+            retVal.X = 1 / orthM;
+            retVal.Z = orthN;
+
+            // Exit Function
+            return retVal;
+        }
+
+        #endregion
+
+        #region Misc
+
+        public static bool IsNearZero(double testValue)
+        {
+            return Math.Abs(testValue) <= NEARZERO;
+        }
+        public static bool IsNearZero(Vector3D testVect)
+        {
+            return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
+        }
+        public static bool IsNearZero(Point3D testPoint)
+        {
+            return Math.Abs(testPoint.X) <= NEARZERO && Math.Abs(testPoint.Y) <= NEARZERO && Math.Abs(testPoint.Z) <= NEARZERO;
+        }
+        public static bool IsNearValue(double testValue, double compareTo)
+        {
+            return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
+        }
+        public static bool IsNearValue(Vector3D testVect, Vector3D compareTo)
+        {
+            return testVect.X >= compareTo.X - NEARZERO && testVect.X <= compareTo.X + NEARZERO &&
+                        testVect.Y >= compareTo.Y - NEARZERO && testVect.Y <= compareTo.Y + NEARZERO &&
+                        testVect.Z >= compareTo.Z - NEARZERO && testVect.Z <= compareTo.Z + NEARZERO;
+        }
+        public static bool IsNearValue(Point3D testPoint, Point3D compareTo)
+        {
+            return testPoint.X >= compareTo.X - NEARZERO && testPoint.X <= compareTo.X + NEARZERO &&
+                        testPoint.Y >= compareTo.Y - NEARZERO && testPoint.Y <= compareTo.Y + NEARZERO &&
+                        testPoint.Z >= compareTo.Z - NEARZERO && testPoint.Z <= compareTo.Z + NEARZERO;
+        }
+
+        //TODO: Come up with a better name for these.  The test value must exceed a threshold before these return true (a value that IsNearZero would call true won't make these true)
+        public static bool IsNearNegative(double testValue)
+        {
+            return testValue < -NEARZERO;
+        }
+        public static bool IsNearPositive(double testValue)
+        {
+            return testValue > NEARZERO;
+        }
+
+        /// <summary>
+        /// This tests to see if the point is sitting on the triangle
+        /// </summary>
+        /// <param name="shouldTestCoplanar">Pass in false if you're already sure the point is coplanar with the triangle (saves from unnecessary processing)</param>
+        public static bool IsNearTriangle(ITriangle triangle, Point3D testPoint, bool shouldTestCoplanar)
+        {
+            // Ensure coplanar
+            if (shouldTestCoplanar)
+            {
+                double distFromPlane = DistanceFromPlane(new Vector3D[] { triangle.Point0.ToVector(), triangle.Point1.ToVector(), triangle.Point2.ToVector() }, testPoint.ToVector());
+                if (!IsNearZero(distFromPlane))
+                {
+                    return false;
+                }
+            }
+
+            // Ensure inside triangle
+            Vector bary = Math3D.ToBarycentric(triangle, testPoint);
+            if (Math3D.IsNearNegative(bary.X) || Math3D.IsNearNegative(bary.Y) || Math3D.IsNearPositive(bary.X + bary.Y - 1d))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public static bool IsDivisible(double larger, double smaller)
+        {
+            if (Math3D.IsNearZero(smaller))
+            {
+                // Divide by zero.  Nothing is divisible by zero, not even zero.  (I looked up "is zero divisible by zero", and got very
+                // technical reasons why it's not.  It would be cool to be able to view the world the way math people do.  Visualizing
+                // complex equations, etc)
+                return false;
+            }
+
+            // Divide the larger by the smaller.  If the result is an integer (or very close to an integer), then they are divisible
+            double division = larger / smaller;
+            double divisionInt = Math.Round(division);
+
+            return Math3D.IsNearValue(division, divisionInt);
+        }
+
+        /// <summary>
+        /// Returns true if the double is NaN or Infinity
+        /// </summary>
+        public static bool IsInvalid(double testValue)
+        {
+            return double.IsNaN(testValue) || double.IsInfinity(testValue);
+        }
+        /// <summary>
+        /// Returns true if the vector contains NaN or Infinity
+        /// </summary>
+        public static bool IsInvalid(Vector3D testVect)
+        {
+            return IsInvalid(testVect.X) || IsInvalid(testVect.Y) || IsInvalid(testVect.Z);
+        }
+        /// <summary>
+        /// Returns true if the point contains NaN or Infinity
+        /// </summary>
+        public static bool IsInvalid(Point3D testPoint)
+        {
+            return IsInvalid(testPoint.X) || IsInvalid(testPoint.Y) || IsInvalid(testPoint.Z);
+        }
+
+        /// <summary>
+        /// This returns the location of the point relative to the triangle
+        /// </summary>
+        /// <remarks>
+        /// The term Barycentric for a triangle seems to be 3 positions, so I'm not sure if this method is named right
+        /// 
+        /// This is useful if you want to store a point's location relative to a triangle when that triangle will move all
+        /// around.  You don't need to know the transform used to move that triangle, just the triangle's final position
+        /// 
+        /// This is also useful to see if the point is inside the triangle.  If x or y is negative, or they add up to > 1, then it
+        /// is outside the triangle:
+        ///		if x is zero, it's on the 0_1 edge
+        ///		if y is zero, it's on the 0_2 edge
+        ///		if x+y is one, it's on the 1_2 edge
+        /// 
+        /// Got this here (good flash visualization too):
+        /// http://www.blackpawn.com/texts/pointinpoly/default.html
+        /// </remarks>
+        /// <returns>
+        /// X = % along the line triangle.P0 to triangle.P1
+        /// Y = % along the line triangle.P0 to triangle.P2
+        /// </returns>
+        public static Vector ToBarycentric(ITriangle triangle, Point3D point)
+        {
+            return ToBarycentric(triangle.Point0, triangle.Point1, triangle.Point2, point);
+        }
+        public static Vector ToBarycentric(Point3D p0, Point3D p1, Point3D p2, Point3D testPoint)
+        {
+            // Compute vectors        
+            Vector3D v0 = p2 - p0;
+            Vector3D v1 = p1 - p0;
+            Vector3D v2 = testPoint - p0;
+
+            // Compute dot products
+            double dot00 = Vector3D.DotProduct(v0, v0);
+            double dot01 = Vector3D.DotProduct(v0, v1);
+            double dot02 = Vector3D.DotProduct(v0, v2);
+            double dot11 = Vector3D.DotProduct(v1, v1);
+            double dot12 = Vector3D.DotProduct(v1, v2);
+
+            // Compute barycentric coordinates
+            double invDenom = 1d / (dot00 * dot11 - dot01 * dot01);
+            double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+            double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+            // Exit Function
+            return new Vector(u, v);
+        }
+        /// <summary>
+        /// This projects the barycentric back into cartesian coords
+        /// </summary>
+        /// <param name="bary">Save me Bary!!! (Misfits)</param>
+        public static Point3D FromBarycentric(ITriangle triangle, Vector bary)
+        {
+            return FromBarycentric(triangle.Point0, triangle.Point1, triangle.Point2, bary);
+        }
+        public static Point3D FromBarycentric(Point3D p0, Point3D p1, Point3D p2, Vector bary)
+        {
+            //Vector3D line01 = p1 - p0;
+            //Vector3D line02 = p2 - p0;
+            Vector3D line01 = p2 - p0;		// ToBarycentric has x as p2
+            Vector3D line02 = p1 - p0;
+
+            return p0 + (line01 * bary.X) + (line02 * bary.Y);
+        }
+
+        public static double DegreesToRadians(double degrees)
+        {
+            return degrees * _PI_over_180;
+        }
+        public static float DegreesToRadians(float degrees)
+        {
+            return degrees * _PI_over_180_FLOAT;
+        }
+
+        public static double RadiansToDegrees(double radians)
+        {
+            return radians * _180_over_PI;
+        }
+        public static float RadiansToDegrees(float radians)
+        {
+            return radians * _180_over_PI_FLOAT;
+        }
+
+        /// <summary>
+        /// This function will rotate the vector around any arbitrary axis
+        /// </summary>
+        /// <param name="vector">The vector to get rotated</param>
+        /// <param name="rotateAround">Any vector to rotate around</param>
+        /// <param name="radians">How far to rotate</param>
+        public static Vector3D RotateAroundAxis(Vector3D vector, Vector3D rotateAround, double radians)
+        {
+            // Create a quaternion that represents the axis and angle passed in
+            Quaternion rotationQuat = new Quaternion(rotateAround, RadiansToDegrees(radians));
+
+            Matrix3D matrix = new Matrix3D();
+            matrix.Rotate(rotationQuat);
+
+            // Get a vector that represents me rotated by the quaternion
+            Vector3D retVal = matrix.Transform(vector);
+
+            // Exit Function
+            return retVal;
+        }
+
+        /// <summary>
+        /// This overload returns a quaternion
+        /// </summary>
+        /// <remarks>
+        /// I decided to copy the other method, so it's a bit more optimized
+        /// </remarks>
+        public static Quaternion GetRotation(Vector3D from, Vector3D to)
+        {
+            // Grab the angle
+            double angle = Vector3D.AngleBetween(from, to);
+            if (Double.IsNaN(angle))
+            {
+                return Quaternion.Identity;
+            }
+
+            // I need to pull the cross product from me to the vector passed in
+            Vector3D axis = Vector3D.CrossProduct(from, to);
+
+            // If the cross product is zero, then there are two possibilities.  The vectors point in the same direction, or opposite directions.
+            if (axis.IsZero())
+            {
+                // If I am here, then the angle will either be 0 or 180.
+                if (angle == 0)
+                {
+                    // The vectors sit on top of each other.  I will set the orthoganal to an arbitrary value, and return zero for the radians
+                    return Quaternion.Identity;
+                }
+                else
+                {
+                    // The vectors are pointing directly away from each other, so I will need to be more careful when I create my orthoganal.
+                    axis = GetArbitraryOrhonganal(from);
+                }
+            }
+
+            // Exit Function
+            return new Quaternion(axis, angle);
+        }
+        /// <summary>
+        /// This returns how much from should be rotated (and through what axis) to line up with to
+        /// NOTE:  To rotate a vector pair (standard and orthogonal), see DoubleVector.GetAngleAroundAxis)
+        /// </summary>
+        public static void GetRotation(out Vector3D axis, out double radians, Vector3D from, Vector3D to)
+        {
+            // Grab the angle
+            radians = DegreesToRadians(Vector3D.AngleBetween(from, to));
+            if (Double.IsNaN(radians))
+            {
+                radians = 0;
+            }
+
+            // I need to pull the cross product from me to the vector passed in
+            axis = Vector3D.CrossProduct(from, to);
+
+            // If the cross product is zero, then there are two possibilities.  The vectors point in the same direction, or opposite directions.
+            if (axis.IsZero())
+            {
+                // If I am here, then the angle will either be 0 or PI.
+                if (radians == 0)
+                {
+                    // The vectors sit on top of each other.  I will set the orthoganal to an arbitrary value, and return zero for the radians
+                    axis.X = 1;
+                    radians = 0;
+                }
+                else
+                {
+                    // The vectors are pointing directly away from each other, so I will need to be more careful when I create my orthoganal.
+                    axis = GetArbitraryOrhonganal(from);
+                }
+            }
+
+            //rotationAxis.BecomeUnitVector();		// It would be nice to be tidy, but not nessassary, and I don't want slow code
+        }
+        public static Quaternion GetRotation(DoubleVector from, DoubleVector to)
+        {
+            // I got tired of searching for this method, so I exposed it here as well
+            return from.GetRotation(to);
+        }
+        public static Quaternion GetRotation(Quaternion from, Quaternion to)
+        {
+            //http://stackoverflow.com/questions/1755631/difference-between-two-quaternions
+
+            Quaternion fromInverse = from.ToUnit();
+            fromInverse.Invert();
+            return Quaternion.Multiply(to.ToUnit(), fromInverse);
+        }
+        public static Quaternion GetRotation(ITriangle from, ITriangle to)
+        {
+            Vector3D fromStand = from.Point1 - from.Point0;
+            Vector3D fromOrth = Vector3D.CrossProduct(fromStand, from.Normal);
+
+            Vector3D toStand = to.Point1 - to.Point0;
+            Vector3D toOrth = Vector3D.CrossProduct(toStand, to.Normal);
+
+            return GetRotation(new DoubleVector(fromStand, fromOrth), new DoubleVector(toStand, toOrth));
+        }
+
+        /// <summary>
+        /// This returns a vector that is orthogonal to standard, and in the same plane as direction
+        /// </summary>
+        public static Vector3D GetOrthogonal(Vector3D standard, Vector3D direction)
+        {
+            Vector3D cross = Vector3D.CrossProduct(standard, direction);		// getting an orthogonal of the two vectors passed in
+            return Vector3D.CrossProduct(cross, standard);		// now get an orthogonal pointing in the same direction as direction
+        }
+
+        /// <summary>
+        /// This returns the center of position of the points
+        /// </summary>
+        public static Point3D GetCenter(Point3D[] points)
+        {
+            if (points == null || points.Length == 0)
+            {
+                return new Point3D(0, 0, 0);
+            }
+
+            double x = 0d;
+            double y = 0d;
+            double z = 0d;
+
+            for (int cntr = 0; cntr < points.Length; cntr++)
+            {
+                x += points[cntr].X;
+                y += points[cntr].Y;
+                z += points[cntr].Z;
+            }
+
+            double oneOverLen = 1d / Convert.ToDouble(points.Length);
+
+            return new Point3D(x * oneOverLen, y * oneOverLen, z * oneOverLen);
+        }
+        /// <summary>
+        /// This returns the center of mass of the points
+        /// </summary>
+        public static Point3D GetCenter(Tuple<Point3D, double>[] pointsMasses)
+        {
+            if (pointsMasses == null || pointsMasses.Length == 0)
+            {
+                return new Point3D(0, 0, 0);
+            }
+
+            double totalMass = pointsMasses.Sum(o => o.Item2);
+            if (IsNearZero(totalMass))
+            {
+                return GetCenter(pointsMasses.Select(o => o.Item1).ToArray());
+            }
+
+            double x = 0d;
+            double y = 0d;
+            double z = 0d;
+
+            foreach (var pointMass in pointsMasses)
+            {
+                x += pointMass.Item1.X * pointMass.Item2;
+                y += pointMass.Item1.Y * pointMass.Item2;
+                z += pointMass.Item1.Z * pointMass.Item2;
+            }
+
+            double totalMassInverse = 1d / totalMass;
+
+            return new Point3D(x * totalMassInverse, y * totalMassInverse, z * totalMassInverse);
+        }
+
+        public static Tuple<Point3D, Point3D> GetAABB(ITriangle triangle)
+        {
+            return GetAABB(new Point3D[] { triangle.Point0, triangle.Point1, triangle.Point2 });
+        }
+        public static Rect3D GetAABBRect(ITriangle triangle)
+        {
+            return GetAABBRect(new Point3D[] { triangle.Point0, triangle.Point1, triangle.Point2 });
+        }
+        public static Tuple<Point3D, Point3D> GetAABB(IEnumerable<Point3D> points)
+        {
+            bool foundOne = false;
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double minZ = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+            double maxZ = double.MinValue;
+
+            foreach (Point3D point in points)
+            {
+                foundOne = true;        // it's too expensive to look at points.Count()
+
+                if (point.X < minX)
+                {
+                    minX = point.X;
+                }
+
+                if (point.Y < minY)
+                {
+                    minY = point.Y;
+                }
+
+                if (point.Z < minZ)
+                {
+                    minZ = point.Z;
+                }
+
+                if (point.X > maxX)
+                {
+                    maxX = point.X;
+                }
+
+                if (point.Y > maxY)
+                {
+                    maxY = point.Y;
+                }
+
+                if (point.Z > maxZ)
+                {
+                    maxZ = point.Z;
+                }
+            }
+
+            if (!foundOne)
+            {
+                // There were no points passed in
+                //TODO: May want an exception
+                return Tuple.Create(new Point3D(0, 0, 0), new Point3D(0, 0, 0));
+            }
+
+            // Exit Function
+            return Tuple.Create(new Point3D(minX, minY, minZ), new Point3D(maxX, maxY, maxZ));
+        }
+        public static Rect3D GetAABBRect(IEnumerable<Point3D> points)
+        {
+            var aabb = GetAABB(points);
+            return new Rect3D(aabb.Item1, (aabb.Item2 - aabb.Item1).ToSize());
+        }
+
+        // This came from Game.Orig.Math3D.TorqueBall
+        public static void SplitForceIntoTranslationAndTorque(out Vector3D translationForce, out Vector3D torque, Vector3D offsetFromCenterMass, Vector3D force)
+        {
+            // Torque is how much of the force is applied perpendicular to the radius
+            torque = Vector3D.CrossProduct(offsetFromCenterMass, force);
+
+            // I'm still not convinced this is totally right, but none of the articles I've read seem to do anything different
+            translationForce = force;
+        }
+
+        /// <summary>
+        /// This returns a convex hull of triangles that uses the outermost points (uses the quickhull algorithm)
+        /// </summary>
+        public static TriangleIndexed[] GetConvexHull(Point3D[] points)
+        {
+            return QuickHull3D.GetConvexHull(points);
+        }
+
+        public static ITriangle[] SliceLargeTriangles(ITriangle[] triangles, double maxEdgeLength)
+        {
+            return SliceTriangles.Slice(triangles, maxEdgeLength);
+        }
+
+        public static ITriangleIndexed[] SortByPlaneDistance(ITriangleIndexed[] triangles, Point3D pointOnPlane, Vector3D planeNormal)
+        {
+            //NOTE: This method assumes that the plane is away from all the triangles.  If it cuts through the triangles, the results will be a bit odd
+
+            if (triangles.Length == 0)
+            {
+                return triangles;
+            }
+
+            Vector3D normalUnit = planeNormal.ToUnit();
+            double originDistance = GetPlaneOriginDistance(normalUnit, pointOnPlane);
+
+            Point3D[] allPoints = triangles[0].AllPoints;     // this assumes that all triangles share the same point list
+
+            // Sort the points by their distance to the plane
+            var planeDistances = Enumerable.Range(0, allPoints.Length).
+                Select(o => Tuple.Create(o, DistanceFromPlane(normalUnit, originDistance, allPoints[o].ToVector()))).
+                OrderBy(o => o.Item2).
+                ToArray();
+
+            //Key=Index into allPoints
+            //Value=Index into planeDistances (the lower, the closer it is to the plane)
+            SortedList<int, int> indexMap = new SortedList<int, int>();
+
+            for (int cntr = 0; cntr < planeDistances.Length; cntr++)
+            {
+                indexMap.Add(planeDistances[cntr].Item1, cntr);
+            }
+
+            // OrderBy needs a tuple when ordering by multiple items.  So create a tuple for each triangle, that is
+            // locally ordered by distance to plane.
+            Tuple<int, Tuple<int, int, int>>[] ranks = new Tuple<int, Tuple<int, int, int>>[triangles.Length];
+
+            for (int cntr = 0; cntr < triangles.Length; cntr++)
+            {
+                int[] subRank = triangles[cntr].IndexArray.Select(o => indexMap[o]).OrderBy(o => o).ToArray();
+
+                ranks[cntr] = Tuple.Create(cntr, Tuple.Create(subRank[0], subRank[1], subRank[2]));
+            }
+
+            //var debug = ranks.OrderBy(o => o.Item2).ToArray();
+
+            // Now sort the entire list to see which triangles are closest, and return the triangles according to that order
+            return ranks.OrderBy(o => o.Item2).Select(o => triangles[o.Item1]).ToArray();
+        }
+
+        // I got tired of nesting min/max statements
+        public static int Min(int v1, int v2, int v3)
+        {
+            return Math.Min(Math.Min(v1, v2), v3);
+        }
+        public static int Min(int v1, int v2, int v3, int v4)
+        {
+            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
+        }
+        public static int Min(int v1, int v2, int v3, int v4, int v5)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
+        }
+        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
+        }
+        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
+        }
+        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+        }
+
+        public static double Min(double v1, double v2, double v3)
+        {
+            return Math.Min(Math.Min(v1, v2), v3);
+        }
+        public static double Min(double v1, double v2, double v3, double v4)
+        {
+            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
+        }
+        public static double Min(double v1, double v2, double v3, double v4, double v5)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
+        }
+        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
+        }
+        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
+        }
+        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
+        {
+            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+        }
+
+        public static int Max(int v1, int v2, int v3)
+        {
+            return Math.Max(Math.Max(v1, v2), v3);
+        }
+        public static int Max(int v1, int v2, int v3, int v4)
+        {
+            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
+        }
+        public static int Max(int v1, int v2, int v3, int v4, int v5)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
+        }
+        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
+        }
+        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
+        }
+        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
+        }
+
+        public static double Max(double v1, double v2, double v3)
+        {
+            return Math.Max(Math.Max(v1, v2), v3);
+        }
+        public static double Max(double v1, double v2, double v3, double v4)
+        {
+            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
+        }
+        public static double Max(double v1, double v2, double v3, double v4, double v5)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
+        }
+        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
+        }
+        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
+        }
+        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
+        {
+            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
+        }
+
+        public static double Avg(double v1, double v2)
+        {
+            return (v1 + v2) / 2d;
+        }
+        public static double Avg(double v1, double v2, double v3)
+        {
+            return (v1 + v2 + v3) / 3d;
+        }
+        public static double Avg(double v1, double v2, double v3, double v4)
+        {
+            return (v1 + v2 + v3 + v4) / 4d;
+        }
+        public static double Avg(double v1, double v2, double v3, double v4, double v5)
+        {
+            return (v1 + v2 + v3 + v4 + v5) / 5d;
+        }
+        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6)
+        {
+            return (v1 + v2 + v3 + v4 + v5 + v6) / 6d;
+        }
+        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
+        {
+            return (v1 + v2 + v3 + v4 + v5 + v6 + v7) / 7d;
+        }
+        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
+        {
+            return (v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 8d;
+        }
+
+        #endregion
+
+        #region Intersections
+
+        /// <summary>
+        /// This returns true if any part of the sphere intersects any part of the AABB
+        /// (also returns true if one is inside the other)
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://stackoverflow.com/questions/4578967/cube-sphere-intersection-test
+        /// 
+        /// Which referenced:
+        /// http://www.ics.uci.edu/~arvo/code/BoxSphereIntersect.c
+        /// </remarks>
+        public static bool IsIntersecting_AABB_Sphere(Point3D min, Point3D max, Point3D center, double radius)
+        {
+            double r2 = radius * radius;
+            double dmin = 0d;
+
+            if (center.X < min.X)
+            {
+                dmin += (center.X - min.X) * (center.X - min.X);
+            }
+            else if (center.X > max.X)
+            {
+                dmin += (center.X - max.X) * (center.X - max.X);
+            }
+
+            if (center.Y < min.Y)
+            {
+                dmin += (center.Y - min.Y) * (center.Y - min.Y);
+            }
+            else if (center.Y > max.Y)
+            {
+                dmin += (center.Y - max.Y) * (center.Y - max.Y);
+            }
+
+            if (center.Z < min.Z)
+            {
+                dmin += (center.Z - min.Z) * (center.Z - min.Z);
+            }
+            else if (center.Z > max.Z)
+            {
+                dmin += (center.Z - max.Z) * (center.Z - max.Z);
+            }
+
+            return dmin <= r2;
+        }
+        /// <summary>
+        /// This returns true if any part of AABB1 intersects any part of the AABB2
+        /// (also returns true if one is inside the other)
+        /// </summary>
+        public static bool IsIntersecting_AABB_AABB(Point3D min1, Point3D max1, Point3D min2, Point3D max2)
+        {
+            if (min1.X > max2.X || min2.X > max1.X)
+            {
+                return false;
+            }
+            else if (min1.Y > max2.Y || min2.Y > max1.Y)
+            {
+                return false;
+            }
+            else if (min1.Z > max2.Z || min2.Z > max1.Z)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// This returns whether the point is inside all the planes (the triangles don't define finite triangles, but whole planes)
+        /// NOTE: Make sure the normals point outward, or there will be odd results
+        /// </summary>
+        /// <remarks>
+        /// This is a reworked copy of QuickHull3D.GetOutsideSet, which was inspired by:
+        /// http://www.gamedev.net/topic/106765-determining-if-a-point-is-in-front-of-or-behind-a-plane/
+        /// </remarks>
+        public static bool IsInside_Planes(IEnumerable<ITriangle> planes, Point3D testPoint)
+        {
+            foreach (ITriangle plane in planes)
+            {
+                // Compute D, using a arbitrary point P, that lies on the plane: D = - (Nx*Px + Ny*Py + Nz*Pz); Don't forget the inversion !
+                double d = -((plane.NormalUnit.X * plane.Point0.X) + (plane.NormalUnit.Y * plane.Point0.Y) + (plane.NormalUnit.Z * plane.Point0.Z));
+
+                // You can test a point (T) with respect to the plane using the plane equation: res = Nx*Tx + Ny*Ty + Nz*Tz + D
+                double res = (plane.NormalUnit.X * testPoint.X) + (plane.NormalUnit.Y * testPoint.Y) + (plane.NormalUnit.Z * testPoint.Z) + d;
+
+                if (res >= 0)		// greater than zero is outside the plane
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        public static bool IsInside_AABB(Point3D min, Point3D max, Point3D testPoint)
+        {
+            if (testPoint.X < min.X)
+            {
+                return false;
+            }
+            else if (testPoint.X > max.X)
+            {
+                return false;
+            }
+            else if (testPoint.Y < min.Y)
+            {
+                return false;
+            }
+            else if (testPoint.Y > max.Y)
+            {
+                return false;
+            }
+            else if (testPoint.Z < min.Z)
+            {
+                return false;
+            }
+            else if (testPoint.Z > max.Z)
+            {
+                return false;
+            }
+
+            return true;
+        }
+        public static bool IsInside_AABB(Vector3D min, Vector3D max, Vector3D testPoint)
+        {
+            if (testPoint.X < min.X)
+            {
+                return false;
+            }
+            else if (testPoint.X > max.X)
+            {
+                return false;
+            }
+            else if (testPoint.Y < min.Y)
+            {
+                return false;
+            }
+            else if (testPoint.Y > max.Y)
+            {
+                return false;
+            }
+            else if (testPoint.Z < min.Z)
+            {
+                return false;
+            }
+            else if (testPoint.Z > max.Z)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// This returns a point along the line that is the shortest distance to the test point
+        /// NOTE:  The line passed in is assumed to be infinite, not a line segment
+        /// </summary>
+        /// <param name="pointOnLine">Any arbitrary point along the line</param>
+        /// <param name="lineDirection">The direction of the line (slope in x,y,z)</param>
+        /// <param name="testPoint">The point that is not on the line</param>
+        public static Point3D GetClosestPoint_Point_Line(Point3D pointOnLine, Vector3D lineDirection, Point3D testPoint)
+        {
+            Vector3D dirToPoint = testPoint - pointOnLine;
+
+            double dot1 = Vector3D.DotProduct(dirToPoint, lineDirection);
+            double dot2 = Vector3D.DotProduct(lineDirection, lineDirection);
+            double ratio = dot1 / dot2;
+
+            Point3D retVal = pointOnLine + (ratio * lineDirection);
+
+            return retVal;
+        }
+        /// <summary>
+        /// This is a wrapper to GetNearestPointAlongLine that just returns the distance
+        /// </summary>
+        public static double GetClosestDistance_Point_Line(Point3D pointOnLine, Vector3D lineDirection, Point3D testPoint)
+        {
+            return (testPoint - GetClosestPoint_Point_Line(pointOnLine, lineDirection, testPoint)).Length;
+        }
+
+        public static Point3D GetClosestPoint_Point_Plane(ITriangle plane, Point3D testPoint)
+        {
+            Point3D? retVal = GetIntersection_Plane_Line(plane, testPoint, plane.Normal);
+            if (retVal == null)
+            {
+                throw new ApplicationException("Intersection between a plane and its normal should never be null");
+            }
+
+            return retVal.Value;
+        }
+
+        /// <summary>
+        /// This returns the distance beween two skew lines at their closest point
+        /// </summary>
+        /// <remarks>
+        /// http://2000clicks.com/mathhelp/GeometryPointsAndLines3D.aspx
+        /// </remarks>
+        public static double GetClosestDistance_Line_Line(Point3D point1, Vector3D dir1, Point3D point2, Vector3D dir2)
+        {
+            //g = (a-c) · (b×d) / |b×d|
+            //dist = (a - c) dot (b cross d).ToUnit
+            //dist = (point1 - point2) dot (dir1 cross dir2).ToUnit
+
+            //TODO: Detect if they are parallel and return the distance
+
+            Vector3D cross1_2 = Vector3D.CrossProduct(dir1, dir2).ToUnit();
+            Vector3D sub1_2 = point1 - point2;
+
+            double retVal = Vector3D.DotProduct(sub1_2, cross1_2);
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// Calculates the intersection line segment between 2 lines (not segments).
+        /// Returns false if no solution can be found.
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/calclineline.cs
+        /// 
+        /// Which was ported from the C algorithm of Paul Bourke:
+        /// http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline3d/
+        /// </remarks>
+        public static bool GetClosestPoints_Line_Line(out Point3D? resultPoint1, out Point3D? resultPoint2, Point3D point1, Vector3D dir1, Point3D point2, Vector3D dir2)
+        {
+            return GetClosestPoints_Line_Line(out resultPoint1, out resultPoint2, point1, point1 + dir1, point2, point2 + dir2);
+        }
+        public static bool GetClosestPoints_Line_Line(out Point3D? resultPoint1, out Point3D? resultPoint2, Point3D line1Point1, Point3D line1Point2, Point3D line2Point1, Point3D line2Point2)
+        {
+            resultPoint1 = null;
+            resultPoint2 = null;
+
+            Point3D p1 = line1Point1;
+            Point3D p2 = line1Point2;
+            Point3D p3 = line2Point1;
+            Point3D p4 = line2Point2;
+            Vector3D p13 = p1 - p3;
+            Vector3D p43 = p4 - p3;
+
+            //if (IsNearZero(p43.LengthSquared))
+            //{
+            //    return false;
+            //}
+
+            Vector3D p21 = p2 - p1;
+            //if (IsNearZero(p21.LengthSquared))
+            //{
+            //    return false;
+            //}
+
+            double d1343 = (p13.X * p43.X) + (p13.Y * p43.Y) + (p13.Z * p43.Z);
+            double d4321 = (p43.X * p21.X) + (p43.Y * p21.Y) + (p43.Z * p21.Z);
+            double d1321 = (p13.X * p21.X) + (p13.Y * p21.Y) + (p13.Z * p21.Z);
+            double d4343 = (p43.X * p43.X) + (p43.Y * p43.Y) + (p43.Z * p43.Z);
+            double d2121 = (p21.X * p21.X) + (p21.Y * p21.Y) + (p21.Z * p21.Z);
+
+            double denom = (d2121 * d4343) - (d4321 * d4321);
+            //if (IsNearZero(denom))
+            //{
+            //    return false;
+            //}
+            double numer = (d1343 * d4321) - (d1321 * d4343);
+
+            double mua = numer / denom;
+            if (double.IsNaN(mua))
+            {
+                return false;
+            }
+
+            double mub = (d1343 + d4321 * (mua)) / d4343;
+
+            resultPoint1 = new Point3D(p1.X + mua * p21.X, p1.Y + mua * p21.Y, p1.Z + mua * p21.Z);
+            resultPoint2 = new Point3D(p3.X + mub * p43.X, p3.Y + mub * p43.Y, p3.Z + mub * p43.Z);
+
+            if (double.IsNaN(resultPoint1.Value.X) || double.IsNaN(resultPoint1.Value.Y) || double.IsNaN(resultPoint1.Value.Z) ||
+                double.IsNaN(resultPoint2.Value.X) || double.IsNaN(resultPoint2.Value.Y) || double.IsNaN(resultPoint2.Value.Z))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        public static bool GetClosestPoints_Line_LineSegment(out Point3D[] resultPointsLine, out Point3D[] resultPointsLineSegment, Point3D pointOnLine, Vector3D lineDirection, Point3D lineSegmentStart, Point3D lineSegmentStop)
+        {
+            Point3D? result1, result2;
+            if (!GetClosestPoints_Line_Line(out result1, out result2, pointOnLine, pointOnLine + lineDirection, lineSegmentStart, lineSegmentStop))
+            {
+                // If line/line fails, it's because they are parallel.  If the lines coincide, then return the segment start and stop
+
+
+                //TODO: Finish this
+
+
+
+                resultPointsLine = new Point3D[0];
+                resultPointsLineSegment = new Point3D[0];
+                return false;
+            }
+
+            // Make sure the line segment result isn't beyond the line segment
+            Vector3D segmentDirLen = lineSegmentStop - lineSegmentStart;
+            Vector3D resultDirLen = result2.Value - lineSegmentStart;
+
+            if (!IsNearValue(Vector3D.DotProduct(segmentDirLen.ToUnit(), resultDirLen.ToUnit()), 1d))
+            {
+                // It's the other direction (beyond segment start)
+                resultPointsLine = new Point3D[0];
+                resultPointsLineSegment = new Point3D[0];
+                return false;
+            }
+
+            if (resultDirLen.LengthSquared > segmentDirLen.LengthSquared)
+            {
+                // It's beyond segment stop
+                resultPointsLine = new Point3D[0];
+                resultPointsLineSegment = new Point3D[0];
+                return false;
+            }
+
+            // Return single points (this is the standard flow)
+            resultPointsLine = new Point3D[] { result1.Value };
+            resultPointsLineSegment = new Point3D[] { result2.Value };
+            return true;
+        }
+
+        public static Point3D? GetClosestPoint_Point_Circle(ITriangle circlePlane, Point3D circleCenter, double circleRadius, Point3D testPoint)
+        {
+            // Project the test point onto the circle's plane
+            Point3D planePoint = GetClosestPoint_Point_Plane(circlePlane, testPoint);
+
+            if (IsNearValue(planePoint, circleCenter))
+            {
+                // The test point is directly over the center of the circle (or is the center of the circle)
+                return null;
+            }
+
+            // Get the line from the circle's center to that point
+            Vector3D line = planePoint - circleCenter;
+
+            // Project out to the length of the circle
+            return circleCenter + (line.ToUnit() * circleRadius);
+        }
+
+        public static Point3D? GetClosestPoint_Point_Cylinder(Point3D pointOnAxis, Vector3D axisDirection, double radius, Point3D testPoint)
+        {
+            // Get the shortest point between the cylinder's axis and the test point
+            Point3D nearestAxisPoint = GetClosestPoint_Point_Line(pointOnAxis, axisDirection, testPoint);
+
+            // Get the line from that point to the test point
+            Vector3D line = testPoint - nearestAxisPoint;
+
+            if (IsNearZero(line))
+            {
+                // The test point is sitting on the axis
+                return null;
+            }
+
+            // Project out to the radius of the cylinder
+            return nearestAxisPoint + (line.ToUnit() * radius);
+        }
+
+        public static Point3D? GetClosestPoint_Point_Sphere(Point3D centerPoint, double radius, Point3D testPoint)
+        {
+            if (IsNearValue(centerPoint, testPoint))
+            {
+                // The test point is the center of the sphere
+                return null;
+            }
+
+            // Get the line from the center to the test point
+            Vector3D line = testPoint - centerPoint;
+
+            // Project out to the radius of the sphere
+            return centerPoint + (line.ToUnit() * radius);
+        }
+
+        /// <summary>
+        /// This will figure out the nearest points between a circle and line
+        /// </summary>
+        /// <remarks>
+        /// circlePoints will be the nearest point on the circle to the line, and linePoints will hold the closest point on the line to
+        /// the corresponding element of circlePoints
+        /// 
+        /// The only time false is returned is if the line is perpendicular to the circle and goes through the center of the circle (in
+        /// that case, linePoints will hold the circle's center point
+        /// 
+        /// Most of the time, only one output point will be returned, but there are some cases where two are returned
+        /// 
+        /// If onlyReturnSinglePoint is true, then the arrays will never be larger than one (the point in linePoints that is closest to
+        /// pointOnLine is chosen)
+        /// </remarks>
+        public static bool GetClosestPoints_Line_Circle(out Point3D[] circlePoints, out Point3D[] linePoints, ITriangle circlePlane, Point3D circleCenter, double circleRadius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
+        {
+            // There are too many loose variables, so package them up
+            CircleLineArgs args = new CircleLineArgs()
+            {
+                CirclePlane = circlePlane,
+                CircleCenter = circleCenter,
+                CircleRadius = circleRadius,
+                PointOnLine = pointOnLine,
+                LineDirection = lineDirection
+            };
+
+            // Call the overload
+            bool retVal = GetClosestPointsBetweenLineCircle(out circlePoints, out linePoints, args);
+            if (returnWhich == RayCastReturn.AllPoints || !retVal || circlePoints.Length == 1)
+            {
+                return retVal;
+            }
+
+            switch (returnWhich)
+            {
+                case RayCastReturn.ClosestToRay:
+                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref circlePoints, ref linePoints, pointOnLine);
+                    break;
+
+                case RayCastReturn.ClosestToRayOrigin:
+                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref circlePoints, ref linePoints, pointOnLine);
+                    break;
+
+                default:
+                    throw new ApplicationException("Unexpected RayCastReturn: " + returnWhich.ToString());
+            }
+
+            return true;
+
+            #region OLD
+
+            //#region Find closest point
+
+            //// There is more than one point, and they want a single point
+            //double minDistance = double.MaxValue;
+            //int minIndex = -1;
+
+            //for (int cntr = 0; cntr < circlePoints.Length; cntr++)
+            //{
+            //    double distance = (linePoints[cntr] - pointOnLine).Length;
+
+            //    if (distance < minDistance)
+            //    {
+            //        minDistance = distance;
+            //        minIndex = cntr;
+            //    }
+            //}
+
+            //if (minIndex < 0)
+            //{
+            //    throw new ApplicationException("Should always find a closest point");
+            //}
+
+            //#endregion
+
+            //// Return only the closest point
+            //circlePoints = new Point3D[] { circlePoints[minIndex] };
+            //linePoints = new Point3D[] { linePoints[minIndex] };
+            //return true;
+
+            #endregion
+        }
+
+        public static bool GetClosestPoints_Line_Cylinder(out Point3D[] cylinderPoints, out Point3D[] linePoints, Point3D pointOnAxis, Vector3D axisDirection, double radius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
+        {
+            // Get the shortest point between the cylinder's axis and the line
+            Point3D? nearestAxisPoint, nearestLinePoint;
+            if (!GetClosestPoints_Line_Line(out nearestAxisPoint, out nearestLinePoint, pointOnAxis, axisDirection, pointOnLine, lineDirection))
+            {
+                // The axis and line are parallel
+                cylinderPoints = null;
+                linePoints = null;
+                return false;
+            }
+
+            Vector3D nearestLine = nearestLinePoint.Value - nearestAxisPoint.Value;
+            double nearestDistance = nearestLine.Length;
+
+            if (nearestDistance >= radius)
+            {
+                // Sitting outside the cylinder, so just project the line to the cylinder wall
+                cylinderPoints = new Point3D[] { nearestAxisPoint.Value + (nearestLine.ToUnit() * radius) };
+                linePoints = new Point3D[] { nearestLinePoint.Value };
+                return true;
+            }
+
+            // The rest of this function is for a line intersect inside the cylinder (there's always two intersect points)
+
+            // Make a plane that the circle sits in (this is used by code shared with the circle/line intersect)
+            //NOTE: The plane is using nearestAxisPoint, and not the arbitrary point that was passed in (this makes later logic easier)
+            Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? GetArbitraryOrhonganal(axisDirection) : nearestLine;
+            Vector3D circlePlaneLine2 = Vector3D.CrossProduct(axisDirection, circlePlaneLine1);
+            ITriangle circlePlane = new Triangle(nearestAxisPoint.Value, nearestAxisPoint.Value + circlePlaneLine1, nearestAxisPoint.Value + circlePlaneLine2);
+
+            CircleLineArgs args = new CircleLineArgs()
+            {
+                CircleCenter = nearestAxisPoint.Value,
+                CirclePlane = circlePlane,
+                CircleRadius = radius,
+                PointOnLine = pointOnLine,
+                LineDirection = lineDirection
+            };
+
+            CirclePlaneIntersectProps intersectArgs = GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(args, nearestLinePoint.Value, nearestLine, nearestDistance);
+
+            GetClosestPointsBetweenLineCylinderSprtFinish(out cylinderPoints, out linePoints, args, intersectArgs);
+
+            switch (returnWhich)
+            {
+                case RayCastReturn.AllPoints:
+                    // Nothing more to do
+                    break;
+
+                case RayCastReturn.ClosestToRay:
+                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref cylinderPoints, ref linePoints, pointOnLine);
+                    break;
+
+                case RayCastReturn.ClosestToRayOrigin:
+                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref cylinderPoints, ref linePoints, pointOnLine);
+                    break;
+
+                default:
+                    throw new ApplicationException("Unknown RayCastReturn: " + returnWhich.ToString());
+            }
+
+            return true;
+        }
+
+        public static void GetClosestPoints_Line_Sphere(out Point3D[] spherePoints, out Point3D[] linePoints, Point3D centerPoint, double radius, Point3D pointOnLine, Vector3D lineDirection, RayCastReturn returnWhich)
+        {
+            // Get the shortest point between the sphere's center and the line
+            Point3D nearestLinePoint = GetClosestPoint_Point_Line(pointOnLine, lineDirection, centerPoint);
+
+            Vector3D nearestLine = nearestLinePoint - centerPoint;
+            double nearestDistance = nearestLine.Length;
+
+            if (nearestDistance >= radius)
+            {
+                // Sitting outside the sphere, so just project the line to the sphere wall
+                spherePoints = new Point3D[] { centerPoint + (nearestLine.ToUnit() * radius) };
+                linePoints = new Point3D[] { nearestLinePoint };
+                return;
+            }
+
+            // The rest of this function is for a line intersect inside the sphere (there's always two intersect points)
+
+            // Make a plane that the circle sits in (this is used by code shared with the circel/line intersect)
+            //NOTE: The plane is oriented along the shortest path line
+            Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? new Vector3D(1, 0, 0) : nearestLine;
+            Vector3D circlePlaneLine2 = lineDirection;
+            ITriangle circlePlane = new Triangle(centerPoint, centerPoint + circlePlaneLine1, centerPoint + circlePlaneLine2);
+
+            CircleLineArgs args = new CircleLineArgs()
+            {
+                CircleCenter = centerPoint,
+                CirclePlane = circlePlane,
+                CircleRadius = radius,
+                PointOnLine = pointOnLine,
+                LineDirection = lineDirection
+            };
+
+            CirclePlaneIntersectProps intersectArgs = new CirclePlaneIntersectProps()
+            {
+                PointOnLine = pointOnLine,
+                LineDirection = lineDirection,
+                NearestToCenter = nearestLinePoint,
+                CenterToNearest = nearestLine,
+                CenterToNearestLength = nearestDistance,
+                IsInsideCircle = true
+            };
+
+            // Get the circle intersects (since the line is on the circle's plane, this is the final answer)
+            GetClosestPointsBetweenLineCircleSprtInsidePerps(out spherePoints, out linePoints, args, intersectArgs);
+
+            switch (returnWhich)
+            {
+                case RayCastReturn.AllPoints:
+                    // Nothing more to do
+                    break;
+
+                case RayCastReturn.ClosestToRay:
+                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref spherePoints, ref linePoints, pointOnLine);
+                    break;
+
+                case RayCastReturn.ClosestToRayOrigin:
+                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref spherePoints, ref linePoints, pointOnLine);
+                    break;
+
+                default:
+                    throw new ApplicationException("Unknown RayCastReturn: " + returnWhich.ToString());
+            }
+        }
+
+        #region FLAWED
+
+        ///// <summary>
+        ///// This finds the intersection point of two lines.  If they are parallel or skew, null is returned
+        ///// </summary>
+        ///// <remarks>
+        ///// Got this here:
+        ///// http://stackoverflow.com/questions/2316490/the-algorithm-to-find-the-point-of-intersection-of-two-3d-line-segment
+        ///// 
+        ///// Which references here:
+        ///// http://mathforum.org/library/drmath/view/62814.html
+        ///// 
+        ///// Thanks for writing to Doctor Math.
+        ///// 
+        ///// Let's try this with vector algebra. First write the two equations like 
+        ///// this.
+        ///// 
+        /////   L1 = P1 + a V1
+        ///// 
+        /////   L2 = P2 + b V2
+        ///// 
+        ///// P1 and P2 are points on each line. V1 and V2 are the direction vectors 
+        ///// for each line.
+        ///// 
+        ///// If we assume that the lines intersect, we can look for the point on L1 
+        ///// that satisfies the equation for L2. This gives us this equation to 
+        ///// solve.
+        ///// 
+        /////   P1 + a V1 = P2 + b V2
+        ///// 
+        ///// Now rewrite it like this.
+        ///// 
+        /////   a V1 = (P2 - P1) + b V2
+        ///// 
+        ///// Now take the cross product of each side with V2. This will make the 
+        ///// term with 'b' drop out.
+        ///// 
+        /////   a (V1 X V2) = (P2 - P1) X V2
+        ///// 
+        ///// If the lines intersect at a single point, then the resultant vectors 
+        ///// on each side of this equation must be parallel, and the left side must 
+        ///// not be the zero vector. We should check to make sure that this is 
+        ///// true. Once we have checked this, we can solve for 'a' by taking the 
+        ///// magnitude of each side and dividing. If the resultant vectors are 
+        ///// parallel, but in opposite directions, then 'a' is the negative of the 
+        ///// ratio of magnitudes. Once we have 'a' we can go back to the equation 
+        ///// for L1 to find the intersection point.
+        ///// 
+        ///// Write back if you need more help with this.
+        ///// 
+        ///// - Doctor George, The Math Forum
+        /////   http://mathforum.org/dr.math/ 		
+        ///// </remarks>
+        //private static Point3D? GetIntersection_Line_Line_BAD(Point3D pointOnLine1, Vector3D lineDirection1, Point3D pointOnLine2, Vector3D lineDirection2)
+        //{
+        //    throw new ApplicationException("This method is broken, finish the alternate (it looks like it's cheaper)");
+
+        //    // a (V1 X V2) = (P2 - P1) X V2
+        //    // and solve for a
+
+        //    // Convert to unit vectors
+        //    //Vector3D v1 = lineDirection1.ToUnit();
+        //    //Vector3D v2 = lineDirection2.ToUnit();
+
+        //    Vector3D p2_p1 = pointOnLine2 - pointOnLine1;
+
+        //    //Vector3D leftCross = Vector3D.CrossProduct(v1, v2);
+        //    //Vector3D rightCross = Vector3D.CrossProduct(p2_p1, v2);
+        //    Vector3D leftCross = Vector3D.CrossProduct(lineDirection1, lineDirection2);
+        //    Vector3D rightCross = Vector3D.CrossProduct(p2_p1, lineDirection2);
+
+        //    // Make sure they are parallel
+        //    //double dot = Vector3D.DotProduct(leftCross, rightCross.ToUnit());		// left cross is the cross of 2 units, so is also a unit vector
+        //    double dot = Vector3D.DotProduct(leftCross.ToUnit(), rightCross.ToUnit());
+        //    if (!IsNearValue(Math.Abs(dot), 1d))
+        //    {
+        //        return null;
+        //    }
+
+        //    // Figure out the length
+        //    //double lengthA = 1d / p2_p1.Length;
+        //    double lengthA = leftCross.Length / rightCross.Length;
+        //    if (dot < 0)
+        //    {
+        //        lengthA *= -1;
+        //    }
+
+        //    return (lineDirection1 * lengthA).ToPoint();
+        //}
+        ///// <remarks>
+        ///// Got this here:
+        ///// http://mathforum.org/library/drmath/view/63719.html
+        ///// 
+        ///// Define line 1 to contain point (x1,y1,z1) with vector (a1,b1,c1).
+        ///// Define line 2 to contain point (x2,y2,z2) with vector (a2,b2,c2).
+        ///// 
+        ///// We can write these parametric equations for the lines.
+        ///// 
+        /////       Line1                         Line2
+        /////       -----                         -----
+        /////   x = x1 + a1 * t1              x = x2 + a2 * t2
+        /////   y = y1 + b1 * t1              y = y2 + b2 * t2
+        /////   z = z1 + c1 * t1              z = z2 + c2 * t2
+        ///// 
+        ///// If we set the two x values equal, and the two y values equal we get
+        ///// these two equations.
+        ///// 
+        /////   x1 + a1 * t1 = x2 + a2 * t2
+        /////   y1 + b1 * t1 = y2 + b2 * t2
+        ///// 
+        ///// You can solve these equations for t1 and t2. Then put those values
+        ///// back into the parametric equations to solve for the intersection 
+        ///// point.
+        ///// 
+        ///// If you have done the arithmetic correctly, you only need to use one of
+        ///// the equations for each of x and y. You should check both equations for
+        ///// z to make sure they give the same result. If they give different
+        ///// results then the lines are skew.
+        ///// 
+        ///// 
+        ///// 
+        ///// 
+        ///// Now try Dr. George's method. The lines are
+        ///// 
+        /////      Line1                    Line2
+        /////      -----                    -----
+        /////   x = 1 + 2t1              x = 0 + 5t2
+        /////   y = 0 + 3t1              y = 5 + 1t2
+        /////   z = 0 + 1t1              z = 5 - 3t2
+        ///// 
+        ///// Setting the x's and y's equal, we have to solve
+        ///// 
+        /////   1 + 2t1 = 0 + 5t2
+        /////   0 + 3t1 = 5 + 1t2
+        ///// 
+        ///// This reduces to
+        ///// 
+        /////   2t1 - 5t2 = -1
+        /////   3t1 - 1t2 = 5
+        ///// 
+        ///// We can multiply the first equation by -1 and the second equation by
+        ///// 5 and add:
+        ///// 
+        /////   -2t1 + 5t2 =  1
+        /////   15t1 - 5t2 = 25
+        /////   ---------------
+        /////   13t1       = 26
+        ///// 
+        /////   t1 = 2
+        ///// 
+        ///// Plugging that into the second of our pair, we get
+        ///// 
+        /////   3*2 - t2 = 5
+        ///// 
+        ///// which gives
+        ///// 
+        /////   t2 = 1
+        ///// 
+        ///// Plugging those into all six equations for x, y, and z, we get
+        ///// 
+        /////   x = 1 + 2*2 = 5     x = 0 + 5*1 = 5
+        /////   y = 0 + 3*2 = 6     y = 5 + 1*1 = 6
+        /////   z = 0 + 1*2 = 2     z = 5 - 3*1 = 2
+        ///// 
+        ///// So this is indeed the intersection of the lines.
+        ///// </remarks>
+        //private static Point3D? GetIntersection_Line_Line(Point3D pointOnLine1, Vector3D lineDirection1, Point3D pointOnLine2, Vector3D lineDirection2)
+        //{
+        //    throw new ApplicationException("finish this");
+        //}
+
+        #endregion
+
+        /// <summary>
+        /// This gets the line of intersection between two planes (returns false if they are parallel)
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://forums.create.msdn.com/forums/t/40119.aspx
+        /// </remarks>
+        public static bool GetIntersection_Plane_Plane(out Point3D point, out Vector3D direction, ITriangle plane1, ITriangle plane2)
+        {
+            Vector3D normal1 = plane1.NormalUnit;
+            Vector3D normal2 = plane2.NormalUnit;
+
+            // Find a point that satisfies both plane equations
+            double distance1 = -plane1.PlaneDistance;		// Math3D.PlaneDistance uses "normal + d = 0", but the equation below uses "normal = d", so the distances need to be negated
+            double distance2 = -plane2.PlaneDistance;
+
+            double offDiagonal = Vector3D.DotProduct(normal1, normal2);
+            if (IsNearValue(Math.Abs(offDiagonal), 1d))
+            {
+                // The planes are parallel
+                point = new Point3D();
+                direction = new Vector3D();
+                return false;
+            }
+
+            double det = 1d - offDiagonal * offDiagonal;
+
+            double a = (distance1 - distance2 * offDiagonal) / det;
+            double b = (distance2 - distance1 * offDiagonal) / det;
+            point = (a * normal1 + b * normal2).ToPoint();
+
+            // The line is perpendicular to both normals
+            direction = Vector3D.CrossProduct(normal1, normal2);
+
+            return true;
+        }
+
+        public static Tuple<Point3D, Point3D> GetIntersection_Plane_Triangle(ITriangle plane, ITriangle triangle)
+        {
+            // Get the line of intersection of the two planes
+            Point3D pointOnLine;
+            Vector3D lineDirection;
+            if (!GetIntersection_Plane_Plane(out pointOnLine, out lineDirection, plane, triangle))
+            {
+                return null;
+            }
+
+            // Cap to the triangle
+            return GetIntersection_Line_Triangle_sameplane(pointOnLine, lineDirection, triangle);
+        }
+
+        public static Tuple<Point3D, Point3D> GetIntersection_Triangle_Triangle(ITriangle triangle1, ITriangle triangle2)
+        {
+            // Get the line of intersection of the two planes
+            Point3D pointOnLine;
+            Vector3D lineDirection;
+            if (!GetIntersection_Plane_Plane(out pointOnLine, out lineDirection, triangle1, triangle2))
+            {
+                return null;
+            }
+
+            // Cap to the triangles
+            Tuple<Point3D, Point3D> segment1 = GetIntersection_Line_Triangle_sameplane(pointOnLine, lineDirection, triangle1);
+            if (segment1 == null)
+            {
+                return null;
+            }
+
+            Tuple<Point3D, Point3D> segment2 = GetIntersection_Line_Triangle_sameplane(pointOnLine, lineDirection, triangle2);
+            if (segment2 == null)
+            {
+                return null;
+            }
+
+            // Cap the line segments
+            Point3D? point1_A = GetIntersection_LineSegment_Point_colinear(segment1.Item1, segment1.Item2, segment2.Item1);
+            Point3D? point1_B = GetIntersection_LineSegment_Point_colinear(segment1.Item1, segment1.Item2, segment2.Item2);
+
+            Point3D? point2_A = GetIntersection_LineSegment_Point_colinear(segment2.Item1, segment2.Item2, segment1.Item1);
+            Point3D? point2_B = GetIntersection_LineSegment_Point_colinear(segment2.Item1, segment2.Item2, segment1.Item2);
+
+            List<Point3D> retVal = new List<Point3D>();
+
+            AddIfUnique(retVal, point1_A);
+            AddIfUnique(retVal, point1_B);
+            AddIfUnique(retVal, point2_A);
+            AddIfUnique(retVal, point2_B);
+
+            if (retVal.Count == 0)
+            {
+                // The triangles aren't touching
+                return null;
+            }
+            else if (retVal.Count == 1)
+            {
+                // The triangles are touching at a point, just consider that a non touch
+                return null;
+            }
+            else if (retVal.Count == 2)
+            {
+                return Tuple.Create(retVal[0], retVal[1]);
+            }
+            else
+            {
+                throw new ApplicationException(string.Format("Didn't expect more than 2 unique points.  Got {0} unique points", retVal.Count));
+            }
+        }
+
+        /// <summary>
+        /// This returns the distance between a plane and the origin
+        /// WARNING: Make sure you actually want this instead of this.DistanceFromPlane
+        /// NOTE: Normal must be a unit vector
+        /// </summary>
+        public static double GetPlaneOriginDistance(Vector3D normalUnit, Point3D pointOnPlane)
+        {
+            double distance = 0;	// This variable holds the distance from the plane to the origin
+
+            // Use the plane equation to find the distance (Ax + By + Cz + D = 0)  We want to find D.
+            // So, we come up with D = -(Ax + By + Cz)
+            // Basically, the negated dot product of the normal of the plane and the point. (More about the dot product in another tutorial)
+            distance = -((normalUnit.X * pointOnPlane.X) + (normalUnit.Y * pointOnPlane.Y) + (normalUnit.Z * pointOnPlane.Z));
+
+            return distance; // Return the distance
+        }
+
+        // Math.Since the last tutorial, we added 2 more parameters for the normal and the distance
+        // from the origin.  This is so we don't have to recalculate it 3 times in our IntersectionPoint() 
+        // IntersectedPolygon() functions.  We would probably make 2 different functions for
+        // this so we have the choice of getting the normal and distance back, or not.
+        // I also changed the vTriangle to "vPoly" because it isn't always a triangle.
+        // The code doesn't change, it's just more correct (though we only need 3 points anyway).
+        // For C programmers, the '&' is called a reference and is the same concept as the '*' for addresMath.Sing.
+
+        /// <summary>
+        /// This checks to see if a line intersects a plane
+        /// </summary>
+        public static bool IsIntersecting_Plane_Line(Vector3D[] polygon, Vector3D[] line, out Vector3D normal, out double originDistance)
+        {
+            if (line.Length != 2) throw new ArgumentException("A line vector can only be 2 verticies.", "vLine");
+
+            double distance1 = 0, distance2 = 0;						// The distances from the 2 points of the line from the plane
+
+            normal = GetTriangleNormal(polygon);							// We need to get the normal of our plane to go any further
+
+            // Let's find the distance our plane is from the origin.  We can find this value
+            // from the normal to the plane (polygon) and any point that lies on that plane (Any vertice)
+            originDistance = GetPlaneOriginDistance(normal, polygon[0].ToPoint());
+
+            // Get the distance from point1 from the plane uMath.Sing: Ax + By + Cz + D = (The distance from the plane)
+
+            distance1 = ((normal.X * line[0].X) +					// Ax +
+                         (normal.Y * line[0].Y) +					// Bx +
+                         (normal.Z * line[0].Z)) + originDistance;	// Cz + D
+
+            // Get the distance from point2 from the plane uMath.Sing Ax + By + Cz + D = (The distance from the plane)
+
+            distance2 = ((normal.X * line[1].X) +					// Ax +
+                         (normal.Y * line[1].Y) +					// Bx +
+                         (normal.Z * line[1].Z)) + originDistance;	// Cz + D
+
+            // Now that we have 2 distances from the plane, if we times them together we either
+            // get a positive or negative number.  If it's a negative number, that means we collided!
+            // This is because the 2 points must be on either side of the plane (IE. -1 * 1 = -1).
+
+            if (distance1 * distance2 >= 0)			// Check to see if both point's distances are both negative or both positive
+                return false;						// Return false if each point has the same sign.  -1 and 1 would mean each point is on either side of the plane.  -1 -2 or 3 4 wouldn't...
+
+            return true;							// The line intersected the plane, Return TRUE
+        }
+
+        /// <summary>
+        /// This returns the intersection point of the line that intersects the plane
+        /// </summary>
+        public static Point3D? GetIntersection_Plane_Line(ITriangle plane, Point3D pointOnLine, Vector3D lineDir)
+        {
+            Vector3D? retVal = GetIntersection_Plane_Line(plane.NormalUnit, new Vector3D[] { pointOnLine.ToVector(), (pointOnLine + lineDir).ToVector() }, plane.PlaneDistance, EdgeType.Line);
+            if (retVal == null)
+            {
+                return null;
+            }
+            else
+            {
+                return retVal.Value.ToPoint();
+            }
+        }
+        public static Point3D? GetIntersection_Plane_Ray(ITriangle plane, Point3D rayStart, Vector3D rayDir)
+        {
+            Vector3D? retVal = GetIntersection_Plane_Line(plane.NormalUnit, new Vector3D[] { rayStart.ToVector(), (rayStart + rayDir).ToVector() }, plane.PlaneDistance, EdgeType.Ray);
+            if (retVal == null)
+            {
+                return null;
+            }
+            else
+            {
+                return retVal.Value.ToPoint();
+            }
+        }
+        public static Point3D? GetIntersection_Plane_LineSegment(ITriangle plane, Point3D lineStart, Point3D lineStop)
+        {
+            Vector3D? retVal = GetIntersection_Plane_Line(plane.NormalUnit, new Vector3D[] { lineStart.ToVector(), lineStop.ToVector() }, plane.PlaneDistance, EdgeType.Segment);
+            if (retVal == null)
+            {
+                return null;
+            }
+            else
+            {
+                return retVal.Value.ToPoint();
+            }
+        }
+        private static Vector3D? GetIntersection_Plane_Line(Vector3D normal, Vector3D[] line, double originDistance, EdgeType edgeType)
+        {
+            Vector3D result = new Vector3D();
+
+            // Here comes the confuMath.Sing part.  We need to find the 3D point that is actually
+            // on the plane.  Here are some steps to do that:
+
+            // 1)  First we need to get the vector of our line, Then normalize it so it's a length of 1
+            Vector3D lineDir = line[1] - line[0];		// Get the Vector of the line
+            lineDir.Normalize();				// Normalize the lines vector
+
+
+            // 2) Use the plane equation (distance = Ax + By + Cz + D) to find the distance from one of our points to the plane.
+            //    Here I just chose a arbitrary point as the point to find that distance.  You notice we negate that
+            //    distance.  We negate the distance because we want to eventually go BACKWARDS from our point to the plane.
+            //    By doing this is will basically bring us back to the plane to find our intersection point.
+            double numerator = -(normal.X * line[0].X +		// Use the plane equation with the normal and the line
+                                               normal.Y * line[0].Y +
+                                               normal.Z * line[0].Z + originDistance);
+
+            // 3) If we take the dot product between our line vector and the normal of the polygon,
+            //    this will give us the Math.CoMath.Sine of the angle between the 2 (Math.Since they are both normalized - length 1).
+            //    We will then divide our Numerator by this value to find the offset towards the plane from our arbitrary point.
+            double denominator = Vector3D.DotProduct(normal, lineDir);		// Get the dot product of the line's vector and the normal of the plane
+
+            // Math.Since we are uMath.Sing division, we need to make sure we don't get a divide by zero error
+            // If we do get a 0, that means that there are INFINATE points because the the line is
+            // on the plane (the normal is perpendicular to the line - (Normal.Vector = 0)).  
+            // In this case, we should just return any point on the line.
+
+            if (denominator == 0.0)						// Check so we don't divide by zero
+                return null;		// line is parallel to plane
+
+            // We divide the (distance from the point to the plane) by (the dot product)
+            // to get the distance (dist) that we need to move from our arbitrary point.  We need
+            // to then times this distance (dist) by our line's vector (direction).  When you times
+            // a scalar (Math.Single number) by a vector you move along that vector.  That is what we are
+            // doing.  We are moving from our arbitrary point we chose from the line BACK to the plane
+            // along the lines vector.  It seems logical to just get the numerator, which is the distance
+            // from the point to the line, and then just move back that much along the line's vector.
+            // Well, the distance from the plane means the SHORTEST distance.  What about in the case that
+            // the line is almost parallel with the polygon, but doesn't actually intersect it until half
+            // way down the line's length.  The distance from the plane is short, but the distance from
+            // the actual intersection point is pretty long.  If we divide the distance by the dot product
+            // of our line vector and the normal of the plane, we get the correct length.  Cool huh?
+
+            double dist = numerator / denominator;				// Divide to get the multiplying (percentage) factor
+
+            switch (edgeType)
+            {
+                case EdgeType.Ray:
+                    if (dist < 0d)
+                    {
+                        // This is outside of the ray
+                        return null;
+                    }
+                    break;
+
+                case EdgeType.Segment:
+                    if (dist < 0d || dist > 1d)
+                    {
+                        // This is outside of the line segment
+                        return null;
+                    }
+                    break;
+            }
+
+            // Now, like we said above, we times the dist by the vector, then add our arbitrary point.
+            // This essentially moves the point along the vector to a certain distance.  This now gives
+            // us the intersection point.  Yay!
+
+            result.X = line[0].X + (lineDir.X * dist);
+            result.Y = line[0].Y + (lineDir.Y * dist);
+            result.Z = line[0].Z + (lineDir.Z * dist);
+
+            return result;								// Return the intersection point
+        }
+
+        public static Point3D? GetIntersection_Triangle_Line(ITriangle triangle, Point3D pointOnLine, Vector3D lineDir)
+        {
+            // Plane
+            Point3D? retVal = GetIntersection_Plane_Line(triangle, pointOnLine, lineDir);
+            if (retVal == null)
+            {
+                return null;
+            }
+
+            // Constrain to triangle
+            Vector bary = ToBarycentric(triangle, retVal.Value);
+            if (bary.X < 0 || bary.Y < 0 || bary.X + bary.Y > 1)
+            {
+                return null;
+            }
+
+            // The return point is inside the triangle
+            return retVal.Value;
+        }
+        public static Point3D? GetIntersection_Triangle_Ray(ITriangle triangle, Point3D rayStart, Vector3D rayDir)
+        {
+            // Plane
+            Point3D? retVal = GetIntersection_Plane_Ray(triangle, rayStart, rayDir);
+            if (retVal == null)
+            {
+                return null;
+            }
+
+            // Constrain to triangle
+            Vector bary = ToBarycentric(triangle, retVal.Value);
+            if (bary.X < 0 || bary.Y < 0 || bary.X + bary.Y > 1)
+            {
+                return null;
+            }
+
+            // The return point is inside the triangle
+            return retVal.Value;
+        }
+        public static Point3D? GetIntersection_Triangle_LineSegment(ITriangle triangle, Point3D lineStart, Point3D lineStop)
+        {
+            // Plane
+            Point3D? retVal = GetIntersection_Plane_LineSegment(triangle, lineStart, lineStop);
+            if (retVal == null)
+            {
+                return null;
+            }
+
+            // Constrain to triangle
+            Vector bary = ToBarycentric(triangle, retVal.Value);
+            if (bary.X < 0 || bary.Y < 0 || bary.X + bary.Y > 1)
+            {
+                return null;
+            }
+
+            // The return point is inside the triangle
+            return retVal.Value;
+        }
+
+        public static Point3D[] GetIntersection_Hull_Triangle(ITriangleIndexed[] hull, ITriangle triangle)
+        {
+            return HullTriangleIntersect.GetIntersection_Hull_Triangle(hull, triangle);
+        }
+
+        /// <summary>
+        /// This checks to see if a point is inside the ranges of a polygon
+        /// TODO: Figure out why this is giving false positives - I think it's meant for a 2D polygon within 3D.  Not a 3D hull
+        /// </summary>
+        public static bool IsInside_Polygon2D(Vector3D intersectionPoint, Vector3D[] polygon2D, long verticeCount)
+        {
+            //const double MATCH_FACTOR = 0.9999;		// Used to cover up the error in floating point
+            const double MATCH_FACTOR = 0.999999;		// Used to cover up the error in floating point
+            double Angle = 0.0;						// Initialize the angle
+
+            // Just because we intersected the plane, doesn't mean we were anywhere near the polygon.
+            // This functions checks our intersection point to make sure it is inside of the polygon.
+            // This is another tough function to grasp at first, but let me try and explain.
+            // It's a brilliant method really, what it does is create triangles within the polygon
+            // from the intersection point.  It then adds up the inner angle of each of those triangles.
+            // If the angles together add up to 360 degrees (or 2 * PI in radians) then we are inside!
+            // If the angle is under that value, we must be outside of polygon.  To further
+            // understand why this works, take a pencil and draw a perfect triangle.  Draw a dot in
+            // the middle of the triangle.  Now, from that dot, draw a line to each of the vertices.
+            // Now, we have 3 triangles within that triangle right?  Now, we know that if we add up
+            // all of the angles in a triangle we get 360 right?  Well, that is kinda what we are doing,
+            // but the inverse of that.  Say your triangle is an isosceles triangle, so add up the angles
+            // and you will get 360 degree angles.  90 + 90 + 90 is 360.
+
+            for (int i = 0; i < verticeCount; i++)		// Go in a circle to each vertex and get the angle between
+            {
+                Vector3D vA = polygon2D[i] - intersectionPoint;	// Subtract the intersection point from the current vertex
+                // Subtract the point from the next vertex
+                Vector3D vB = polygon2D[(i + 1) % verticeCount] - intersectionPoint;
+
+                Angle += DegreesToRadians(Vector3D.AngleBetween(vA, vB));	// Find the angle between the 2 vectors and add them all up as we go along
+            }
+
+            // Now that we have the total angles added up, we need to check if they add up to 360 degrees.
+            // Math.Since we are uMath.Sing the dot product, we are working in radians, so we check if the angles
+            // equals 2*PI.  We defined PI in 3DMath.h.  You will notice that we use a MATCH_FACTOR
+            // in conjunction with our desired degree.  This is because of the inaccuracy when working
+            // with floating point numbers.  It usually won't always be perfectly 2 * PI, so we need
+            // to use a little twiddling.  I use .9999, but you can change this to fit your own desired accuracy.
+
+            if (Angle >= (MATCH_FACTOR * (2.0 * Math.PI)))	// If the angle is greater than 2 PI, (360 degrees)
+                return true;							// The point is inside of the polygon
+
+            return false;								// If you get here, it obviously wasn't inside the polygon, so Return FALSE
+        }
+
+        /// <summary>
+        /// This checks if a line is intersecting a polygon
+        /// </summary>
+        public static bool IsIntersecting_Polygon2D_Line(Vector3D[] polygon2D, Vector3D[] line, int verticeCount, out Vector3D normal, out double originDistance, out Vector3D? intersectionPoint)
+        {
+            intersectionPoint = null;
+
+            // First we check to see if our line intersected the plane.  If this isn't true
+            // there is no need to go on, so return false immediately.
+            // We pass in address of vNormal and originDistance so we only calculate it once
+
+            // Reference
+            if (!IsIntersecting_Plane_Line(polygon2D, line, out normal, out originDistance))
+                return false;
+
+            // Now that we have our normal and distance passed back from IntersectedPlane(), 
+            // we can use it to calculate the intersection point.  The intersection point
+            // is the point that actually is ON the plane.  It is between the line.  We need
+            // this point test next, if we are inside the polygon.  To get the I-Point, we
+            // give our function the normal of the plan, the points of the line, and the originDistance.
+
+            intersectionPoint = GetIntersection_Plane_Line(normal, line, originDistance, EdgeType.Line);
+            if (intersectionPoint == null)
+                return false;
+
+            // Now that we have the intersection point, we need to test if it's inside the polygon.
+            // To do this, we pass in :
+            // (our intersection point, the polygon, and the number of vertices our polygon has)
+
+            if (IsInside_Polygon2D(intersectionPoint.Value, polygon2D, verticeCount))
+                return true;							// We collided!	  Return success
+
+
+            // If we get here, we must have NOT collided
+
+            return false;								// There was no collision, so return false
+        }
+        /// <summary>
+        /// This checks if a line is intersecting a polygon
+        /// </summary>
+        public static bool IsIntersecting_Polygon2D_Line(Vector3D[] polygon2D, Vector3D[] line)
+        {
+            Vector3D normal;
+            double originDistance;
+            Vector3D? intersectionPoint;
+
+            return IsIntersecting_Polygon2D_Line(polygon2D, line, polygon2D.Length, out normal, out originDistance, out intersectionPoint);
+        }
+
+        /// <summary>
+        /// NOTE: This only works if all of the triangle's normals point outward
+        /// </summary>
+        public static bool IsInside_ConvexHull(IEnumerable<ITriangle> hull, Point3D point)
+        {
+            foreach (ITriangle triangle in hull)
+            {
+                if (Vector3D.DotProduct(triangle.Normal, point - triangle.Point0) > 0d)
+                {
+                    // This point is outside
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        /// <summary>
+        /// This will work for concave or convex hulls.  The triangle normals don't matter
+        /// NOTE: It's up to the caller to do sphere or AABB check before taking the expense of calling this method
+        /// </summary>
+        /// <param name="asParallel">WARNING: Test both to see which is faster before automatically choosing parallel - it can be slower</param>
+        /// <remarks>
+        /// Got this here:
+        /// http://www.yaldex.com/game-programming/0131020099_ch22lev1sec1.html
+        /// </remarks>
+        public static bool IsInside_ConcaveHull(IEnumerable<ITriangle> hull, Point3D point, bool asParallel = false)
+        {
+            //Vector3D rayDirection = new Vector3D(1, 0, 0);        // can't use this, because I was getting flaky results when the ray was shooting through perfectly aligned hulls (ray was intersecting the edges)
+            Vector3D rayDirection = GetRandomVector(1);
+
+            int numIntersections = 0;
+
+            if (asParallel)
+            {
+                numIntersections = hull.
+                    AsParallel().
+                    Sum(o => (GetIntersection_Triangle_Ray(o, point, rayDirection) != null) ? 1 : 0);
+            }
+            else
+            {
+                foreach (ITriangle triangle in hull)        // Avoiding linq for speed reasons
+                {
+                    if (GetIntersection_Triangle_Ray(triangle, point, rayDirection) != null)
+                    {
+                        numIntersections++;
+                    }
+                }
+            }
+
+            // If the number of intersections is odd, then the point started inside the hull.
+            // If zero, it missed
+            // If even, it punched all the way through
+            return numIntersections % 2 == 1;
+        }
+
+        public static double DistanceFromPlane(Vector3D[] polygon, Vector3D point)
+        {
+            Vector3D normal = GetTriangleNormal(polygon); // We need to get the normal of our plane to go any further
+
+            // Let's find the distance our plane is from the origin.  We can find this value
+            // from the normal to the plane (polygon) and any point that lies on that plane (Any vertice)
+            double originDistance = GetPlaneOriginDistance(normal, polygon[0].ToPoint());
+
+            // Get the distance from point1 from the plane uMath.Sing: Ax + By + Cz + D = (The distance from the plane)
+            return DistanceFromPlane(normal, originDistance, point);
+        }
+        public static double DistanceFromPlane(Vector3D normal, double originDistance, Vector3D point)
+        {
+            return ((normal.X * point.X) +					// Ax +
+                    (normal.Y * point.Y) +					// Bx +
+                    (normal.Z * point.Z)) + originDistance;	// Cz + D
+        }
+
+        /// <summary>
+        /// This splits the vector into a vector along the plane, and orthogonal to the plane
+        /// </summary>
+        /// <remarks>
+        /// The two returned vectors will add up to the original vector passed in
+        /// </remarks>
+        public static DoubleVector SplitVector(Vector3D vector, ITriangle plane)
+        {
+            // Get portion along normal: this is up/down
+            Vector3D orth = vector.GetProjectedVector(plane.Normal);
+
+            // Subtract that off: this is left/right
+            Vector3D along = vector - orth;
+
+            // Exit Function
+            return new DoubleVector(along, orth);
+        }
+
+        #endregion
+
+        #region Matrix Logic
+
+        public static void MatrixDecompose(Matrix3D mat, out Vector3D vTrans, out Vector3D vScale, out Vector3D vRot, bool scaleTransform)
+        {
+            vTrans = new Vector3D();
+            vScale = new Vector3D();
+
+            Vector3D[] vCols = new Vector3D[]{
                     new Vector3D(mat.M11,mat.M12,mat.M13),
                     new Vector3D(mat.M21,mat.M22,mat.M23),
                     new Vector3D(mat.M31,mat.M32,mat.M33)  
                 };
 
-			vScale.X = vCols[0].Length;
-			vScale.Y = vCols[1].Length;
-			vScale.Z = vCols[2].Length;
+            vScale.X = vCols[0].Length;
+            vScale.Y = vCols[1].Length;
+            vScale.Z = vCols[2].Length;
 
-			if (scaleTransform)
-			{
-				vTrans.X = mat.OffsetX / (vScale.X == 0 ? 1 : vScale.X);
-				vTrans.Y = mat.OffsetY / (vScale.Y == 0 ? 1 : vScale.Y);
-				vTrans.Z = mat.OffsetZ / (vScale.Z == 0 ? 1 : vScale.Z);
-			}
-			else
-			{
-				vTrans.X = mat.OffsetX;
-				vTrans.Y = mat.OffsetY;
-				vTrans.Z = mat.OffsetZ;
-			}
+            if (scaleTransform)
+            {
+                vTrans.X = mat.OffsetX / (vScale.X == 0 ? 1 : vScale.X);
+                vTrans.Y = mat.OffsetY / (vScale.Y == 0 ? 1 : vScale.Y);
+                vTrans.Z = mat.OffsetZ / (vScale.Z == 0 ? 1 : vScale.Z);
+            }
+            else
+            {
+                vTrans.X = mat.OffsetX;
+                vTrans.Y = mat.OffsetY;
+                vTrans.Z = mat.OffsetZ;
+            }
 
-			if (vScale.X != 0)
-			{
-				vCols[0].X /= vScale.X;
-				vCols[0].Y /= vScale.X;
-				vCols[0].Z /= vScale.X;
-			}
-			if (vScale.Y != 0)
-			{
-				vCols[1].X /= vScale.Y;
-				vCols[1].Y /= vScale.Y;
-				vCols[1].Z /= vScale.Y;
-			}
-			if (vScale.Z != 0)
-			{
-				vCols[2].X /= vScale.Z;
-				vCols[2].Y /= vScale.Z;
-				vCols[2].Z /= vScale.Z;
-			}
+            if (vScale.X != 0)
+            {
+                vCols[0].X /= vScale.X;
+                vCols[0].Y /= vScale.X;
+                vCols[0].Z /= vScale.X;
+            }
+            if (vScale.Y != 0)
+            {
+                vCols[1].X /= vScale.Y;
+                vCols[1].Y /= vScale.Y;
+                vCols[1].Z /= vScale.Y;
+            }
+            if (vScale.Z != 0)
+            {
+                vCols[2].X /= vScale.Z;
+                vCols[2].Y /= vScale.Z;
+                vCols[2].Z /= vScale.Z;
+            }
 
-			/*
-			Matrix3D mRot = new Matrix3D();
-			mRot.M11 = vCols[0].X;
-			mRot.M12 = vCols[0].Y;
-			mRot.M13 = vCols[0].Z;
-			mRot.M14 = 0;
-			mRot.M21 = vCols[1].X;
-			mRot.M22 = vCols[1].Y;
-			mRot.M23 = vCols[1].Z;
-			mRot.M24 = 0;
-			mRot.M31 = vCols[2].X;
-			mRot.M32 = vCols[2].Y;
-			mRot.M33 = vCols[2].Z;
-			mRot.M34 = 0;
-			mRot.OffsetX = 0;
-			mRot.OffsetY = 0;
-			mRot.OffsetZ = 0;
-			mRot.M44 = 1;
-			*/
+            /*
+            Matrix3D mRot = new Matrix3D();
+            mRot.M11 = vCols[0].X;
+            mRot.M12 = vCols[0].Y;
+            mRot.M13 = vCols[0].Z;
+            mRot.M14 = 0;
+            mRot.M21 = vCols[1].X;
+            mRot.M22 = vCols[1].Y;
+            mRot.M23 = vCols[1].Z;
+            mRot.M24 = 0;
+            mRot.M31 = vCols[2].X;
+            mRot.M32 = vCols[2].Y;
+            mRot.M33 = vCols[2].Z;
+            mRot.M34 = 0;
+            mRot.OffsetX = 0;
+            mRot.OffsetY = 0;
+            mRot.OffsetZ = 0;
+            mRot.M44 = 1;
+            */
 
-			vRot = new Vector3D();
-			vRot.X = Math.Asin(/*-mRot.M32*/-vCols[2].Y);
+            vRot = new Vector3D();
+            vRot.X = Math.Asin(/*-mRot.M32*/-vCols[2].Y);
 
-			double threshold = 0.001;
-			double test = Math.Cos(vRot.X);
-			if (Math.Abs(test) > threshold)
-			{
-				vRot.Y = RadiansToDegrees(Math.Atan2(/*mRot.M31*/vCols[2].X, /*mRot.M33*/vCols[2].Z));
-				vRot.Z = RadiansToDegrees(Math.Atan2(/*mRot.M12*/vCols[0].Y, /*mRot.M22*/vCols[1].Y));
-			}
-			else
-			{
-				vRot.Y = 0.0;
-				vRot.Z = RadiansToDegrees(Math.Atan2(-/*mRot.M21*/vCols[1].X, /*mRot.M11*/vCols[0].X));
-			}
-			vRot.X = RadiansToDegrees(vRot.X);
-		}
+            double threshold = 0.001;
+            double test = Math.Cos(vRot.X);
+            if (Math.Abs(test) > threshold)
+            {
+                vRot.Y = RadiansToDegrees(Math.Atan2(/*mRot.M31*/vCols[2].X, /*mRot.M33*/vCols[2].Z));
+                vRot.Z = RadiansToDegrees(Math.Atan2(/*mRot.M12*/vCols[0].Y, /*mRot.M22*/vCols[1].Y));
+            }
+            else
+            {
+                vRot.Y = 0.0;
+                vRot.Z = RadiansToDegrees(Math.Atan2(-/*mRot.M21*/vCols[1].X, /*mRot.M11*/vCols[0].X));
+            }
+            vRot.X = RadiansToDegrees(vRot.X);
+        }
 
-		public static Vector3D GetMatrixScale(ref Matrix3D mat)
-		{
-			Vector3D[] vCols = new Vector3D[]{
+        public static Vector3D GetMatrixScale(ref Matrix3D mat)
+        {
+            Vector3D[] vCols = new Vector3D[]{
                     new Vector3D(mat.M11,mat.M12,mat.M13),
                     new Vector3D(mat.M21,mat.M22,mat.M23),
                     new Vector3D(mat.M31,mat.M32,mat.M33)  
                 };
 
-			return new Vector3D(vCols[0].Length, vCols[1].Length, vCols[2].Length);
-		}
-
-		public static Matrix3D GetScaleMatrix(ref Matrix3D matrix)
-		{
-			Matrix3D result = Matrix3D.Identity;
-			result.Scale(GetMatrixScale(ref matrix));
-			return result;
-		}
-
-		/*
-		public static Matrix3D CreateRotationMatrix(Vector3D rotation)
-		{
-			return CreateYawPitchRollMatrix(rotation.X, rotation.Y, rotation.Z);
-		}
-
-		public static Matrix3D CreateRotationX(double pitchInDegrees)
-		{
-			double x = DegreesToRadians(pitchInDegrees);
-
-			double cx = Math.Cos(x);
-			double sx = Math.Sin(x);
-
-			Matrix3D mRot = new Matrix3D();
-			mRot.M11 = 1;
-			mRot.M12 = 0;
-			mRot.M13 = 0;
-
-			mRot.M21 = 0;
-			mRot.M22 = cx;
-			mRot.M23 = -sx;
-
-			mRot.M31 = 0;
-			mRot.M32 = sx;
-			mRot.M33 = cx;
-
-			mRot.M44 = 1;
-
-			return mRot;
-		}
-
-		public static Matrix3D CreateRotationY(double yawInDegrees)
-		{
-			double y = DegreesToRadians(yawInDegrees);
-
-			double cy = Math.Cos(y);
-			double sy = Math.Sin(y);
-
-			Matrix3D mRot = new Matrix3D();
-			mRot.M11 = cy;
-			mRot.M12 = 0;
-			mRot.M13 = sy;
-
-			mRot.M21 = 0;
-			mRot.M22 = 1;
-			mRot.M23 = 0;
-
-			mRot.M31 = -sy;
-			mRot.M32 = 0;
-			mRot.M33 = cy;
-
-			mRot.M44 = 1;
-
-			return mRot;
-		}
-
-		public static Matrix3D CreateRotationZ(double rollInDegrees)
-		{
-			double z = DegreesToRadians(rollInDegrees);
-
-			double cz = Math.Cos(z);
-			double sz = Math.Sin(z);
-
-			Matrix3D mRot = new Matrix3D();
-			mRot.M11 = cz;
-			mRot.M12 = -sz;
-			mRot.M13 = 0;
-
-			mRot.M21 = sz;
-			mRot.M22 = cz;
-			mRot.M23 = 0;
-
-			mRot.M31 = 0;
-			mRot.M32 = 0;
-			mRot.M33 = 1;
-
-			mRot.M44 = 1;
-
-			return mRot;
-		}
-		*/
-
-		/// <summary>
-		/// Creates a YawPitchRoll matrix.
-		/// </summary>
-		/// <param name="xPitchDegrees">Pitch.</param>
-		/// <param name="yYawDegrees">Yaw.</param>
-		/// <param name="zRollDegrees">Roll.</param>
-		/// <returns>The rotation matrix.</returns>
-		/// 
-		public static Matrix3D CreateYawPitchRollMatrix(double xPitchDegrees, double yYawDegrees, double zRollDegrees)
-		{
-			double x = DegreesToRadians(xPitchDegrees);
-			double y = DegreesToRadians(yYawDegrees);
-			double z = DegreesToRadians(zRollDegrees);
-
-			double cx = Math.Cos(x);
-			double cy = Math.Cos(y);
-			double cz = Math.Cos(z);
-
-			double sx = Math.Sin(x);
-			double sy = Math.Sin(y);
-			double sz = Math.Sin(z);
-
-			Matrix3D mRot = new Matrix3D();
-			mRot.M11 = cz * cy + sz * sx * sy;
-			mRot.M12 = sz * cx;
-			mRot.M13 = cz * -sy + sz * sx * sy;
-
-			mRot.M21 = -sz * cy + cz * sx * sy;
-			mRot.M22 = cz * cx;
-			mRot.M23 = sz * sy + cz * sx * cy;
-
-			mRot.M31 = cx * sy;
-			mRot.M32 = -sx;
-			mRot.M33 = cx * cy;
-
-			mRot.M44 = 1;
-
-			return mRot;
-
-			//return CreateRotationZ(zRollDegrees) * CreateRotationX(xPitchDegrees) * CreateRotationY(yYawDegrees);
-		}
-		public static Matrix3D CreateYawPitchRollMatrix(Vector3D rotation)
-		{
-			return CreateYawPitchRollMatrix(rotation.X, rotation.Y, rotation.Z);
-		}
-
-		public static void RemoveMatrixScale(ref Matrix3D matrix)
-		{
-			Vector3D v = GetFrontVector(ref matrix);
-			v.Normalize();
-			SetFrontVector(ref matrix, v);
-
-			v = GetUpVector(ref matrix);
-			v.Normalize();
-			SetUpVector(ref matrix, v);
-
-			v = GetRightVector(ref matrix);
-			v.Normalize();
-			SetRightVector(ref matrix, v);
-		}
-
-		public static Matrix3D GetRotationMatrix(Matrix3D matrix)
-		{
-			Matrix3D result = Matrix3D.Identity;
-
-			Vector3D v = GetFrontVector(ref matrix);
-			v.Normalize();
-			SetFrontVector(ref result, v);
-
-			v = GetUpVector(ref matrix);
-			v.Normalize();
-			SetUpVector(ref result, v);
-
-			v = GetRightVector(ref matrix);
-			v.Normalize();
-			SetRightVector(ref result, v);
-
-			return result;
-		}
-		public static Matrix3D GetTranslationMatrix(Matrix3D matrix)
-		{
-			Matrix3D result = Matrix3D.Identity;
-
-			SetOffset(ref result, GetOffset(ref matrix));
-
-			return result;
-		}
-
-		/*
-		public static Matrix3D CreateZDirectionMatrix(Point3D position, Vector3D lookDirection, Vector3D upDirection)
-		{
-			Vector3D zAxis = lookDirection;
-			zAxis.Normalize();
-
-			Vector3D xAxis = Vector3D.CrossProduct(upDirection, zAxis);
-			if (xAxis.Length > 0)
-			{
-				xAxis.Normalize();
-
-				Vector3D yAxis = Vector3D.CrossProduct(zAxis, xAxis);
-
-				Vector3D p = (Vector3D)position;
-				double offsetX = -Vector3D.DotProduct(xAxis, p);
-				double offsetY = -Vector3D.DotProduct(yAxis, p);
-				double offsetZ = -Vector3D.DotProduct(zAxis, p);
-
-				Matrix3D result = new Matrix3D(
-					xAxis.X, yAxis.X, zAxis.X, 0,
-					xAxis.Y, yAxis.Y, zAxis.Y, 0,
-					xAxis.Z, yAxis.Z, zAxis.Z, 0,
-					offsetX, offsetY, offsetZ, 1);
-
-				result.Invert();
-				return result;
-			}
-			else
-				return ZeroMatrix;
-		}
-		*/
-
-		public static Matrix3D CreateZDirectionMatrix(Point3D offset, Vector3D lookDirection)
-		{
-			Vector3D up;
-			Vector3D front;
-			Vector3D right = lookDirection;
-			right.Normalize();
-
-			if (Math.Abs(right.Z) > 0.577f)
-				front = Vector3D.CrossProduct(new Vector3D(right.Y, right.Z, 0), right);
-			else
-				front = Vector3D.CrossProduct(new Vector3D(right.Y, right.X, 0), right);
-
-			front.Normalize();
-
-			up = Vector3D.CrossProduct(right, front);
-
-			return CreateMatrix(front, up, right, offset, false);
-		}
-		public static Matrix3D CreateZDirectionMatrix(Vector3D lookDirection)
-		{
-			return CreateZDirectionMatrix(new Point3D(), lookDirection);
-		}
-
-		/*
-		public static MatrixTransform3D CreateZDirectionRotationTransform(Point3D position, Vector3D lookDirection, Vector3D upDirection)
-		{
-			return new MatrixTransform3D(CreateZDirectionMatrix(position, lookDirection, upDirection));
-		}
-		*/
-
-		/*
-		public static MatrixTransform3D CreateRotationTransform(double xDegrees, double yDegrees, double zDegrees)
-		{
-			return new MatrixTransform3D(CreateYawPitchRollMatrix(xDegrees, yDegrees, zDegrees));
-		}
-
-		public static MatrixTransform3D CreateRotationTransform(Vector3D rotation)
-		{
-			return new MatrixTransform3D(CreateRotationMatrix(rotation));
-		}
-		*/
-
-		/*
-		public static Quaternion CreateQuaternionFromAxisAngle(Vector3D axis, double angle)
-		{
-			Quaternion quaternion = new Quaternion();
-			double num2 = angle * 0.5;
-			double num = Math.Sin(num2);
-			double num3 = Math.Cos(num2);
-			quaternion.X = axis.X * num;
-			quaternion.Y = axis.Y * num;
-			quaternion.Z = axis.Z * num;
-			quaternion.W = num3;
-			return quaternion;
-		}
-		*/
-
-		public static Vector3D GetFrontVector(ref Matrix3D matrix)
-		{
-			return new Vector3D(matrix.M11, matrix.M12, matrix.M13);
-		}
-		public static void SetFrontVector(ref Matrix3D matrix, Vector3D vector)
-		{
-			matrix.M11 = vector.X;
-			matrix.M12 = vector.Y;
-			matrix.M13 = vector.Z;
-		}
-
-		public static Vector3D GetUpVector(ref Matrix3D matrix)
-		{
-			return new Vector3D(matrix.M21, matrix.M22, matrix.M23);
-		}
-		public static void SetUpVector(ref Matrix3D matrix, Vector3D vector)
-		{
-			matrix.M21 = vector.X;
-			matrix.M22 = vector.Y;
-			matrix.M23 = vector.Z;
-		}
-
-		public static Vector3D GetRightVector(ref Matrix3D matrix)
-		{
-			return new Vector3D(matrix.M31, matrix.M32, matrix.M33);
-		}
-		public static void SetRightVector(ref Matrix3D matrix, Vector3D vector)
-		{
-			matrix.M31 = vector.X;
-			matrix.M32 = vector.Y;
-			matrix.M33 = vector.Z;
-		}
-
-		public static Vector3D GetOffset(ref Matrix3D matrix)
-		{
-			return new Vector3D(matrix.OffsetX, matrix.OffsetY, matrix.OffsetZ);
-		}
-		public static void SetOffset(ref Matrix3D matrix, Vector3D offset)
-		{
-			matrix.OffsetX = offset.X;
-			matrix.OffsetY = offset.Y;
-			matrix.OffsetZ = offset.Z;
-		}
-
-		public static Vector3D UnTransform(ref Matrix3D matrix, Vector3D vector)
-		{
-			return new Vector3D(
-				Vector3D.DotProduct(vector, GetFrontVector(ref matrix)),
-				Vector3D.DotProduct(vector, GetUpVector(ref matrix)),
-				Vector3D.DotProduct(vector, GetRightVector(ref matrix)));
-		}
-		public static Point3D UnTransform(ref Matrix3D matrix, Point3D point)
-		{
-			return (Point3D)UnTransform(ref matrix, (Vector3D)point - GetOffset(ref matrix));
-		}
-
-		public static Vector3D Transform(Quaternion deltaQuaternion, Vector3D vector)
-		{
-			Quaternion direction = new Quaternion(vector.X, vector.Y, vector.Z, 0);
-
-			// Compose the delta with the orientation
-			direction = deltaQuaternion * direction;
-
-			// convert back to vector
-			deltaQuaternion.Conjugate();
-			direction *= deltaQuaternion;
-
-			return new Vector3D(direction.X, direction.Y, direction.Z);
-		}
-		public static void Transform(Quaternion deltaQuaternion, ProjectionCamera camera)
-		{
-			camera.LookDirection = Transform(deltaQuaternion, camera.LookDirection);
-			camera.UpDirection = Transform(deltaQuaternion, camera.UpDirection);
-		}
-
-		public static Matrix3D CreateMatrix(Vector3D front, Vector3D up, Vector3D right, Point3D offset, bool normalize)
-		{
-			if (normalize)
-			{
-				front.Normalize();
-				up.Normalize();
-				right.Normalize();
-			}
-
-			return new Matrix3D(
-				front.X, front.Y, front.Z, 0,
-				up.X, up.Y, up.Z, 0,
-				right.X, right.Y, right.Z, 0,
-				offset.X, offset.Y, offset.Z, 1);
-		}
-
-		#endregion
-
-		#region Should go in MathUtils
-
-		public static Point3D TransformToWorld(DependencyObject visual, Point3D point)
-		{
-			Matrix3D m = MathUtils.GetTransformToWorld(visual);
-			return m.Transform(point);
-		}
-		public static Vector3D TransformToWorld(DependencyObject visual, Vector3D vector)
-		{
-			Matrix3D m = MathUtils.GetTransformToWorld(visual);
-			return m.Transform(vector);
-		}
-
-		public static Point3D TransformToLocal(DependencyObject visual, Point3D point)
-		{
-			Matrix3D m = MathUtils.GetTransformToLocal(visual);
-			return m.Transform(point);
-		}
-		public static Vector3D TransformToLocal(DependencyObject visual, Vector3D vector)
-		{
-			Matrix3D m = MathUtils.GetTransformToLocal(visual);
-			return m.Transform(vector);
-		}
-
-		#endregion
-
-		#region Duplication with wpf
-
-		/*
+            return new Vector3D(vCols[0].Length, vCols[1].Length, vCols[2].Length);
+        }
+
+        public static Matrix3D GetScaleMatrix(ref Matrix3D matrix)
+        {
+            Matrix3D result = Matrix3D.Identity;
+            result.Scale(GetMatrixScale(ref matrix));
+            return result;
+        }
+
+        /*
+        public static Matrix3D CreateRotationMatrix(Vector3D rotation)
+        {
+            return CreateYawPitchRollMatrix(rotation.X, rotation.Y, rotation.Z);
+        }
+
+        public static Matrix3D CreateRotationX(double pitchInDegrees)
+        {
+            double x = DegreesToRadians(pitchInDegrees);
+
+            double cx = Math.Cos(x);
+            double sx = Math.Sin(x);
+
+            Matrix3D mRot = new Matrix3D();
+            mRot.M11 = 1;
+            mRot.M12 = 0;
+            mRot.M13 = 0;
+
+            mRot.M21 = 0;
+            mRot.M22 = cx;
+            mRot.M23 = -sx;
+
+            mRot.M31 = 0;
+            mRot.M32 = sx;
+            mRot.M33 = cx;
+
+            mRot.M44 = 1;
+
+            return mRot;
+        }
+
+        public static Matrix3D CreateRotationY(double yawInDegrees)
+        {
+            double y = DegreesToRadians(yawInDegrees);
+
+            double cy = Math.Cos(y);
+            double sy = Math.Sin(y);
+
+            Matrix3D mRot = new Matrix3D();
+            mRot.M11 = cy;
+            mRot.M12 = 0;
+            mRot.M13 = sy;
+
+            mRot.M21 = 0;
+            mRot.M22 = 1;
+            mRot.M23 = 0;
+
+            mRot.M31 = -sy;
+            mRot.M32 = 0;
+            mRot.M33 = cy;
+
+            mRot.M44 = 1;
+
+            return mRot;
+        }
+
+        public static Matrix3D CreateRotationZ(double rollInDegrees)
+        {
+            double z = DegreesToRadians(rollInDegrees);
+
+            double cz = Math.Cos(z);
+            double sz = Math.Sin(z);
+
+            Matrix3D mRot = new Matrix3D();
+            mRot.M11 = cz;
+            mRot.M12 = -sz;
+            mRot.M13 = 0;
+
+            mRot.M21 = sz;
+            mRot.M22 = cz;
+            mRot.M23 = 0;
+
+            mRot.M31 = 0;
+            mRot.M32 = 0;
+            mRot.M33 = 1;
+
+            mRot.M44 = 1;
+
+            return mRot;
+        }
+        */
+
+        /// <summary>
+        /// Creates a YawPitchRoll matrix.
+        /// </summary>
+        /// <param name="xPitchDegrees">Pitch.</param>
+        /// <param name="yYawDegrees">Yaw.</param>
+        /// <param name="zRollDegrees">Roll.</param>
+        /// <returns>The rotation matrix.</returns>
+        /// 
+        public static Matrix3D CreateYawPitchRollMatrix(double xPitchDegrees, double yYawDegrees, double zRollDegrees)
+        {
+            double x = DegreesToRadians(xPitchDegrees);
+            double y = DegreesToRadians(yYawDegrees);
+            double z = DegreesToRadians(zRollDegrees);
+
+            double cx = Math.Cos(x);
+            double cy = Math.Cos(y);
+            double cz = Math.Cos(z);
+
+            double sx = Math.Sin(x);
+            double sy = Math.Sin(y);
+            double sz = Math.Sin(z);
+
+            Matrix3D mRot = new Matrix3D();
+            mRot.M11 = cz * cy + sz * sx * sy;
+            mRot.M12 = sz * cx;
+            mRot.M13 = cz * -sy + sz * sx * sy;
+
+            mRot.M21 = -sz * cy + cz * sx * sy;
+            mRot.M22 = cz * cx;
+            mRot.M23 = sz * sy + cz * sx * cy;
+
+            mRot.M31 = cx * sy;
+            mRot.M32 = -sx;
+            mRot.M33 = cx * cy;
+
+            mRot.M44 = 1;
+
+            return mRot;
+
+            //return CreateRotationZ(zRollDegrees) * CreateRotationX(xPitchDegrees) * CreateRotationY(yYawDegrees);
+        }
+        public static Matrix3D CreateYawPitchRollMatrix(Vector3D rotation)
+        {
+            return CreateYawPitchRollMatrix(rotation.X, rotation.Y, rotation.Z);
+        }
+
+        public static void RemoveMatrixScale(ref Matrix3D matrix)
+        {
+            Vector3D v = GetFrontVector(ref matrix);
+            v.Normalize();
+            SetFrontVector(ref matrix, v);
+
+            v = GetUpVector(ref matrix);
+            v.Normalize();
+            SetUpVector(ref matrix, v);
+
+            v = GetRightVector(ref matrix);
+            v.Normalize();
+            SetRightVector(ref matrix, v);
+        }
+
+        public static Matrix3D GetRotationMatrix(Matrix3D matrix)
+        {
+            Matrix3D result = Matrix3D.Identity;
+
+            Vector3D v = GetFrontVector(ref matrix);
+            v.Normalize();
+            SetFrontVector(ref result, v);
+
+            v = GetUpVector(ref matrix);
+            v.Normalize();
+            SetUpVector(ref result, v);
+
+            v = GetRightVector(ref matrix);
+            v.Normalize();
+            SetRightVector(ref result, v);
+
+            return result;
+        }
+        public static Matrix3D GetTranslationMatrix(Matrix3D matrix)
+        {
+            Matrix3D result = Matrix3D.Identity;
+
+            SetOffset(ref result, GetOffset(ref matrix));
+
+            return result;
+        }
+
+        /*
+        public static Matrix3D CreateZDirectionMatrix(Point3D position, Vector3D lookDirection, Vector3D upDirection)
+        {
+            Vector3D zAxis = lookDirection;
+            zAxis.Normalize();
+
+            Vector3D xAxis = Vector3D.CrossProduct(upDirection, zAxis);
+            if (xAxis.Length > 0)
+            {
+                xAxis.Normalize();
+
+                Vector3D yAxis = Vector3D.CrossProduct(zAxis, xAxis);
+
+                Vector3D p = (Vector3D)position;
+                double offsetX = -Vector3D.DotProduct(xAxis, p);
+                double offsetY = -Vector3D.DotProduct(yAxis, p);
+                double offsetZ = -Vector3D.DotProduct(zAxis, p);
+
+                Matrix3D result = new Matrix3D(
+                    xAxis.X, yAxis.X, zAxis.X, 0,
+                    xAxis.Y, yAxis.Y, zAxis.Y, 0,
+                    xAxis.Z, yAxis.Z, zAxis.Z, 0,
+                    offsetX, offsetY, offsetZ, 1);
+
+                result.Invert();
+                return result;
+            }
+            else
+                return ZeroMatrix;
+        }
+        */
+
+        public static Matrix3D CreateZDirectionMatrix(Point3D offset, Vector3D lookDirection)
+        {
+            Vector3D up;
+            Vector3D front;
+            Vector3D right = lookDirection;
+            right.Normalize();
+
+            if (Math.Abs(right.Z) > 0.577f)
+                front = Vector3D.CrossProduct(new Vector3D(right.Y, right.Z, 0), right);
+            else
+                front = Vector3D.CrossProduct(new Vector3D(right.Y, right.X, 0), right);
+
+            front.Normalize();
+
+            up = Vector3D.CrossProduct(right, front);
+
+            return CreateMatrix(front, up, right, offset, false);
+        }
+        public static Matrix3D CreateZDirectionMatrix(Vector3D lookDirection)
+        {
+            return CreateZDirectionMatrix(new Point3D(), lookDirection);
+        }
+
+        /*
+        public static MatrixTransform3D CreateZDirectionRotationTransform(Point3D position, Vector3D lookDirection, Vector3D upDirection)
+        {
+            return new MatrixTransform3D(CreateZDirectionMatrix(position, lookDirection, upDirection));
+        }
+        */
+
+        /*
+        public static MatrixTransform3D CreateRotationTransform(double xDegrees, double yDegrees, double zDegrees)
+        {
+            return new MatrixTransform3D(CreateYawPitchRollMatrix(xDegrees, yDegrees, zDegrees));
+        }
+
+        public static MatrixTransform3D CreateRotationTransform(Vector3D rotation)
+        {
+            return new MatrixTransform3D(CreateRotationMatrix(rotation));
+        }
+        */
+
+        /*
+        public static Quaternion CreateQuaternionFromAxisAngle(Vector3D axis, double angle)
+        {
+            Quaternion quaternion = new Quaternion();
+            double num2 = angle * 0.5;
+            double num = Math.Sin(num2);
+            double num3 = Math.Cos(num2);
+            quaternion.X = axis.X * num;
+            quaternion.Y = axis.Y * num;
+            quaternion.Z = axis.Z * num;
+            quaternion.W = num3;
+            return quaternion;
+        }
+        */
+
+        public static Vector3D GetFrontVector(ref Matrix3D matrix)
+        {
+            return new Vector3D(matrix.M11, matrix.M12, matrix.M13);
+        }
+        public static void SetFrontVector(ref Matrix3D matrix, Vector3D vector)
+        {
+            matrix.M11 = vector.X;
+            matrix.M12 = vector.Y;
+            matrix.M13 = vector.Z;
+        }
+
+        public static Vector3D GetUpVector(ref Matrix3D matrix)
+        {
+            return new Vector3D(matrix.M21, matrix.M22, matrix.M23);
+        }
+        public static void SetUpVector(ref Matrix3D matrix, Vector3D vector)
+        {
+            matrix.M21 = vector.X;
+            matrix.M22 = vector.Y;
+            matrix.M23 = vector.Z;
+        }
+
+        public static Vector3D GetRightVector(ref Matrix3D matrix)
+        {
+            return new Vector3D(matrix.M31, matrix.M32, matrix.M33);
+        }
+        public static void SetRightVector(ref Matrix3D matrix, Vector3D vector)
+        {
+            matrix.M31 = vector.X;
+            matrix.M32 = vector.Y;
+            matrix.M33 = vector.Z;
+        }
+
+        public static Vector3D GetOffset(ref Matrix3D matrix)
+        {
+            return new Vector3D(matrix.OffsetX, matrix.OffsetY, matrix.OffsetZ);
+        }
+        public static void SetOffset(ref Matrix3D matrix, Vector3D offset)
+        {
+            matrix.OffsetX = offset.X;
+            matrix.OffsetY = offset.Y;
+            matrix.OffsetZ = offset.Z;
+        }
+
+        public static Vector3D UnTransform(ref Matrix3D matrix, Vector3D vector)
+        {
+            return new Vector3D(
+                Vector3D.DotProduct(vector, GetFrontVector(ref matrix)),
+                Vector3D.DotProduct(vector, GetUpVector(ref matrix)),
+                Vector3D.DotProduct(vector, GetRightVector(ref matrix)));
+        }
+        public static Point3D UnTransform(ref Matrix3D matrix, Point3D point)
+        {
+            return (Point3D)UnTransform(ref matrix, (Vector3D)point - GetOffset(ref matrix));
+        }
+
+        public static Vector3D Transform(Quaternion deltaQuaternion, Vector3D vector)
+        {
+            Quaternion direction = new Quaternion(vector.X, vector.Y, vector.Z, 0);
+
+            // Compose the delta with the orientation
+            direction = deltaQuaternion * direction;
+
+            // convert back to vector
+            deltaQuaternion.Conjugate();
+            direction *= deltaQuaternion;
+
+            return new Vector3D(direction.X, direction.Y, direction.Z);
+        }
+        public static void Transform(Quaternion deltaQuaternion, ProjectionCamera camera)
+        {
+            camera.LookDirection = Transform(deltaQuaternion, camera.LookDirection);
+            camera.UpDirection = Transform(deltaQuaternion, camera.UpDirection);
+        }
+
+        public static Matrix3D CreateMatrix(Vector3D front, Vector3D up, Vector3D right, Point3D offset, bool normalize)
+        {
+            if (normalize)
+            {
+                front.Normalize();
+                up.Normalize();
+                right.Normalize();
+            }
+
+            return new Matrix3D(
+                front.X, front.Y, front.Z, 0,
+                up.X, up.Y, up.Z, 0,
+                right.X, right.Y, right.Z, 0,
+                offset.X, offset.Y, offset.Z, 1);
+        }
+
+        #endregion
+
+        #region Should go in MathUtils
+
+        public static Point3D TransformToWorld(DependencyObject visual, Point3D point)
+        {
+            Matrix3D m = MathUtils.GetTransformToWorld(visual);
+            return m.Transform(point);
+        }
+        public static Vector3D TransformToWorld(DependencyObject visual, Vector3D vector)
+        {
+            Matrix3D m = MathUtils.GetTransformToWorld(visual);
+            return m.Transform(vector);
+        }
+
+        public static Point3D TransformToLocal(DependencyObject visual, Point3D point)
+        {
+            Matrix3D m = MathUtils.GetTransformToLocal(visual);
+            return m.Transform(point);
+        }
+        public static Vector3D TransformToLocal(DependencyObject visual, Vector3D vector)
+        {
+            Matrix3D m = MathUtils.GetTransformToLocal(visual);
+            return m.Transform(vector);
+        }
+
+        #endregion
+
+        #region Duplication with wpf
+
+        /*
 		/// <summary>
 		/// This returns a perpendicular vector from 2 given vectors by taking the cross product.
 		/// </summary>
@@ -2839,6 +4715,563 @@ namespace Game.Newt.HelperClasses
 		}
 		*/
 
-		#endregion
-	}
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// This returns the normal of a polygon (The direction the polygon is facing)
+        /// </summary>
+        private static Vector3D GetTriangleNormal(Vector3D[] triangle)
+        {
+            // This is the original, but was returning a left handed normal
+            //Vector3D vVector1 = triangle[2] - triangle[0];
+            //Vector3D vVector2 = triangle[1] - triangle[0];
+
+            //Vector3D vNormal = Vector3D.CrossProduct(vVector1, vVector2);		// Take the cross product of our 2 vectors to get a perpendicular vector
+
+
+            Vector3D dir1 = triangle[0] - triangle[1];
+            Vector3D dir2 = triangle[2] - triangle[1];
+
+            Vector3D normal = Vector3D.CrossProduct(dir2, dir1);
+
+
+            // Now we have a normal, but it's at a strange length, so let's make it length 1.
+            normal.Normalize();
+
+            return normal;										// Return our normal at our desired length
+        }
+
+        private static Tuple<Point3D, Point3D> GetIntersection_Line_Triangle_sameplane(Point3D pointOnLine, Vector3D lineDirection, ITriangle triangle)
+        {
+            List<Point3D> retval = new List<Point3D>();
+
+            // Cap the line to the triangle
+            foreach (TriangleEdge edge in Enum.GetValues(typeof(TriangleEdge)))
+            {
+                Point3D[] resultsLine, resultsLineSegment;
+                if (!GetClosestPoints_Line_LineSegment(out resultsLine, out resultsLineSegment, pointOnLine, lineDirection, triangle.GetPoint(edge, true), triangle.GetPoint(edge, false)))
+                {
+                    continue;
+                }
+
+                if (resultsLine.Length != resultsLineSegment.Length)
+                {
+                    throw new ApplicationException("The line vs line segments have a different number of matches");
+                }
+
+                // This method is dealing with lines that are in the same plane, so if the result point for the plane/plane line is different
+                // than the triangle edge, then throw out this match
+                bool allMatched = true;
+                for (int cntr = 0; cntr < resultsLine.Length; cntr++)
+                {
+                    if (!IsNearValue(resultsLine[cntr], resultsLineSegment[cntr]))
+                    {
+                        allMatched = false;
+                        break;
+                    }
+                }
+
+                if (!allMatched)
+                {
+                    continue;
+                }
+
+                retval.AddRange(resultsLineSegment);
+
+                if (retval.Count >= 2)
+                {
+                    // No need to keep looking, there will only be up to two points of intersection
+                    break;
+                }
+            }
+
+            // Exit Function
+            if (retval.Count == 0)
+            {
+                return null;
+            }
+            else if (retval.Count == 1)
+            {
+                // Only touched one vertex
+                return Tuple.Create(retval[0], retval[0]);
+            }
+            else if (retval.Count == 2)
+            {
+                // Standard result
+                return Tuple.Create(retval[0], retval[1]);
+            }
+            else
+            {
+                throw new ApplicationException("Found more than two intersection points");
+            }
+        }
+
+        private static Point3D? GetIntersection_LineSegment_Point_colinear(Point3D segmentStart, Point3D segmentStop, Point3D point)
+        {
+            if (IsNearValue(segmentStart, point) || IsNearValue(segmentStop, point))
+            {
+                // It's touching one of the endpoints
+                return point;
+            }
+
+            // Make sure the point isn't beyond the line segment
+            Vector3D segmentDir = segmentStop - segmentStart;
+            Vector3D testDir = point - segmentStart;
+
+            if (!IsNearValue(Vector3D.DotProduct(segmentDir.ToUnit(), testDir.ToUnit()), 1d))
+            {
+                // It's the other direction (beyond segment start)
+                return null;
+            }
+
+            if (testDir.LengthSquared > segmentDir.LengthSquared)
+            {
+                // It's beyond segment stop
+                return null;
+            }
+
+            // It's somewhere inside the segment
+            return point;
+        }
+
+        private static void AddIfUnique(List<Point3D> list, Point3D? test)
+        {
+            if (test == null)
+            {
+                return;
+            }
+
+            if (list.Any(o => IsNearValue(o, test.Value)))
+            {
+                return;
+            }
+
+            list.Add(test.Value);
+        }
+
+        #region Circle/Line Intersect Helpers
+
+        private struct CircleLineArgs
+        {
+            public ITriangle CirclePlane;
+            public Point3D CircleCenter;
+            public double CircleRadius;
+            public Point3D PointOnLine;
+            public Vector3D LineDirection;
+        }
+
+        private struct CirclePlaneIntersectProps
+        {
+            // This is the line that the planes intersect along
+            public Point3D PointOnLine;
+            public Vector3D LineDirection;
+
+            // This is a line from the circle's center to the intersect line
+            public Point3D NearestToCenter;
+            public Vector3D CenterToNearest;
+            public double CenterToNearestLength;
+
+            // This is whether NearestToCenter is within the circle or outside of it
+            public bool IsInsideCircle;
+        }
+
+        private static bool GetClosestPointsBetweenLineCircle(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
+        {
+            #region Scenarios
+
+            // Line intersects plane inside circle:
+            //		Calculate intersect point to circle rim
+            //		Calculate two perps to circle rim
+            //
+            // Take the closest of those three points
+
+            // Line intersects plane outside circle, but passes over circle:
+            //		Calculate intersect point to circle rim
+            //		Calculate two perps to circle rim
+            //
+            // Take the closest of those three points
+
+            // Line is parallel to the plane, passes over circle
+            //		Calculate two perps to circle rim
+
+            // Line is parallel to the plane, does not pass over circle
+            //		Get closest point between center and line, project onto plane, find point along the circle
+
+            // Line does not pass over the circle
+            //		Calculate intersect point to circle rim
+            //		Get closest point between plane intersect line and circle center
+            //
+            // Take the closest of those two points
+
+            // Line is perpendicular to the plane
+            //		Calculate intersect point to circle rim
+
+            #endregion
+
+            // Detect perpendicular
+            double dot = Vector3D.DotProduct(args.CirclePlane.NormalUnit, args.LineDirection.ToUnit());
+            if (IsNearValue(Math.Abs(dot), 1d))
+            {
+                return GetClosestPointsBetweenLineCircleSprtPerpendicular(out circlePoints, out linePoints, args);
+            }
+
+            // Project the line onto the circle's plane
+            CirclePlaneIntersectProps planeIntersect = GetClosestPointsBetweenLineCircleSprtPlaneIntersect(args);
+
+            // There's less to do if the line is parallel
+            if (IsNearZero(dot))
+            {
+                GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
+            }
+            else
+            {
+                GetClosestPointsBetweenLineCircleSprtOther(out circlePoints, out linePoints, args, planeIntersect);
+            }
+
+            return true;
+        }
+        private static bool GetClosestPointsBetweenLineCircleSprtPerpendicular(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
+        {
+            Point3D planeIntersect = GetClosestPoint_Point_Line(args.PointOnLine, args.LineDirection, args.CircleCenter);
+
+            if (IsNearValue(planeIntersect, args.CircleCenter))
+            {
+                // This is a perpendicular ray shot straight through the center.  All circle points are closest to the line
+                circlePoints = null;
+                linePoints = new Point3D[] { args.CircleCenter };
+                return false;
+            }
+
+            GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints, out linePoints, args, planeIntersect);
+            return true;
+        }
+        private static void GetClosestPointsBetweenLineCircleSprtParallel(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
+        {
+            if (planeIntersect.IsInsideCircle)
+            {
+                GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints, out linePoints, args, planeIntersect);
+            }
+            else
+            {
+                circlePoints = new Point3D[] { args.CircleCenter + (planeIntersect.CenterToNearest * (args.CircleRadius / planeIntersect.CenterToNearestLength)) };
+                linePoints = new Point3D[] { GetClosestPoint_Point_Line(args.PointOnLine, args.LineDirection, circlePoints[0]) };
+            }
+        }
+        private static void GetClosestPointsBetweenLineCircleSprtOther(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
+        {
+            // See where the line intersects the circle's plane
+            Point3D? lineIntersect = GetIntersection_Plane_Line(args.CirclePlane, args.PointOnLine, args.LineDirection);
+            if (lineIntersect == null)		// this should never happen, since an IsParallel check was already done (but one might be stricter than the other)
+            {
+                GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
+                return;
+            }
+
+            if (planeIntersect.IsInsideCircle)
+            {
+                #region Line is over circle
+
+                // Line intersects plane inside circle:
+                //		Calculate intersect point to circle rim
+                //		Calculate two perps to circle rim
+                //
+                // Take the closest of those three points
+
+                Point3D[] circlePoints1;
+                Point3D[] linePoints1;
+                GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints1, out linePoints1, args, lineIntersect.Value);
+
+                Point3D[] circlePoints2;
+                Point3D[] linePoints2;
+                GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints2, out linePoints2, args, planeIntersect);
+
+                GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints1, linePoints1, circlePoints2, linePoints2);
+
+                #endregion
+            }
+            else
+            {
+                #region Line is outside circle
+
+                // Line does not pass over the circle
+                //		Calculate intersect point to circle rim
+                //		Get closest point between plane intersect line and circle center
+                //
+                // Take the closest of those two points
+
+                Point3D[] circlePoints3;
+                Point3D[] linePoints3;
+                GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints3, out linePoints3, args, lineIntersect.Value);
+
+                Point3D[] circlePoints4;
+                Point3D[] linePoints4;
+                GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints4, out linePoints4, args, planeIntersect.NearestToCenter);
+
+                GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints3, linePoints3, circlePoints4, linePoints4);
+
+                #endregion
+            }
+        }
+        private static void GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out Point3D[] circlePoints, out Point3D[] linePoints, Point3D[] circlePoints1, Point3D[] linePoints1, Point3D[] circlePoints2, Point3D[] linePoints2)
+        {
+            List<Point3D> circlePointList = new List<Point3D>();
+            List<Point3D> linePointList = new List<Point3D>();
+            double distance = double.MaxValue;
+
+            // Find the shortest distance across the pairs
+            if (circlePoints1 != null)
+            {
+                for (int cntr = 0; cntr < circlePoints1.Length; cntr++)
+                {
+                    double localDistance = (linePoints1[cntr] - circlePoints1[cntr]).Length;
+
+                    if (IsNearValue(localDistance, distance))
+                    {
+                        circlePointList.Add(circlePoints1[cntr]);
+                        linePointList.Add(linePoints1[cntr]);
+                    }
+                    else if (localDistance < distance)
+                    {
+                        circlePointList.Clear();
+                        linePointList.Clear();
+                        circlePointList.Add(circlePoints1[cntr]);
+                        linePointList.Add(linePoints1[cntr]);
+                        distance = localDistance;
+                    }
+                }
+            }
+
+            if (circlePoints2 != null)
+            {
+                for (int cntr = 0; cntr < circlePoints2.Length; cntr++)
+                {
+                    double localDistance = (linePoints2[cntr] - circlePoints2[cntr]).Length;
+
+                    if (IsNearValue(localDistance, distance))
+                    {
+                        circlePointList.Add(circlePoints2[cntr]);
+                        linePointList.Add(linePoints2[cntr]);
+                    }
+                    else if (localDistance < distance)
+                    {
+                        circlePointList.Clear();
+                        linePointList.Clear();
+                        circlePointList.Add(circlePoints2[cntr]);
+                        linePointList.Add(linePoints2[cntr]);
+                        distance = localDistance;
+                    }
+                }
+            }
+
+            if (circlePointList.Count == 0)
+            {
+                throw new ApplicationException("Couldn't find a return point");
+            }
+
+            // Return the result
+            circlePoints = circlePointList.ToArray();
+            linePoints = linePointList.ToArray();
+        }
+        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCircleSprtPlaneIntersect(CircleLineArgs args)
+        {
+            CirclePlaneIntersectProps retVal;
+
+            // The slice plane runs perpendicular to the circle's plane
+            Triangle slicePlane = new Triangle(args.PointOnLine, args.PointOnLine + args.LineDirection, args.PointOnLine + args.CirclePlane.Normal);
+
+            // Use that slice plane to project the line onto the circle's plane
+            if (!GetIntersection_Plane_Plane(out retVal.PointOnLine, out retVal.LineDirection, args.CirclePlane, slicePlane))
+            {
+                throw new ApplicationException("The slice plane should never be parallel to the circle's plane");		// it was defined as perpendicular
+            }
+
+            // Find the closest point between the circle's center to this intersection line
+            retVal.NearestToCenter = GetClosestPoint_Point_Line(retVal.PointOnLine, retVal.LineDirection, args.CircleCenter);
+            retVal.CenterToNearest = retVal.NearestToCenter - args.CircleCenter;
+            retVal.CenterToNearestLength = retVal.CenterToNearest.Length;
+
+            retVal.IsInsideCircle = retVal.CenterToNearestLength <= args.CircleRadius;
+
+            // Exit Function
+            return retVal;
+        }
+        private static void GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, Point3D planeIntersect)
+        {
+            Vector3D centerToIntersect = planeIntersect - args.CircleCenter;
+            double centerToIntersectLength = centerToIntersect.Length;
+
+            if (IsNearZero(centerToIntersectLength))
+            {
+                circlePoints = null;
+                linePoints = null;
+            }
+            else
+            {
+                circlePoints = new Point3D[] { args.CircleCenter + (centerToIntersect * (args.CircleRadius / centerToIntersectLength)) };
+                linePoints = new Point3D[] { GetClosestPoint_Point_Line(args.PointOnLine, args.LineDirection, circlePoints[0]) };
+            }
+        }
+        private static void GetClosestPointsBetweenLineCircleSprtInsidePerps(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
+        {
+            // See if the line passes through the center
+            if (IsNearZero(planeIntersect.CenterToNearestLength))
+            {
+                //Vector3D lineDirUnit = args.LineDirection.ToUnit();
+                Vector3D lineDirUnit = planeIntersect.LineDirection.ToUnit();
+
+                // The line passes over the circle's center, so the nearest points will shoot straight from the center in the direction of the line
+                circlePoints = new Point3D[2];
+                circlePoints[0] = args.CircleCenter + (lineDirUnit * args.CircleRadius);
+                circlePoints[1] = args.CircleCenter - (lineDirUnit * args.CircleRadius);
+            }
+            else
+            {
+                // The two points are perpendicular to this line.  Use A^2 + B^2 = C^2 to get the length of the perpendiculars
+                double perpLength = Math.Sqrt((args.CircleRadius * args.CircleRadius) - (planeIntersect.CenterToNearestLength * planeIntersect.CenterToNearestLength));
+                Vector3D perpDirection = Vector3D.CrossProduct(planeIntersect.CenterToNearest, args.CirclePlane.Normal).ToUnit();
+
+                circlePoints = new Point3D[2];
+                circlePoints[0] = planeIntersect.NearestToCenter + (perpDirection * perpLength);
+                circlePoints[1] = planeIntersect.NearestToCenter - (perpDirection * perpLength);
+            }
+
+            // Get corresponding points along the line
+            linePoints = new Point3D[2];
+            linePoints[0] = GetClosestPoint_Point_Line(args.PointOnLine, args.LineDirection, circlePoints[0]);
+            linePoints[1] = GetClosestPoint_Point_Line(args.PointOnLine, args.LineDirection, circlePoints[1]);
+        }
+
+        /// <summary>
+        /// This one returns the one that is closest to pointOnLine
+        /// </summary>
+        private static void GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
+        {
+            #region Find closest point
+
+            // There is more than one point, and they want a single point
+            double minDistance = double.MaxValue;
+            int minIndex = -1;
+
+            for (int cntr = 0; cntr < circlePoints.Length; cntr++)
+            {
+                double distance = (linePoints[cntr] - rayOrigin).LengthSquared;
+
+                if (distance < minDistance)
+                {
+                    minDistance = distance;
+                    minIndex = cntr;
+                }
+            }
+
+            if (minIndex < 0)
+            {
+                throw new ApplicationException("Should always find a closest point");
+            }
+
+            #endregion
+
+            // Return only the closest point
+            circlePoints = new Point3D[] { circlePoints[minIndex] };
+            linePoints = new Point3D[] { linePoints[minIndex] };
+        }
+        /// <summary>
+        /// This one returns the one that is closest between the two hits
+        /// </summary>
+        private static void GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
+        {
+            #region Find closest point
+
+            // There is more than one point, and they want a single point
+            double minDistance = double.MaxValue;
+            double minOriginDistance = double.MaxValue;		// use this as a secondary sort (really important if the collision shape is a cylinder or sphere.  The line will have two exact matches, so return the one closest to the ray cast origin)
+            int minIndex = -1;
+
+            for (int cntr = 0; cntr < circlePoints.Length; cntr++)
+            {
+                double distance = (linePoints[cntr] - circlePoints[cntr]).LengthSquared;
+                double originDistance = (linePoints[cntr] - rayOrigin).LengthSquared;
+
+                bool isEqualDistance = IsNearValue(distance, minDistance);
+
+                //NOTE: I can't just say distance < minDistance, because for a sphere, it kept jittering between the near
+                // side and far side, so it has to be closer by a decisive amount
+                if ((!isEqualDistance && distance < minDistance) || (isEqualDistance && originDistance < minOriginDistance))
+                {
+                    minDistance = distance;
+                    minOriginDistance = originDistance;
+                    minIndex = cntr;
+                }
+            }
+
+            if (minIndex < 0)
+            {
+                throw new ApplicationException("Should always find a closest point");
+            }
+
+            #endregion
+
+            // Return only the closest point
+            circlePoints = new Point3D[] { circlePoints[minIndex] };
+            linePoints = new Point3D[] { linePoints[minIndex] };
+        }
+
+        #endregion
+        #region Cylinder/Line Intersect Helpers
+
+        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(CircleLineArgs args, Point3D nearestLinePoint, Vector3D nearestLine, double nearestLineDistance)
+        {
+            //NOTE: This is nearly identical to GetClosestPointsBetweenLineCircleSprtPlaneIntersect, but since some stuff was already done,
+            // it's more just filling out the struct
+
+            CirclePlaneIntersectProps retVal;
+
+            // The slice plane runs perpendicular to the circle's plane
+            Triangle slicePlane = new Triangle(args.PointOnLine, args.PointOnLine + args.LineDirection, args.PointOnLine + args.CirclePlane.Normal);
+
+            // Use that slice plane to project the line onto the circle's plane
+            if (!GetIntersection_Plane_Plane(out retVal.PointOnLine, out retVal.LineDirection, args.CirclePlane, slicePlane))
+            {
+                throw new ApplicationException("The slice plane should never be parallel to the circle's plane");		// it was defined as perpendicular
+            }
+
+            // Store what was passed in (the circle/line intersect waits till now to do this, but for cylinder, this was done previously)
+            retVal.NearestToCenter = nearestLinePoint;
+            retVal.CenterToNearest = nearestLine;
+            retVal.CenterToNearestLength = nearestLineDistance;
+
+            retVal.IsInsideCircle = true;		// this method is only called when true
+
+            // Exit Function
+            return retVal;
+        }
+
+        private static void GetClosestPointsBetweenLineCylinderSprtFinish(out Point3D[] cylinderPoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps intersectArgs)
+        {
+            // Get the circle intersects
+            Point3D[] circlePoints2D, linePoints2D;
+            GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints2D, out linePoints2D, args, intersectArgs);
+
+            // Project the circle hits onto the original line
+            Point3D? p1, p2, p3, p4;
+            GetClosestPoints_Line_Line(out p1, out p2, args.PointOnLine, args.LineDirection, circlePoints2D[0], args.CirclePlane.Normal);
+            GetClosestPoints_Line_Line(out p3, out p4, args.PointOnLine, args.LineDirection, circlePoints2D[1], args.CirclePlane.Normal);
+
+            // p1 and p2 are the same, p3 and p4 are the same
+            if (p1 == null || p3 == null)
+            {
+                cylinderPoints = new Point3D[] { circlePoints2D[0], circlePoints2D[1] };
+            }
+            else
+            {
+                cylinderPoints = new Point3D[] { p1.Value, p3.Value };
+            }
+            linePoints = cylinderPoints;
+        }
+
+        #endregion
+
+        #endregion
+    }
 }

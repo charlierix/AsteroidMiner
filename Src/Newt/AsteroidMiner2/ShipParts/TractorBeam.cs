@@ -11,224 +11,217 @@ using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	//TODO:  Draw small visual whenever activated
+    //TODO:  Draw small visual whenever activated
 
-	#region Class: TractorBeamToolItem
+    #region Class: TractorBeamToolItem
 
-	public class TractorBeamToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class TractorBeamToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public TractorBeamToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public TractorBeamToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Tractor Beam";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Consumes energy, and produces force (will only produce force when pushing against other objects)";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_PROPULSION;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Tractor Beam";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Consumes energy, and produces force (will only produce force when pushing against other objects)";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_PROPULSION;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new TractorBeamDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new TractorBeamDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: TractorBeamDesign
+    #endregion
+    #region Class: TractorBeamDesign
 
-	public class TractorBeamDesign : PartDesignBase
-	{
-		#region Constructor
+    public class TractorBeamDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public TractorBeamDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.XYZ;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public TractorBeamDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometries = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometries == null)
-				{
-					_geometries = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometries;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometries = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometries == null)
+                {
+                    _geometries = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometries;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			const double SCALE = 1d / ((1.5d + 1d) * 2d);		//	the rod is longer than the base, so double that
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-			ScaleTransform3D transform = new ScaleTransform3D(SCALE, SCALE, SCALE);
+        #endregion
 
-			int domeSegments = isFinal ? 2 : 10;
-			int cylinderSegments = isFinal ? 6 : 35;
+        #region Private Methods
 
-			Model3DGroup retVal = new Model3DGroup();
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            const double SCALE = 1d / ((1.5d + 1d) * 2d);		// the rod is longer than the base, so double that
 
-			//	Geometry Model1
-			GeometryModel3D geometry = new GeometryModel3D();
-			MaterialGroup material = new MaterialGroup();
-			DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.TractorBeamBase));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.TractorBeamBase));
-			material.Children.Add(diffuse);
+            ScaleTransform3D transform = new ScaleTransform3D(SCALE, SCALE, SCALE);
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				base.SelectionEmissives.Add(selectionEmissive);
-			}
+            int domeSegments = isFinal ? 2 : 10;
+            int cylinderSegments = isFinal ? 6 : 35;
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            Model3DGroup retVal = new Model3DGroup();
 
-			List<TubeRingBase> rings = new List<TubeRingBase>();
-			rings.Add(new TubeRingPoint(0, false));
-			rings.Add(new TubeRingRegularPolygon(.3, false, .5, .5, false));
-			rings.Add(new TubeRingRegularPolygon(2, false, 1, 1, false));
-			rings.Add(new TubeRingDome(.66, false, domeSegments));
+            // Geometry Model1
+            GeometryModel3D geometry = new GeometryModel3D();
+            MaterialGroup material = new MaterialGroup();
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamBase));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamBase));
+            material.Children.Add(diffuse);
 
-			geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, true, transform);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                base.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			retVal.Children.Add(geometry);
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			//	Geometry Model2
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.TractorBeamRod));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.TractorBeamRod));
-			material.Children.Add(diffuse);
-			SpecularMaterial specular = this.Options.WorldColors.TractorBeamRodSpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
-			EmissiveMaterial emissive = this.Options.WorldColors.TractorBeamRodEmissive;
-			this.MaterialBrushes.Add(new MaterialColorProps(emissive));
-			material.Children.Add(emissive);
+            List<TubeRingBase> rings = new List<TubeRingBase>();
+            rings.Add(new TubeRingPoint(0, false));
+            rings.Add(new TubeRingRegularPolygon(.3, false, .5, .5, false));
+            rings.Add(new TubeRingRegularPolygon(2, false, 1, 1, false));
+            rings.Add(new TubeRingDome(.66, false, domeSegments));
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				base.SelectionEmissives.Add(selectionEmissive);
-			}
+            geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, true, transform);
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            retVal.Children.Add(geometry);
 
-			rings = new List<TubeRingBase>();
-			rings.Add(new TubeRingRegularPolygon(0, false, .25, .25, false));
-			rings.Add(new TubeRingRegularPolygon(1.5, false, .25, .25, false));
-			rings.Add(new TubeRingDome(1, false, domeSegments));
+            // Geometry Model2
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamRod));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamRod));
+            material.Children.Add(diffuse);
+            SpecularMaterial specular = WorldColors.TractorBeamRodSpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
+            EmissiveMaterial emissive = WorldColors.TractorBeamRodEmissive;
+            this.MaterialBrushes.Add(new MaterialColorProps(emissive));
+            material.Children.Add(emissive);
 
-			geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, false, transform);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                base.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			retVal.Children.Add(geometry);
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			//	Transform
-			Transform3DGroup transformGlobal = new Transform3DGroup();
-			if (isFinal)
-			{
-				transformGlobal.Children.Add(_scaleTransform.Clone());
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform.Clone()));
-				transformGlobal.Children.Add(_translateTransform.Clone());
-			}
-			else
-			{
-				transformGlobal.Children.Add(_scaleTransform);
-				transformGlobal.Children.Add(new RotateTransform3D(_rotateTransform));
-				transformGlobal.Children.Add(_translateTransform);
-			}
-			retVal.Transform = transformGlobal;
+            rings = new List<TubeRingBase>();
+            rings.Add(new TubeRingRegularPolygon(0, false, .25, .25, false));
+            rings.Add(new TubeRingRegularPolygon(1.5, false, .25, .25, false));
+            rings.Add(new TubeRingDome(1, false, domeSegments));
 
-			//	Exit Function
-			return retVal;
-		}
+            geometry.Geometry = UtilityWPF.GetMultiRingedTube(cylinderSegments, rings, true, false, transform);
 
-		#endregion
-	}
+            retVal.Children.Add(geometry);
 
-	#endregion
-	#region Class: TractorBeam
+            // Transform
+            retVal.Transform = GetTransformForGeometry(isFinal);
 
-	public class TractorBeam
-	{
-		public const string PARTTYPE = "TractorBeam";
-	}
+            // Exit Function
+            return retVal;
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: TractorBeam
+
+    public class TractorBeam
+    {
+        public const string PARTTYPE = "TractorBeam";
+    }
+
+    #endregion
 }

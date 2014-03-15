@@ -50,55 +50,55 @@ namespace Game.Orig.TestersGDI
             v2.GetAngleAroundAxis(out rotationAxis, out radians, v1);
         }
 
-		private void button3_Click(object sender, EventArgs e)
-		{
-			ClearPictureBox();
+        private void button3_Click(object sender, EventArgs e)
+        {
+            ClearPictureBox();
 
-            //	Setup Orig Vector
+            // Setup Orig Vector
             MyVector origVector = new MyVector(9, 0, 0);
-			DrawVector(origVector, Color.Silver);
+            DrawVector(origVector, Color.Silver);
 
-			#region Single Rotation
+            #region Single Rotation
 
-			//	Setup quat to do the whole rotation in one shot
+            // Setup quat to do the whole rotation in one shot
             MyQuaternion largeRotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(90));
             MyVector largeRotation = largeRotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(largeRotation, Color.White);
+            DrawVector(largeRotation, Color.White);
 
-			#endregion
+            #endregion
 
-			#region Multi Rotations
+            #region Multi Rotations
 
-			//	Setup quat that holds a 30 degree angle
+            // Setup quat that holds a 30 degree angle
             MyQuaternion multiRotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(30));
             MyVector subRotation = multiRotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(subRotation, Color.Orange);
+            DrawVector(subRotation, Color.Orange);
 
 
-			//	Setup a quat that holds a 1 degree angle
+            // Setup a quat that holds a 1 degree angle
             MyQuaternion anotherRotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(1));
-			
-			//	Apply this to the multi quat 60 times
-			for (int cntr = 1; cntr <= 60; cntr++)
-			{
+
+            // Apply this to the multi quat 60 times
+            for (int cntr = 1; cntr <= 60; cntr++)
+            {
                 multiRotationQuat = MyQuaternion.Multiply(anotherRotationQuat, multiRotationQuat);
-			}
+            }
 
-			//	Let's see what happened
-			subRotation = multiRotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(subRotation, Color.HotPink);
+            // Let's see what happened
+            subRotation = multiRotationQuat.GetRotatedVector(origVector, true);
+            DrawVector(subRotation, Color.HotPink);
 
-			#endregion
-			#region Multi Rotations (3D)
+            #endregion
+            #region Multi Rotations (3D)
             /*
-			//	Rotate around Y
+			// Rotate around Y
 			multiRotationQuat = new MyQuaternion(new MyVector(0, 1, 0), Utility3D.GetDegreesToRadians(90));
 
-			//	Rotate around X
+			// Rotate around X
 			anotherRotationQuat = new MyQuaternion(new MyVector(1, 0, 0), Utility3D.GetDegreesToRadians(90));
 			multiRotationQuat = MyQuaternion.Multiply(anotherRotationQuat, multiRotationQuat);
 
-			//	Draw the final output
+			// Draw the final output
 			subRotation = multiRotationQuat.GetRotatedVector(origVector, true);
 			DrawVector(subRotation, Color.Yellow);
 			*/
@@ -115,115 +115,115 @@ namespace Game.Orig.TestersGDI
             #endregion
         }
 
-		private void button4_Click(object sender, EventArgs e)
-		{
-			ClearPictureBox();
+        private void button4_Click(object sender, EventArgs e)
+        {
+            ClearPictureBox();
 
-            //	Setup Orig Vector
+            // Setup Orig Vector
             MyVector origVector = new MyVector(9, 0, 0);
-			DrawVector(origVector, Color.Silver);
+            DrawVector(origVector, Color.Silver);
 
             MyQuaternion multiRotationQuat = new MyQuaternion(new MyVector(0, 0, 0), Utility3D.GetDegreesToRadians(0));
 
-			//	Rotate around Z
+            // Rotate around Z
             MyQuaternion anotherRotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(1));
 
-			//List<double> lengths = new List<double>();
+            //List<double> lengths = new List<double>();
 
-			for (int outerCntr = 1; outerCntr <= 100000; outerCntr++)
-			{
-				//lengths.Add(multiRotationQuat.GetMagnitude());
-				for (int innerCntr = 1; innerCntr <= 360; innerCntr++)
-				{
+            for (int outerCntr = 1; outerCntr <= 100000; outerCntr++)
+            {
+                //lengths.Add(multiRotationQuat.GetMagnitude());
+                for (int innerCntr = 1; innerCntr <= 360; innerCntr++)
+                {
                     multiRotationQuat = MyQuaternion.Multiply(anotherRotationQuat, multiRotationQuat);
-				}
-				//multiRotationQuat.BecomeUnitQuaternion();
-			}
+                }
+                //multiRotationQuat.BecomeUnitQuaternion();
+            }
 
-			//	Draw the final output
+            // Draw the final output
             MyVector subRotation = multiRotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(subRotation, Color.Yellow);
-		}
+            DrawVector(subRotation, Color.Yellow);
+        }
 
-		private void btnRotationMatrix_Click(object sender, EventArgs e)
-		{
-			ClearPictureBox();
+        private void btnRotationMatrix_Click(object sender, EventArgs e)
+        {
+            ClearPictureBox();
 
-            //	Setup Orig Vector
+            // Setup Orig Vector
             MyVector origVector = new MyVector(9, 0, 0);
-			DrawVector(origVector, Color.Silver);
+            DrawVector(origVector, Color.Silver);
 
-			//	Rotate around Z
+            // Rotate around Z
             MyQuaternion rotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(30));
 
             MyVector rotated = rotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(rotated, Color.Black);
+            DrawVector(rotated, Color.Black);
 
-			MyMatrix3 rotationMatrix;
-			for (int cntr = 1; cntr <= 10000000; cntr++)
-			{
-				rotationMatrix = rotationQuat.ToMatrix3FromUnitQuaternion();
+            MyMatrix3 rotationMatrix;
+            for (int cntr = 1; cntr <= 10000000; cntr++)
+            {
+                rotationMatrix = rotationQuat.ToMatrix3FromUnitQuaternion();
 
-				rotationQuat = null;
+                rotationQuat = null;
                 rotationQuat = new MyQuaternion();
-				rotationQuat.FromRotationMatrix(rotationMatrix);
+                rotationQuat.FromRotationMatrix(rotationMatrix);
 
-				rotationMatrix = null;
-			}
+                rotationMatrix = null;
+            }
 
 
-			rotated = rotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(rotated, Color.DodgerBlue);
+            rotated = rotationQuat.GetRotatedVector(origVector, true);
+            DrawVector(rotated, Color.DodgerBlue);
 
-			rotationQuat.W *= -1;
+            rotationQuat.W *= -1;
             MyVector rotatedNegated = rotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(rotatedNegated, Color.Yellow);
-		}
-		private void button5_Click(object sender, EventArgs e)
-		{
+            DrawVector(rotatedNegated, Color.Yellow);
+        }
+        private void button5_Click(object sender, EventArgs e)
+        {
 
 
 
-			//	This button tests TorqueBall.OrthonormalizeOrientation
+            // This button tests TorqueBall.OrthonormalizeOrientation
 
 
 
 
-			ClearPictureBox();
+            ClearPictureBox();
 
-			//	Setup Orig Vector
+            // Setup Orig Vector
             MyVector origVector = new MyVector(9, 0, 0);
-			DrawVector(origVector, Color.Silver);
+            DrawVector(origVector, Color.Silver);
 
-			//	Rotate around Z
+            // Rotate around Z
             MyQuaternion rotationQuat = new MyQuaternion(new MyVector(0, 0, 1), Utility3D.GetDegreesToRadians(30));
 
             MyVector rotated = rotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(rotated, Color.Black);
+            DrawVector(rotated, Color.Black);
 
             MyMatrix3 rotationMatrix = rotationQuat.ToMatrix3FromUnitQuaternion();
 
 
 
 
-			//	See if this affects the rotation matrix
-			TorqueBall.OrthonormalizeOrientation(rotationMatrix);
+            // See if this affects the rotation matrix
+            TorqueBall.OrthonormalizeOrientation(rotationMatrix);
 
 
 
 
 
-			rotationQuat = null;
+            rotationQuat = null;
             rotationQuat = new MyQuaternion();
-			rotationQuat.FromRotationMatrix(rotationMatrix);
+            rotationQuat.FromRotationMatrix(rotationMatrix);
 
-			rotationMatrix = null;
+            rotationMatrix = null;
 
 
-			//	Draw the results
-			rotated = rotationQuat.GetRotatedVector(origVector, true);
-			DrawVector(rotated, Color.DodgerBlue);
-		}
+            // Draw the results
+            rotated = rotationQuat.GetRotatedVector(origVector, true);
+            DrawVector(rotated, Color.DodgerBlue);
+        }
 
         private void trackBar_Scroll(object sender, EventArgs e)
         {

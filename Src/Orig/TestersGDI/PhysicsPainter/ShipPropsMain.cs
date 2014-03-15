@@ -150,7 +150,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
         private void txtMinSize_TextChanged(object sender, EventArgs e)
         {
-            //	Parse it
+            // Parse it
             double minSize;
             bool valid = false;
             if (double.TryParse(txtMinSize.Text, out minSize))
@@ -161,7 +161,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 }
             }
 
-            //	Store it
+            // Store it
             if (valid)
             {
                 _minSize = minSize;
@@ -180,7 +180,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void txtMaxSize_TextChanged(object sender, EventArgs e)
         {
-            //	Parse it
+            // Parse it
             double maxSize;
             bool valid = false;
             if (double.TryParse(txtMaxSize.Text, out maxSize))
@@ -191,7 +191,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 }
             }
 
-            //	Store it
+            // Store it
             if (valid)
             {
                 _maxSize = maxSize;
@@ -247,8 +247,8 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             text += "2 = Set normal power tractor beam\n";
             text += "3 = Set double power tractor beam\n";
             text += "4 = Set infinite power tractor beam\n\n";
-			text += "Ctrl = Machine Gun\n";
-			text += "Shift = Cannon";
+            text += "Ctrl = Machine Gun\n";
+            text += "Shift = Cannon";
 
             form.KeyboardText = text;
             form.TopMost = true;

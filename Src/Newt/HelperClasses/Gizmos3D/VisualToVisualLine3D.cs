@@ -7,8 +7,7 @@ using System.Windows.Media;
 
 namespace Game.Newt.HelperClasses.Gizmos3D
 {
-    public partial class VisualToVisualLine3D : ModelVisual3D,
-        IDisposable
+    public partial class VisualToVisualLine3D : ModelVisual3D, IDisposable
     {
         private ScreenSpaceLines3D _line;
         private bool _autoUpdate;
@@ -35,10 +34,19 @@ namespace Game.Newt.HelperClasses.Gizmos3D
 
         public void Dispose()
         {
-            if (_autoUpdate)
-                CompositionTarget.Rendering -= OnRender;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            Viewport3DHelper.Dispose(this.Children, true);
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_autoUpdate)
+                    CompositionTarget.Rendering -= OnRender;
+
+                Viewport3DHelper.Dispose(this.Children, true);
+            }
         }
 
         #endregion

@@ -1,0 +1,56 @@
+﻿<Window x:Class="Game.Newt.Testers.ShipCameraTesterSnapshot"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ShipCameraTesterSnapshot" ResizeMode="CanResizeWithGrip" Width="600" Height="600" SizeChanged="grdTriangles_SizeChanged">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Canvases -->
+        <UniformGrid Grid.Row="0" Name="grdPixels" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <Canvas Grid.Row="0" Name="grdPolygons"/>
+        <Canvas Grid.Row="0" Name="grdTriangles"/>
+        <Canvas Grid.Row="0" Name="grdCircles"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="4"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Pixels -->
+            <CheckBox Grid.Column="0" Grid.Row="0" IsChecked="True" Name="chkShowPixels" Content="Show pixels" VerticalAlignment="Center" Checked="Show_Checked" Unchecked="Show_Checked"/>
+            <Slider Grid.Column="2" Grid.Row="0" Name="trkPixelOpacity" Minimum="0" Maximum="100" Value="10" ValueChanged="Opacity_ValueChanged"/>
+
+            <!-- Polygons -->
+            <CheckBox Grid.Column="0" Grid.Row="1" IsChecked="True" Name="chkShowPolygons" Content="Show polygons" VerticalAlignment="Center" Checked="Show_Checked" Unchecked="Show_Checked"/>
+            <Slider Grid.Column="2" Grid.Row="1" Name="trkPolygonOpacity" Minimum="0" Maximum="100" Value="100" ValueChanged="Opacity_ValueChanged"/>
+
+            <!-- Triangles -->
+            <CheckBox Grid.Column="0" Grid.Row="2" IsChecked="False" Name="chkShowTriangles" Content="Show triangles" VerticalAlignment="Center" Checked="Show_Checked" Unchecked="Show_Checked"/>
+            <Slider Grid.Column="2" Grid.Row="2" Name="trkTriangleOpacity" Minimum="0" Maximum="100" Value="100" ValueChanged="Opacity_ValueChanged"/>
+
+            <!-- Circles -->
+            <CheckBox Grid.Column="0" Grid.Row="3" IsChecked="False" Name="chkShowCircles" Content="Show circles" VerticalAlignment="Center" Checked="Show_Checked" Unchecked="Show_Checked"/>
+            <Slider Grid.Column="2" Grid.Row="3" Name="trkCircleOpacity" Minimum="0" Maximum="100" Value="100" ValueChanged="Opacity_ValueChanged"/>
+
+            <!-- Misc -->
+            <Grid Grid.Column="4" Grid.Row="0" Grid.RowSpan="5">
+                <Button Content="Random" Height="23" HorizontalAlignment="Left" Margin="6,6,0,0" Name="btnColorRandom" VerticalAlignment="Top" Width="75" Click="btnColorRandom_Click"/>
+                <Button Content="All" Height="23" HorizontalAlignment="Left" Margin="87,6,0,0" Name="btnColorAll" VerticalAlignment="Top" Width="75" Click="btnColorAll_Click"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

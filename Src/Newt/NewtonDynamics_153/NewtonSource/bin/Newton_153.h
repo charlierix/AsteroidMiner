@@ -524,10 +524,10 @@ extern "C" {
 	NEWTON_API void NewtonRagDollEnd (const NewtonRagDoll* ragDoll);
 
 
-//	NEWTON_API void NewtonRagDollSetFriction (const NewtonRagDoll* ragDoll, dFloat friction);
+// NEWTON_API void NewtonRagDollSetFriction (const NewtonRagDoll* ragDoll, dFloat friction);
 
 	NEWTON_API NewtonRagDollBone* NewtonRagDollFindBone (const NewtonRagDoll* ragDoll, int id);
-//	NEWTON_API NewtonRagDollBone* NewtonRagDollGetRootBone (const NewtonRagDoll* ragDoll);
+// NEWTON_API NewtonRagDollBone* NewtonRagDollGetRootBone (const NewtonRagDoll* ragDoll);
 
 	NEWTON_API void NewtonRagDollSetForceAndTorqueCallback (const NewtonRagDoll* ragDoll, NewtonApplyForceAndTorque callback);
 	NEWTON_API void NewtonRagDollSetTransformCallback (const NewtonRagDoll* ragDoll, NewtonSetRagDollTransform callback);
@@ -544,11 +544,11 @@ extern "C" {
 		                                        const dFloat* coneDir, dFloat minConeAngle, dFloat maxConeAngle, dFloat maxTwistAngle,
 												const dFloat* bilateralConeDir, dFloat negativeBilateralConeAngle, dFloat positiveBilateralConeAngle);
 	
-//	NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetChild (const NewtonRagDollBone* bone);
-//	NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetSibling (const NewtonRagDollBone* bone);
-//	NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetParent (const NewtonRagDollBone* bone);
-//	NEWTON_API void NewtonRagDollBoneSetLocalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);
-//	NEWTON_API void NewtonRagDollBoneSetGlobalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);
+// NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetChild (const NewtonRagDollBone* bone);
+// NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetSibling (const NewtonRagDollBone* bone);
+// NEWTON_API NewtonRagDollBone* NewtonRagDollBoneGetParent (const NewtonRagDollBone* bone);
+// NEWTON_API void NewtonRagDollBoneSetLocalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);
+// NEWTON_API void NewtonRagDollBoneSetGlobalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);
 
 	NEWTON_API void NewtonRagDollBoneGetLocalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);
 	NEWTON_API void NewtonRagDollBoneGetGlobalMatrix3D (const NewtonRagDollBone* bone, dFloat* matrix);

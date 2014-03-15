@@ -101,6 +101,16 @@
                         <TextBlock Text="There is a section of methods in Math3D that deals with polygon collision" Style="{StaticResource ackDescription}"/>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.GameTutorials.com"/></Hyperlink></TextBlock>
 
+                        <TextBlock Text="Voronoi 2D" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="The implementation of voronoi has a mozilla licence (other links in the code)" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.mozilla.org/MPL/"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Clipper" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="This is a library that does some 2D polygon combinations (intersect, union)" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://sourceforge.net/projects/polyclipping/"/></Hyperlink></TextBlock>
+                        <TextBlock Text="License:" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.boost.org/LICENSE_1_0.txt"/></Hyperlink></TextBlock>
+
                         <TextBlock Text="Application Icon" Style="{StaticResource ackHeader}"/>
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.iconarchive.com/artist/artcore-illustrations.html"/></Hyperlink></TextBlock>
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://artcore-illustrations.de/"/></Hyperlink></TextBlock>

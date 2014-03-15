@@ -81,8 +81,8 @@ typedef struct NewtonCollision{} NewtonCollision;
 typedef struct NewtonSceneProxy{} NewtonSceneProxy;
 typedef struct NewtonbreakableComponentMesh{} NewtonbreakableComponentMesh;
 
-//	typedef struct NewtonRagDoll{} NewtonRagDoll;
-//	typedef struct NewtonRagDollBone{} NewtonRagDollBone;
+// typedef struct NewtonRagDoll{} NewtonRagDoll;
+// typedef struct NewtonRagDollBone{} NewtonRagDollBone;
 
 #define SERIALIZE_ID_BOX					0
 #define SERIALIZE_ID_CONE					1
@@ -352,9 +352,9 @@ typedef void (*NewtonUserBilateralGetInfoCallBack) (const NewtonJoint* const use
 
 typedef void (*NewtonConstraintDestructor) (const NewtonJoint*const  me);
 
-//	typedef void (*NewtonSetRagDollTransform) (const NewtonRagDollBone* const bone);
-//	typedef void (*NewtonBodyActivationState) (const NewtonBody* const body, unsigned state);
-//	typedef void (*NewtonVehicleTireUpdate) (const NewtonJoint* const vehicle, dFloat timestep);
+// typedef void (*NewtonSetRagDollTransform) (const NewtonRagDollBone* const bone);
+// typedef void (*NewtonBodyActivationState) (const NewtonBody* const body, unsigned state);
+// typedef void (*NewtonVehicleTireUpdate) (const NewtonJoint* const vehicle, dFloat timestep);
 
 
 // **********************************************************************************************
@@ -401,7 +401,7 @@ NEWTON_API void NewtonSetCollisionDestructor (const NewtonWorld* const newtonWor
 NEWTON_API void NewtonSetDestroyBodyByExeciveForce (const NewtonWorld* const newtonWorld, NewtonDestroyBodyByExeciveForce callback);
 
 
-//	NEWTON_API void NewtonWorldForEachBodyDo (const NewtonWorld* const newtonWorld, NewtonBodyIterator callback);
+// NEWTON_API void NewtonWorldForEachBodyDo (const NewtonWorld* const newtonWorld, NewtonBodyIterator callback);
 NEWTON_API void NewtonWorldForEachJointDo (const NewtonWorld* const newtonWorld, NewtonJointIterator callback, void* const userData);
 NEWTON_API void NewtonWorldForEachBodyInAABBDo (const NewtonWorld* const newtonWorld, const dFloat* const p0, const dFloat* const p1, NewtonBodyIterator callback, void* const userData);
 
@@ -534,13 +534,13 @@ NEWTON_API int NewtonAddCollisionReference (const NewtonCollision* const collisi
 // mass/spring/damper collision shape
 //
 // **********************************************************************************************
-//	NEWTON_API NewtonCollision* NewtonCreateSoftShape (const NewtonWorld* const newtonWorld);
-//	NEWTON_API void NewtonSoftBodySetMassCount (const NewtonCollision* convexCollision, int count);
-//	NEWTON_API void NewtonSoftBodySetSpringCount (const NewtonCollision* convexCollision, int count);
+// NEWTON_API NewtonCollision* NewtonCreateSoftShape (const NewtonWorld* const newtonWorld);
+// NEWTON_API void NewtonSoftBodySetMassCount (const NewtonCollision* convexCollision, int count);
+// NEWTON_API void NewtonSoftBodySetSpringCount (const NewtonCollision* convexCollision, int count);
 
-//	NEWTON_API void NewtonSoftBodySetMass (const NewtonCollision* convexCollision, int index, dFloat mass, dFloat* position);
-//	NEWTON_API int NewtonSoftBodySetSpring (const NewtonCollision* convexCollision, int index, int mass0, int mass1, dFloat stiffness, dFloat damper);
-//	NEWTON_API int NewtonSoftBodyGetMassArray (const NewtonCollision* convexCollision, dFloat* masses, dFloat** positions);
+// NEWTON_API void NewtonSoftBodySetMass (const NewtonCollision* convexCollision, int index, dFloat mass, dFloat* position);
+// NEWTON_API int NewtonSoftBodySetSpring (const NewtonCollision* convexCollision, int index, int mass0, int mass1, dFloat stiffness, dFloat damper);
+// NEWTON_API int NewtonSoftBodyGetMassArray (const NewtonCollision* convexCollision, dFloat* masses, dFloat** positions);
 
 
 // **********************************************************************************************
@@ -557,7 +557,7 @@ NEWTON_API NewtonCollision* NewtonCreateCompoundCollisionFromMesh (const NewtonW
 // complex breakable collision primitives interface
 //
 // **********************************************************************************************
-//	NEWTON_API NewtonCollision* NewtonCreateCompoundBreakable (const NewtonWorld* const newtonWorld, int meshCount,
+// NEWTON_API NewtonCollision* NewtonCreateCompoundBreakable (const NewtonWorld* const newtonWorld, int meshCount,
 //															   NewtonMesh* const solids[], NewtonMesh* const splitePlanes[],
 //															   dFloat* const matrixPallete, int* const shapeIDArray, dFloat* const densities,
 //															   int shapeID, int debriID, NewtonCollisionCompoundBreakableCallback callback, void* buildUsedData);
@@ -619,7 +619,7 @@ NEWTON_API void NewtonSceneCollisionOptimize (NewtonCollision* scene);
 
 //  ***********************************************************************************************************
 //
-//	Collision serialization functions
+// Collision serialization functions
 //
 // ***********************************************************************************************************
 NEWTON_API NewtonCollision* NewtonCreateCollisionFromSerialization (const NewtonWorld* const newtonWorld, NewtonDeserialize deserializeFunction, void* const serializeHandle);
@@ -729,15 +729,15 @@ NEWTON_API int  NewtonBodyGetFreezeState(const NewtonBody* const body);
 NEWTON_API void NewtonBodySetFreezeState (const NewtonBody* const body, int state);
 
 
-//	NEWTON_API void NewtonBodySetAutoFreeze(const NewtonBody* const body, int state);
-//	NEWTON_API void NewtonBodyCoriolisForcesMode (const NewtonBody* const body, int mode);
-//	NEWTON_API void NewtonBodySetGyroscopicForcesMode (const NewtonBody* const body, int mode);
-//	NEWTON_API int  NewtonBodyGetGyroscopicForcesMode (const NewtonBody* const body);
-//	NEWTON_API int  NewtonBodyGetFreezeState (const NewtonBody* const body);
-//	NEWTON_API void NewtonBodySetFreezeState  (const NewtonBody* const body, int state);
-//	NEWTON_API void NewtonBodyGetFreezeTreshold (const NewtonBody* const body, dFloat* freezeSpeed2, dFloat* freezeOmega2);
-//	NEWTON_API void NewtonBodySetFreezeTreshold (const NewtonBody* const body, dFloat freezeSpeed2, dFloat freezeOmega2, int framesCount);
-//	NEWTON_API void NewtonBodySetAutoactiveCallback (const NewtonBody* const body, NewtonBodyActivationState callback);
+// NEWTON_API void NewtonBodySetAutoFreeze(const NewtonBody* const body, int state);
+// NEWTON_API void NewtonBodyCoriolisForcesMode (const NewtonBody* const body, int mode);
+// NEWTON_API void NewtonBodySetGyroscopicForcesMode (const NewtonBody* const body, int mode);
+// NEWTON_API int  NewtonBodyGetGyroscopicForcesMode (const NewtonBody* const body);
+// NEWTON_API int  NewtonBodyGetFreezeState (const NewtonBody* const body);
+// NEWTON_API void NewtonBodySetFreezeState  (const NewtonBody* const body, int state);
+// NEWTON_API void NewtonBodyGetFreezeTreshold (const NewtonBody* const body, dFloat* freezeSpeed2, dFloat* freezeOmega2);
+// NEWTON_API void NewtonBodySetFreezeTreshold (const NewtonBody* const body, dFloat freezeSpeed2, dFloat freezeOmega2, int framesCount);
+// NEWTON_API void NewtonBodySetAutoactiveCallback (const NewtonBody* const body, NewtonBodyActivationState callback);
 
 
 NEWTON_API void  NewtonBodySetDestructorCallback (const NewtonBody* const body, NewtonBodyDestructor callback);
@@ -788,7 +788,7 @@ NEWTON_API void  NewtonBodyAddBuoyancyForce (const NewtonBody* const body, dFloa
                        dFloat fluidLinearViscosity, dFloat fluidAngularViscosity,
                        const dFloat* const gravityVector, NewtonGetBuoyancyPlane buoyancyPlane, void* const context);
 
-//	NEWTON_API void NewtonBodyForEachPolygonDo (const NewtonBody* const body, NewtonCollisionIterator callback);
+// NEWTON_API void NewtonBodyForEachPolygonDo (const NewtonBody* const body, NewtonCollisionIterator callback);
 NEWTON_API void NewtonBodyAddImpulse (const NewtonBody* const body, const dFloat* const pointDeltaVeloc, const dFloat* const pointPosit);
 
 

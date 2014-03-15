@@ -1,0 +1,35 @@
+﻿<UserControl x:Class="Game.Newt.AsteroidMiner2.AstField.OptionsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignWidth="331" d:DesignHeight="257" MinWidth="331" MinHeight="257">
+
+    <!-- TODO: Bind colors to constants -->
+
+    <Border CornerRadius="8" BorderBrush="#D0D0D0" BorderThickness="2" Background="#B0B0B0">
+        <Grid>
+
+            <GroupBox Background="#A0A0A0" Header="Number of starting objects" Margin="14,14,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="6">
+                <StackPanel>
+                    <RadioButton Name="radStartVeryFew" Content="Very few"/>
+                    <RadioButton Name="radStartFew" Content="Few"/>
+                    <RadioButton Name="radStartNormal" Content="Normal"/>
+                    <RadioButton Name="radStartMany" Content="Many"/>
+                </StackPanel>
+            </GroupBox>
+
+            <Button Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,14,14" Name="btnOK" VerticalAlignment="Bottom" Width="75" Click="btnClose_Click" />
+
+            <GroupBox Background="#A0A0A0" Header="Map octree" Margin="14,119,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Padding="6">
+                <StackPanel>
+                    <CheckBox Content="Show lines" Name="chkOctreeShowLines" />
+                    <CheckBox Content="Centers drift" Name="chkOctreeCentersDrift" />
+                </StackPanel>
+            </GroupBox>
+            
+            <CheckBox Content="Show Stars" HorizontalAlignment="Left" Margin="14,223,0,0" Name="chkShowStars" VerticalAlignment="Top" />
+        </Grid>
+    </Border>
+</UserControl>

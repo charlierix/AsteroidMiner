@@ -18,7 +18,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         #region Declaration Section
 
         //TODO: Make soft a boolean (except for default)
-		private const string TYPE_OVERLAID = "Overlaid";
+        private const string TYPE_OVERLAID = "Overlaid";
         private const string TYPE_INOUT = "In/Out";
         private const string TYPE_INOUTSOFT = "In/Out - soft";
         private const string TYPE_LEFTRIGHT = "Left/Right";
@@ -26,19 +26,19 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private const string TYPE_DISTANTCIRCLE = "Distant Circle";
         private const string TYPE_DISTANTCIRCLESOFT = "Distant Circle - soft";
 
-		//private const double TRACTOR_MAXFORCEPERTICK = ShipController.THRUSTER_FORCE * 2d;
+        //private const double TRACTOR_MAXFORCEPERTICK = ShipController.THRUSTER_FORCE * 2d;
 
         private ShipController _shipController = null;
-		private SimpleMap _map = null;
+        private SimpleMap _map = null;
 
-		private double _strengthMax = 0;
-		private double _strengthNear = 0;
-		private double _strengthFar = 0;
+        private double _strengthMax = 0;
+        private double _strengthNear = 0;
+        private double _strengthFar = 0;
 
-		private double _sizeMax = 0;
-		private double _sizeActual = 0;
+        private double _sizeMax = 0;
+        private double _sizeActual = 0;
 
-		private double _sweepAngle = 45;
+        private double _sweepAngle = 45;
 
         #endregion
 
@@ -48,7 +48,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         {
             InitializeComponent();
 
-			cboType.Items.Add(TYPE_OVERLAID);
+            cboType.Items.Add(TYPE_OVERLAID);
             cboType.Items.Add(TYPE_INOUT);
             cboType.Items.Add(TYPE_INOUTSOFT);
             cboType.Items.Add(TYPE_LEFTRIGHT);
@@ -56,7 +56,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             cboType.Items.Add(TYPE_DISTANTCIRCLE);
             cboType.Items.Add(TYPE_DISTANTCIRCLESOFT);
 
-			cboType.Text = TYPE_INOUT;
+            cboType.Text = TYPE_INOUT;
         }
 
         #endregion
@@ -66,17 +66,17 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         public void SetPointers(ShipController shipController, SimpleMap map)
         {
             _shipController = shipController;
-			_map = map;
+            _map = map;
 
-			_shipController.CreateNewTractorBeams += new EventHandler(ShipController_CreateNewTractorBeams);
-			_shipController.RecalcTractorBeamOffsets += new EventHandler(ShipController_RecalcTractorBeamOffsets);
-			_shipController.ChangeTractorBeamPower += new EventHandler(ShipController_ChangeTractorBeamPower);
+            _shipController.CreateNewTractorBeams += new EventHandler(ShipController_CreateNewTractorBeams);
+            _shipController.RecalcTractorBeamOffsets += new EventHandler(ShipController_RecalcTractorBeamOffsets);
+            _shipController.ChangeTractorBeamPower += new EventHandler(ShipController_ChangeTractorBeamPower);
 
             // Apply Settings
             cboType_SelectedIndexChanged(this, new EventArgs());
-			txtStrengthMax_TextChanged(this, new EventArgs());		//	this method calls the trackbar methods
-			txtMaxSize_TextChanged(this, new EventArgs());		//	this method calls the trackbar's method
-			trkSweepAngle_Scroll(this, new EventArgs());
+            txtStrengthMax_TextChanged(this, new EventArgs());		// this method calls the trackbar methods
+            txtMaxSize_TextChanged(this, new EventArgs());		// this method calls the trackbar's method
+            trkSweepAngle_Scroll(this, new EventArgs());
         }
 
         #endregion
@@ -100,158 +100,158 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 trkSweepAngle.Enabled = true;
             }
 
-			//	Reset Tractors
-			ShipController_CreateNewTractorBeams(this, new EventArgs());
-			ShipController_RecalcTractorBeamOffsets(this, new EventArgs());
-			ShipController_ChangeTractorBeamPower(this, new EventArgs());
+            // Reset Tractors
+            ShipController_CreateNewTractorBeams(this, new EventArgs());
+            ShipController_RecalcTractorBeamOffsets(this, new EventArgs());
+            ShipController_ChangeTractorBeamPower(this, new EventArgs());
         }
 
-		private void txtStrengthMax_TextChanged(object sender, EventArgs e)
-		{
-			double strength;
-			if (!double.TryParse(txtStrengthMax.Text, out strength))
-			{
-				txtStrengthMax.ForeColor = Color.Red;
-				return;
-			}
+        private void txtStrengthMax_TextChanged(object sender, EventArgs e)
+        {
+            double strength;
+            if (!double.TryParse(txtStrengthMax.Text, out strength))
+            {
+                txtStrengthMax.ForeColor = Color.Red;
+                return;
+            }
 
-			txtStrengthMax.ForeColor = SystemColors.WindowText;
-			_strengthMax = strength;
+            txtStrengthMax.ForeColor = SystemColors.WindowText;
+            _strengthMax = strength;
 
-			trkStrengthNear_Scroll(this, new EventArgs());
-			trkStrengthFar_Scroll(this, new EventArgs());
-		}
-		private void trkStrengthNear_Scroll(object sender, EventArgs e)
-		{
-			_strengthNear = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthNear.Minimum, trkStrengthNear.Maximum, trkStrengthNear.Value);
+            trkStrengthNear_Scroll(this, new EventArgs());
+            trkStrengthFar_Scroll(this, new EventArgs());
+        }
+        private void trkStrengthNear_Scroll(object sender, EventArgs e)
+        {
+            _strengthNear = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthNear.Minimum, trkStrengthNear.Maximum, trkStrengthNear.Value);
 
-			toolTip1.SetToolTip(trkStrengthNear, _strengthNear.ToString());
+            toolTip1.SetToolTip(trkStrengthNear, _strengthNear.ToString());
 
-			//	Apply to tractor beams
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
-				tractor.ForceAtZero = _strengthNear;
-			}
+            // Apply to tractor beams
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
+                tractor.ForceAtZero = _strengthNear;
+            }
 
-			ShipController_ChangeTractorBeamPower(this, new EventArgs());
-		}
-		private void trkStrengthFar_Scroll(object sender, EventArgs e)
-		{
-			_strengthFar = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthFar.Minimum, trkStrengthFar.Maximum, trkStrengthFar.Value);
+            ShipController_ChangeTractorBeamPower(this, new EventArgs());
+        }
+        private void trkStrengthFar_Scroll(object sender, EventArgs e)
+        {
+            _strengthFar = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthFar.Minimum, trkStrengthFar.Maximum, trkStrengthFar.Value);
 
-			toolTip1.SetToolTip(trkStrengthFar, _strengthFar.ToString());
+            toolTip1.SetToolTip(trkStrengthFar, _strengthFar.ToString());
 
-			//	Apply to tractor beams
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
-				tractor.ForceAtMax = _strengthFar;
-			}
+            // Apply to tractor beams
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
+                tractor.ForceAtMax = _strengthFar;
+            }
 
-			ShipController_ChangeTractorBeamPower(this, new EventArgs());
-		}
+            ShipController_ChangeTractorBeamPower(this, new EventArgs());
+        }
 
-		private void txtMaxSize_TextChanged(object sender, EventArgs e)
-		{
-			double size;
-			if (!double.TryParse(txtMaxSize.Text, out size))
-			{
-				txtMaxSize.ForeColor = Color.Red;
-				return;
-			}
+        private void txtMaxSize_TextChanged(object sender, EventArgs e)
+        {
+            double size;
+            if (!double.TryParse(txtMaxSize.Text, out size))
+            {
+                txtMaxSize.ForeColor = Color.Red;
+                return;
+            }
 
-			txtMaxSize.ForeColor = SystemColors.WindowText;
-			_sizeMax = size;
+            txtMaxSize.ForeColor = SystemColors.WindowText;
+            _sizeMax = size;
 
-			trkSize_Scroll(this, new EventArgs());
-		}
-		private void trkSize_Scroll(object sender, EventArgs e)
-		{
-			_sizeActual = UtilityHelper.GetScaledValue(100, _sizeMax, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
+            trkSize_Scroll(this, new EventArgs());
+        }
+        private void trkSize_Scroll(object sender, EventArgs e)
+        {
+            _sizeActual = UtilityHelper.GetScaledValue(100, _sizeMax, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
 
-			toolTip1.SetToolTip(trkSize, _sizeActual.ToString());
+            toolTip1.SetToolTip(trkSize, _sizeActual.ToString());
 
-			bool changeOffset = false;
+            bool changeOffset = false;
 
-			//	Apply to tractor beams
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
-				if (cboType.Text == TYPE_DISTANTCIRCLE || cboType.Text == TYPE_DISTANTCIRCLESOFT)
-				{
-					changeOffset = true;
+            // Apply to tractor beams
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
+                if (cboType.Text == TYPE_DISTANTCIRCLE || cboType.Text == TYPE_DISTANTCIRCLESOFT)
+                {
+                    changeOffset = true;
 
-					tractor.MaxDistance = _sizeActual / 3d;
-				}
-				else
-				{
-					tractor.MaxDistance = _sizeActual;
-				}
-			}
+                    tractor.MaxDistance = _sizeActual / 3d;
+                }
+                else
+                {
+                    tractor.MaxDistance = _sizeActual;
+                }
+            }
 
-			//	Distant circle needs the offset changed
-			if (changeOffset)
-			{
-				ShipController_RecalcTractorBeamOffsets(this, new EventArgs());
-			}
-		}
+            // Distant circle needs the offset changed
+            if (changeOffset)
+            {
+                ShipController_RecalcTractorBeamOffsets(this, new EventArgs());
+            }
+        }
 
-		private void trkSweepAngle_Scroll(object sender, EventArgs e)
-		{
-			toolTip1.SetToolTip(trkSweepAngle, trkSweepAngle.Value.ToString());
+        private void trkSweepAngle_Scroll(object sender, EventArgs e)
+        {
+            toolTip1.SetToolTip(trkSweepAngle, trkSweepAngle.Value.ToString());
 
-			_sweepAngle = Utility3D.GetDegreesToRadians(trkSweepAngle.Value);
+            _sweepAngle = Utility3D.GetDegreesToRadians(trkSweepAngle.Value);
 
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
-				tractor.SweepAngle = _sweepAngle;
-			}
-		}
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
+                tractor.SweepAngle = _sweepAngle;
+            }
+        }
 
-		private void ShipController_CreateNewTractorBeams(object sender, EventArgs e)
-		{
-			_shipController.TractorBeams.Clear();
+        private void ShipController_CreateNewTractorBeams(object sender, EventArgs e)
+        {
+            _shipController.TractorBeams.Clear();
 
-			if (_shipController.ShipType == ShipController.ShipTypeQual.None)
-			{
-				return;
-			}
+            if (_shipController.ShipType == ShipController.ShipTypeQual.None)
+            {
+                return;
+            }
 
-			switch (cboType.Text)
-			{
-				case TYPE_OVERLAID:
-					CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
-					CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, false, _sweepAngle, _sizeActual, _strengthNear / 5d, _strengthFar / 5d);
-					break;
-
-				case TYPE_INOUT:
-					CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
-					break;
-                case TYPE_INOUTSOFT:
-					CreateNewTractor(TractorBeamCone.BeamMode.PushPull, true, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
+            switch (cboType.Text)
+            {
+                case TYPE_OVERLAID:
+                    CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
+                    CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, false, _sweepAngle, _sizeActual, _strengthNear / 5d, _strengthFar / 5d);
                     break;
 
-				case TYPE_LEFTRIGHT:
-					CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);		//	may want to divide by 5
-					break;
-				case TYPE_LEFTRIGHTSOFT:
-					CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, true, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
-					break;
+                case TYPE_INOUT:
+                    CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
+                    break;
+                case TYPE_INOUTSOFT:
+                    CreateNewTractor(TractorBeamCone.BeamMode.PushPull, true, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
+                    break;
+
+                case TYPE_LEFTRIGHT:
+                    CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, false, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);		// may want to divide by 5
+                    break;
+                case TYPE_LEFTRIGHTSOFT:
+                    CreateNewTractor(TractorBeamCone.BeamMode.LeftRight, true, _sweepAngle, _sizeActual, _strengthNear, _strengthFar);
+                    break;
 
                 case TYPE_DISTANTCIRCLE:
-					CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, Math.PI * 2d, _sizeActual / 3d, _strengthNear, _strengthFar);
+                    CreateNewTractor(TractorBeamCone.BeamMode.PushPull, false, Math.PI * 2d, _sizeActual / 3d, _strengthNear, _strengthFar);
                     break;
                 case TYPE_DISTANTCIRCLESOFT:
-					CreateNewTractor(TractorBeamCone.BeamMode.PushPull, true, Math.PI * 2d, _sizeActual / 3d, _strengthNear, _strengthFar);
+                    CreateNewTractor(TractorBeamCone.BeamMode.PushPull, true, Math.PI * 2d, _sizeActual / 3d, _strengthNear, _strengthFar);
                     break;
 
-				default:
-					throw new ApplicationException("Unknown Type: " + cboType.Text);
-			}
-		}
-		private void ShipController_RecalcTractorBeamOffsets(object sender, EventArgs e)
-		{
-			// Figure out tractor beam placement
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
+                default:
+                    throw new ApplicationException("Unknown Type: " + cboType.Text);
+            }
+        }
+        private void ShipController_RecalcTractorBeamOffsets(object sender, EventArgs e)
+        {
+            // Figure out tractor beam placement
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
                 if (cboType.Text == TYPE_DISTANTCIRCLE || cboType.Text == TYPE_DISTANTCIRCLESOFT)
                 {
                     #region Distant Circle
@@ -273,7 +273,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                     switch (_shipController.ShipType)
                     {
                         case ShipController.ShipTypeQual.None:
-                            //	Nothing to do
+                            // Nothing to do
                             break;
 
                         case ShipController.ShipTypeQual.Ball:
@@ -287,51 +287,51 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                     #endregion
                 }
-			}
-		}
-		private void ShipController_ChangeTractorBeamPower(object sender, EventArgs e)
-		{
-			double max = _strengthFar;
-			if (_strengthNear > _strengthFar)
-			{
-				max = _strengthNear;
-			}
+            }
+        }
+        private void ShipController_ChangeTractorBeamPower(object sender, EventArgs e)
+        {
+            double max = _strengthFar;
+            if (_strengthNear > _strengthFar)
+            {
+                max = _strengthNear;
+            }
 
-			foreach (TractorBeamCone tractor in _shipController.TractorBeams)
-			{
-				switch (_shipController.PowerLevel)
-				{
-					case 1:
-						tractor.MaxForcePerTick = max * .5d;
-						break;
+            foreach (TractorBeamCone tractor in _shipController.TractorBeams)
+            {
+                switch (_shipController.PowerLevel)
+                {
+                    case 1:
+                        tractor.MaxForcePerTick = max * .5d;
+                        break;
 
-					case 2:
-						tractor.MaxForcePerTick = max;
-						break;
+                    case 2:
+                        tractor.MaxForcePerTick = max;
+                        break;
 
-					case 3:
-						tractor.MaxForcePerTick = max * 2d;
-						break;
+                    case 3:
+                        tractor.MaxForcePerTick = max * 2d;
+                        break;
 
-					default:		//	4
-						tractor.MaxForcePerTick = double.MaxValue;
-						break;
-				}
-			}
-		}
+                    default:		// 4
+                        tractor.MaxForcePerTick = double.MaxValue;
+                        break;
+                }
+            }
+        }
 
         #endregion
 
-		#region Private Methods
+        #region Private Methods
 
         private void CreateNewTractor(TractorBeamCone.BeamMode mode, bool isSoft, double sweepAngle, double maxDistance, double forceAtZero, double forceAtMax)
-		{
-			// New tractor beam (I'm not worried about the offset, it always gets reset in the other event) (also max force per tick)
-			TractorBeamCone tractor = new TractorBeamCone(_map, _shipController.Ship, new MyVector(0, 0, 0), _shipController.Ship.Ball.OriginalDirectionFacing.Clone(), mode, isSoft, sweepAngle, maxDistance, forceAtZero, forceAtMax, 0);
+        {
+            // New tractor beam (I'm not worried about the offset, it always gets reset in the other event) (also max force per tick)
+            TractorBeamCone tractor = new TractorBeamCone(_map, _shipController.Ship, new MyVector(0, 0, 0), _shipController.Ship.Ball.OriginalDirectionFacing.Clone(), mode, isSoft, sweepAngle, maxDistance, forceAtZero, forceAtMax, 0);
 
-			_shipController.TractorBeams.Add(tractor);
-		}
+            _shipController.TractorBeams.Add(tractor);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }

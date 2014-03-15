@@ -24,9 +24,9 @@ namespace Game.Orig.HelperClassesOrig
     {
         #region Classes: New Projectile Settings
 
-        //	These help me know how to set up a projectile
+        // These help me know how to set up a projectile
 
-        private class ProjectileFuseSettings		//	This is it's own class, because it could be null, and I don't want to deal with a nullable double
+        private class ProjectileFuseSettings		// This is it's own class, because it could be null, and I don't want to deal with a nullable double
         {
             public double Duration = 0;
 
@@ -154,7 +154,7 @@ namespace Game.Orig.HelperClassesOrig
         /// </summary>
         private SimpleMap _map = null;
 
-        //	This is the bounding box that I will set up all the projectiles with
+        // This is the bounding box that I will set up all the projectiles with
         private bool _useBoundry = false;
         private MyVector _boundryLower = null;
         private MyVector _boundryUpper = null;
@@ -409,7 +409,7 @@ namespace Game.Orig.HelperClassesOrig
 
             if (!_enforceFiringModeOuterTime)
             {
-                //	?????????????????
+                // ?????????????????
                 _elapsedTime.OuterFiringRate = 0;
             }
 
@@ -429,7 +429,7 @@ namespace Game.Orig.HelperClassesOrig
 
             if (!_enforceFiringModeOuterTime)
             {
-                //	?????????????????
+                // ?????????????????
                 _elapsedTime.OuterFiringRate = 0;
             }
         }
@@ -450,7 +450,7 @@ namespace Game.Orig.HelperClassesOrig
 
         public void Timer(double elapsedTime)
         {
-            //	Decrement the elapsed time (or increment depending on how you want to think about it)
+            // Decrement the elapsed time (or increment depending on how you want to think about it)
             _elapsedTime.OuterFiringRate -= elapsedTime;
             if (_elapsedTime.OuterFiringRate < 0)
             {
@@ -463,25 +463,25 @@ namespace Game.Orig.HelperClassesOrig
                 _elapsedTime.InnerFiringRate = 0;
             }
 
-            //	If I'm not currently firing, then there is nothing left to do
+            // If I'm not currently firing, then there is nothing left to do
             if (!_isFiring)
             {
                 return;
             }
 
-            //	First off, see if I'm ready for a new outer loop
+            // First off, see if I'm ready for a new outer loop
             if (_elapsedTime.OuterFiringRate == 0)
             {
                 if (Fire())
                 {
-                    //	I fired, reset some stuff
+                    // I fired, reset some stuff
                     _elapsedTime.NumRoundsPerOuter = 0;
                     _elapsedTime.OuterFiringRate = _firingModes[_activeFiringMode].OuterFiringRate;
                 }
             }
             else if (_elapsedTime.InnerFiringRate == 0 && _elapsedTime.NumRoundsPerOuter < _firingModes[_activeFiringMode].NumRoundsPerOuter)
             {
-                //	I wasn't ready for a new outer loop, but I am ready for a new inner loop
+                // I wasn't ready for a new outer loop, but I am ready for a new inner loop
                 Fire();
             }
         }
@@ -492,36 +492,36 @@ namespace Game.Orig.HelperClassesOrig
 
         private bool Fire()
         {
-            //	Before I begin, try to grab some ammo
+            // Before I begin, try to grab some ammo
             //if(_useAmmoClip && _ammoClip.RemoveQuantity(_amtAmmoToPull, true) > 0)
             //{
             //    return false;
             //}
 
-            //	The ammo has been grabbed, bump the elapsed time structure
+            // The ammo has been grabbed, bump the elapsed time structure
             _elapsedTime.InnerFiringRate = _firingModes[_activeFiringMode].InnerFiringRate;
             _elapsedTime.NumRoundsPerOuter++;
 
-            //	Fire each barrel
+            // Fire each barrel
             foreach (Barrel barrel in _barrels)
             {
                 #region Fire New Projectile
 
-                //	Create the position
+                // Create the position
                 MyVector position = _ship.Ball.Position.Clone();
                 if (barrel.Offset != null)
                 {
                     position = _ship.Ball.Rotation.GetRotatedVector(barrel.Offset, true) + position;
                 }
 
-                //	Create the direction facing
+                // Create the direction facing
                 DoubleVector dirFacing = _ship.Ball.DirectionFacing.Clone();
                 if (barrel.Rotation != null)
                 {
                     dirFacing = barrel.Rotation.GetRotatedVector(dirFacing, true);
                 }
 
-                //	Make a ball
+                // Make a ball
                 Ball ball = null;
                 if (_useBoundry)
                 {
@@ -535,14 +535,14 @@ namespace Game.Orig.HelperClassesOrig
                 MyVector dirFacingUnit = dirFacing.Standard;
                 dirFacingUnit.BecomeUnitVector();
 
-                //	Set the velocity
+                // Set the velocity
                 ball.Velocity.StoreNewValues(dirFacingUnit * _projectileSettings.Speed);
                 ball.Velocity.Add(_ship.Ball.Velocity);
 
-                //	Make a projectile
-				Projectile projectile = new Projectile(ball, _ship.Token, _projectileSettings.IgnoreOtherProjectiles, _projectileSettings.Pain, _map, _projectileSettings.Qual, TokenGenerator.Instance.NextToken());
+                // Make a projectile
+                Projectile projectile = new Projectile(ball, _ship.Token, _projectileSettings.IgnoreOtherProjectiles, _projectileSettings.Pain, _map, _projectileSettings.Qual, TokenGenerator.Instance.NextToken());
 
-                //	Set up explosion and fuse settings
+                // Set up explosion and fuse settings
                 if (_projectileSettings.Explosion != null)
                 {
                     projectile.SetExplosion(_projectileSettings.Explosion.Radius, _projectileSettings.Explosion.Duration, _projectileSettings.Explosion.Force);
@@ -552,7 +552,7 @@ namespace Game.Orig.HelperClassesOrig
                     projectile.SetFuse(_projectileSettings.Fuse.Duration);
                 }
 
-                //	Generate the kick
+                // Generate the kick
                 if (_produceKick)
                 {
                     #region Kick
@@ -571,13 +571,13 @@ namespace Game.Orig.HelperClassesOrig
                     #endregion
                 }
 
-                //	Hand the projectile to the map
+                // Hand the projectile to the map
                 _map.Add(projectile);
 
                 #endregion
             }
 
-            //	Exit function
+            // Exit function
             return true;
         }
 

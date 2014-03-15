@@ -1,0 +1,113 @@
+﻿<Window x:Class="Game.Newt.Testers.GlobalItemStatsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Global Item Stats" SizeToContent="WidthAndHeight">
+    <Window.Resources>
+        <Style TargetType="GroupBox">
+            <Setter Property="Foreground" Value="#D0000000"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Background" Value="#80FFFFFF"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="MinWidth" Value="180"/>
+        </Style>
+
+        <Style x:Key="labelLeft" TargetType="TextBlock">
+            <Setter Property="Grid.Column" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+        <Style x:Key="labelRight" TargetType="TextBlock">
+            <Setter Property="Grid.Column" Value="2"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="Black"/>
+        </Style>
+    </Window.Resources>
+
+    <StackPanel Grid.IsSharedSizeScope="True" Margin="10">
+        <GroupBox Header="Newton Objects">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" SharedSizeGroup="left"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="1*" SharedSizeGroup="right"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Worlds" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="0" Name="lblWorlds" Style="{StaticResource labelRight}"/>
+
+                <TextBlock Grid.Row="1" Text="Collision Hulls" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="1" Name="lblHulls" Style="{StaticResource labelRight}"/>
+
+                <TextBlock Grid.Row="2" Text="Bodies" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="2" Name="lblBodies" Style="{StaticResource labelRight}"/>
+
+                <TextBlock Grid.Row="3" Text="Joints" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="3" Name="lblJoints" Style="{StaticResource labelRight}"/>
+
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Neural Pool">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" SharedSizeGroup="left"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="1*" SharedSizeGroup="right"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Threads" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="0" Name="lblNeuralPoolThreads" Style="{StaticResource labelRight}"/>
+
+                <TextBlock Grid.Row="1" Text="Buckets" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="1" Name="lblNeuralPoolBuckets" Style="{StaticResource labelRight}"/>
+                
+                <TextBlock Grid.Row="2" Text="Links" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="2" Name="lblNeuralPoolLinks" Style="{StaticResource labelRight}"/>
+
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Misc">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" SharedSizeGroup="left"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="1*" SharedSizeGroup="right"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Token" Style="{StaticResource labelLeft}"/>
+                <TextBlock Grid.Row="0" Name="lblToken" Style="{StaticResource labelRight}"/>
+
+            </Grid>
+        </GroupBox>
+
+        <Grid Margin="0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button Grid.Column="0" Name="btnGarbageCollect" Content="Garbage Collect" Click="btnGarbageCollect_Click"/>
+            <Ellipse Grid.Column="1" Name="ellipseGC" Width="20" Stroke="#40000000" StrokeThickness="2" Fill="#10FFFFFF" Margin="4,0,0,0"/>
+        </Grid>
+        
+    </StackPanel>
+</Window>

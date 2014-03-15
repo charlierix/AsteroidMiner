@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Game.Newt.NewtonDynamics</RootNamespace>
     <AssemblyName>Game.Newt.NewtonDynamics</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -31,7 +31,8 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,6 +43,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -51,6 +53,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore">
@@ -79,6 +82,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DisposeTests.cs" />
+    <Compile Include="FluidField3D.cs" />
     <Compile Include="FluidHull.cs" />
     <Compile Include="Import\DllImports.cs" />
     <Compile Include="Import\testimport.cs" />
@@ -109,6 +114,10 @@
     <None Include="Import\newton.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+      <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
+      <Name>HelperClasses</Name>
+    </ProjectReference>
     <ProjectReference Include="..\HelperClasses\HelperClasses.csproj">
       <Project>{0F6B42D4-C2C8-499A-897D-76D4CE6D0DB6}</Project>
       <Name>HelperClasses %28Newt\HelperClasses%29</Name>

@@ -30,20 +30,28 @@ namespace Game.Newt.NewtonDynamics_153.Api
 
         #region IDisposable Members
 
-        public virtual void Dispose()
+        public void Dispose()
         {
-            if (m_Handle != IntPtr.Zero)
-            {
-                Newton.NewtonDestroyJoint(m_World.Handle, m_Handle);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-                CHashTables.JointUserData.Remove(m_Handle);
-                CHashTables.Joint.Remove(m_Handle);
-                m_Handle = IntPtr.Zero;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (m_Handle != IntPtr.Zero)
+                {
+                    Newton.NewtonDestroyJoint(m_World.Handle, m_Handle);
+
+                    CHashTables.JointUserData.Remove(m_Handle);
+                    CHashTables.Joint.Remove(m_Handle);
+                    m_Handle = IntPtr.Zero;
+                }
             }
         }
 
         #endregion
-
 
         #region Properties
 
@@ -93,7 +101,6 @@ namespace Game.Newt.NewtonDynamics_153.Api
 
         #endregion
 
-
         #region Events
 
         public event EventHandler<CConstraintDestructorEventArgs> ConstraintDestructor
@@ -123,7 +130,6 @@ namespace Game.Newt.NewtonDynamics_153.Api
 
         #endregion
 
-
         #region Invokes
 
         protected void InvokeDestructor(IntPtr pNewtonJoint)
@@ -132,7 +138,6 @@ namespace Game.Newt.NewtonDynamics_153.Api
         }
 
         #endregion
-
 
         #region Virtuals
 

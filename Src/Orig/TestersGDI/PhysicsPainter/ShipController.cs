@@ -13,33 +13,33 @@ using Game.Orig.Map;
 namespace Game.Orig.TestersGDI.PhysicsPainter
 {
     //TODO:  Put the majority of this class in Game.HelperClasses (as an abstract)
-	public class ShipController
-	{
-		#region Enum: ShipTypeQual
+    public class ShipController
+    {
+        #region Enum: ShipTypeQual
 
-		public enum ShipTypeQual
-		{
-			None = 0,
-			Ball,
-			SolidBall
-		}
+        public enum ShipTypeQual
+        {
+            None = 0,
+            Ball,
+            SolidBall
+        }
 
-		#endregion
-		#region Enum: AttatchementType
+        #endregion
+        #region Enum: AttatchementType
 
-		private enum AttatchementType
-		{
-			Thruster = 0,
-			Tractor,
-			Cannon,
-			MachineGun
-		}
+        private enum AttatchementType
+        {
+            Thruster = 0,
+            Tractor,
+            Cannon,
+            MachineGun
+        }
 
-		#endregion
+        #endregion
 
-		#region Events
+        #region Events
 
-		public event EventHandler CreateNewTractorBeams = null;
+        public event EventHandler CreateNewTractorBeams = null;
         public event EventHandler RecalcTractorBeamOffsets = null;
         public event EventHandler ChangeTractorBeamPower = null;
 
@@ -50,33 +50,33 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private const double TURNRADIANS = .12d;
         public const double STANDARDRADIUS = 300;
         //public const double THRUSTER_FORCE = 120d;
-		public const double THRUSTER_FORCE = 20000000d;
+        public const double THRUSTER_FORCE = 20000000d;
 
         private Random _rand = new Random();
 
         private bool _isSetup = false;
 
         // Pointers passed in
-		private LargeMapViewer2D _picturebox = null;
-		private SimpleMap _map;
+        private LargeMapViewer2D _picturebox = null;
+        private SimpleMap _map;
         private MyVector _boundryLower = null;
         private MyVector _boundryUpper = null;
 
-		/// <summary>
-		/// The ship type could get swapped around (causing new blips to be created), but this will be the only
-		/// token I will use (there will only be at most one ship in existance)
-		/// </summary>
-		private long _blipToken = 0;
+        /// <summary>
+        /// The ship type could get swapped around (causing new blips to be created), but this will be the only
+        /// token I will use (there will only be at most one ship in existance)
+        /// </summary>
+        private long _blipToken = 0;
         private BallBlip _ship = null;
 
         // These properties are what the user plays with in the property panel
         private ShipTypeQual _type = ShipTypeQual.None;
         private double _shipSize = 0;
         private double _thrusterAngle = 0;
-		private double _machineGunAngle = 0;
-		private bool _isMachineGunCrossoverInfinity = true;
-		private double _machineGunCrossoverDistance = 0;
-		private bool _ignoreOtherProjectiles = true;
+        private double _machineGunAngle = 0;
+        private bool _isMachineGunCrossoverInfinity = true;
+        private double _machineGunCrossoverDistance = 0;
+        private bool _ignoreOtherProjectiles = true;
 
         // Keyboard
         private bool _isUpPressed = false;
@@ -89,8 +89,8 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private bool _isWPressed = false;
         private bool _isQPressed = false;
         private bool _isEPressed = false;
-		private bool _isShiftPressed = false;
-		private bool _isCtrlPressed = false;
+        private bool _isShiftPressed = false;
+        private bool _isCtrlPressed = false;
 
         private int _qDownTick = Environment.TickCount;
         private int _eDownTick = Environment.TickCount;
@@ -102,9 +102,9 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         // Tractor Beam
         private List<TractorBeamCone> _tractorBeams = new List<TractorBeamCone>();
 
-		//	Guns
-		private ProjectileWeapon _cannon = null;
-		private List<ProjectileWeapon> _machineGuns = new List<ProjectileWeapon>();
+        // Guns
+        private ProjectileWeapon _cannon = null;
+        private List<ProjectileWeapon> _machineGuns = new List<ProjectileWeapon>();
 
         // These thruster offsets are only used for the solid ball
         private MyVector _thrusterOffset_BottomRight = null;
@@ -118,42 +118,42 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private double _thrustForce = 0d;
         private double _torqueballLeftRightThrusterForce = 0d;
 
-		#endregion
+        #endregion
 
-		#region Constructor
+        #region Constructor
 
         public ShipController(LargeMapViewer2D picturebox, SimpleMap map, MyVector boundryLower, MyVector boundryUpper)
-		{
-			_picturebox = picturebox;
-			_map = map;
+        {
+            _picturebox = picturebox;
+            _map = map;
             _boundryLower = boundryLower;
             _boundryUpper = boundryUpper;
 
-			_blipToken = TokenGenerator.Instance.NextToken();
+            _blipToken = TokenGenerator.Instance.NextToken();
 
             _picturebox.KeyDown += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyDown);
             _picturebox.KeyUp += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyUp);
-		}
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public bool Active
-		{
-			get
-			{
-				return _type != ShipTypeQual.None;
-			}
-		}
+        public bool Active
+        {
+            get
+            {
+                return _type != ShipTypeQual.None;
+            }
+        }
 
-		public long ShipToken
-		{
-			get
-			{
-				return _blipToken;
-			}
-		}
+        public long ShipToken
+        {
+            get
+            {
+                return _blipToken;
+            }
+        }
 
         /// <summary>
         /// NOTE:  This may be null
@@ -205,60 +205,60 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 PropsChanged(false);
             }
         }
-		public double MachineGunOffset
-		{
-			get
-			{
-				return _machineGunAngle;
-			}
-			set
-			{
-				_machineGunAngle = value;
+        public double MachineGunOffset
+        {
+            get
+            {
+                return _machineGunAngle;
+            }
+            set
+            {
+                _machineGunAngle = value;
 
-				PropsChanged(false);
-			}
-		}
+                PropsChanged(false);
+            }
+        }
 
-		public bool MachineGunCrossoverDistanceIsInfinity
-		{
-			get
-			{
-				return _isMachineGunCrossoverInfinity;
-			}
-			set
-			{
-				_isMachineGunCrossoverInfinity = value;
+        public bool MachineGunCrossoverDistanceIsInfinity
+        {
+            get
+            {
+                return _isMachineGunCrossoverInfinity;
+            }
+            set
+            {
+                _isMachineGunCrossoverInfinity = value;
 
-				PropsChanged(false);
-			}
-		}
-		public double MachineGunCrossoverDistance
-		{
-			get
-			{
-				return _machineGunCrossoverDistance;
-			}
-			set
-			{
-				_machineGunCrossoverDistance = value;
+                PropsChanged(false);
+            }
+        }
+        public double MachineGunCrossoverDistance
+        {
+            get
+            {
+                return _machineGunCrossoverDistance;
+            }
+            set
+            {
+                _machineGunCrossoverDistance = value;
 
-				PropsChanged(false);
-			}
-		}
+                PropsChanged(false);
+            }
+        }
 
-		public bool IgnoreOtherProjectiles
-		{
-			get
-			{
-				return _ignoreOtherProjectiles;
-			}
-			set
-			{
-				_ignoreOtherProjectiles = value;
+        public bool IgnoreOtherProjectiles
+        {
+            get
+            {
+                return _ignoreOtherProjectiles;
+            }
+            set
+            {
+                _ignoreOtherProjectiles = value;
 
-				PropsChanged(false);
-			}
-		}
+                PropsChanged(false);
+            }
+        }
 
         public List<TractorBeamCone> TractorBeams
         {
@@ -268,15 +268,15 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
         }
 
-		public int PowerLevel
-		{
-			get
-			{
-				return _powerLevel;
-			}
-		}
+        public int PowerLevel
+        {
+            get
+            {
+                return _powerLevel;
+            }
+        }
 
-		#endregion
+        #endregion
 
         #region Public Methods
 
@@ -312,22 +312,22 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 if (_isUpPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, 1, 0), _thrustForce * 2d);		//	down
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, 1, 0), _thrustForce * 2d);		// down
                 }
 
                 if (_isWPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, 1, 0), _thrustForce * 20d);		//	down
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, 1, 0), _thrustForce * 20d);		// down
                 }
 
                 if (_isDownPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, -1, 0), _thrustForce * 2d);		//	up
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, -1, 0), _thrustForce * 2d);		// up
                 }
 
                 if (_isSPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, -1, 0), _thrustForce * 20d);		//	up
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(0, -1, 0), _thrustForce * 20d);		// up
                 }
 
                 if (_isLeftPressed)
@@ -342,12 +342,12 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 if (_isAPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(1, 0, 0), _thrustForce * 2d);		//	right
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(1, 0, 0), _thrustForce * 2d);		// right
                 }
 
                 if (_isDPressed)
                 {
-                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(-1, 0, 0), _thrustForce * 2d);		//	left
+                    ApplyThrust(new MyVector(0, 0, 0), new MyVector(-1, 0, 0), _thrustForce * 2d);		// left
                 }
 
                 #endregion
@@ -358,50 +358,50 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 if (_isUpPressed)
                 {
-                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _thrustForce);		//	down
-                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _thrustForce);		//	s
+                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _thrustForce);		// down
+                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _thrustForce);		// s
                 }
 
                 if (_isWPressed)
                 {
-                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _thrustForce * 10d);		//	down
-                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _thrustForce * 10d);		//	s
+                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _thrustForce * 10d);		// down
+                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _thrustForce * 10d);		// s
                 }
 
                 if (_isDownPressed)
                 {
-                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _thrustForce);		//	up
-                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _thrustForce);		//	w
+                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _thrustForce);		// up
+                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _thrustForce);		// w
                 }
 
                 if (_isSPressed)
                 {
-                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _thrustForce * 10d);		//	up
-                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _thrustForce * 10d);		//	w
+                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _thrustForce * 10d);		// up
+                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _thrustForce * 10d);		// w
                 }
 
                 if (_isLeftPressed)
                 {
-                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _torqueballLeftRightThrusterForce);		//	up
-                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _torqueballLeftRightThrusterForce);		//	s
+                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(0, -1, 0), _torqueballLeftRightThrusterForce);		// up
+                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(0, 1, 0), _torqueballLeftRightThrusterForce);		// s
                 }
 
                 if (_isRightPressed)
                 {
-                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _torqueballLeftRightThrusterForce);		//	down
-                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _torqueballLeftRightThrusterForce);		//	w
+                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(0, 1, 0), _torqueballLeftRightThrusterForce);		// down
+                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(0, -1, 0), _torqueballLeftRightThrusterForce);		// w
                 }
 
                 if (_isAPressed)
                 {
-                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(1, 0, 0), _thrustForce);		//	right
-                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(1, 0, 0), _thrustForce);		//	right
+                    ApplyThrust(_thrusterOffset_TopLeft, new MyVector(1, 0, 0), _thrustForce);		// right
+                    ApplyThrust(_thrusterOffset_BottomLeft, new MyVector(1, 0, 0), _thrustForce);		// right
                 }
 
                 if (_isDPressed)
                 {
-                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(-1, 0, 0), _thrustForce);		//	left
-                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(-1, 0, 0), _thrustForce);		//	left
+                    ApplyThrust(_thrusterOffset_TopRight, new MyVector(-1, 0, 0), _thrustForce);		// left
+                    ApplyThrust(_thrusterOffset_BottomRight, new MyVector(-1, 0, 0), _thrustForce);		// left
                 }
 
                 #endregion
@@ -433,17 +433,17 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             #endregion
 
-			#region Guns
+            #region Guns
 
-			_cannon.Timer(elapsedTime);
+            _cannon.Timer(elapsedTime);
 
-			foreach (ProjectileWeapon weapon in _machineGuns)
-			{
-				weapon.Timer(elapsedTime);
-			}
+            foreach (ProjectileWeapon weapon in _machineGuns)
+            {
+                weapon.Timer(elapsedTime);
+            }
 
-			#endregion
-		}
+            #endregion
+        }
 
         public void Draw()
         {
@@ -452,10 +452,10 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 return;
             }
 
-            //	Fill Circle
+            // Fill Circle
             _picturebox.FillCircle(Color.FromArgb(100, Color.LimeGreen), _ship.Sphere.Position, _ship.Sphere.Radius);
 
-            //	Draw direction facing
+            // Draw direction facing
             MyVector dirFacing = _ship.Sphere.DirectionFacing.Standard.Clone();
             dirFacing.BecomeUnitVector();
             dirFacing.Multiply(_ship.Sphere.Radius);
@@ -463,10 +463,10 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             _picturebox.DrawLine(Color.White, 4, _ship.Sphere.Position, dirFacing);
 
-            //	Draw an edge
+            // Draw an edge
             _picturebox.DrawCircle(Color.Black, 25d, _ship.Sphere.Position, _ship.Sphere.Radius);
 
-			#region Thrust Lines
+            #region Thrust Lines
 
             foreach (MyVector[] thrustPair in _thrustLines)
             {
@@ -482,93 +482,93 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
 
             #endregion
-			#region Tractor Effect
+            #region Tractor Effect
 
-			if (_isQPressed || _isQLocked || _isEPressed || _isELocked)
-			{
-				foreach (TractorBeamCone tractor in _tractorBeams)
-				{
-					// Figure out the cone tip location
+            if (_isQPressed || _isQLocked || _isEPressed || _isELocked)
+            {
+                foreach (TractorBeamCone tractor in _tractorBeams)
+                {
+                    // Figure out the cone tip location
                     MyVector tractorStart = _ship.Ball.Rotation.GetRotatedVector(tractor.Offset, true);
-					tractorStart.Add(_ship.Ball.Position);
+                    tractorStart.Add(_ship.Ball.Position);
 
-					// Figure out how bright to draw it
-					int alpha = 0;
-					if (_powerLevel == 1)
-					{
-						alpha = 15;
-					}
-					else if (_powerLevel == 2)
-					{
-						alpha = 30;
-					}
-					else if (_powerLevel == 3)
-					{
-						alpha = 60;
-					}
-					else //if (_powerLevel == 4)
-					{
-						alpha = 128;
-					}
+                    // Figure out how bright to draw it
+                    int alpha = 0;
+                    if (_powerLevel == 1)
+                    {
+                        alpha = 15;
+                    }
+                    else if (_powerLevel == 2)
+                    {
+                        alpha = 30;
+                    }
+                    else if (_powerLevel == 3)
+                    {
+                        alpha = 60;
+                    }
+                    else //if (_powerLevel == 4)
+                    {
+                        alpha = 128;
+                    }
 
-					// Draw Cone
-					if ((_isQPressed || _isQLocked) && (_isEPressed || _isELocked))
-					{
-						_picturebox.FillPie(Color.FromArgb(alpha, Color.White), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
-					}
-					else if (_isQPressed || _isQLocked)
-					{
-						_picturebox.FillPie(Color.FromArgb(alpha, Color.Pink), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
-					}
-					else if (_isEPressed || _isELocked)
-					{
-						_picturebox.FillPie(Color.FromArgb(alpha, Color.LightSkyBlue), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
-					}
-				}
-			}
+                    // Draw Cone
+                    if ((_isQPressed || _isQLocked) && (_isEPressed || _isELocked))
+                    {
+                        _picturebox.FillPie(Color.FromArgb(alpha, Color.White), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
+                    }
+                    else if (_isQPressed || _isQLocked)
+                    {
+                        _picturebox.FillPie(Color.FromArgb(alpha, Color.Pink), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
+                    }
+                    else if (_isEPressed || _isELocked)
+                    {
+                        _picturebox.FillPie(Color.FromArgb(alpha, Color.LightSkyBlue), tractorStart, tractor.MaxDistance, _ship.Ball.DirectionFacing.Standard, tractor.SweepAngle);
+                    }
+                }
+            }
 
-			#endregion
-			#region Gun Effect
+            #endregion
+            #region Gun Effect
 
 
 
-			#endregion
+            #endregion
 
-			#region Thrusters
+            #region Thrusters
 
-			if (_type == ShipTypeQual.Ball)
+            if (_type == ShipTypeQual.Ball)
             {
                 DrawAttatchment(new MyVector(0, 0, 0), AttatchementType.Thruster);
             }
             else if (_type == ShipTypeQual.SolidBall)
             {
-				DrawAttatchment(_thrusterOffset_BottomRight, AttatchementType.Thruster);
-				DrawAttatchment(_thrusterOffset_BottomLeft, AttatchementType.Thruster);
-				DrawAttatchment(_thrusterOffset_TopRight, AttatchementType.Thruster);
-				DrawAttatchment(_thrusterOffset_TopLeft, AttatchementType.Thruster);
+                DrawAttatchment(_thrusterOffset_BottomRight, AttatchementType.Thruster);
+                DrawAttatchment(_thrusterOffset_BottomLeft, AttatchementType.Thruster);
+                DrawAttatchment(_thrusterOffset_TopRight, AttatchementType.Thruster);
+                DrawAttatchment(_thrusterOffset_TopLeft, AttatchementType.Thruster);
             }
 
             #endregion
-			#region Gun
+            #region Gun
 
-			DrawAttatchment(_cannon.Barrels[0].Offset, AttatchementType.Cannon);
+            DrawAttatchment(_cannon.Barrels[0].Offset, AttatchementType.Cannon);
 
-			foreach (ProjectileWeapon weapon in _machineGuns)
-			{
-				DrawAttatchment(weapon.Barrels[0].Offset, AttatchementType.MachineGun);
-			}
+            foreach (ProjectileWeapon weapon in _machineGuns)
+            {
+                DrawAttatchment(weapon.Barrels[0].Offset, AttatchementType.MachineGun);
+            }
 
-			#endregion
-			#region Tractor Beam
+            #endregion
+            #region Tractor Beam
 
-			//	This needs to go after thrusters and guns, because the tractor is smaller, and the ball has everything at zero
-			foreach (TractorBeamCone tractor in _tractorBeams)
-			{
-				DrawAttatchment(tractor.Offset, AttatchementType.Tractor);
-			}
+            // This needs to go after thrusters and guns, because the tractor is smaller, and the ball has everything at zero
+            foreach (TractorBeamCone tractor in _tractorBeams)
+            {
+                DrawAttatchment(tractor.Offset, AttatchementType.Tractor);
+            }
 
-			#endregion
-		}
+            #endregion
+        }
 
         #endregion
 
@@ -577,43 +577,43 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private void Picturebox_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             // Arrows
-			if (e.KeyCode == Keys.Up)
-			{
-				_isUpPressed = true;
-			}
-			if (e.KeyCode == Keys.Down)
+            if (e.KeyCode == Keys.Up)
+            {
+                _isUpPressed = true;
+            }
+            if (e.KeyCode == Keys.Down)
             {
                 _isDownPressed = true;
             }
-			if (e.KeyCode == Keys.Left)
+            if (e.KeyCode == Keys.Left)
             {
                 _isLeftPressed = true;
             }
-			if (e.KeyCode == Keys.Right)
+            if (e.KeyCode == Keys.Right)
             {
                 _isRightPressed = true;
             }
 
             // ASDW
-			if (e.KeyCode == Keys.A)
+            if (e.KeyCode == Keys.A)
             {
                 _isAPressed = true;
             }
-			if (e.KeyCode == Keys.S)
+            if (e.KeyCode == Keys.S)
             {
                 _isSPressed = true;
             }
-			if (e.KeyCode == Keys.D)
+            if (e.KeyCode == Keys.D)
             {
                 _isDPressed = true;
             }
-			if (e.KeyCode == Keys.W)
+            if (e.KeyCode == Keys.W)
             {
                 _isWPressed = true;
             }
 
             // Q, E
-			if (e.KeyCode == Keys.Q)
+            if (e.KeyCode == Keys.Q)
             {
                 if (!_isQPressed)
                 {
@@ -632,7 +632,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 _isQPressed = true;
             }
-			if (e.KeyCode == Keys.E)
+            if (e.KeyCode == Keys.E)
             {
                 if (!_isEPressed)
                 {
@@ -653,102 +653,102 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
 
             // 1-4
-			if (e.KeyCode == Keys.D1 || e.KeyCode == Keys.NumPad1)
+            if (e.KeyCode == Keys.D1 || e.KeyCode == Keys.NumPad1)
             {
                 _powerLevel = 1;
                 PropsChangedSprtTractorPower();
             }
-			if (e.KeyCode == Keys.D2 || e.KeyCode == Keys.NumPad2)
+            if (e.KeyCode == Keys.D2 || e.KeyCode == Keys.NumPad2)
             {
                 _powerLevel = 2;
                 PropsChangedSprtTractorPower();
             }
-			if (e.KeyCode == Keys.D3 || e.KeyCode == Keys.NumPad3)
+            if (e.KeyCode == Keys.D3 || e.KeyCode == Keys.NumPad3)
             {
                 _powerLevel = 3;
                 PropsChangedSprtTractorPower();
             }
-			if (e.KeyCode == Keys.D4 || e.KeyCode == Keys.NumPad4)
+            if (e.KeyCode == Keys.D4 || e.KeyCode == Keys.NumPad4)
             {
                 _powerLevel = 4;
                 PropsChangedSprtTractorPower();
             }
 
-			if (e.KeyCode == Keys.ShiftKey)
-			{
-				_isShiftPressed = true;
-				_cannon.StartFiring();
-			}
-			if (e.KeyCode == Keys.ControlKey)
-			{
-				_isCtrlPressed = true;
-				foreach (ProjectileWeapon weapon in _machineGuns)
-				{
-					weapon.StartFiring();
-				}
-			}
+            if (e.KeyCode == Keys.ShiftKey)
+            {
+                _isShiftPressed = true;
+                _cannon.StartFiring();
+            }
+            if (e.KeyCode == Keys.ControlKey)
+            {
+                _isCtrlPressed = true;
+                foreach (ProjectileWeapon weapon in _machineGuns)
+                {
+                    weapon.StartFiring();
+                }
+            }
         }
         private void Picturebox_KeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
         {
             // Arrow Keys
-			if (e.KeyCode == Keys.Up)
+            if (e.KeyCode == Keys.Up)
             {
                 _isUpPressed = false;
             }
-			if (e.KeyCode == Keys.Down)
+            if (e.KeyCode == Keys.Down)
             {
                 _isDownPressed = false;
             }
-			if (e.KeyCode == Keys.Left)
+            if (e.KeyCode == Keys.Left)
             {
                 _isLeftPressed = false;
             }
-			if (e.KeyCode == Keys.Right)
+            if (e.KeyCode == Keys.Right)
             {
                 _isRightPressed = false;
             }
 
             // ASDW
-			if (e.KeyCode == Keys.A)
+            if (e.KeyCode == Keys.A)
             {
                 _isAPressed = false;
             }
-			if (e.KeyCode == Keys.S)
+            if (e.KeyCode == Keys.S)
             {
                 _isSPressed = false;
             }
-			if (e.KeyCode == Keys.D)
+            if (e.KeyCode == Keys.D)
             {
                 _isDPressed = false;
             }
-			if (e.KeyCode == Keys.W)
+            if (e.KeyCode == Keys.W)
             {
                 _isWPressed = false;
             }
 
             // Q, E
-			if (e.KeyCode == Keys.Q)
+            if (e.KeyCode == Keys.Q)
             {
                 _isQPressed = false;
             }
-			if (e.KeyCode == Keys.E)
+            if (e.KeyCode == Keys.E)
             {
                 _isEPressed = false;
             }
 
-			if(e.KeyCode == Keys.ShiftKey)
-			{
-				_isShiftPressed = false;
-				_cannon.StopFiring();
-			}
-			if (e.KeyCode == Keys.ControlKey)
-			{
-				_isCtrlPressed = false;
-				foreach (ProjectileWeapon weapon in _machineGuns)
-				{
-					weapon.StopFiring();
-				}
-			}
+            if (e.KeyCode == Keys.ShiftKey)
+            {
+                _isShiftPressed = false;
+                _cannon.StopFiring();
+            }
+            if (e.KeyCode == Keys.ControlKey)
+            {
+                _isCtrlPressed = false;
+                foreach (ProjectileWeapon weapon in _machineGuns)
+                {
+                    weapon.StopFiring();
+                }
+            }
         }
 
         #endregion
@@ -778,16 +778,16 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 // Figure out thruster placement
                 PropsChangedSprtThrusters();
 
-				//	Figure out gun placement
-				PropsChangedSprtGuns();
+                // Figure out gun placement
+                PropsChangedSprtGuns();
 
-				if (this.RecalcTractorBeamOffsets != null)
-				{
-					this.RecalcTractorBeamOffsets(this, new EventArgs());
-				}
+                if (this.RecalcTractorBeamOffsets != null)
+                {
+                    this.RecalcTractorBeamOffsets(this, new EventArgs());
+                }
 
-				//	Figure out how much power the tractor beam has (based on 1-4 keys)
-				PropsChangedSprtTractorPower();
+                // Figure out how much power the tractor beam has (based on 1-4 keys)
+                PropsChangedSprtTractorPower();
             }
         }
         private void PropsChangedSprtNew()
@@ -806,9 +806,9 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 position = Utility3D.GetRandomVector(_boundryLower, _boundryUpper);
             }
 
-			_tractorBeams.Clear();
-			_cannon = null;
-			_machineGuns.Clear();
+            _tractorBeams.Clear();
+            _cannon = null;
+            _machineGuns.Clear();
 
             #region New Ship
 
@@ -864,35 +864,35 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             #endregion
 
-			if (this.CreateNewTractorBeams != null)
-			{
-				this.CreateNewTractorBeams(this, new EventArgs());
-			}
+            if (this.CreateNewTractorBeams != null)
+            {
+                this.CreateNewTractorBeams(this, new EventArgs());
+            }
 
-			#region Guns
+            #region Guns
 
-			_cannon = new ProjectileWeapon(300, 150, UtilityHelper.GetMassForRadius(150, 1d), 25, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
-			_cannon.AddBarrel(_ship.Ball.OriginalDirectionFacing.Standard.Clone());
-			_cannon.AddFiringMode(20);
-			_cannon.SetProjectileExplosion(450, 2, 10000);
-			_cannon.SeProjectileFuse(500);
-			_cannon.SetShip(_ship);
+            _cannon = new ProjectileWeapon(300, 150, UtilityHelper.GetMassForRadius(150, 1d), 25, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
+            _cannon.AddBarrel(_ship.Ball.OriginalDirectionFacing.Standard.Clone());
+            _cannon.AddFiringMode(20);
+            _cannon.SetProjectileExplosion(450, 2, 10000);
+            _cannon.SeProjectileFuse(500);
+            _cannon.SetShip(_ship);
 
-			for (int cntr = 0; cntr < 2; cntr++)
-			{
-				ProjectileWeapon weapon = new ProjectileWeapon(30, 20, UtilityHelper.GetMassForRadius(20, 1d), 100, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
+            for (int cntr = 0; cntr < 2; cntr++)
+            {
+                ProjectileWeapon weapon = new ProjectileWeapon(30, 20, UtilityHelper.GetMassForRadius(20, 1d), 100, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
                 weapon.AddBarrel(new MyVector(), new MyQuaternion());
-				weapon.AddFiringMode(2);
-				weapon.SetProjectileExplosion(40, 2, 300);
-				weapon.SeProjectileFuse(500);
-				weapon.SetShip(_ship);
+                weapon.AddFiringMode(2);
+                weapon.SetProjectileExplosion(40, 2, 300);
+                weapon.SeProjectileFuse(500);
+                weapon.SetShip(_ship);
 
-				_machineGuns.Add(weapon);
-			}
+                _machineGuns.Add(weapon);
+            }
 
-			#endregion
-		}
-		private void PropsChangedSprtExisting()
+            #endregion
+        }
+        private void PropsChangedSprtExisting()
         {
             switch (_type)
             {
@@ -929,14 +929,14 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             MyVector thrusterSeed = new MyVector(0, _ship.Ball.Radius, 0);
             MyVector zAxis = new MyVector(0, 0, 1);
 
-            //	Bottom Thrusters
+            // Bottom Thrusters
             _thrusterOffset_BottomRight = thrusterSeed.Clone();
             _thrusterOffset_BottomRight.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(_thrusterAngle * -1));
 
             _thrusterOffset_BottomLeft = thrusterSeed.Clone();
             _thrusterOffset_BottomLeft.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(_thrusterAngle));
 
-            //	Top Thrusters
+            // Top Thrusters
             thrusterSeed = new MyVector(0, _ship.Ball.Radius * -1, 0);
             _thrusterOffset_TopRight = thrusterSeed.Clone();
             _thrusterOffset_TopRight.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(_thrusterAngle));
@@ -944,48 +944,48 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             _thrusterOffset_TopLeft = thrusterSeed.Clone();
             _thrusterOffset_TopLeft.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(_thrusterAngle * -1));
         }
-		private void PropsChangedSprtGuns()
-		{
-			//TODO:  Change the size and pain of the projectiles based on the size of the ship
+        private void PropsChangedSprtGuns()
+        {
+            //TODO:  Change the size and pain of the projectiles based on the size of the ship
 
-			//	Cannon
-			_cannon.Barrels[0].Offset.BecomeUnitVector();
-			_cannon.Barrels[0].Offset.Multiply(_ship.Ball.Radius + (_cannon.ProjectileRadius * 1.5d));
-			_cannon.IgnoreOtherProjectiles = _ignoreOtherProjectiles;
+            // Cannon
+            _cannon.Barrels[0].Offset.BecomeUnitVector();
+            _cannon.Barrels[0].Offset.Multiply(_ship.Ball.Radius + (_cannon.ProjectileRadius * 1.5d));
+            _cannon.IgnoreOtherProjectiles = _ignoreOtherProjectiles;
 
-			//	Machine Guns
+            // Machine Guns
             MyVector zAxis = new MyVector(0, 0, 1);
             MyVector gunSeed = new MyVector(0, _ship.Ball.Radius + (_machineGuns[0].ProjectileRadius * 1.5d), 0);
-			bool isLeft = true;
+            bool isLeft = true;
 
-			foreach (ProjectileWeapon weapon in _machineGuns)
-			{
-				//	Misc
-				weapon.IgnoreOtherProjectiles = _ignoreOtherProjectiles;
+            foreach (ProjectileWeapon weapon in _machineGuns)
+            {
+                // Misc
+                weapon.IgnoreOtherProjectiles = _ignoreOtherProjectiles;
 
-				double gunAngle = _machineGunAngle;
-				if (isLeft)
-				{
-					gunAngle *= -1;
-				}
+                double gunAngle = _machineGunAngle;
+                if (isLeft)
+                {
+                    gunAngle *= -1;
+                }
 
-				//	Offset
-				weapon.Barrels[0].Offset.StoreNewValues(gunSeed);
-				weapon.Barrels[0].Offset.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(gunAngle));
+                // Offset
+                weapon.Barrels[0].Offset.StoreNewValues(gunSeed);
+                weapon.Barrels[0].Offset.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(gunAngle));
 
-				//	Rotation
-				if (_isMachineGunCrossoverInfinity)
-				{
+                // Rotation
+                if (_isMachineGunCrossoverInfinity)
+                {
                     weapon.Barrels[0].Rotation.StoreNewValues(new MyQuaternion(zAxis, 0));
-				}
-				else
-				{
-					weapon.Barrels[0].Rotation.StoreNewValues(GetCrossoverRotation(weapon.Barrels[0].Offset, _machineGunCrossoverDistance, _ship.Ball.Radius, isLeft));
-				}
+                }
+                else
+                {
+                    weapon.Barrels[0].Rotation.StoreNewValues(GetCrossoverRotation(weapon.Barrels[0].Offset, _machineGunCrossoverDistance, _ship.Ball.Radius, isLeft));
+                }
 
-				isLeft = false;
-			}
-		}
+                isLeft = false;
+            }
+        }
         private void PropsChangedSprtTractorPower()
         {
             if (_tractorBeams.Count == 0)
@@ -993,10 +993,10 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 return;
             }
 
-			if (this.ChangeTractorBeamPower != null)
-			{
-				this.ChangeTractorBeamPower(this, new EventArgs());
-			}
+            if (this.ChangeTractorBeamPower != null)
+            {
+                this.ChangeTractorBeamPower(this, new EventArgs());
+            }
         }
 
         private void ApplyThrust(MyVector offset, MyVector force, double forceMultiplier)
@@ -1023,28 +1023,28 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             MyVector worldAttatchment = _ship.Ball.Rotation.GetRotatedVector(offset, true);
             worldAttatchment.Add(_ship.Ball.Position);
 
-			switch (attatchment)
-			{
-				case AttatchementType.Thruster:
-					_picturebox.FillCircle(Color.Silver, worldAttatchment, 60d);
-					_picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 60d);
-					break;
+            switch (attatchment)
+            {
+                case AttatchementType.Thruster:
+                    _picturebox.FillCircle(Color.Silver, worldAttatchment, 60d);
+                    _picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 60d);
+                    break;
 
-				case AttatchementType.Tractor:
-					_picturebox.FillCircle(Color.Olive, worldAttatchment, 40d);
-					_picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 40d);
-					break;
+                case AttatchementType.Tractor:
+                    _picturebox.FillCircle(Color.Olive, worldAttatchment, 40d);
+                    _picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 40d);
+                    break;
 
-				case AttatchementType.Cannon:
-					_picturebox.FillCircle(Color.Brown, worldAttatchment, 30d);
-					_picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 30d);
-					break;
+                case AttatchementType.Cannon:
+                    _picturebox.FillCircle(Color.Brown, worldAttatchment, 30d);
+                    _picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 30d);
+                    break;
 
-				case AttatchementType.MachineGun:
-					_picturebox.FillCircle(Color.Brown, worldAttatchment, 25d);
-					_picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 25d);
-					break;
-			}
+                case AttatchementType.MachineGun:
+                    _picturebox.FillCircle(Color.Brown, worldAttatchment, 25d);
+                    _picturebox.DrawCircle(Color.Black, 1d, worldAttatchment, 25d);
+                    break;
+            }
         }
 
         private static double GetThrustForce(double mass)
@@ -1080,18 +1080,18 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
 
         private static MyQuaternion GetCrossoverRotation(MyVector offset, double distance, double radius, bool isLeft)
-		{
+        {
             MyVector straight = new MyVector(0, -distance - radius, 0);
             MyVector angled = offset - new MyVector(0, distance + radius, 0);
 
             double angle = MyVector.GetAngleBetweenVectors(straight, angled);
-			if (!isLeft)
-			{
-				angle = angle * -1d;
-			}
+            if (!isLeft)
+            {
+                angle = angle * -1d;
+            }
 
             return new MyQuaternion(new MyVector(0, 0, 1), angle);
-		}
+        }
 
         #endregion
     }

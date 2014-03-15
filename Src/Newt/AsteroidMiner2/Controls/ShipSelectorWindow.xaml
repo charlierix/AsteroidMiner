@@ -1,0 +1,28 @@
+﻿<Window x:Class="Game.Newt.AsteroidMiner2.Controls.ShipSelectorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bean Selector" ResizeMode="CanResizeWithGrip" Width="550" Height="448">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Name="grdFolder">
+            <Label Content="Folder Name" Height="28" Margin="12,6,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" />
+            <TextBox Name="txtFoldername" Height="23" Margin="12,30,41,0" VerticalAlignment="Top" TextChanged="txtFoldername_TextChanged" AllowDrop="True" PreviewDragEnter="txtFoldername_PreviewDragEnter" PreviewDragOver="txtFoldername_PreviewDragEnter" Drop="txtFoldername_Drop"/>
+
+            <Button Name="btnBrowse" Content="..." Height="23" HorizontalAlignment="Right" Margin="0,30,12,0" VerticalAlignment="Top" Width="23" Click="btnBrowse_Click"/>
+        </Grid>
+
+        <ListBox Grid.Row="1" Name="lstItems" Margin="12,12,12,41" SelectionMode="Multiple">
+            <ScrollViewer.CanContentScroll>False</ScrollViewer.CanContentScroll>
+
+        </ListBox>
+
+        <Label Grid.Row="1" Name="lblStatus" Content="" HorizontalAlignment="Left" VerticalAlignment="Bottom" />
+
+        <Button Grid.Row="1" Name="btnOK" Content="OK" Height="23" HorizontalAlignment="Right" Margin="0,0,93,12" VerticalAlignment="Bottom" Width="75" IsDefault="True" Click="btnOK_Click"/>
+        <Button Grid.Row="1" Name="btnCancel" Content="Cancel" Height="23" HorizontalAlignment="Right" Margin="0,0,12,12" VerticalAlignment="Bottom" Width="75" IsCancel="True" Click="btnCancel_Click"/>
+    </Grid>
+</Window>

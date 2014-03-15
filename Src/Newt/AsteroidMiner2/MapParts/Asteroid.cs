@@ -11,150 +11,201 @@ using Game.Newt.NewtonDynamics;
 
 namespace Game.Newt.AsteroidMiner2.MapParts
 {
-	//TODO: There seems to sometimes be one triangle with the wrong normal (or it's defined backward).  Do a scan
-	//	of the completed mesh's normals to see if there is a bug
+    //TODO: There seems to sometimes be one triangle with the wrong normal (or it's defined backward).  Do a scan
+    // of the completed mesh's normals to see if there is a bug
 
-	public class Asteroid : IMapObject
-	{
-		#region Constructor
+    public class Asteroid : IMapObject
+    {
+        #region Constructor
 
-		public Asteroid(double radius, double mass, Point3D position, World world, int materialID, WorldColors colors)
-			: this(radius, mass, position, world, materialID, colors, GetHullTriangles(radius)) { }
+        public Asteroid(double radius, double mass, Point3D position, World world, int materialID)
+            : this(radius, mass, position, world, materialID, GetHullTriangles(radius)) { }
 
-		public Asteroid(double radius, double mass, Point3D position, World world, int materialID, WorldColors colors, TriangleIndexed[] triangles)
-		{
-			this.Radius = radius;
+        public Asteroid(double radius, double mass, Point3D position, World world, int materialID, TriangleIndexed[] triangles)
+        {
+            this.Radius = radius;
 
-			#region WPF Model
+            #region WPF Model
 
-			//	Material
-			MaterialGroup materials = new MaterialGroup();
-			materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.AsteroidColor)));
-			materials.Children.Add(colors.AsteroidSpecular);
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.AsteroidColor)));
+            materials.Children.Add(WorldColors.AsteroidSpecular);
 
-			//	Geometry Model
-			GeometryModel3D geometry = new GeometryModel3D();
-			geometry.Material = materials;
-			geometry.BackMaterial = materials;
-			//geometry.Geometry = UtilityWPF.GetSphere(5, radius);
-			geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles);
+            // Geometry Model
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = materials;
+            geometry.BackMaterial = materials;
+            //geometry.Geometry = UtilityWPF.GetSphere(5, radius);
+            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles);
 
-			//	Model Visual
-			ModelVisual3D model = new ModelVisual3D();
-			model.Content = geometry;
-			model.Transform = new TranslateTransform3D(position.ToVector());
+            this.Model = geometry;
 
-			#endregion
+            // Model Visual
+            ModelVisual3D model = new ModelVisual3D();
+            model.Content = geometry;
 
-			#region Physics Body
+            #endregion
 
-			CollisionHull hull = CollisionHull.CreateConvexHull(world, 0, triangles[0].AllPoints, 0.002d, null);
-			//CollisionHull hull = CollisionHull.CreateSphere(world, 0, new Vector3D(radius, radius, radius), null);
+            #region Physics Body
 
-			this.PhysicsBody = new Body(hull, model.Transform.Value, mass, new Visual3D[] { model });
-			//this.PhysicsBody.IsContinuousCollision = true;
-			this.PhysicsBody.MaterialGroupID = materialID;
-			this.PhysicsBody.LinearDamping = .01d;
-			this.PhysicsBody.AngularDamping = new Vector3D(.01d, .01d, .01d);
+            Transform3DGroup transform = new Transform3DGroup();
+            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));
+            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
 
-			//this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Body_ApplyForceAndTorque);
+            using (CollisionHull hull = CollisionHull.CreateConvexHull(world, 0, triangles[0].AllPoints, 0.002d, null))
+            {
+                this.PhysicsBody = new Body(hull, transform.Value, mass, new Visual3D[] { model });
+                //this.PhysicsBody.IsContinuousCollision = true;
+                this.PhysicsBody.MaterialGroupID = materialID;
+                this.PhysicsBody.LinearDamping = .01d;
+                this.PhysicsBody.AngularDamping = new Vector3D(.01d, .01d, .01d);
 
-			#endregion
-		}
+                //this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Body_ApplyForceAndTorque);
+            }
 
-		#endregion
+            #endregion
 
-		#region IMapObject Members
+            this.CreationTime = DateTime.Now;
+        }
 
-		public Body PhysicsBody
-		{
-			get;
-			private set;
-		}
+        #endregion
 
-		public Visual3D[] Visuals3D
-		{
-			get
-			{
-				return this.PhysicsBody.Visuals;
-			}
-		}
+        #region IMapObject Members
 
-		public Point3D PositionWorld
-		{
-			get
-			{
-				return this.PhysicsBody.Position;
-			}
-		}
+        public long Token
+        {
+            get
+            {
+                return this.PhysicsBody.Token;
+            }
+        }
 
-		public Vector3D VelocityWorld
-		{
-			get
-			{
-				return this.PhysicsBody.Velocity;
-			}
-		}
+        public Body PhysicsBody
+        {
+            get;
+            private set;
+        }
 
-		public double Radius
-		{
-			get;
-			private set;
-		}
+        public Visual3D[] Visuals3D
+        {
+            get
+            {
+                return this.PhysicsBody.Visuals;
+            }
+        }
+        public Model3D Model
+        {
+            get;
+            private set;
+        }
 
-		#endregion
+        public Point3D PositionWorld
+        {
+            get
+            {
+                return this.PhysicsBody.Position;
+            }
+        }
+        public Vector3D VelocityWorld
+        {
+            get
+            {
+                return this.PhysicsBody.Velocity;
+            }
+        }
+        public Matrix3D OffsetMatrix
+        {
+            get
+            {
+                return this.PhysicsBody.OffsetMatrix;
+            }
+        }
 
-		#region Public Methods
+        public double Radius
+        {
+            get;
+            private set;
+        }
 
-		/// <summary>
-		/// This is exposed so it can be called externally on a separate thread, then call this asteroid's constructor
-		/// in the main thread once this returns
-		/// </summary>
-		public static TriangleIndexed[] GetHullTriangles(double radius)
-		{
-			const int NUMPOINTS = 60;		//	too many, and it looks too perfect
+        public DateTime CreationTime
+        {
+            get;
+            private set;
+        }
 
-			Exception lastException = null;
-			Random rand = StaticRandom.GetRandomForThread();
+        public int CompareTo(IMapObject other)
+        {
+            return MapObjectUtil.CompareToT(this, other);
+        }
 
-			for (int infiniteLoopCntr = 0; infiniteLoopCntr < 50; infiniteLoopCntr++)		//	there is a slight chance that the convex hull generator will choke on the inputs.  If so just retry
-			{
-				try
-				{
-					double minRadius = radius * .9d;
+        public bool Equals(IMapObject other)
+        {
+            return MapObjectUtil.EqualsT(this, other);
+        }
+        public override bool Equals(object obj)
+        {
+            return MapObjectUtil.EqualsObj(this, obj);
+        }
 
-					Point3D[] points = new Point3D[NUMPOINTS];
+        public override int GetHashCode()
+        {
+            return MapObjectUtil.GetHashCode(this);
+        }
 
-					//	Make a point cloud
-					for (int cntr = 0; cntr < NUMPOINTS; cntr++)
-					{
-						points[cntr] = Math3D.GetRandomVectorSpherical(minRadius, radius).ToPoint();
-					}
+        #endregion
 
-					//	Squash it
-					Transform3DGroup transform = new Transform3DGroup();
-					transform.Children.Add(new ScaleTransform3D(.33d + (rand.NextDouble() * .66d), .33d + (rand.NextDouble() * .66d), 1d));		//	squash it
-					transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));		//	giving it a random rotation, since it's always squashed along the same axiis
-					transform.Transform(points);
+        #region Public Methods
 
-					//	Get a hull that wraps those points
-					TriangleIndexed[] retVal = UtilityWPF.GetConvexHull(points.ToArray());
+        /// <summary>
+        /// This is exposed so it can be called externally on a separate thread, then call this asteroid's constructor
+        /// in the main thread once this returns
+        /// </summary>
+        public static TriangleIndexed[] GetHullTriangles(double radius)
+        {
+            const int NUMPOINTS = 60;		// too many, and it looks too perfect
 
-					//	Get rid of unused points
-					retVal = TriangleIndexed.Clone_CondensePoints(retVal);
+            Exception lastException = null;
+            Random rand = StaticRandom.GetRandomForThread();
 
-					//	Exit Function
-					return retVal;
-				}
-				catch (Exception ex)
-				{
-					lastException = ex;
-				}
-			}
+            for (int infiniteLoopCntr = 0; infiniteLoopCntr < 50; infiniteLoopCntr++)		// there is a slight chance that the convex hull generator will choke on the inputs.  If so just retry
+            {
+                try
+                {
+                    double minRadius = radius * .9d;
 
-			throw new ApplicationException(lastException.ToString());
-		}
+                    Point3D[] points = new Point3D[NUMPOINTS];
 
-		#endregion
-	}
+                    // Make a point cloud
+                    for (int cntr = 0; cntr < NUMPOINTS; cntr++)
+                    {
+                        points[cntr] = Math3D.GetRandomVectorSpherical(minRadius, radius).ToPoint();
+                    }
+
+                    // Squash it
+                    Transform3DGroup transform = new Transform3DGroup();
+                    transform.Children.Add(new ScaleTransform3D(.33d + (rand.NextDouble() * .66d), .33d + (rand.NextDouble() * .66d), 1d));		// squash it
+                    transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));		// giving it a random rotation, since it's always squashed along the same axiis
+                    transform.Transform(points);
+
+                    // Get a hull that wraps those points
+                    TriangleIndexed[] retVal = Math3D.GetConvexHull(points.ToArray());
+
+                    // Get rid of unused points
+                    retVal = TriangleIndexed.Clone_CondensePoints(retVal);
+
+                    // Exit Function
+                    return retVal;
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                }
+            }
+
+            throw new ApplicationException(lastException.ToString());
+        }
+
+        #endregion
+    }
 }

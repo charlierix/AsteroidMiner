@@ -11,270 +11,263 @@ using Game.Newt.HelperClasses;
 
 namespace Game.Newt.AsteroidMiner2.ShipParts
 {
-	#region Class: HangarBayToolItem
+    #region Class: HangarBayToolItem
 
-	public class HangarBayToolItem : PartToolItemBase
-	{
-		#region Constructor
+    public class HangarBayToolItem : PartToolItemBase
+    {
+        #region Constructor
 
-		public HangarBayToolItem(EditorOptions options)
-			: base(options)
-		{
-			_visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-			this.TabName = PartToolItemBase.TAB_SHIPPART;
-		}
+        public HangarBayToolItem(EditorOptions options)
+            : base(options)
+        {
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
+            this.TabName = PartToolItemBase.TAB_SHIPPART;
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Public Properties
 
-		public override string Name
-		{
-			get
-			{
-				return "Hangar Bay";
-			}
-		}
-		public override string Description
-		{
-			get
-			{
-				return "Stores and repairs smaller ships";
-			}
-		}
-		public override string Category
-		{
-			get
-			{
-				return PartToolItemBase.CATEGORY_CONTAINER;
-			}
-		}
+        public override string Name
+        {
+            get
+            {
+                return "Hangar Bay";
+            }
+        }
+        public override string Description
+        {
+            get
+            {
+                return "Stores and repairs smaller ships";
+            }
+        }
+        public override string Category
+        {
+            get
+            {
+                return PartToolItemBase.CATEGORY_CONTAINER;
+            }
+        }
 
-		private UIElement _visual2D = null;
-		public override UIElement Visual2D
-		{
-			get
-			{
-				return _visual2D;
-			}
-		}
+        private UIElement _visual2D = null;
+        public override UIElement Visual2D
+        {
+            get
+            {
+                return _visual2D;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Public Methods
+        #region Public Methods
 
-		public override PartDesignBase GetNewDesignPart()
-		{
-			return new HangarBayDesign(this.Options);
-		}
+        public override PartDesignBase GetNewDesignPart()
+        {
+            return new HangarBayDesign(this.Options);
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 
-	#endregion
-	#region Class: HangarBayDesign
+    #endregion
+    #region Class: HangarBayDesign
 
-	public class HangarBayDesign : PartDesignBase
-	{
-		#region Constructor
+    public class HangarBayDesign : PartDesignBase
+    {
+        #region Declaration Section
 
-		public HangarBayDesign(EditorOptions options)
-			: base(options) { }
+        public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.X_Y_Z;		// This is here so the scale can be known through reflection
 
-		#endregion
+        #endregion
 
-		#region Public Properties
+        #region Constructor
 
-		public override PartDesignAllowedScale AllowedScale
-		{
-			get
-			{
-				return PartDesignAllowedScale.X_Y_Z;
-			}
-		}
-		public override PartDesignAllowedRotation AllowedRotation
-		{
-			get
-			{
-				return PartDesignAllowedRotation.X_Y_Z;
-			}
-		}
+        public HangarBayDesign(EditorOptions options)
+            : base(options) { }
 
-		private Model3DGroup _geometry = null;
-		public override Model3D Model
-		{
-			get
-			{
-				if (_geometry == null)
-				{
-					_geometry = CreateGeometry(false);
-				}
+        #endregion
 
-				return _geometry;
-			}
-		}
+        #region Public Properties
 
-		#endregion
+        public override PartDesignAllowedScale AllowedScale
+        {
+            get
+            {
+                return ALLOWEDSCALE;
+            }
+        }
+        public override PartDesignAllowedRotation AllowedRotation
+        {
+            get
+            {
+                return PartDesignAllowedRotation.X_Y_Z;
+            }
+        }
 
-		#region Public Methods
+        private Model3DGroup _geometry = null;
+        public override Model3D Model
+        {
+            get
+            {
+                if (_geometry == null)
+                {
+                    _geometry = CreateGeometry(false);
+                }
 
-		public override Model3D GetFinalModel()
-		{
-			return CreateGeometry(true);
-		}
+                return _geometry;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region Private Methods
+        #region Public Methods
 
-		private Model3DGroup CreateGeometry(bool isFinal)
-		{
-			const double BOXWIDTHHALF = .47d;
-			const double PLATEHEIGHT = .1d;
-			const double PLATEHEIGHTHALF = PLATEHEIGHT * .5d;
-			const double TRIMWIDTH = .1d;
-			const double TRIMWIDTHHALF = TRIMWIDTH * .5d;
+        public override Model3D GetFinalModel()
+        {
+            return CreateGeometry(true);
+        }
 
-			Model3DGroup retVal = new Model3DGroup();
+        #endregion
 
-			GeometryModel3D geometry;
-			MaterialGroup material;
-			DiffuseMaterial diffuse;
-			SpecularMaterial specular;
+        #region Private Methods
 
-			#region Main Box
+        private Model3DGroup CreateGeometry(bool isFinal)
+        {
+            const double BOXWIDTHHALF = .47d;
+            const double PLATEHEIGHT = .1d;
+            const double PLATEHEIGHTHALF = PLATEHEIGHT * .5d;
+            const double TRIMWIDTH = .1d;
+            const double TRIMWIDTHHALF = TRIMWIDTH * .5d;
 
-			geometry = new GeometryModel3D();
-			material = new MaterialGroup();
-			diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.HangarBay));
-			this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.HangarBay));
-			material.Children.Add(diffuse);
-			specular = this.Options.WorldColors.HangarBaySpecular;
-			this.MaterialBrushes.Add(new MaterialColorProps(specular));
-			material.Children.Add(specular);
+            Model3DGroup retVal = new Model3DGroup();
 
-			if (!isFinal)
-			{
-				EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-				material.Children.Add(selectionEmissive);
-				this.SelectionEmissives.Add(selectionEmissive);
-			}
+            GeometryModel3D geometry;
+            MaterialGroup material;
+            DiffuseMaterial diffuse;
+            SpecularMaterial specular;
 
-			geometry.Material = material;
-			geometry.BackMaterial = material;
+            #region Main Box
 
-			if (isFinal)
-			{
-				geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-.5, -.5, -.5), new Point3D(.5, .5, .5));
-			}
-			else
-			{
-				geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-BOXWIDTHHALF, -BOXWIDTHHALF, -BOXWIDTHHALF), new Point3D(BOXWIDTHHALF, BOXWIDTHHALF, BOXWIDTHHALF));
-			}
+            geometry = new GeometryModel3D();
+            material = new MaterialGroup();
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBay));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBay));
+            material.Children.Add(diffuse);
+            specular = WorldColors.HangarBaySpecular;
+            this.MaterialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
 
-			retVal.Children.Add(geometry);
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                this.SelectionEmissives.Add(selectionEmissive);
+            }
 
-			#endregion
+            geometry.Material = material;
+            geometry.BackMaterial = material;
 
-			if (!isFinal)
-			{
-				#region Plates
+            if (isFinal)
+            {
+                geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-.5, -.5, -.5), new Point3D(.5, .5, .5));
+            }
+            else
+            {
+                geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-BOXWIDTHHALF, -BOXWIDTHHALF, -BOXWIDTHHALF), new Point3D(BOXWIDTHHALF, BOXWIDTHHALF, BOXWIDTHHALF));
+            }
 
-				for (int cntr = -1; cntr <= 1; cntr += 2)
-				{
-					geometry = new GeometryModel3D();
-					material = new MaterialGroup();
-					diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.HangarBayTrim));
-					this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.HangarBayTrim));
-					material.Children.Add(diffuse);
-					specular = this.Options.WorldColors.HangarBayTrimSpecular;
-					this.MaterialBrushes.Add(new MaterialColorProps(specular));
-					material.Children.Add(specular);
+            retVal.Children.Add(geometry);
 
-					//if (!isFinal)
-					//{
-					EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-					material.Children.Add(selectionEmissive);
-					this.SelectionEmissives.Add(selectionEmissive);
-					//}
+            #endregion
 
-					geometry.Material = material;
-					geometry.BackMaterial = material;
+            if (!isFinal)
+            {
+                #region Plates
 
-					double z = (.5d - PLATEHEIGHTHALF) * cntr;
-					geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-.5d, -.5d, z - PLATEHEIGHTHALF), new Point3D(.5d, .5d, z + PLATEHEIGHTHALF));
+                for (int cntr = -1; cntr <= 1; cntr += 2)
+                {
+                    geometry = new GeometryModel3D();
+                    material = new MaterialGroup();
+                    diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim));
+                    this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim));
+                    material.Children.Add(diffuse);
+                    specular = WorldColors.HangarBayTrimSpecular;
+                    this.MaterialBrushes.Add(new MaterialColorProps(specular));
+                    material.Children.Add(specular);
 
-					retVal.Children.Add(geometry);
-				}
+                    //if (!isFinal)
+                    //{
+                    EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                    material.Children.Add(selectionEmissive);
+                    this.SelectionEmissives.Add(selectionEmissive);
+                    //}
 
-				#endregion
+                    geometry.Material = material;
+                    geometry.BackMaterial = material;
 
-				#region Supports
+                    double z = (.5d - PLATEHEIGHTHALF) * cntr;
+                    geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(-.5d, -.5d, z - PLATEHEIGHTHALF), new Point3D(.5d, .5d, z + PLATEHEIGHTHALF));
 
-				for (int xCntr = -1; xCntr <= 1; xCntr += 2)
-				{
-					for (int yCntr = -1; yCntr <= 1; yCntr += 2)
-					{
-						geometry = new GeometryModel3D();
-						material = new MaterialGroup();
-						diffuse = new DiffuseMaterial(new SolidColorBrush(this.Options.WorldColors.HangarBayTrim));
-						this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.Options.WorldColors.HangarBayTrim));
-						material.Children.Add(diffuse);
-						specular = this.Options.WorldColors.HangarBayTrimSpecular;
-						this.MaterialBrushes.Add(new MaterialColorProps(specular));
-						material.Children.Add(specular);
+                    retVal.Children.Add(geometry);
+                }
 
-						//if (!isFinal)
-						//{
-						EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-						material.Children.Add(selectionEmissive);
-						this.SelectionEmissives.Add(selectionEmissive);
-						//}
+                #endregion
 
-						geometry.Material = material;
-						geometry.BackMaterial = material;
+                #region Supports
 
-						double x = (.5d - TRIMWIDTHHALF) * xCntr;
-						double y = (.5d - TRIMWIDTHHALF) * yCntr;
-						geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(x - TRIMWIDTHHALF, y - TRIMWIDTHHALF, -.5d), new Point3D(x + TRIMWIDTHHALF, y + TRIMWIDTHHALF, .5d));
+                for (int xCntr = -1; xCntr <= 1; xCntr += 2)
+                {
+                    for (int yCntr = -1; yCntr <= 1; yCntr += 2)
+                    {
+                        geometry = new GeometryModel3D();
+                        material = new MaterialGroup();
+                        diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim));
+                        this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim));
+                        material.Children.Add(diffuse);
+                        specular = WorldColors.HangarBayTrimSpecular;
+                        this.MaterialBrushes.Add(new MaterialColorProps(specular));
+                        material.Children.Add(specular);
 
-						retVal.Children.Add(geometry);
-					}
-				}
+                        //if (!isFinal)
+                        //{
+                        EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                        material.Children.Add(selectionEmissive);
+                        this.SelectionEmissives.Add(selectionEmissive);
+                        //}
 
-				#endregion
-			}
+                        geometry.Material = material;
+                        geometry.BackMaterial = material;
 
-			//	Transform
-			Transform3DGroup transform = new Transform3DGroup();
-			if (isFinal)
-			{
-				transform.Children.Add(_scaleTransform.Clone());
-				transform.Children.Add(new RotateTransform3D(_rotateTransform.Clone()));
-				transform.Children.Add(_translateTransform.Clone());
-			}
-			else
-			{
-				transform.Children.Add(_scaleTransform);
-				transform.Children.Add(new RotateTransform3D(_rotateTransform));
-				transform.Children.Add(_translateTransform);
-			}
-			retVal.Transform = transform;
+                        double x = (.5d - TRIMWIDTHHALF) * xCntr;
+                        double y = (.5d - TRIMWIDTHHALF) * yCntr;
+                        geometry.Geometry = UtilityWPF.GetCube_IndependentFaces(new Point3D(x - TRIMWIDTHHALF, y - TRIMWIDTHHALF, -.5d), new Point3D(x + TRIMWIDTHHALF, y + TRIMWIDTHHALF, .5d));
 
-			//	Exit Function
-			return retVal;
-		}
+                        retVal.Children.Add(geometry);
+                    }
+                }
 
-		#endregion
-	}
+                #endregion
+            }
 
-	#endregion
-	#region Class: HangarBay
+            // Transform
+            retVal.Transform = GetTransformForGeometry(isFinal);
 
-	public class HangarBay
-	{
-		public const string PARTTYPE = "HangarBay";
-	}
+            // Exit Function
+            return retVal;
+        }
 
-	#endregion
+        #endregion
+    }
+
+    #endregion
+    #region Class: HangarBay
+
+    public class HangarBay
+    {
+        public const string PARTTYPE = "HangarBay";
+    }
+
+    #endregion
 }
