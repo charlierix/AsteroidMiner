@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.CollisionShapes"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:newton="clr-namespace:Game.Newt.NewtonDynamics_153;assembly=Game.Newt.NewtonDynamics_153"
+    xmlns:newton="clr-namespace:Game.Newt.v1.NewtonDynamics1;assembly=Game.Newt.v1.NewtonDynamics1"
     Title="Collision Shapes" Height="600" Width="800" Loaded="Window_Loaded" Closed="Window_Closed">
     <DockPanel LastChildFill="True">
         <Grid Name="grdPanel" Width="250.075" DockPanel.Dock="Left">

@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.ShipCameraTester"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Ship Camera Tester" ResizeMode="CanResizeWithGrip" Width="800" Height="600" Loaded="Window_Loaded" Closed="Window_Closed">
+        Title="Ship Camera Tester" ResizeMode="CanResizeWithGrip" Width="1024" Height="768" Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <Style TargetType="Button">
             <Setter Property="Margin" Value="0,2"/>

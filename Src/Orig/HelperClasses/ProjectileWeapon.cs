@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.Map;
 using Game.Orig.Math3D;
 
@@ -540,7 +540,7 @@ namespace Game.Orig.HelperClassesOrig
                 ball.Velocity.Add(_ship.Ball.Velocity);
 
                 // Make a projectile
-                Projectile projectile = new Projectile(ball, _ship.Token, _projectileSettings.IgnoreOtherProjectiles, _projectileSettings.Pain, _map, _projectileSettings.Qual, TokenGenerator.Instance.NextToken());
+                Projectile projectile = new Projectile(ball, _ship.Token, _projectileSettings.IgnoreOtherProjectiles, _projectileSettings.Pain, _map, _projectileSettings.Qual, TokenGenerator.NextToken());
 
                 // Set up explosion and fuse settings
                 if (_projectileSettings.Explosion != null)

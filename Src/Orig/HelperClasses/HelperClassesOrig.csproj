@@ -80,9 +80,9 @@
     <Compile Include="TractorBeamCone.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
-      <Name>HelperClasses</Name>
+      <Name>HelperClassesCore</Name>
     </ProjectReference>
     <ProjectReference Include="..\Map\Map.csproj">
       <Project>{9595B310-A0E9-48A0-A011-91584138C027}</Project>

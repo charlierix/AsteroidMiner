@@ -35,6 +35,7 @@
         </Grid.RowDefinitions>
 
         <TabControl>
+            <!-- About -->
             <TabItem Header="About">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -105,6 +106,12 @@
                         <TextBlock Text="The implementation of voronoi has a mozilla licence (other links in the code)" Style="{StaticResource ackDescription}"/>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.mozilla.org/MPL/"/></Hyperlink></TextBlock>
 
+                        <TextBlock Text="Delaunay/Voronoi 3D" Style="{StaticResource ackHeader}"/>
+                        <!--<TextBlock Text="The 3D implementation (MIConvexHull) has GNU Lesser Public Licence 2.1" Style="{StaticResource ackDescription}"/>-->
+
+                        <TextBlock Style="{StaticResource ackDescription}">The 3D implementation (<TextBlock Style="{StaticResource ackLink}" Margin="0"><Hyperlink NavigateUri="https://miconvexhull.codeplex.com/" TextDecorations="None" Click="Hyperlink_Click"><Run Text="MIConvexHull"/></Hyperlink></TextBlock>) has GNU Lesser Public Licence 2.1</TextBlock> 
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://www.gnu.org/licenses/lgpl-2.1.html"/></Hyperlink></TextBlock>
+
                         <TextBlock Text="Clipper" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="This is a library that does some 2D polygon combinations (intersect, union)" Style="{StaticResource ackDescription}"/>
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://sourceforge.net/projects/polyclipping/"/></Hyperlink></TextBlock>
@@ -125,6 +132,21 @@
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="www.gamedev.net"/></Hyperlink></TextBlock>
 
                         <TextBlock Text="Over time, I've gotten better about putting links to sources in my comments.  But I'm sure there's quite a few methods that have no acknowledgments.  If you see any of your code, and it's not acknowleged, let me know so I can give proper credit." Margin="0,12" Style="{StaticResource ackDescription}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Misc -->
+            <TabItem Header="Cool Sites">
+                <ScrollViewer Name="pnlMisc" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="Boxcar 2D" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="Car evolver (runs online)" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://boxcar2d.com"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Gene Pool / Swimbots" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="This is a very good simulation of evolution.  I've wanted to recreate it for a long time." Style="{StaticResource ackDescription}"/>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.swimbots.com"/></Hyperlink></TextBlock>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

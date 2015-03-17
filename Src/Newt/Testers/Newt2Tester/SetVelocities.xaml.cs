@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
@@ -100,11 +100,11 @@ namespace Game.Newt.Testers.Newt2Tester
 
 		private double GetTranslationSpeed()
 		{
-			return UtilityHelper.GetScaledValue_Capped(.1d, 50d, trkSpeed.Minimum, trkSpeed.Maximum, trkSpeed.Value);
+			return UtilityCore.GetScaledValue_Capped(.1d, 50d, trkSpeed.Minimum, trkSpeed.Maximum, trkSpeed.Value);
 		}
 		private double GetRotationSpeed()
 		{
-			return UtilityHelper.GetScaledValue_Capped(.1d, 20d, trkSpeed.Minimum, trkSpeed.Maximum, trkSpeed.Value);
+			return UtilityCore.GetScaledValue_Capped(.1d, 20d, trkSpeed.Minimum, trkSpeed.Maximum, trkSpeed.Value);
 		}
 
 		private bool GetOverwriteSetting()

@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.Map;
 
@@ -208,7 +208,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
 
             // Store the value
-            _exposedProps.SizeIfFixed = UtilityHelper.GetScaledValue(_exposedProps.MinRandSize, _exposedProps.MaxRandSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
+            _exposedProps.SizeIfFixed = UtilityCore.GetScaledValue(_exposedProps.MinRandSize, _exposedProps.MaxRandSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
             toolTip1.SetToolTip(trkSize, _exposedProps.SizeIfFixed.ToString());
 
             // Raise Event

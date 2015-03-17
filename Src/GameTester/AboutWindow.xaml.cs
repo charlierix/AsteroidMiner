@@ -51,7 +51,7 @@ The idea is that the bots will evolve to be optimal for the map they are in.  A 
             lblPointsOfInterest.Text =
 @"Everything in the Orig folder is old stuff, pre wpf.  Once wpf came out, I had to rename a lot of the math classes with My in front of them.  There may still be some useful stuff in there though.
 
-The Game.Newt.HelperClasses project has quite a bit in there.  It is a combination of other people's code and mine:
+The Game.HelperClassesWPF project has quite a bit in there.  It is a combination of other people's code and mine:
 	- Extenders has some handy extension methods (Vector.ToPoint() and Point.ToVector() should ship native, they make life a lot easier)
 	- Math3D has a lot in it
 	- UtilityWPF has a bunch of color stuff, as well as a bunch of 3D geometry builders (cube, sphere, etc)
@@ -60,7 +60,7 @@ The Game.Newt.HelperClasses project has quite a bit in there.  It is a combinati
 	- Trackball is reworked from the codeplex 3D tools Trackball, it has an easy way to set up mappings
 	- ScreenSpaceLines3D is also from codeplex 3D tools, it is very useful to draw lines in 3D
 
-Game.Newt.NewtonDynamics is a C# wrapper to the newton dll.  Newton is a great engine, I have a feeling a lot of the downloads will just be for this.";
+Game.Newt.v2.NewtonDynamics is a C# wrapper to the newton dll.  Newton is a great engine, I have a feeling a lot of the downloads will just be for this.";
 
             txtLicense.Text =
 @"This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
@@ -109,6 +109,12 @@ Permission is granted to anyone to use this software for any purpose, including 
             if (senderCast == null)
             {
                 return null;
+            }
+
+            if(senderCast.NavigateUri != null)
+            {
+                // The link was explicitely set
+                return senderCast.NavigateUri.AbsoluteUri;
             }
 
             // The link is the text in the inline

@@ -1,0 +1,191 @@
+﻿<UserControl x:Class="Game.Newt.v2.FlyingBeans.PanelBeanProps"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+             mc:Ignorable="d"
+             MinWidth="200" MaxHeight="550">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="BeanStylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource panelBorder}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+
+                <!-- TODO: Show some helper labels that show how long it would take to use up fuel/energy based on current settings -->
+
+                <!-- Consumption -->
+                <Expander IsExpanded="False" Header="Consumption">
+                    <Border Style="{StaticResource borderInsideExpander}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Thrust Force" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="0" Name="trkThrustForce" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="1" Text="Fuel Draw" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="1" Name="trkFuelDraw" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="2" Text="Gravity Sensor Energy Draw" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="2" Name="trkGravitySensorEnergyDraw" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="3" Text="Spin Sensor Energy Draw" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="3" Name="trkSpinSensorEnergyDraw" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="4" Text="Brain Energy Draw" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="4" Name="trkBrainEnergyDraw" Style="{StaticResource slider_local}"/>
+
+                            <!-- Projected Energy Duration (energy tank scale one - 1 brain - 1 sensor) -->
+                            <!-- Projected Fuel Duration (fuel tank scale one - 1 thruster) -->
+
+                        </Grid>
+                    </Border>
+                </Expander>
+
+                <!-- Neural -->
+                <Expander IsExpanded="False" Header="Neural">
+                    <Border Style="{StaticResource borderInsideExpander}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Gravity Sensor" Style="{StaticResource labelMinorHeader}"/>
+
+                            <TextBlock Grid.Row="1" Text="Neuron Density" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="1" Name="trkGravSensorNeuronDensity" Style="{StaticResource slider_local}"/>
+
+
+                            <TextBlock Grid.Row="2" Text="Brain" Style="{StaticResource labelMinorHeader}"/>
+
+                            <TextBlock Grid.Row="3" Text="Neuron Density" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="3" Name="trkBrainNeuronDensity" Style="{StaticResource slider_local}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="4">
+                                <TextBlock Text="Brain Chemical" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="Density" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="4" Name="trkBrainChemicalDensity" Style="{StaticResource slider_local}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="5">
+                                <TextBlock Text="Internal Link" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="Multiplier" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="5" Name="trkBrainInternalLinks" Style="{StaticResource slider_local}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="6">
+                                <TextBlock Text="External Link" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="to sensor" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="6" Name="trkBrainExternalLinkSensor" Style="{StaticResource slider_local}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="7">
+                                <TextBlock Text="External Link" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="to brain" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="7" Name="trkBrainExternalLinkBrain" Style="{StaticResource slider_local}"/>
+
+
+                            <TextBlock Grid.Row="8" Text="Thruster" Style="{StaticResource labelMinorHeader}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="9">
+                                <TextBlock Text="External Link" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="to sensor" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="9" Name="trkThrusterExternalLinkSensor" Style="{StaticResource slider_local}"/>
+
+                            <StackPanel Grid.Column="0" Grid.Row="10">
+                                <TextBlock Text="External Link" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="to brain" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="10" Name="trkThrusterExternalLinkBrain" Style="{StaticResource slider_local}"/>
+                        </Grid>
+                    </Border>
+                </Expander>
+
+                <!-- Density -->
+                <Expander IsExpanded="False" Header="Density">
+                    <Border Style="{StaticResource borderInsideExpander}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Text="Brain" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="0" Name="trkBrainDensity" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="1" Text="Gravity Sensor" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="1" Name="trkGravSensorDensity" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="2" Text="Energy Tank" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="2" Name="trkEnergyTankDensity" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="3" Text="Fuel Tank" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="3" Name="trkFuelTankDensity" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="4" Text="Fuel" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="4" Name="trkFuelDensity" Style="{StaticResource slider_local}"/>
+
+                            <TextBlock Grid.Row="5" Text="Thruster" Style="{StaticResource labelLeft_local}"/>
+                            <helpctrl:SliderShowValues Grid.Row="5" Name="trkThrusterDensity" Style="{StaticResource slider_local}"/>
+
+                            <!-- TODO: Make this slider on a log scale -->
+                            <StackPanel Grid.Column="0" Grid.Row="6">
+                                <TextBlock Text="Moment of" Style="{StaticResource labelLeft_local}"/>
+                                <TextBlock Text="inertia mult" Style="{StaticResource labelLeft_local}"/>
+                            </StackPanel>
+                            <helpctrl:SliderShowValues Grid.Row="6" Name="trkMomentOfInertia" Style="{StaticResource slider_local}"/>
+                        </Grid>
+                    </Border>
+                </Expander>
+
+            </StackPanel>
+
+        </ScrollViewer>
+    </Border>
+</UserControl>

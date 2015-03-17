@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.Math3D;
 using Game.Orig.Map;
 using Game.Orig.HelperClassesWPF;
@@ -56,7 +56,7 @@ namespace Game.Orig.TestersWPF
         private MyVector _boundryUpper = new MyVector(BOUNDRY, BOUNDRY, BOUNDRY);
         //private GravityController _gravController = null;
 
-        private Game.Newt.HelperClasses.TrackBallRoam _trackball = null;
+        private Game.HelperClassesWPF.TrackBallRoam _trackball = null;
 
         #endregion
 
@@ -67,10 +67,10 @@ namespace Game.Orig.TestersWPF
             InitializeComponent();
 
             // Trackball
-            _trackball = new Game.Newt.HelperClasses.TrackBallRoam(_camera);
+            _trackball = new Game.HelperClassesWPF.TrackBallRoam(_camera);
             _trackball.EventSource = grid1;
             _trackball.AllowZoomOnMouseWheel = true;
-            _trackball.Mappings.AddRange(Game.Newt.HelperClasses.TrackBallMapping.GetPrebuilt(Game.Newt.HelperClasses.TrackBallMapping.PrebuiltMapping.MouseComplete));
+            _trackball.Mappings.AddRange(Game.HelperClassesWPF.TrackBallMapping.GetPrebuilt(Game.HelperClassesWPF.TrackBallMapping.PrebuiltMapping.MouseComplete));
 
             // Setup the map
             _map.CollisionHandler = new CollisionHandler();
@@ -317,7 +317,7 @@ namespace Game.Orig.TestersWPF
 
             Ball ball = new Ball(pos, dirFacing, radius, mass, ELASTICITY, KINETICFRICTION, STATICFRICTION, _boundryLower, _boundryUpper);
 
-            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.Instance.NextToken());
+            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.NextToken());
             _map.Add(blip);
 
             // WPF Rendering

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.Orig.Math3D
 {
@@ -132,7 +132,7 @@ namespace Game.Orig.Math3D
     /// triangles should only be used for physics, not graphics, so the total number of triangles should be fewer.
     /// (use DirectX's, or OpenGL's, or XAML3D's, or whoever's primitives for graphics)
     /// 
-    /// NOTE: See Game.Newt.HelperClasses.Triangle for a better implementation
+    /// NOTE: See Game.HelperClassesWPF.Triangle for a better implementation
     /// </remarks>
     public class Triangle
     {
@@ -385,7 +385,7 @@ namespace Game.Orig.Math3D
             return retVal;
         }
 
-        //NOTE: These two methods are wrong, see the proper implementation in Game.Newt.HelperClasses.Math3D
+        //NOTE: These two methods are wrong, see the proper implementation in Game.HelperClassesWPF.Math3D
         /// <summary>
         /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
         /// rather than cube)

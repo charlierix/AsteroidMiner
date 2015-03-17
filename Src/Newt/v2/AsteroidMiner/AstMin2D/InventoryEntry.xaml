@@ -1,0 +1,112 @@
+﻿<UserControl x:Class="Game.Newt.v2.AsteroidMiner.AstMin2D.InventoryEntry"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+    <UserControl.Resources>
+
+        <Style x:Key="mainBorder" TargetType="Border">
+            <Setter Property="Background" Value="#30FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#20000000"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Margin" Value="3"/>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=IsMouseOver}" Value="True" >
+                    <Setter Property="Background" Value="#78FFFFFF"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="baseTextBlock" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{Binding Foreground}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="titleTextBlock" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="subTextBlock" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Opacity" Value=".75"/>
+        </Style>
+        <Style x:Key="subNumTextBlock" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
+            <!--<Setter Property="FontSize" Value="10"/>-->
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style x:Key="actionPanel" TargetType="UniformGrid">
+            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Margin" Value="0,3"/>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=Border, AncestorLevel=1}, Path=IsMouseOver}" Value="True" >
+                    <Setter Property="Visibility" Value="Visible" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Margin" Value="1"/>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource mainBorder}">
+        <Grid Margin="0,0,4,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Icon -->
+            <ContentPresenter Grid.Column="0" Name="pnlIcon" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Width="75" Height="75"/>
+
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0">
+                <!-- Name -->
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Name="lblName" Style="{StaticResource titleTextBlock}"/>
+                    <TextBlock Name="lblMultipleX" Text="x" Margin="4,0" Style="{StaticResource titleTextBlock}"/>
+                    <TextBlock Name="lblMultiple" Style="{StaticResource titleTextBlock}"/>
+                </StackPanel>
+
+                <Grid Margin="0,3,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" SharedSizeGroup="volume"/>
+                        <ColumnDefinition Width="auto" SharedSizeGroup="mass"/>
+                        <ColumnDefinition Width="auto" SharedSizeGroup="price"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Volume -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <TextBlock Text="volume" Margin="0,0,4,0" Style="{StaticResource subTextBlock}"/>
+                        <TextBlock Name="lblVolume" Style="{StaticResource subNumTextBlock}"/>
+                    </StackPanel>
+
+                    <!-- Mass -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <TextBlock Text="mass" Margin="10,0,4,0" Style="{StaticResource subTextBlock}"/>
+                        <TextBlock Name="lblMass" Style="{StaticResource subNumTextBlock}"/>
+                    </StackPanel>
+
+                    <!-- Price -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <TextBlock Text="price" Margin="10,0,4,0" Style="{StaticResource subTextBlock}"/>
+                        <TextBlock Name="lblPrice" Style="{StaticResource subNumTextBlock}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <!-- TODO: Define a style for these buttons -->
+            <UniformGrid Grid.Column="3" Name="pnlActionButtons" Style="{StaticResource actionPanel}" Button.Click="ActionButton_Click"/>
+        </Grid>
+    </Border>
+</UserControl>

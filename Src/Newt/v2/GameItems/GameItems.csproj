@@ -1,0 +1,192 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{A3CA9A78-4FAF-47C0-9CD0-9B864DF7BAE5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Game.Newt.v2.GameItems</RootNamespace>
+    <AssemblyName>Game.Newt.v2.GameItems</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CameraPool.cs" />
+    <Compile Include="Container.cs" />
+    <Compile Include="Controls\ProgressBarGame.xaml.cs">
+      <DependentUpon>ProgressBarGame.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\Icon3D.xaml.cs">
+      <DependentUpon>Icon3D.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ShipProgressBarManager.cs" />
+    <Compile Include="Controls\ShipSelectorWindow.xaml.cs">
+      <DependentUpon>ShipSelectorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ShipViewerWindow.xaml.cs">
+      <DependentUpon>ShipViewerWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Converter.cs" />
+    <Compile Include="Explosion.cs" />
+    <Compile Include="Fields.cs" />
+    <Compile Include="IMapObject.cs" />
+    <Compile Include="ItemOptions.cs" />
+    <Compile Include="ItemSelectDragLogic.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="MapObjectChase_Orientation.cs" />
+    <Compile Include="MapObjectChase_Point.cs" />
+    <Compile Include="MapParts\Mineral.cs" />
+    <Compile Include="MapParts\Projectile.cs" />
+    <Compile Include="MutateUtility.cs" />
+    <Compile Include="Neural.cs" />
+    <Compile Include="PartBase.cs" />
+    <Compile Include="PartSeparator.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SharedVisuals.cs" />
+    <Compile Include="Ship.cs" />
+    <Compile Include="ShipEditor\DesignPart.cs" />
+    <Compile Include="ShipEditor\DraggableModifier.cs" />
+    <Compile Include="ShipEditor\DraggingDropPart.cs" />
+    <Compile Include="ShipEditor\Editor.xaml.cs">
+      <DependentUpon>Editor.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ShipEditor\EditorColors.cs" />
+    <Compile Include="ShipEditor\EditorOptions.cs" />
+    <Compile Include="ShipEditor\InfoWindow.xaml.cs">
+      <DependentUpon>InfoWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ShipEditor\LayerRow.xaml.cs">
+      <DependentUpon>LayerRow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ShipEditor\SelectedParts.cs" />
+    <Compile Include="ShipEditor\ShipEditorWindow.xaml.cs">
+      <DependentUpon>ShipEditorWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ShipEditor\UndoRedoItem.cs" />
+    <Compile Include="ShipParts\AmmoBox.cs" />
+    <Compile Include="ShipParts\BeamGun.cs" />
+    <Compile Include="ShipParts\Brain.cs" />
+    <Compile Include="ShipParts\CameraColorRGB.cs" />
+    <Compile Include="ShipParts\CargoBay.cs" />
+    <Compile Include="ShipParts\ConverterEnergyToAmmo.cs" />
+    <Compile Include="ShipParts\ConverterEnergyToFuel.cs" />
+    <Compile Include="ShipParts\ConverterFuelToEnergy.cs" />
+    <Compile Include="ShipParts\ConverterMatterToAmmo.cs" />
+    <Compile Include="ShipParts\ConverterMatterToEnergy.cs" />
+    <Compile Include="ShipParts\ConverterMatterToFuel.cs" />
+    <Compile Include="ShipParts\ConverterRadiationToEnergy.cs" />
+    <Compile Include="ShipParts\EnergyTank.cs" />
+    <Compile Include="ShipParts\Eye.cs" />
+    <Compile Include="ShipParts\FuelTank.cs" />
+    <Compile Include="ShipParts\GrappleGun.cs" />
+    <Compile Include="ShipParts\HangarBay.cs" />
+    <Compile Include="ShipParts\PlasmaTank.cs" />
+    <Compile Include="ShipParts\ProjectileGun.cs" />
+    <Compile Include="ShipParts\SelfRepair.cs" />
+    <Compile Include="ShipParts\SensorCollision.cs" />
+    <Compile Include="ShipParts\SensorFluid.cs" />
+    <Compile Include="ShipParts\SensorGravity.cs" />
+    <Compile Include="ShipParts\SensorInternalForce.cs" />
+    <Compile Include="ShipParts\SensorNetForce.cs" />
+    <Compile Include="ShipParts\SensorRadiation.cs" />
+    <Compile Include="ShipParts\SensorSpin.cs" />
+    <Compile Include="ShipParts\SensorTractor.cs" />
+    <Compile Include="ShipParts\SensorVelocity.cs" />
+    <Compile Include="ShipParts\ShieldEnergy.cs" />
+    <Compile Include="ShipParts\ShieldKinetic.cs" />
+    <Compile Include="ShipParts\ShieldTractor.cs" />
+    <Compile Include="ShipParts\Thruster.cs" />
+    <Compile Include="ShipParts\TractorBeam.cs" />
+    <Compile Include="UpdateManager.cs" />
+    <Compile Include="WorldColors.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\HelperClassesCore\HelperClassesCore.csproj">
+      <Project>{228f5901-5156-43df-b377-627d80b4fdbc}</Project>
+      <Name>HelperClassesCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\HelperClassesWPF\HelperClassesWPF.csproj">
+      <Project>{0f6b42d4-c2c8-499a-897d-76d4ce6d0db6}</Project>
+      <Name>HelperClassesWPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\NewtonDynamics\NewtonDynamics.csproj">
+      <Project>{6c91684b-de51-4cbb-920d-f5b267709799}</Project>
+      <Name>NewtonDynamics</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls\ProgressBarGame.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\Icon3D.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ShipSelectorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\ShipViewerWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ShipEditor\Editor.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ShipEditor\InfoWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ShipEditor\LayerRow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ShipEditor\ShipEditorWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

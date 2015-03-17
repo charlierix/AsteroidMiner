@@ -113,17 +113,17 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
-      <Name>HelperClasses</Name>
+      <Name>HelperClassesCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Newt\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesWPF\HelperClassesWPF.csproj">
       <Project>{0F6B42D4-C2C8-499A-897D-76D4CE6D0DB6}</Project>
-      <Name>HelperClasses %28Newt\HelperClasses%29</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\HelperClassesWPF\HelperClassesWPF.csproj">
-      <Project>{94B5B104-07B0-4014-B17C-E09C6F18F473}</Project>
       <Name>HelperClassesWPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HelperClassesWPF_orig\HelperClassesWPF_orig.csproj">
+      <Project>{94B5B104-07B0-4014-B17C-E09C6F18F473}</Project>
+      <Name>HelperClassesWPF_orig</Name>
     </ProjectReference>
     <ProjectReference Include="..\Map\Map.csproj">
       <Project>{9595B310-A0E9-48A0-A011-91584138C027}</Project>

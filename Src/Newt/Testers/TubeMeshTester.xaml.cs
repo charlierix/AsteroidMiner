@@ -13,8 +13,8 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.Testers
 {

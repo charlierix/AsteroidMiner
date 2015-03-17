@@ -60,6 +60,8 @@
                                 <Button Name="btnShadowMultiStep2" Content="Shadow multi step (no slicing)" Click="btnShadowMultiStep2_Click"/>
 
                                 <Button Name="btnPolyUnion2" Content="Polygon Union" Margin="0,8,0,0" Click="btnPolyUnion2_Click"/>
+
+                                <Button Name="btnTessellateConcave" Content="Tessellate Concave" Margin="0,8,0,0" Click="btnTessellateConcave_Click"/>
                             </StackPanel>
                         </Border>
                     </Expander>
@@ -93,7 +95,7 @@
                                 <Button Name="btnPolyUnionTest5" Content="Polygon Union Test5" Click="btnPolyUnionTest5_Click"/>
 
                                 <!-- These are pretty much throw away.  I ended up downloading that clipper util -->
-                                <StackPanel Visibility="Collapsed">
+                                <StackPanel Visibility="Visible">
                                     <Button Name="btnChainTest1" Content="Chain Test1" Margin="0,8,0,0" Click="btnChainTest1_Click"/>
                                     <Button Name="btnChainTest2" Content="Chain Test2" Click="btnChainTest2_Click"/>
                                     <Button Name="btnChainTest3" Content="Chain Test3" Click="btnChainTest3_Click"/>
@@ -118,6 +120,8 @@
                                 <Button Name="btnIntersectTriangles2" Content="Intersect Triangles 2" Click="btnIntersectTriangles2_Click"/>
                                 <Button Name="btnIntersectTriangles3" Content="Intersect Triangles 3" Click="btnIntersectTriangles3_Click"/>
                                 <Button Name="btnIntersectTriangles3a" Content="Intersect Triangles 3a" Click="btnIntersectTriangles3a_Click"/>
+
+                                <Button Name="btnClosestPointTriangle" Content="Get closest point on triangle" ToolTip="Push this button, then click around on the screen" Margin="0,8,0,0" Click="btnClosestPointTriangle_Click"/>
                             </StackPanel>
                         </Border>
                     </Expander>
@@ -142,7 +146,7 @@
         </Border>
 
         <!-- Viewport -->
-        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12">
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="grdViewPort" Background="#E8E8E8" BorderThickness="2" BorderBrush="Gray" CornerRadius="3" Margin="9,12,12,12" PreviewMouseDown="grdViewPort_MouseDown">
             <Viewport3D Name="_viewport" IsHitTestVisible="False">
                 <!-- Camera -->
                 <Viewport3D.Camera>

@@ -1,0 +1,39 @@
+﻿<UserControl x:Class="Game.Newt.v2.AsteroidMiner.AstMin2D.InfoScreen"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             SizeChanged="UserControl_SizeChanged" Focusable="True" IsHitTestVisible="True" Loaded="UserControl_Loaded" PreviewKeyDown="UserControl_KeyDown">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Stylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource dialogBorder}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- TODO: Make this button look better, throw it in a panel -->
+            <Button Grid.Column="0" Name="btnBack" Content="Back" FontSize="30" FontWeight="Bold" Padding="12,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="btnBack_Click"/>
+
+            <!-- TODO: Show the cargo along the left.  Let them dump cargo if they want -->
+            <!-- TODO: Also show general stats on the bottom left (money, desired accelerations) -->
+
+            <Border Grid.Column="1" Background="#202020" BorderBrush="#101010" BorderThickness="2" Margin="8,0,0,0">
+                <Canvas Name="canvasMap"/>
+            </Border>
+
+            <!-- When there are no controls that get focus, keyboard events quit working.  So using this invisible control for focus -->
+            <!-- NOTE: This only really worked when focus was set from the Loaded event.  Very infuriating -->
+            <!-- TODO: This still isn't working -->
+            <!--<Label Name="lblFocusable" Focusable="True" HorizontalAlignment="Right" VerticalAlignment="Bottom"/>-->
+        </Grid>
+    </Border>
+</UserControl>

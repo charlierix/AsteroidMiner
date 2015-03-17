@@ -130,6 +130,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <None Include="Documentation\Classes - GameItems.pptx" />
+    <None Include="Documentation\Classes - NewtonDynamics.pptx" />
+    <None Include="Documentation\Project Structure.pptx" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -149,17 +152,37 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
-      <Name>HelperClasses</Name>
+      <Name>HelperClassesCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Newt\AsteroidMiner2\AsteroidMiner2.csproj">
+    <ProjectReference Include="..\Newt\v1\AsteroidMiner1\AsteroidMiner1.csproj">
+      <Project>{b2665ad3-8c78-4a12-a6d9-f117225ad904}</Project>
+      <Name>AsteroidMiner1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\Arcanorum\Arcanorum.csproj">
+      <Project>{ecc151be-22ff-4d6d-9a13-27ced43257c2}</Project>
+      <Name>Arcanorum</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\AsteroidMiner\AsteroidMiner.csproj">
       <Project>{A80968C6-78CD-4D22-BFE9-364991784478}</Project>
-      <Name>AsteroidMiner2</Name>
+      <Name>AsteroidMiner</Name>
     </ProjectReference>
     <ProjectReference Include="..\Newt\Testers\Testers.csproj">
       <Project>{713AC9D0-DA1D-40D3-8002-70D2CC5C4D6F}</Project>
       <Name>Testers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\FlyingBeans\FlyingBeans.csproj">
+      <Project>{6f3e4854-5cd6-4863-ab2d-f5beee5ec0d1}</Project>
+      <Name>FlyingBeans</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\GameItems\GameItems.csproj">
+      <Project>{a3ca9a78-4faf-47c0-9cd0-9b864df7bae5}</Project>
+      <Name>GameItems</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\GenePool\GenePool.csproj">
+      <Project>{65b4cecd-3124-4c42-8b02-a4b09f3c8de7}</Project>
+      <Name>GenePool</Name>
     </ProjectReference>
     <ProjectReference Include="..\Orig\HelperClassesGDI\HelperClassesGDI.csproj">
       <Project>{491C4322-B760-4898-AE62-F52029C6C78D}</Project>
@@ -203,9 +226,9 @@
   </Target>
   -->
   <PropertyGroup>
-    <PreBuildEvent>copy "$(ProjectDir)\..\Newt\NewtonDynamics_153\NewtonSource\bin\newton_153.dll" "$(TargetDir)"
+    <PreBuildEvent>copy "$(ProjectDir)\..\Newt\v1\NewtonDynamics\NewtonSource\bin\newton_153.dll" "$(TargetDir)"
 
-copy "$(ProjectDir)\..\Newt\NewtonDynamics\Import\newton.dll" "$(TargetDir)"
-copy "$(ProjectDir)\..\Newt\NewtonDynamics\Import\dJointLibrary.dll" "$(TargetDir)"</PreBuildEvent>
+copy "$(ProjectDir)\..\Newt\v2\NewtonDynamics\Import\newton.dll" "$(TargetDir)"
+copy "$(ProjectDir)\..\Newt\v2\NewtonDynamics\Import\dJointLibrary.dll" "$(TargetDir)"</PreBuildEvent>
   </PropertyGroup>
 </Project>

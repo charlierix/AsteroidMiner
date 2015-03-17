@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.Math3D;
 
@@ -161,7 +161,7 @@ namespace Game.Orig.TestersGDI
         private void trkNorthPos_Scroll(object sender, EventArgs e)
         {
 
-            _north.Y = UtilityHelper.GetScaledValue(MINRADIUS, MAXRADIUS, trkNorthPos.Minimum, trkNorthPos.Maximum, trkNorthPos.Maximum - trkNorthPos.Value);
+            _north.Y = UtilityCore.GetScaledValue(MINRADIUS, MAXRADIUS, trkNorthPos.Minimum, trkNorthPos.Maximum, trkNorthPos.Maximum - trkNorthPos.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledYPos.Checked)
             {
@@ -189,7 +189,7 @@ namespace Game.Orig.TestersGDI
         private void trkSouthPos_Scroll(object sender, EventArgs e)
         {
 
-            _south.Y = -1d * UtilityHelper.GetScaledValue(MINRADIUS, MAXRADIUS, trkSouthPos.Minimum, trkSouthPos.Maximum, trkSouthPos.Value);
+            _south.Y = -1d * UtilityCore.GetScaledValue(MINRADIUS, MAXRADIUS, trkSouthPos.Minimum, trkSouthPos.Maximum, trkSouthPos.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledYPos.Checked)
             {
@@ -217,7 +217,7 @@ namespace Game.Orig.TestersGDI
         private void trkEastPos_Scroll(object sender, EventArgs e)
         {
 
-            _east.X = UtilityHelper.GetScaledValue(MINRADIUS, MAXRADIUS, trkEastPos.Minimum, trkEastPos.Maximum, trkEastPos.Value);
+            _east.X = UtilityCore.GetScaledValue(MINRADIUS, MAXRADIUS, trkEastPos.Minimum, trkEastPos.Maximum, trkEastPos.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledXPos.Checked)
             {
@@ -245,7 +245,7 @@ namespace Game.Orig.TestersGDI
         private void trkWestPos_Scroll(object sender, EventArgs e)
         {
 
-            _west.X = -1d * UtilityHelper.GetScaledValue(MINRADIUS, MAXRADIUS, trkWestPos.Minimum, trkWestPos.Maximum, trkWestPos.Maximum - trkWestPos.Value);
+            _west.X = -1d * UtilityCore.GetScaledValue(MINRADIUS, MAXRADIUS, trkWestPos.Minimum, trkWestPos.Maximum, trkWestPos.Maximum - trkWestPos.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledXPos.Checked)
             {
@@ -313,7 +313,7 @@ namespace Game.Orig.TestersGDI
         private void trkNorthMass_Scroll(object sender, EventArgs e)
         {
 
-            _north.Mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, trkNorthMass.Minimum, trkNorthMass.Maximum, trkNorthMass.Maximum - trkNorthMass.Value);
+            _north.Mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, trkNorthMass.Minimum, trkNorthMass.Maximum, trkNorthMass.Maximum - trkNorthMass.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledYMass.Checked)
             {
@@ -341,7 +341,7 @@ namespace Game.Orig.TestersGDI
         private void trkSouthMass_Scroll(object sender, EventArgs e)
         {
 
-            _south.Mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, trkSouthMass.Minimum, trkSouthMass.Maximum, trkSouthMass.Value);
+            _south.Mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, trkSouthMass.Minimum, trkSouthMass.Maximum, trkSouthMass.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledYMass.Checked)
             {
@@ -369,7 +369,7 @@ namespace Game.Orig.TestersGDI
         private void trkEastMass_Scroll(object sender, EventArgs e)
         {
 
-            _east.Mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, trkEastMass.Minimum, trkEastMass.Maximum, trkEastMass.Value);
+            _east.Mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, trkEastMass.Minimum, trkEastMass.Maximum, trkEastMass.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledXMass.Checked)
             {
@@ -397,7 +397,7 @@ namespace Game.Orig.TestersGDI
         private void trkWestMass_Scroll(object sender, EventArgs e)
         {
 
-            _west.Mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, trkWestMass.Minimum, trkWestMass.Maximum, trkWestMass.Maximum - trkWestMass.Value);
+            _west.Mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, trkWestMass.Minimum, trkWestMass.Maximum, trkWestMass.Maximum - trkWestMass.Value);
 
             if (!_isProgramaticPointMass1D && chkCoupledXMass.Checked)
             {
@@ -427,7 +427,7 @@ namespace Game.Orig.TestersGDI
 
         private void trkAngularMomentum_Scroll(object sender, EventArgs e)
         {
-            double magnitude = UtilityHelper.GetScaledValue(MINMOMENTUM, MAXMOMENTUM, trkAngularMomentum.Minimum, trkAngularMomentum.Maximum, trkAngularMomentum.Value);
+            double magnitude = UtilityCore.GetScaledValue(MINMOMENTUM, MAXMOMENTUM, trkAngularMomentum.Minimum, trkAngularMomentum.Maximum, trkAngularMomentum.Value);
 
             _rigidBody.AngularMomentum.StoreNewValues(new MyVector(0, 0, magnitude));
 

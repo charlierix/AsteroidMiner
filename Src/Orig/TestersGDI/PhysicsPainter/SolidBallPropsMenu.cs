@@ -7,7 +7,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Math3D;
@@ -321,7 +321,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             {
                 case BallProps.SizeModes.Draw:
                     //TODO:  Use a different line color
-                    ballRadius = UtilityHelper.GetScaledValue(MINTARGET, MAXTARGET, 0d, 1d, .75d);
+                    ballRadius = UtilityCore.GetScaledValue(MINTARGET, MAXTARGET, 0d, 1d, .75d);
                     break;
 
                 case BallProps.SizeModes.Fixed:
@@ -337,7 +337,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
 
             // Figure out the radius to draw
-            double radiusPercent = UtilityHelper.GetScaledValue_Capped(MINRADIUSPERCENT, MAXRADIUSPERCENT, MINTARGET, MAXTARGET, ballRadius);
+            double radiusPercent = UtilityCore.GetScaledValue_Capped(MINRADIUSPERCENT, MAXRADIUSPERCENT, MINTARGET, MAXTARGET, ballRadius);
 
             #endregion
 
@@ -406,7 +406,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             double velocityPercent = 0d;
             if (realVelocity >= MINLENGTHPERCENT)
             {
-                velocityPercent = UtilityHelper.GetScaledValue_Capped(MINLENGTHPERCENT, MAXLENGTHPERCENT, MINTARGET, MAXTARGET, realVelocity);
+                velocityPercent = UtilityCore.GetScaledValue_Capped(MINLENGTHPERCENT, MAXLENGTHPERCENT, MINTARGET, MAXTARGET, realVelocity);
             }
 
             #endregion
@@ -476,8 +476,8 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             }
             else
             {
-                double derivedMinTarget = UtilityHelper.GetScaledValue(minTarget, maxTarget, 0d, 1d, .9d);
-                double colorPercent = UtilityHelper.GetScaledValue_Capped(0d, 1d, derivedMinTarget, maxTarget * 3d, actualValue);
+                double derivedMinTarget = UtilityCore.GetScaledValue(minTarget, maxTarget, 0d, 1d, .9d);
+                double colorPercent = UtilityCore.GetScaledValue_Capped(0d, 1d, derivedMinTarget, maxTarget * 3d, actualValue);
 
                 return UtilityGDI.AlphaBlend(Color.Firebrick, Color.OliveDrab, colorPercent);
             }

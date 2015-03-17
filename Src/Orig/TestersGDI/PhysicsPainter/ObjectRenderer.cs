@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Text;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Map;
@@ -375,7 +375,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             #endregion
 
             // Figure out the line thickness
-            double lineThickness = UtilityHelper.GetScaledValue_Capped(4d, 15d, MINSIZE, MAXSIZE, radius);
+            double lineThickness = UtilityCore.GetScaledValue_Capped(4d, 15d, MINSIZE, MAXSIZE, radius);
 
             // Draw Icon
             switch (collisionStyle)

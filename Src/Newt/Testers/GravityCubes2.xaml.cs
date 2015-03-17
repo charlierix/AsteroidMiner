@@ -12,10 +12,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics_153;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v1.NewtonDynamics1;
 
 namespace Game.Newt.Testers
 {
@@ -199,7 +199,7 @@ namespace Game.Newt.Testers
 
                 _didRandomizeVelocities = true;
 
-                Vector3D newVelocity = Math3D.GetRandomVectorSpherical(MAXRANDVELOCITY * _randVelMultiplier);
+                Vector3D newVelocity = Math3D.GetRandomVector_Spherical(MAXRANDVELOCITY * _randVelMultiplier);
 
                 e.AddImpulse(newVelocity, sender.CenterOfMass.ToVector());
 
@@ -249,22 +249,22 @@ namespace Game.Newt.Testers
                 double ratioX, ratioY, ratioZ;
                 if (chkRandomRatios.IsChecked.Value)
                 {
-                    ratioX = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
-                    ratioY = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
-                    ratioZ = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
+                    ratioX = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
+                    ratioY = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
+                    ratioZ = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
                 }
                 else
                 {
-                    ratioX = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
-                    ratioY = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
-                    ratioZ = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
+                    ratioX = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
+                    ratioY = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
+                    ratioZ = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
                 }
 
                 #region WPF Model
 
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(255, 64, 192))));
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(64, 192))));
                 materials.Children.Add(new SpecularMaterial(Brushes.White, 100d));
 
                 // Geometry Model
@@ -276,7 +276,7 @@ namespace Game.Newt.Testers
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVectorSpherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
                 transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector(_boundryMin, _boundryMax)));
 
                 // Model Visual
@@ -300,7 +300,7 @@ namespace Game.Newt.Testers
                 {
                     // If I try to be realistic, then it's boring, so I'll scale the result.  (density shrinks a bit as things get larger)
                     double mass = ratioX * ratioY * ratioZ;
-                    mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
+                    mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
                     body.Mass = Convert.ToSingle(mass);
                 }
 
@@ -395,7 +395,7 @@ namespace Game.Newt.Testers
         {
             for (int cntr = 1; cntr <= 1; cntr++)
             {
-                Color lineColor = UtilityWPF.GetRandomColor(255, 64, 192);
+                Color lineColor = UtilityWPF.GetRandomColor(64, 192);
 
                 ScreenSpaceLines3D lineModel = new ScreenSpaceLines3D(false);
                 lineModel.Thickness = 1d;
@@ -432,7 +432,7 @@ namespace Game.Newt.Testers
             // Material
             MaterialGroup materials = new MaterialGroup();
             Color color = Colors.Black;
-            color.ScA = UtilityWPF.GetRandomColor(255, 64, 192).ScA;
+            color.ScA = UtilityWPF.GetRandomColor(64, 192).ScA;
             materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
             materials.Children.Add(new EmissiveMaterial(new SolidColorBrush(color)));
             //materials.Children.Add(new SpecularMaterial(Brushes.White, 100d));
@@ -519,7 +519,7 @@ namespace Game.Newt.Testers
 
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(255, 64, 192))));
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(64, 192))));
                 materials.Children.Add(new SpecularMaterial(Brushes.White, 100d));
 
                 // Geometry Model
@@ -531,7 +531,7 @@ namespace Game.Newt.Testers
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVectorSpherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
                 transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector(_boundryMin, _boundryMax)));
 
                 // Model Visual

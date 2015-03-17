@@ -11,7 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using Game.Newt.HelperClasses;
+using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers
 {

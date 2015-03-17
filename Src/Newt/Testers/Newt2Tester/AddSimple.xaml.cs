@@ -13,8 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
@@ -238,15 +238,15 @@ namespace Game.Newt.Testers.Newt2Tester
             // Ratios
             if (chkRandomRatios.IsChecked.Value)
             {
-                x = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());		// reused as radius
-                y = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());		// reused as height
-                z = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());
+                x = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());		// reused as radius
+                y = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());		// reused as height
+                z = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());
             }
             else
             {
-                x = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
-                y = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
-                z = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
+                x = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
+                y = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
+                z = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
             }
 
             switch (shape)
@@ -267,7 +267,7 @@ namespace Game.Newt.Testers.Newt2Tester
             }
 
             // If I try to be realistic, then it's boring, so I'll scale the result.  (density shrinks a bit as things get larger)
-            mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
+            mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
         }
         private void GetRatiosMass(out double radius, out double height, out double mass, CollisionShapeType shape)
         {
@@ -275,27 +275,27 @@ namespace Game.Newt.Testers.Newt2Tester
 
             if (chkRandomRatios.IsChecked.Value)
             {
-                height = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());
+                height = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, _rand.NextDouble());
 
                 switch (shape)
                 {
                     case CollisionShapeType.Cone:
                     case CollisionShapeType.Capsule:
                         // height must be greater or equal to diameter
-                        radius = UtilityHelper.GetScaledValue(MINRATIO * 2d, height, 0d, 1d, _rand.NextDouble());
+                        radius = UtilityCore.GetScaledValue(MINRATIO * 2d, height, 0d, 1d, _rand.NextDouble());
                         break;
 
                     default:
-                        radius = UtilityHelper.GetScaledValue(MINRATIO * 2d, MAXRATIO, 0d, 1d, _rand.NextDouble());
+                        radius = UtilityCore.GetScaledValue(MINRATIO * 2d, MAXRATIO, 0d, 1d, _rand.NextDouble());
                         break;
                 }
             }
             else
             {
                 //NOTE:  I'm not going to error out if they have invalid values - this is a tester, and I want to test what happens
-                radius = UtilityHelper.GetScaledValue(MINRATIO * 2d, MAXRATIO * 2d, trkX.Minimum, trkX.Maximum, trkX.Value);
+                radius = UtilityCore.GetScaledValue(MINRATIO * 2d, MAXRATIO * 2d, trkX.Minimum, trkX.Maximum, trkX.Value);
                 radius /= 2d;		// the slider is diameter
-                height = UtilityHelper.GetScaledValue(MINRATIO * 2d, MAXRATIO * 2d, trkY.Minimum, trkY.Maximum, trkY.Value);
+                height = UtilityCore.GetScaledValue(MINRATIO * 2d, MAXRATIO * 2d, trkY.Minimum, trkY.Maximum, trkY.Value);
             }
 
             #endregion
@@ -327,7 +327,7 @@ namespace Game.Newt.Testers.Newt2Tester
             }
 
             // If I try to be realistic, then it's boring, so I'll scale the result.  (density shrinks a bit as things get larger)
-            mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
+            mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
         }
 
         #endregion

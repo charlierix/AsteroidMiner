@@ -52,8 +52,12 @@
                     <Label Content="Background"/>
                     <TextBox Name="txtBackground" Text="606060" BorderThickness="1"/>
 
-                    <TextBlock FontSize="16" Margin="0,30,0,0" HorizontalAlignment="Center">
+                    <TextBlock FontSize="20" Margin="0,30,0,0" HorizontalAlignment="Center">
                         <Hyperlink Foreground="#9898F0" RequestNavigate="Hyperlink_RequestNavigate" NavigateUri="https://kuler.adobe.com/explore/most-popular">kuler</Hyperlink>
+                    </TextBlock>
+
+                    <TextBlock FontSize="11" Margin="0,15,0,0" HorizontalAlignment="Center">
+                        <Hyperlink Foreground="#9898F0" Click="Copy_Click">copy clipboard</Hyperlink>
                     </TextBlock>
 
                 </StackPanel>

@@ -1,0 +1,77 @@
+﻿<UserControl x:Class="Game.Newt.Testers.ChaseForces.ChasedPosition"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Stylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="mySlider" BasedOn="{StaticResource slider}" TargetType="helpctrl:SliderShowValues">
+                <Setter Property="Foreground" Value="{Binding Path=Foreground}"/>
+            </Style>
+
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Motion Type -->
+        <RadioButton IsChecked="True" Name="radMotionStop" Content="Stop" Checked="radMotion_Checked" Unchecked="radMotion_Checked"/>
+        <RadioButton Name="radMotionJump" Content="Jump" Checked="radMotion_Checked" Unchecked="radMotion_Checked"/>
+        <RadioButton Name="radMotionBrownian" Content="Brownian" Checked="radMotion_Checked" Unchecked="radMotion_Checked"/>
+        <RadioButton Name="radMotionBounceOffWalls" Content="Bounce off walls" Checked="radMotion_Checked" Unchecked="radMotion_Checked"/>
+        <RadioButton Name="radMotionOrbit" Content="Orbit" Checked="radMotion_Checked" Unchecked="radMotion_Checked"/>
+
+        <Grid Margin="0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!--    Speed -->
+            <TextBlock Grid.Column="0" Grid.Row="0" Text="Speed" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkSpeed" Minimum="0" Maximum="100" Value="20" Style="{StaticResource mySlider}" ValueChanged="trkSpeed_ValueChanged"/>
+
+            <!--    Bounding rect -->
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="Boundry" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <CheckBox Grid.Column="2" Grid.Row="1" IsChecked="True" Name="chkBoundCube" Content="cube" VerticalAlignment="Center" Checked="chkBoundCube_Checked" Unchecked="chkBoundCube_Checked"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Name="lblBoundXYZ" Text="XYZ" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkBoundXYZ" Minimum="10" Maximum="100" Value="25" Style="{StaticResource mySlider}" ValueChanged="trkBound_ValueChanged"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="3" Name="lblBoundX" Text="X" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="3" Name="trkBoundX" Minimum="0" Maximum="100" Value="25" Style="{StaticResource mySlider}" ValueChanged="trkBound_ValueChanged"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="4" Name="lblBoundY" Text="Y" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkBoundY" Minimum="0" Maximum="100" Value="25" Style="{StaticResource mySlider}" ValueChanged="trkBound_ValueChanged"/>
+
+            <TextBlock Grid.Column="0" Grid.Row="5" Name="lblBoundZ" Text="Z" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="5" Name="trkBoundZ" Minimum="0" Maximum="100" Value="25" Style="{StaticResource mySlider}" ValueChanged="trkBound_ValueChanged"/>
+
+            <!--    Delay -->
+            <TextBlock Grid.Column="0" Grid.Row="6" Text="Delay" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkDelay" Minimum=".1" Maximum="5" Value="1" Style="{StaticResource mySlider}" ValueChanged="trkDelay_ValueChanged"/>
+        </Grid>
+
+        <!-- Might want to do these, but chasing the ball should be good enough -->
+        <!--    Snap to plane -->
+        <!--    Snap to cylinder -->
+        <!--    Snap to sphere -->
+    </StackPanel>
+</UserControl>

@@ -11,9 +11,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.Testers
 {
@@ -97,6 +97,8 @@ namespace Game.Newt.Testers
         ScreenSpaceLines3D[] _lineTo = null;
         ScreenSpaceLines3D[] _lineTransformed = null;
 
+        List<Visual3D> _tempVisuals = new List<Visual3D>();
+
         private List<ModelVisual3D> _orientationVisualsFrom = new List<ModelVisual3D>();
         private TrackballGrabber _orientationTrackballFrom = null;
 
@@ -132,8 +134,8 @@ namespace Game.Newt.Testers
                 SetupToTrackball();
 
                 // Add the 3 axiis to the main viewport
-                _lineFrom = BuildLines(_orientationTrackballFrom.Transform, true);
-                _lineTo = BuildLines(_orientationTrackballTo.Transform, false);
+                _lineFrom = AddLines(_orientationTrackballFrom.Transform, true);
+                _lineTo = AddLines(_orientationTrackballTo.Transform, false);
 
                 _isInitialized = true;
             }
@@ -149,23 +151,27 @@ namespace Game.Newt.Testers
 
         private void OrientationTrackballFrom_RotationChanged(object sender, EventArgs e)
         {
+            ClearTempVisuals();
+
             // Wipe the transformed lines until they click the button
             ClearLines(_lineTransformed);
             _lineTransformed = null;
 
             // Rebuild the from lines
             ClearLines(_lineFrom);
-            _lineFrom = BuildLines(_orientationTrackballFrom.Transform, true);
+            _lineFrom = AddLines(_orientationTrackballFrom.Transform, true);
         }
         private void OrientationTrackballTo_RotationChanged(object sender, EventArgs e)
         {
+            ClearTempVisuals();
+
             // Wipe the transformed lines until they click the button
             ClearLines(_lineTransformed);
             _lineTransformed = null;
 
             // Rebuild the to lines
             ClearLines(_lineTo);
-            _lineTo = BuildLines(_orientationTrackballTo.Transform, false);
+            _lineTo = AddLines(_orientationTrackballTo.Transform, false);
         }
 
         private void grdFrom_MouseUp(object sender, MouseButtonEventArgs e)
@@ -209,10 +215,11 @@ namespace Game.Newt.Testers
             Vector3D axis = _orientationTrackballFrom.Transform.Transform(quat.Axis.ToUnit() * (LINELENGTH_X * 1.5d));		// I rotate axis by from, because I want it relative to from (axis isn't in world coords)
 
             pnlReport.Children.Clear();
+            ClearTempVisuals();
             ClearLines(_lineTransformed);
-            _lineTransformed = BuildLines(rotated, axis);
+            _lineTransformed = AddLines(rotated, axis);
         }
-        private void btnGetRotation_Click(object sender, RoutedEventArgs e)
+        private void btnGetRotationDblVect_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -223,13 +230,14 @@ namespace Game.Newt.Testers
                 Quaternion delta2 = GetDelta(from, to);
 
                 pnlReport.Children.Clear();
+                ClearTempVisuals();
                 ClearLines(_lineFrom);
                 ClearLines(_lineTo);
                 ClearLines(_lineTransformed);
 
-                _lineFrom = BuildLines(new [] { from }, _colors.FromLine);
-                _lineTo = BuildLines(new [] { to }, _colors.ToLine);
-                _lineTransformed = BuildLines(new [] { delta1, delta2 }, _colors.RotatedLine);
+                _lineFrom = AddLines(new[] { from }, _colors.FromLine);
+                _lineTo = AddLines(new[] { to }, _colors.ToLine);
+                _lineTransformed = AddLines(new[] { delta1, delta2 }, _colors.RotatedLine);
 
                 string format = "axis={0} | angle={1}";
                 double fontsize = 16;
@@ -237,6 +245,144 @@ namespace Game.Newt.Testers
                 pnlReport.Children.Add(new TextBlock() { Text = string.Format(format, to.Axis.ToString(true), to.Angle.ToString()), Foreground = new SolidColorBrush(_colors.ToLine), FontSize = fontsize });
                 pnlReport.Children.Add(new TextBlock() { Text = string.Format(format, delta1.Axis.ToString(true), delta1.Angle.ToString()), Foreground = new SolidColorBrush(_colors.RotatedLine), FontSize = fontsize });
                 pnlReport.Children.Add(new TextBlock() { Text = string.Format(format, delta2.Axis.ToString(true), delta2.Angle.ToString()), Foreground = new SolidColorBrush(_colors.RotatedLine), FontSize = fontsize });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnGetRotationPlanes_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pnlReport.Children.Clear();
+                ClearTempVisuals();
+                //ClearLines(_lineFrom);
+                //ClearLines(_lineTo);
+                ClearLines(_lineTransformed);
+
+                Quaternion from = _orientationTrackballFrom.Transform.ToQuaternion();
+                Quaternion to = _orientationTrackballTo.Transform.ToQuaternion();
+
+                Point3D[] points = Enumerable.Range(0, 6).
+                    Select(o => Math3D.GetRandomVector_Circular(5)).        // this creates vectors in the XY plane
+                    Select(o => new Point3D(o.X, 0, o.Y)).      // the visuals are built along XZ plane
+                    Select((o, i) => i < 3 ? from.GetRotatedVector(o) : to.GetRotatedVector(o)).        // first three use from, last three use to
+                    ToArray();
+
+                Triangle plane1 = new Triangle(points[0], points[1], points[2]);
+                Triangle plane2 = new Triangle(points[3], points[4], points[5]);
+
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = UtilityWPF.GetPlane(plane1, 10, _colors.FromLine, Colors.Silver, center: new Point3D(0, 0, 0));
+                _viewport.Children.Add(visual);
+                _tempVisuals.Add(visual);
+
+                visual = new ModelVisual3D();
+                visual.Content = UtilityWPF.GetPlane(plane2, 10, _colors.ToLine, Colors.Silver, center: new Point3D(0, 0, 0));
+                _viewport.Children.Add(visual);
+                _tempVisuals.Add(visual);
+
+                Quaternion delta1 = Math3D.GetRotation(from, to);
+                //Quaternion delta2 = Math3D.GetRotation(plane1, plane2);
+                //Quaternion delta2 = GetRotation(plane1, plane2);
+                Quaternion delta2 = Math3D.GetRotation(plane1.Point1 - plane1.Point0, plane1.Point2 - plane1.Point0, plane2.Point1 - plane2.Point0, plane2.Point2 - plane2.Point0);
+
+                //Quaternion deltaX = Math3D.GetRotation(from.GetRotatedVector(new Vector3D(1, 0, 0)), to.GetRotatedVector(new Vector3D(1, 0, 0)));
+                //Quaternion deltaY = Math3D.GetRotation(from.GetRotatedVector(new Vector3D(0, 1, 0)), to.GetRotatedVector(new Vector3D(0, 1, 0)));
+                //Quaternion deltaZ = Math3D.GetRotation(from.GetRotatedVector(new Vector3D(0, 0, 1)), to.GetRotatedVector(new Vector3D(0, 0, 1)));
+
+                _tempVisuals.AddRange(AddLines(new[] { delta1 }, _colors.RotatedLine));
+                _tempVisuals.AddRange(AddLines(new[] { delta2 }, Colors.Red));
+                //_tempVisuals.AddRange(BuildLines(new[] { deltaX }, Colors.Black));
+                //_tempVisuals.AddRange(BuildLines(new[] { deltaY }, Colors.Gray));
+                //_tempVisuals.AddRange(BuildLines(new[] { deltaZ }, Colors.White));
+
+
+                Tuple<Point3D, Point3D>[] segments = new[] { Tuple.Create(plane1.Point0, plane1.Point1), Tuple.Create(plane1.Point1, plane1.Point2), Tuple.Create(plane1.Point2, plane1.Point0) };
+                _tempVisuals.AddRange(AddLines(segments, _colors.FromLine));
+
+                var segmentsRotated = segments.Select(o => Tuple.Create(delta1.GetRotatedVector(o.Item1), delta1.GetRotatedVector(o.Item2)));
+                _tempVisuals.AddRange(AddLines(segmentsRotated, _colors.RotatedLine));
+
+                segmentsRotated = segments.Select(o => Tuple.Create(delta2.GetRotatedVector(o.Item1), delta2.GetRotatedVector(o.Item2)));
+                _tempVisuals.AddRange(AddLines(segmentsRotated, Colors.Red));
+
+
+                Point3D testPoint = new Point3D(1, 0, 0);
+                _tempVisuals.Add(AddDot(testPoint, Colors.Black));
+                _tempVisuals.Add(AddDot(delta1.GetRotatedVector(testPoint), _colors.RotatedLine));
+                _tempVisuals.Add(AddDot(delta2.GetRotatedVector(testPoint), Colors.Red));
+
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnGetRotationPlanes2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                pnlReport.Children.Clear();
+                ClearTempVisuals();
+                ClearLines(_lineTransformed);
+
+                Quaternion trackballFromQuat = _orientationTrackballFrom.Transform.ToQuaternion();
+                Quaternion trackballToQuat = _orientationTrackballTo.Transform.ToQuaternion();
+
+                Point3D[] points1 = Enumerable.Range(0, 3).
+                    Select(o => Math3D.GetRandomVector_Circular(5)).        // this creates vectors in the XY plane
+                    Select(o => new Point3D(o.X, 0, o.Y)).      // the visuals are built along XZ plane
+                    Select(o => trackballFromQuat.GetRotatedVector(o)).
+                    ToArray();
+
+                Triangle plane1 = new Triangle(points1[0], points1[1], points1[2]);
+
+                Quaternion delta1 = Math3D.GetRotation(trackballFromQuat, trackballToQuat);
+                Transform3D transform = new RotateTransform3D(new QuaternionRotation3D(delta1));
+
+                Triangle plane2 = new Triangle(transform.Transform(points1[0]), transform.Transform(points1[1]), transform.Transform(points1[2]));
+
+                // Test out the get rotate method
+                Quaternion delta2 = Math3D.GetRotation(plane1.Point1 - plane1.Point0, plane1.Point2 - plane1.Point0, plane2.Point1 - plane2.Point0, plane2.Point2 - plane2.Point0);
+
+                #region Draw
+
+                // Planes
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = UtilityWPF.GetPlane(plane1, 10, _colors.FromLine, Colors.Silver, center: new Point3D(0, 0, 0));
+                _viewport.Children.Add(visual);
+                _tempVisuals.Add(visual);
+
+                visual = new ModelVisual3D();
+                visual.Content = UtilityWPF.GetPlane(plane2, 10, _colors.ToLine, Colors.Silver, center: new Point3D(0, 0, 0));
+                _viewport.Children.Add(visual);
+                _tempVisuals.Add(visual);
+
+                // Quats
+                _tempVisuals.AddRange(AddLines(new[] { delta1 }, _colors.RotatedLine));
+                _tempVisuals.AddRange(AddLines(new[] { delta2 }, Colors.Red));
+
+                // Triangles
+                Tuple<Point3D, Point3D>[] segments = new[] { Tuple.Create(plane1.Point0, plane1.Point1), Tuple.Create(plane1.Point1, plane1.Point2), Tuple.Create(plane1.Point2, plane1.Point0) };
+                _tempVisuals.AddRange(AddLines(segments, _colors.FromLine));
+
+                var segmentsRotated = segments.Select(o => Tuple.Create(delta1.GetRotatedVector(o.Item1), delta1.GetRotatedVector(o.Item2)));
+                _tempVisuals.AddRange(AddLines(segmentsRotated, _colors.RotatedLine));
+
+                segmentsRotated = segments.Select(o => Tuple.Create(delta2.GetRotatedVector(o.Item1), delta2.GetRotatedVector(o.Item2)));
+                _tempVisuals.AddRange(AddLines(segmentsRotated, Colors.Red));
+
+                // Points
+                Point3D testPoint = new Point3D(1, 0, 0);
+                _tempVisuals.Add(AddDot(testPoint, Colors.Black));
+                _tempVisuals.Add(AddDot(delta1.GetRotatedVector(testPoint), _colors.RotatedLine));
+                _tempVisuals.Add(AddDot(delta2.GetRotatedVector(testPoint), Colors.Red));
+
+                #endregion
             }
             catch (Exception ex)
             {
@@ -378,7 +524,26 @@ namespace Game.Newt.Testers
             _orientationTrackballTo.HoverVisuals.Add(TrackballGrabber.GetGuideLine(Axis.Z, false, _colors.TrackballAxisLine_To));
         }
 
-        private ScreenSpaceLines3D[] BuildLines(RotateTransform3D transform, bool isFromLine)
+        private void ClearTempVisuals()
+        {
+            _viewport.Children.RemoveAll(_tempVisuals);
+            _tempVisuals.Clear();
+        }
+        private void ClearLines(ScreenSpaceLines3D[] lines)
+        {
+            if (lines != null)
+            {
+                for (int cntr = 0; cntr < lines.Length; cntr++)
+                {
+                    if (_viewport.Children.Contains(lines[cntr]))
+                    {
+                        _viewport.Children.Remove(lines[cntr]);
+                    }
+                }
+            }
+        }
+
+        private ScreenSpaceLines3D[] AddLines(RotateTransform3D transform, bool isFromLine)
         {
             ScreenSpaceLines3D[] retVal = new ScreenSpaceLines3D[3];
 
@@ -400,7 +565,7 @@ namespace Game.Newt.Testers
 
             return retVal;
         }
-        private ScreenSpaceLines3D[] BuildLines(DoubleVector transformedLine, Vector3D rotationAxis)
+        private ScreenSpaceLines3D[] AddLines(DoubleVector transformedLine, Vector3D rotationAxis)
         {
             ScreenSpaceLines3D[] retVal = new ScreenSpaceLines3D[4];
 
@@ -435,7 +600,7 @@ namespace Game.Newt.Testers
 
             return retVal;
         }
-        private ScreenSpaceLines3D[] BuildLines(Quaternion[] quaternions, Color color)
+        private ScreenSpaceLines3D[] AddLines(Quaternion[] quaternions, Color color)
         {
             ScreenSpaceLines3D[] retVal = new ScreenSpaceLines3D[1];
 
@@ -452,18 +617,44 @@ namespace Game.Newt.Testers
 
             return retVal;
         }
-        private void ClearLines(ScreenSpaceLines3D[] lines)
+        private ScreenSpaceLines3D[] AddLines(IEnumerable<Tuple<Point3D, Point3D>> segments, Color color)
         {
-            if (lines != null)
+            ScreenSpaceLines3D[] retVal = new ScreenSpaceLines3D[1];
+
+            retVal[0] = new ScreenSpaceLines3D();
+            retVal[0].Color = color;
+            retVal[0].Thickness = 3d;
+
+            foreach (var segment in segments)
             {
-                for (int cntr = 0; cntr < lines.Length; cntr++)
-                {
-                    if (_viewport.Children.Contains(lines[cntr]))
-                    {
-                        _viewport.Children.Remove(lines[cntr]);
-                    }
-                }
+                retVal[0].AddLine(segment.Item1, segment.Item2);
             }
+
+            _viewport.Children.Add(retVal[0]);
+
+            return retVal;
+        }
+
+        private Visual3D AddDot(Point3D position, Color color, double radius = .03)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
+
+            // Geometry Model
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = materials;
+            geometry.BackMaterial = materials;
+            geometry.Geometry = UtilityWPF.GetSphere_Ico(radius, 4, true);
+
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = geometry;
+            visual.Transform = new TranslateTransform3D(position.ToVector());
+
+            _viewport.Children.Add(visual);
+            return visual;
         }
 
         private static Quaternion GetDelta(Quaternion from, Quaternion to)

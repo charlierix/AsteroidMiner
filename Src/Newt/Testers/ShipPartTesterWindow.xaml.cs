@@ -13,13 +13,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.AsteroidMiner2.ShipEditor;
-using Game.Newt.AsteroidMiner2.ShipParts;
-using Game.Newt.NewtonDynamics;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.HelperClasses;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.GameItems.ShipParts;
+using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF;
 using System.Xaml;
 
 //TODO: UtilityWPF.GetConvexHull fails with coplanar points
@@ -400,7 +400,7 @@ namespace Game.Newt.Testers
 
                 remainExtremes.Add(new Point3D(0, 0, 0));
 
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(others.Count))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(others.Count))
                 {
                     // Add up the vectors that this combo points to
                     Vector3D extremity = others[combo[0]];
@@ -430,11 +430,11 @@ namespace Game.Newt.Testers
                 {
                     if (is3D)
                     {
-                        retVal[cntr] = Math3D.GetRandomVectorSpherical(MAXRADIUS);
+                        retVal[cntr] = Math3D.GetRandomVector_Spherical(MAXRADIUS);
                     }
                     else
                     {
-                        retVal[cntr] = Math3D.GetRandomVectorSpherical2D(MAXRADIUS);
+                        retVal[cntr] = Math3D.GetRandomVector_Circular(MAXRADIUS);
                     }
                 }
 
@@ -564,7 +564,7 @@ namespace Game.Newt.Testers
                 lines.Thickness = 1d;
                 lines.Color = UtilityWPF.ColorFromHex(LINE_BLUE);
 
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(others.Count))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(others.Count))
                 {
                     // Add up the vectors that this combo points to
                     Vector3D extremity = others[combo[0]];
@@ -702,7 +702,7 @@ namespace Game.Newt.Testers
                         GeometryModel3D geometry = new GeometryModel3D();
                         geometry.Material = materials;
                         geometry.BackMaterial = materials;
-                        geometry.Geometry = UtilityWPF.GetSphere(5, .05d);
+                        geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, .05d);
 
                         // Model Visual
                         ModelVisual3D model = new ModelVisual3D();
@@ -928,7 +928,7 @@ namespace Game.Newt.Testers
                 //List<int[]> allCombos = new List<int[]>(UtilityHelper.AllCombosEnumerator(vectors.Length));
 
                 // See which sets of thrusters can be fired at 100% - in other words, find the weakest link(s)
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(vectors.Length))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(vectors.Length))
                 {
                     List<Vector3D> tests = new List<Vector3D>();
                     List<Vector3D> others = new List<Vector3D>();
@@ -1184,7 +1184,7 @@ namespace Game.Newt.Testers
                 //List<int[]> allCombos = new List<int[]>(UtilityHelper.AllCombosEnumerator(vectors.Length));
 
                 // See which sets of thrusters can be fired at 100% - in other words, find the weakest link(s)
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(vectors.Length))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(vectors.Length))
                 {
                     List<Vector3D> tests = new List<Vector3D>();
                     List<Vector3D> others = new List<Vector3D>();
@@ -1469,7 +1469,7 @@ namespace Game.Newt.Testers
             #region Declaration Section
 
             private Ship _ship = null;
-            private List<Thruster> _thrusters = null;
+            private Thruster[] _thrusters = null;
 
             private Viewport3D _viewport = null;
             private ScreenSpaceLines3D _lines = null;
@@ -1488,6 +1488,7 @@ namespace Game.Newt.Testers
             private ThrustContribution[] _contributions = null;
             private ThrustSet[] _zeroTranslationSets = null;
             private ThrustSet[] _zeroTorqueSets = null;
+            private bool _useSimple;
 
             #endregion
 
@@ -1524,11 +1525,7 @@ namespace Game.Newt.Testers
 
                     if (_viewport != null && _debugVisuals != null)
                     {
-                        foreach (Visual3D model in _debugVisuals)
-                        {
-                            _viewport.Children.Remove(model);
-                        }
-
+                        _viewport.Children.RemoveAll(_debugVisuals);
                         _debugVisuals = null;
                     }
 
@@ -1543,8 +1540,9 @@ namespace Game.Newt.Testers
             /// <summary>
             /// Call this whenever the ship's mass matrix changes
             /// </summary>
-            public void MassChanged()
+            public void MassChanged(bool useSimple)
             {
+                _useSimple = useSimple;
                 _contributions = null;
                 _zeroTranslationSets = null;
                 _zeroTorqueSets = null;
@@ -1619,14 +1617,34 @@ namespace Game.Newt.Testers
                 // Keeping each button's contribution in a set so they are easier to normalize
                 List<Tuple<Thruster, int, double>[]> thrusterSets = new List<Tuple<Thruster, int, double>[]>();
 
+                Vector3D direction;
+
                 if (_isUpPressed)
                 {
-                    thrusterSets.Add(FireThrustLinear3(e, elapsedTime, new Vector3D(0, 0, 1)).ToArray());
+                    direction = new Vector3D(0, 0, 1);
+
+                    if(_useSimple)
+                    {
+                        thrusterSets.Add(FireThrustLinear1(e, elapsedTime, direction).ToArray());
+                    }
+                    else
+                    {
+                        thrusterSets.Add(FireThrustLinear3(e, elapsedTime, direction).ToArray());
+                    }
                 }
 
                 if (_isDownPressed)
                 {
-                    thrusterSets.Add(FireThrustLinear3(e, elapsedTime, new Vector3D(0, 0, -1)).ToArray());
+                    direction = new Vector3D(0, 0, -1);
+
+                    if (_useSimple)
+                    {
+                        thrusterSets.Add(FireThrustLinear1(e, elapsedTime, direction).ToArray());
+                    }
+                    else
+                    {
+                        thrusterSets.Add(FireThrustLinear3(e, elapsedTime, direction).ToArray());
+                    }
                 }
 
                 //TODO: Normalize these so no thruster will fire above 100% (keep the ratios though)
@@ -1724,7 +1742,7 @@ namespace Game.Newt.Testers
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = materials;
                 geometry.BackMaterial = materials;
-                geometry.Geometry = UtilityWPF.GetSphere(5, .1d, .1d, .1d);
+                geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, .1d, .1d, .1d);
 
                 ModelVisual3D model = new ModelVisual3D();
                 model.Content = geometry;
@@ -1781,7 +1799,7 @@ namespace Game.Newt.Testers
             /// <summary>
             /// This fires any thruster that contributes to the direction at 100%
             /// </summary>
-            private void FireThrustLinear1(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
+            private List<Tuple<Thruster, int, double>> FireThrustLinear1(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
             {
                 #region Get contributing thrusters
 
@@ -1805,40 +1823,41 @@ namespace Game.Newt.Testers
 
                 #endregion
 
-                if (contributing.Count == 0)
-                {
-                    return;
-                }
+                List<Tuple<Thruster, int, double>> retVal = new List<Tuple<Thruster, int, double>>();
 
-                Point3D center = _ship.PhysicsBody.CenterOfMass;
-                MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
+                retVal.AddRange(contributing.Select(o => Tuple.Create(o.Item1, o.Item2, 1d)));      // 1 for 100%
 
-                // Figure out the drift
+                return retVal;
+
+                //Point3D center = _ship.PhysicsBody.CenterOfMass;
+                //MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
+
+                //// Figure out the drift
 
 
-                // See which thrusters can most reduce that drift
+                //// See which thrusters can most reduce that drift
 
-                #region Fire them
+                //#region Fire them
 
-                foreach (var contribute in contributing)
-                {
-                    double percent = 1d;
-                    Vector3D? force = contribute.Item1.Fire(ref percent, contribute.Item2, elapsedTime);
-                    if (force != null)
-                    {
-                        Vector3D bodyForce = e.Body.DirectionToWorld(force.Value);
-                        Point3D bodyPoint = e.Body.PositionToWorld(contribute.Item1.Position);
-                        e.Body.AddForceAtPoint(bodyForce, bodyPoint);
+                //foreach (var contribute in contributing)
+                //{
+                //    double percent = 1d;
+                //    Vector3D? force = contribute.Item1.Fire(ref percent, contribute.Item2, elapsedTime);
+                //    if (force != null)
+                //    {
+                //        Vector3D bodyForce = e.Body.DirectionToWorld(force.Value);
+                //        Point3D bodyPoint = e.Body.PositionToWorld(contribute.Item1.Position);
+                //        e.Body.AddForceAtPoint(bodyForce, bodyPoint);
 
-                        _lines.AddLine(bodyPoint, bodyPoint - bodyForce);		// subtracting, so the line looks like a flame
-                    }
-                    else
-                    {
-                        int seven = -2;
-                    }
-                }
+                //        _lines.AddLine(bodyPoint, bodyPoint - bodyForce);		// subtracting, so the line looks like a flame
+                //    }
+                //    else
+                //    {
+                //        int seven = -2;
+                //    }
+                //}
 
-                #endregion
+                //#endregion
             }
             /// <summary>
             /// This is an attempt to fix 1, but I didn't get very far
@@ -2518,7 +2537,7 @@ namespace Game.Newt.Testers
                 foreach (var thrust in posDots)
                 {
                     Point3D torquePoint = (thrust.Item1.Torque * percentFrontBack).ToPoint();
-                    Point3D pointAlongLine = Math3D.GetClosestPoint_Point_Line(new Point3D(0, 0, 0), sumTorque, torquePoint);
+                    Point3D pointAlongLine = Math3D.GetClosestPoint_Line_Point(new Point3D(0, 0, 0), sumTorque, torquePoint);
                     Vector3D line = torquePoint - pointAlongLine;
                     sumOrth += line;
                     posDistToLine.Add(new Tuple<ThrustContribution, Vector3D>(thrust.Item1, line));
@@ -2527,7 +2546,7 @@ namespace Game.Newt.Testers
                 foreach (var thrust in negDots)
                 {
                     Point3D torquePoint = thrust.Item1.Torque.ToPoint();		// the negatives fire at 100%
-                    Point3D pointAlongLine = Math3D.GetClosestPoint_Point_Line(new Point3D(0, 0, 0), sumTorque, torquePoint);
+                    Point3D pointAlongLine = Math3D.GetClosestPoint_Line_Point(new Point3D(0, 0, 0), sumTorque, torquePoint);
                     Vector3D line = torquePoint - pointAlongLine;
                     sumOrth += line;
                     negDistToLine.Add(new Tuple<ThrustContribution, Vector3D>(thrust.Item1, line));
@@ -2754,10 +2773,10 @@ namespace Game.Newt.Testers
 
                 SortedList<int, List<int[]>> fullThrusts = new SortedList<int, List<int[]>>();
 
-                List<int[]> allCombos = new List<int[]>(UtilityHelper.AllCombosEnumerator(hasTorque.Count));
+                List<int[]> allCombos = new List<int[]>(UtilityCore.AllCombosEnumerator(hasTorque.Count));
 
                 // See which sets of thrusters can be fired at 100% - in other words, find the weakest link(s)
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(hasTorque.Count))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(hasTorque.Count))
                 {
                     List<Vector3D> tests = new List<Vector3D>();
                     List<Tuple<Vector3D, Vector3D>> others = new List<Tuple<Vector3D, Vector3D>>();
@@ -2940,7 +2959,7 @@ namespace Game.Newt.Testers
                 foreach (Vector3D negative in negatives)
                 {
                     Point3D negPoint = negative.ToPoint();
-                    Point3D pointAlongLine = Math3D.GetClosestPoint_Point_Line(new Point3D(0, 0, 0), sumPositive, negPoint);
+                    Point3D pointAlongLine = Math3D.GetClosestPoint_Line_Point(new Point3D(0, 0, 0), sumPositive, negPoint);
                     Vector3D line = negPoint - pointAlongLine;
 
                     sumOrths += line;
@@ -3021,7 +3040,7 @@ namespace Game.Newt.Testers
 
                 remainExtremes.Add(new Point3D(0, 0, 0));
 
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(remaining.Count))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(remaining.Count))
                 {
                     // Add up the vectors that this combo points to
                     Vector3D extremity = remaining[combo[0]];
@@ -3454,7 +3473,7 @@ namespace Game.Newt.Testers
                 double[] percents = new double[candidates.Length];
 
                 int seedIndex = rand.Next(candidates.Length);
-                percents[seedIndex] = UtilityHelper.GetScaledValue(minMaxAbs[seedIndex].X, minMaxAbs[seedIndex].Y, 0d, 1d, rand.NextDouble());
+                percents[seedIndex] = UtilityCore.GetScaledValue(minMaxAbs[seedIndex].X, minMaxAbs[seedIndex].Y, 0d, 1d, rand.NextDouble());
 
                 // Come up with the percents
                 for (int cntr = 0; cntr < candidates.Length; cntr++)
@@ -3483,11 +3502,11 @@ namespace Game.Newt.Testers
                         if (min == null)
                         {
                             // Couldn't get a relative range, so just pick a random absolute value
-                            percents[cntr] = UtilityHelper.GetScaledValue(minMaxAbs[cntr].X, minMaxAbs[cntr].Y, 0d, 1d, rand.NextDouble());
+                            percents[cntr] = UtilityCore.GetScaledValue(minMaxAbs[cntr].X, minMaxAbs[cntr].Y, 0d, 1d, rand.NextDouble());
                         }
                         else
                         {
-                            percents[cntr] = UtilityHelper.GetScaledValue(min.Value, max.Value, 0d, 1d, rand.NextDouble());
+                            percents[cntr] = UtilityCore.GetScaledValue(min.Value, max.Value, 0d, 1d, rand.NextDouble());
                             if (percents[cntr] < minMaxAbs[cntr].X)
                             {
                                 percents[cntr] = minMaxAbs[cntr].X;
@@ -3696,7 +3715,7 @@ namespace Game.Newt.Testers
                 double[] retVal = new double[candidates.Length];
 
                 int seedIndex = rand.Next(candidates.Length);
-                retVal[seedIndex] = UtilityHelper.GetScaledValue(minMaxAbs[seedIndex].X, minMaxAbs[seedIndex].Y, 0d, 1d, rand.NextDouble());
+                retVal[seedIndex] = UtilityCore.GetScaledValue(minMaxAbs[seedIndex].X, minMaxAbs[seedIndex].Y, 0d, 1d, rand.NextDouble());
 
                 // Come up with the percents
                 for (int cntr = 0; cntr < candidates.Length; cntr++)
@@ -3725,11 +3744,11 @@ namespace Game.Newt.Testers
                         if (min == null)
                         {
                             // Couldn't get a relative range, so just pick a random absolute value
-                            retVal[cntr] = UtilityHelper.GetScaledValue(minMaxAbs[cntr].X, minMaxAbs[cntr].Y, 0d, 1d, rand.NextDouble());
+                            retVal[cntr] = UtilityCore.GetScaledValue(minMaxAbs[cntr].X, minMaxAbs[cntr].Y, 0d, 1d, rand.NextDouble());
                         }
                         else
                         {
-                            retVal[cntr] = UtilityHelper.GetScaledValue(min.Value, max.Value, 0d, 1d, rand.NextDouble());
+                            retVal[cntr] = UtilityCore.GetScaledValue(min.Value, max.Value, 0d, 1d, rand.NextDouble());
                             if (retVal[cntr] < minMaxAbs[cntr].X)
                             {
                                 retVal[cntr] = minMaxAbs[cntr].X;
@@ -3942,7 +3961,7 @@ namespace Game.Newt.Testers
             /// </summary>
             private static IEnumerable<int[]> AllCombosEnumerator(int inputSize, Tuple<int, int>[] illegalPairs)
             {
-                foreach (int[] retVal in UtilityHelper.AllCombosEnumerator(inputSize))
+                foreach (int[] retVal in UtilityCore.AllCombosEnumerator(inputSize))
                 {
                     bool isValid = true;
 
@@ -4246,7 +4265,7 @@ namespace Game.Newt.Testers
 
                 // Make the angle to be some proportion between the torque's length and the average size of the part
                 //double angle = UtilityHelper.GetScaledValue_Capped(0d, MAXANGLE, 0d, size, length);
-                double angle = UtilityHelper.GetScaledValue_Capped(0d, MAXANGLE, 0d, size, length * 100);
+                double angle = UtilityCore.GetScaledValue_Capped(0d, MAXANGLE, 0d, size, length * 100);
 
                 return new Quaternion(axis, angle);
             }
@@ -4526,7 +4545,7 @@ namespace Game.Newt.Testers
                         Vector3D startPos;
                         while (true)
                         {
-                            startPos = Math3D.GetRandomVectorSpherical2D(radius);
+                            startPos = Math3D.GetRandomVector_Circular(radius);
 
                             if (!positions.Any(o => (o - startPos).LengthSquared < maxDist))
                             {
@@ -4853,7 +4872,7 @@ namespace Game.Newt.Testers
                 ConverterRadiationToEnergyDNA dna2 = new ConverterRadiationToEnergyDNA()
                 {
                     PartType = ConverterRadiationToEnergy.PARTTYPE,
-                    Shape = UtilityHelper.GetRandomEnum<SolarPanelShape>(),
+                    Shape = UtilityCore.GetRandomEnum<SolarPanelShape>(),
                     Position = new Point3D(0, 0, 0),
                     Orientation = Quaternion.Identity,
                     Scale = new Vector3D(1, 1, 1)
@@ -4881,7 +4900,7 @@ namespace Game.Newt.Testers
                 ThrusterDNA dna2 = new ThrusterDNA()
                 {
                     PartType = Thruster.PARTTYPE,
-                    ThrusterType = UtilityHelper.GetRandomEnum<ThrusterType>(),
+                    ThrusterType = UtilityCore.GetRandomEnum<ThrusterType>(),
                     Position = new Point3D(0, 0, 0),
                     Orientation = Quaternion.Identity,
                     Scale = new Vector3D(1, 1, 1)
@@ -4922,7 +4941,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -4946,7 +4965,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -4970,7 +4989,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -4998,7 +5017,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5022,7 +5041,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(energyTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5046,7 +5065,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5070,7 +5089,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5096,7 +5115,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5115,7 +5134,7 @@ namespace Game.Newt.Testers
                 ConverterRadiationToEnergyDNA dna = new ConverterRadiationToEnergyDNA()
                 {
                     PartType = ConverterRadiationToEnergy.PARTTYPE,
-                    Shape = UtilityHelper.GetRandomEnum<SolarPanelShape>(),
+                    Shape = UtilityCore.GetRandomEnum<SolarPanelShape>(),
                     Position = new Point3D(0, 0, 0),
                     Orientation = Quaternion.Identity,
                     Scale = new Vector3D(1, 1, 1)
@@ -5128,7 +5147,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(solar.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5144,7 +5163,7 @@ namespace Game.Newt.Testers
                 ThrusterDNA dna = new ThrusterDNA()
                 {
                     PartType = Thruster.PARTTYPE,
-                    ThrusterType = UtilityHelper.GetRandomEnum<ThrusterType>(ThrusterType.Custom),
+                    ThrusterType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom),
                     Position = new Point3D(0, 0, 0),
                     Orientation = Quaternion.Identity,
                     Scale = new Vector3D(1, 1, 1)
@@ -5159,7 +5178,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityHelper.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(thruster.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5182,7 +5201,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5209,7 +5228,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5222,7 +5241,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5254,7 +5273,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5267,7 +5286,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5299,7 +5318,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5312,7 +5331,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5338,13 +5357,13 @@ namespace Game.Newt.Testers
                 List<PartDNA> parts = new List<PartDNA>();
                 parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5357,7 +5376,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5383,14 +5402,14 @@ namespace Game.Newt.Testers
                 List<PartDNA> parts = new List<PartDNA>();
                 parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5403,7 +5422,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5431,14 +5450,14 @@ namespace Game.Newt.Testers
 
                 Vector3D referenceVect = new Vector3D(0, 0, 1);
 
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVectorSpherical2D(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVectorSpherical2D(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVectorSpherical2D(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVectorSphericalShell2D(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVectorSpherical2D(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVector_Circular(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVector_Circular(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVector_Circular(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Math3D.GetRotation(referenceVect, referenceVect + Math3D.GetRandomVector_Circular(.3d)), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5451,7 +5470,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5494,7 +5513,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5509,7 +5528,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5537,21 +5556,21 @@ namespace Game.Newt.Testers
                 List<PartDNA> parts = new List<PartDNA>();
                 parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
 
-                ThrusterType thrustType = UtilityHelper.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
+                ThrusterType thrustType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterDirections = ThrusterDesign.GetThrusterDirections(thrustType), ThrusterType = thrustType });
 
-                thrustType = UtilityHelper.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
+                thrustType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterDirections = ThrusterDesign.GetThrusterDirections(thrustType), ThrusterType = thrustType });
 
-                thrustType = UtilityHelper.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
+                thrustType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterDirections = ThrusterDesign.GetThrusterDirections(thrustType), ThrusterType = thrustType });
 
-                thrustType = UtilityHelper.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
+                thrustType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, -1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterDirections = ThrusterDesign.GetThrusterDirections(thrustType), ThrusterType = thrustType });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5566,7 +5585,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5598,7 +5617,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5613,7 +5632,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5646,7 +5665,7 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
 
                 ClearCurrent();
 
@@ -5661,7 +5680,7 @@ namespace Game.Newt.Testers
 
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -5686,7 +5705,7 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                //TODO: Let the use choose a file
+                //TODO: Let the user choose a file
                 ShipDNA shipDNA = (ShipDNA)XamlServices.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Ships\Beans\2013-05-17 13.50.46.937 - boston - 137.7.xml");
 
                 DateTime startTime = DateTime.Now;
@@ -5694,7 +5713,7 @@ namespace Game.Newt.Testers
                 for (int cntr = 0; cntr < 100; cntr++)
                 {
                     //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, true, true)) { }
-                    using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, true, false)) { }          // BAAAAAAAAAD
+                    using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, true, false)) { }          // BAAAAAAAAAD
                     //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, true)) { }        // GOOD
                 }
 
@@ -5729,6 +5748,21 @@ namespace Game.Newt.Testers
                 grdViewPort.Focus();
 
                 MessageBox.Show(elapsed.TotalMilliseconds.ToString("N0"), this.Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void chkShipSimple_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_thrustController != null)
+                {
+                    _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
+                }
             }
             catch (Exception ex)
             {
@@ -5789,7 +5823,7 @@ namespace Game.Newt.Testers
 
                 EnsureWorldStarted();
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, false);
+                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, chkLoadRepairPositions.IsChecked.Value);
 
                 ClearCurrent();
 
@@ -5800,9 +5834,12 @@ namespace Game.Newt.Testers
 
                 _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+                if (_ship.Fuel != null)
+                {
+                    _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+                }
                 _ship.RecalculateMass();
-                _thrustController.MassChanged();
+                _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
                 {
@@ -6141,10 +6178,10 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                PartNeuralDNA dnaGrav = new PartNeuralDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                //PartNeuralDNA dnaGrav = new PartNeuralDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                //PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                //PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                //PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -6206,8 +6243,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                PartNeuralDNA dnaGrav = new PartNeuralDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -6238,10 +6275,10 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                //PartNeuralDNA dnaGrav = new PartNeuralDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                //PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 30), Scale = new Vector3D(10, 10, 10) };
-                PartNeuralDNA dnaGrav = new PartNeuralDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
-                PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
+                //PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                //PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 30), Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
+                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -6542,7 +6579,7 @@ namespace Game.Newt.Testers
                     GeometryModel3D geometry = new GeometryModel3D();
                     geometry.Material = material3D;
                     geometry.BackMaterial = material3D;
-                    geometry.Geometry = UtilityWPF.GetSphere(5, .2d);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, .2d);
                     geometry.Transform = new TranslateTransform3D(points3D[cntr].ToVector());
                     geometries.Children.Add(geometry);
 
@@ -6552,7 +6589,7 @@ namespace Game.Newt.Testers
                         geometry = new GeometryModel3D();
                         geometry.Material = material2D;
                         geometry.BackMaterial = material2D;
-                        geometry.Geometry = UtilityWPF.GetSphere(5, .2d);
+                        geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, .2d);
                         geometry.Transform = new TranslateTransform3D(points2D[cntr].X, points2D[cntr].Y, 0d);
                         geometries.Children.Add(geometry);
 
@@ -6619,7 +6656,7 @@ namespace Game.Newt.Testers
 
             if (_ship != null)
             {
-                _map.RemoveItem(_ship);
+                _map.RemoveItem(_ship, true);
                 _ship.Dispose();
                 _ship = null;
             }
@@ -6670,21 +6707,21 @@ namespace Game.Newt.Testers
             _materialManager = new MaterialManager(_world);
 
             // Asteroid
-            Game.Newt.NewtonDynamics.Material material = new Game.Newt.NewtonDynamics.Material();
+            Game.Newt.v2.NewtonDynamics.Material material = new Game.Newt.v2.NewtonDynamics.Material();
             material.Elasticity = .25d;
             material.StaticFriction = .9d;
             material.KineticFriction = .75d;
             _material_Asteroid = _materialManager.AddMaterial(material);
 
             // Ship
-            material = new Game.Newt.NewtonDynamics.Material();
+            material = new Game.Newt.v2.NewtonDynamics.Material();
             material.Elasticity = .75d;
             material.StaticFriction = .5d;
             material.KineticFriction = .2d;
             _material_Ship = _materialManager.AddMaterial(material);
 
             // Sand
-            material = new Game.Newt.NewtonDynamics.Material();
+            material = new Game.Newt.v2.NewtonDynamics.Material();
             material.Elasticity = .5d;
             material.StaticFriction = .5d;
             material.KineticFriction = .33d;
@@ -6780,7 +6817,7 @@ namespace Game.Newt.Testers
                     break;
 
                 case CollisionShapeType.Sphere:
-                    geometry.Geometry = UtilityWPF.GetSphere(5, size.X, size.Y, size.Z);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, size.X, size.Y, size.Z);
                     if (createHull)
                     {
                         hull = CollisionHull.CreateSphere(_world, 0, size, null);
@@ -6859,7 +6896,7 @@ namespace Game.Newt.Testers
                     break;
 
                 case CollisionShapeType.Sphere:
-                    geometry.Geometry = UtilityWPF.GetSphere(5, size.X, size.Y, size.Z);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, size.X, size.Y, size.Z);
                     if (createHull)
                     {
                         hull = CollisionHull.CreateSphere(_world, 0, size, null);

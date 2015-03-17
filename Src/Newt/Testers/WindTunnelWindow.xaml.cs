@@ -12,10 +12,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
-using Game.HelperClasses;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.Testers
 {
@@ -468,7 +468,7 @@ namespace Game.Newt.Testers
             materials.Children.Add(_colors.HullFaceSpecular);
 
             // Geometry Mesh
-            MeshGeometry3D mesh = UtilityWPF.GetSphere(1, 1d);
+            MeshGeometry3D mesh = UtilityWPF.GetSphere_LatLon(1, 1d);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -515,7 +515,7 @@ namespace Game.Newt.Testers
             materials.Children.Add(_colors.HullFaceSpecular);
 
             // Geometry Mesh
-            MeshGeometry3D mesh = UtilityWPF.GetSphere(2, 1d);
+            MeshGeometry3D mesh = UtilityWPF.GetSphere_LatLon(2, 1d);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -562,7 +562,7 @@ namespace Game.Newt.Testers
             materials.Children.Add(_colors.HullFaceSpecular);
 
             // Geometry Mesh
-            MeshGeometry3D mesh = UtilityWPF.GetSphere(4, 1d);
+            MeshGeometry3D mesh = UtilityWPF.GetSphere_LatLon(4, 1d);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -1336,7 +1336,7 @@ namespace Game.Newt.Testers
             materials.Children.Add(_colors.AnchorSpecular);
 
             // Geometry Mesh
-            MeshGeometry3D mesh = UtilityWPF.GetSphere(5, .1d);
+            MeshGeometry3D mesh = UtilityWPF.GetSphere_LatLon(5, .1d);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -1544,10 +1544,10 @@ namespace Game.Newt.Testers
 
                 Color color = _colors.FluidLine;		// the property get returns a random color each time
 
-                Point3D position = Math3D.GetRandomVectorSpherical(FLUIDVISUALMAXPOS).ToPoint();
+                Point3D position = Math3D.GetRandomVector_Spherical(FLUIDVISUALMAXPOS).ToPoint();
 
                 double maxDistance = position.ToVector().Length;
-                maxDistance = UtilityHelper.GetScaledValue_Capped(maxDistance, FLUIDVISUALMAXPOS, 0d, 1d, StaticRandom.NextDouble());
+                maxDistance = UtilityCore.GetScaledValue_Capped(maxDistance, FLUIDVISUALMAXPOS, 0d, 1d, StaticRandom.NextDouble());
 
                 _fluidVisuals.Add(new FluidVisual(_viewport, modelFrom, modelTo, position, GetWorldFlow(), color, maxDistance));
             }

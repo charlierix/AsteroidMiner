@@ -1,0 +1,80 @@
+﻿<UserControl x:Class="Game.Newt.v2.GameItems.Controls.Icon3D"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             x:Name="thisBeanIcon">
+    <UserControl.Resources>
+        <Style x:Key="iconBorder" TargetType="Border">
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=ShowBorder, ElementName=thisBeanIcon}" Value="True">
+                    <Setter Property="CornerRadius" Value="3"/>
+                    <Setter Property="BorderBrush" Value="#70404040"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="Background" Value="#60FFFFFF"/>
+                </DataTrigger>
+
+                <DataTrigger Binding="{Binding Path=IsSelected, ElementName=thisBeanIcon}" Value="True">
+                    <Setter Property="BorderBrush" Value="#805C3D46"/>
+                    <Setter Property="BorderThickness" Value="3"/>
+                    <Setter Property="Border.Background">
+                        <Setter.Value>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <LinearGradientBrush.GradientStops>
+                                    <GradientStop Color="#E0FFFFFF" Offset="0"/>
+                                    <GradientStop Color="#E0F5F2EF" Offset="0.131059"/>
+                                    <GradientStop Color="#E0F5F0EC" Offset="0.368043"/>
+                                    <GradientStop Color="#E0F5EFEA" Offset="0.54219"/>
+                                    <GradientStop Color="#E0F1EAE5" Offset="0.64632"/>
+                                    <GradientStop Color="#E0EDE6E0" Offset="0.822262"/>
+                                    <GradientStop Color="#E0E7DDD2" Offset="1"/>
+                                </LinearGradientBrush.GradientStops>
+                            </LinearGradientBrush>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="mainGrid" TargetType="Grid">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=ShowBorder, ElementName=thisBeanIcon}" Value="True">
+                    <Setter Property="Margin" Value="4"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource mainGrid}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Name="pnlIconBorder" Grid.Row="0" Height="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth}" Style="{StaticResource iconBorder}" MouseEnter="pnlIconBorder_MouseEnter" MouseLeave="pnlIconBorder_MouseLeave" MouseMove="pnlIconBorder_MouseMove">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,1,0" LookDirection="0,-1,0" UpDirection="0,0,1" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <!-- NOTE: There are a couple more lights that are programatically controlled (hover and selected) -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup x:Name="_lightGroup">
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="#A0C0C0C0" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+        <TextBlock Grid.Row="1" Name="lblName" HorizontalAlignment="Center" FontSize="14" Foreground="White"/>
+    </Grid>
+</UserControl>

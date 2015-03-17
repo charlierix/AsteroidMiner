@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.Map;
 using Game.Orig.Math3D;
@@ -123,7 +123,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void trkStrengthNear_Scroll(object sender, EventArgs e)
         {
-            _strengthNear = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthNear.Minimum, trkStrengthNear.Maximum, trkStrengthNear.Value);
+            _strengthNear = UtilityCore.GetScaledValue(0, _strengthMax, trkStrengthNear.Minimum, trkStrengthNear.Maximum, trkStrengthNear.Value);
 
             toolTip1.SetToolTip(trkStrengthNear, _strengthNear.ToString());
 
@@ -137,7 +137,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void trkStrengthFar_Scroll(object sender, EventArgs e)
         {
-            _strengthFar = UtilityHelper.GetScaledValue(0, _strengthMax, trkStrengthFar.Minimum, trkStrengthFar.Maximum, trkStrengthFar.Value);
+            _strengthFar = UtilityCore.GetScaledValue(0, _strengthMax, trkStrengthFar.Minimum, trkStrengthFar.Maximum, trkStrengthFar.Value);
 
             toolTip1.SetToolTip(trkStrengthFar, _strengthFar.ToString());
 
@@ -166,7 +166,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void trkSize_Scroll(object sender, EventArgs e)
         {
-            _sizeActual = UtilityHelper.GetScaledValue(100, _sizeMax, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
+            _sizeActual = UtilityCore.GetScaledValue(100, _sizeMax, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
 
             toolTip1.SetToolTip(trkSize, _sizeActual.ToString());
 

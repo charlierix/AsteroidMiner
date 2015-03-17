@@ -13,9 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers
 {
@@ -68,7 +68,7 @@ namespace Game.Newt.Testers
                 lblNeuralPoolLinks.Text = links.ToString("N0");
 
                 // TokenGenerator
-                lblToken.Text = TokenGenerator.Instance.GetCurrentToken_DEBUGGINGONLY().ToString("N0");
+                lblToken.Text = TokenGenerator.CurrentToken_DEBUGGINGONLY().ToString("N0");
             }
             catch (Exception ex)
             {

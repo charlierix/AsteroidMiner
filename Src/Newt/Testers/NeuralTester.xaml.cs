@@ -12,9 +12,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.Testers
 {
@@ -250,7 +250,7 @@ namespace Game.Newt.Testers
             {
                 #region Wipe Existing
 
-                foreach (Neuron node in UtilityHelper.Iterate(_inputs, _outputs, _neurons))		// the iterate method will skip null arrays
+                foreach (Neuron node in UtilityCore.Iterate(_inputs, _outputs, _neurons))		// the iterate method will skip null arrays
                 {
                     _viewport.Children.Remove(node.Visual);
                 }
@@ -374,7 +374,7 @@ namespace Game.Newt.Testers
                 #region Calculate Positions
 
                 Point3D[] positions = null;
-                Point3D[] existing = UtilityHelper.Iterate(_inputs, _outputs).Select(o => o.Position).ToArray();
+                Point3D[] existing = UtilityCore.Iterate(_inputs, _outputs).Select(o => o.Position).ToArray();
 
                 if (radInsideBall.IsChecked.Value)
                 {
@@ -487,7 +487,7 @@ namespace Game.Newt.Testers
             // Exit Function
             return GetPlacements(count, minDistanceSquared, null, new Func<Vector3D>(delegate()
                 {
-                    Vector3D vector = Math3D.GetRandomVectorSpherical2D(radius);
+                    Vector3D vector = Math3D.GetRandomVector_Circular(radius);
                     return new Vector3D(vector.X, vector.Y, z);
                 }));
         }
@@ -503,7 +503,7 @@ namespace Game.Newt.Testers
             // Exit Function
             return GetPlacements(count, minDistanceSquared, null, new Func<Vector3D>(delegate()
             {
-                return Math3D.GetRandomVectorSphericalShell(radius);
+                return Math3D.GetRandomVector_Spherical_Shell(radius);
             }));
         }
         private static Point3D[] GetSpherePlacement(int count, double radius, double factor, Point3D[] existing)
@@ -524,7 +524,7 @@ namespace Game.Newt.Testers
             }
 
             // Use this method instead.  It should be a bit more efficient
-            return Math3D.GetRandomVectorsSphericalClusteredMinDist(count, existingVectors, radius, minDistance, .001d, 1000, null, null).Select(o => o.ToPoint()).ToArray();
+            return Math3D.GetRandomVectors_Spherical_ClusteredMinDist(count, radius, minDistance, .001d, 1000, null, existingVectors, null).Select(o => o.ToPoint()).ToArray();
         }
         private static Point3D[] GetSpherePlacement_ORIG(int count, double radius, double factor, Point3D[] existing)
         {
@@ -540,7 +540,7 @@ namespace Game.Newt.Testers
             // Exit Function
             return GetPlacements(count, minDistanceSquared, existing, new Func<Vector3D>(delegate()
             {
-                return Math3D.GetRandomVectorSpherical(radius);
+                return Math3D.GetRandomVector_Spherical(radius);
             }));
         }
         private static Point3D[] GetPlacements(int count, double minDistanceSquared, Point3D[] existing, Func<Vector3D> getRandVector)
@@ -559,7 +559,7 @@ namespace Game.Newt.Testers
                     // Make sure this isn't too close to the other items
                     bool wasTooClose = false;
 
-                    foreach (Vector3D prev in UtilityHelper.Iterate(existingCast, retVal))
+                    foreach (Vector3D prev in UtilityCore.Iterate(existingCast, retVal))
                     {
                         double distance = (test - prev).LengthSquared;
                         if (distance < minDistanceSquared)
@@ -588,7 +588,7 @@ namespace Game.Newt.Testers
             // Place them randomly
             for (int cntr = 0; cntr < count; cntr++)
             {
-                retVal[cntr] = Math3D.GetRandomVectorSpherical(radius);
+                retVal[cntr] = Math3D.GetRandomVector_Spherical(radius);
             }
 
             //int existingLength = existing == null ? 0 : existing.Length;
@@ -680,7 +680,7 @@ namespace Game.Newt.Testers
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = materials;
                 geometry.BackMaterial = materials;
-                geometry.Geometry = UtilityWPF.GetSphere(20, NODESIZE);
+                geometry.Geometry = UtilityWPF.GetSphere_LatLon(20, NODESIZE);
 
                 Transform3DGroup transform = new Transform3DGroup();
                 transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));
@@ -806,7 +806,7 @@ namespace Game.Newt.Testers
             var outputLinks = links.Where(o => o.To_IsOutput).GroupBy(o => o.To_Index).ToArray();
 
             // Build return items
-            foreach (var link in UtilityHelper.Iterate(neuronLinks, outputLinks))
+            foreach (var link in UtilityCore.Iterate(neuronLinks, outputLinks))
             {
                 retVal.Add(new NeuronBackPointer(
                     link.First().To_IsOutput ? outputs[link.Key] : neurons[link.Key],

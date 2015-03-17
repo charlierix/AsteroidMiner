@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.Math3D;
 
@@ -78,7 +78,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             const double MINGRAVITY = 0d;
             const double MAXGRAVITY = 10d;
 
-            _gravController.GravityMultiplier = UtilityHelper.GetScaledValue(MINGRAVITY, MAXGRAVITY, trkGravityForce.Minimum, trkGravityForce.Maximum, trkGravityForce.Value);
+            _gravController.GravityMultiplier = UtilityCore.GetScaledValue(MINGRAVITY, MAXGRAVITY, trkGravityForce.Minimum, trkGravityForce.Maximum, trkGravityForce.Value);
         }
 
         #endregion

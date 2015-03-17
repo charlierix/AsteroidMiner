@@ -1,0 +1,120 @@
+﻿<Window x:Class="Game.Newt.v2.GameItems.Controls.ShipViewerWindow"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+             xmlns:ast2="clr-namespace:Game.Newt.v2.GameItems.Controls"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             x:Name="thisWindow" Title="ShipViewer" WindowStyle="None" WindowStartupLocation="Manual" Topmost="True" ShowActivated="False" ShowInTaskbar="False" AllowsTransparency="True" Background="Transparent" Width="800" Height="700" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style x:Key="radio" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{Binding Path=Foreground, ElementName=thisWindow}"/>
+        </Style>
+
+        <Style x:Key="check" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{Binding Path=Foreground, ElementName=thisWindow}"/>
+        </Style>
+
+        <Style x:Key="panelBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="BorderBrush" Value="{Binding Path=PanelBorder, ElementName=thisWindow}"/>
+            <Setter Property="Background" Value="{Binding Path=PanelBackground, ElementName=thisWindow}"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Name="pnlOuterBorder" Margin="5" CornerRadius="5" BorderThickness="1.5" BorderBrush="{Binding Path=PopupBorder, ElementName=thisWindow}" Background="{Binding Path=PopupBackground, ElementName=thisWindow}" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+        <!-- TODO: Can't use this effect, because the child textblocks also inherit this effect.  Figure out how to block them, or place them over this border instead of inside -->
+        <!--<Border.Effect>
+            <DropShadowEffect Color="Black" Opacity=".35" ShadowDepth="3" BlurRadius="4" />
+        </Border.Effect>-->
+
+        <Grid>
+            <!-- TODO: Fix this (ButtonClicked is never firing - an animation seems to be glitching) -->
+            <!--<helpctrl:GlassButton_Circle ButtonClicked="btnClose_ButtonClicked" Name="btnClose" ButtonBackground="#FF9D6565" Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-8,12,0">
+                <helpctrl:GlassButton_Circle.ButtonContent>
+                    <Grid>
+                        <Line Margin="4" Stroke="#E8FFFFFF" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeThickness="2" X1="0" Y1="0" X2="1" Y2="1" Stretch="Fill" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                        <Line Margin="4" Stroke="#E8FFFFFF" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeThickness="2" X1="1" Y1="0" X2="0" Y2="1" Stretch="Fill" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                    </Grid>
+                </helpctrl:GlassButton_Circle.ButtonContent>
+            </helpctrl:GlassButton_Circle>-->
+
+            <!-- Viewport -->
+            <Border Name="pnlViewport" Margin="4,18,4,4" CornerRadius="5" BorderBrush="{Binding Path=ViewportBorder, ElementName=thisWindow}" Background="{Binding Path=ViewportBackground, ElementName=thisWindow}">
+                <Grid>
+                    <Viewport3D Name="_viewportBack" Opacity=".04">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_cameraBack" Position="0,1,0" LookDirection="0,-1,0" UpDirection="0,0,1" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                    <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+
+                    <Viewport3D Name="_viewport">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_camera" Position="0,1,0" LookDirection="0,-1,0" UpDirection="0,0,1" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                    <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+                </Grid>
+            </Border>
+
+            <!-- Overlays -->
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource panelBorder}">
+                <StackPanel>
+                    <!-- TODO: Make this visible when more overlays are implemented -->
+                    <StackPanel Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,0,12" RadioButton.Checked="Overlay_Checked" RadioButton.Unchecked="Overlay_Checked">
+                        <RadioButton IsChecked="True" Name="radNeural" Content="Neural" Style="{StaticResource radio}"/>
+                        <RadioButton IsEnabled="False" Name="radParts" Content="Parts" Style="{StaticResource radio}"/>
+                        <RadioButton IsEnabled="False" Name="radMass" Content="Mass" Style="{StaticResource radio}"/>
+                        <RadioButton IsEnabled="False" Name="radCargo" Content="Cargo" Style="{StaticResource radio}"/>
+                        <RadioButton IsEnabled="False" Name="radGraphs" Content="Graphs" Style="{StaticResource radio}"/>
+                    </StackPanel>
+
+                    <!-- Neural Options -->
+                    <StackPanel Visibility="Collapsed" Name="pnlNeuralOptions" HorizontalAlignment="Right" CheckBox.Checked="NeuralOptions_Checked" CheckBox.Unchecked="NeuralOptions_Checked">
+                        <CheckBox IsChecked="True" Name="chkNeuralShowLinks" Content="Show Links" Style="{StaticResource check}"/>
+                        <CheckBox IsChecked="True" Name="chkNeuralShowParts" Content="Show Parts" Style="{StaticResource check}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Progress Meters -->
+            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource panelBorder}">
+                <StackPanel Name="pnlProgressBars">
+
+                    <!-- This will be populated programatically -->
+
+                </StackPanel>
+            </Border>
+
+            <!-- TODO: Add a container to hold a custom control that holds stats of ships derived from Ship -->
+
+            <!-- Name -->
+            <!--<StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom">
+
+        </StackPanel>-->
+
+
+
+
+        </Grid>
+    </Border>
+</Window>

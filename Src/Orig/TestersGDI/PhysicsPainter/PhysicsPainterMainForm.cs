@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.HelperClassesGDI.Controls;
@@ -797,7 +797,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 // to the point of impact (maybe give them slightly tweaked velocities as well so they explode
                 // outward)
 
-                _map.Add(new BallBlip(ball, blip.CollisionStyle, blip.Qual, TokenGenerator.Instance.NextToken()));
+                _map.Add(new BallBlip(ball, blip.CollisionStyle, blip.Qual, TokenGenerator.NextToken()));
             }
 
             #endregion

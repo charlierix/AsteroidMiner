@@ -6,8 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-using Game.Newt.HelperClasses;
-using Game.Newt.NewtonDynamics_153;
+using Game.HelperClassesWPF;
+using Game.Newt.v1.NewtonDynamics1;
 
 namespace Game.Newt.Testers
 {

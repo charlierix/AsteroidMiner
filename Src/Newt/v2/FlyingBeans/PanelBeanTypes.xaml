@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="Game.Newt.v2.FlyingBeans.PanelBeanTypes"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="BeanStylesheet.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource panelBorder}">
+        <!-- NOTE: I wanted max height to follow a golden retangle, but since the bean icon stays square, there was an infinite loop of needing a scrollbar, the icons resize, scrollbar dissapears, icons enlarge, scrollbar appears, etc.  So I had to make it a bit shorter -->
+        <Grid Width="350" MinHeight="216" MaxHeight="550">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Name="pnlIconGridBorder" Margin="0,0,0,4" PreviewMouseDown="pnlIconGridBorder_MouseDown" Style="{StaticResource insideBorder}">
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <UniformGrid Name="grdIcons" Columns="3">
+
+                        <!-- This will be programatically populated with BeanIcon controls -->
+
+                    </UniformGrid>
+                </ScrollViewer>
+            </Border>
+
+            <UniformGrid Grid.Row="1" Rows="1" Margin="0,4,-2,1">
+                <Button Name="btnClear" Content="Clear" Margin="0,0,2,0" Click="btnClear_Click"/>
+                <Button Name="btnRemove" IsEnabled="False" Content="Remove" Margin="0,0,2,0" Click="btnRemove_Click"/>
+                <Button Name="btnAddDefault" Content="Add (defaults)" Margin="0,0,2,0" Click="btnAddDefault_Click"/>
+                <Button Name="btnAddFile" Content="Add (file)" Margin="0,0,2,0" Click="btnAddFile_Click"/>
+            </UniformGrid>
+        </Grid>
+    </Border>
+</UserControl>

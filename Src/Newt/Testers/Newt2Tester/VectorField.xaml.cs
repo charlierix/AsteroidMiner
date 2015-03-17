@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
@@ -124,11 +124,11 @@ namespace Game.Newt.Testers.Newt2Tester
             double strength;
             if (useForce)
             {
-                strength = UtilityHelper.GetScaledValue_Capped(.5d, 100d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+                strength = UtilityCore.GetScaledValue_Capped(.5d, 100d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
             }
             else
             {
-                strength = UtilityHelper.GetScaledValue_Capped(.05d, 25d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+                strength = UtilityCore.GetScaledValue_Capped(.05d, 25d, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
             }
 
             // Fire Event

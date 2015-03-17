@@ -1,0 +1,47 @@
+﻿<Window x:Class="Game.Newt.Testers.MultithreadWorlds"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MultithreadWorlds" ResizeMode="CanResizeWithGrip" Width="500" Height="400">
+    <Grid>
+        <Grid HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top">
+            <Grid.Resources>
+                <Style TargetType="Button">
+                    <Setter Property="Margin" Value="2"/>
+                    <Setter Property="Padding" Value="5,1"/>
+                </Style>
+            </Grid.Resources>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Column="0" Grid.Row="0" Name="btnUI100" Content="UI thread, 100 ticks" Click="btnUI100_Click"/>
+
+            <Button Grid.Column="0" Grid.Row="1" Name="btnTask100" Content="Task, 100 ticks" Click="btnTask100_Click"/>
+
+            <Button Grid.Column="0" Grid.Row="2" Name="btnLongSleep0" Content="Long running, wait for cancel, sleep(0)" Click="btnLongSleep0_Click"/>
+            <Button Grid.Column="1" Grid.Row="2" Name="btnLongSleep0Cancel" Content="cancel" Click="btnLongSleep0Cancel_Click"/>
+
+            <Button Grid.Column="0" Grid.Row="3" Name="btnLongTimerWait" Content="Long running, wait for cancel, timer/waitone" Click="btnLongTimerWait_Click"/>
+            <Button Grid.Column="1" Grid.Row="3" Name="btnLongTimerWaitCancel" Content="cancel" Click="btnLongTimerWaitCancel_Click"/>
+
+            <Button Grid.Column="0" Grid.Row="4" IsEnabled="False" Name="btnThreadTimerWait" Content="New thread, wait for cancel, timer/waitone" Click="btnThreadTimerWait_Click"/>
+            <Button Grid.Column="1" Grid.Row="4" IsEnabled="False" Name="btnThreadTimerWaitCancel" Content="cancel" Click="btnThreadTimerWaitCancel_Click"/>
+
+            <Button Grid.Column="0" Grid.Row="5" Name="btnTimerCreateThread" Content="Use TimerCreateThread" Click="btnTimerCreateThread_Click"/>
+            <Button Grid.Column="1" Grid.Row="5" Name="btnTimerCreateThreadCancel" Content="cancel" Click="btnTimerCreateThreadCancel_Click"/>
+        </Grid>
+    </Grid>
+</Window>

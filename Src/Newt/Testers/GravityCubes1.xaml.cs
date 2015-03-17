@@ -12,8 +12,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.Newt.NewtonDynamics_153;
-using Game.Newt.HelperClasses;
+using Game.Newt.v1.NewtonDynamics1;
+using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers
 {
@@ -131,7 +131,7 @@ namespace Game.Newt.Testers
 
                 _didRandomizeVelocities = true;
 
-                Vector3D newVelocity = Math3D.GetRandomVectorSpherical(MAXRANDVELOCITY * _randVelMultiplier);
+                Vector3D newVelocity = Math3D.GetRandomVector_Spherical(MAXRANDVELOCITY * _randVelMultiplier);
 
                 //sender.Velocity.X = newVelocity.X;
                 //sender.Velocity.Y = newVelocity.Y;

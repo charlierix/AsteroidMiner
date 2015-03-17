@@ -13,8 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers
 {
@@ -93,9 +93,9 @@ namespace Game.Newt.Testers
                 AddVisual(UtilityWPF.GetCylinder_AlongX(60, 1, 2), new Point3D(-2.5, 2.5, 0));
                 AddVisual(UtilityWPF.GetCube_IndependentFaces(new Point3D(-1, -1, -1), new Point3D(1, 1, 1)), new Point3D(2.5, 2.5, 0));
 
-                AddVisual(UtilityWPF.GetSphere(20, 1), new Point3D(-2.5, -2.5, 0));
+                AddVisual(UtilityWPF.GetSphere_LatLon(20, 1), new Point3D(-2.5, -2.5, 0));
 
-                var hull = Math3D.GetConvexHull(Enumerable.Range(0, 40).Select(o => Math3D.GetRandomVectorSpherical(1.1, 1.3).ToPoint()).ToArray());
+                var hull = Math3D.GetConvexHull(Enumerable.Range(0, 40).Select(o => Math3D.GetRandomVector_Spherical(1.1, 1.3).ToPoint()).ToArray());
                 AddVisual(UtilityWPF.GetMeshFromTriangles(hull), new Point3D(2.5, -2.5, 0));
                 AddVisual(UtilityWPF.GetMeshFromTriangles_IndependentFaces(hull), new Point3D(2.5, -6, 0));
 
@@ -136,7 +136,7 @@ namespace Game.Newt.Testers
                     if (shouldSwitch)
                     {
                         // Set a new random angle
-                        tracker.Transform.Axis = Math3D.GetRandomVectorSpherical(1);
+                        tracker.Transform.Axis = Math3D.GetRandomVector_Spherical(1);
                         tracker.DeltaAngle = StaticRandom.NextDouble(-DELTAANGLE, DELTAANGLE);
                     }
 
@@ -215,6 +215,107 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void Copy_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                StringBuilder report = new StringBuilder();
+
+                // Simple
+                if (chkDiffuse.IsChecked.Value)
+                {
+                    report.Append("Diffuse\t\t");
+                    report.AppendLine(txtDiffuse.Text);
+                }
+
+                if (chkSpecular.IsChecked.Value)
+                {
+                    report.Append("Specular\t");
+                    report.Append(txtSpecular.Text);
+                    report.Append("\t");
+                    report.AppendLine(txtSpecularPower.Text);
+                }
+
+                if (chkEmissive.IsChecked.Value)
+                {
+                    report.Append("Emissive\t");
+                    report.AppendLine(txtEmissive.Text);
+                }
+
+                report.AppendLine();
+                report.AppendLine();
+                report.AppendLine();
+
+                // C#
+                if (chkDiffuse.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(\"{0}\")))", txtDiffuse.Text));
+                }
+
+                if (chkSpecular.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(\"{0}\")), {1})", txtSpecular.Text, txtSpecularPower.Text));
+                }
+
+                if (chkEmissive.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(\"{0}\")))", txtEmissive.Text));
+                }
+
+                report.AppendLine();
+                report.AppendLine();
+                report.AppendLine();
+
+                // C# pure
+                if (chkDiffuse.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new DiffuseMaterial(new SolidColorBrush((Color)ColorConverter.ConvertFromString(\"#{0}\")))", txtDiffuse.Text));
+                }
+
+                if (chkSpecular.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new SpecularMaterial(new SolidColorBrush((Color)ColorConverter.ConvertFromString(\"#{0}\")), {1})", txtSpecular.Text, txtSpecularPower.Text));
+                }
+
+                if (chkEmissive.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("new EmissiveMaterial(new SolidColorBrush((Color)ColorConverter.ConvertFromString(\"#{0}\")))", txtEmissive.Text));
+                }
+
+                report.AppendLine();
+                report.AppendLine();
+                report.AppendLine();
+
+                // XAML
+                report.AppendLine("<GeometryModel3D.Material>");
+                report.AppendLine("\t<MaterialGroup>");
+
+                if (chkDiffuse.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("\t\t<DiffuseMaterial Color=\"#{0}\"/>", txtDiffuse.Text));
+                }
+
+                if (chkSpecular.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("\t\t<SpecularMaterial Color=\"#{0}\" SpecularPower=\"{1}\"/>", txtSpecular.Text, txtSpecularPower.Text));
+                }
+
+                if (chkEmissive.IsChecked.Value)
+                {
+                    report.AppendLine(string.Format("\t\t<EmissiveMaterial Color=\"#{0}\"/>", txtEmissive.Text));
+                }
+
+                report.AppendLine("\t</MaterialGroup>");
+                report.AppendLine("</GeometryModel3D.Material>");
+
+                Clipboard.SetText(report.ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -266,7 +367,7 @@ namespace Game.Newt.Testers
             visual.Content = model;
 
             Transform3DGroup transform = new Transform3DGroup();
-            AxisAngleRotation3D rotation = new AxisAngleRotation3D(Math3D.GetRandomVectorSpherical(1), StaticRandom.NextDouble(360));
+            AxisAngleRotation3D rotation = new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(1), StaticRandom.NextDouble(360));
             transform.Children.Add(new RotateTransform3D(rotation));
             transform.Children.Add(new TranslateTransform3D(position.ToVector()));
 

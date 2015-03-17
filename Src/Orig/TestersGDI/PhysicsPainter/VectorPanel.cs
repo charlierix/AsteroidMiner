@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.Math3D;
 using Game.Orig.HelperClassesOrig;
 
@@ -443,8 +443,8 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private void StoreMouseMove(int x, int y)
         {
             MyVector safe = new MyVector();
-            safe.X = UtilityHelper.GetScaledValue(_multiplier * -1d, _multiplier, 0, this.Width, x);
-            safe.Y = UtilityHelper.GetScaledValue(_multiplier * -1d, _multiplier, 0, this.Height, y);
+            safe.X = UtilityCore.GetScaledValue(_multiplier * -1d, _multiplier, 0, this.Width, x);
+            safe.Y = UtilityCore.GetScaledValue(_multiplier * -1d, _multiplier, 0, this.Height, y);
 
             double safeMultiplier = _multiplier * SAFEPERCENT;		// I don't want to butt up against the multiplier, or store value will increase it on me
             if (safe.GetMagnitudeSquared() > safeMultiplier * safeMultiplier)
@@ -525,8 +525,8 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                         {
                             float controlRadiusF = Convert.ToSingle(controlRadius);
 
-                            float drawX = Convert.ToSingle(UtilityHelper.GetScaledValue(0, this.Width, _multiplier * -1d, _multiplier, _vector.X));
-                            float drawY = Convert.ToSingle(UtilityHelper.GetScaledValue(0, this.Height, _multiplier * -1d, _multiplier, _vector.Y));
+                            float drawX = Convert.ToSingle(UtilityCore.GetScaledValue(0, this.Width, _multiplier * -1d, _multiplier, _vector.X));
+                            float drawY = Convert.ToSingle(UtilityCore.GetScaledValue(0, this.Height, _multiplier * -1d, _multiplier, _vector.Y));
 
                             graphics.DrawLine(pen, controlRadiusF, controlRadiusF, drawX, drawY);
                         }

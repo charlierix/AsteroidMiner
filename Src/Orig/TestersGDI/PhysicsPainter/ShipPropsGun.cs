@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 
 namespace Game.Orig.TestersGDI.PhysicsPainter
@@ -60,7 +60,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 		}
 		private void trkCrossoverDistance_Scroll(object sender, EventArgs e)
 		{
-			double distance = UtilityHelper.GetScaledValue_Capped(double.Parse(lblCrossoverMin.Text), double.Parse(lblCrossoverMax.Text), trkCrossoverDistance.Minimum, trkCrossoverDistance.Maximum, trkCrossoverDistance.Value);
+			double distance = UtilityCore.GetScaledValue_Capped(double.Parse(lblCrossoverMin.Text), double.Parse(lblCrossoverMax.Text), trkCrossoverDistance.Minimum, trkCrossoverDistance.Maximum, trkCrossoverDistance.Value);
 
 			toolTip1.SetToolTip(trkCrossoverDistance, distance.ToString());
 

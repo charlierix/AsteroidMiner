@@ -12,10 +12,10 @@ using System.Windows.Media.Media3D;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics_153;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v1.NewtonDynamics1;
 
 namespace Game.Newt.Testers
 {
@@ -244,11 +244,11 @@ namespace Game.Newt.Testers
 
             if (trkSimulationSpeed.Value >= halfRange)
             {
-                speed = UtilityHelper.GetScaledValue_Capped(1d, 10d, halfRange, trkSimulationSpeed.Maximum, trkSimulationSpeed.Value);
+                speed = UtilityCore.GetScaledValue_Capped(1d, 10d, halfRange, trkSimulationSpeed.Maximum, trkSimulationSpeed.Value);
             }
             else
             {
-                speed = UtilityHelper.GetScaledValue_Capped(.1d, 1d, trkSimulationSpeed.Minimum, halfRange, trkSimulationSpeed.Value);
+                speed = UtilityCore.GetScaledValue_Capped(.1d, 1d, trkSimulationSpeed.Minimum, halfRange, trkSimulationSpeed.Value);
             }
 
             _world.SimulationSpeed = speed;
@@ -342,7 +342,7 @@ namespace Game.Newt.Testers
 
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(255, 64, 192))));
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(64, 192))));
                 materials.Children.Add(new SpecularMaterial(Brushes.White, 100d));
 
                 // Geometry Model
@@ -357,7 +357,7 @@ namespace Game.Newt.Testers
                         break;
 
                     case ConvexBody3D.CollisionShape.Sphere:
-                        geometry.Geometry = UtilityWPF.GetSphere(5, ratioX, ratioY, ratioZ);
+                        geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, ratioX, ratioY, ratioZ);
                         //geometry.Geometry = UtilityWPF.GetTorus(30, 10, ratioX * .2, ratioX);    // 
                         break;
 
@@ -371,7 +371,7 @@ namespace Game.Newt.Testers
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVectorSpherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
                 transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector(CREATEOBJECTBOUNDRY)));
 
                 // Model Visual
@@ -429,7 +429,7 @@ namespace Game.Newt.Testers
         {
             foreach (ConvexBody3D body in _bodies)
             {
-                body.Velocity = Math3D.GetRandomVectorSpherical(speed);
+                body.Velocity = Math3D.GetRandomVector_Spherical(speed);
             }
         }
 
@@ -451,15 +451,15 @@ namespace Game.Newt.Testers
             // Ratios
             if (chkRandomRatios.IsChecked.Value)
             {
-                ratioX = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());		// reused as radius
-                ratioY = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());		// reused as height
-                ratioZ = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
+                ratioX = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());		// reused as radius
+                ratioY = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());		// reused as height
+                ratioZ = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, 0d, 1d, StaticRandom.NextDouble());
             }
             else
             {
-                ratioX = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
-                ratioY = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
-                ratioZ = UtilityHelper.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
+                ratioX = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkX.Minimum, trkX.Maximum, trkX.Value);
+                ratioY = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkY.Minimum, trkY.Maximum, trkY.Value);
+                ratioZ = UtilityCore.GetScaledValue(MINRATIO, MAXRATIO, trkZ.Minimum, trkZ.Maximum, trkZ.Value);
             }
 
             if (radCube.IsChecked.Value)
@@ -506,7 +506,7 @@ namespace Game.Newt.Testers
             else
             {
                 // If I try to be realistic, then it's boring, so I'll scale the result.  (density shrinks a bit as things get larger)
-                mass = UtilityHelper.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
+                mass = UtilityCore.GetScaledValue(MINMASS, MAXMASS, Math.Pow(MINRATIO, 3), Math.Pow(MAXRATIO, 3), mass);
             }
         }
 

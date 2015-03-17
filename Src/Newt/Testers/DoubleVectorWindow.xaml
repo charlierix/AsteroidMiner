@@ -83,8 +83,12 @@
 
             <CheckBox Visibility="Collapsed" Checked="chkSnap45Degrees_Checked" Unchecked="chkSnap45Degrees_Checked" Name="chkSnap45Degrees" Content="Snap to 45 degrees" Margin="0,12,0,0"/>
 
-            <Button Click="btnTestIt_Click" Name="btnTestIt" Content="DoubleVector.GetAngleAroundAxis" FontWeight="bold" Padding="12" Margin="0,12,0,0"/>
-            <Button Click="btnGetRotation_Click" Name="btnGetRotation" Content="Math3D.GetRotation" FontWeight="bold" Padding="12"/>
+            <StackPanel Margin="0,12,0,0" HorizontalAlignment="Left">
+                <Button Name="btnTestIt" Content="DoubleVector.GetAngleAroundAxis" Click="btnTestIt_Click"/>
+                <Button Name="btnGetRotationDblVect" Content="Math3D.GetRotation (dbl vect)" Click="btnGetRotationDblVect_Click"/>
+                <Button Visibility="Collapsed" Name="btnGetRotationPlanes" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes_Click"/>
+                <Button Name="btnGetRotationPlanes2" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes2_Click"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- Viewport -->

@@ -74,103 +74,208 @@
                         <!-- Point Cloud -->
                         <Expander Header="Point Cloud">
                             <Border Style="{StaticResource controlsPanelInExpander}">
-                                <Grid>
-                                    <StackPanel Margin="8">
-                                        <Button Click="btnPointCloudDisk_Click" Name="btnPointCloudDisk" Content="Disk"/>
-                                        <Button Click="btnPointCloudRingThick_Click" Name="btnPointCloudRingThick" Content="Ring (thick)"/>
-                                        <Button Click="btnPointCloudRing_Click" Name="btnPointCloudRing" Content="Ring"/>
-                                        <Button Click="btnPointCloudSphere_Click" Name="btnPointCloudSphere" Content="Sphere"/>
-                                        <Button Click="btnPointCloudSphereShellThick_Click" Name="btnPointCloudSphereShellThick" Content="Sphere Shell (thick)"/>
-                                        <Button Click="btnPointCloudSphereShell_Click" Name="btnPointCloudSphereShell" Content="Sphere Shell"/>
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Margin="8">
+                                    <Button Click="btnPointCloudDisk_Click" Name="btnPointCloudDisk" Content="Disk"/>
+                                    <Button Click="btnPointCloudRingThick_Click" Name="btnPointCloudRingThick" Content="Ring (thick)"/>
+                                    <Button Click="btnPointCloudRing_Click" Name="btnPointCloudRing" Content="Ring"/>
+                                    <Button Click="btnPointCloudSphere_Click" Name="btnPointCloudSphere" Content="Sphere"/>
+                                    <Button Click="btnPointCloudSphereShellThick_Click" Name="btnPointCloudSphereShellThick" Content="Sphere Shell (thick)"/>
+                                    <Button Click="btnPointCloudSphereShell_Click" Name="btnPointCloudSphereShell" Content="Sphere Shell"/>
+                                </StackPanel>
                             </Border>
                         </Expander>
 
                         <!-- Hull from points -->
                         <Expander IsExpanded="True" Header="Hull from Points">
                             <Border Style="{StaticResource controlsPanelInExpander}">
-                                <Grid>
-                                    <StackPanel Margin="8">
-                                        <Button Click="btnHullCircle2D_Click" Name="btnHullCircle2D" Content="Circle 2D"/>
-                                        <Button Click="btnHullSphere3D_Click" Name="btnHullSphere3D" Content="Sphere 3D"/>
-                                        
-                                        <CheckBox Name="chkConcentricHulls" Content="Concentric hulls" Margin="2,5,2,2"/>
-                                        <CheckBox Name="chkDrawDots" Content="Draw Dots" IsChecked="True"/>
-                                        <CheckBox Name="chkDrawLines" Content="Draw Lines" IsChecked="True"/>
-                                        <CheckBox Name="chkDrawNormals" Content="Draw Normals"/>
-                                        <CheckBox Name="chkSoftFaces" Content="Soft Faces"/>
-                                        <CheckBox Name="chkNearlyTransparent" Content="Nearly Transparent"/>
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Margin="8">
+                                    <Button Click="btnHullCircle2D_Click" Name="btnHullCircle2D" Content="Circle 2D"/>
+                                    <Button Click="btnHullSphere3D_Click" Name="btnHullSphere3D" Content="Sphere 3D"/>
+
+                                    <CheckBox Name="chkConcentricHulls" Content="Concentric hulls" Margin="2,5,2,2"/>
+                                    <CheckBox Name="chkDrawDots" Content="Draw Dots" IsChecked="True"/>
+                                    <CheckBox Name="chkDrawLines" Content="Draw Lines" IsChecked="True"/>
+                                    <CheckBox Name="chkDrawNormals" Content="Draw Normals"/>
+                                    <CheckBox Name="chkSoftFaces" Content="Soft Faces"/>
+                                    <CheckBox Name="chkNearlyTransparent" Content="Nearly Transparent"/>
+                                </StackPanel>
                             </Border>
                         </Expander>
 
                         <!-- Points on Hull -->
                         <Expander IsExpanded="False" Header="Points on Hull">
                             <Border Style="{StaticResource controlsPanelInExpander}">
-                                <Grid>
-                                    <StackPanel Margin="8">
-                                        <Button Click="btnPointsOnHullTriangle_Click" Name="btnPointsOnHullTriangle" Content="Triangle"/>
-                                        <Button Click="btnPointsOnHullSeveralTriangles_Click" Name="btnPointsOnHullSeveralTriangles" Content="Several Triangles"/>
-                                        <Button Click="btnPointsOnHullRandom_Click" Name="btnPointsOnHullRandom" Content="Random Hull"/>
-                                        <CheckBox Name="chkPointsDrawLines" Content="Draw Lines" IsChecked="False"/>
-                                        <CheckBox Name="chkPointsDrawFaces" Content="Draw Faces" IsChecked="True"/>
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Margin="8">
+                                    <Button Click="btnPointsOnHullTriangle_Click" Name="btnPointsOnHullTriangle" Content="Triangle"/>
+                                    <Button Click="btnPointsOnHullSeveralTriangles_Click" Name="btnPointsOnHullSeveralTriangles" Content="Several Triangles"/>
+                                    <Button Click="btnPointsOnHullRandom_Click" Name="btnPointsOnHullRandom" Content="Random Hull"/>
+                                    <CheckBox Name="chkPointsDrawLines" Content="Draw Lines" IsChecked="False"/>
+                                    <CheckBox Name="chkPointsDrawFaces" Content="Draw Faces" IsChecked="True"/>
+                                </StackPanel>
                             </Border>
                         </Expander>
 
                         <!-- Hull, Points, Hull -->
                         <Expander IsExpanded="False" Header="Hull, Points, Hull">
                             <Border Style="{StaticResource controlsPanelInExpander}">
-                                <Grid>
-                                    <StackPanel Margin="8">
-                                        <Button Click="btnHPHOrigAttempt_Click" Name="btnHPHOrigAttempt" Content="Orig Attempt (fail)"/>
-                                        <Button Click="btnHPHPreprocessPoints_Click" Name="btnHPHPreprocessPoints" Content="Preprocess Points (fail)"/>
-                                        <Button Click="btnHPHDetectCoplanar_Click" Name="btnHPHDetectCoplanar" Content="Detect Coplanar (fail)"/>
-                                        <Button Click="btnHPHPreprocessPoints2_Click" Name="btnHPHPreprocessPoints2" Content="Preprocess Points 2"/>
-                                        <CheckBox Name="chkHPHOrigLines" Content="Orig Lines" IsChecked="False"/>
-                                        <CheckBox Name="chkHPHOrigFaces" Content="Orig Faces" IsChecked="True"/>
-                                        <CheckBox Name="chkHPHOrigSoftFaces" Content="Orig Soft Faces" IsChecked="False"/>
-                                        <CheckBox Name="chkHPHPoints" Content="Points" IsChecked="True"/>
-                                        <CheckBox Name="chkHPHFinalLines" Content="Final Lines" IsChecked="False"/>
-                                        <CheckBox Name="chkHPHFinalFaces" Content="Final Faces" IsChecked="True"/>
-                                        <CheckBox Name="chkHPHFinalSoftFaces" Content="Final Soft Faces" IsChecked="False"/>
+                                <StackPanel Margin="8">
+                                    <Button Click="btnHPHOrigAttempt_Click" Name="btnHPHOrigAttempt" Content="Orig Attempt (fail)"/>
+                                    <Button Click="btnHPHPreprocessPoints_Click" Name="btnHPHPreprocessPoints" Content="Preprocess Points (fail)"/>
+                                    <Button Click="btnHPHDetectCoplanar_Click" Name="btnHPHDetectCoplanar" Content="Detect Coplanar (fail)"/>
+                                    <Button Click="btnHPHPreprocessPoints2_Click" Name="btnHPHPreprocessPoints2" Content="Preprocess Points 2"/>
+                                    <CheckBox Name="chkHPHOrigLines" Content="Orig Lines" IsChecked="False"/>
+                                    <CheckBox Name="chkHPHOrigFaces" Content="Orig Faces" IsChecked="True"/>
+                                    <CheckBox Name="chkHPHOrigSoftFaces" Content="Orig Soft Faces" IsChecked="False"/>
+                                    <CheckBox Name="chkHPHPoints" Content="Points" IsChecked="True"/>
+                                    <CheckBox Name="chkHPHFinalLines" Content="Final Lines" IsChecked="False"/>
+                                    <CheckBox Name="chkHPHFinalFaces" Content="Final Faces" IsChecked="True"/>
+                                    <CheckBox Name="chkHPHFinalSoftFaces" Content="Final Soft Faces" IsChecked="False"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Icosahedron -->
+                        <Expander IsExpanded="False" Header="Icosahedron">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Margin="8">
+                                    <Button Name="btnIcosahedron" Content="Icosahedron" Click="btnIcosahedron_Click"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Slider Grid.Column="0" Name="trkIcoRecurse" ToolTip="Recurse level" Minimum="0" Maximum="7" Value="0" SmallChange="1" VerticalAlignment="Center" ValueChanged="trkIcoRecurse_ValueChanged"/>
+                                        <TextBlock Grid.Column="1" Name="lblIcoRecurse" Text="0" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Slider Grid.Column="0" Name="trkIcoRadius" ToolTip="Radius" Minimum=".1" Maximum="20" Value="10" VerticalAlignment="Center" ValueChanged="trkIcoRadius_ValueChanged"/>
+                                        <TextBlock Grid.Column="1" Name="lblIcoRadius" Text="10.0" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                    </Grid>
+
+                                    <Button Name="btnIcoSpike1" Content="Spike Ball 1" Margin="0,20,0,0" Click="btnIcoSpike1_Click"/>
+                                    <Button Name="btnIcoSpike2" Content="Spike Ball 2" Click="btnIcoSpike2_Click"/>
+                                    <Button Name="btnIcoSpike3" Content="Spike Ball 3" Click="btnIcoSpike3_Click"/>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Slider Name="trkIcoSpikeRatio" ToolTip="Ratio" Minimum=".5" Maximum="1" Value=".75" VerticalAlignment="Center" ValueChanged="trkIcoSpikeRatio_ValueChanged"/>
+                                        <TextBlock Grid.Column="1" Name="lblIcoSpikeRatio" Text="0.75" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Slider Name="trkIcoSpikeRatioUnder" ToolTip="Ratio (under)" Minimum=".1" Maximum=".99" Value=".95" VerticalAlignment="Center" ValueChanged="trkIcoSpikeRatioUnder_ValueChanged"/>
+                                        <TextBlock Grid.Column="1" Name="lblIcoSpikeRatioUnder" Text="0.95" VerticalAlignment="Center" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Other Polyhedra -->
+                        <Expander IsExpanded="False" Header="Other Polyhedra">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Margin="8">
+                                    <Button Name="btnRhombicuboctahedron" Content="Rhombicuboctahedron" Click="btnRhombicuboctahedron_Click"/>
+                                    <Button Name="btnIcosidodecahedron" Content="Icosidodecahedron" Click="btnIcosidodecahedron_Click"/>
+                                    <Button Name="btnTruncatedIcosidodecahedron" Content="Truncated icosidodecahedron" Click="btnTruncatedIcosidodecahedron_Click"/>
+                                    <Button Name="btnDodecahedron" Content="Dodecahedron" Click="btnDodecahedron_Click"/>
+                                    <Button Name="btnPentakisDodecahedron" Content="Pentakis Dodecahedron" Click="btnPentakisDodecahedron_Click"/>
+                                    <Button Name="btnTruncatedIcosahedron" Content="Truncated icosahedron" ToolTip="Soccer Ball" Click="btnTruncatedIcosahedron_Click"/>
+                                    <Button Visibility="Collapsed" Content="Deltoidal icositetrahedron"/>
+                                    <Button Visibility="Collapsed" Content="Pentagonal hexecontahedron"/>
+                                    <Button Visibility="Collapsed" Content="Truncated cube" ToolTip="add a bevel % as input"/>
+                                    <Button Visibility="Collapsed" Content="Rhombic triacontahedron"/>
+                                    <Button Visibility="Collapsed" Content="Rhombic dodecahedron" ToolTip="this has the advantage that it can be perfectly packed (no gaps)"/>
+                                    <Button Visibility="Collapsed" Content="Elongated dodecahedron" ToolTip="this has the advantage that it can be perfectly packed (no gaps)"/>
+
+                                    <CheckBox IsChecked="True" Name="chkPolyMajorLines" Content="Show major lines" Margin="2,8,2,2"/>
+                                    <CheckBox Name="chkPolyRandomSize" Content="Random Size"/>
+                                    <CheckBox Name="chkPolyLabelPoints" Content="Label Points"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Mad Shatter -->
+                        <Expander IsExpanded="True" Header="Mad Shatter">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Margin="8">
+                                    <Button Name="btnNewAsteroid" Content="New Asteroid" Click="btnNewAsteroid_Click"/>
+                                    <Button Name="btnShatterTriangle" Content="Single Triangle" Click="btnShatterTriangle_Click"/>
+                                    <Button Visibility="Collapsed" Name="btnShatterTest" Content="test" Click="btnShatterTest_Click"/>
+                                    <Button Visibility="Collapsed" Name="btnShatterTest2" Content="test2" Click="btnShatterTest2_Click"/>
+
+                                    <!-- These were used to build the slice smooth and remove thin -->
+                                    <StackPanel Visibility="Collapsed">
+                                        <Button Visibility="Collapsed" Name="btnNewAsteroidDivided1" Content="New Asteroid (divided 1)" Click="btnNewAsteroidDivided1_Click"/>
+                                        <Button Name="btnNewAsteroidDivided2Debug" Content="New Asteroid (divided - debug)" Click="btnNewAsteroidDivided2Debug_Click"/>
+                                        <Button Name="btnNewAsteroidDivided2" Content="New Asteroid (divided)" Click="btnNewAsteroidDivided2_Click"/>
+                                        <Button Name="btnNewAsteroidRemoveSkinny3" Content="New Asteroid (remove skinny 3)" Click="btnNewAsteroidRemoveSkinny3_Click"/>
+                                        <Button Name="btnNewAsteroidRemoveSkinnyJ" Content="New Asteroid (remove skinny J)" Click="btnNewAsteroidRemoveSkinnyJ_Click"/>
+                                        <Button Name="btnNewAsteroidRemoveAddRemove" Content="New Asteroid (remove add remove)" Click="btnNewAsteroidRemoveAddRemove_Click"/>
+                                        <Button Name="btnNewAsteroidFinal" Content="New Asteroid (final)" Click="btnNewAsteroidFinal_Click"/>
                                     </StackPanel>
-                                </Grid>
+
+                                    <Button Name="btnShatterRandVoronoi" Content="Random Voronoi" Margin="2,8,2,2" Click="btnShatterRandVoronoi_Click"/>
+                                    <Button Name="btnShatterRandVoronoiFar" Content="Random Voronoi (far)" Click="btnShatterRandVoronoiFar_Click"/>
+
+                                    <Button Name="btnClearShatterHits" Content="Clear hits" Margin="2,8,2,2" Click="btnClearShatterHits_Click"/>
+                                    <Button Name="btnShatterHitVoronoi" Content="Voronoi based on hits" Click="btnShatterHitVoronoi_Click"/>
+
+                                    <Button Name="btnShatterRedraw" Content="Redraw" Margin="2,12,2,2" Click="btnShatterRedraw_Click"/>
+                                    <RadioButton Name="radShatterVoronoiLinesOnly" Content="Voronoi lines only"/>
+                                    <RadioButton Name="radShatterTriangleByCtrlPoint" Content="Triangles by ctrl point"/>
+                                    <RadioButton IsChecked="True" Name="radShatterFirstCtrlPoint" Content="First ctrl point"/>
+                                    
+                                    <Button Name="btnShatterChains" Content="Test Chains 1" Margin="2,18,2,2" Click="btnShatterChains_Click"/>
+                                    <Button Name="btnShatterChains2" Content="Test Chains 2" Click="btnShatterChains2_Click"/>
+                                    
+                                </StackPanel>
                             </Border>
                         </Expander>
 
                         <!-- Random Tests -->
-                        <Expander IsExpanded="True" Header="Random Tests">
+                        <Expander IsExpanded="False" Header="Random Tests">
                             <Border Style="{StaticResource controlsPanelInExpander}">
-                                <Grid>
-                                    <StackPanel Margin="8">
-                                        <Button Visibility="Collapsed" Click="btnVariousNormals_Click" Name="btnVariousNormals" Content="Various Normals"/>
-                                        <Button Click="btnOutsideSet_Click" Name="btnOutsideSet" Content="Outside Set"/>
-                                        <Button Click="btnStart3D_Click" Name="btnStart3D" Content="Start 3D"/>
-                                        <Button Click="btnFail3D_Click" Name="btnFail3D" Content="Fail 3D"/>
-                                        <Button Visibility="Collapsed" Click="btn3DAttempt6_Click" Name="btn3DAttempt6" Content="Attempt 6"/>
-                                        <Button Visibility="Collapsed" Click="btn3DAttempt6FromFile_Click" Name="btn3DAttempt6FromFile">
-                                            <Button.Content>
-                                                <TextBlock>Attempt 6<LineBreak/>From File</TextBlock>
-                                            </Button.Content>
-                                        </Button>
-                                        <TextBlock Name="lblTriangleReport" Text="" Visibility="Collapsed" Foreground="#2B3434"/>
+                                <StackPanel Margin="8">
+                                    <Button Visibility="Collapsed" Click="btnVariousNormals_Click" Name="btnVariousNormals" Content="Various Normals"/>
+                                    <Button Click="btnOutsideSet_Click" Name="btnOutsideSet" Content="Outside Set"/>
+                                    <Button Click="btnStart3D_Click" Name="btnStart3D" Content="Start 3D"/>
+                                    <Button Click="btnFail3D_Click" Name="btnFail3D" Content="Fail 3D"/>
+                                    <Button Visibility="Collapsed" Click="btn3DAttempt6_Click" Name="btn3DAttempt6" Content="Attempt 6"/>
+                                    <Button Visibility="Collapsed" Click="btn3DAttempt6FromFile_Click" Name="btn3DAttempt6FromFile">
+                                        <Button.Content>
+                                            <TextBlock>Attempt 6<LineBreak/>From File</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+                                    <TextBlock Name="lblTriangleReport" Text="" Visibility="Collapsed" Foreground="#2B3434"/>
 
-                                        <Button Click="btnHullCoplanar3D_Click" Name="btnHullCoplanar3D" Content="Coplanar 3D" Margin="0,8,0,0"/>
-                                        <Grid Visibility="Collapsed">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="auto"/>
-                                                <ColumnDefinition Width="1*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Label Grid.Column="0" Content="Max Steps"/>
-                                            <TextBox Name="txtCoplanarMaxSteps" Grid.Column="1" Text="-1"/>
-                                        </Grid>
-                                        
-                                    </StackPanel>
-                                </Grid>
+                                    <Button Click="btnHullCoplanar3D_Click" Name="btnHullCoplanar3D" Content="Coplanar 3D" Margin="0,8,0,0"/>
+                                    <Grid Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Label Grid.Column="0" Content="Max Steps"/>
+                                        <TextBox Name="txtCoplanarMaxSteps" Grid.Column="1" Text="-1"/>
+                                    </Grid>
+
+                                </StackPanel>
                             </Border>
                         </Expander>
                     </StackPanel>
@@ -194,23 +299,29 @@
         </Grid>
 
         <!-- Viewport -->
-        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" Background="#B8BDB5" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3" Margin="9,12,12,12">
-            <Viewport3D Name="_viewport" IsHitTestVisible="False">
-                <!-- Camera -->
-                <Viewport3D.Camera>
-                    <PerspectiveCamera x:Name="_camera" Position="0,-25,25" LookDirection="0,1,-1" UpDirection="0,1,0" FieldOfView="45"/>
-                </Viewport3D.Camera>
-                <!-- Lights -->
-                <ModelVisual3D>
-                    <ModelVisual3D.Content>
-                        <Model3DGroup>
-                            <AmbientLight Color="DimGray" />
-                            <DirectionalLight Color="White" Direction="1,-1,-1" />
-                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
-                        </Model3DGroup>
-                    </ModelVisual3D.Content>
-                </ModelVisual3D>
-            </Viewport3D>
+        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" Background="#B8BDB5" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3" Margin="9,12,12,12" MouseDown="grdViewPort_MouseDown">
+            <Grid IsHitTestVisible="False">
+                <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                    <!-- Camera -->
+                    <Viewport3D.Camera>
+                        <PerspectiveCamera x:Name="_camera" Position="0,-25,25" LookDirection="0,1,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                    </Viewport3D.Camera>
+                    <!-- Lights -->
+                    <ModelVisual3D>
+                        <ModelVisual3D.Content>
+                            <Model3DGroup>
+                                <AmbientLight Color="DimGray" />
+                                <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                            </Model3DGroup>
+                        </ModelVisual3D.Content>
+                    </ModelVisual3D>
+                </Viewport3D>
+
+                <!-- This holds 2D visuals (use it when labeling points) -->
+                <Canvas Name="pnlVisuals2D" Cursor="None" IsHitTestVisible="False"/>
+            </Grid>
         </Border>
+
     </Grid>
 </Window>

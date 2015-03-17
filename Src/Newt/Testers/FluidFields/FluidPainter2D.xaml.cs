@@ -14,9 +14,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Controls2D;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls2D;
 
 namespace Game.Newt.Testers.FluidFields
 {
@@ -108,7 +108,7 @@ namespace Game.Newt.Testers.FluidFields
             _randColors.Add(RandColorType.Unispew, new string[] { "FF009C", "FFA11F", "9BFF00", "00FFFD", "8E47FF" }.Select(o => UtilityWPF.ColorFromHex(o)).ToArray());
             _randColors.Add(RandColorType.Camo, new string[] { "244034", "5E744A", "9EA755", "0D0A00", "745515" }.Select(o => UtilityWPF.ColorFromHex(o)).ToArray());
             _randColors.Add(RandColorType.Cold_Beach, new string[] { "CCC8B1", "858068", "FFFCF6", "B7ECFF", "B1CCCC" }.Select(o => UtilityWPF.ColorFromHex(o)).ToArray());
-            _randColors.Add(RandColorType.Mono_Cyan, UtilityHelper.Iterate(new string[] { "037B8E" }, Enumerable.Range(0, 10).Select(o => new string[] { "99A3A4", "B8BCBB", "535855", "79756A" }).SelectMany(o => o)).Select(o => UtilityWPF.ColorFromHex(o)).ToArray());
+            _randColors.Add(RandColorType.Mono_Cyan, UtilityCore.Iterate(new string[] { "037B8E" }, Enumerable.Range(0, 10).Select(o => new string[] { "99A3A4", "B8BCBB", "535855", "79756A" }).SelectMany(o => o)).Select(o => UtilityWPF.ColorFromHex(o)).ToArray());
 
             foreach (string colorType in Enum.GetNames(typeof(RandColorType)))
             {
@@ -848,7 +848,7 @@ namespace Game.Newt.Testers.FluidFields
 
                         retVal.Add(Tuple.Create(
                             field.GetK(x, y),       // coordinates that the field wants
-                            UtilityHelper.GetScaledValue(valueCenter, valueEdge, 0, maxDistance, distance)      // LERP
+                            UtilityCore.GetScaledValue(valueCenter, valueEdge, 0, maxDistance, distance)      // LERP
                             ));
                     }
                 }

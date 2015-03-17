@@ -15,11 +15,11 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Controls2D;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls2D;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.FluidFields
 {
@@ -820,7 +820,7 @@ namespace Game.Newt.Testers.FluidFields
                             continue;
                         }
 
-                        byte[] depthColor = UtilityWPF.AlphaBlend(colorZBack, colorZFront, UtilityHelper.GetScaledValue_Capped(0, 1, 0, size - 1, z));
+                        byte[] depthColor = UtilityWPF.AlphaBlend(colorZBack, colorZFront, UtilityCore.GetScaledValue_Capped(0, 1, 0, size - 1, z));
 
                         int alpha = Convert.ToInt32(Math.Round(inkCell * 255));
                         if (alpha < 0)

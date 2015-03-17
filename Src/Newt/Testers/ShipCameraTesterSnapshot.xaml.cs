@@ -12,8 +12,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.HelperClasses;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers
 {
@@ -405,9 +405,9 @@ namespace Game.Newt.Testers
 
                 Point3D center = _triangles[cntr].Triangle.GetCenterPoint();
                 double radius = Math3D.Min(
-                    Math3D.GetClosestDistance_Point_Line(_triangles[cntr].Triangle.Point0, _triangles[cntr].Triangle.Point1 - _triangles[cntr].Triangle.Point0, center),
-                    Math3D.GetClosestDistance_Point_Line(_triangles[cntr].Triangle.Point1, _triangles[cntr].Triangle.Point2 - _triangles[cntr].Triangle.Point1, center),
-                    Math3D.GetClosestDistance_Point_Line(_triangles[cntr].Triangle.Point2, _triangles[cntr].Triangle.Point0 - _triangles[cntr].Triangle.Point2, center));
+                    Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point0, _triangles[cntr].Triangle.Point1 - _triangles[cntr].Triangle.Point0, center),
+                    Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point1, _triangles[cntr].Triangle.Point2 - _triangles[cntr].Triangle.Point1, center),
+                    Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point2, _triangles[cntr].Triangle.Point0 - _triangles[cntr].Triangle.Point2, center));
 
                 //  Min is too small, but avg has overlap.  Getting an inscribed circle would be the right way, but this is just a quick tester
                 //double radius = new double[] {
@@ -548,7 +548,7 @@ namespace Game.Newt.Testers
             if (chkShowPixels.IsChecked.Value)
             {
                 grdPixels.Visibility = Visibility.Visible;
-                grdPixels.Opacity = UtilityHelper.GetScaledValue_Capped(0d, 1d, trkPixelOpacity.Minimum, trkPixelOpacity.Maximum, trkPixelOpacity.Value);
+                grdPixels.Opacity = UtilityCore.GetScaledValue_Capped(0d, 1d, trkPixelOpacity.Minimum, trkPixelOpacity.Maximum, trkPixelOpacity.Value);
             }
             else
             {
@@ -559,7 +559,7 @@ namespace Game.Newt.Testers
             if (chkShowPolygons.IsChecked.Value)
             {
                 grdPolygons.Visibility = Visibility.Visible;
-                grdPolygons.Opacity = UtilityHelper.GetScaledValue_Capped(0d, 1d, trkPolygonOpacity.Minimum, trkPolygonOpacity.Maximum, trkPolygonOpacity.Value);
+                grdPolygons.Opacity = UtilityCore.GetScaledValue_Capped(0d, 1d, trkPolygonOpacity.Minimum, trkPolygonOpacity.Maximum, trkPolygonOpacity.Value);
             }
             else
             {
@@ -570,7 +570,7 @@ namespace Game.Newt.Testers
             if (chkShowTriangles.IsChecked.Value)
             {
                 grdTriangles.Visibility = Visibility.Visible;
-                grdTriangles.Opacity = UtilityHelper.GetScaledValue_Capped(0d, 1d, trkTriangleOpacity.Minimum, trkTriangleOpacity.Maximum, trkTriangleOpacity.Value);
+                grdTriangles.Opacity = UtilityCore.GetScaledValue_Capped(0d, 1d, trkTriangleOpacity.Minimum, trkTriangleOpacity.Maximum, trkTriangleOpacity.Value);
             }
             else
             {
@@ -581,7 +581,7 @@ namespace Game.Newt.Testers
             if (chkShowCircles.IsChecked.Value)
             {
                 grdCircles.Visibility = Visibility.Visible;
-                grdCircles.Opacity = UtilityHelper.GetScaledValue_Capped(0d, 1d, trkCircleOpacity.Minimum, trkCircleOpacity.Maximum, trkCircleOpacity.Value);
+                grdCircles.Opacity = UtilityCore.GetScaledValue_Capped(0d, 1d, trkCircleOpacity.Minimum, trkCircleOpacity.Maximum, trkCircleOpacity.Value);
             }
             else
             {

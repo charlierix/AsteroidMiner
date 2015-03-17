@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.Math3D;
 using Game.Orig.Map;
 using Game.Orig.HelperClassesOrig;
@@ -60,7 +60,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
 		private void trkWidth_Scroll(object sender, EventArgs e)
 		{
-			double size = UtilityHelper.GetScaledValue(0, BOUNDRYMAX, trkWidth.Minimum, trkWidth.Maximum, trkWidth.Value);
+			double size = UtilityCore.GetScaledValue(0, BOUNDRYMAX, trkWidth.Minimum, trkWidth.Maximum, trkWidth.Value);
 
 			_boundryLower.X = size * -1d;
 			_boundryUpper.X = size;
@@ -75,7 +75,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 		}
 		private void trkHeight_Scroll(object sender, EventArgs e)
 		{
-			double size = UtilityHelper.GetScaledValue(0, BOUNDRYMAX, trkHeight.Minimum, trkHeight.Maximum, trkHeight.Value);
+			double size = UtilityCore.GetScaledValue(0, BOUNDRYMAX, trkHeight.Minimum, trkHeight.Maximum, trkHeight.Value);
 
 			_boundryLower.Y = size * -1d;
 			_boundryUpper.Y = size;

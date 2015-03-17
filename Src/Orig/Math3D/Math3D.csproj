@@ -106,9 +106,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
-      <Name>HelperClasses</Name>
+      <Name>HelperClassesCore</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

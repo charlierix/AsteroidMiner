@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.GameTester
 {
@@ -122,59 +122,7 @@ namespace Game.GameTester
         }
 
         #endregion
-        #region WPF Tests
-
-        private void itemColorVisualizer_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.ColorVisualizer().Show();
-        }
-        private void itemCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.CameraTester().Show();
-        }
-        private void itemTransformTester_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.TransformTester().Show();
-        }
-        private void itemSoundTester_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.SoundTester().Show();
-        }
-        private void itemRotateDblVect_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.DoubleVectorWindow().Show();
-        }
-        private void itemTubeMeshTester_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.TubeMeshTester().Show();
-        }
-        private void itemPotatoes_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.PotatoWindow().Show();
-        }
-        private void itemNeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.NeuralTester().Show();
-        }
-        private void itemEvenDistribute_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.EvenDistributionSphere().Show();
-        }
-        private void itemShadows_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.ShadowsWindow().Show();
-        }
-        private void itemPainter_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.FluidFields.FluidPainter2D().Show();
-        }
-        private void itemPainter3D_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.FluidFields.FluidPainter3D().Show();
-        }
-
-        #endregion
-        #region Newton Engine
+        #region Newton 1.53
 
         private void itemGravityCubes1_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -190,12 +138,79 @@ namespace Game.GameTester
         }
         private void itemAstMiner2D_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.AsteroidMiner2D_153.Miner2D().Show();
+            new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2D().Show();
         }
         private void itemSwarmBots_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.AsteroidMiner2D_153.SwarmBotTester().Show();
+            new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.SwarmBotTester().Show();
         }
+
+        #endregion
+        #region WPF Tests
+
+        private void itemColorVisualizer_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.ColorVisualizer().Show();
+        }
+        private void itemCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.CameraTester().Show();
+        }
+        private void itemTransformTester_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.TransformTester().Show();
+        }
+        private void itemRotateDblVect_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.DoubleVectorWindow().Show();
+        }
+        private void itemTubeMeshTester_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.TubeMeshTester().Show();
+        }
+        private void itemSoundTester_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.SoundTester().Show();
+        }
+        private void itemPotatoes_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.PotatoWindow().Show();
+        }
+        private void itemEvenDistribute_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.EvenDistributionSphere().Show();
+        }
+        private void itemClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.ClusteredPoints().Show();
+        }
+        private void itemShadows_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.ShadowsWindow().Show();
+        }
+        private void itemCurves_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Curves().Show();
+        }
+
+        #endregion
+        #region Misc Tests
+
+        private void itemNeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NeuralTester().Show();
+        }
+        private void itemPainter_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.FluidFields.FluidPainter2D().Show();
+        }
+        private void itemPainter3D_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.FluidFields.FluidPainter3D().Show();
+        }
+
+        #endregion
+        #region Newton 2.36
 
         private void itemGlobalStats_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -204,6 +219,10 @@ namespace Game.GameTester
         private void itemNewt2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Newt2Tester.Newt2Tester().Show();
+        }
+        private void itemMultithreadWorlds_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.MultithreadWorlds().Show();
         }
         private void itemTowerWrecker_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -219,11 +238,11 @@ namespace Game.GameTester
         }
         private void itemAsteroidField_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.AsteroidMiner2.AstField.AsteroidFieldWindow().Show();
+            new Game.Newt.v2.AsteroidMiner.AstField.AsteroidFieldWindow().Show();
         }
         private void itemShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.ShipEditorWindow().Show();
+            new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
         }
         private void itemShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -237,9 +256,13 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.BrainTester().Show();
         }
+        private void itemBrainTester2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.BrainTester2().Show();
+        }
         private void itemFlyingBeans_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.FlyingBeans.FlyingBeansWindow().Show();
+            new Game.Newt.v2.FlyingBeans.FlyingBeansWindow().Show();
         }
         private void itemShipCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -274,10 +297,35 @@ namespace Game.GameTester
             // More complex is to have an arbitrary number of rigid chassis that are separated by joints.  The parts attach to those chassis.  Each chassis
             // will be invisible like the single one is now.
 
-            new Game.Newt.Testers.GenePool.GenePoolWindow().Show();
+            new Game.Newt.v2.GenePool.GenePoolWindow().Show();
+        }
+        private void itemChaseForces_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.ChaseForces.ChaseForcesWindow().Show();
+        }
+        private void itemArcanorum_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
+        }
+        private void itemAstMiner2D_2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.AsteroidMiner.AstMin2D.Miner().Show();
         }
 
         #endregion
+
+        private void SettingsFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Open the settings folder in windows explorer
+                System.Diagnostics.Process.Start(UtilityCore.GetOptionsFolder());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void About_Click(object sender, RoutedEventArgs e)
         {
@@ -300,7 +348,7 @@ namespace Game.GameTester
             //          These will auto shoot at anything that is not from their team
 
             // Make some kind of brain tower that acts as a spawn point, gun turret, sensor package, control center.  Maybe have it start as a mobile
-            // unit, then when it gets to where it needs to go, it permanently converts into a brain tower.  (maybe make it look like sort of like deadmau5,
+            // unit, then when it gets to where it needs to go, it permanently converts into a brain tower.  (make it look sort of like deadmau5,
             // just to further the pun)
 
 
@@ -343,10 +391,6 @@ namespace Game.GameTester
 
 
         }
-        private void itemArcanorum_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.Arcanorum.ArcanorumWindow().Show();
-        }
 
         #endregion
 
@@ -354,7 +398,7 @@ namespace Game.GameTester
 
         private void LoadOptionsFromFile()
         {
-            MainFormOptions options = UtilityHelper.ReadOptions<MainFormOptions>(FILE) ?? new MainFormOptions();
+            MainFormOptions options = UtilityCore.ReadOptions<MainFormOptions>(FILE) ?? new MainFormOptions();
 
             chkAutoClose.IsChecked = options.ShouldAutoClose ?? false;
         }
@@ -364,7 +408,7 @@ namespace Game.GameTester
 
             options.ShouldAutoClose = chkAutoClose.IsChecked.Value;
 
-            UtilityHelper.SaveOptions(options, FILE);
+            UtilityCore.SaveOptions(options, FILE);
         }
 
         #endregion

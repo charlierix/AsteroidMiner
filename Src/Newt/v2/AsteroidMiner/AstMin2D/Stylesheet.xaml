@@ -1,0 +1,47 @@
+﻿<ResourceDictionary
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008">
+
+    <!-- For the entire dialog -->
+    <Style x:Key="dialogBorder" TargetType="Border">
+        <Setter Property="Background" Value="#C8606060"/>
+        <Setter Property="BorderBrush" Value="#D0404040"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Margin" Value="40"/>
+        <Setter Property="Padding" Value="20"/>
+    </Style>
+
+    <!-- Panels that present primary data -->
+    <Style x:Key="primaryBorder" TargetType="Border">
+        <Setter Property="Background" Value="#909090"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#D0D0D0"/>
+        <Setter Property="CornerRadius" Value="5"/>
+    </Style>
+
+    <SolidColorBrush x:Key="primaryBorderTextColor" Color="#D0D0D0" />
+
+    <!-- Panels that sit inside the primary border -->
+    <Style x:Key="primarySubBorder" TargetType="Border">
+        <Setter Property="Background" Value="#A8A8A8"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#9A9A9A"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="Margin" Value="4"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+
+    <SolidColorBrush x:Key="primarySubBorderTextColor" Color="#F0F0F0" />
+
+    <!-- Panels along the edges of the dialog (more subdued) -->
+    <Style x:Key="secondaryBorder" TargetType="Border">
+        <Setter Property="Background" Value="#28FFFFFF"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
+    <SolidColorBrush x:Key="secondaryBorderTextColor" Color="#E0E0E0" />
+
+</ResourceDictionary>

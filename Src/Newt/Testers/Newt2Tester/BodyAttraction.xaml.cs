@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
@@ -97,33 +97,33 @@ namespace Game.Newt.Testers.Newt2Tester
 			switch (attractionType)
 			{
 				case BodyAttractionType.Gravity:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 125, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 125, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
 					break;
 
 				case BodyAttractionType.Spring:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 10, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 10, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
 					break;
 
 				case BodyAttractionType.SpringDesiredDistance:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 50, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
-					distance = UtilityHelper.GetScaledValue_Capped(0, 100, trkDistance.Minimum, trkDistance.Maximum, trkDistance.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 50, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					distance = UtilityCore.GetScaledValue_Capped(0, 100, trkDistance.Minimum, trkDistance.Maximum, trkDistance.Value);
 					break;
 
 				case BodyAttractionType.SpringInverseDist:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 10, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 10, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
 					break;
 
 				case BodyAttractionType.Tangent:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 200, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
-					distance = UtilityHelper.GetScaledValue_Capped(0, 50, trkDistance.Minimum, trkDistance.Maximum, trkDistance.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 200, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					distance = UtilityCore.GetScaledValue_Capped(0, 50, trkDistance.Minimum, trkDistance.Maximum, trkDistance.Value);
 					break;
 
 				case BodyAttractionType.Constant:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 20, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 20, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
 					break;
 
 				default:
-					strength = UtilityHelper.GetScaledValue_Capped(0, 100, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
+					strength = UtilityCore.GetScaledValue_Capped(0, 100, trkStrength.Minimum, trkStrength.Maximum, trkStrength.Value);
 					break;
 			}
 

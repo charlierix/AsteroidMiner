@@ -11,8 +11,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Media.Media3D;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.Testers
 {
@@ -91,7 +91,7 @@ namespace Game.Newt.Testers
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = materials;
                 geometry.BackMaterial = materials;
-                geometry.Geometry = UtilityWPF.GetSphere(5, DOTRADIUS, DOTRADIUS, DOTRADIUS);
+                geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, DOTRADIUS, DOTRADIUS, DOTRADIUS);
 
                 // Model Visual
                 ModelVisual3D retVal = new ModelVisual3D();
@@ -190,7 +190,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < count; cntr++)
                 {
-                    Dot dot = new Dot(false, Math3D.GetRandomVectorSpherical(radius).ToPoint());
+                    Dot dot = new Dot(false, Math3D.GetRandomVector_Spherical(radius).ToPoint());
 
                     _dots.Add(dot);
                     _viewport.Children.Add(dot.Visual);
@@ -226,7 +226,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < count; cntr++)
                 {
-                    Dot dot = new Dot(true, Math3D.GetRandomVectorSpherical(radius).ToPoint());
+                    Dot dot = new Dot(true, Math3D.GetRandomVector_Spherical(radius).ToPoint());
 
                     _dots.Add(dot);
                     _viewport.Children.Add(dot.Visual);
@@ -268,11 +268,11 @@ namespace Game.Newt.Testers
 
                 ClearDebugVisuals();
 
-                if (chkInwardForce.IsChecked.Value || chkRepulsiveForce.IsChecked.Value)
+                if ((chkInteriorPoints.IsChecked.Value && chkInwardForce.IsChecked.Value) || chkRepulsiveForce.IsChecked.Value)
                 {
                     Vector3D[] forces = new Vector3D[_dots.Count];
 
-                    if (chkInwardForce.IsChecked.Value)
+                    if (chkInteriorPoints.IsChecked.Value && chkInwardForce.IsChecked.Value)
                     {
                         // Inward Force
                         GetInwardForces(forces, _dots);
@@ -348,8 +348,17 @@ namespace Game.Newt.Testers
 
                 ClearDebugVisuals();
 
+
+                if (!chkInteriorPoints.IsChecked.Value)
+                {
+                    // Snap them to the surface of the sphere
+                    SnapToSphere(_dots, radius);
+                }
+
+
+
                 Vector3D[] forces = new Vector3D[_dots.Count];
-                if (chkInwardForce.IsChecked.Value)
+                if (chkInteriorPoints.IsChecked.Value && chkInwardForce.IsChecked.Value)
                 {
                     // Inward Force
                     GetInwardForces(forces, _dots);
@@ -369,6 +378,17 @@ namespace Game.Newt.Testers
                         _dots[cntr].Position += forces[cntr] * percent;
                     }
                 }
+
+
+
+                if (!chkInteriorPoints.IsChecked.Value)
+                {
+                    // Now that they've moved, snap them back to the surface of the sphere
+                    SnapToSphere(_dots, radius);
+                }
+
+
+
 
                 if (chkShowForcesAfterMove.IsChecked.Value)
                 {
@@ -609,6 +629,7 @@ namespace Game.Newt.Testers
 
             return radius / resultRadius;
         }
+
         private static void GetRepulsionForces(Vector3D[] forces, List<Dot> dots, double maxDist)
         {
             const double STRENGTH = 1d;
@@ -658,13 +679,24 @@ namespace Game.Newt.Testers
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(20, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(20, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D retVal = new ModelVisual3D();
             retVal.Content = geometry;
 
             return retVal;
+        }
+
+        private static void SnapToSphere(List<Dot> dots, double radius)
+        {
+            foreach (Dot dot in dots)
+            {
+                if (!dot.IsStatic)
+                {
+                    dot.Position = (dot.Position.ToVector().ToUnit() * radius).ToPoint();
+                }
+            }
         }
 
         #endregion

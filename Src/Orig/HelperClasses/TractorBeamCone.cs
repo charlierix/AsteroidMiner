@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.Math3D;
 using Game.Orig.Map;
 
@@ -404,7 +404,7 @@ namespace Game.Orig.HelperClassesOrig
                 double distance = lineBetween.GetMagnitude();
 
                 // Figure out the force to apply
-                double force = UtilityHelper.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
+                double force = UtilityCore.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
                 force *= _percent;
 
                 switch (_mode)
@@ -490,7 +490,7 @@ namespace Game.Orig.HelperClassesOrig
                             double force = relativeVelocity * blip.Ball.Mass;   // Velocity * Mass is impulse force
 
                             // See if force needs to be limited by the tractor's max force
-                            double maxForce = UtilityHelper.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
+                            double maxForce = UtilityCore.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
                             if (Math.Abs(force) > maxForce)
                             {
                                 if (force > 0d)
@@ -529,7 +529,7 @@ namespace Game.Orig.HelperClassesOrig
                             double force1 = relativeVelocity1 * blip.Ball.Mass;   // Velocity * Mass is impulse force
 
                             // See if force needs to be limited by the tractor's max force
-                            double maxForce1 = UtilityHelper.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
+                            double maxForce1 = UtilityCore.GetScaledValue(_forceAtZero, _forceAtMax, 0d, _maxDistance, distance);
                             if (Math.Abs(force1) > maxForce1)
                             {
                                 if (force1 > 0d)
@@ -569,7 +569,7 @@ namespace Game.Orig.HelperClassesOrig
         {
             const double MINVELOCITY = 20d;
 
-            double minVelocity = UtilityHelper.GetScaledValue(0, MINVELOCITY, 0, _maxDistance, distance);
+            double minVelocity = UtilityCore.GetScaledValue(0, MINVELOCITY, 0, _maxDistance, distance);
 
             MyVector dummy;
             MyVector tractorVelocity = GetSpinVelocityAtPoint(ref angularInfo, out dummy, dirFacingWorld, _offset, _ship.Ball.Position + _offset);

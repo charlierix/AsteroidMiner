@@ -12,14 +12,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.AsteroidMiner2.ShipParts;
-using Game.Newt.AsteroidMiner2.ShipEditor;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Clipper;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipParts;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Clipper;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers
 {
@@ -462,7 +462,7 @@ namespace Game.Newt.Testers
 
                 Point3D? resultEdge, resultGuide;
 
-                foreach (TriangleEdge edge in Enum.GetValues(typeof(TriangleEdge)))
+                foreach (TriangleEdge edge in Triangle.Edges)
                 {
                     // Since the test points are coplanar, this will return a value that is also coplanar
                     if (!Math3D.GetClosestPoints_Line_Line(out resultEdge, out resultGuide, triangle.GetPoint(edge, true), triangle.GetPoint(edge, false), pointOnTriangle, guidePoint2))
@@ -681,7 +681,7 @@ namespace Game.Newt.Testers
                 List<Point3D> retval = new List<Point3D>();
 
                 // Cap to the triangle
-                foreach (TriangleEdge edge in Enum.GetValues(typeof(TriangleEdge)))
+                foreach (TriangleEdge edge in Triangle.Edges)
                 {
                     Point3D[] resultsLine, resultsLineSegment;
                     if (!Math3D.GetClosestPoints_Line_LineSegment(out resultsLine, out resultsLineSegment, pointOnLine, lineDirection, triangle.GetPoint(edge, true), triangle.GetPoint(edge, false)))
@@ -1647,7 +1647,7 @@ namespace Game.Newt.Testers
                 {
                     // Find the unique points
                     List<Point> uniquePointList = new List<Point>();
-                    foreach (Point point in UtilityHelper.Iterate(lineSegments.Select(o => o.Item1), lineSegments.Select(o => o.Item2)))
+                    foreach (Point point in UtilityCore.Iterate(lineSegments.Select(o => o.Item1), lineSegments.Select(o => o.Item2)))
                     {
                         if (!uniquePointList.Any(o => Math2D.IsNearValue(point, o)))
                         {
@@ -1691,7 +1691,7 @@ namespace Game.Newt.Testers
                     while (true)
                     {
                         // Find the points that only have one segment pointing to them
-                        var pointCounts = UtilityHelper.Iterate(segmentList.Select(o => o.Item1), segmentList.Select(o => o.Item2)).
+                        var pointCounts = UtilityCore.Iterate(segmentList.Select(o => o.Item1), segmentList.Select(o => o.Item2)).
                             GroupBy(o => o).
                             Select(o => new { Point = o.Key, Count = o.Count() }).
                             Where(o => o.Count == 1).
@@ -1728,7 +1728,7 @@ namespace Game.Newt.Testers
                 private static List<Chain> GetChains(Tuple<int, int>[] segments)
                 {
                     // Find the points that have more than two segments pointing to them
-                    var pointCounts = UtilityHelper.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).
+                    var pointCounts = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).
                         GroupBy(o => o).
                         Select(o => Tuple.Create(o.Key, o.Count())).
                         Where(o => o.Item2 > 2).
@@ -1815,7 +1815,7 @@ namespace Game.Newt.Testers
 
                     if (currentPoint < 0)
                     {
-                        int[] points = UtilityHelper.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).Distinct().ToArray();
+                        int[] points = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).Distinct().ToArray();
                         throw new ApplicationException(string.Format("Didn't find the start: {0}, in: {1}", start.ToString(), string.Join(" ", points)));
                     }
 
@@ -2182,7 +2182,7 @@ namespace Game.Newt.Testers
 
                         if (!foundOne)
                         {
-                            int[] points = UtilityHelper.Iterate(junctions.Select(o => o.FromPoint), junctions.Select(o => o.ToPoint)).Distinct().ToArray();
+                            int[] points = UtilityCore.Iterate(junctions.Select(o => o.FromPoint), junctions.Select(o => o.ToPoint)).Distinct().ToArray();
                             throw new ApplicationException(string.Format("Didn't find the point: {0}, in: {1}", currentPoint.ToString(), string.Join(" ", points)));
                         }
                     }
@@ -2387,7 +2387,7 @@ namespace Game.Newt.Testers
                 private static Tuple<int, Junction[]> ReduceJunctions_Multiple_ClusterSprtFindMulti(List<Junction> junctions)
                 {
                     // Find the point that has the most junctions pointing to it
-                    var multi = UtilityHelper.Iterate(junctions.Select(o => o.FromPoint), junctions.Select(o => o.ToPoint)).
+                    var multi = UtilityCore.Iterate(junctions.Select(o => o.FromPoint), junctions.Select(o => o.ToPoint)).
                         GroupBy(o => o).
                         Select(o => new { Point = o.Key, Count = o.Count() }).
                         Where(o => o.Count > 1).
@@ -3137,6 +3137,178 @@ namespace Game.Newt.Testers
 
         #endregion
 
+        #region Class: Triangulator
+
+        // Got this here:
+        // http://wiki.unity3d.com/index.php?title=Triangulator
+        private static class Triangulator
+        {
+            public static Tuple<int, int, int>[] Triangulate(Point[] points)
+            {
+                int n = points.Length;
+                if (n < 3)
+                {
+                    return new Tuple<int, int, int>[0];
+                }
+
+                int[] V = new int[n];
+                if (Area_Signed(points) > 0)
+                {
+                    for (int v = 0; v < n; v++)
+                    {
+                        V[v] = v;
+                    }
+                }
+                else
+                {
+                    for (int v = 0; v < n; v++)
+                    {
+                        V[v] = (n - 1) - v;
+                    }
+                }
+
+                List<int> retVal = new List<int>();
+
+                int nv = n;
+                int count = 2 * nv;
+                for (int m = 0, v = nv - 1; nv > 2; )
+                {
+                    if ((count--) <= 0)
+                    {
+                        return ConvertToTriples(retVal.ToArray());
+                    }
+
+                    int u = v;
+                    if (nv <= u)
+                    {
+                        u = 0;
+                    }
+
+                    v = u + 1;
+                    if (nv <= v)
+                    {
+                        v = 0;
+                    }
+
+                    int w = v + 1;
+                    if (nv <= w)
+                    {
+                        w = 0;
+                    }
+
+                    if (Snip(u, v, w, nv, V, points))
+                    {
+                        int a = V[u];
+                        int b = V[v];
+                        int c = V[w];
+
+                        retVal.Add(a);
+                        retVal.Add(b);
+                        retVal.Add(c);
+
+                        m++;
+                        for (int s = v, t = v + 1; t < nv; s++, t++)
+                        {
+                            V[s] = V[t];
+                        }
+
+                        nv--;
+                        count = 2 * nv;
+                    }
+                }
+
+                retVal.Reverse();
+                return ConvertToTriples(retVal.ToArray());
+            }
+
+            private static Tuple<int, int, int>[] ConvertToTriples(int[] indices)
+            {
+                if (indices.Length % 3 != 0)
+                {
+                    throw new ApplicationException("Return list should be divisible by three: " + indices.Length.ToString());
+                }
+
+                Tuple<int, int, int>[] retVal = new Tuple<int, int, int>[indices.Length / 3];
+
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    int index = cntr * 3;
+
+                    retVal[cntr] = Tuple.Create(indices[index], indices[index + 1], indices[index + 2]);
+                }
+
+                return retVal;
+            }
+
+            /// <summary>
+            /// This returns the area of the polygon (may be negative if normal faces down)
+            /// </summary>
+            private static double Area_Signed(Point[] points)
+            {
+                int n = points.Length;
+
+                double retVal = 0d;
+
+                for (int p = n - 1, q = 0; q < n; p = q++)
+                {
+                    retVal += points[p].X * points[q].Y - points[q].X * points[p].Y;
+                }
+
+                return (retVal / 2d);
+            }
+
+            //TODO: Rename as a question (IsSnipping?)
+            private static bool Snip(int u, int v, int w, int n, int[] V, Point[] points)
+            {
+                int p;
+                Point A = points[V[u]];
+                Point B = points[V[v]];
+                Point C = points[V[w]];
+
+                if (Math3D.NEARZERO > (((B.X - A.X) * (C.Y - A.Y)) - ((B.Y - A.Y) * (C.X - A.X))))
+                    return false;
+
+                for (p = 0; p < n; p++)
+                {
+                    if ((p == u) || (p == v) || (p == w))
+                    {
+                        continue;
+                    }
+
+                    Point P = points[V[p]];
+
+                    if (InsideTriangle(A, B, C, P))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            //TODO: Replace with Math2D.IsInsidePolygon
+            private static bool InsideTriangle(Point A, Point B, Point C, Point P)
+            {
+                double ax, ay, bx, by, cx, cy, apx, apy, bpx, bpy, cpx, cpy;
+                double cCROSSap, bCROSScp, aCROSSbp;
+
+                ax = C.X - B.X; ay = C.Y - B.Y;
+                bx = A.X - C.X; by = A.Y - C.Y;
+                cx = B.X - A.X; cy = B.Y - A.Y;
+                apx = P.X - A.X; apy = P.Y - A.Y;
+                bpx = P.X - B.X; bpy = P.Y - B.Y;
+                cpx = P.X - C.X; cpy = P.Y - C.Y;
+
+                aCROSSbp = ax * bpy - ay * bpx;
+                cCROSSap = cx * apy - cy * apx;
+                bCROSScp = bx * cpy - by * cpx;
+
+                return ((aCROSSbp >= 0d) && (bCROSScp >= 0d) && (cCROSSap >= 0d));
+            }
+        }
+
+        #endregion
+
         #region Declaration Section
 
         private EditorOptions _editorOptions = new EditorOptions();
@@ -3160,6 +3332,8 @@ namespace Game.Newt.Testers
         private TriangleVisual[] _collidedTriangles = null;
 
         private List<Visual3D> _debugVisuals = new List<Visual3D>();
+
+        private ITriangle _testTriangle = null;
 
         #endregion
 
@@ -3291,6 +3465,61 @@ namespace Game.Newt.Testers
 
         }
 
+        private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (_testTriangle == null)
+                {
+                    return;
+                }
+
+                if (e.ChangedButton != MouseButton.Left)
+                {
+                    return;
+                }
+
+                // Get click point
+                Point clickPoint = e.GetPosition(grdViewPort);
+
+                RayHitTestParameters clickRay;
+                List<MyHitTestResult> hits = UtilityWPF.CastRay(out clickRay, clickPoint, grdViewPort, _camera, _viewport, true);
+
+                // Get hit point
+                Point3D hitPoint = Math3D.GetClosestPoint_Triangle_Point(_testTriangle, clickRay.Origin);
+
+                Color color = UtilityWPF.GetRandomColor(64, 192);
+
+                // Hit point
+                Visual3D visual = GetVisual_Dot(hitPoint, .1, color);
+                _debugVisuals.Add(visual);
+                _viewport.Children.Add(visual);
+
+                // Click from
+                visual = GetVisual_Dot(clickRay.Origin, .1, color);
+                _debugVisuals.Add(visual);
+                _viewport.Children.Add(visual);
+
+                // Lines
+                ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+                lines.Color = color;
+                lines.Thickness = 1;
+
+                lines.AddLine(clickRay.Origin, clickRay.Origin + _testTriangle.Normal * 100);
+                lines.AddLine(clickRay.Origin, clickRay.Origin -_testTriangle.Normal * 100);
+
+                lines.AddLine(hitPoint, clickRay.Origin + _testTriangle.Normal * 100);
+                lines.AddLine(hitPoint, clickRay.Origin - _testTriangle.Normal * 100);
+
+                _debugVisuals.Add(lines);
+                _viewport.Children.Add(lines);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnRandom5_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -3358,11 +3587,11 @@ namespace Game.Newt.Testers
                 //_viewport.Children.Add(visual);
 
                 ITriangle[] sliced = Math3D.SliceLargeTriangles(orig, 8d);
-                var slicedIndexed = TriangleIndexedThreadsafe.ConvertToIndexed(sliced, false);
+                var slicedIndexed = TriangleIndexed.ConvertToIndexed(sliced);
 
                 foreach (ITriangle triangle in slicedIndexed)
                 {
-                    Visual3D visual = GetVisual_Triangle(new ITriangle[] { triangle }, UtilityWPF.GetRandomColor(255, 128, 192));
+                    Visual3D visual = GetVisual_Triangle(new ITriangle[] { triangle }, UtilityWPF.GetRandomColor(128, 192));
                     _debugVisuals.Add(visual);
                     _viewport.Children.Add(visual);
                 }
@@ -3441,7 +3670,7 @@ namespace Game.Newt.Testers
                 Point3D pointOnTriangle = Math3D.FromBarycentric(triangle, bary);
 
                 // Pick a random spot in space to tell what direction to go in
-                Point3D guidePoint = Math3D.GetRandomVectorSpherical(30).ToPoint();
+                Point3D guidePoint = Math3D.GetRandomVector_Spherical(30).ToPoint();
                 //Point3D guidePoint = pointOnTriangle + triangle.Normal;       // used to test for a perpendicular guide direction
 
                 // Find the point on the triangle's edge
@@ -4643,7 +4872,7 @@ namespace Game.Newt.Testers
                 for (int cntr = 0; cntr < initialPolys.Length; cntr++)
                 {
                     Point[] triangle = Enumerable.Range(0, 3).
-                        Select(o => Math3D.GetRandomVectorSpherical2D(20d)).
+                        Select(o => Math3D.GetRandomVector_Circular(20d)).
                         Select(o => new Point(o.X, o.Y)).
                         ToArray();
 
@@ -4719,7 +4948,7 @@ namespace Game.Newt.Testers
                 for (int cntr = 0; cntr < polys.Length; cntr++)
                 {
                     Point[] triangle = Enumerable.Range(0, 3).
-                        Select(o => Math3D.GetRandomVectorSpherical2D(20d)).
+                        Select(o => Math3D.GetRandomVector_Circular(20d)).
                         Select(o => new Point(o.X, o.Y)).
                         ToArray();
 
@@ -4837,7 +5066,7 @@ namespace Game.Newt.Testers
                 for (int cntr = 0; cntr < initialPolys.Length; cntr++)
                 {
                     Point[] triangle = Enumerable.Range(0, 3).
-                        Select(o => Math3D.GetRandomVectorSpherical2D(20d)).
+                        Select(o => Math3D.GetRandomVector_Circular(20d)).
                         Select(o => new Point(o.X, o.Y)).
                         ToArray();
 
@@ -5148,7 +5377,7 @@ namespace Game.Newt.Testers
                 //      If there is more than one match, the list should be able to be simplified
 
                 List<Point> uniquePoints = new List<Point>();
-                foreach (Point point in UtilityHelper.Iterate(feedsIntermediate.Select(o => o.Item1), feedsIntermediate.Select(o => o.Item2)))
+                foreach (Point point in UtilityCore.Iterate(feedsIntermediate.Select(o => o.Item1), feedsIntermediate.Select(o => o.Item2)))
                 {
                     if (!uniquePoints.Any(o => Math2D.IsNearValue(point, o)))
                     {
@@ -5439,6 +5668,69 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void btnTessellateConcave_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ClearAllVisuals();
+
+                // Create some random triangles
+                Point[][] initialPolys = new Point[5][];
+
+                for (int cntr = 0; cntr < initialPolys.Length; cntr++)
+                {
+                    Point[] triangle = Enumerable.Range(0, 3).
+                        Select(o => Math3D.GetRandomVector_Circular(20d)).
+                        Select(o => new Point(o.X, o.Y)).
+                        ToArray();
+
+                    initialPolys[cntr] = triangle;
+                }
+
+                // Turn into polygons
+                Polygon2D[] unionPolys = Math2D.GetUnion_Polygons(initialPolys);
+
+                TriangleIndexed[][] triangulated = new TriangleIndexed[unionPolys.Length][];
+                for (int cntr = 0; cntr < unionPolys.Length; cntr++)
+                {
+                    //http://wiki.unity3d.com/index.php?title=Triangulator
+
+                    Point3D[] poly3D = unionPolys[cntr].Polygon.Select(o => o.ToPoint3D()).ToArray();
+
+                    triangulated[cntr] = Triangulator.Triangulate(unionPolys[cntr].Polygon).
+                        Select(o => new TriangleIndexed(o.Item1, o.Item2, o.Item3, poly3D)).
+                        ToArray();
+                }
+
+                #region Draw
+
+                Visual3D visual;
+
+                // Orig polygons
+                foreach (Polygon2D polygon in unionPolys)       // ignoring holes
+                {
+                    visual = GetVisual_PolygonLines(polygon.Polygon.Select(o => o.ToPoint3D()).ToArray(), Colors.Gray, 2);
+                    _debugVisuals.Add(visual);
+                    _viewport.Children.Add(visual);
+                }
+
+                // Individual triangles
+                foreach (TriangleIndexed triangle in triangulated.SelectMany(o => o))
+                {
+                    visual = GetVisual_Triangle(new ITriangle[] { triangle }, UtilityWPF.GetRandomColor(128, 0, 255));
+
+                    _debugVisuals.Add(visual);
+                    _viewport.Children.Add(visual);
+                }
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnChainTest1_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -5454,7 +5746,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(1, -1), new Point(0, -1)));       //4
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -5510,7 +5802,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(-1, -1), new Point(0, -1)));      //5
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -5568,7 +5860,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(0, 1), new Point(-1, -1)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -5652,7 +5944,7 @@ namespace Game.Newt.Testers
 
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -5983,7 +6275,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(0, -1), new Point(0, 1)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -6048,7 +6340,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(1, 0), new Point(2, 0)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = null;
                 try
@@ -6121,7 +6413,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(3, 0), new Point(2, 0)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = null;
                 try
@@ -6191,7 +6483,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(1, 0), new Point(1.5, .5)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -6344,7 +6636,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(-3, -2), new Point(0, -5)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = null;
                 try
@@ -6407,7 +6699,7 @@ namespace Game.Newt.Testers
                 segments1.Add(Tuple.Create(new Point(1, -1), new Point(0, 0)));
 
                 //var segments = segments1;
-                var segments = UtilityHelper.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
+                var segments = UtilityCore.RandomRange(0, segments1.Count).Select(o => segments1[o]).ToList();
 
                 Polygon2D[] final = PolyUnion2.StitchSegments2.Stitch(segments.ToArray());
 
@@ -6548,12 +6840,12 @@ namespace Game.Newt.Testers
                 ClearAllVisuals();
 
                 Point[] triangle = Enumerable.Range(0, 3).
-                    Select(o => Math3D.GetRandomVectorSpherical2D(RADIUS)).
+                    Select(o => Math3D.GetRandomVector_Circular(RADIUS)).
                     Select(o => new Point(o.X, o.Y)).
                     ToArray();
 
                 var isInside = Enumerable.Range(0, 200).
-                    Select(o => Math3D.GetRandomVectorSpherical2D(RADIUS)).
+                    Select(o => Math3D.GetRandomVector_Circular(RADIUS)).
                     Select(o => new Point(o.X, o.Y)).
                     Select(o => new
                         {
@@ -6819,6 +7111,28 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void btnClosestPointTriangle_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ClearAllVisuals();
+
+                _testTriangle = GetRandomTriangle(1, 30);
+
+                Visual3D visual = GetVisual_Triangle(new[] { _testTriangle }, UtilityWPF.ColorFromHex("CCC"));
+                _debugVisuals.Add(visual);
+                _viewport.Children.Add(visual);
+
+                visual = GetVisual_Plane(_testTriangle, UtilityWPF.ColorFromHex("40EEEEEE"));
+                _debugVisuals.Add(visual);
+                _viewport.Children.Add(visual);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -6843,12 +7157,10 @@ namespace Game.Newt.Testers
         }
         private void ClearDebugVisuals()
         {
-            foreach (Visual3D visual in _debugVisuals)
-            {
-                _viewport.Children.Remove(visual);
-            }
-
+            _viewport.Children.RemoveAll(_debugVisuals);
             _debugVisuals.Clear();
+
+            _testTriangle = null;
         }
 
         private Polygon2D[] GetPolyUnion(Point[][] polygons)
@@ -6980,10 +7292,11 @@ namespace Game.Newt.Testers
         private PartBase[] GetRandomParts(int count)
         {
             PartBase[] parts = Enumerable.Range(0, 5).Select(o => GetRandomPart()).ToArray();
+            PartSeparator_Part[] partWrappers = parts.Select(o => new PartSeparator_Part(o)).ToArray();
 
             bool changed1, changed2;
-            Ship.PartSeparator.PullInCrude(out changed1, parts);
-            Ship.PartSeparator.Separate(out changed2, parts, _world);
+            PartSeparator.PullInCrude(out changed1, partWrappers);
+            PartSeparator.Separate(out changed2, partWrappers, _world);
 
             return parts;
         }
@@ -7002,7 +7315,7 @@ namespace Game.Newt.Testers
                     #region Spin
 
                     double spinSize = 5d + (StaticRandom.NextDouble() * 8d);
-                    PartNeuralDNA dnaSpin = new PartNeuralDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
+                    PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
                     return new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
 
                     #endregion
@@ -7028,7 +7341,7 @@ namespace Game.Newt.Testers
                 case 3:
                     #region Brain
 
-                    PartNeuralDNA dnaBrain = new PartNeuralDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
+                    PartDNA dnaBrain = new PartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
                     return new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
                     #endregion
@@ -7036,7 +7349,7 @@ namespace Game.Newt.Testers
                 case 4:
                     #region Thruster
 
-                    ThrusterDNA dnaThruster1 = new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, height, height), ThrusterType = UtilityHelper.GetRandomEnum(ThrusterType.Custom) };
+                    ThrusterDNA dnaThruster1 = new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, height, height), ThrusterType = UtilityCore.GetRandomEnum(ThrusterType.Custom) };
                     return new Thruster(_editorOptions, _itemOptions, dnaThruster1, null);
 
                     #endregion
@@ -7044,7 +7357,7 @@ namespace Game.Newt.Testers
                 case 5:
                     #region Solar
 
-                    ConverterRadiationToEnergyDNA dnaSolar = new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, 1d + StaticRandom.NextDouble() * 4d, 1d), Shape = UtilityHelper.GetRandomEnum<SolarPanelShape>() };
+                    ConverterRadiationToEnergyDNA dnaSolar = new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, 1d + StaticRandom.NextDouble() * 4d, 1d), Shape = UtilityCore.GetRandomEnum<SolarPanelShape>() };
                     return new ConverterRadiationToEnergy(_editorOptions, _itemOptions, dnaSolar, null, _radiation);
 
                     #endregion
@@ -7244,7 +7557,7 @@ namespace Game.Newt.Testers
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(3, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D retVal = new ModelVisual3D();
@@ -7293,6 +7606,15 @@ namespace Game.Newt.Testers
 
             return retVal;
         }
+        private static Visual3D GetVisual_Plane(ITriangle plane, Color color, double size = 50)
+        {
+            Model3D model = UtilityWPF.GetPlane(plane, size, color);
+
+            ModelVisual3D retVal = new ModelVisual3D();
+            retVal.Content = model;
+
+            return retVal;
+        }
 
         private static Triangle[] GetRandomTrianglesOnion(double minRadius, double maxRadius, int count)
         {
@@ -7310,9 +7632,9 @@ namespace Game.Newt.Testers
         private static Triangle GetRandomTriangle(double minRadius, double maxRadius)
         {
             return new Triangle(
-                Math3D.GetRandomVectorSpherical(minRadius, maxRadius).ToPoint(),
-                Math3D.GetRandomVectorSpherical(minRadius, maxRadius).ToPoint(),
-                Math3D.GetRandomVectorSpherical(minRadius, maxRadius).ToPoint());
+                Math3D.GetRandomVector_Spherical(minRadius, maxRadius).ToPoint(),
+                Math3D.GetRandomVector_Spherical(minRadius, maxRadius).ToPoint(),
+                Math3D.GetRandomVector_Spherical(minRadius, maxRadius).ToPoint());
         }
 
         private static Triangle[] GetRandomTrianglesPlate(double radius, int count)
@@ -7324,7 +7646,7 @@ namespace Game.Newt.Testers
                 while (true)
                 {
                     // Make a random triangle
-                    Point[] triangle = Enumerable.Range(0, 3).Select(o => Math3D.GetRandomVectorSpherical2D(radius)).Select(o => new Point(o.X, o.Y)).ToArray();
+                    Point[] triangle = Enumerable.Range(0, 3).Select(o => Math3D.GetRandomVector_Circular(radius)).Select(o => new Point(o.X, o.Y)).ToArray();
 
                     // Dupe check
                     bool intersected = false;

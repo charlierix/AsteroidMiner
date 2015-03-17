@@ -87,65 +87,57 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Arcanorum\AIMousePlate.cs" />
-    <Compile Include="Arcanorum\ArcanorumWindow.xaml.cs">
-      <DependentUpon>ArcanorumWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\BackdropPanel.xaml.cs">
-      <DependentUpon>BackdropPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\BackdropQuick.xaml.cs">
-      <DependentUpon>BackdropQuick.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\Bot.cs" />
-    <Compile Include="Arcanorum\BotNPC.cs" />
-    <Compile Include="Arcanorum\CustomMouseCursor.cs" />
-    <Compile Include="Arcanorum\Inventory.cs" />
-    <Compile Include="Arcanorum\InventoryItem.xaml.cs">
-      <DependentUpon>InventoryItem.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\InventoryQuickPanel.xaml.cs">
-      <DependentUpon>InventoryQuickPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\ItemDetailPanel.xaml.cs">
-      <DependentUpon>ItemDetailPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\ItemOptionsArco.cs" />
-    <Compile Include="Arcanorum\KeepItems2D.cs" />
-    <Compile Include="Arcanorum\MapObjectChaseVelocity.cs" />
-    <Compile Include="Arcanorum\MaterialIDs.cs" />
-    <Compile Include="Arcanorum\PortalVisual.cs" />
-    <Compile Include="Arcanorum\RamWeapon.cs" />
-    <Compile Include="Arcanorum\Sensors.cs" />
-    <Compile Include="Arcanorum\ShopPanel.xaml.cs">
-      <DependentUpon>ShopPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Arcanorum\TreasureBox.cs" />
-    <Compile Include="Arcanorum\Weapon.cs" />
-    <Compile Include="Arcanorum\WorldColorsArco.cs" />
-    <Compile Include="AsteroidMiner2D_153\OptionsPanel.xaml.cs">
-      <DependentUpon>OptionsPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="AsteroidMiner2D_153\Miner2D.xaml.cs">
-      <DependentUpon>Miner2D.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="AsteroidMiner2D_153\SpaceDockPanel.xaml.cs">
-      <DependentUpon>SpaceDockPanel.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="AsteroidMiner2D_153\SwarmBotTester.xaml.cs">
-      <DependentUpon>SwarmBotTester.xaml</DependentUpon>
-    </Compile>
     <Compile Include="BrainTester.xaml.cs">
       <DependentUpon>BrainTester.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BrainTester2.xaml.cs">
+      <DependentUpon>BrainTester2.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CameraTester.xaml.cs">
       <DependentUpon>CameraTester.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\BodyBall.cs" />
+    <Compile Include="ChaseForces\ChaseColors.cs" />
+    <Compile Include="ChaseForces\ChasedBall.cs" />
+    <Compile Include="ChaseForces\ChasedOrientation.xaml.cs">
+      <DependentUpon>ChasedOrientation.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\ChasedPosition.xaml.cs">
+      <DependentUpon>ChasedPosition.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\ChaseForcesWindow.xaml.cs">
+      <DependentUpon>ChaseForcesWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\ChaseOrientation_DirectionType.cs" />
+    <Compile Include="ChaseForces\GradientStops.xaml.cs">
+      <DependentUpon>GradientStops.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\GradientStopsPreset.xaml.cs">
+      <DependentUpon>GradientStopsPreset.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\ForceCollection.xaml.cs">
+      <DependentUpon>ForceCollection.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\ForceEntry.xaml.cs">
+      <DependentUpon>ForceEntry.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\LinearVelocity.xaml.cs">
+      <DependentUpon>LinearVelocity.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ChaseForces\OrientationVelocity.xaml.cs">
+      <DependentUpon>OrientationVelocity.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ClusteredPoints.xaml.cs">
+      <DependentUpon>ClusteredPoints.xaml</DependentUpon>
     </Compile>
     <Compile Include="CollisionShapes.xaml.cs">
       <DependentUpon>CollisionShapes.xaml</DependentUpon>
     </Compile>
     <Compile Include="ColorVisualizer.xaml.cs">
       <DependentUpon>ColorVisualizer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Curves.xaml.cs">
+      <DependentUpon>Curves.xaml</DependentUpon>
     </Compile>
     <Compile Include="DoubleVectorWindow.xaml.cs">
       <DependentUpon>DoubleVectorWindow.xaml</DependentUpon>
@@ -169,37 +161,6 @@
     <Compile Include="FluidFields\WindTunnel2.xaml.cs">
       <DependentUpon>WindTunnel2.xaml</DependentUpon>
     </Compile>
-    <Compile Include="FlyingBeans\Bean.cs" />
-    <Compile Include="FlyingBeans\BeanColors.cs" />
-    <Compile Include="FlyingBeans\FlyingBeanOptions.cs" />
-    <Compile Include="FlyingBeans\FlyingBeanSession.cs" />
-    <Compile Include="FlyingBeans\FlyingBeansWindow.xaml.cs">
-      <DependentUpon>FlyingBeansWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelBeanProps.xaml.cs">
-      <DependentUpon>PanelBeanProps.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelBeanTypes.xaml.cs">
-      <DependentUpon>PanelBeanTypes.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelFile.xaml.cs">
-      <DependentUpon>PanelFile.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelMutation.xaml.cs">
-      <DependentUpon>PanelMutation.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelSimulation.xaml.cs">
-      <DependentUpon>PanelSimulation.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\PanelTracking.xaml.cs">
-      <DependentUpon>PanelTracking.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="FlyingBeans\WinnerList.cs" />
-    <Compile Include="GenePool\GenePoolWindow.xaml.cs">
-      <DependentUpon>GenePoolWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="GenePool\SelectedItemSwimbots.cs" />
-    <Compile Include="GenePool\Swimbot.cs" />
     <Compile Include="GlobalItemStatsWindow.xaml.cs">
       <DependentUpon>GlobalItemStatsWindow.xaml</DependentUpon>
     </Compile>
@@ -208,6 +169,9 @@
     </Compile>
     <Compile Include="GravityCubes2.xaml.cs">
       <DependentUpon>GravityCubes2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MultithreadWorlds.xaml.cs">
+      <DependentUpon>MultithreadWorlds.xaml</DependentUpon>
     </Compile>
     <Compile Include="NeuralTester.xaml.cs">
       <DependentUpon>NeuralTester.xaml</DependentUpon>
@@ -261,9 +225,6 @@
     <Compile Include="ShipCameraTesterSnapshot.xaml.cs">
       <DependentUpon>ShipCameraTesterSnapshot.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ShipEditorWindow.xaml.cs">
-      <DependentUpon>ShipEditorWindow.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ShipPartTesterWindow.xaml.cs">
       <DependentUpon>ShipPartTesterWindow.xaml</DependentUpon>
     </Compile>
@@ -296,63 +257,11 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Arcanorum\ArcanorumWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\BackdropPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\BackdropQuick.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\BackdropStylesheet.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\InventoryItem.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\InventoryQuickPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\ItemDetailPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Arcanorum\ShopPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="AsteroidMiner2D_153\OptionsPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="AsteroidMiner2D_153\Miner2D.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="AsteroidMiner2D_153\SpaceDockPanel.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="AsteroidMiner2D_153\SwarmBotTester.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="BrainTester.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="BrainTester2.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -362,6 +271,50 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="ChaseForces\ChasedOrientation.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\ChasedPosition.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\ChaseForcesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\GradientStops.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\GradientStopsPreset.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\ForceCollection.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\ForceEntry.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\LinearVelocity.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\OrientationVelocity.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ChaseForces\Stylesheet.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ClusteredPoints.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CollisionShapes.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -369,6 +322,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="ColorVisualizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Curves.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -406,42 +363,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="FlyingBeans\BeanStylesheet.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\FlyingBeansWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelBeanProps.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelBeanTypes.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelFile.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelMutation.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelSimulation.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="FlyingBeans\PanelTracking.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="GenePool\GenePoolWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="GlobalItemStatsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -457,6 +378,10 @@
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MultithreadWorlds.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="NeuralTester.xaml">
       <SubType>Designer</SubType>
@@ -532,12 +457,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ShipEditorWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="ShipPartTesterWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -580,34 +499,30 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
-      <Name>HelperClasses</Name>
+      <Name>HelperClassesCore</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AsteroidMiner2\AsteroidMiner2.csproj">
-      <Project>{A80968C6-78CD-4D22-BFE9-364991784478}</Project>
-      <Name>AsteroidMiner2</Name>
+    <ProjectReference Include="..\v1\NewtonDynamics1\NewtonDynamics1.csproj">
+      <Project>{57517a06-cffa-471d-b540-819727e3aae7}</Project>
+      <Name>NewtonDynamics1</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AsteroidMiner_153\AsteroidMiner_153.csproj">
-      <Project>{B2665AD3-8C78-4A12-A6D9-F117225AD904}</Project>
-      <Name>AsteroidMiner_153</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\HelperClasses\HelperClasses.csproj">
+    <ProjectReference Include="..\..\HelperClassesWPF\HelperClassesWPF.csproj">
       <Project>{0F6B42D4-C2C8-499A-897D-76D4CE6D0DB6}</Project>
-      <Name>HelperClasses %28Newt\HelperClasses%29</Name>
+      <Name>HelperClassesWPF</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NewtonDynamics\NewtonDynamics.csproj">
+    <ProjectReference Include="..\v2\AsteroidMiner\AsteroidMiner.csproj">
+      <Project>{a80968c6-78cd-4d22-bfe9-364991784478}</Project>
+      <Name>AsteroidMiner</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\v2\GameItems\GameItems.csproj">
+      <Project>{a3ca9a78-4faf-47c0-9cd0-9b864df7bae5}</Project>
+      <Name>GameItems</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\v2\NewtonDynamics\NewtonDynamics.csproj">
       <Project>{6C91684B-DE51-4CBB-920D-F5B267709799}</Project>
       <Name>NewtonDynamics</Name>
     </ProjectReference>
-    <ProjectReference Include="..\NewtonDynamics_153\NewtonDynamics_153.csproj">
-      <Project>{57517A06-CFFA-471D-B540-819727E3AAE7}</Project>
-      <Name>NewtonDynamics_153</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Resources\gear_black.png" />
-    <Resource Include="Resources\gear_gray.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.Testers.FluidFields
 {

@@ -5,7 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Map;
@@ -763,7 +763,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             {
                 int fadeElapse = FADEDURATION - (tickCount - _lastMouseMove - INITIALDELAY);		// I reversed it so I can run the result through the LERP function
 
-                return UtilityHelper.GetScaledValue_Capped(0d, 1d, 0, FADEDURATION, fadeElapse);
+                return UtilityCore.GetScaledValue_Capped(0d, 1d, 0, FADEDURATION, fadeElapse);
             }
 
             return 0d;

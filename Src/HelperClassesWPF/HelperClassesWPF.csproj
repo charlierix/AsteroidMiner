@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{0F6B42D4-C2C8-499A-897D-76D4CE6D0DB6}</ProjectGuid>
+    <RootNamespace>Game.HelperClassesWPF</RootNamespace>
+    <AssemblyName>Game.HelperClassesWPF</AssemblyName>
+    <WarningLevel>4</WarningLevel>
+    <OutputType>library</OutputType>
+    <!-- Most people will use Publish dialog in Visual Studio to increment this -->
+    <MinFrameworkVersionRequired>3.0</MinFrameworkVersionRequired>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>.\bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>.\bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="PresentationCore">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="PresentationFramework">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UIAutomationProvider">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="ReachFramework" />
+    <Reference Include="System.Printing" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.IdentityModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AutoScrollEmulator.cs" />
+    <Compile Include="BindingHelper.cs" />
+    <Compile Include="CameraHelper.cs" />
+    <Compile Include="Clipper\Clipper.cs" />
+    <Compile Include="Controls2D\OutlinedTextBlock.cs" />
+    <Compile Include="Controls2D\GlassButton_Circle.xaml.cs">
+      <DependentUpon>GlassButton_Circle.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls2D\SliderShowValues.xaml.cs">
+      <DependentUpon>SliderShowValues.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls2D\UndoRedo.xaml.cs">
+      <DependentUpon>UndoRedo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="DoubleVector.cs" />
+    <Compile Include="DragHitShape.cs" />
+    <Compile Include="Extenders.cs" />
+    <Compile Include="Gizmos3D\Arrow.xaml.cs">
+      <DependentUpon>Arrow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Gizmos3D\VisualToVisualLine3D.cs" />
+    <Compile Include="Gizmos3D\VisualToVisualLine3D.Properties.cs" />
+    <Compile Include="Math2D.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\Collections.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\Constants.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\ConvexFace.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\ConvexFaceInternal.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\ConvexHull.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\ConvexHullInternal.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\IVertex.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\MathHelper.cs" />
+    <Compile Include="MIConvexHull\ConvexHull\ObjectManager.cs" />
+    <Compile Include="MIConvexHull\Triangulation\DelaunayTriangulation.cs" />
+    <Compile Include="MIConvexHull\Triangulation\Triangulation.cs" />
+    <Compile Include="MIConvexHull\Triangulation\TriangulationCell.cs" />
+    <Compile Include="MIConvexHull\Triangulation\VoronoiEdge.cs" />
+    <Compile Include="MIConvexHull\Triangulation\VoronoiMesh.cs" />
+    <Compile Include="Primitives3D\ArcScreenSpaceLines3D.cs" />
+    <Compile Include="Primitives3D\BillboardLine3D.cs" />
+    <Compile Include="Primitives3D\CompoundVisual3D.cs" />
+    <Compile Include="Math3D.cs" />
+    <Compile Include="MathUtils.cs" />
+    <Compile Include="Matrix3DStack.cs" />
+    <Compile Include="Primitives3D\ConeVisual3D.cs" />
+    <Compile Include="Primitives3D\CubeVisual3D.cs" />
+    <Compile Include="Primitives3D\CylinderVisual3D.cs" />
+    <Compile Include="Primitives3D\PlaneVisual3D.cs" />
+    <Compile Include="Primitives3D\PrimitiveVisual3D.cs" />
+    <Compile Include="Primitives3D\ScreenSpaceLines3D.cs" />
+    <Compile Include="Primitives3D\SphereVisual3D.cs" />
+    <Compile Include="Primitives3D\TessellianVisual3D.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="Primitives3D\ScreenSpaceLines3DHelper.cs" />
+    <Compile Include="Rectangle3DIndexed.cs" />
+    <Compile Include="SoundPool.cs" />
+    <Compile Include="StaTaskScheduler.cs" />
+    <Compile Include="Tetrahedron.cs" />
+    <Compile Include="TrackBall.cs" />
+    <Compile Include="TrackballGrabber.cs" />
+    <Compile Include="Triangle.cs" />
+    <Compile Include="UIElementHelper.cs" />
+    <Compile Include="UtilityWPF.cs" />
+    <Compile Include="Viewport3DHelper.cs" />
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{B4F97281-0DBD-4835-9ED8-7DFB966E87FF}" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Controls2D\GlassButton_Circle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls2D\SliderShowValues.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls2D\UndoRedo.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Gizmos3D\Arrow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\gear_black.png" />
+    <Resource Include="Resources\gear_gray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HelperClassesCore\HelperClassesCore.csproj">
+      <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
+      <Name>HelperClassesCore</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="MIConvexHull\readme.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

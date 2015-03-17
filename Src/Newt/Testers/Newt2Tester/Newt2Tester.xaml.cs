@@ -13,9 +13,9 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.Newt2Tester
 {
@@ -392,7 +392,7 @@ namespace Game.Newt.Testers.Newt2Tester
 
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(255, 64, 192))));
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.GetRandomColor(64, 192))));
                 materials.Children.Add(new SpecularMaterial(Brushes.White, 100d));
 
                 // Geometry Model
@@ -410,7 +410,7 @@ namespace Game.Newt.Testers.Newt2Tester
                         break;
 
                     case CollisionShapeType.Sphere:
-                        geometry.Geometry = UtilityWPF.GetSphere(5, e.Size.X, e.Size.Y, e.Size.Z);
+                        geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, e.Size.X, e.Size.Y, e.Size.Z);
                         hull = CollisionHull.CreateSphere(_world, 0, e.Size, null);
                         break;
 
@@ -435,8 +435,8 @@ namespace Game.Newt.Testers.Newt2Tester
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVectorSpherical(10), Math3D.GetNearZeroValue(360d))));
-                transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVectorSpherical(CREATEOBJECTBOUNDRY)));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector_Spherical(CREATEOBJECTBOUNDRY)));
 
                 // Model Visual
                 ModelVisual3D model = new ModelVisual3D();
@@ -453,7 +453,7 @@ namespace Game.Newt.Testers.Newt2Tester
                 // Make a physics body that represents this shape
                 Body body = new Body(hull, transform.Value, e.Mass, new Visual3D[] { model });
                 hull.Dispose();
-                body.Velocity = Math3D.GetRandomVectorSpherical2D(1d);
+                body.Velocity = Math3D.GetRandomVector_Circular(1d);
 
                 //body.LinearDamping = .01f;
                 //body.AngularDamping = new Vector3D(.01f, .01f, .01f);
@@ -477,7 +477,7 @@ namespace Game.Newt.Testers.Newt2Tester
             try
             {
                 // Figure out the centerpoint
-                Point3D centerPoint = Math3D.GetRandomVectorSpherical(CREATEOBJECTBOUNDRY).ToPoint();
+                Point3D centerPoint = Math3D.GetRandomVector_Spherical(CREATEOBJECTBOUNDRY).ToPoint();
 
                 // Get a random rotation
                 //TODO:  Figure out why it fails when I give it a rotation
@@ -485,7 +485,7 @@ namespace Game.Newt.Testers.Newt2Tester
                 Quaternion finalRotation = new Quaternion(new Vector3D(0, 0, 1), 0);
 
                 // All bodies will be the same color
-                Color color = UtilityWPF.GetRandomColor(255, 64, 192);
+                Color color = UtilityWPF.GetRandomColor(64, 192);
 
                 Body[] bodies = null;
 
@@ -655,7 +655,7 @@ namespace Game.Newt.Testers.Newt2Tester
                             switch (e.Direction)
                             {
                                 case SetVelocityDirection.Random:
-                                    direction = Math3D.GetRandomVectorSpherical(1d);
+                                    direction = Math3D.GetRandomVector_Spherical(1d);
                                     break;
 
                                 case SetVelocityDirection.FromCenter:
@@ -698,7 +698,7 @@ namespace Game.Newt.Testers.Newt2Tester
                                 case SetVelocityDirection.Random:
                                 case SetVelocityDirection.FromCenter:		// just letting all rotations be random
                                 case SetVelocityDirection.TowardCenter:
-                                    axis = Math3D.GetRandomVectorSpherical(1d);
+                                    axis = Math3D.GetRandomVector_Spherical(1d);
                                     break;
 
                                 //case SetVelocityDirection.FromCenter:
@@ -970,7 +970,7 @@ namespace Game.Newt.Testers.Newt2Tester
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(3, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D model = new ModelVisual3D();
@@ -1115,7 +1115,7 @@ namespace Game.Newt.Testers.Newt2Tester
                     break;
 
                 case CollisionShapeType.Sphere:
-                    geometry.Geometry = UtilityWPF.GetSphere(5, 1d, 1d, 1d);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, 1d, 1d, 1d);
                     hull = CollisionHull.CreateSphere(_world, 0, new Vector3D(1d, 1d, 1d), null);
                     break;
 
@@ -1157,7 +1157,7 @@ namespace Game.Newt.Testers.Newt2Tester
             // Make a physics body that represents this shape
             Body body = new Body(hull, transform.Value, 1d, new Visual3D[] { model });		// being lazy with mass, but since size is fixed, it won't be too noticable
             hull.Dispose();
-            body.Velocity = Math3D.GetRandomVectorSpherical2D(1d);
+            body.Velocity = Math3D.GetRandomVector_Circular(1d);
 
             //body.LinearDamping = .01f;
             //body.AngularDamping = new Vector3D(.01f, .01f, .01f);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Map;
@@ -326,7 +326,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             #endregion
 
             // Create a blip to contain this object
-            BallBlip blip = new BallBlip(newObject, _newBallProps.CollisionStyle, blipQual, TokenGenerator.Instance.NextToken());
+            BallBlip blip = new BallBlip(newObject, _newBallProps.CollisionStyle, blipQual, TokenGenerator.NextToken());
 
             // If this is a torqueball, then it will get the angular velocity.  I have to wait until now, because
             // the size could change during a draw (you don't see it spin during the drag anyway, because I
@@ -371,7 +371,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             #endregion
 
-            double mass = UtilityHelper.GetMassForRadius(radius, 1d);
+            double mass = UtilityCore.GetMassForRadius(radius, 1d);
 
             MyVector velocity;
             #region Calculate Velocity
@@ -446,7 +446,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                     }
 
                     _drawingBall.Radius = newValue;
-                    _drawingBall.Mass = UtilityHelper.GetMassForRadius(newValue, 1d);
+                    _drawingBall.Mass = UtilityCore.GetMassForRadius(newValue, 1d);
                     break;
 
                 //case AddingMode.AddRigidBody:
@@ -461,7 +461,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private bool WillCollide(Ball ball)
         {
             // Make a temp blip to be a wrapper for this
-            RadarBlip blip = new RadarBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined10, TokenGenerator.Instance.NextToken());
+            RadarBlip blip = new RadarBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined10, TokenGenerator.NextToken());
 
             foreach (RadarBlip existingBlip in _map.GetAllBlips())
             {
@@ -493,7 +493,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                     break;
 
                 case BallProps.AngularVelocityModes.Random:
-                    angularVelocity = new MyVector(0, 0, UtilityHelper.GetScaledValue(_newBallProps.MinRandAngularVelocity, _newBallProps.MaxRandAngularVelocity, 0, 1, _rand.NextDouble()));
+                    angularVelocity = new MyVector(0, 0, UtilityCore.GetScaledValue(_newBallProps.MinRandAngularVelocity, _newBallProps.MaxRandAngularVelocity, 0, 1, _rand.NextDouble()));
                     break;
 
                 default:

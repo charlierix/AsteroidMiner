@@ -18,12 +18,12 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Xaml;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.AsteroidMiner2.ShipEditor;
-using Game.Newt.AsteroidMiner2.ShipParts;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.GameItems.ShipParts;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.Testers
 {
@@ -199,7 +199,7 @@ namespace Game.Newt.Testers
                     // See if the triangle is completely inside the rectangle
                     if (min.X >= tile.Item1.Left && max.X <= tile.Item1.Right && min.Y >= tile.Item1.Top && max.Y <= tile.Item1.Bottom)
                     {
-                        double areaTriangle = triangle.NormalLength;
+                        double areaTriangle = triangle.NormalLength / 2d;
                         double areaRect = tile.Item1.Width * tile.Item1.Height;
 
                         if (areaTriangle > areaRect)
@@ -548,7 +548,7 @@ namespace Game.Newt.Testers
                 EnergyTank energy = new EnergyTank(_editorOptions, _itemOptions, energyDNA);
                 energy.QuantityCurrent = energy.QuantityMax;
 
-                PartNeuralDNA dna = new PartNeuralDNA() { PartType = CameraColorRGB.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 1) };
+                PartDNA dna = new PartDNA() { PartType = CameraColorRGB.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 1) };
 
                 CameraColorRGB camera = new CameraColorRGB(_editorOptions, _itemOptions, dna, energy, _cameraPool);
 
@@ -561,7 +561,8 @@ namespace Game.Newt.Testers
 
                 //camera.StoreSnapshot(bitmap);
 
-                camera.Update(1);
+                camera.Update_MainThread(1);
+                camera.Update_AnyThread(1);
             }
             catch (Exception ex)
             {
@@ -625,9 +626,7 @@ namespace Game.Newt.Testers
                     #region Build triangles
 
                     //  Get the vertices of the triangles
-                    Vector[] vertices = Math3D.GetRandomVectorsCircularCenterPacked(
-                        Enumerable.Range(0, numNeurons + 2).Select(o => Math3D.GetRandomVectorSpherical2D(1d)).Select(o => new Vector(o.X, o.Y)).ToArray(),
-                        null, 1d, .03d, 1000, null, null);
+                    Vector[] vertices = Math3D.GetRandomVectors_Circular_CenterPacked(Enumerable.Range(0, numNeurons + 2).Select(o => Math3D.GetRandomVector_Circular(1d)).Select(o => new Vector(o.X, o.Y)).ToArray(), 1d, .03d, 1000, null, null, null);
 
                     #region Figure out the extremes
 
@@ -662,7 +661,7 @@ namespace Game.Newt.Testers
                     #region Build polygons
 
                     //  Get the control points
-                    Point[] controlPoints = Math3D.GetRandomVectorsCircularCenterPacked(numNeurons, null, 1d, .03d, 1000, null, null).Select(o => o.ToPoint()).ToArray();
+                    Point[] controlPoints = Math3D.GetRandomVectors_Circular_CenterPacked(numNeurons, 1d, .03d, 1000, null, null, null).Select(o => o.ToPoint()).ToArray();
 
                     var voronoi = Math2D.CapVoronoiCircle(Math2D.GetVoronoi(controlPoints, true));
 
@@ -1086,7 +1085,7 @@ namespace Game.Newt.Testers
                         GeometryModel3D geometry = new GeometryModel3D();
                         geometry.Material = materials;
                         geometry.BackMaterial = materials;
-                        geometry.Geometry = UtilityWPF.GetSphere(4, .05d);
+                        geometry.Geometry = UtilityWPF.GetSphere_LatLon(4, .05d);
 
                         geometry.Transform = new TranslateTransform3D(intersect[0].ToVector3D());
 
@@ -1243,12 +1242,12 @@ namespace Game.Newt.Testers
                 }
                 else
                 {
-                    before = Enumerable.Range(0, count).Select(o => Math3D.GetRandomVectorSpherical2D(MAXRADIUS)).ToArray();
+                    before = Enumerable.Range(0, count).Select(o => Math3D.GetRandomVector_Circular(MAXRADIUS)).ToArray();
                     //before = Enumerable.Range(0, count).Select(o => Math3D.GetRandomVectorSpherical(MAXRADIUS)).ToArray();
                 }
 
                 //Vector[] after2D = Math3D.GetRandomVectorsCircularEvenDist(before.Select(o => new Vector(o.X, o.Y)).ToArray(), null, MAXRADIUS, .03d, 1000, null, null);
-                Vector[] after2D = Math3D.GetRandomVectorsCircularEvenDist(before.Select(o => new Vector(o.X, o.Y)).ToArray(), null, MAXRADIUS, .001d, 1, null, null);
+                Vector[] after2D = Math3D.GetRandomVectors_Circular_EvenDist(before.Select(o => new Vector(o.X, o.Y)).ToArray(), MAXRADIUS, .001d, 1, null, null, null);
                 Vector3D[] after = after2D.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
 
                 //Vector3D[] after = Math3D.GetRandomVectorsSphericalEvenDist(before, null, MAXRADIUS, .001d, 25, null, null);
@@ -1301,11 +1300,11 @@ namespace Game.Newt.Testers
                 }
                 else
                 {
-                    before = Enumerable.Range(0, count).Select(o => Math3D.GetRandomVectorSpherical2D(MAXRADIUS)).ToArray();
+                    before = Enumerable.Range(0, count).Select(o => Math3D.GetRandomVector_Circular(MAXRADIUS)).ToArray();
                 }
 
                 //Vector[] after2D = Math3D.GetRandomVectorsCircularEvenDist(before.Select(o => new Vector(o.X, o.Y)).ToArray(), null, MAXRADIUS, .03d, 1000, null, null);
-                Vector[] after2D = Math3D.GetRandomVectorsCircularCenterPacked(before.Select(o => new Vector(o.X, o.Y)).ToArray(), null, MAXRADIUS, .001d, 1, null, null);
+                Vector[] after2D = Math3D.GetRandomVectors_Circular_CenterPacked(before.Select(o => new Vector(o.X, o.Y)).ToArray(), MAXRADIUS, .001d, 1, null, null, null);
                 Vector3D[] after = after2D.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
 
                 _evenDistPoints = after;
@@ -1452,7 +1451,7 @@ namespace Game.Newt.Testers
                 else
                 {
                     Model3DGroup geometries = new Model3DGroup();
-                    Color[] triangleColors = triangles.Select(o => UtilityWPF.GetRandomColor(255, 100, 192)).ToArray();
+                    Color[] triangleColors = triangles.Select(o => UtilityWPF.GetRandomColor(100, 192)).ToArray();
 
                     #region Intersections (plates)
 
@@ -1617,7 +1616,7 @@ namespace Game.Newt.Testers
                 modelBytes = stream.ToArray();
             }
 
-            CameraPoolVisual poolVisual = new CameraPoolVisual(TokenGenerator.Instance.NextToken(), modelBytes, null);
+            CameraPoolVisual poolVisual = new CameraPoolVisual(TokenGenerator.NextToken(), modelBytes, null);
 
             //  Add it
             _cameraPoolVisuals.Add(poolVisual);
@@ -1649,7 +1648,7 @@ namespace Game.Newt.Testers
                     GeometryModel3D geometry = new GeometryModel3D();
                     geometry.Material = materials;
                     geometry.BackMaterial = materials;
-                    geometry.Geometry = UtilityWPF.GetSphere(2, .02d);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, .02d);
 
                     geometry.Transform = new TranslateTransform3D(before[cntr]);
 
@@ -1678,7 +1677,7 @@ namespace Game.Newt.Testers
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = materials;
                 geometry.BackMaterial = materials;
-                geometry.Geometry = UtilityWPF.GetSphere(2, .03d);
+                geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, .03d);
 
                 geometry.Transform = new TranslateTransform3D(after[cntr]);
 
@@ -1741,7 +1740,7 @@ namespace Game.Newt.Testers
                     GeometryModel3D geometry = new GeometryModel3D();
                     geometry.Material = materials;
                     geometry.BackMaterial = materials;
-                    geometry.Geometry = UtilityWPF.GetSphere(2, .04d);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, .04d);
 
                     geometry.Transform = new TranslateTransform3D(triangles[cntr].GetCenterPoint().ToVector());
 

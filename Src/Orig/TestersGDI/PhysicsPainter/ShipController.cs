@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Math3D;
@@ -12,7 +12,7 @@ using Game.Orig.Map;
 
 namespace Game.Orig.TestersGDI.PhysicsPainter
 {
-    //TODO:  Put the majority of this class in Game.HelperClasses (as an abstract)
+    //TODO:  Put the majority of this class in Game.HelperClassesCore (as an abstract)
     public class ShipController
     {
         #region Enum: ShipTypeQual
@@ -129,7 +129,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
             _boundryLower = boundryLower;
             _boundryUpper = boundryUpper;
 
-            _blipToken = TokenGenerator.Instance.NextToken();
+            _blipToken = TokenGenerator.NextToken();
 
             _picturebox.KeyDown += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyDown);
             _picturebox.KeyUp += new System.Windows.Forms.KeyEventHandler(Picturebox_KeyUp);
@@ -829,7 +829,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 case ShipTypeQual.Ball:
                     #region Ball
 
-                    newBall = new Ball(position, new DoubleVector(0, 1, 0, 1, 0, 0), _shipSize, UtilityHelper.GetMassForRadius(_shipSize, 1d), elasticity, kineticFriction, staticFriction, _boundryLower, _boundryUpper);
+                    newBall = new Ball(position, new DoubleVector(0, 1, 0, 1, 0, 0), _shipSize, UtilityCore.GetMassForRadius(_shipSize, 1d), elasticity, kineticFriction, staticFriction, _boundryLower, _boundryUpper);
 
                     blipQual = RadarBlipQual.BallUserDefined00;
 
@@ -842,7 +842,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
                 case ShipTypeQual.SolidBall:
                     #region Solid Ball
 
-                    newBall = new SolidBall(position, new DoubleVector(0, 1, 0, 1, 0, 0), _shipSize, UtilityHelper.GetMassForRadius(_shipSize, 1d), elasticity, kineticFriction, staticFriction, _boundryLower, _boundryUpper);
+                    newBall = new SolidBall(position, new DoubleVector(0, 1, 0, 1, 0, 0), _shipSize, UtilityCore.GetMassForRadius(_shipSize, 1d), elasticity, kineticFriction, staticFriction, _boundryLower, _boundryUpper);
 
                     blipQual = RadarBlipQual.BallUserDefined01;
 
@@ -871,7 +871,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             #region Guns
 
-            _cannon = new ProjectileWeapon(300, 150, UtilityHelper.GetMassForRadius(150, 1d), 25, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
+            _cannon = new ProjectileWeapon(300, 150, UtilityCore.GetMassForRadius(150, 1d), 25, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
             _cannon.AddBarrel(_ship.Ball.OriginalDirectionFacing.Standard.Clone());
             _cannon.AddFiringMode(20);
             _cannon.SetProjectileExplosion(450, 2, 10000);
@@ -880,7 +880,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
             for (int cntr = 0; cntr < 2; cntr++)
             {
-                ProjectileWeapon weapon = new ProjectileWeapon(30, 20, UtilityHelper.GetMassForRadius(20, 1d), 100, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
+                ProjectileWeapon weapon = new ProjectileWeapon(30, 20, UtilityCore.GetMassForRadius(20, 1d), 100, true, _ignoreOtherProjectiles, RadarBlipQual.Projectile, false, _map, _boundryLower, _boundryUpper);
                 weapon.AddBarrel(new MyVector(), new MyQuaternion());
                 weapon.AddFiringMode(2);
                 weapon.SetProjectileExplosion(40, 2, 300);
@@ -901,7 +901,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 case ShipTypeQual.Ball:
                     _ship.Ball.Radius = _shipSize;
-                    _ship.Ball.Mass = UtilityHelper.GetMassForRadius(_shipSize, 1d);
+                    _ship.Ball.Mass = UtilityCore.GetMassForRadius(_shipSize, 1d);
 
                     _thrustForce = GetThrustForce(_ship.Ball.Mass);
                     _torqueballLeftRightThrusterForce = _thrustForce;
@@ -909,7 +909,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
                 case ShipTypeQual.SolidBall:
                     _ship.Ball.Radius = _shipSize;
-                    _ship.Ball.Mass = UtilityHelper.GetMassForRadius(_shipSize, 1d);
+                    _ship.Ball.Mass = UtilityCore.GetMassForRadius(_shipSize, 1d);
 
                     _thrustForce = GetThrustForce(_ship.Ball.Mass);
                     _torqueballLeftRightThrusterForce = GetLeftRightThrusterMagnitude(_ship.TorqueBall.InertialTensorBody);
@@ -1049,12 +1049,12 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
         private static double GetThrustForce(double mass)
         {
-            return THRUSTER_FORCE * (mass / UtilityHelper.GetMassForRadius(STANDARDRADIUS, 1d));
+            return THRUSTER_FORCE * (mass / UtilityCore.GetMassForRadius(STANDARDRADIUS, 1d));
         }
         private static double GetLeftRightThrusterMagnitude(MyMatrix3 inertialTensor)
         {
             // Create a standard sized solid ball, and use that as my baseline
-            SolidBall standBall = new SolidBall(new MyVector(), new DoubleVector(1, 0, 0, 0, 1, 0), STANDARDRADIUS, UtilityHelper.GetMassForRadius(STANDARDRADIUS, 1d));
+            SolidBall standBall = new SolidBall(new MyVector(), new DoubleVector(1, 0, 0, 0, 1, 0), STANDARDRADIUS, UtilityCore.GetMassForRadius(STANDARDRADIUS, 1d));
 
             double averageStand = GetLeftRightThrusterMagnitudeSprtGetAvg(standBall.InertialTensorBody);
             double averageShip = GetLeftRightThrusterMagnitudeSprtGetAvg(inertialTensor);

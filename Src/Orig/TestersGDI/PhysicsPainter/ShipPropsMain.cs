@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Map;
@@ -210,7 +210,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void trkSize_Scroll(object sender, EventArgs e)
         {
-            _shipController.ShipSize = UtilityHelper.GetScaledValue(_minSize, _maxSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
+            _shipController.ShipSize = UtilityCore.GetScaledValue(_minSize, _maxSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
             toolTip1.SetToolTip(trkSize, Math.Round(_shipController.ShipSize, 0).ToString());
         }
 

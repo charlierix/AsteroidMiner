@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.HelperClassesGDI;
 using Game.Orig.Map;
@@ -178,7 +178,7 @@ namespace Game.Orig.TestersGDI
             ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
             ball.Velocity.Z = 0;
 
-            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.Instance.NextToken());
+            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined00, TokenGenerator.NextToken());
 
             _map.Add(blip);
         }
@@ -192,7 +192,7 @@ namespace Game.Orig.TestersGDI
             ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
             ball.Velocity.Z = 0;
 
-            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined01, TokenGenerator.Instance.NextToken());
+            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined01, TokenGenerator.NextToken());
 
             _map.Add(blip);
         }
@@ -237,7 +237,7 @@ namespace Game.Orig.TestersGDI
             ball.Velocity.Add(Utility3D.GetRandomVector(MAXVELOCITY));
             ball.Velocity.Z = 0;
 
-            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined02, TokenGenerator.Instance.NextToken());
+            BallBlip blip = new BallBlip(ball, CollisionStyle.Standard, RadarBlipQual.BallUserDefined02, TokenGenerator.NextToken());
 
             _map.Add(blip);
         }
@@ -276,7 +276,7 @@ namespace Game.Orig.TestersGDI
                     _shipThrusterOffset_TopLeft.RotateAroundAxis(zAxis, Utility3D.GetDegreesToRadians(THRUSTERANGLE * -1));
 
                     // Add to the map
-                    _ship = new BallBlip(ship, CollisionStyle.Standard, RadarBlipQual.BallUserDefined03, TokenGenerator.Instance.NextToken());
+                    _ship = new BallBlip(ship, CollisionStyle.Standard, RadarBlipQual.BallUserDefined03, TokenGenerator.NextToken());
                     _map.Add(_ship);
 
                     #endregion
@@ -357,7 +357,7 @@ namespace Game.Orig.TestersGDI
             const double MINFORCE = 1;
             const double MAXFORCE = 750;
 
-            _vectorField.Strength = UtilityHelper.GetScaledValue(MINFORCE, MAXFORCE, trkVectorFieldForce.Minimum, trkVectorFieldForce.Maximum, trkVectorFieldForce.Value);
+            _vectorField.Strength = UtilityCore.GetScaledValue(MINFORCE, MAXFORCE, trkVectorFieldForce.Minimum, trkVectorFieldForce.Maximum, trkVectorFieldForce.Value);
         }
 
         private void trkVectorFieldSize_Scroll(object sender, EventArgs e)
@@ -365,7 +365,7 @@ namespace Game.Orig.TestersGDI
             const double MINSIZE = 10;
             const double MAXSIZE = 10000;
 
-            double size = UtilityHelper.GetScaledValue(MINSIZE, MAXSIZE, trkVectorFieldSize.Minimum, trkVectorFieldSize.Maximum, trkVectorFieldSize.Value);
+            double size = UtilityCore.GetScaledValue(MINSIZE, MAXSIZE, trkVectorFieldSize.Minimum, trkVectorFieldSize.Maximum, trkVectorFieldSize.Value);
 
             _vectorField.SizeX = size;
             _vectorField.SizeY = size;
@@ -416,7 +416,7 @@ namespace Game.Orig.TestersGDI
             const double MINTIME = .01d;
             const double MAXTIME = 10d;
 
-            _elapsedTime = UtilityHelper.GetScaledValue(MINTIME, MAXTIME, trkElapsedTime.Minimum, trkElapsedTime.Maximum, trkElapsedTime.Value);
+            _elapsedTime = UtilityCore.GetScaledValue(MINTIME, MAXTIME, trkElapsedTime.Minimum, trkElapsedTime.Maximum, trkElapsedTime.Value);
 
             txtElapsedTime.Text = Math.Round(_elapsedTime, 2).ToString();
         }
@@ -426,7 +426,7 @@ namespace Game.Orig.TestersGDI
             const double MINPERCENT = .001d;
             const double MAXPERCENT = .999d;
 
-            _map.CollisionHandler.PenetrationThresholdPercent = UtilityHelper.GetScaledValue(MINPERCENT, MAXPERCENT, trkThreshold.Minimum, trkThreshold.Maximum, trkThreshold.Value);
+            _map.CollisionHandler.PenetrationThresholdPercent = UtilityCore.GetScaledValue(MINPERCENT, MAXPERCENT, trkThreshold.Minimum, trkThreshold.Maximum, trkThreshold.Value);
 
             txtThreshold.Text = Math.Round(_map.CollisionHandler.PenetrationThresholdPercent * 100d, 1).ToString() + "%";
         }
@@ -455,7 +455,7 @@ namespace Game.Orig.TestersGDI
             const double MINGRAVITY = 0d;
             const double MAXGRAVITY = 50d;
 
-            _gravityMultiplier = UtilityHelper.GetScaledValue(MINGRAVITY, MAXGRAVITY, trkGravityForce.Minimum, trkGravityForce.Maximum, trkGravityForce.Value);
+            _gravityMultiplier = UtilityCore.GetScaledValue(MINGRAVITY, MAXGRAVITY, trkGravityForce.Minimum, trkGravityForce.Maximum, trkGravityForce.Value);
         }
 
         private void chkDrawCollisionsRed_CheckedChanged(object sender, EventArgs e)
@@ -542,7 +542,7 @@ namespace Game.Orig.TestersGDI
 
             try
             {
-                _map.CollisionHandler.PullApartInstantPercent = UtilityHelper.GetScaledValue(MINPERCENT, MAXPERCENT, trkPullApartPercent.Minimum, trkPullApartPercent.Maximum, trkPullApartPercent.Value);
+                _map.CollisionHandler.PullApartInstantPercent = UtilityCore.GetScaledValue(MINPERCENT, MAXPERCENT, trkPullApartPercent.Minimum, trkPullApartPercent.Maximum, trkPullApartPercent.Value);
 
                 txtPullApartPercent.Text = Math.Round(_map.CollisionHandler.PullApartInstantPercent * 100d, 1).ToString() + "%";
             }
@@ -557,7 +557,7 @@ namespace Game.Orig.TestersGDI
             const double MINVELOCITY = .01d;
             const double MAXVELOCITY = 30d;
 
-            _map.CollisionHandler.PullApartSpringVelocity = UtilityHelper.GetScaledValue(MINVELOCITY, MAXVELOCITY, trkPullApartSpring.Minimum, trkPullApartSpring.Maximum, trkPullApartSpring.Value);
+            _map.CollisionHandler.PullApartSpringVelocity = UtilityCore.GetScaledValue(MINVELOCITY, MAXVELOCITY, trkPullApartSpring.Minimum, trkPullApartSpring.Maximum, trkPullApartSpring.Value);
 
             txtPullApartSpring.Text = _map.CollisionHandler.PullApartSpringVelocity.ToString();
         }

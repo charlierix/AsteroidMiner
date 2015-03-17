@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 
 namespace Game.Orig.TestersGDI.PhysicsPainter
@@ -212,7 +212,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         private void trkAngularVelocity_Scroll(object sender, EventArgs e)
         {
             // Calculate the trackbar value
-            double scaledValue = UtilityHelper.GetScaledValue(_exposedProps.MinRandAngularVelocity, _exposedProps.MaxRandAngularVelocity, trkAngularVelocity.Minimum, trkAngularVelocity.Maximum, trkAngularVelocity.Maximum - trkAngularVelocity.Value);
+            double scaledValue = UtilityCore.GetScaledValue(_exposedProps.MinRandAngularVelocity, _exposedProps.MaxRandAngularVelocity, trkAngularVelocity.Minimum, trkAngularVelocity.Maximum, trkAngularVelocity.Maximum - trkAngularVelocity.Value);
             toolTip1.SetToolTip(trkAngularVelocity, Math.Round(scaledValue, 2).ToString());
 
             // I present angular velocity in rotations/frame.  But the torqueball wants it in radians/frame

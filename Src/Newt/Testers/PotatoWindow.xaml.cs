@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -12,10 +13,12 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Media.Media3D;
 
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.HelperClasses;
-using System.IO;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls2D;
+using Game.HelperClassesWPF.Primitives3D;
+using System.Text.RegularExpressions;
+using Game.Newt.v2.AsteroidMiner.MapParts;
 
 namespace Game.Newt.Testers
 {
@@ -199,6 +202,3309 @@ namespace Game.Newt.Testers
                     return _hullFaceSpecularOtherRemoved;
                 }
             }
+
+            public Color Spike = UtilityWPF.ColorFromHex("E3E0D5");
+            private SpecularMaterial _spikeSpecular = null;
+            public SpecularMaterial SpikeSpecular
+            {
+                get
+                {
+                    if (_spikeSpecular == null)
+                    {
+                        _spikeSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80C2BFB6")), 10d);
+                    }
+
+                    return _spikeSpecular;
+                }
+            }
+
+            public Color SpikeBall = UtilityWPF.ColorFromHex("615E54");
+            private SpecularMaterial _spikeBallSpecular = null;
+            public SpecularMaterial SpikeBallSpecular
+            {
+                get
+                {
+                    if (_spikeBallSpecular == null)
+                    {
+                        _spikeBallSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40C2BFB6")), 3d);
+                    }
+
+                    return _spikeBallSpecular;
+                }
+            }
+
+            //public readonly Brush LabelFill = new SolidColorBrush(UtilityWPF.ColorFromHex("FFFFFF"));
+            //public readonly Brush LabelStroke = new SolidColorBrush(UtilityWPF.ColorFromHex("A0000000"));
+            //public readonly Brush LabelFill = new SolidColorBrush(UtilityWPF.ColorFromHex("00FF4D"));
+            public readonly Brush LabelFill = new SolidColorBrush(UtilityWPF.ColorFromHex("A0FF2E"));
+            public readonly Brush LabelStroke = new SolidColorBrush(UtilityWPF.ColorFromHex("A0000000"));
+        }
+
+        #endregion
+        #region Class: AsteroidShatter
+
+        private class AsteroidShatter
+        {
+            public AsteroidShatter(ITriangleIndexed[] hull)
+            {
+                this.Hull = hull;
+
+                if (hull == null)
+                {
+                    this.HullPoints = null;
+                }
+                else if (hull.Length == 0)
+                {
+                    this.HullPoints = new Point3D[0];
+                }
+                else
+                {
+                    this.HullPoints = hull[0].AllPoints;
+                }
+            }
+
+            public readonly ITriangleIndexed[] Hull;
+            public readonly Point3D[] HullPoints;
+
+            /// <summary>
+            /// This is optional, it emulates collisions that will be considered when splitting the asteroid
+            /// </summary>
+            public readonly List<Tuple<Point3D, Vector3D>> Collisions = new List<Tuple<Point3D, Vector3D>>();
+
+            /// <summary>
+            /// When a decision to make a voronoi occurs, this is the voronoi
+            /// </summary>
+            public VoronoiResult3D Voronoi = null;
+            /// <summary>
+            /// When a voronoi gets created, this is the result of clipping the parent asteroid with the voronoi
+            /// NOTE: Each control point will have a corresponding shard in this list (the shard may be zero length if the control point is outside the asteroid
+            /// </summary>
+            public ITriangleIndexed[][] ShatteredHulls = null;
+        }
+
+        #endregion
+        #region Class: SmoothHullDebug
+
+        private static class SmoothHullDebug
+        {
+            public static ITriangleIndexed[] SmoothSlice(out long[] specialTokens, ITriangleIndexed[] triangles, double maxEdgeLength, int maxPasses = 3)
+            {
+                List<long> specialTokensList = new List<long>();
+
+                if (maxPasses < 1)
+                {
+                    specialTokens = specialTokensList.ToArray();
+                    return triangles;
+                }
+
+                List<ITriangle> sliced = new List<ITriangle>();
+
+                bool foundLarger = false;
+
+                SortedList<int, ITriangle> planes = new SortedList<int, ITriangle>();
+                SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers = new SortedList<Tuple<int, int>, BezierSegmentDef>();
+
+                for (int cntr = 0; cntr < triangles.Length; cntr++)
+                {
+                    // Get the length of the longest edge
+                    Tuple<TriangleEdge, double>[] edgeLengths = Triangle.Edges.
+                        Select(o => Tuple.Create(o, triangles[cntr].GetEdgeLength(o))).
+                        OrderBy(o => o.Item2).
+                        ToArray();
+
+                    double maxLength = edgeLengths.Max(o => o.Item2);
+
+                    if (maxLength > maxEdgeLength)
+                    {
+                        // This is too big.  Cut it up
+                        sliced.AddRange(Divide(triangles[cntr], edgeLengths, triangles, planes, edgeBeziers));
+                        foundLarger = true;
+                    }
+                    else
+                    {
+                        // Keep as is
+                        sliced.Add(triangles[cntr]);
+                    }
+                }
+
+                if (!foundLarger)
+                {
+                    specialTokens = specialTokensList.ToArray();
+                    return triangles;
+                }
+
+                foreach (ITriangleIndexed triangle in sliced.ToArray())
+                {
+                    specialTokensList.AddRange(DivideNeighbor(triangle, sliced, edgeBeziers));
+                }
+
+
+
+
+
+                specialTokens = specialTokensList.ToArray();
+                return sliced.Select(o => (ITriangleIndexed)o).ToArray();
+
+
+
+
+
+                // Convert to indexed
+                TriangleIndexed[] slicedIndexed = TriangleIndexed.ConvertToIndexed(sliced.ToArray());
+
+                if (maxPasses > 1)
+                {
+                    // Recurse
+                    long[] dummy;
+                    return SmoothSlice(out dummy, slicedIndexed, maxEdgeLength, maxPasses - 1);
+                }
+                else
+                {
+                    return slicedIndexed;
+                }
+            }
+
+            #region Private Methods
+
+            private static ITriangle[] Divide(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            {
+                // Define beziers for the three edges
+                var curves = Triangle.Edges.
+                    Select(o => Tuple.Create(o, GetCurvedEdge(triangle, o, triangles, planes, edgeBeziers))).
+                    ToArray();
+
+                // Take the shortest length divided by the longest (the array is sorted)
+                double ratio = edgeLengths[0].Item2 / edgeLengths[2].Item2;
+
+                TriangleIndexed[] retVal = null;
+
+                if (ratio > .75d)
+                {
+                    // The 3 egde lengths are roughly equal.  Divide into 4
+                    retVal = Divide_4(triangle, curves);
+                }
+                else if (ratio < .33d)
+                {
+                    // Skinny base, and two large sides
+                    retVal = Divide_SkinnyBase(triangle, edgeLengths, curves);
+                }
+                else
+                {
+                    // Wide base, and two smaller sides
+                    retVal = Divide_WideBase(triangle, edgeLengths, curves);
+                }
+
+                // Make sure the normals point in the same direction
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    if (Vector3D.DotProduct(retVal[cntr].Normal, triangle.Normal) < 0)
+                    {
+                        // Reverse it
+                        retVal[cntr] = new TriangleIndexed(retVal[cntr].Index0, retVal[cntr].Index2, retVal[cntr].Index1, retVal[cntr].AllPoints);
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static TriangleIndexed[] Divide_4(ITriangleIndexed triangle, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                //NOTE: Reusing existing points, then just adding new.  The constructed hull will have patches of triangles with
+                //differing point arrays, but there is a pass at the end that rebuilds the hull with a single unique point array
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.Index0);      // 0
+                map.Add(triangle.Index1);      // 1
+                map.Add(triangle.Index2);      // 2
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_01).Item2));       // 3
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_12).Item2));       // 4
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_20).Item2));       // 5
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[3], map[5], pointArr), triangle));       // Bottom Left
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[4], map[3], pointArr), triangle));       // Top
+                retVal.Add(MatchNormal(new TriangleIndexed(map[2], map[5], map[4], pointArr), triangle));       // Bottom Right
+                retVal.Add(MatchNormal(new TriangleIndexed(map[3], map[4], map[5], pointArr), triangle));       // Center
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] Divide_SkinnyBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[1].Item1));        // Bottom Left (0)
+                map.Add(triangle.GetCommonIndex(edgeLengths[1].Item1, edgeLengths[2].Item1));        // Top (1)
+                map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[2].Item1));        // Bottom Right (2)
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[1].Item1).Item2));        // Mid Left (3)
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Right (4)
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[4], map[3], pointArr), triangle));       // Top
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[4], map[2], pointArr), triangle));       // Bottom Right
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[3], map[4], pointArr), triangle));       // Middle Left
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] Divide_WideBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.GetCommonIndex(edgeLengths[2].Item1, edgeLengths[0].Item1));        // Bottom Left (0)
+                map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[1].Item1));        // Top (1)
+                map.Add(triangle.GetCommonIndex(edgeLengths[2].Item1, edgeLengths[1].Item1));        // Bottom Right (2)
+
+                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Bottom (3)
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[1], map[3], pointArr), triangle));       // Left
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[2], map[3], pointArr), triangle));       // Right
+
+                return retVal.ToArray();
+            }
+
+            private static long[] DivideNeighbor(ITriangleIndexed triangle, List<ITriangle> returnList, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            {
+                // Find beziers for the edges of this triangle (if a bezier was created, then that edge was sliced in half)
+                var bisectedEdges = Triangle.Edges.
+                    Select(o => new { Edge = o, From = triangle.GetIndex(o, true), To = triangle.GetIndex(o, false) }).
+                    Select(o => new { Edge = o.Edge, Key = Tuple.Create(Math.Min(o.From, o.To), Math.Max(o.From, o.To)) }).
+                    Select(o => new { Edge = o.Edge, Key = o.Key, Match = edgeBeziers.TryGetValue(o.Key) }).
+                    Where(o => o.Match.Item1).
+                    Select(o => Tuple.Create(o.Edge, o.Key, o.Match.Item2)).
+                    ToArray();
+
+                TriangleIndexed[] replacement;
+                long[] retVal = new long[0];
+
+                switch (bisectedEdges.Length)
+                {
+                    case 0:
+                        return retVal;
+
+                    case 1:
+                        replacement = DivideNeighbor_1(triangle, bisectedEdges[0]);
+                        break;
+
+                    case 2:
+                        replacement = DivideNeighbor_2(triangle, bisectedEdges);
+                        break;
+
+                    case 3:
+                        replacement = DivideNeighbor_3(triangle, bisectedEdges);
+                        retVal = replacement.Select(o => o.Token).ToArray();
+                        break;
+
+                    default:
+                        throw new ApplicationException("Unexpected number of matches: " + bisectedEdges.Length.ToString());
+                }
+
+                // Swap them
+                returnList.Remove(triangle);
+                returnList.AddRange(replacement);
+
+                return retVal;
+            }
+
+            private static TriangleIndexed[] DivideNeighbor_1(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef> bisectedEdge)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.GetIndex(bisectedEdge.Item1, true));        // Bottom Left (0)
+                map.Add(triangle.GetOppositeIndex(bisectedEdge.Item1));        // Top (1)
+                map.Add(triangle.GetIndex(bisectedEdge.Item1, false));        // Bottom Right (2)
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdge.Item3));        // Mid Bottom (3)
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[1], map[3], pointArr), triangle));       // Left
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[2], map[3], pointArr), triangle));       // Right
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] DivideNeighbor_2(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.GetUncommonIndex(bisectedEdges[0].Item1, bisectedEdges[1].Item1));        // Bottom Left (0)
+                map.Add(triangle.GetCommonIndex(bisectedEdges[0].Item1, bisectedEdges[1].Item1));        // Top (1)
+                map.Add(triangle.GetUncommonIndex(bisectedEdges[1].Item1, bisectedEdges[0].Item1));        // Bottom Right (2)
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[0].Item3));        // Mid Left (3)
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[1].Item3));        // Mid Right (4)
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[4], map[3], pointArr), triangle));       // Top
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[4], map[2], pointArr), triangle));       // Bottom Right
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[3], map[4], pointArr), triangle));       // Middle Left
+
+                return retVal.ToArray();
+            }
+            private static TriangleIndexed[] DivideNeighbor_3(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            {
+                List<Point3D> points = new List<Point3D>();
+                List<int> map = new List<int>();
+
+                points.AddRange(triangle.AllPoints);
+
+                map.Add(triangle.Index0);      // 0
+                map.Add(triangle.Index1);      // 1
+                map.Add(triangle.Index2);      // 2
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_01).Item3));       // 3
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_12).Item3));       // 4
+                map.Add(points.Count - 1);
+
+                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_20).Item3));       // 5
+                map.Add(points.Count - 1);
+
+                Point3D[] pointArr = points.ToArray();
+
+                List<TriangleIndexed> retVal = new List<TriangleIndexed>();
+
+                retVal.Add(MatchNormal(new TriangleIndexed(map[0], map[3], map[5], pointArr), triangle));       // Bottom Left
+                retVal.Add(MatchNormal(new TriangleIndexed(map[1], map[4], map[3], pointArr), triangle));       // Top
+                retVal.Add(MatchNormal(new TriangleIndexed(map[2], map[5], map[4], pointArr), triangle));       // Bottom Right
+                retVal.Add(MatchNormal(new TriangleIndexed(map[3], map[4], map[5], pointArr), triangle));       // Center
+
+                return retVal.ToArray();
+            }
+
+            private static TriangleIndexed MatchNormal(TriangleIndexed newTriangle, ITriangle compareTo)
+            {
+                if (Vector3D.DotProduct(newTriangle.Normal, compareTo.Normal) > 0)
+                {
+                    return newTriangle;
+                }
+                else
+                {
+                    return new TriangleIndexed(newTriangle.Index0, newTriangle.Index2, newTriangle.Index1, newTriangle.AllPoints);
+                }
+            }
+
+            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edges, double controlPercent = .25d)
+            {
+                int fromIndex = triangle.GetIndex(edge, true);
+                int toIndex = triangle.GetIndex(edge, false);
+
+                var key = Tuple.Create(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex));
+
+                BezierSegmentDef retVal;
+                if (edges.TryGetValue(key, out retVal))
+                {
+                    return retVal;
+                }
+
+                retVal = GetCurvedEdge(triangle, edge, triangles, planes, controlPercent);
+
+                edges.Add(key, retVal);
+
+                return retVal;
+            }
+            /// <summary>
+            /// Each point on the hull will get its own tangent plane.  This will return a bezier with control points
+            /// snapped to the coresponding planes.  That way, any beziers that meet at a point will have a smooth
+            /// transition
+            /// </summary>
+            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, double controlPercent = .25d)
+            {
+                // Points
+                int fromIndex = triangle.GetIndex(edge, true);
+                int toIndex = triangle.GetIndex(edge, false);
+
+                Point3D fromPoint = triangle.GetPoint(edge, true);
+                Point3D toPoint = triangle.GetPoint(edge, false);
+
+                // Snap planes
+                ITriangle fromPlane = GetTangentPlane(fromIndex, triangles, planes);
+                ITriangle toPlane = GetTangentPlane(toIndex, triangles, planes);
+
+                // Edge line segment
+                Vector3D dir = toPoint - fromPoint;
+
+                // Control points
+                Point3D fromControl = Math3D.GetClosestPoint_Plane_Point(fromPlane, fromPoint + (dir * controlPercent));
+                Point3D toControl = Math3D.GetClosestPoint_Plane_Point(toPlane, toPoint + (-dir * controlPercent));
+
+                return new BezierSegmentDef(fromIndex, toIndex, new[] { fromControl, toControl }, triangle.AllPoints);
+            }
+
+            private static ITriangle GetTangentPlane(int index, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes)
+            {
+                ITriangle retVal;
+                if (planes.TryGetValue(index, out retVal))
+                {
+                    return retVal;
+                }
+
+                retVal = GetTangentPlane(index, triangles);
+
+                planes.Add(index, retVal);
+
+                return retVal;
+            }
+            private static ITriangle GetTangentPlane(int index, ITriangleIndexed[] triangles)
+            {
+                // Find the triangles that touch this point
+                ITriangleIndexed[] touching = triangles.
+                    Where(o => o.IndexArray.Contains(index)).
+                    ToArray();
+
+                // Get all the points in those triangles that aren't the point passed in
+                Point3D[] otherPoints = touching.
+                    SelectMany(o => o.IndexArray).
+                    Where(o => o != index).
+                    Select(o => triangles[0].AllPoints[o]).
+                    ToArray();
+
+                // Use those points to define a plane
+                ITriangle plane = Math2D.GetPlane_Average(otherPoints);
+
+                // Translate the plane
+                Point3D requestPoint = triangles[0].AllPoints[index];
+                return new Triangle(requestPoint, requestPoint + (plane.Point1 - plane.Point0), requestPoint + (plane.Point2 - plane.Point0));
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: HullVoronoiIntersect
+
+        private static class HullVoronoiIntersect
+        {
+            #region Class: TriangleIntersection 1,2,3
+
+            private class TriInt_I
+            {
+                public TriInt_I(ITriangleIndexed triangle, int triangleIndex)
+                {
+                    this.Triangle = triangle;
+                    this.TriangleIndex = triangleIndex;
+                }
+
+                public readonly ITriangleIndexed Triangle;
+                public readonly int TriangleIndex;
+
+                public readonly List<TriInt_II> ControlPoints = new List<TriInt_II>();
+            }
+
+            private class TriInt_II
+            {
+                public TriInt_II(int controlPointIndex)
+                {
+                    this.ControlPointIndex = controlPointIndex;
+                }
+
+                public readonly int ControlPointIndex;
+                public readonly List<TriInt_III> Faces = new List<TriInt_III>();
+            }
+
+            private class TriInt_III
+            {
+                public TriInt_III(Face3D face, int faceIndex, Tuple<Point3D, Point3D> segment, int[] triangleIndices)
+                {
+                    this.Face = face;
+                    this.FaceIndex = faceIndex;
+                    this.Segment = segment;
+                    this.TriangleIndices = triangleIndices;
+                }
+
+                // The face that the triangle intersected
+                public readonly Face3D Face;
+                public readonly int FaceIndex;
+
+                // The points of intersection
+                public readonly Tuple<Point3D, Point3D> Segment;
+
+                // The indicies of the triangle that are part of the parent control point
+                public readonly int[] TriangleIndices;
+            }
+
+            #endregion
+            #region Class: PolyFragIntermediate
+
+            private class PolyFragIntermediate
+            {
+                public PolyFragIntermediate(int controlPointIndex, int originalTriangleIndex, Tuple<TriangleEdge, int>[] faceIndices, int triangleIndex0, int triangleIndex1, int triangleIndex2)
+                {
+                    this.ControlPointIndex = controlPointIndex;
+                    this.OriginalTriangleIndex = originalTriangleIndex;
+
+                    this.FaceIndices = faceIndices;
+
+                    this.TriangleIndex0 = triangleIndex0;
+                    this.TriangleIndex1 = triangleIndex1;
+                    this.TriangleIndex2 = triangleIndex2;
+                }
+
+                public readonly int ControlPointIndex;
+                public readonly int OriginalTriangleIndex;
+
+                public readonly Tuple<TriangleEdge, int>[] FaceIndices;
+
+                public readonly int TriangleIndex0;
+                public readonly int TriangleIndex1;
+                public readonly int TriangleIndex2;
+            }
+
+            #endregion
+
+            #region Class: FaceTriangulation
+
+            public class FaceTriangulation
+            {
+                public FaceTriangulation(Face3D face, int faceIndex, FaceTriangulation2_Poly[] polys)
+                {
+                    this.Face = face;
+                    this.FaceIndex = faceIndex;
+                    this.Polys = polys;
+                }
+
+                public readonly Face3D Face;
+                public readonly int FaceIndex;
+
+                public readonly FaceTriangulation2_Poly[] Polys;
+            }
+
+            public class FaceTriangulation2_Poly
+            {
+                public FaceTriangulation2_Poly(Point3D[] points, ITriangleIndexed[] triangles, Tuple<Edge3D, int>[] faceEdgePoints)
+                {
+                    this.Points = points;
+                    this.Triangles = triangles;
+                    this.FaceEdgePoints = faceEdgePoints;
+                }
+
+                public readonly Point3D[] Points;
+                public readonly ITriangleIndexed[] Triangles;
+
+                public readonly Tuple<Edge3D, int>[] FaceEdgePoints;
+            }
+
+            #endregion
+
+            #region Class: TestFaceResult
+
+            public class TestFaceResult
+            {
+                public TestFaceResult(Face3D face, int faceIndex, ITriangleIndexed[] poly1, ITriangleIndexed[] poly2)
+                {
+                    this.Face = face;
+                    this.FaceIndex = faceIndex;
+                    this.Poly1 = poly1;
+                    this.Poly2 = poly2;
+                }
+
+                public readonly Face3D Face;
+                public readonly int FaceIndex;
+
+                public readonly ITriangleIndexed[] Poly1;
+                public readonly ITriangleIndexed[] Poly2;      // poly2 is alt, could be null.  The final result class shouldn't have an alt
+            }
+
+            #endregion
+
+            #region Class: Fragment Results
+
+            public class PatchFragment
+            {
+                public PatchFragment(TriangleFragment[] polygon, int controlPointIndex)
+                {
+                    this.Polygon = polygon;
+                    this.ControlPointIndex = controlPointIndex;
+                }
+
+                public readonly TriangleFragment[] Polygon;
+
+                public readonly int ControlPointIndex;
+            }
+
+            public class TriangleFragment
+            {
+                public TriangleFragment(ITriangleIndexed triangle, Tuple<TriangleEdge, int>[] faceIndices, int originalTriangleIndex)
+                {
+                    this.Triangle = triangle;
+                    this.FaceIndices = faceIndices;
+                    this.OriginalTriangleIndex = originalTriangleIndex;
+                }
+
+                public readonly ITriangleIndexed Triangle;
+                public readonly Tuple<TriangleEdge, int>[] FaceIndices;
+                public readonly int OriginalTriangleIndex;
+            }
+
+            #endregion
+
+            /// <summary>
+            /// This divides the hull into a set of cells.  It includes the voronoi walls and interior cells, but not outside the hull
+            /// </summary>
+            /// <returns>
+            /// Item1=Index of control point
+            /// Item2=Cell for that control point
+            /// </returns>
+            public static Tuple<int, ITriangleIndexed[]>[] SliceHull(ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            {
+                // Intersect the voronoi and hull
+                PatchFragment[] hullIntersects = GetFragments(hull, voronoi);
+
+                Point3D hullCenter = Math3D.GetCenter(hull.SelectMany(o => new[] { o.Point0, o.Point1, o.Point2 }));
+
+                // Convert each intersect patch into a sub hull
+                var intersectSubs = hullIntersects.
+                    Select(o => Tuple.Create(o.ControlPointIndex, GetSubHull(o, hull, voronoi, hullCenter))).
+                    ToArray();
+
+
+                //TODO: Detect any control points that are completely internal and return them as well
+
+
+
+                return intersectSubs;
+            }
+
+
+            public static TestFaceResult[] GetTestFacePolys(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            {
+                List<TestFaceResult> retVal = new List<TestFaceResult>();
+
+                int[] faces = voronoi.FacesByControlPoint[patch.ControlPointIndex];
+
+                var workLater = new List<Tuple<int, Point3D[], Tuple<TriangleFragment, Tuple<TriangleEdge, int>[]>[]>>();
+
+                foreach (int faceIndex in faces)
+                {
+                    var intersects = patch.Polygon.
+                        Select(o => new
+                        {
+                            Triangle = o,
+                            FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray()
+                        }).
+                        Where(o => o.FaceHits.Length > 0).
+                        ToArray();
+
+                    Point3D[] points = intersects.
+                        SelectMany(o => o.FaceHits.SelectMany(p => new[] { o.Triangle.Triangle.GetPoint(p.Item1, true), o.Triangle.Triangle.GetPoint(p.Item1, false) })).
+                        ToArray();
+
+                    if (points.Length == 0)
+                    {
+                        continue;
+                    }
+
+
+
+                    // Detect which of the points are on the face's edge, and extend along that edge
+                    var faceEdgeHits = voronoi.Faces[faceIndex].Edges.
+                        Select(o => new
+                        {
+                            Edge = o,
+                            Points = points.Where(p => Math3D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                        }).
+                        Where(o => o.Points.Length > 0).
+                        ToArray();
+
+
+
+
+                    if (points.Length < 3)
+                    {
+                        workLater.Add(Tuple.Create(faceIndex, points, intersects.Select(o => Tuple.Create(o.Triangle, o.FaceHits)).ToArray()));
+                        continue;
+                    }
+
+
+
+
+                    // Triangulate these points
+                    //TODO: Can't assume that the face intersects are convex
+                    var hull2D = Math2D.GetConvexHull(points);
+                    TriangleIndexed[] triangles = Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+
+
+                    retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, triangles, null));
+                }
+
+
+
+                //TODO: Dedupe points across sets of triangles
+
+
+
+                return retVal.ToArray();
+            }
+
+
+
+            public static FaceTriangulation[] GetTestFacePolys2(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            {
+                FaceTriangulation[] faceTriangles = voronoi.FacesByControlPoint[patch.ControlPointIndex].
+                    Select(o => GetFaceTriangles(o, patch, voronoi)).
+                    Where(o => o != null).
+                    ToArray();
+
+
+                //TODO: Join faces that share edge points
+
+
+                //TODO: Dedupe points across sets of triangles
+
+
+
+                return faceTriangles;
+            }
+
+
+
+            /// <summary>
+            /// This will return the triangles sliced by voronoi regions
+            /// </summary>
+            /// <param name="triangles">A list of triangles.  Doesn't need to be a closed hull</param>
+            /// <returns>
+            /// Item1=Index of control point
+            /// Item2=Set of triangles inside that control point's region
+            /// </returns>
+            public static PatchFragment[] GetFragments(ITriangleIndexed[] triangles, VoronoiResult3D voronoi)
+            {
+                if (triangles == null || triangles.Length == 0)
+                {
+                    return new PatchFragment[0];
+                }
+
+                Point3D[] allPoints = triangles[0].AllPoints;
+
+                // Figure out which control point owns each triangle point
+                int[] controlPointsByTrianglePoint = GetNearestControlPoints(allPoints, voronoi);
+
+                // Divide the triangles by control point
+                return GetTrianglesByControlPoint(triangles, voronoi, controlPointsByTrianglePoint);
+            }
+
+            #region Private Methods - sub hulls
+
+            private static ITriangleIndexed[] GetSubHull(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi, Point3D hullCenter)
+            {
+                // I think it's flawed thinking to see if the control point is interior
+                //if (IsInteriorControlPoint(patch, voronoi, hullCenter))
+                //{
+                //    return GetSubHull_Interior(patch, hull, voronoi);
+                //}
+                //else
+                //{
+                //    return GetSubHull_Exterior(patch, hull, voronoi);
+                //}
+
+
+
+
+                var faces = voronoi.FacesByControlPoint[patch.ControlPointIndex].
+                    Select(o => new
+                    {
+                        FaceIndex = o,
+                        Triangles = patch.Polygon.
+                            Select(p => new { Triangle = p, FaceHits = p.FaceIndices.Where(q => q.Item2 == o).ToArray() }).
+                            Where(p => p.FaceHits.Length > 0).
+                            ToArray()
+                    }).
+                    ToArray();
+
+
+
+
+
+                //int[] faces = voronoi.FacesByControlPoint[patch.ControlPointIndex];
+
+                //foreach (int faceIndex in faces)
+                //{
+                //    patch.Polygon.
+                //        Select(o => new { Triangle = o, FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray() }).
+                //        Where(o => o.FaceHits.Length > 0).
+                //        ToArray();
+
+
+
+
+
+
+
+
+
+                //}
+
+
+
+
+
+
+
+                return null;
+            }
+
+            private static bool IsInteriorControlPoint(PatchFragment patch, VoronoiResult3D voronoi, Point3D hullCenter)
+            {
+                Point3D ctrlPoint = voronoi.ControlPoints[patch.ControlPointIndex];
+
+                List<bool> results = new List<bool>();
+
+                foreach (var triangle in patch.Polygon)
+                {
+                    double centerDot = Vector3D.DotProduct(hullCenter - triangle.Triangle.Point0, triangle.Triangle.Normal);
+                    double ctrlDot = Vector3D.DotProduct(ctrlPoint - triangle.Triangle.Point0, triangle.Triangle.Normal);
+
+                    if (Math3D.IsNearZero(centerDot) || Math3D.IsNearZero(centerDot))
+                    {
+                        continue;
+                    }
+
+                    // If they are both the same sign, then the control point is on the same side of the patch as the center (meaning: interior)
+                    results.Add(Math3D.IsNearPositive(centerDot) == Math3D.IsNearPositive(ctrlDot));
+                }
+
+                if (results.Count == 0)
+                {
+                    throw new ApplicationException("Couldn't find a triangle to compare");
+                }
+
+                int trueCount = results.Where(o => o).Count();
+                int falseCount = results.Where(o => !o).Count();
+
+                bool retVal = trueCount > falseCount;
+
+                double ratio = Convert.ToDouble(retVal ? trueCount : falseCount) / Convert.ToDouble(trueCount + falseCount);
+
+                //if(ratio < 1d)
+                //{
+                //    int four = 15;
+                //}
+
+
+                //if(ratio < .75)
+                //{
+                //    //throw new ApplicationException("Couldn't get a clear enough answer");
+                //    int seven = 12;
+                //}
+
+                return retVal;
+            }
+
+            #region Class: Segment_Face
+
+            public class Segment_Face
+            {
+                public Segment_Face(int index0, int index1, IList<Point3D> allPoints)
+                {
+                    this.Index0 = index0;
+                    this.Index1 = index1;
+
+                    this.AllPoints = allPoints;
+
+                    this.IsFaceEdge = false;
+                    this.FaceEdge = null;
+                }
+                public Segment_Face(int index0, int index1, IList<Point3D> allPoints, Edge3D faceEdge, int? corner0, int? corner1)
+                {
+                    this.Index0 = index0;
+                    this.Index1 = index1;
+
+                    this.AllPoints = allPoints;
+
+                    this.IsFaceEdge = true;
+                    this.FaceEdge = faceEdge;
+
+                    this.Corner0 = corner0;
+                    this.Corner1 = corner1;
+                }
+
+                public readonly int Index0;
+                public readonly int Index1;
+
+                public Point3D Point0
+                {
+                    get
+                    {
+                        return this.AllPoints[this.Index0];
+                    }
+                }
+                public Point3D Point1
+                {
+                    get
+                    {
+                        return this.AllPoints[this.Index1];
+                    }
+                }
+
+                public readonly IList<Point3D> AllPoints;
+
+                public readonly bool IsFaceEdge;
+                public readonly Edge3D FaceEdge;
+
+                // These are tough to name.  If point0 is a face corner, then Corner0 will hold 0 or 1 (which end of the edge the point came from)
+                public readonly int? Corner0;
+                public readonly int? Corner1;
+
+                /// <summary>
+                /// This is useful when looking at lists of edges in the quick watch
+                /// </summary>
+                public override string ToString()
+                {
+                    const string DELIM = "       |       ";
+
+                    StringBuilder retVal = new StringBuilder(100);
+
+                    retVal.Append(this.IsFaceEdge ? "face edge" : "trian edge");
+                    retVal.Append(DELIM);
+
+                    retVal.Append(string.Format("{0} - {1}{2}({3}) ({4})",
+                        this.Index0,
+                        this.Index1,
+                        DELIM,
+                        this.Point0.ToString(2),
+                        this.Point1.ToString(2)));
+
+                    return retVal.ToString();
+                }
+            }
+
+            #endregion
+
+            private static FaceTriangulation GetFaceTriangles(int faceIndex, PatchFragment patch, VoronoiResult3D voronoi)
+            {
+                // Get all the points that touch the face (stored as segments)
+                var faceIntersects = GetFaceIntersects(faceIndex, patch);
+                if (faceIntersects == null)
+                {
+                    return null;
+                }
+
+                List<Segment_Face> segments = new List<Segment_Face>(faceIntersects.Item1);
+                List<Point3D> points = new List<Point3D>(faceIntersects.Item2);
+
+                // Add the face's edges (broken up by the intersecting points)
+                AddFaceEdges(faceIndex, voronoi, segments, points);
+
+                // Get all possible loops of segments
+                var chains = ChainAttempt1.GetChains_Multiple(
+                    segments.Select(o => Tuple.Create(o.Index0, o.Index1, o)).ToArray(),        // these are the segments mapped to something the method can use
+                    (o, p) => o == p,       // int compare
+                    (o, p) => o.Index0 == p.Index0 && o.Index1 == p.Index1);        // face edge compare (can't use o.FaceEdge.Token, because FaceEdge could be null).  It's safe to always compare index0 with index0, because duplicate/reverse segments will never be created
+
+                // Throw out chains
+                var loops = chains.
+                    Where(o => o.Item2).
+                    ToArray();
+
+
+                // Each loop is a polygon (could be concave).  Triangulate them
+
+
+
+                return null;
+            }
+
+            private static Tuple<IEnumerable<Segment_Face>, IEnumerable<Point3D>> GetFaceIntersects(int faceIndex, PatchFragment patch)
+            {
+                // Get all the points that touch this face
+                var intersects = patch.Polygon.
+                    Select(o => new
+                    {
+                        Triangle = o,
+                        FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray()
+                    }).
+                    Where(o => o.FaceHits.Length > 0);
+
+                List<Point3D> points = intersects.
+                    SelectMany(o => o.FaceHits.SelectMany(p => new[] { o.Triangle.Triangle.GetPoint(p.Item1, true), o.Triangle.Triangle.GetPoint(p.Item1, false) })).
+                    Distinct((o, p) => Math3D.IsNearValue(o, p)).
+                    ToList();
+
+                if (points.Count == 0)
+                {
+                    return null;
+                }
+
+                Func<Point3D, Point3D, bool> pointCompare = (o, p) => Math3D.IsNearValue(o, p);
+
+                // Store these as segments
+                List<Segment_Face> segments = intersects.
+                    SelectMany(o => o.FaceHits.Select(p => new Segment_Face(
+                        points.IndexOf(o.Triangle.Triangle.GetPoint(p.Item1, true), pointCompare),
+                        points.IndexOf(o.Triangle.Triangle.GetPoint(p.Item1, false), pointCompare),
+                        points))).
+                    ToList();
+
+                #region Validate
+#if DEBUG
+                if (segments.Any(o => o.Index0 < 0 || o.Index1 < 0))
+                {
+                    throw new ApplicationException("fail");
+                }
+#endif
+                #endregion
+
+                return new Tuple<IEnumerable<Segment_Face>, IEnumerable<Point3D>>(segments, points);
+            }
+
+            private static void AddFaceEdges(int faceIndex, VoronoiResult3D voronoi, List<Segment_Face> segments, List<Point3D> points)
+            {
+                // Detect which of the points are on the face's edge
+                var faceEdgeHits = voronoi.Faces[faceIndex].Edges.
+                    Select(o => new
+                    {
+                        Edge = o,
+                        Points = points.Where(p => Math3D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                    }).
+                    Where(o => o.Points.Length > 0).
+                    ToArray();
+
+                if (faceEdgeHits.Length > 0)
+                {
+                    #region Add face edges
+
+                    List<Segment_Face> faceSegments = new List<Segment_Face>();
+
+                    // Extend edge hits to the corners, store all pieces as segments (that aren't rays)
+                    foreach (var faceEdgeHit in faceEdgeHits)
+                    {
+                        faceSegments.AddRange(DivideFaceEdgeHit(faceEdgeHit.Edge, faceEdgeHit.Points, points));
+                    }
+
+                    // Merge into the common list
+                    segments.AddRange(faceSegments);
+
+                    // Also store face edges that haven't been touched, but are between extensions
+                    for (int cntr = 0; cntr < voronoi.Faces[faceIndex].Edges.Length; cntr++)
+                    {
+                        Edge3D edge = voronoi.Faces[faceIndex].Edges[cntr];
+
+                        if (edge.EdgeType != EdgeType.Segment)
+                        {
+                            // Rays that haven't been intersected won't make polygons
+                            continue;
+                        }
+
+                        if (!faceSegments.Any(o => o.FaceEdge.Token == edge.Token))
+                        {
+                            // Just add it straight to segments.  That way it's not compared against by other face edges
+                            segments.Add(new Segment_Face(
+                                GetPointIndex(edge.Point0, points),
+                                GetPointIndex(edge.Point1.Value, points),
+                                points, edge, 0, 1));
+                        }
+                    }
+
+                    #endregion
+                }
+            }
+
+
+            private static IEnumerable<Segment_Face> DivideFaceEdgeHit(Edge3D edge, Point3D[] intersectPoints, List<Point3D> allPoints)
+            {
+                // Sort the points by distance from edge.0
+                Point3D[] sorted = intersectPoints.
+                    Select(o => new { Point = o, Distance = (o - edge.Point0).LengthSquared }).
+                    OrderBy(o => o.Distance).
+                    Select(o => o.Point).
+                    ToArray();
+
+                List<Segment_Face> retVal = new List<Segment_Face>();
+
+                // edge.0 to first point
+                retVal.Add(new Segment_Face(GetPointIndex(edge.Point0, allPoints), GetPointIndex(sorted[0], allPoints), allPoints, edge, 0, null));
+
+                // points[n] to points[n + 1]
+                for (int cntr = 0; cntr < sorted.Length - 1; cntr++)
+                {
+                    retVal.Add(new Segment_Face(GetPointIndex(sorted[cntr], allPoints), GetPointIndex(sorted[cntr + 1], allPoints), allPoints, edge, null, null));
+                }
+
+                // last point to edge.1 (unless it's a ray)
+                if (edge.EdgeType == EdgeType.Segment)
+                {
+                    retVal.Add(new Segment_Face(GetPointIndex(sorted[sorted.Length - 1], allPoints), GetPointIndex(edge.Point1.Value, allPoints), allPoints, edge, null, 1));
+                }
+
+                return retVal;
+            }
+
+
+            #endregion
+            #region Private Methods - fragments
+
+            private static PatchFragment[] GetTrianglesByControlPoint(ITriangleIndexed[] triangles, VoronoiResult3D voronoi, int[] controlPointsByTrianglePoint)
+            {
+                List<PolyFragIntermediate> buildingFinals = new List<PolyFragIntermediate>();
+
+                List<Point3D> newPoints = new List<Point3D>();
+
+                List<Tuple<long, int>> triangleFaceMisses = new List<Tuple<long, int>>();
+                List<TriInt_I> intermediate = new List<TriInt_I>();
+
+                // Figure out how long rays should extend
+                var aabb = Math3D.GetAABB(voronoi.EdgePoints);
+                double rayLength = (aabb.Item2 - aabb.Item1).Length * 10;
+
+                // Get the aabb of each face
+                var faceAABBs = voronoi.Faces.
+                    Select(o => Math3D.GetAABB(o.Edges, rayLength)).
+                    ToArray();
+
+                for (int triangleIndex = 0; triangleIndex < triangles.Length; triangleIndex++)
+                {
+                    ITriangleIndexed triangle = triangles[triangleIndex];
+
+                    if (controlPointsByTrianglePoint[triangle.Index0] == controlPointsByTrianglePoint[triangle.Index1] && controlPointsByTrianglePoint[triangle.Index0] == controlPointsByTrianglePoint[triangle.Index2])
+                    {
+                        #region Interior Triangle
+
+                        // The entire triangle is inside the control point's cell
+                        int index0 = GetPointIndex(triangle.Point0, newPoints);
+                        int index1 = GetPointIndex(triangle.Point1, newPoints);
+                        int index2 = GetPointIndex(triangle.Point2, newPoints);
+
+                        var faceIndices = new Tuple<TriangleEdge, int>[0];
+
+                        buildingFinals.Add(new PolyFragIntermediate(controlPointsByTrianglePoint[triangle.Index0], triangleIndex, faceIndices, index0, index1, index2));
+
+                        #endregion
+                        continue;
+                    }
+
+                    var triangleAABB = Math3D.GetAABB(triangle);
+
+                    for (int faceIndex = 0; faceIndex < voronoi.Faces.Length; faceIndex++)
+                    {
+                        if (!Math3D.IsIntersecting_AABB_AABB(triangleAABB.Item1, triangleAABB.Item2, faceAABBs[faceIndex].Item1, faceAABBs[faceIndex].Item2))
+                        {
+                            continue;
+                        }
+
+                        GetTrianglesByControlPoint_FaceTriangle(triangle, triangleIndex, faceIndex, voronoi, controlPointsByTrianglePoint, intermediate, triangleFaceMisses, rayLength);
+                    }
+                }
+
+                // Convert each intersected triangle into smaller triangles
+                buildingFinals.AddRange(ConvertToSmaller(newPoints, intermediate));
+
+                Point3D[] allPoints = newPoints.ToArray();
+
+                // Map to the output type
+                return buildingFinals.
+                    GroupBy(o => o.ControlPointIndex).
+                    Select(o => new PatchFragment(o.Select(p => new TriangleFragment(
+                        new TriangleIndexed(p.TriangleIndex0, p.TriangleIndex1, p.TriangleIndex2, allPoints),
+                        p.FaceIndices,
+                        p.OriginalTriangleIndex
+                        )).ToArray(), o.Key)).
+                    ToArray();
+            }
+
+            private static void GetTrianglesByControlPoint_FaceTriangle(ITriangleIndexed triangle, int triangleIndex, int faceIndex, VoronoiResult3D voronoi, int[] controlPointsByTrianglePoint, List<TriInt_I> intersections, List<Tuple<long, int>> triangleFaceMisses, double rayLength)
+            {
+                Tuple<long, int> key = Tuple.Create(triangle.Token, faceIndex);
+
+                // See if this triangle and face have been intersected
+                if (triangleFaceMisses.Contains(key) || HasIntersection(triangle, faceIndex, intersections))
+                {
+                    return;
+                }
+
+                // Intersect the face and triangle
+                Tuple<Point3D, Point3D> segment = Math3D.GetIntersection_Face_Triangle(voronoi.Faces[faceIndex], triangle, rayLength);
+
+                if (segment == null)
+                {
+                    triangleFaceMisses.Add(key);
+                    return;
+                }
+
+                // Store this intersection segment for every control point that has this face
+                foreach (int controlIndex in voronoi.GetControlPoints(faceIndex))
+                {
+                    // Figure out which corners of the triangle are in this control point's cell
+                    int[] triangleIndices = triangle.IndexArray.
+                        Where(o => controlPointsByTrianglePoint[o] == controlIndex).
+                        ToArray();
+
+                    AddIntersection(triangle, triangleIndex, triangleIndices, controlIndex, faceIndex, voronoi.Faces[faceIndex], segment, intersections);
+                }
+            }
+
+            private static IEnumerable<PolyFragIntermediate> ConvertToSmaller(List<Point3D> newPoints, List<TriInt_I> intersections)
+            {
+                List<PolyFragIntermediate> retVal = new List<PolyFragIntermediate>();
+
+                foreach (TriInt_I triangle in intersections)
+                {
+                    foreach (TriInt_II controlPoint in triangle.ControlPoints)
+                    {
+                        IEnumerable<ITriangle> smalls;
+
+                        if (controlPoint.Faces.Count == 1)
+                        {
+                            smalls = ConvertToSmaller_Single(triangle, controlPoint, controlPoint.Faces[0]);
+                        }
+                        else
+                        {
+                            smalls = ConvertToSmaller_Multi(triangle, controlPoint, controlPoint.Faces);
+                        }
+
+                        foreach (ITriangle small in smalls)
+                        {
+                            ITriangle smallValidNormal = MatchNormal(small, triangle.Triangle);
+
+                            // Convert small into a final triangle indexed
+                            int index0 = GetPointIndex(smallValidNormal.Point0, newPoints);
+                            int index1 = GetPointIndex(smallValidNormal.Point1, newPoints);
+                            int index2 = GetPointIndex(smallValidNormal.Point2, newPoints);
+
+                            Tuple<TriangleEdge, int>[] faceIndices = LinkSegmentsWithFaces(index0, index1, index2, newPoints, controlPoint.Faces);
+
+                            retVal.Add(new PolyFragIntermediate(controlPoint.ControlPointIndex, triangle.TriangleIndex, faceIndices, index0, index1, index2));
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Single(TriInt_I triangle, TriInt_II controlPoint, TriInt_III face)
+            {
+                Point3D[] points3D = UtilityCore.Iterate(face.TriangleIndices.Select(o => triangle.Triangle.AllPoints[o]), new[] { face.Segment.Item1, face.Segment.Item2 }).ToArray();
+
+                return ConvertToSmaller_Finish(triangle, points3D);
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Multi(TriInt_I triangle, TriInt_II controlPoint, List<TriInt_III> faces)
+            {
+                IEnumerable<Point3D> trianglePoints = faces.
+                    SelectMany(o => o.TriangleIndices).
+                    Distinct().
+                    Select(o => triangle.Triangle.AllPoints[o]);
+
+                var chains1 = UtilityCore.GetChains(faces.Select(o => o.Segment), (o, p) => Math3D.IsNearValue(o, p));
+                var chains2 = chains1;
+                if (chains2.Length == 0)
+                {
+                    return new ITriangle[0];
+                }
+                else if (chains2.Length > 1 && chains2.Any(o => o.Item2))
+                {
+                    return new ITriangle[0];
+                }
+                else if (chains2.Length > 1)
+                {
+                    // This sometimes happens.  Just combine the chains
+                    chains2 = new[] { Tuple.Create(chains2.SelectMany(o => o.Item1).ToArray(), false) };
+                }
+
+                Point3D[] points3D = UtilityCore.Iterate(trianglePoints, chains2[0].Item1).ToArray();
+
+                return ConvertToSmaller_Finish(triangle, points3D);
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Finish(TriInt_I triangle, Point3D[] points)
+            {
+                if (points.Length < 3)
+                {
+                    //throw new ApplicationException("handle less than 2");
+                    return new ITriangle[0];
+                }
+                else if (points.Length == 3)
+                {
+                    return new[] { new Triangle(points[0], points[1], points[2]) };
+                }
+
+                // The points could come in any order, so convert into a polygon to figure out the order
+                //NOTE: At first, I tried Math2D.GetDelaunayTriangulation(), which works in most cases.  But when two points are really close together, it weirds out and returns nothing
+                var hull2D = Math2D.GetConvexHull(points);
+
+                // Now triangulate it
+                return Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+            }
+
+            private static Tuple<TriangleEdge, int>[] LinkSegmentsWithFaces(int index0, int index1, int index2, List<Point3D> newPoints, List<TriInt_III> faces)
+            {
+                var retVal = new List<Tuple<TriangleEdge, int>>();
+
+                // Store the triangle's points as something queryable
+                var points = new[]
+                    {
+                        new { Index = 0, Point = newPoints[index0]},
+                        new { Index = 1, Point = newPoints[index1]},
+                        new { Index = 2, Point = newPoints[index2]},
+                    };
+
+                foreach (var face in faces)
+                {
+                    // Find two points of the triangle that match this face intersect
+                    var matches = new[] { face.Segment.Item1, face.Segment.Item2 }.
+                        Select(o => points.FirstOrDefault(p => Math3D.IsNearValue(p.Point, o))).
+                        Where(o => o != null).
+                        OrderBy(o => o.Index).
+                        ToArray();
+
+                    if (matches.Length < 2)
+                    {
+                        continue;
+                    }
+
+                    TriangleEdge edge;
+
+                    if (matches[0].Index == 0 && matches[1].Index == 1)
+                    {
+                        edge = TriangleEdge.Edge_01;
+                    }
+                    else if (matches[0].Index == 0 && matches[1].Index == 2)
+                    {
+                        edge = TriangleEdge.Edge_20;
+                    }
+                    else if (matches[0].Index == 1 && matches[1].Index == 2)
+                    {
+                        edge = TriangleEdge.Edge_12;
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Unexpected pair: " + matches[0].Index.ToString() + ", " + matches[1].Index.ToString());
+                    }
+
+                    retVal.Add(Tuple.Create(edge, face.FaceIndex));
+                }
+
+                return retVal.ToArray();
+            }
+
+            private static void AddFinal(int controlPoint, ITriangleIndexed triangle, SortedList<int, List<ITriangleIndexed>> triangleByControlPoint)
+            {
+                List<ITriangleIndexed> list;
+                if (!triangleByControlPoint.TryGetValue(controlPoint, out list))
+                {
+                    list = new List<ITriangleIndexed>();
+                    triangleByControlPoint.Add(controlPoint, list);
+                }
+
+                list.Add(triangle);
+            }
+
+            private static bool HasIntersection(ITriangleIndexed triangle, int faceIndex, List<TriInt_I> intersections)
+            {
+                TriInt_I i = intersections.FirstOrDefault(o => o.Triangle.Token == triangle.Token);
+                if (i == null)
+                {
+                    return false;
+                }
+
+                foreach (TriInt_II ii in i.ControlPoints)
+                {
+                    TriInt_III iii = ii.Faces.FirstOrDefault(o => o.FaceIndex == faceIndex);
+                    if (iii != null)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            private static void AddIntersection(ITriangleIndexed triangle, int triangleIndex, int[] triangleIndices, int controlPointIndex, int faceIndex, Face3D face, Tuple<Point3D, Point3D> segment, List<TriInt_I> intersections)
+            {
+                TriInt_I i = intersections.FirstOrDefault(o => o.Triangle.Token == triangle.Token);
+                if (i == null)
+                {
+                    i = new TriInt_I(triangle, triangleIndex);
+                    intersections.Add(i);
+                }
+
+                TriInt_II ii = i.ControlPoints.FirstOrDefault(o => o.ControlPointIndex == controlPointIndex);
+                if (ii == null)
+                {
+                    ii = new TriInt_II(controlPointIndex);
+                    i.ControlPoints.Add(ii);
+                }
+
+                TriInt_III iii = ii.Faces.FirstOrDefault(o => o.FaceIndex == faceIndex);
+                if (iii == null)
+                {
+                    iii = new TriInt_III(face, faceIndex, segment, triangleIndices);
+                    ii.Faces.Add(iii);
+                }
+            }
+
+            private static void RemoveNulls(List<TriInt_I> intersections)
+            {
+                // ugly, but it works :)
+
+                int i = 0;
+                while (i < intersections.Count)
+                {
+                    #region i
+
+                    int ii = 0;
+                    while (ii < intersections[i].ControlPoints.Count)
+                    {
+                        #region ii
+
+                        int iii = 0;
+                        while (iii < intersections[i].ControlPoints[ii].Faces.Count)
+                        {
+                            #region iii
+
+                            if (intersections[i].ControlPoints[ii].Faces[iii].Segment == null)
+                            {
+                                intersections[i].ControlPoints[ii].Faces.RemoveAt(iii);
+                            }
+                            else
+                            {
+                                iii++;
+                            }
+
+                            #endregion
+                        }
+
+                        if (intersections[i].ControlPoints[ii].Faces.Count == 0)
+                        {
+                            intersections[i].ControlPoints.RemoveAt(ii);
+                        }
+                        else
+                        {
+                            ii++;
+                        }
+
+                        #endregion
+                    }
+
+                    if (intersections[i].ControlPoints.Count == 0)
+                    {
+                        intersections.RemoveAt(i);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+
+                    #endregion
+                }
+            }
+
+            private static int GetPointIndex(Point3D point, List<Point3D> points)
+            {
+                for (int cntr = 0; cntr < points.Count; cntr++)
+                {
+                    if (Math3D.IsNearValue(points[cntr], point))
+                    {
+                        return cntr;
+                    }
+                }
+
+                points.Add(point);
+                return points.Count - 1;
+            }
+
+            private static ITriangle MatchNormal(ITriangle toMatch, ITriangle matchAgainst)
+            {
+                if (Vector3D.DotProduct(toMatch.Normal, matchAgainst.Normal) < 0)
+                {
+                    return new Triangle(toMatch.Point0, toMatch.Point2, toMatch.Point1);
+                }
+                else
+                {
+                    return toMatch;
+                }
+            }
+
+            /// <summary>
+            /// This returns which control point each triangle point is closest to
+            /// </summary>
+            /// <returns>
+            /// Index into return = Triangle point index
+            /// Value of return = Voronoi control point index
+            /// </returns>
+            private static int[] GetNearestControlPoints(Point3D[] allPoints, VoronoiResult3D voronoi)
+            {
+                // Cache the index with the point
+                var controlPoints = voronoi.ControlPoints.
+                    Select((o, i) => new { Point = o, Index = i }).
+                    ToArray();
+
+                // Find the closest control point for each triangle point
+                return allPoints.
+                    Select(o =>
+                        controlPoints.
+                            OrderBy(p => (o - p.Point).LengthSquared).
+                            First().
+                            Index).
+                    ToArray();
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: ChainAttempt1
+
+        //TODO: Put in UtilityCore
+        private static class ChainAttempt1
+        {
+            /// <remarks>
+            /// NOTE: Lower methods take TKey?, which must be a struct.  If there are cases where key is a class, then make an with the
+            /// same basic logic, but contrains to class
+            /// </remarks>
+            public static Tuple<TItem[], bool>[] GetChains_Multiple<TKey, TItem>(Tuple<TKey, TKey, TItem>[] segments, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem) where TKey : struct
+            {
+                //This was copied from Math3D.DelaunayVoronoi3D.WalkChains
+
+                var retVal = new List<Tuple<TItem[], bool>>();
+
+                foreach (var segment in segments)
+                {
+                    retVal.AddRange(WalkChains(segment, segments, retVal, compareKey, compareItem));
+                }
+
+                return retVal.ToArray();
+            }
+
+            /// <summary>
+            /// This takes a starting segment, and returns all chains/loops that contain that segment
+            /// </summary>
+            /// <remarks>
+            /// A face can either begin and end with rays, or can be a loop of segments.  This method walks in one direction:
+            ///     If it finds a ray, it walks the other direction to find the other ray
+            ///     If it loops back to the original segment, then it stops with that face
+            ///     
+            /// While walking, there will be other segments and rays that branch (not coplanar with the currently walked chain).  Those
+            /// are ignored.  This method will get called for all segments, so those other branches will get picked up in another run
+            /// </remarks>
+            private static Tuple<TItem[], bool>[] WalkChains<TKey, TItem>(Tuple<TKey, TKey, TItem> start, Tuple<TKey, TKey, TItem>[] allSegments, IEnumerable<Tuple<TItem[], bool>> finishedChains, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem) where TKey : struct
+            {
+                var nextLeft = GetNext_Point_Edges(start, allSegments, compareKey, compareItem);
+
+                var retVal = new List<Tuple<TItem[], bool>>();
+
+                foreach (var nextLeftEdge in nextLeft.Item2)
+                {
+                    if (HasSeenSegments(start.Item3, nextLeftEdge.Item3, finishedChains, compareItem))
+                    {
+                        continue;
+                    }
+
+                    var combinedFinished = UtilityCore.Iterate(finishedChains, retVal).ToArray();
+
+                    // Walk left
+                    //Tuple<bool, Tuple<TKey, TKey, TItem>[]> partialLeft;
+                    var partialLeft = WalkChain(start, nextLeftEdge, nextLeft.Item1, true, allSegments, combinedFinished, compareKey, compareItem, true);
+
+                    if (partialLeft.Item1)
+                    {
+                        // Going left formed a loop
+                        retVal.Add(BuildFinalChain(compareItem, partialLeft.Item2, start));
+                    }
+                    else
+                    {
+                        #region Walk right
+
+                        // Going left ended in a ray.  Go right to find the other ray (but only the path with the same axis)
+                        var partialRight = WalkChain(start, start, null, false, allSegments, combinedFinished, compareKey, compareItem, false);
+                        if (partialRight == null)
+                        {
+                            // This happens when partialLeft is for a ray that belongs to a different control point
+                            continue;
+                        }
+
+                        #region asserts
+#if DEBUG
+                        if (partialRight.Item1)
+                        {
+                            throw new ApplicationException("When walking right, there should never be a loop");
+                        }
+#endif
+                        #endregion
+
+                        // Stitch the two chains together (both end in a ray)
+                        retVal.Add(BuildFinalChain(compareItem, partialLeft.Item2, start, partialRight.Item2));
+
+                        #endregion
+                    }
+                }
+
+                return retVal.ToArray();
+            }
+
+            /// <summary>
+            /// This walks in one direction, and recurses for each segment it encounters.  It stops when it encounters a ray,
+            /// or loops back to the original segment
+            /// </summary>
+            /// <remarks>
+            /// Using the term ray to mean a segment with only one connect (the method this was copied from actually
+            /// had rays
+            /// </remarks>
+            /// <returns>
+            /// Item1 = Whether it is a loop (if false, the last element of Item2 is a ray)
+            /// Item2 = Segments that make a chain or loop
+            /// </returns>
+            private static Tuple<bool, Tuple<TKey, TKey, TItem>[]> WalkChain<TKey, TItem>(Tuple<TKey, TKey, TItem> start, Tuple<TKey, TKey, TItem> current, TKey? commonPoint, bool isLeft, Tuple<TKey, TKey, TItem>[] allSegments, IEnumerable<Tuple<TItem[], bool>> finishedChains, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem, bool includeCurrentInReturn = false) where TKey : struct
+            {
+
+                //TODO: When there is a fork, need to walk all paths, and return unique chains - maybe?
+
+                var returnChain = new List<Tuple<TKey, TKey, TItem>>();
+                bool? endedAsLoop = null;
+
+                if (includeCurrentInReturn)
+                {
+                    returnChain.Add(current);
+                }
+
+                // Find segments tied to the part of current that isn't commonPoint
+                var next = GetNext_Point_Edges(current, allSegments, compareKey, compareItem, isLeft, commonPoint);
+
+                foreach (var nextSegment in next.Item2)
+                {
+                    if (compareItem(nextSegment.Item3, start.Item3))
+                    {
+                        // Looped around.  Don't add this to the return list
+                        endedAsLoop = true;
+                        continue;       // can't return yet, because there may still be branches - not sure this is valid anymore (probably written like this when it was gathering branches)
+                    }
+
+                    // See if this path has already been done
+                    if (HasSeenSegments(current.Item3, nextSegment.Item3, finishedChains, compareItem))
+                    {
+                        continue;
+                    }
+
+                    returnChain.Add(nextSegment);
+
+                    // Recurse
+                    var recursedResult = WalkChain(start, nextSegment, next.Item1, isLeft, allSegments, finishedChains, compareKey, compareItem);
+
+                    returnChain.AddRange(recursedResult.Item2);
+                    endedAsLoop = recursedResult.Item1;
+
+                    break;
+                }
+
+
+
+
+                //TODO: See if this if statment is still needed
+                if (endedAsLoop == null)
+                {
+                    // This is sometimes a legitimate case.  When getting edges by control point, multirays sometimes have a ray that is for a different
+                    // control point.  This if statement should only hit when walking right (because walking left found a ray)
+                    if (isLeft)
+                    {
+                        throw new ApplicationException("Didn't find the next link in the chain");
+                    }
+
+                    return null;
+                }
+
+
+
+
+                return Tuple.Create(endedAsLoop.Value, returnChain.ToArray());
+            }
+
+            /// <summary>
+            /// This returns edges that touch one of the ends of the segment passed in (current must be of type segment)
+            /// NOTE: This only returns edges that touch one side of current, not both
+            /// </summary>
+            /// <remarks>
+            /// This gets called from several places.  If it's called for the first time, then isLeft becomes important (left is index0, right is index1)
+            /// If it's called while walking a chain, then commonPointIndex becomes important (returns for index that isn't commonPointIndex)
+            /// </remarks>
+            private static Tuple<TKey, Tuple<TKey, TKey, TItem>[]> GetNext_Point_Edges<TKey, TItem>(Tuple<TKey, TKey, TItem> current, Tuple<TKey, TKey, TItem>[] allSegments, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem, bool isLeft = true, TKey? commonKey = null) where TKey : struct
+            {
+                TKey nextKey;
+                if (commonKey == null)
+                {
+                    nextKey = isLeft ? current.Item1 : current.Item2;
+                }
+                else if (compareKey(current.Item1, commonKey.Value))
+                {
+                    nextKey = current.Item2;
+                }
+                else
+                {
+                    nextKey = current.Item1;
+                }
+
+                // Find the segments that have this key (not including this segment)
+                var nextSegments = allSegments.
+                    Where(o => !compareItem(o.Item3, current.Item3)).       // grab the segments that aren't current
+                    Where(o => compareKey(o.Item1, nextKey) || compareKey(o.Item2, nextKey)).       // grab the segments that contain nextKey
+                    ToArray();
+
+                return Tuple.Create(nextKey, nextSegments);
+            }
+
+            private static bool HasSeenSegments<TItem>(TItem segment1, TItem segment2, IEnumerable<Tuple<TItem[], bool>> finishedChains, Func<TItem, TItem, bool> compareItem)
+            {
+                foreach (var chain in finishedChains)
+                {
+                    // See if this chain contains both segments
+                    if (chain.Item1.Any(o => compareItem(o, segment1)) && chain.Item1.Any(o => compareItem(o, segment2)))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            private static Tuple<TItem[], bool> BuildFinalChain<TKey, TItem>(Func<TItem, TItem, bool> compareItem, Tuple<TKey, TKey, TItem>[] chain1, Tuple<TKey, TKey, TItem> middle, Tuple<TKey, TKey, TItem>[] chain2 = null) where TKey : struct
+            {
+                TItem[] retVal;
+                bool isClosed;
+
+                if (chain2 == null)
+                {
+                    #region Left, Middle
+
+                    retVal = UtilityCore.Iterate<TItem>(middle.Item3, chain1.Select(o => o.Item3)).ToArray();
+                    isClosed = true;
+
+                    #endregion
+                }
+                else
+                {
+                    #region Left, Middle, Right
+
+                    // Merge the chains
+                    retVal = UtilityCore.Iterate<TItem>(
+                        chain1.Select(o => o.Item3).Reverse(),      // reversing, because the chain walks toward a ray.  Need to go from ray toward middle
+                        middle.Item3,
+                        chain2.Select(o => o.Item3)
+                        ).ToArray();
+
+                    // See if the chain is closed (a loop) - I don't think it ever will be
+                    if (retVal.Length > 1 && compareItem(retVal[0], retVal[retVal.Length - 1]))
+                    {
+                        retVal = retVal.Take(retVal.Length - 1).ToArray();
+                        isClosed = true;
+                    }
+                    else
+                    {
+                        isClosed = false;
+                    }
+
+                    #endregion
+                }
+
+                return Tuple.Create(retVal, isClosed);
+            }
+        }
+
+        #endregion
+        #region Class: ChainAttempt2
+
+        private static class ChainAttempt2
+        {
+
+            //TODO: Copy over bits of ShadowsWindow.PolyUnion2.StitchSegments2
+
+
+            public static Tuple<TItem[], bool>[] GetChains_Multiple<TKey, TItem>(Tuple<TKey, TKey, TItem>[] segments, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem) where TKey : struct
+            {
+                // Get rid non loops
+                Tuple<TKey, TKey, TItem>[] reducedSegments;
+                Tuple<TItem[], bool>[] tails;
+                RemoveTails(out reducedSegments, out tails, segments, compareKey);
+
+
+
+
+
+                return null;
+            }
+
+
+            private static void RemoveTails<TKey, TItem>(out Tuple<TKey, TKey, TItem>[] reducedSegments, out Tuple<TItem[], bool>[] tails, Tuple<TKey, TKey, TItem>[] segments, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                var segmentList = new List<Tuple<TKey, TKey, TItem>>(segments);
+
+                var tailSegments = new List<Tuple<TKey, TKey, TItem>>();
+
+                while (true)
+                {
+                    // Find the points that only have one segment pointing to them
+                    var pointCounts = UtilityCore.Iterate(segmentList.Select(o => o.Item1), segmentList.Select(o => o.Item2)).
+                        GroupBy(compareKey).
+                        Select(o => new { Point = o.Key, Count = o.Count() }).
+                        Where(o => o.Count == 1).
+                        ToArray();
+
+                    if (pointCounts.Length == 0)
+                    {
+                        break;
+                    }
+
+                    TKey pointToFind = pointCounts[0].Point;
+
+                    // Remove the segment that contains this point
+                    bool foundIt = false;
+                    for (int cntr = 0; cntr < segmentList.Count; cntr++)
+                    {
+                        if (compareKey(segmentList[cntr].Item1, pointToFind) || compareKey(segmentList[cntr].Item2, pointToFind))
+                        {
+                            tailSegments.Add(segmentList[cntr]);
+                            segmentList.RemoveAt(cntr);
+                            foundIt = true;
+                            break;
+                        }
+                    }
+
+                    if (!foundIt)
+                    {
+                        throw new ApplicationException("Didn't find point");
+                    }
+                }
+
+                tails = GetChains(tailSegments, compareKey);
+
+                reducedSegments = segmentList.ToArray();
+            }
+
+
+            #region get chains
+
+            //private static List<Chain> GetChains(Tuple<int, int>[] segments)
+            //{
+            //    // Find the points that have more than two segments pointing to them
+            //    var pointCounts = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).
+            //        GroupBy(o => o).
+            //        Select(o => Tuple.Create(o.Key, o.Count())).
+            //        Where(o => o.Item2 > 2).
+            //        ToArray();
+
+            //    List<Tuple<int, int>> segmentList = segments.ToList();
+
+            //    if (pointCounts.Length == 0)
+            //    {
+            //        // There are no junctions, so just return the unique loops
+            //        return GetChainsSprtLoops(segmentList);
+            //    }
+
+            //    List<Chain> retVal = new List<Chain>();
+
+            //    retVal.AddRange(GetChainsSprtFragments(segmentList, pointCounts));
+
+            //    if (segmentList.Count > 0)
+            //    {
+            //        retVal.AddRange(GetChainsSprtLoops(segmentList));
+            //    }
+
+            //    return retVal;
+            //}
+            //private static List<Chain> GetChainsSprtLoops(List<Tuple<int, int>> segments)
+            //{
+            //    List<Chain> retVal = new List<Chain>();
+
+            //    int[] ends = new int[0];
+
+            //    while (segments.Count > 0)
+            //    {
+            //        Chain polygon = GetChainsSprtSingle(segments, segments[0].Item1, ends);
+
+            //        retVal.Add(polygon);
+            //    }
+
+            //    // Exit Function
+            //    return retVal;
+            //}
+            //private static Chain[] GetChainsSprtFragments(List<Tuple<int, int>> segments, Tuple<int, int>[] pointCounts)
+            //{
+            //    List<int> ends = pointCounts.SelectMany(o => Enumerable.Repeat(o.Item1, o.Item2)).ToList();
+
+            //    List<Chain> retVal = new List<Chain>();
+
+            //    while (ends.Count > 0)
+            //    {
+            //        Chain chain = GetChainsSprtSingle(segments, ends[0], ends.Where(o => o != ends[0]).ToArray());
+
+            //        ends.Remove(chain.Points[0]);
+            //        ends.Remove(chain.Points[chain.Points.Length - 1]);
+
+            //        retVal.Add(chain);
+            //    }
+
+            //    return retVal.ToArray();
+            //}
+            //private static Chain GetChainsSprtSingle(List<Tuple<int, int>> segments, int start, int[] ends)
+            //{
+            //    List<int> retVal = new List<int>();
+
+            //    #region Find the start
+
+            //    int currentPoint = -1;
+
+            //    for (int cntr = 0; cntr < segments.Count; cntr++)
+            //    {
+            //        if (segments[cntr].Item1 == start)
+            //        {
+            //            retVal.Add(segments[cntr].Item1);
+            //            currentPoint = segments[cntr].Item2;
+            //            segments.RemoveAt(cntr);
+            //            break;
+            //        }
+            //        else if (segments[cntr].Item2 == start)
+            //        {
+            //            retVal.Add(segments[cntr].Item2);
+            //            currentPoint = segments[cntr].Item1;
+            //            segments.RemoveAt(cntr);
+            //            break;
+            //        }
+            //    }
+
+            //    if (currentPoint < 0)
+            //    {
+            //        int[] points = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).Distinct().ToArray();
+            //        throw new ApplicationException(string.Format("Didn't find the start: {0}, in: {1}", start.ToString(), string.Join(" ", points)));
+            //    }
+
+            //    #endregion
+
+            //    // Stitch the segments together into a polygon
+            //    while (segments.Count > 0)
+            //    {
+            //        if (ends.Contains(currentPoint))
+            //        {
+            //            retVal.Add(currentPoint);
+            //            return new Chain(retVal.ToArray(), false);
+            //        }
+
+            //        var match = FindAndRemoveMatchingSegment(segments, currentPoint);
+            //        if (match == null)
+            //        {
+            //            // The rest of the segments belong to a polygon independent of the one that is currently being built (a hole)
+            //            break;
+            //        }
+
+            //        retVal.Add(match.Item1);
+            //        currentPoint = match.Item2;
+            //    }
+
+            //    if (ends.Length == 0)
+            //    {
+            //        if (retVal[0] != currentPoint)
+            //        {
+            //            throw new ApplicationException("There are gaps in this polygon");
+            //        }
+
+            //        if (retVal.Count < 3)
+            //        {
+            //            return null;
+            //        }
+
+            //        return new Chain(retVal.ToArray(), true);
+            //    }
+            //    else
+            //    {
+            //        if (!ends.Contains(currentPoint))
+            //        {
+            //            throw new ApplicationException("Didn't find the end point");
+            //        }
+
+            //        retVal.Add(currentPoint);
+            //        return new Chain(retVal.ToArray(), false);
+            //    }
+            //}
+
+            #endregion
+
+            #region get junctions
+
+            //private static List<Junction> GetJunctions(IEnumerable<Chain> chains)
+            //{
+            //    SortedList<Tuple<int, int>, List<Chain>> junctions = new SortedList<Tuple<int, int>, List<Chain>>();
+
+            //    foreach (Chain openChain in chains.Where(o => !o.IsClosed))
+            //    {
+            //        // Get the from/to points
+            //        Tuple<int, int> fromTo = Tuple.Create(openChain.Points[0], openChain.Points[openChain.Points.Length - 1]);
+
+            //        // Make sure from is less than to (that way all the chains point the same direction)
+            //        Chain chain = openChain;
+            //        if (fromTo.Item2 < fromTo.Item1)
+            //        {
+            //            // Reverse the chain
+            //            chain = new Chain(chain.Points.Reverse().ToArray(), false);
+            //            fromTo = Tuple.Create(fromTo.Item2, fromTo.Item1);
+            //        }
+
+            //        // Add this to a junction
+            //        if (!junctions.ContainsKey(fromTo))
+            //        {
+            //            junctions.Add(fromTo, new List<Chain>());
+            //        }
+
+            //        junctions[fromTo].Add(chain);
+            //    }
+
+            //    // Finalize it
+            //    List<Junction> retVal = new List<Junction>();
+
+            //    foreach (var point in junctions.Keys)
+            //    {
+            //        retVal.Add(new Junction(point.Item1, point.Item2, junctions[point].ToList()));
+            //    }
+
+            //    return retVal;
+            //}
+
+            #endregion
+
+
+            #region other get chains
+
+            //TODO: Make sure that 8 becomes two loops
+
+            ///// <summary>
+            ///// This converts the set of segments into chains (good for making polygons out of line segments)
+            ///// </summary>
+            ///// <remarks>
+            ///// NOTE: When there is a spoke (think of an octopus), individual chains are found and removed.  There could be multiple ways
+            ///// those chains chains could be selected, this method arbitrarily chooses one.  In other words:
+            /////     >---
+            /////     could become
+            /////     \---    and    /
+            /////     or
+            /////     /---    and    \
+            ///// This method will only return one of those possibilities
+            ///// </remarks>
+            ///// <returns>
+            ///// Item1=A chain or loop of items
+            ///// Item2=True: Loop, False: Chain
+            ///// </returns>
+            //private static Tuple<TItem[], bool>[] GetChains<TKey, TItem>(IEnumerable<Tuple<TKey, TKey, TItem>> segments, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem) where TKey : struct
+            //{
+            //    // Convert the segments into chains
+            //    List<Tuple<TKey, TKey, TItem>[]> chains = segments.
+            //        Select(o => new[] { o }).
+            //        ToList();
+
+            //    // Keep trying to merge the chains until no more merges are possible
+            //    while (true)
+            //    {
+            //        #region Merge pass
+
+            //        if (chains.Count == 1) break;
+
+            //        bool hadJoin = false;
+
+            //        for (int outer = 0; outer < chains.Count - 1; outer++)
+            //        {
+            //            for (int inner = outer + 1; inner < chains.Count; inner++)
+            //            {
+            //                // See if these two can be merged
+            //                Tuple<TKey, TKey, TItem>[] newChain = TryJoinChains(chains[outer], chains[inner], compareKey, compareItem);
+
+            //                if (newChain != null)
+            //                {
+            //                    // Swap the sub chains with the new combined one
+            //                    chains.RemoveAt(inner);
+            //                    chains.RemoveAt(outer);
+
+            //                    chains.Add(newChain);
+
+            //                    hadJoin = true;
+            //                    break;
+            //                }
+            //            }
+
+            //            if (hadJoin) break;
+            //        }
+
+            //        if (!hadJoin) break;        // compared all the mini chains, and there were no merges.  Quit looking
+
+            //        #endregion
+            //    }
+
+            //    #region Detect loops
+
+            //    List<Tuple<T[], bool>> retVal = new List<Tuple<T[], bool>>();
+
+            //    foreach (T[] chain in chains)
+            //    {
+            //        if (compare(chain[0], chain[chain.Length - 1]))
+            //        {
+            //            T[] loop = chain.Skip(1).ToArray();
+            //            retVal.Add(Tuple.Create(loop, true));
+            //        }
+            //        else
+            //        {
+            //            retVal.Add(Tuple.Create(chain, false));
+            //        }
+            //    }
+
+            //    #endregion
+
+            //    return retVal.ToArray();
+            //}
+
+            //private static Tuple<TKey, TKey, TItem>[] TryJoinChains(Tuple<TKey, TKey, TItem>[] tuple1, Tuple<TKey, TKey, TItem>[] tuple2, Func<TKey, TKey, bool> compareKey, Func<TItem, TItem, bool> compareItem)
+            //{
+            //}
+
+            //private static T[] TryJoinChains<T>(T[] chain1, T[] chain2, Func<T, T, bool> compare)
+            //{
+            //    if (compare(chain1[0], chain2[0]))
+            //    {
+            //        return UtilityCore.Iterate(chain1.Reverse<T>(), chain2.Skip(1)).ToArray();
+            //    }
+            //    else if (compare(chain1[chain1.Length - 1], chain2[0]))
+            //    {
+            //        return UtilityCore.Iterate(chain1, chain2.Skip(1)).ToArray();
+            //    }
+            //    else if (compare(chain1[0], chain2[chain2.Length - 1]))
+            //    {
+            //        return UtilityCore.Iterate(chain2, chain1.Skip(1)).ToArray();
+            //    }
+            //    else if (compare(chain1[chain1.Length - 1], chain2[chain2.Length - 1]))
+            //    {
+            //        return UtilityCore.Iterate(chain2, chain1.Reverse<T>().Skip(1)).ToArray();
+            //    }
+            //    else
+            //    {
+            //        return null;
+            //    }
+            //}
+
+            #endregion
+            #region other get chains
+
+            private static Tuple<TItem[], bool>[] GetChains<TKey, TItem>(IEnumerable<Tuple<TKey, TKey, TItem>> segments, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                var retVal = new List<Tuple<TItem[], bool>>();
+
+                var segmentList = segments.ToList();
+
+                Tuple<TItem[], bool> current;
+
+                while (ExtractChain(out current, segmentList, compareKey))
+                {
+                    retVal.Add(current);
+                }
+
+                #region asserts
+#if DEBUG
+                if (segmentList.Count > 0)
+                {
+                    throw new ApplicationException("segmentList should be empty at this point");
+                }
+#endif
+                #endregion
+
+                return retVal.ToArray();
+            }
+
+            private static bool ExtractChain<TKey, TItem>(out Tuple<TItem[], bool> chain, List<Tuple<TKey, TKey, TItem>> segmentList, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                //TODO: this   Q   needs to be a chain   \   and a loop   O   not a single loop chain
+
+                if (segmentList.Count == 0)
+                {
+                    chain = null;
+                    return false;
+                }
+
+                List<Tuple<TKey, TKey, TItem>> retVal = new List<Tuple<TKey, TKey, TItem>>();
+                List<TKey> usedKeys = new List<TKey>();
+
+                // Pop the first segment from the list
+                retVal.Add(segmentList[0]);
+                segmentList.RemoveAt(0);
+
+                bool? isLoop = null;
+
+                while (true)
+                {
+                    if (retVal.Count > 2 && GetCommonKey(retVal[0], retVal[retVal.Count - 1], compareKey) != null)
+                    {
+                        isLoop = true;
+                        break;
+                    }
+
+                    if (!TryExtractNextSegment(retVal, usedKeys, segmentList, compareKey))
+                    {
+                        isLoop = false;
+                        break;
+                    }
+                }
+
+                if (isLoop == null)
+                {
+                    throw new ApplicationException("The decision whether the return is a loop or not should have been made by now");
+                }
+
+                chain = Tuple.Create(retVal.Select(o => o.Item3).ToArray(), isLoop.Value);
+                return true;
+            }
+
+            private static bool TryExtractNextSegment<TKey, TItem>(List<Tuple<TKey, TKey, TItem>> retVal, List<TKey> usedKeys, List<Tuple<TKey, TKey, TItem>> segmentList, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                // Get the key from retVal[len-1] that isn't in common with retVal[len - 2] (if retVal is only one segment, then return Item2)
+                foreach (TKey key in GetNextKeys(retVal, compareKey))
+                {
+                    if (usedKeys.Contains(key, compareKey))
+                    {
+                        // The next key to search for is already somewhere in the chain being built up.  Quit searching
+                        return false;
+                    }
+
+                    // Find a segment that has the exposed key
+                    for (int cntr = 0; cntr < segmentList.Count; cntr++)
+                    {
+                        if (compareKey(segmentList[cntr].Item1, key) || compareKey(segmentList[cntr].Item2, key))
+                        {
+                            if (retVal.Count == 1)
+                            {
+                                // Waiting until now to add these so the above contains check doesn't fail
+                                usedKeys.Add(retVal[0].Item1);
+                                usedKeys.Add(retVal[0].Item2);
+                            }
+                            else
+                            {
+                                usedKeys.Add(key);
+                            }
+
+                            retVal.Add(segmentList[cntr]);
+                            segmentList.RemoveAt(cntr);
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            private static TKey? GetCommonKey<TKey, TItem>(Tuple<TKey, TKey, TItem> segment1, Tuple<TKey, TKey, TItem> segment2, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                if (compareKey(segment1.Item1, segment2.Item1))
+                {
+                    return segment1.Item1;
+                }
+                else if (compareKey(segment1.Item1, segment2.Item2))
+                {
+                    return segment1.Item1;
+                }
+                else if (compareKey(segment1.Item2, segment2.Item1))
+                {
+                    return segment1.Item2;
+                }
+                else if (compareKey(segment1.Item2, segment2.Item2))
+                {
+                    return segment1.Item2;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            private static TKey[] GetNextKeys<TKey, TItem>(List<Tuple<TKey, TKey, TItem>> segments, Func<TKey, TKey, bool> compareKey) where TKey : struct
+            {
+                if (segments.Count == 0)
+                {
+                    throw new ArgumentException("The list passed in can't be empty");
+                }
+                else if (segments.Count == 1)
+                {
+                    //NOTE: Need to return both, because one direction may have no connections
+                    return new[] { segments[0].Item1, segments[0].Item2 };
+                }
+
+                var seg1 = segments[segments.Count - 2];
+                var seg2 = segments[segments.Count - 1];
+
+                if (compareKey(seg2.Item1, seg1.Item1) || compareKey(seg2.Item1, seg1.Item2))
+                {
+                    return new[] { seg2.Item2 };      // returning the uncommon one
+                }
+                else if (compareKey(seg2.Item2, seg1.Item1) || compareKey(seg2.Item2, seg1.Item2))
+                {
+                    return new[] { seg2.Item1 };
+                }
+
+                throw new ApplicationException("The last two segments in the list don't have a common key");
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: GetChains2D_1
+
+        private static class GetChains2D_1
+        {
+            #region Class: EventPoint
+
+            private class EventPoint
+            {
+                public EventPoint(Point point, Tuple<Point, Point> segment, bool? isLeftPoint)
+                {
+                    this.Point = point;
+                    this.Segment = segment;
+                    this.IsLeftPoint = isLeftPoint;
+                }
+
+                public readonly Point Point;
+                public readonly Tuple<Point, Point> Segment;
+                public readonly bool? IsLeftPoint;      // null means the point was generated from an intersection
+            }
+
+            #endregion
+
+            //Bentley–Ottmann algorithm
+            //http://geomalgorithms.com/a09-_intersect-3.html
+            //http://stackoverflow.com/questions/4407493/existing-bentley-ottmann-algorithm-implementation
+            public static Point[][] GetSubPolygons(Tuple<Point, Point>[] segments, bool couldEdgesOverlap)
+            {
+                if (segments == null)
+                {
+                    return null;
+                }
+                else if (segments.Length == 0)
+                {
+                    return new[] { new Point[0] };
+                }
+
+                // Initialize event queue EQ = all segment endpoints;
+                // Sort EQ by increasing x and y;
+                List<EventPoint> eventQueue = segments.
+                    SelectMany(o => new[]
+                    {
+                        new EventPoint(o.Item1, o, true),
+                        new EventPoint(o.Item2, o, false),
+                    }).
+                    OrderBy(o => o.Point.X).
+                    ThenBy(o => o.Point.Y).
+                    ToList();
+
+                // Initialize sweep line SL to be empty;
+                var sweepLine = new List<Tuple<Point, Point>>();
+
+                // Initialize output intersection list IL to be empty;
+                List<Point> retVal = new List<Point>();
+
+                //While (EQ is nonempty) {
+                while (eventQueue.Count > 0)
+                {
+                    //Let E = the next event from EQ;
+                    EventPoint e = eventQueue[0];
+
+                    if (e.IsLeftPoint == null)
+                    {
+                        #region Inserted Point
+
+                        //Add E’s intersect point to the output list IL;
+                        //NOTE: Only intersections are stored in the return, because this method only worries about polygons (tails sticking out the side are thrown out)
+                        //retVal.Add(e.Point);
+
+                        //Let segE1 above segE2 be E's intersecting segments in SL;
+                        //Swap their positions so that segE2 is now above segE1;
+                        //Let segA = the segment above segE2 in SL;
+                        //Let segB = the segment below segE1 in SL;
+                        //If (I = Intersect(segE2 with segA) exists)
+                        //    If (I is not in EQ already) 
+                        //        Insert I into EQ;
+                        //If (I = Intersect(segE1 with segB) exists)
+                        //    If (I is not in EQ already) 
+                        //        Insert I into EQ;
+
+                        #endregion
+                    }
+                    else if (e.IsLeftPoint.Value)
+                    {
+                        #region Orig Left
+
+                        int sweepIndex = AddToSweepLine(sweepLine, e.Segment);
+
+                        var segA = GetAbove(sweepLine, sweepIndex);
+                        Point? intersect = Intersect(e.Segment, segA);
+                        if (intersect != null)
+                        {
+                            AddToEventQueue(eventQueue, intersect.Value, e.Segment, segA);
+                        }
+
+                        var segB = GetBelow(sweepLine, sweepIndex);
+                        intersect = Intersect(e.Segment, segB);
+                        if (intersect != null)
+                        {
+                            AddToEventQueue(eventQueue, intersect.Value, e.Segment, segA);
+                        }
+
+                        #endregion
+                    }
+                    else
+                    {
+                        #region Orig Right
+
+                        int sweepIndex = sweepLine.IndexOf(e.Segment, (o, p) => Math2D.IsNearValue(o.Item1, p.Item1) && Math2D.IsNearValue(o.Item2, p.Item2));
+
+                        var segA = GetAbove(sweepLine, sweepIndex);
+                        var segB = GetBelow(sweepLine, sweepIndex);
+
+                        sweepLine.RemoveAt(sweepIndex);
+
+                        Point? intersect = Intersect(segA, segB);
+
+                        if (intersect != null)
+                        {
+                            int eqIndex = FindIndex(eventQueue, intersect.Value);
+
+                            if (eqIndex < 0)
+                            {
+                                AddToEventQueue(eventQueue, intersect.Value, segA, segB);
+                            }
+                        }
+
+                        #endregion
+                    }
+
+                    eventQueue.RemoveAt(FindIndex(eventQueue, e.Point));
+                }
+
+                //return IL;
+                return null;
+            }
+
+            private static int AddToSweepLine(List<Tuple<Point, Point>> sweepLine, Tuple<Point, Point> segment)
+            {
+                //TODO: May need insert in the middle
+                sweepLine.Add(segment);
+                return sweepLine.Count - 1;
+            }
+
+            private static Tuple<Point, Point> GetAbove(List<Tuple<Point, Point>> sweepLine, int index)
+            {
+                if (index == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    return sweepLine[index - 1];
+                }
+            }
+            private static Tuple<Point, Point> GetBelow(List<Tuple<Point, Point>> sweepLine, int index)
+            {
+                if (index == sweepLine.Count - 1)
+                {
+                    return null;
+                }
+                else
+                {
+                    return sweepLine[index + 1];
+                }
+            }
+
+            private static int AddToEventQueue(List<EventPoint> eventQueue, Point point, Tuple<Point, Point> orig1, Tuple<Point, Point> orig2)
+            {
+                // Remove the two original segments, and create 4 new segments.  Store them in order
+
+                throw new ApplicationException("finish this");
+            }
+
+            private static Point? Intersect(Tuple<Point, Point> segment1, Tuple<Point, Point> segment2)
+            {
+                if (segment1 == null || segment2 == null)
+                {
+                    return null;
+                }
+
+                //TODO: See if they intersect
+                return null;
+            }
+
+            private static int FindIndex(List<EventPoint> eventQueue, Point point)
+            {
+                for (int cntr = 0; cntr < eventQueue.Count; cntr++)
+                {
+                    if (Math2D.IsNearValue(eventQueue[cntr].Point, point))
+                    {
+                        return cntr;
+                    }
+                }
+
+                return -1;
+            }
+        }
+
+        #endregion
+        #region Class: GetChains2D_2
+
+        private static class GetChains2D_2
+        {
+            #region Class: SweepPoly
+
+            private class SweepPoly
+            {
+                private readonly List<int> _chain = new List<int>();
+
+                public SweepPoly(Tuple<int, int> segment)
+                {
+                    _chain.Add(segment.Item1);
+                    _chain.Add(segment.Item2);
+
+                    this.IsComplete = false;
+                }
+
+                public bool IsComplete
+                {
+                    get;
+                    private set;
+                }
+
+                public bool TryAdd(Tuple<int, int> segment)
+                {
+                    if (this.IsComplete)
+                    {
+                        throw new InvalidOperationException("Can't try to add a segment to a completed loop");
+                    }
+
+                    int first = _chain[0];
+                    int last = _chain[_chain.Count - 1];
+
+                    if ((segment.Item1 == first && segment.Item2 == last) || (segment.Item2 == first && segment.Item1 == last))
+                    {
+                        this.IsComplete = true;
+                    }
+                    else if (segment.Item1 == last)
+                    {
+                        _chain.Add(segment.Item2);
+                    }
+                    else if (segment.Item2 == last)
+                    {
+                        _chain.Add(segment.Item1);
+                    }
+                    else if (segment.Item1 == first)
+                    {
+                        _chain.Insert(0, segment.Item2);
+                    }
+                    else if (segment.Item2 == first)
+                    {
+                        _chain.Insert(0, segment.Item1);
+                    }
+                    else
+                    {
+                        // This is the only case that returns false
+                        return false;
+                    }
+
+                    return true;
+                }
+                public bool WillClose(Tuple<int, int> segment)
+                {
+                    if (this.IsComplete)
+                    {
+                        throw new InvalidOperationException("Can't try to add a segment to a completed loop");
+                    }
+
+                    int first = _chain[0];
+                    int last = _chain[_chain.Count - 1];
+
+                    return (segment.Item1 == first && segment.Item2 == last) || (segment.Item2 == first && segment.Item1 == last);
+                }
+
+                public int[] GetChain()
+                {
+                    return _chain.ToArray();
+                }
+            }
+
+            #endregion
+
+            public static Tuple<int[][], Point[]> GetSubPolygons(Tuple<Point, Point>[] segments)
+            {
+                throw new ApplicationException("finish this");
+            }
+            /// <summary>
+            /// This will find polygons within the segments.  It finds the most granular polygons (no unions)
+            /// </summary>
+            /// <remarks>
+            /// http://programmers.stackexchange.com/questions/216255/find-all-lines-segments-intersections
+            /// </remarks>
+            public static Tuple<int[][], Point[]> GetSubPolygons(Tuple<int, int>[] segments, Point[] points, bool shouldDedupePoints = false, bool couldSegmentsIntersect = true)
+            {
+                if (segments == null)
+                {
+                    return null;
+                }
+                else if (segments.Length == 0)
+                {
+                    return Tuple.Create(new int[0][], new Point[0]);
+                }
+
+                //TODO: Dedupe points
+                //TODO: Intersect segments
+                //TODO: Remove tails
+
+
+                return Tuple.Create(GetSubPolygons_Clean(segments, points), points);
+            }
+
+            #region Private Methods
+
+            public static int[][] GetSubPolygons_Clean(Tuple<int, int>[] segments, Point[] points)
+            {
+                // Sort the points
+                var sortedPoints = points.
+                    Select((o, i) => new { Point = o, Index = i }).
+                    OrderBy(o => o.Point.X).
+                    ThenBy(o => o.Point.Y).
+                    ToArray();
+
+                // The angles are needed to know which segments that share a point are next to which (imagine 3 segments off of a point.
+                // The angles are used to know what order to put them in)
+                var angles = GetSegmentAngles(segments, points);
+
+                List<SweepPoly> sweepLine = new List<SweepPoly>();
+                List<int[]> retVal = new List<int[]>();
+
+                bool[] segmentUsed = new bool[segments.Length];
+
+                for (int ptCntr = 0; ptCntr < sortedPoints.Length; ptCntr++)
+                {
+                    // Find all segments that contain this point
+                    var matchingSegments = FindSegments(sortedPoints[ptCntr].Index, segments, segmentUsed, angles);
+
+                    for (int segCntr = 0; segCntr < matchingSegments.Length; segCntr++)
+                    {
+                        if (matchingSegments[segCntr].Item2)
+                        {
+                            // This segment has already been added (the reason for keeping it in the for loop is so shouldAddTwice will be accurate)
+                            continue;
+                        }
+
+                        //NOTE: Interior segments need to be duplicated between the poly above and poly below
+                        bool shouldAddTwice = segCntr > 0 && segCntr < matchingSegments.Length - 1;
+
+                        AddToSweepLine(matchingSegments[segCntr].Item1, sweepLine, retVal, shouldAddTwice);
+                    }
+                }
+
+                if (sweepLine.Count > 0)
+                {
+                    //throw new ApplicationException("There are still unfinished chains");
+                    int sixty = 2;
+                }
+
+                return retVal.ToArray();
+            }
+
+            private static Tuple<Tuple<int, int>, bool>[] FindSegments_ORIG(int point, Tuple<int, int>[] segments, bool[] segmentsUsed, Tuple<int, int>[] sortedIndices)
+            {
+                var retVal = new List<Tuple<Tuple<int, int>, bool>>();
+
+                // Find all the segments that contain the point passed in
+                //NOTE: All segments in retVal will have the point as Item1
+                for (int cntr = 0; cntr < segments.Length; cntr++)
+                {
+                    if (segments[cntr].Item1 == point)
+                    {
+                        retVal.Add(Tuple.Create(segments[cntr], segmentsUsed[cntr]));
+                        segmentsUsed[cntr] = true;
+                    }
+                    else if (segments[cntr].Item2 == point)
+                    {
+                        // Reverse the order of the segment
+                        retVal.Add(Tuple.Create(Tuple.Create(segments[cntr].Item2, segments[cntr].Item1), segmentsUsed[cntr]));
+                        segmentsUsed[cntr] = true;
+                    }
+                }
+
+                // Make the list the same order as sortedIndices
+                return retVal.
+                    Select(o => new
+                    {
+                        Segment = o,
+                        Order = sortedIndices.
+                            First(p => p.Item1 == o.Item1.Item2).     // Use the second point in the segment (o.Item2) to find the entry in sortedIndices (p.Item1)
+                            Item2       //sortedIndices.Item2 is the sort order
+                    }).
+                    OrderBy(o => o.Order).
+                    Select(o => o.Segment).
+                    ToArray();
+            }
+            private static Tuple<Tuple<int, int>, bool>[] FindSegments(int point, Tuple<int, int>[] segments, bool[] segmentsUsed, Tuple<Tuple<int, int>, double, double>[] angles)
+            {
+                var retVal = new List<Tuple<Tuple<int, int>, bool>>();
+
+                // Find all the segments that contain the point passed in
+                //NOTE: All segments in retVal will have the point as Item1
+                for (int cntr = 0; cntr < segments.Length; cntr++)
+                {
+                    if (segments[cntr].Item1 == point)
+                    {
+                        retVal.Add(Tuple.Create(segments[cntr], segmentsUsed[cntr]));
+                        segmentsUsed[cntr] = true;
+                    }
+                    else if (segments[cntr].Item2 == point)
+                    {
+                        // Reverse the order of the segment
+                        retVal.Add(Tuple.Create(Tuple.Create(segments[cntr].Item2, segments[cntr].Item1), segmentsUsed[cntr]));
+                        segmentsUsed[cntr] = true;
+                    }
+                }
+
+                // Sort them by angle
+                return retVal.
+                    Select(o => new
+                    {
+                        Segment = o,
+                        Angle = GetAngle(o.Item1, angles)
+                    }).
+                    OrderBy(o => o.Angle).
+                    Select(o => o.Segment).
+                    ToArray();
+            }
+
+            private static void AddToSweepLine_ORIG(Tuple<int, int> segment, List<SweepPoly> sweepLine, List<int[]> finishedLoops, bool addTwice)
+            {
+                int index = 0;
+                int addCount = 0;
+
+                while (index < sweepLine.Count)
+                {
+
+                    //TODO: TryAdd is too greedy
+                    //      Instead, get all that can take it, and give to the best ---- not sure about this approach
+                    //      Instead, find any polys that this will finish.  If found, add it.  Then go back and add to any polys that could take it (assuming the add count hasn't been exceeded)
+
+                    if (sweepLine[index].TryAdd(segment))
+                    {
+                        if (sweepLine[index].IsComplete)
+                        {
+                            finishedLoops.Add(sweepLine[index].GetChain());
+                            sweepLine.RemoveAt(index);
+                        }
+
+                        addCount++;
+                        if (addCount > (addTwice ? 1 : 0))
+                        {
+                            return;
+                        }
+                    }
+
+                    index++;
+                }
+
+                sweepLine.Add(new SweepPoly(segment));
+
+                if (addTwice && addCount < 1)
+                {
+                    throw new ApplicationException("Should have added twice");
+                }
+            }
+            private static void AddToSweepLine(Tuple<int, int> segment, List<SweepPoly> sweepLine, List<int[]> finishedLoops, bool addTwice)
+            {
+                int addCount = 0;
+
+                // Try to close figures
+                int index = 0;
+                while (index < sweepLine.Count)
+                {
+                    if (sweepLine[index].WillClose(segment))
+                    {
+                        sweepLine[index].TryAdd(segment);       // this will close it, so commit the add
+                        finishedLoops.Add(sweepLine[index].GetChain());
+                        sweepLine.RemoveAt(index);
+
+                        addCount++;
+                        if (addCount > (addTwice ? 1 : 0))
+                        {
+                            return;
+                        }
+                    }
+
+                    index++;
+                }
+
+                // Standard add
+                index = 0;
+                while (index < sweepLine.Count)
+                {
+                    if (sweepLine[index].TryAdd(segment))
+                    {
+                        if (sweepLine[index].IsComplete)
+                        {
+                            finishedLoops.Add(sweepLine[index].GetChain());
+                            sweepLine.RemoveAt(index);
+                        }
+
+                        addCount++;
+                        if (addCount > (addTwice ? 1 : 0))
+                        {
+                            return;
+                        }
+                    }
+
+                    index++;
+                }
+
+                sweepLine.Add(new SweepPoly(segment));
+                addCount++;
+
+                if (addTwice && addCount < 2)
+                {
+                    throw new ApplicationException("Should have added twice");
+                }
+            }
+
+            /// <summary>
+            /// This returns the angle to -1,0
+            /// </summary>
+            /// <returns>
+            /// Item1=Angle when going from segment[n].Item1 to Item2
+            /// Item2=Angle when going from segment[n].Item2 to Item1
+            /// </returns>
+            private static Tuple<Tuple<int, int>, double, double>[] GetSegmentAngles(Tuple<int, int>[] segments, Point[] points)
+            {
+                var retVal = new Tuple<Tuple<int, int>, double, double>[segments.Length];
+
+                Vector vector = new Vector(-1, 0);
+
+                for (int cntr = 0; cntr < segments.Length; cntr++)
+                {
+                    double angle = Vector.AngleBetween(vector, points[segments[cntr].Item2] - points[segments[cntr].Item1]);
+
+                    if (angle < 0)
+                    {
+                        angle += 360d;
+                    }
+
+                    double opposite = angle + 180;
+                    if (opposite >= 360d)
+                    {
+                        opposite -= 360d;
+                    }
+
+                    retVal[cntr] = Tuple.Create(segments[cntr], angle, opposite);
+                }
+
+                return retVal;
+            }
+
+            private static double GetAngle(Tuple<int, int> segment, Tuple<Tuple<int, int>, double, double>[] angles)
+            {
+                // Find this segment in the angles passed in
+                foreach (var angle in angles)
+                {
+                    if (angle.Item1.Item1 == segment.Item1 && angle.Item1.Item2 == segment.Item2)
+                    {
+                        return angle.Item2;
+                    }
+                    else if (angle.Item1.Item1 == segment.Item2 && angle.Item1.Item2 == segment.Item1)
+                    {
+                        return angle.Item3;
+                    }
+                }
+
+                throw new ArgumentException("Didn't find the segment");
+            }
+
+            #endregion
+
+            //private static Point? GetIntersection(Tuple<Point, Point> segment1, Tuple<Point, Point> segment2)
+            //{
+            //    return Math2D.GetIntersection_LineSegment_LineSegment(segment1.Item1, segment1.Item2, segment2.Item1, segment2.Item2);
+            //}
+        }
+
+        #endregion
+        #region Class: GetChains2D_3
+
+        private static class GetChains2D_3
+        {
+            public static Tuple<int[][], Point[]> GetSubPolygons(Tuple<int, int>[] segments, Point[] points, bool shouldDedupePoints = false, bool couldSegmentsIntersect = true)
+            {
+                if (segments == null)
+                {
+                    return null;
+                }
+                else if (segments.Length == 0)
+                {
+                    return Tuple.Create(new int[0][], new Point[0]);
+                }
+
+                //TODO: Dedupe points
+                //TODO: Intersect segments
+                //TODO: Remove tails
+
+
+                return Tuple.Create(GetSubPolygons_Clean(segments, points), points);
+            }
+
+            #region Private Methods
+
+            private static int[][] GetSubPolygons_Clean(Tuple<int, int>[] segments, Point[] points)
+            {
+                // Sort the points
+                var sortedPoints = points.
+                    Select((o, i) => new { Point = o, Index = i }).
+                    OrderBy(o => o.Point.X).
+                    ThenBy(o => o.Point.Y).
+                    ToArray();
+
+                //// Find the points that have more than two segments pointing to them
+                //var pointCounts = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).
+                //    GroupBy(o => o).
+                //    Select(o => Tuple.Create(o.Key, o.Count())).
+                //    Where(o => o.Item2 > 2).
+                //    ToArray();
+
+                // Come up with chains and rings
+                List<Chain> chains = GetChains(segments);
+                List<Junction> junctions = GetJunctions(chains);
+                chains = chains.Where(o => o.IsClosed).ToList();       // only keep the rings (the junctions now own the fragment chains)
+
+
+
+
+
+
+
+
+
+
+                return new int[0][];
+            }
+
+
+
+            #region Class: Chain
+
+            private class Chain
+            {
+                public Chain(int[] points, bool isClosed)
+                {
+                    this.Points = points;
+                    this.IsClosed = isClosed;
+                }
+
+                public readonly int[] Points;
+                public readonly bool IsClosed;
+
+                public override string ToString()
+                {
+                    const string DELIM = "       |       ";
+
+                    StringBuilder retVal = new StringBuilder(100);
+
+                    retVal.Append(this.IsClosed ? "closed" : "open");
+
+                    retVal.Append(DELIM);
+
+                    retVal.Append(string.Join(", ", this.Points));
+
+                    return retVal.ToString();
+                }
+            }
+
+            #endregion
+            #region Class: Junction
+
+            private class Junction
+            {
+                public Junction(int fromPoint, int toPoint, List<Chain> chains)
+                {
+                    this.FromPoint = fromPoint;
+                    this.ToPoint = toPoint;
+                    this.Chains = chains;
+                }
+
+                public readonly int FromPoint;
+                public readonly int ToPoint;
+                public List<Chain> Chains;
+
+                public override string ToString()
+                {
+                    const string DELIM = "       |       ";
+
+                    StringBuilder retVal = new StringBuilder(100);
+
+                    retVal.Append(string.Format("{0} - {1}", this.FromPoint, this.ToPoint));
+
+                    retVal.Append(DELIM);
+
+                    //retVal.Append(string.Join(" ", this.Chains.Select(o => string.Format("{{0} {1}}", o.IsClosed ? "closed" : "open", string.Join(",", o.Points)))));
+                    retVal.Append(string.Join(" ", this.Chains.Select(o => "(" + string.Join(",", o.Points) + ")")));
+
+                    return retVal.ToString();
+                }
+            }
+
+            #endregion
+
+
+            #region get chains
+
+            private static List<Chain> GetChains(Tuple<int, int>[] segments)
+            {
+                // Find the points that have more than two segments pointing to them
+                var pointCounts = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).
+                    GroupBy(o => o).
+                    Select(o => Tuple.Create(o.Key, o.Count())).
+                    Where(o => o.Item2 > 2).
+                    ToArray();
+
+                List<Tuple<int, int>> segmentList = segments.ToList();
+
+                if (pointCounts.Length == 0)
+                {
+                    // There are no junctions, so just return the unique loops
+                    return GetChainsSprtLoops(segmentList);
+                }
+
+                List<Chain> retVal = new List<Chain>();
+
+                retVal.AddRange(GetChainsSprtFragments(segmentList, pointCounts));
+
+                if (segmentList.Count > 0)
+                {
+                    retVal.AddRange(GetChainsSprtLoops(segmentList));
+                }
+
+                return retVal;
+            }
+            private static List<Chain> GetChainsSprtLoops(List<Tuple<int, int>> segments)
+            {
+                List<Chain> retVal = new List<Chain>();
+
+                int[] ends = new int[0];
+
+                while (segments.Count > 0)
+                {
+                    Chain polygon = GetChainsSprtSingle(segments, segments[0].Item1, ends);
+
+                    retVal.Add(polygon);
+                }
+
+                // Exit Function
+                return retVal;
+            }
+            private static Chain[] GetChainsSprtFragments(List<Tuple<int, int>> segments, Tuple<int, int>[] pointCounts)
+            {
+                List<int> ends = pointCounts.SelectMany(o => Enumerable.Repeat(o.Item1, o.Item2)).ToList();
+
+                List<Chain> retVal = new List<Chain>();
+
+                while (ends.Count > 0)
+                {
+                    Chain chain = GetChainsSprtSingle(segments, ends[0], ends.Where(o => o != ends[0]).ToArray());
+
+                    ends.Remove(chain.Points[0]);
+                    ends.Remove(chain.Points[chain.Points.Length - 1]);
+
+                    retVal.Add(chain);
+                }
+
+                return retVal.ToArray();
+            }
+            private static Chain GetChainsSprtSingle(List<Tuple<int, int>> segments, int start, int[] ends)
+            {
+                List<int> retVal = new List<int>();
+
+                #region Find the start
+
+                int currentPoint = -1;
+
+                for (int cntr = 0; cntr < segments.Count; cntr++)
+                {
+                    if (segments[cntr].Item1 == start)
+                    {
+                        retVal.Add(segments[cntr].Item1);
+                        currentPoint = segments[cntr].Item2;
+                        segments.RemoveAt(cntr);
+                        break;
+                    }
+                    else if (segments[cntr].Item2 == start)
+                    {
+                        retVal.Add(segments[cntr].Item2);
+                        currentPoint = segments[cntr].Item1;
+                        segments.RemoveAt(cntr);
+                        break;
+                    }
+                }
+
+                if (currentPoint < 0)
+                {
+                    int[] points = UtilityCore.Iterate(segments.Select(o => o.Item1), segments.Select(o => o.Item2)).Distinct().ToArray();
+                    throw new ApplicationException(string.Format("Didn't find the start: {0}, in: {1}", start.ToString(), string.Join(" ", points)));
+                }
+
+                #endregion
+
+                // Stitch the segments together into a polygon
+                while (segments.Count > 0)
+                {
+                    if (ends.Contains(currentPoint))
+                    {
+                        retVal.Add(currentPoint);
+                        return new Chain(retVal.ToArray(), false);
+                    }
+
+                    var match = FindAndRemoveMatchingSegment(segments, currentPoint);
+                    if (match == null)
+                    {
+                        // The rest of the segments belong to a polygon independent of the one that is currently being built (a hole)
+                        break;
+                    }
+
+                    retVal.Add(match.Item1);
+                    currentPoint = match.Item2;
+                }
+
+                if (ends.Length == 0)
+                {
+                    if (retVal[0] != currentPoint)
+                    {
+                        throw new ApplicationException("There are gaps in this polygon");
+                    }
+
+                    if (retVal.Count < 3)
+                    {
+                        return null;
+                    }
+
+                    return new Chain(retVal.ToArray(), true);
+                }
+                else
+                {
+                    if (!ends.Contains(currentPoint))
+                    {
+                        throw new ApplicationException("Didn't find the end point");
+                    }
+
+                    retVal.Add(currentPoint);
+                    return new Chain(retVal.ToArray(), false);
+                }
+            }
+
+            /// <summary>
+            /// This compares the test point to each end of each line segment.  Then removes that matching segment from the list
+            /// </summary>
+            /// <returns>
+            /// null, or:
+            /// Item1=Common Point
+            /// Item2=Other Point
+            /// </returns>
+            private static Tuple<int, int> FindAndRemoveMatchingSegment(List<Tuple<int, int>> lineSegments, int testPoint)
+            {
+                for (int cntr = 0; cntr < lineSegments.Count; cntr++)
+                {
+                    if (lineSegments[cntr].Item1 == testPoint)
+                    {
+                        var retVal = lineSegments[cntr];
+                        lineSegments.RemoveAt(cntr);
+                        return retVal;
+                    }
+
+                    if (lineSegments[cntr].Item2 == testPoint)
+                    {
+                        var retVal = Tuple.Create(lineSegments[cntr].Item2, lineSegments[cntr].Item1);
+                        lineSegments.RemoveAt(cntr);
+                        return retVal;
+                    }
+                }
+
+                // No match found
+                return null;
+            }
+
+            #endregion
+            #region get junctions
+
+            private static List<Junction> GetJunctions(IEnumerable<Chain> chains)
+            {
+                SortedList<Tuple<int, int>, List<Chain>> junctions = new SortedList<Tuple<int, int>, List<Chain>>();
+
+                foreach (Chain openChain in chains.Where(o => !o.IsClosed))
+                {
+                    // Get the from/to points
+                    Tuple<int, int> fromTo = Tuple.Create(openChain.Points[0], openChain.Points[openChain.Points.Length - 1]);
+
+                    // Make sure from is less than to (that way all the chains point the same direction)
+                    Chain chain = openChain;
+                    if (fromTo.Item2 < fromTo.Item1)
+                    {
+                        // Reverse the chain
+                        chain = new Chain(chain.Points.Reverse().ToArray(), false);
+                        fromTo = Tuple.Create(fromTo.Item2, fromTo.Item1);
+                    }
+
+                    // Add this to a junction
+                    if (!junctions.ContainsKey(fromTo))
+                    {
+                        junctions.Add(fromTo, new List<Chain>());
+                    }
+
+                    junctions[fromTo].Add(chain);
+                }
+
+                // Finalize it
+                List<Junction> retVal = new List<Junction>();
+
+                foreach (var point in junctions.Keys)
+                {
+                    retVal.Add(new Junction(point.Item1, point.Item2, junctions[point].ToList()));
+                }
+
+                return retVal;
+            }
+
+            #endregion
+
+
+
+
+
+
+
+
+            #endregion
         }
 
         #endregion
@@ -220,6 +3526,11 @@ namespace Game.Newt.Testers
         private List<ModelVisual3D> _visuals = new List<ModelVisual3D>();
 
         private string _prevAttempt6File = null;
+
+        private Lazy<FontFamily> _font = new Lazy<FontFamily>(() => GetBestFont());
+
+        private AsteroidShatter _shatter = null;
+        private ITriangleIndexed[][] _multiHull = null;
 
         #endregion
 
@@ -244,7 +3555,7 @@ namespace Game.Newt.Testers
                 _trackball = new TrackBallRoam(_camera);
                 _trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
                 _trackball.AllowZoomOnMouseWheel = true;
-                _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
+                _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete_NoLeft));
                 //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
 
                 //TODO:  Add a checkbox to make this conditional
@@ -263,6 +3574,26 @@ namespace Game.Newt.Testers
         private void Window_Closed(object sender, EventArgs e)
         {
 
+        }
+
+        private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+
+
+
+
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void trkNumPoints_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -327,7 +3658,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSpherical2D(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Circular(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -343,7 +3674,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSpherical2D(MAXRADIUS * .7d, MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Circular(MAXRADIUS * .7d, MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -359,7 +3690,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSphericalShell2D(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Circular_Shell(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -376,7 +3707,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -392,7 +3723,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSpherical(.9d * MAXRADIUS, MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Spherical(.9d * MAXRADIUS, MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -408,7 +3739,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    AddDot(Math3D.GetRandomVectorSphericalShell(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
+                    AddDot(Math3D.GetRandomVector_Spherical_Shell(MAXRADIUS).ToPoint(), DOTRADIUS, _colors.MedSlate);
                 }
             }
             catch (Exception ex)
@@ -429,7 +3760,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    points.Add(Math3D.GetRandomVectorSpherical2D(minRadius, MAXRADIUS).ToPoint());
+                    points.Add(Math3D.GetRandomVector_Circular(minRadius, MAXRADIUS).ToPoint());
 
                     if (chkDrawDots.IsChecked.Value)
                     {
@@ -547,7 +3878,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    points.Add(Math3D.GetRandomVectorSpherical(minRadius, MAXRADIUS).ToPoint());
+                    points.Add(Math3D.GetRandomVector_Spherical(minRadius, MAXRADIUS).ToPoint());
 
                     if (chkDrawDots.IsChecked.Value)
                     {
@@ -604,16 +3935,16 @@ namespace Game.Newt.Testers
 
                 // Make a random triangle
                 Point3D[] points = new Point3D[3];
-                points[0] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
-                points[1] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
-                points[2] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
+                points[0] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
+                points[1] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
+                points[2] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
                 TriangleIndexed triangle = new TriangleIndexed(0, 1, 2, points);
 
                 // Create random points within that triangle
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
                     //Point3D insidePoint = Math3D.GetRandomPointInTriangle(_rand, triangle.Point0, triangle.Point1, triangle.Point2);
-                    Point3D insidePoint = Math3D.GetRandomPointInTriangle(triangle);
+                    Point3D insidePoint = Math3D.GetRandomPoint_InTriangle(triangle);
                     AddDot(insidePoint, DOTRADIUS, _colors.MedSlate);
                 }
 
@@ -638,15 +3969,15 @@ namespace Game.Newt.Testers
                 // Make some random triangles
                 for (int cntr = 0; cntr < triangles.Length; cntr++)
                 {
-                    allPoints[cntr * 3] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
-                    allPoints[(cntr * 3) + 1] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
-                    allPoints[(cntr * 3) + 2] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
+                    allPoints[cntr * 3] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
+                    allPoints[(cntr * 3) + 1] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
+                    allPoints[(cntr * 3) + 2] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
 
                     triangles[cntr] = new TriangleIndexed(cntr * 3, (cntr * 3) + 1, (cntr * 3) + 2, allPoints);
                 }
 
                 // Create random points within those triangles
-                Point3D[] points = Math3D.GetRandomPointsOnHull(triangles, Convert.ToInt32(trkNumPoints.Value));
+                Point3D[] points = Math3D.GetRandomPoints_OnHull(triangles, Convert.ToInt32(trkNumPoints.Value));
 
                 foreach (Point3D point in points)
                 {
@@ -678,7 +4009,7 @@ namespace Game.Newt.Testers
                 TriangleIndexed[] triangles = GetRandomHull();
 
                 // Create random points within those triangles
-                Point3D[] points = Math3D.GetRandomPointsOnHull(triangles, Convert.ToInt32(trkNumPoints.Value));
+                Point3D[] points = Math3D.GetRandomPoints_OnHull(triangles, Convert.ToInt32(trkNumPoints.Value));
 
                 foreach (Point3D point in points)
                 {
@@ -704,7 +4035,7 @@ namespace Game.Newt.Testers
                 TriangleIndexed[] origTriangles = GetRandomHull();
 
                 // Create random points within those triangles
-                Point3D[] points = Math3D.GetRandomPointsOnHull(origTriangles, Convert.ToInt32(trkNumPoints.Value));
+                Point3D[] points = Math3D.GetRandomPoints_OnHull(origTriangles, Convert.ToInt32(trkNumPoints.Value));
 
                 //TODO:  This fails a lot when points are coplanar.  Preprocess the points:
                 //		? Pre-processes the input point cloud by converting it to a unit-normal cube. Duplicate vertices are removed based on a normalized tolerance level (i.e. 0.1 means collapse vertices within 1/10th the width/breadth/depth of any side. This is extremely useful in eliminating slivers. When cleaning up ?duplicates and/or nearby neighbors? it also keeps the one which is ?furthest away? from the centroid of the volume. 
@@ -759,7 +4090,7 @@ namespace Game.Newt.Testers
                 TriangleIndexed[] origTriangles = GetRandomHull();
 
                 // Create random points within those triangles
-                SortedList<int, List<Point3D>> points = Math3D.GetRandomPointsOnHull_Structured(origTriangles, Convert.ToInt32(trkNumPoints.Value));
+                SortedList<int, List<Point3D>> points = Math3D.GetRandomPoints_OnHull_Structured(origTriangles, Convert.ToInt32(trkNumPoints.Value));
 
 
 
@@ -829,7 +4160,7 @@ namespace Game.Newt.Testers
                 TriangleIndexed[] origTriangles = GetRandomHull();
 
                 // Create random points within those triangles
-                Point3D[] points = Math3D.GetRandomPointsOnHull(origTriangles, Convert.ToInt32(trkNumPoints.Value));
+                Point3D[] points = Math3D.GetRandomPoints_OnHull(origTriangles, Convert.ToInt32(trkNumPoints.Value));
 
                 // Get Convex Hull
                 TriangleIndexed[] finalTriangles = QuickHull7.GetConvexHull(points.ToArray());
@@ -875,7 +4206,7 @@ namespace Game.Newt.Testers
                 TriangleIndexed[] origTriangles = UtilityWPF.GetTrianglesFromMesh(UtilityWPF.GetCylinder_AlongX(3, MAXRADIUS, MAXRADIUS));
 
                 // Create random points within those triangles
-                SortedList<int, List<Point3D>> points = Math3D.GetRandomPointsOnHull_Structured(origTriangles, Convert.ToInt32(trkNumPoints.Value));
+                SortedList<int, List<Point3D>> points = Math3D.GetRandomPoints_OnHull_Structured(origTriangles, Convert.ToInt32(trkNumPoints.Value));
 
                 #region Group coplanar triangles
 
@@ -964,6 +4295,1423 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void btnIcosahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                int numRecursions = Convert.ToInt32(trkIcoRecurse.Value);
+
+                TriangleIndexed[] triangles = UtilityWPF.GetIcosahedron(trkIcoRadius.Value, numRecursions);
+
+                if (chkDrawDots.IsChecked.Value)
+                {
+                    foreach (Point3D point in triangles[0].AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+                }
+
+                AddHull(triangles, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void trkIcoRecurse_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                if (!_isInitialized)
+                {
+                    return;
+                }
+
+                lblIcoRecurse.Text = trkIcoRecurse.Value.ToString("N0");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void trkIcoRadius_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                if (!_isInitialized)
+                {
+                    return;
+                }
+
+                lblIcoRadius.Text = trkIcoRadius.Value.ToString("N1");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnIcoSpike1_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                int numRecursions = Convert.ToInt32(trkIcoRecurse.Value);
+
+                #region Outer
+
+                //TriangleIndexed[] triangles = IcoSpike1.GetIcosahedron(trkIcoRadius.Value, numRecursions);
+
+                double[] radius = new double[numRecursions + 1];
+
+                radius[0] = trkIcoRadius.Value;
+                for (int cntr = 1; cntr < radius.Length; cntr++)
+                {
+                    radius[cntr] = trkIcoRadius.Value / Convert.ToDouble(cntr + 2);
+                }
+
+                TriangleIndexed[] triangles = UtilityWPF.GetIcosahedron(radius);
+
+                if (chkDrawDots.IsChecked.Value)
+                {
+                    foreach (Point3D point in triangles[0].AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+                }
+
+                AddHull(triangles, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+
+                #endregion
+
+                #region Inner
+
+                if (numRecursions > 0)
+                {
+                    //triangles = IcoSpike1.GetIcosahedron(trkIcoRadius.Value * trkIcoSpikeRatio.Value, numRecursions - 1);
+
+                    radius = new double[numRecursions];
+
+                    radius[0] = trkIcoRadius.Value * trkIcoSpikeRatio.Value;
+                    for (int cntr = 1; cntr < radius.Length; cntr++)
+                    {
+                        radius[cntr] = radius[0] / Convert.ToDouble(cntr + 2);
+                    }
+
+                    triangles = UtilityWPF.GetIcosahedron(radius);
+
+                    if (chkDrawDots.IsChecked.Value)
+                    {
+                        foreach (Point3D point in triangles[0].AllPoints)
+                        {
+                            AddDot(point, DOTRADIUS, _colors.MedSlate);
+                        }
+                    }
+
+                    AddHull(triangles, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+                }
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnIcoSpike2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                int numRecursions = Convert.ToInt32(trkIcoRecurse.Value);
+
+                double[] radius = new double[numRecursions + 1];
+
+                #region First only
+
+                radius[0] = trkIcoRadius.Value;
+
+                for (int cntr = 1; cntr < radius.Length; cntr++)
+                {
+                    radius[cntr] = trkIcoRadius.Value * trkIcoSpikeRatio.Value;
+                }
+
+                #endregion
+
+                #region Every other - fail
+
+                //for (int cntr = 0; cntr < radius.Length; cntr++)
+                //{
+                //    if (cntr % 2 == 0)
+                //    {
+                //        radius[cntr] = trkIcoRadius.Value;
+                //    }
+                //    else
+                //    {
+                //        radius[cntr] = trkIcoRadius.Value * trkIcoSpikeRatio.Value;
+                //    }
+                //}
+
+                #endregion
+
+                TriangleIndexed[] triangles = UtilityWPF.GetIcosahedron(radius);
+
+                if (chkDrawDots.IsChecked.Value)
+                {
+                    foreach (Point3D point in triangles[0].AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+                }
+
+                AddHull(triangles, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnIcoSpike3_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                int numRecursions = Convert.ToInt32(trkIcoRecurse.Value);
+
+                // Spikes
+                //double[] radius = Enumerable.Range(0, numRecursions + 1).Select(o => trkIcoRadius.Value * trkIcoSpikeRatio.Value).ToArray();
+                //radius[0] = trkIcoRadius.Value;
+
+                double[] radius = new double[] { trkIcoRadius.Value, trkIcoRadius.Value * trkIcoSpikeRatio.Value * trkIcoSpikeRatioUnder.Value };
+
+                TriangleIndexed[] triangles = UtilityWPF.GetIcosahedron(radius);
+
+                AddHullTest(triangles, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, _colors.Spike, _colors.SpikeSpecular, chkSoftFaces.IsChecked.Value);
+
+                // Ball
+                //if (numRecursions > 0)
+                //{
+                triangles = UtilityWPF.GetIcosahedron(trkIcoRadius.Value * trkIcoSpikeRatio.Value, numRecursions);
+
+                AddHullTest(triangles, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, _colors.SpikeBall, _colors.SpikeBallSpecular, true);
+                //}
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void trkIcoSpikeRatio_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                if (!_isInitialized)
+                {
+                    return;
+                }
+
+                lblIcoSpikeRatio.Text = trkIcoSpikeRatio.Value.ToString("N2");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void trkIcoSpikeRatioUnder_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                if (!_isInitialized)
+                {
+                    return;
+                }
+
+                lblIcoSpikeRatioUnder.Text = trkIcoSpikeRatioUnder.Value.ToString("N2");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btnRhombicuboctahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //http://en.wikipedia.org/wiki/Rhombicuboctahedron
+
+                RemoveCurrentBody();
+
+                Rhombicuboctahedron rhomb;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    rhomb = UtilityWPF.GetRhombicuboctahedron(StaticRandom.NextPercent(MAXRADIUS, .75), StaticRandom.NextPercent(MAXRADIUS, .75), StaticRandom.NextPercent(MAXRADIUS, .75));
+                }
+                else
+                {
+                    rhomb = UtilityWPF.GetRhombicuboctahedron(MAXRADIUS, MAXRADIUS, MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in rhomb.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(rhomb.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(rhomb.GetUniqueLines(), rhomb.AllPoints);
+                }
+
+                AddHull(rhomb.AllTriangles, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnIcosidodecahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                Icosidodecahedron ico;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    ico = UtilityWPF.GetIcosidodecahedron(StaticRandom.NextPercent(MAXRADIUS, .75));
+                }
+                else
+                {
+                    ico = UtilityWPF.GetIcosidodecahedron(MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in ico.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(ico.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(ico.GetUniqueLines(), ico.AllPoints);
+                }
+
+                AddHull(ico.AllTriangles, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnTruncatedIcosidodecahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                TruncatedIcosidodecahedron ico;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    ico = UtilityWPF.GetTruncatedIcosidodecahedron(StaticRandom.NextPercent(MAXRADIUS, .75));
+                }
+                else
+                {
+                    ico = UtilityWPF.GetTruncatedIcosidodecahedron(MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in ico.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(ico.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(ico.GetUniqueLines(), ico.AllPoints);
+                }
+
+                AddHull(ico.AllTriangles, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnDodecahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                Dodecahedron dodec;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    dodec = UtilityWPF.GetDodecahedron(StaticRandom.NextPercent(MAXRADIUS, .75));
+                }
+                else
+                {
+                    dodec = UtilityWPF.GetDodecahedron(MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in dodec.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(dodec.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(dodec.GetUniqueLines(), dodec.AllPoints);
+                }
+
+                AddHull(dodec.AllTriangles, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnPentakisDodecahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                TriangleIndexed[] triangles;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    triangles = UtilityWPF.GetPentakisDodecahedron(StaticRandom.NextPercent(MAXRADIUS, .75d), StaticRandom.NextPercent(MAXRADIUS, .75d));
+                }
+                else
+                {
+                    triangles = UtilityWPF.GetPentakisDodecahedron(MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in triangles[0].AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(triangles[0].AllPoints);
+                    }
+                }
+
+                AddHull(triangles, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnTruncatedIcosahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                TruncatedIcosahedron soccer;
+                if (chkPolyRandomSize.IsChecked.Value)
+                {
+                    soccer = UtilityWPF.GetTruncatedIcosahedron(StaticRandom.NextPercent(MAXRADIUS, .75));
+                }
+                else
+                {
+                    soccer = UtilityWPF.GetTruncatedIcosahedron(MAXRADIUS);
+                }
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in soccer.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(soccer.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(soccer.GetUniqueLines(), soccer.AllPoints);
+                }
+
+                AddHull(soccer.AllTriangles, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btnNewAsteroid_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+                _shatter = new AsteroidShatter(hull);
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterTriangle_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Point3D[] points = Enumerable.Range(0, 3).
+                    Select(o => Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint()).
+                    ToArray();
+
+                TriangleIndexed[] hull = new[] { new TriangleIndexed(0, 1, 2, points) };
+
+                _shatter = new AsteroidShatter(hull);
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterTest_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                Point3D[] points = new[]
+                    {
+                        new Point3D(-3.18319174107365, -3.56900996180343, -2.25515040289206),
+                        new Point3D(-3.20726473967357, -3.51925477841, -2.30208605004547),
+                        new Point3D(-2.7862288060072, 1.62778045809187, -1.78801317097937),
+                        new Point3D(-2.50952313051213, 1.89001863612309, -1.29104866754377),
+                        new Point3D(-1.97791836600583, 0.946525873863232, -0.262483926147299),
+                        new Point3D(-1.78521769084085, 0.403608941248565, 0.120603908182445),
+                    };
+
+                // transformed 2D:
+                //{0.0675632217518369,-5.02738214164118}	System.Windows.Point
+                //{0.140075582834728,-5.02738214164118}	System.Windows.Point
+                //{3.19924698626505,-0.835129258923396}	System.Windows.Point
+                //{2.96564850696943,-0.253974923988107}	System.Windows.Point
+                //{1.47600830863918,-0.145809657635379}	System.Windows.Point
+                //{0.791541697529613,-0.246577177285284}	System.Windows.Point
+
+
+                var hull2D = Math2D.GetConvexHull(points.ToArray());
+
+                var delaunay2D = Math2D.GetDelaunayTriangulation(hull2D.Points);
+
+                //var hull3D = Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines, points);
+
+
+                // Draw dots
+                foreach (Point3D point in points)
+                {
+                    AddDot(point, DOTRADIUS, _colors.MedSlate);
+                }
+
+                // Draw lines
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                for (int cntr = 0; cntr < points.Length - 1; cntr++)
+                {
+                    lineVisual.AddLine(points[cntr], points[cntr + 1]);
+                }
+
+                lineVisual.AddLine(points[points.Length - 1], points[0]);
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+
+                //ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //for (int cntr = 0; cntr < hull2D.PerimiterLines.Length - 1; cntr++)
+                //{
+                //    lineVisual.AddLine(points[hull2D.PerimiterLines[cntr]], points[hull2D.PerimiterLines[cntr + 1]]);
+                //}
+
+                //lineVisual.AddLine(points[hull2D.PerimiterLines[hull2D.PerimiterLines.Length - 1]], points[hull2D.PerimiterLines[0]]);
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+
+
+                //AddHull(hull3D, true, false);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterTest2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                #region 1
+
+                //// Chain 1
+                //ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(2.41697644690408, -1.03434037222278, 5.34046307400328), new Point3D(2.42650988724898, -0.911816989366243, 5.46170717130378));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 2
+                //lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(6.19389534318238, 0.466722248575599, 2.2599287921911), new Point3D(6.11825541298441, 0.581162982933572, 2.47864203662865));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 3
+                //AddDot(new Point3D(6.00211993510427, -0.468334622855055, 1.48310916922626), DOTRADIUS, _colors.MedSlate);
+
+                #endregion
+                #region 2
+
+                //// Chain 1
+                //ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(-1.66751547623575, 2.43551353884396, -1.28733504900566), new Point3D(-1.91755736428278, 2.40730283120172, -1.05102811655317));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 2
+                //lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(-4.2862280355896, 1.18950573617112, -3.53012404289355), new Point3D(-4.32021145708624, 1.28199914726276, -3.01992835802973));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 3
+                //AddDot(new Point3D(-2.19325004824761, 1.64235592394038, -4.43257882249856), DOTRADIUS, _colors.MedSlate);
+
+                #endregion
+                #region 3
+
+                //// Chain 1
+                //ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(2.78469044162559, 3.1608896451211, 1.81549909443282), new Point3D(2.59850015567276, 3.32650840954175, 1.17271113857054));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 2
+                //lineVisual = new ScreenSpaceLines3D(true);
+                //lineVisual.Thickness = LINETHICKNESS;
+                //lineVisual.Color = _colors.DarkSlate;
+
+                //lineVisual.AddLine(new Point3D(0.309180751879649, 3.01641280381582, 3.58860192317121), new Point3D(0.568794338660403, 2.90869763119882, 3.94299639878302));
+
+                //_viewport.Children.Add(lineVisual);
+                //_visuals.Add(lineVisual);
+
+                //// Chain 3
+                //AddDot(new Point3D(0.359346494303422, 3.32770287188034, 2.19655266643483), DOTRADIUS, _colors.MedSlate);
+
+                #endregion
+                #region 4
+
+                // Chain 1
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                lineVisual.AddLine(new Point3D(0.556672739256096, -4.90598854986012, -2.45356798521325), new Point3D(0.995689896533931, -3.39201206426292, -4.1745580542808));
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+                // Chain 2
+                lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                lineVisual.AddLine(new Point3D(2.71027671852163, -3.29453604934813, -2.98697726757335), new Point3D(1.91777287426863, -3.20825352131349, -3.71451112307666));
+                lineVisual.AddLine(new Point3D(1.91777287426863, -3.20825352131349, -3.71451112307666), new Point3D(1.31959862517835, -3.25975720550465, -4.10503104352338));
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+                // Chain 3
+                AddDot(new Point3D(0.581416715714739, -4.94202763952268, -2.38550307273868), DOTRADIUS, _colors.MedSlate);
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidDivided1_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                Point3D[] hullPoints = hull[0].AllPoints;
+
+                double avgEdge = TriangleIndexed.GetUniqueLines(hull).Average(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length);
+
+                // Make sure no triangle is larger than a certain size
+                ITriangle[] slicedHull1 = Math3D.SliceLargeTriangles(hull, avgEdge * 1.5);
+                TriangleIndexed[] slicedHull2 = TriangleIndexed.ConvertToIndexed(slicedHull1);
+
+                _shatter = new AsteroidShatter(slicedHull2);
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidDivided2Debug_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //TODO: Remove excessively thin triangles
+
+
+                // Make sure no triangle is larger than a certain size, and push the point out against a bezier
+
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                Point3D[] hullPoints = hull[0].AllPoints;
+
+                double avgEdge = TriangleIndexed.GetUniqueLines(hull).Average(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length);
+
+                Tuple<int, int, int>[] origKeys = hull.
+                    Select(o => o.IndexArray.OrderBy().ToArray()).
+                    Select(o => Tuple.Create(o[0], o[1], o[2])).
+                    ToArray();
+
+                long[] specialTokens;
+
+                // Make sure no triangle is larger than a certain size
+                ITriangleIndexed[] slicedHull = SmoothHullDebug.SmoothSlice(out specialTokens, hull, avgEdge * 2, 1);
+                //ITriangleIndexed[] slicedHull = SmoothHull.SmoothSlice(out specialTokens, hull, avgEdge * .25, 1);
+
+                _shatter = new AsteroidShatter(slicedHull);
+
+                //DrawShatterAsteroid();
+
+                var hullTriangles = _shatter.Hull.
+                    Select(o => new { Triangle = o, Array = o.IndexArray.OrderBy().ToArray() }).
+                    Select(o => new { Triangle = o.Triangle, Key = Tuple.Create(o.Array[0], o.Array[1], o.Array[2]) }).
+                    Select(o => new { Triangle = o.Triangle, Key = o.Key, IsOrig = origKeys.Contains(o.Key) }).
+                    ToArray();
+
+                RemoveCurrentBody();
+
+                ITriangleIndexed[] triangles = hullTriangles.Where(o => o.IsOrig && !specialTokens.Contains(o.Triangle.Token)).Select(o => o.Triangle).ToArray();
+                AddHull_CustomColor(triangles, _colors.HullFace, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+
+                triangles = TriangleIndexed.ConvertToIndexed(hullTriangles.Where(o => !o.IsOrig && !specialTokens.Contains(o.Triangle.Token)).Select(o => o.Triangle).ToArray());
+                AddHull_CustomColor(triangles, UtilityWPF.AlphaBlend(Colors.Tomato, Colors.Transparent, .8), true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+
+                triangles = TriangleIndexed.ConvertToIndexed(hullTriangles.Where(o => specialTokens.Contains(o.Triangle.Token)).Select(o => o.Triangle).ToArray());
+                AddHull_CustomColor(triangles, UtilityWPF.AlphaBlend(Colors.LightGreen, Colors.Transparent, .8), true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+
+                return;
+                #region Single point and plane
+
+
+                var trianglesByPoint = Enumerable.Range(0, hull[0].AllPoints.Length).
+                    Select(o => hull.Where(p => p.IndexArray.Contains(o)).ToArray()).
+                    ToArray();
+
+
+                int randIndex = StaticRandom.Next(trianglesByPoint.Length);
+
+
+                hull = trianglesByPoint[randIndex];
+
+
+                Point3D[] otherPoints = trianglesByPoint[randIndex].
+                    SelectMany(o => o.IndexArray).
+                    Where(o => o != randIndex).
+                    Select(o => hull[0].AllPoints[o]).
+                    ToArray();
+
+                ITriangle plane = Math2D.GetPlane_Average(otherPoints);
+
+
+                _shatter = new AsteroidShatter(hull);
+
+                DrawShatterAsteroid();
+
+                AddPlane(plane, Colors.Gray, Colors.DarkOliveGreen, hull[0].AllPoints[randIndex]);
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidDivided2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //TODO: Remove excessively thin triangles
+
+
+                // Make sure no triangle is larger than a certain size, and push the point out against a bezier
+
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                Point3D[] hullPoints = hull[0].AllPoints;
+
+                double avgEdge = TriangleIndexed.GetUniqueLines(hull).Average(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length);
+
+                // Make sure no triangle is larger than a certain size
+                //ITriangleIndexed[] slicedHull = Math3D.SliceLargeTriangles_Smooth(hull, avgEdge * 1.5);
+                ITriangleIndexed[] slicedHull = Math3D.SliceLargeTriangles_Smooth(hull, avgEdge);
+                //ITriangleIndexed[] slicedHull = Math3D.SliceLargeTriangles_Smooth(hull, avgEdge * .25);
+
+                _shatter = new AsteroidShatter(slicedHull);
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidRemoveSkinny3_Click(object sender, RoutedEventArgs e)
+        {
+            const double RATIO = .93;
+
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                // Remove excessively thin triangles
+                ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+
+                //_shatter = new AsteroidShatter(slicedHull);
+                //DrawShatterAsteroid();
+
+                _shatter = null;
+                _multiHull = new[] { hull, slicedHull };
+
+                RemoveCurrentBody();
+                DrawMultipleHulls(_multiHull, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidRemoveSkinnyJ_Click(object sender, RoutedEventArgs e)
+        {
+            const double RATIO = .93;
+
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                // Remove excessively thin triangles
+                ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+
+                // Now round it out
+                Point3D[] hullPoints = slicedHull[0].AllPoints;
+                double avgEdge = TriangleIndexed.GetUniqueLines(slicedHull).Average(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length);
+                double[] edgeLengths = TriangleIndexed.GetUniqueLines(slicedHull).Select(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length).ToArray();
+
+                ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, avgEdge);
+
+                //_shatter = new AsteroidShatter(smoothHull);
+                //DrawShatterAsteroid();
+
+                _shatter = null;
+                _multiHull = new[] { hull, slicedHull, smoothHull };
+
+                RemoveCurrentBody();
+                DrawMultipleHulls(_multiHull, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidRemoveAddRemove_Click(object sender, RoutedEventArgs e)
+        {
+            const double RATIO = .93;
+
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                // Remove excessively thin triangles
+                ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+
+                // Now round it out
+                Point3D[] hullPoints = slicedHull[0].AllPoints;
+                double avgEdge = TriangleIndexed.GetUniqueLines(slicedHull).Average(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length);
+                ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, avgEdge);
+
+                ITriangleIndexed[] secondSlicedHull = Math3D.RemoveThinTriangles(smoothHull, RATIO);
+
+                _shatter = null;
+                _multiHull = new[] { hull, slicedHull, smoothHull, secondSlicedHull };
+
+                RemoveCurrentBody();
+                DrawMultipleHulls(_multiHull, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnNewAsteroidFinal_Click(object sender, RoutedEventArgs e)
+        {
+            const double RATIO = .93;
+
+            try
+            {
+                ITriangleIndexed[] hull = Asteroid.GetHullTriangles(MAXRADIUS);
+
+                // Remove excessively thin triangles
+                ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+
+                // Now round it out
+                Point3D[] hullPoints = slicedHull[0].AllPoints;
+
+                double[] lengths = TriangleIndexed.GetUniqueLines(slicedHull).
+                    Select(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length).
+                    ToArray();
+
+                double avgLen = lengths.Average();
+                double maxLen = lengths.Max();
+                double sliceLen = Math3D.Avg(avgLen, maxLen);
+
+                // Another thin triangle slice
+                ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, sliceLen);
+
+                // Remove again
+                ITriangleIndexed[] secondSlicedHull = Math3D.RemoveThinTriangles(smoothHull, RATIO);
+
+                _shatter = new AsteroidShatter(secondSlicedHull);
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterRedraw_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_shatter != null)
+                {
+                    DrawShatterAsteroid();
+                }
+                else if (_multiHull != null)
+                {
+                    RemoveCurrentBody();
+                    DrawMultipleHulls(_multiHull, true, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterRandVoronoi_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_shatter == null)
+                {
+                    MessageBox.Show("Need to create an asteroid first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var aabb = Math3D.GetAABB(_shatter.HullPoints);
+
+                double radius = Math.Sqrt(Math.Max(aabb.Item1.ToVector().LengthSquared, aabb.Item2.ToVector().LengthSquared));
+                radius *= .33;
+
+                Point3D[] controlPoints = Enumerable.Range(0, StaticRandom.Next(6, 15)).
+                    Select(o => Math3D.GetRandomVector(radius).ToPoint()).
+                    ToArray();
+
+                _shatter.Voronoi = Math3D.GetVoronoi(controlPoints, true);
+
+
+
+                //TODO: Finish this
+                _shatter.ShatteredHulls = null;
+
+
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterRandVoronoiFar_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_shatter == null)
+                {
+                    MessageBox.Show("Need to create an asteroid first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var aabb = Math3D.GetAABB(_shatter.HullPoints);
+
+                double radius = Math.Sqrt(Math.Max(aabb.Item1.ToVector().LengthSquared, aabb.Item2.ToVector().LengthSquared));
+                radius *= .75;
+
+                Point3D[] controlPoints = Enumerable.Range(0, StaticRandom.Next(6, 15)).
+                    Select(o => Math3D.GetRandomVector(radius).ToPoint()).
+                    ToArray();
+
+                _shatter.Voronoi = Math3D.GetVoronoi(controlPoints, true);
+
+
+
+                //TODO: Finish this
+                _shatter.ShatteredHulls = null;
+
+
+
+                DrawShatterAsteroid();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnClearShatterHits_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void btnShatterHitVoronoi_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+        private void btnShatterChains_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                Point3D[] points = new[]
+                    {
+                        new Point3D(-1.14, 1.52, -4.90),        // 0
+                        new Point3D(-1.95, 1.65, -4.85),        // 1
+                        new Point3D(-0.53, 1.42, -4.70),        // 2
+                        new Point3D(-0.53, 1.44, -4.20),        // 3
+                        new Point3D(-0.45, 1.12, -14.63),       // 4
+                        new Point3D(-1.36, 1.16, -18.17),       // 5
+                        new Point3D(-1.99, 1.69, -3.79),        // 6
+
+                        new Point3D(-1.36, 1.1, -20),      // 7
+                        new Point3D(-1.5, 1.3, -21),      // 8
+                        new Point3D(-1.1, 1, -23),      // 9
+
+                        new Point3D(-2, 3, -4),      // 10
+                        new Point3D(-1, 4, -4),      // 11
+                        new Point3D(-1.5, 3.5, -5),      // 12
+                        new Point3D(0, 2, -3),      // 13
+                    };
+
+                var segments = new[]
+                    {
+                        new HullVoronoiIntersect.Segment_Face(0, 1, points),
+                        new HullVoronoiIntersect.Segment_Face(2, 0, points),
+                        new HullVoronoiIntersect.Segment_Face(3, 2, points),
+                        new HullVoronoiIntersect.Segment_Face(2, 4, points),
+                        new HullVoronoiIntersect.Segment_Face(5, 1, points),
+                        new HullVoronoiIntersect.Segment_Face(1, 6, points),
+                        new HullVoronoiIntersect.Segment_Face(3, 6, points),
+                        new HullVoronoiIntersect.Segment_Face(5, 4, points),
+
+                        // Extra chain 1
+                        new HullVoronoiIntersect.Segment_Face(5, 7, points),
+                        new HullVoronoiIntersect.Segment_Face(7, 8, points),
+                        new HullVoronoiIntersect.Segment_Face(8, 9, points),
+
+                        // Extra chain 2
+                        new HullVoronoiIntersect.Segment_Face(10, 11, points),
+                        new HullVoronoiIntersect.Segment_Face(12, 13, points),
+                        new HullVoronoiIntersect.Segment_Face(10, 1, points),
+                        new HullVoronoiIntersect.Segment_Face(11, 12, points),
+                    };
+
+                // Draw dots
+                foreach (Point3D point in points)
+                {
+                    AddDot(point, DOTRADIUS, _colors.MedSlate);
+                }
+
+                // Draw lines
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                foreach (var segment in segments)
+                {
+                    lineVisual.AddLine(segment.Point0, segment.Point1);
+                }
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+                #region Attempt 1
+
+                //var chains = ChainAttempt1.GetChains_Multiple(
+                //    segments.Select(o => Tuple.Create(o.Index0, o.Index1, o)).ToArray(),        // these are the segments mapped to something the method can use
+                //    (o, p) => o == p,       // int compare
+                //    (o, p) => o.Index0 == p.Index0 && o.Index1 == p.Index1);        // face edge compare (can't use o.FaceEdge.Token, because FaceEdge could be null).  It's safe to always compare index0 with index0, because duplicate/reverse segments will never be created
+
+
+                //foreach (var chain in chains)
+                //{
+                //    lineVisual = new ScreenSpaceLines3D(true);
+                //    lineVisual.Thickness = LINETHICKNESS;
+                //    lineVisual.Color = UtilityWPF.GetRandomColor(0, 255);
+
+                //    foreach (var seg in chain.Item1)
+                //    {
+                //        lineVisual.AddLine(seg.Point0, seg.Point1);
+                //    }
+
+                //    _viewport.Children.Add(lineVisual);
+                //    _visuals.Add(lineVisual);
+                //}
+
+                #endregion
+
+                var chains = ChainAttempt2.GetChains_Multiple(
+                    segments.Select(o => Tuple.Create(o.Index0, o.Index1, o)).ToArray(),        // these are the segments mapped to something the method can use
+                    (o, p) => o == p,       // int compare
+                    (o, p) => o.Index0 == p.Index0 && o.Index1 == p.Index1);        // face edge compare (can't use o.FaceEdge.Token, because FaceEdge could be null).  It's safe to always compare index0 with index0, because duplicate/reverse segments will never be created
+
+
+                foreach (var chain in chains)
+                {
+                    lineVisual = new ScreenSpaceLines3D(true);
+                    lineVisual.Thickness = LINETHICKNESS;
+                    lineVisual.Color = UtilityWPF.GetRandomColor(0, 255);
+
+                    foreach (var seg in chain.Item1)
+                    {
+                        lineVisual.AddLine(seg.Point0, seg.Point1);
+                    }
+
+                    _viewport.Children.Add(lineVisual);
+                    _visuals.Add(lineVisual);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnShatterChains2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                RemoveCurrentBody();
+
+                // Define Segments
+                var tests = new[]
+                    {
+                        #region tests
+                        //new
+                        //{
+                        //    Points = new[]
+                        //    {
+                        //        new Point(0,0),     
+                        //        new Point(-1,0),     
+                        //        new Point(-1,-1),     
+                        //        new Point(0,-1),     
+                        //        new Point(1,-1),     
+                        //        new Point(1,0),     
+                        //        new Point(1,1),     
+                        //        new Point(0,1),     
+                        //        new Point(-1,1),     
+                        //    },
+                        //    Segments = Enumerable.Range(1,8).Select(o => Tuple.Create(0,o)).ToArray()
+                        //},
+                        #endregion
+
+                        #region diamond - horz
+                        new
+                        {
+                            Points = new[]
+                            {
+                                new Point(180,360),     //0
+                                new Point(390,200),     //1
+                                new Point(560,360),     //2
+                                new Point(390,480),     //3
+                            },
+                            Segments = new[]
+                            {
+                                Tuple.Create(0,1),
+                                Tuple.Create(1,2),
+                                Tuple.Create(2,3),
+                                Tuple.Create(0,3),
+                                Tuple.Create(2,0)
+                            },
+                        },
+                        #endregion
+                        #region diamond - vert
+                        new
+                        {
+                            Points = new[]
+                            {
+                                new Point(180,360),     //0
+                                new Point(390,200),     //1
+                                new Point(560,360),     //2
+                                new Point(390,480),     //3
+                            },
+                            Segments = new[]
+                            {
+                                Tuple.Create(0,1),
+                                Tuple.Create(1,2),
+                                Tuple.Create(2,3),
+                                Tuple.Create(0,3),
+                                Tuple.Create(1,3)
+                            },
+                        },
+                        #endregion
+                        #region diamond - cross
+
+                        //TODO: Build this
+
+                        #endregion
+
+                        #region complex 1
+                        new
+                        {
+                            Points = new[]
+                            {
+                                new Point(95,390),     //0
+                                new Point(95,500),     //1
+                                new Point(335,220),     //2
+                                new Point(272,490),     //3
+                                new Point(200,390),     //4
+                                new Point(200,438),     //5
+                                new Point(350,330),     //6
+                                new Point(350,231),     //7
+                                new Point(525,375),     //8
+                            },
+                            Segments = new[]
+                            {
+                                Tuple.Create(0,1),
+                                Tuple.Create(0,2),
+                                Tuple.Create(0,5),
+                                Tuple.Create(1,5),
+                                Tuple.Create(4,5),
+                                Tuple.Create(5,3),
+                                Tuple.Create(4,6),
+                                Tuple.Create(2,7),
+                                Tuple.Create(6,7),
+                                Tuple.Create(6,8),
+                                Tuple.Create(3,8),
+                                Tuple.Create(7,8),
+                                Tuple.Create(4,3),
+                            },
+                        },
+                        #endregion
+                        #region complex 2
+                        new
+                        {
+                            Points = new[]
+                            {
+                                new Point(85,340),     //0
+                                new Point(190,410),     //1
+                                new Point(190,355),     //2
+                                new Point(335,225),     //3
+                                new Point(390,460),     //4
+                                new Point(525,320),     //5
+                            },
+                            Segments = new[]
+                            {
+                                Tuple.Create(0,1),
+                                Tuple.Create(0,3),
+                                Tuple.Create(1,2),
+                                Tuple.Create(1,4),
+                                Tuple.Create(2,4),
+                                Tuple.Create(3,4),
+                                Tuple.Create(3,5),
+                                Tuple.Create(4,5),
+                            },
+                        },
+                        #endregion
+                        #region complex 3
+                        new
+                        {
+                            Points = new[]
+                            {
+                                new Point(85,370),     //0
+                                new Point(155,320),     //1
+                                new Point(155,425),     //2
+                                new Point(333,480),     //3
+                                new Point(333,260),     //4
+                                new Point(515,350),     //5
+                                new Point(625,325),     //6
+                                new Point(625,405),     //7
+                            },
+                            Segments = new[]
+                            {
+                                Tuple.Create(0,1),
+                                Tuple.Create(0,2),
+                                Tuple.Create(1,2),
+                                Tuple.Create(1,4),
+                                Tuple.Create(2,3),
+                                Tuple.Create(3,4),
+                                Tuple.Create(3,7),
+                                Tuple.Create(4,5),
+                                Tuple.Create(5,6),
+                                Tuple.Create(6,7),
+                            },
+                        },
+                        #endregion
+                    };
+
+                tests = tests.Skip(2).Take(1).ToArray();
+                //tests = tests.Take(1).ToArray();
+
+                // Turn into polygons
+                var solved = tests.Select(o => new
+                    {
+                        Points = o.Points,
+                        Segments = o.Segments,
+                        Polygons = GetChains2D_3.GetSubPolygons(o.Segments, o.Points),
+                    }).
+                    ToArray();
+
+
+                Transform3DGroup transform = new Transform3DGroup();
+                transform.Children.Add(new ScaleTransform3D(.01, .01, .01));
+                transform.Children.Add(new TranslateTransform3D(-18, -3.5, 0));
+
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                foreach (var set in solved)
+                {
+                    Point3D[] transformedPoints = set.Points.Select(o => transform.Transform(o.ToPoint3D())).ToArray();
+
+                    // Draw lines
+                    foreach (var segment in set.Segments)
+                    {
+                        lineVisual.AddLine(transformedPoints[segment.Item1], transformedPoints[segment.Item2]);
+                    }
+
+                    // Label the points
+                    AddPointLabels(transformedPoints, .1);
+
+                    // Draw polygons
+                    foreach (var poly in set.Polygons.Item1)
+                    {
+                        Point[] polyPoints2D = poly.Select(o => set.Polygons.Item2[o]).ToArray();
+                        Point3D[] polyPoints3D = polyPoints2D.Select(o => transform.Transform(o.ToPoint3D())).ToArray();        //NOTE: GetTrianglesFromConcavePoly only knows about the subset of triangles it's handed, so the 3D points need to be from that subset
+
+                        ITriangleIndexed[] triangles = Math2D.GetTrianglesFromConcavePoly(polyPoints2D).
+                            Select(o => new TriangleIndexed(o.Item1, o.Item2, o.Item3, polyPoints3D)).
+                            ToArray();
+
+                        AddHull_CustomColor(triangles, UtilityWPF.GetRandomColor(64, 0, 255), true, false, false, false, false, true);
+                    }
+
+                    transform.Children.Add(new TranslateTransform3D(7, 0, 0));
+                }
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnVariousNormals_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1000,7 +5748,7 @@ namespace Game.Newt.Testers
                 Point3D[] allPoints = new Point3D[(int)trkNumPoints.Value];
                 for (int cntr = 0; cntr < allPoints.Length; cntr++)
                 {
-                    allPoints[cntr] = Math3D.GetRandomVectorSpherical(MAXRADIUS).ToPoint();
+                    allPoints[cntr] = Math3D.GetRandomVector_Spherical(MAXRADIUS).ToPoint();
                 }
 
                 // Create Triangle
@@ -1056,7 +5804,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    points.Add(Math3D.GetRandomVectorSpherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
+                    points.Add(Math3D.GetRandomVector_Spherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
                     AddDot(points[points.Count - 1], DOTRADIUS, _colors.MedSlate);
                 }
 
@@ -1073,12 +5821,12 @@ namespace Game.Newt.Testers
 
                 if (removedTriangle != null)
                 {
-                    AddHullTest(new TriangleIndexed[] { removedTriangle }, true, true, _colors.HullFaceRemoved, _colors.HullFaceSpecularRemoved);
+                    AddHullTest(new TriangleIndexed[] { removedTriangle }, true, true, _colors.HullFaceRemoved, _colors.HullFaceSpecularRemoved, false);
                 }
 
                 if (otherRemovedTriangles != null)
                 {
-                    AddHullTest(otherRemovedTriangles, true, true, _colors.HullFaceOtherRemoved, _colors.HullFaceSpecularOtherRemoved);
+                    AddHullTest(otherRemovedTriangles, true, true, _colors.HullFaceOtherRemoved, _colors.HullFaceSpecularOtherRemoved, false);
                 }
 
                 AddDot(farthestPoint, DOTRADIUS * 5d, Colors.Red);
@@ -1115,7 +5863,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    points.Add(Math3D.GetRandomVectorSpherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
+                    points.Add(Math3D.GetRandomVector_Spherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
                     AddDot(points[points.Count - 1], DOTRADIUS, _colors.MedSlate);
                 }
 
@@ -1173,7 +5921,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < trkNumPoints.Value; cntr++)
                 {
-                    points.Add(Math3D.GetRandomVectorSpherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
+                    points.Add(Math3D.GetRandomVector_Spherical(.6d * MAXRADIUS, MAXRADIUS).ToPoint());
                     AddDot(points[points.Count - 1], DOTRADIUS, _colors.MedSlate);
                 }
 
@@ -1284,7 +6032,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < 5; cntr++)
                 {
-                    seeds.Add(Math3D.GetRandomVectorSpherical(MAXRADIUS));
+                    seeds.Add(Math3D.GetRandomVector_Spherical(MAXRADIUS));
                 }
 
                 //string filename = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), Guid.NewGuid().ToString() + ".txt");
@@ -1341,7 +6089,7 @@ namespace Game.Newt.Testers
 
                 points.Add(new Point3D(0, 0, 0));
 
-                foreach (int[] combo in UtilityHelper.AllCombosEnumerator(seeds.Count))
+                foreach (int[] combo in UtilityCore.AllCombosEnumerator(seeds.Count))
                 {
                     // Add up the vectors that this combo points to
                     Vector3D extremity = seeds[combo[0]];
@@ -1485,6 +6233,8 @@ namespace Game.Newt.Testers
             }
 
             _visuals.Clear();
+
+            pnlVisuals2D.Children.Clear();
         }
 
         private void AddDot(Point3D position, double radius, Color color)
@@ -1498,7 +6248,7 @@ namespace Game.Newt.Testers
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(3, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D model = new ModelVisual3D();
@@ -1519,7 +6269,37 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
             _visuals.Add(lineVisual);
         }
-        private void AddHull(Triangle[] triangles, bool drawLines, bool drawNormals)
+        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points)
+        {
+            // Draw the lines
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = LINETHICKNESS;
+            lineVisual.Color = _colors.DarkSlate;
+
+            foreach (var line in lines)
+            {
+                lineVisual.AddLine(points[line.Item1], points[line.Item2]);
+            }
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points, double thickness, Color color)
+        {
+            // Draw the lines
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = thickness;
+            lineVisual.Color = color;
+
+            foreach (var line in lines)
+            {
+                lineVisual.AddLine(points[line.Item1], points[line.Item2]);
+            }
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddHull(ITriangle[] triangles, bool drawLines, bool drawNormals)
         {
             if (drawLines)
             {
@@ -1531,7 +6311,7 @@ namespace Game.Newt.Testers
                 lineVisual.Color = _colors.DarkSlate;
 
                 // TODO:  Dedupe the lines (that would be a good static method off of triangle
-                foreach (Triangle triangle in triangles)
+                foreach (ITriangle triangle in triangles)
                 {
                     lineVisual.AddLine(triangle.Point0, triangle.Point1);
                     lineVisual.AddLine(triangle.Point1, triangle.Point2);
@@ -1553,7 +6333,7 @@ namespace Game.Newt.Testers
                 lineVisual.Thickness = LINETHICKNESS;
                 lineVisual.Color = _colors.Normals;
 
-                foreach (Triangle triangle in triangles)
+                foreach (ITriangle triangle in triangles)
                 {
                     Point3D centerPoint = ((triangle.Point0.ToVector() + triangle.Point1.ToVector() + triangle.Point2.ToVector()) / 3d).ToPoint();
                     lineVisual.AddLine(centerPoint, centerPoint + triangle.Normal);
@@ -1590,7 +6370,7 @@ namespace Game.Newt.Testers
 
             #endregion
         }
-        private void AddHull(TriangleIndexed[] triangles, bool drawFaces, bool drawLines, bool drawNormals, bool includeEveryOtherFace, bool nearlyTransparent, bool softFaces)
+        private void AddHull(ITriangleIndexed[] triangles, bool drawFaces, bool drawLines, bool drawNormals, bool includeEveryOtherFace, bool nearlyTransparent, bool softFaces)
         {
             if (drawLines)
             {
@@ -1601,12 +6381,11 @@ namespace Game.Newt.Testers
                 lineVisual.Thickness = nearlyTransparent ? LINETHICKNESS * .5d : LINETHICKNESS;
                 lineVisual.Color = _colors.DarkSlate;
 
-                // TODO:  Dedupe the lines (that would be a good static method off of triangle
-                foreach (TriangleIndexed triangle in triangles)
+                Point3D[] points = triangles[0].AllPoints;
+
+                foreach (var line in TriangleIndexed.GetUniqueLines(triangles))
                 {
-                    lineVisual.AddLine(triangle.Point0, triangle.Point1);
-                    lineVisual.AddLine(triangle.Point1, triangle.Point2);
-                    lineVisual.AddLine(triangle.Point2, triangle.Point0);
+                    lineVisual.AddLine(points[line.Item1], points[line.Item2]);
                 }
 
                 _viewport.Children.Add(lineVisual);
@@ -1657,7 +6436,7 @@ namespace Game.Newt.Testers
 
                 if (includeEveryOtherFace)
                 {
-                    List<TriangleIndexed> trianglesEveryOther = new List<TriangleIndexed>();
+                    List<ITriangleIndexed> trianglesEveryOther = new List<ITriangleIndexed>();
                     for (int cntr = 0; cntr < triangles.Length; cntr += 2)
                     {
                         trianglesEveryOther.Add(triangles[cntr]);
@@ -1695,7 +6474,7 @@ namespace Game.Newt.Testers
                 #endregion
             }
         }
-        private void AddHullTest(TriangleIndexed[] triangles, bool drawLines, bool drawNormals, Color faceColor, SpecularMaterial faceSpecular)
+        private void AddHullTest(TriangleIndexed[] triangles, bool drawLines, bool drawNormals, Color faceColor, SpecularMaterial faceSpecular, bool softFaces)
         {
             if (drawLines)
             {
@@ -1706,12 +6485,11 @@ namespace Game.Newt.Testers
                 lineVisual.Thickness = LINETHICKNESS;
                 lineVisual.Color = _colors.DarkSlate;
 
-                // TODO:  Dedupe the lines (that would be a good static method off of triangle
-                foreach (TriangleIndexed triangle in triangles)
+                Point3D[] points = triangles[0].AllPoints;
+
+                foreach (var line in TriangleIndexed.GetUniqueLines(triangles))
                 {
-                    lineVisual.AddLine(triangle.Point0, triangle.Point1);
-                    lineVisual.AddLine(triangle.Point1, triangle.Point2);
-                    lineVisual.AddLine(triangle.Point2, triangle.Point0);
+                    lineVisual.AddLine(points[line.Item1], points[line.Item2]);
                 }
 
                 _viewport.Children.Add(lineVisual);
@@ -1749,7 +6527,15 @@ namespace Game.Newt.Testers
             materials.Children.Add(faceSpecular);
 
             // Geometry Mesh
-            MeshGeometry3D mesh = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
+            MeshGeometry3D mesh;
+            if (softFaces)
+            {
+                mesh = UtilityWPF.GetMeshFromTriangles(TriangleIndexed.Clone_CondensePoints(triangles));
+            }
+            else
+            {
+                mesh = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
+            }
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -1765,6 +6551,450 @@ namespace Game.Newt.Testers
             _visuals.Add(model);
 
             #endregion
+        }
+        private void AddHull_CustomColor(ITriangleIndexed[] triangles, Color color, bool drawFaces, bool drawLines, bool drawNormals, bool includeEveryOtherFace, bool nearlyTransparent, bool softFaces)
+        {
+            if (triangles.Length == 0)
+            {
+                return;
+            }
+
+            if (drawLines)
+            {
+                #region Lines
+
+                // Draw the lines
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = nearlyTransparent ? LINETHICKNESS * .5d : LINETHICKNESS;
+                lineVisual.Color = _colors.DarkSlate;
+
+                Point3D[] points = triangles[0].AllPoints;
+
+                foreach (var line in TriangleIndexed.GetUniqueLines(triangles))
+                {
+                    lineVisual.AddLine(points[line.Item1], points[line.Item2]);
+                }
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+                #endregion
+            }
+
+            if (drawNormals)
+            {
+                #region Normals
+
+                // Draw the lines
+                ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+                lineVisual.Thickness = nearlyTransparent ? LINETHICKNESS * .5d : LINETHICKNESS;
+                lineVisual.Color = _colors.Normals;
+
+                foreach (TriangleIndexed triangle in triangles)
+                {
+                    Point3D centerPoint = ((triangle.Point0.ToVector() + triangle.Point1.ToVector() + triangle.Point2.ToVector()) / 3d).ToPoint();
+                    lineVisual.AddLine(centerPoint, centerPoint + triangle.Normal);
+                }
+
+                _viewport.Children.Add(lineVisual);
+                _visuals.Add(lineVisual);
+
+                #endregion
+            }
+
+            if (drawFaces)
+            {
+                #region Faces
+
+                // Material
+                MaterialGroup materials = new MaterialGroup();
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+                if (softFaces)
+                {
+                    materials.Children.Add(_colors.HullFaceSpecularSoft);
+                }
+                else
+                {
+                    materials.Children.Add(_colors.HullFaceSpecular);
+                }
+
+                // Geometry Mesh
+                MeshGeometry3D mesh = null;
+
+                if (includeEveryOtherFace)
+                {
+                    List<ITriangleIndexed> trianglesEveryOther = new List<ITriangleIndexed>();
+                    for (int cntr = 0; cntr < triangles.Length; cntr += 2)
+                    {
+                        trianglesEveryOther.Add(triangles[cntr]);
+                    }
+
+                    // Not supporting soft for every other (shared vertices with averaged normals)
+                    mesh = UtilityWPF.GetMeshFromTriangles_IndependentFaces(trianglesEveryOther.ToArray());
+                }
+                else
+                {
+                    if (softFaces)
+                    {
+                        mesh = UtilityWPF.GetMeshFromTriangles(TriangleIndexed.Clone_CondensePoints(triangles));
+                        //mesh = UtilityWPF.GetMeshFromTriangles(triangles);
+                    }
+                    else
+                    {
+                        mesh = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
+                    }
+                }
+
+                // Geometry Model
+                GeometryModel3D geometry = new GeometryModel3D();
+                geometry.Material = materials;
+                geometry.BackMaterial = materials;
+                geometry.Geometry = mesh;
+
+                // Model Visual
+                ModelVisual3D model = new ModelVisual3D();
+                model.Content = geometry;
+
+                _viewport.Children.Add(model);
+                _visuals.Add(model);
+
+                #endregion
+            }
+        }
+        private void AddPlane(ITriangle plane, Color fillColor, Color reflectiveColor, Point3D? center = null, double size = MAXRADIUS * 2)
+        {
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = UtilityWPF.GetPlane(plane, size, fillColor, reflectiveColor, center: center);
+
+            _viewport.Children.Add(visual);
+            _visuals.Add(visual);
+        }
+
+        private void AddPointLabels(Point3D[] points, double depthScale = 1)
+        {
+            var ray = UtilityWPF.RayFromViewportPoint(_camera, _viewport, new Point(_viewport.ActualWidth * .5d, _viewport.ActualHeight * .5d));
+
+            Vector3D planeNormalUnit = ray.Direction.ToUnit();
+            double planeOriginDist = Math3D.GetPlaneOriginDistance(planeNormalUnit, ray.Origin);
+
+            var distances = Enumerable.Range(0, points.Length).
+                Select(o => new { Index = o, Point = points[o], Distance = Math3D.DistanceFromPlane(planeNormalUnit, planeOriginDist, points[o]) }).
+                Where(o => o.Distance > 0d).
+                ToArray();
+
+            if (distances.Length == 0)
+            {
+                return;
+            }
+
+            double min = distances.Min(o => o.Distance);
+            double max = distances.Max(o => o.Distance);
+
+            // A value of zero will show no depth, a value of 1 will show maximum depth
+            if (depthScale > 1) depthScale = 1;
+            if (depthScale < 0) depthScale = 0;
+            double halfDepthScale = depthScale / 2;
+            double percentMin = .5 - halfDepthScale;
+            double percentMax = .5 + halfDepthScale;
+
+            foreach (var distance in distances)
+            {
+                //double percent = UtilityCore.GetScaledValue_Capped(0, 1, min, max, distance.Distance);
+                double percent = UtilityCore.GetScaledValue_Capped(percentMin, percentMax, min, max, distance.Distance);
+
+                percent = 1d - percent;     // min distance should have the largest percent (it's closest)
+
+                AddLabel(distance.Point, distance.Index.ToString(), percent);
+            }
+        }
+        private void AddLabel(Point3D position, string text)
+        {
+            bool isInFront;
+            Point? position2D = UtilityWPF.Project3Dto2D(out isInFront, _viewport, position);
+
+            if (position2D == null || !isInFront)
+            {
+                return;
+            }
+
+            // Text
+            OutlinedTextBlock textblock = new OutlinedTextBlock();
+            textblock.Text = text;
+            textblock.FontFamily = _font.Value;
+            textblock.FontSize = 24d;
+            textblock.FontWeight = FontWeight.FromOpenTypeWeight(900);
+            textblock.StrokeThickness = 1d;
+            textblock.Fill = _colors.LabelFill;
+            textblock.Stroke = _colors.LabelStroke;
+
+            pnlVisuals2D.Children.Add(textblock);
+
+            Canvas.SetLeft(textblock, position2D.Value.X - (textblock.ActualWidth / 2));
+            Canvas.SetTop(textblock, position2D.Value.Y - (textblock.ActualHeight / 2));
+        }
+        private void AddLabel(Point3D position, string text, double percent)
+        {
+            bool isInFront;
+            Point? position2D = UtilityWPF.Project3Dto2D(out isInFront, _viewport, position);
+
+            if (position2D == null || !isInFront)
+            {
+                return;
+            }
+
+            // Text
+            OutlinedTextBlock textblock = new OutlinedTextBlock();
+            textblock.Text = text;
+            textblock.FontFamily = _font.Value;
+
+            textblock.FontSize = UtilityCore.GetScaledValue_Capped(13d, 30d, 0, 1, percent);
+
+            int textWeight = Convert.ToInt32(Math.Round(UtilityCore.GetScaledValue_Capped(700, 998, 0, 1, percent)));
+            textblock.FontWeight = FontWeight.FromOpenTypeWeight(textWeight);
+
+            textblock.StrokeThickness = UtilityCore.GetScaledValue_Capped(.75d, 1.6d, 0, 1, percent);
+
+            textblock.Fill = _colors.LabelFill;
+            textblock.Stroke = _colors.LabelStroke;
+
+            pnlVisuals2D.Children.Add(textblock);
+
+            Canvas.SetLeft(textblock, position2D.Value.X - (textblock.ActualWidth / 2));
+            Canvas.SetTop(textblock, position2D.Value.Y - (textblock.ActualHeight / 2));
+        }
+        private static FontFamily GetBestFont()
+        {
+            return UtilityWPF.GetFont(new string[] { "Lucida Console", "Verdana", "Microsoft Sans Serif", "Arial" });
+        }
+
+        private void DrawShatterAsteroid()
+        {
+            RemoveCurrentBody();
+
+            if (_shatter == null)
+            {
+                return;
+            }
+
+            // Fragments
+            var trisByCtrl = new Tuple<int, ITriangleIndexed[], Color, HullVoronoiIntersect.PatchFragment>[0];
+            if (_shatter.Voronoi != null)
+            {
+                trisByCtrl = HullVoronoiIntersect.GetFragments(_shatter.Hull, _shatter.Voronoi).
+                    Select(o => Tuple.Create(o.ControlPointIndex, o.Polygon.Select(p => p.Triangle).ToArray(), UtilityWPF.GetRandomColor(0, 255), o)).
+                    ToArray();
+            }
+
+            #region Look at radios
+
+            bool drawOrigFaces = true;
+            bool drawTrianglesByCtrlPoint = false;
+            bool firstCtrlPointOnly = false;
+            bool thinLines = false;
+            if (_shatter.Voronoi == null || radShatterVoronoiLinesOnly.IsChecked.Value)
+            {
+
+            }
+            else if (radShatterTriangleByCtrlPoint.IsChecked.Value)
+            {
+                drawOrigFaces = false;
+                drawTrianglesByCtrlPoint = true;
+            }
+            else if (radShatterFirstCtrlPoint.IsChecked.Value)
+            {
+                drawOrigFaces = false;
+                drawTrianglesByCtrlPoint = true;
+                firstCtrlPointOnly = true;
+                thinLines = true;
+            }
+            else
+            {
+                throw new ApplicationException("Unknown radio button selection");
+            }
+
+            #endregion
+
+            #region Draw voronoi
+
+            if (_shatter.Voronoi != null)
+            {
+                for (int cntr = 0; cntr < _shatter.Voronoi.ControlPoints.Length; cntr++)
+                {
+                    Color color = Colors.GhostWhite;
+
+                    var colorMatch = trisByCtrl.FirstOrDefault(o => o.Item1 == cntr);
+                    if (drawTrianglesByCtrlPoint && colorMatch != null)     // don't worry about firstonly flag here.  Color all affected dots
+                    {
+                        color = colorMatch.Item3;
+                    }
+
+                    AddDot(_shatter.Voronoi.ControlPoints[cntr], DOTRADIUS * 3, color);
+                }
+
+                // I think it's a bit overkill to get unique, because these already should be unique.  But the method also converts the
+                // rays into segments
+                var segments = Edge3D.GetUniqueLines(_shatter.Voronoi.Edges, 1000);
+
+                AddLines(segments.Item1, segments.Item2, LINETHICKNESS, Colors.GhostWhite);
+
+                // Probably don't need to draw the faces.  It would just get busy
+                //_shatter.Voronoi.Faces
+            }
+
+            #endregion
+            #region Draw dots
+
+            if (chkDrawDots.IsChecked.Value)
+            {
+                foreach (Point3D point in _shatter.HullPoints)
+                {
+                    AddDot(point, DOTRADIUS, _colors.MedSlate);
+                }
+            }
+
+            #endregion
+            #region Draw hull
+
+            AddHull(_shatter.Hull, drawOrigFaces, chkDrawLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, thinLines || chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+
+            if (_shatter.Voronoi != null && drawTrianglesByCtrlPoint)
+            {
+                foreach (var set in trisByCtrl)
+                {
+                    AddHull_CustomColor(set.Item2, UtilityWPF.AlphaBlend(set.Item3, Colors.Transparent, .75), true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+
+                    if (firstCtrlPointOnly)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            #endregion
+
+
+            // Test
+            if (firstCtrlPointOnly)
+            {
+                //TODO: Draw some debug face polys (with less color)
+                var facePolys = HullVoronoiIntersect.GetTestFacePolys(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
+
+                ITriangleIndexed[] faceTriangles = facePolys.SelectMany(o => o.Poly1).ToArray();
+
+                //Color color = UtilityWPF.AlphaBlend(trisByCtrl[0].Item3, Colors.Transparent, .5);
+                Color color = UtilityWPF.ColorFromHex("D0FFFFFF");
+
+                AddHull_CustomColor(faceTriangles, color, true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+
+
+
+
+
+
+                var facePolys2 = HullVoronoiIntersect.GetTestFacePolys2(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
+
+            }
+
+
+
+
+
+        }
+
+        private void DrawMultipleHulls(ITriangleIndexed[][] hulls, bool drawFaces, bool drawLines, bool drawNormals, bool includeEveryOtherFace, bool nearlyTransparent, bool softFaces, bool newTrianglesAsDifferentColor = true)
+        {
+            var aabb = Math3D.GetAABB(hulls.SelectMany(o => o));
+
+            double width = aabb.Item2.X - aabb.Item1.X;
+
+            double gap = width * .125;
+
+            double totalWidth = (width * hulls.Length) + (gap * (hulls.Length - 1));
+
+            double offset = totalWidth / -4;        // half the half width
+
+            long[] prevTokens = null;
+            Color otherColor = UtilityWPF.AlphaBlend(Colors.LightGreen, Colors.Transparent, .8);
+
+            for (int cntr = 0; cntr < hulls.Length; cntr++)
+            {
+                TranslateTransform3D transform = new TranslateTransform3D(offset, 0, 0);
+
+                #region Detect null neighbors
+
+                if (hulls[cntr][0] is TriangleIndexedLinked)
+                {
+                    var bads = hulls[cntr].
+                        Select(o => (TriangleIndexedLinked)o).
+                        Select(o => new
+                        {
+                            Triangle = o,
+                            Edges = Triangle.Edges.Select(p => new
+                                {
+                                    Edge = p,
+                                    Neighbor = o.GetNeighbor(p),
+                                    Point1 = o.GetPoint(p, true),
+                                    Point2 = o.GetPoint(p, false)
+                                }).Where(p => p.Neighbor == null).ToArray()
+                        }).
+                        Where(o => o.Edges.Length > 0).
+                        ToArray();
+
+                    if (bads.Length > 0)
+                    {
+                        Point3D[] points = bads.
+                            SelectMany(o => o.Edges).
+                            SelectMany(o => new[] { transform.Transform(o.Point1), transform.Transform(o.Point2) }).
+                            ToArray();
+
+                        var lines = Enumerable.Range(0, points.Length / 2).
+                            Select(o => Tuple.Create(o * 2, (o * 2) + 1));
+
+                        AddLines(lines, points, LINETHICKNESS * 3, Colors.Red);
+                    }
+                }
+
+                #endregion
+
+                ITriangleIndexed[] translated = hulls[cntr].Select(o => new TriangleIndexed(o.Index0, o.Index1, o.Index2, o.AllPoints.Select(p => transform.Transform(p)).ToArray())).ToArray();       // inneficient, but easy
+
+                if (newTrianglesAsDifferentColor)
+                {
+                    long[] curTokens = hulls[cntr].Select(o => o.Token).ToArray();
+
+                    if (cntr > 0)
+                    {
+                        // New color
+                        ITriangleIndexed[] subset = translated.Where((o, i) => !prevTokens.Contains(hulls[cntr][i].Token)).ToArray();
+                        if (subset.Length > 0)
+                        {
+                            AddHull_CustomColor(subset, otherColor, drawFaces, drawLines, drawNormals, includeEveryOtherFace, nearlyTransparent, softFaces);
+                        }
+
+                        // Standard color
+                        subset = translated.Where((o, i) => prevTokens.Contains(hulls[cntr][i].Token)).ToArray();
+                        if (subset.Length > 0)
+                        {
+                            AddHull(subset, drawFaces, drawLines, drawNormals, includeEveryOtherFace, nearlyTransparent, softFaces);
+                        }
+                    }
+                    else
+                    {
+                        // First one, so nothing to compare to
+                        AddHull(translated, drawFaces, drawLines, drawNormals, includeEveryOtherFace, nearlyTransparent, softFaces);
+                    }
+
+                    prevTokens = curTokens;
+                }
+                else
+                {
+                    // Do all the same color
+                    AddHull(translated, drawFaces, drawLines, drawNormals, includeEveryOtherFace, nearlyTransparent, softFaces);
+                }
+
+                offset += width + gap;
+            }
         }
 
         private static void GroupCoplanarTriangles(int index, TriangleIndexedLinked triangle, List<TrianglesInPlane> groups)
@@ -1806,7 +7036,7 @@ namespace Game.Newt.Testers
                     break;
 
                 case 3:
-                    mesh = UtilityWPF.GetSphere(5, GetRandomSize(MINRADIUS, MAXRADIUS));
+                    mesh = UtilityWPF.GetSphere_LatLon(5, GetRandomSize(MINRADIUS, MAXRADIUS));
                     break;
 
                 case 4:
@@ -1837,6 +7067,8 @@ namespace Game.Newt.Testers
 
         #endregion
     }
+
+    #region quickhull attempts
 
     #region Class: QuickHull1
 
@@ -1933,7 +7165,7 @@ namespace Game.Newt.Testers
             for (int cntr = 0; cntr < points.Count; cntr++)
             {
                 Point3D point = new Point3D(points[cntr].X, points[cntr].Y, 0d);
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(pointOnLine, lineDirection, point);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(pointOnLine, lineDirection, point);
                 double lengthSquared = (point - nearestPoint).LengthSquared;
 
                 if (lengthSquared > longestDistance)
@@ -2141,7 +7373,7 @@ namespace Game.Newt.Testers
             Vector3D lineDirection = new Point3D(lineStop.X, lineStop.Y, 0d) - pointOnLine;
             Point3D point = new Point3D(testPoint.X, testPoint.Y, 0d);
 
-            Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(pointOnLine, lineDirection, point);
+            Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(pointOnLine, lineDirection, point);
 
             return (point - nearestPoint).LengthSquared;
         }
@@ -2334,7 +7566,7 @@ namespace Game.Newt.Testers
             Vector3D lineDirection = new Point3D(lineStop.X, lineStop.Y, 0d) - pointOnLine;
             Point3D point = new Point3D(testPoint.X, testPoint.Y, 0d);
 
-            Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(pointOnLine, lineDirection, point);
+            Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(pointOnLine, lineDirection, point);
 
             return (point - nearestPoint).LengthSquared;
         }
@@ -3935,7 +9167,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Calculate the distance from the line
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(startPoint, lineDirection, points[cntr]);
                 double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
 
                 if (distanceSquared > maxDistance)
@@ -3968,7 +9200,7 @@ namespace Game.Newt.Testers
                     continue;
                 }
 
-                double distance = Math3D.DistanceFromPlane(triangle, points[cntr].ToVector());
+                double distance = Math.Abs(Math3D.DistanceFromPlane(triangle, points[cntr].ToVector()));
                 if (distance > maxDistance)
                 {
                     maxDistance = distance;
@@ -4061,7 +9293,7 @@ namespace Game.Newt.Testers
             for (int cntr = 0; cntr < points.Count; cntr++)
             {
                 double distance = Math3D.DistanceFromPlane(plane, points[cntr].ToVector());
-                if (distance > maxDistance)
+                if (distance > maxDistance)     // distance should never be negative (or the point wouldn't be in the list of outside points).  If for some reason there is one with a negative distance, it shouldn't be considered, because it sits inside the hull
                 {
                     maxDistance = distance;
                     retVal = cntr;
@@ -4368,7 +9600,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Calculate the distance from the line
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(startPoint, lineDirection, points[cntr]);
                 double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
 
                 if (distanceSquared > maxDistance)
@@ -4880,12 +10112,6 @@ namespace Game.Newt.Testers
         /// </summary>
         public class TriangleWithPoints : TriangleIndexedLinked
         {
-            public TriangleWithPoints()
-                : base()
-            {
-                this.OutsidePoints = new List<int>();
-            }
-
             public TriangleWithPoints(int index0, int index1, int index2, Point3D[] allPoints)
                 : base(index0, index1, index2, allPoints)
             {
@@ -5076,7 +10302,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Calculate the distance from the line
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(startPoint, lineDirection, points[cntr]);
                 double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
 
                 if (distanceSquared > maxDistance)
@@ -5476,12 +10702,6 @@ namespace Game.Newt.Testers
         /// </summary>
         public class TriangleWithPoints : TriangleIndexedLinked
         {
-            public TriangleWithPoints()
-                : base()
-            {
-                this.OutsidePoints = new List<int>();
-            }
-
             public TriangleWithPoints(int index0, int index1, int index2, Point3D[] allPoints)
                 : base(index0, index1, index2, allPoints)
             {
@@ -5673,7 +10893,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Calculate the distance from the line
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(startPoint, lineDirection, points[cntr]);
                 double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
 
                 if (distanceSquared > maxDistance)
@@ -5905,15 +11125,15 @@ namespace Game.Newt.Testers
                 switch (nearestEdges[cntr])
                 {
                     case TriangleEdge.Edge_01:
-                        nearestPoint = Math3D.GetClosestPoint_Point_Line(triangle.Point0, triangle.Point1 - triangle.Point0, point);
+                        nearestPoint = Math3D.GetClosestPoint_Line_Point(triangle.Point0, triangle.Point1 - triangle.Point0, point);
                         break;
 
                     case TriangleEdge.Edge_12:
-                        nearestPoint = Math3D.GetClosestPoint_Point_Line(triangle.Point1, triangle.Point2 - triangle.Point1, point);
+                        nearestPoint = Math3D.GetClosestPoint_Line_Point(triangle.Point1, triangle.Point2 - triangle.Point1, point);
                         break;
 
                     case TriangleEdge.Edge_20:
-                        nearestPoint = Math3D.GetClosestPoint_Point_Line(triangle.Point0, triangle.Point2 - triangle.Point0, point);
+                        nearestPoint = Math3D.GetClosestPoint_Line_Point(triangle.Point0, triangle.Point2 - triangle.Point0, point);
                         break;
 
                     default:
@@ -6202,12 +11422,6 @@ namespace Game.Newt.Testers
         /// </summary>
         public class TriangleWithPoints : TriangleIndexedLinked
         {
-            public TriangleWithPoints()
-                : base()
-            {
-                this.OutsidePoints = new List<int>();
-            }
-
             public TriangleWithPoints(int index0, int index1, int index2, Point3D[] allPoints)
                 : base(index0, index1, index2, allPoints)
             {
@@ -6395,7 +11609,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Calculate the distance from the line
-                Point3D nearestPoint = Math3D.GetClosestPoint_Point_Line(startPoint, lineDirection, points[cntr]);
+                Point3D nearestPoint = Math3D.GetClosestPoint_Line_Point(startPoint, lineDirection, points[cntr]);
                 double distanceSquared = (points[cntr] - nearestPoint).LengthSquared;
 
                 if (distanceSquared > maxDistance)
@@ -6825,6 +12039,8 @@ namespace Game.Newt.Testers
 
         #endregion
     }
+
+    #endregion
 
     #endregion
 }

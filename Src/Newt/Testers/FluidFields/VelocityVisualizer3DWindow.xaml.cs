@@ -13,11 +13,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.FluidFields
 {
@@ -614,7 +614,7 @@ namespace Game.Newt.Testers.FluidFields
 
             _velocityLines.BeginAddingLines();
 
-            foreach (int index1D in UtilityHelper.RandomRange(0, _field.Size1D))
+            foreach (int index1D in UtilityCore.RandomRange(0, _field.Size1D))
             {
                 if (blocked[index1D])
                 {
@@ -646,7 +646,7 @@ namespace Game.Newt.Testers.FluidFields
                 bool[] blocked = _field.Blocked;
                 int totalSamples = numSamples * numSamples * numSamples;        // numsamples is per axis, so cube it
 
-                _randPersistIndices = UtilityHelper.RandomRange(0, _field.Size1D).
+                _randPersistIndices = UtilityCore.RandomRange(0, _field.Size1D).
                     Where(o => !blocked[o]).
                     Take(totalSamples).
                     Select(o =>
@@ -691,7 +691,7 @@ namespace Game.Newt.Testers.FluidFields
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(3, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D retVal = new ModelVisual3D();

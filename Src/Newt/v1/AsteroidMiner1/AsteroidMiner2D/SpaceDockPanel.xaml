@@ -1,0 +1,121 @@
+﻿<UserControl x:Class="Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.SpaceDockPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Width="720" Height="540">
+    <UserControl.Resources>
+        <Style x:Key="outerborder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#A0A0A0" />
+            <Setter Property="Background" Value="#D0D0D0" />
+        </Style>
+
+        <Style x:Key="innerborder" TargetType="Border">
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="CornerRadius" Value="2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="#C0C0C0" />
+        </Style>
+
+        <Style TargetType="Expander">
+            <Setter Property="Background" Value="#E8E8E8" />
+        </Style>
+        <Style x:Key="expanderHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border CornerRadius="8" BorderBrush="#D0D0D0" BorderThickness="2" Background="#B0B0B0">
+        <Grid>
+            <!-- Global Status -->
+            <Border Margin="312,8,8,0" Style="{StaticResource outerborder}" Height="69" VerticalAlignment="Top">
+                <Grid>
+                    <!-- Credits -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,12,0" Name="stackPanel1" VerticalAlignment="Top">
+                        <Label VerticalAlignment="Center" Content="Credits"/>
+                        <Label FontWeight="Bold" Name="lblCredits" VerticalAlignment="Center" Content="lblCredits"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Equips -->
+            <Border Margin="8,8,0,9" Style="{StaticResource outerborder}" HorizontalAlignment="Left" Width="301">
+                <Border Style="{StaticResource innerborder}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
+
+                            <!-- Swarm Bots -->
+                            <Expander IsExpanded="True">
+                                <Expander.Header>
+                                    <TextBlock Text="Swarm Bots" Style="{StaticResource expanderHeader}"/>
+                                </Expander.Header>
+                                <StackPanel Name="pnlSwarmBots" Margin="12,3,8,3">
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="40"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+                                        <!-- Number of swarmbots -->
+                                        <Slider Grid.Column="0" Grid.Row="0" Name="trkNumSwarmBots" Minimum="1" Maximum="100" Value="30" ValueChanged="trkNumSwarmBots_ValueChanged" PreviewMouseDown="trkNumSwarmBots_MouseDown" PreviewMouseUp="trkNumSwarmBots_MouseUp" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Grid.Column="1" Grid.Row="0" Name="lblNumSwarmBots" Text="lblNumSwarmBots" VerticalAlignment="Center"/>
+
+                                        <!-- Uniform size -->
+                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Name="chkSwarmbotsSameSize" IsChecked="True" Checked="chkSwarmbotsSameSize_Checked" Unchecked="chkSwarmbotsSameSize_Checked" Margin="0,3">All bots are the same size</CheckBox>
+                                    </Grid>
+
+                                    <!-- The radio buttons will be added here -->
+
+                                </StackPanel>
+                            </Expander>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </Border>
+
+            <!-- Resources -->
+            <Border Margin="312,214,136,11.02" Style="{StaticResource outerborder}">
+                <Grid>
+                    <Border Margin="4,4,4,48.4" Style="{StaticResource innerborder}">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <Grid Name="grdResources">
+                                <Grid.ColumnDefinitions>
+                                    <!-- Mineral Graphic -->
+                                    <ColumnDefinition Width="Auto"/>
+                                    <!-- Mineral Name -->
+                                    <ColumnDefinition Width="2*"/>
+                                    <!-- Price x Quantity -->
+                                    <ColumnDefinition Width="1*"/>
+                                    <!-- Price -->
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- The rows will go here -->
+
+                            </Grid>
+                        </ScrollViewer>
+                    </Border>
+
+                    <Button Height="32" Margin="11,0,0,10" Name="btnSellAllResources" VerticalAlignment="Bottom" HorizontalAlignment="Left" Width="119" Click="btnSellAllResources_Click">Sell all resources</Button>
+                    <Label Height="28" HorizontalAlignment="Right" Margin="0,0,9,10.98" FontWeight="bold" Name="lblTotalResourceValue" HorizontalContentAlignment="Right" VerticalAlignment="Bottom" Width="120">lblTotalResourceValue</Label>
+                </Grid>
+            </Border>
+
+            <Button Height="46" HorizontalAlignment="Right" Margin="0,0,9,60.42" Name="btnRefuel" VerticalAlignment="Bottom" Width="103" Click="btnRefuel_Click">
+                <StackPanel Orientation="Vertical">
+                    <Label Content="Refuel" HorizontalAlignment="Center"/>
+                    <StackPanel Margin="0,-10,0,0" Orientation="Horizontal">
+                        <Label Name="lblRefuelCredits" Content="0" FontSize="10" FontWeight="bold"/>
+                        <Label Content="credits" FontSize="10" Margin="-6,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+
+            <!-- Launch -->
+            <Button Height="42" HorizontalAlignment="Right" Margin="0,0,9,9" Name="btnLaunch" VerticalAlignment="Bottom" Width="103" Click="btnLaunch_Click">Launch</Button>
+        </Grid>
+    </Border>
+</UserControl>

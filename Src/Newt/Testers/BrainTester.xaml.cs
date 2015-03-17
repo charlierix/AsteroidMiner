@@ -14,13 +14,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.AsteroidMiner2.ShipEditor;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
-using Game.Newt.AsteroidMiner2.ShipParts;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
+using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.Testers
 {
@@ -348,7 +348,7 @@ namespace Game.Newt.Testers
                 for (int cntr = 0; cntr < ratios.Length; cntr++)
                 {
                     // Normalize the distance
-                    ratios[cntr] = UtilityHelper.GetScaledValue_Capped(0d, 1d, 0d, maxRange, distances[cntr].Item2 - min);
+                    ratios[cntr] = UtilityCore.GetScaledValue_Capped(0d, 1d, 0d, maxRange, distances[cntr].Item2 - min);
 
                     // Run it through a function
                     ratios[cntr] = 1d / (ratios[cntr] + OFFSET);		// need to add an offset, because one of these will be zero
@@ -417,7 +417,7 @@ namespace Game.Newt.Testers
                         throw new ApplicationException("Can't have an exact match in a list of non exact matches");		// or in any list greater than one
                     }
 
-                    Point3D pointOnLine = Math3D.GetClosestPoint_Point_Line(center, line, points[links[cntr].Index]);
+                    Point3D pointOnLine = Math3D.GetClosestPoint_Line_Point(center, line, points[links[cntr].Index]);
                     // See if it's on the line
                     //if(
 
@@ -605,7 +605,7 @@ namespace Game.Newt.Testers
                 _materialManager = new MaterialManager(_world);
 
                 // Ship
-                var material = new Game.Newt.NewtonDynamics.Material();
+                var material = new Game.Newt.v2.NewtonDynamics.Material();
                 _material_Ship = _materialManager.AddMaterial(material);
 
                 //_materialManager.RegisterCollisionEvent(_material_Terrain, _material_Bean, Collision_BeanTerrain);
@@ -713,7 +713,8 @@ namespace Game.Newt.Testers
             {
                 foreach (GravSensorStuff sensor in _gravSensors)
                 {
-                    sensor.Sensor.Update(elapsedTime);
+                    sensor.Sensor.Update_MainThread(elapsedTime);
+                    sensor.Sensor.Update_AnyThread(elapsedTime);
                 }
 
                 lblSensorMagnitude.Text = Math.Round(_gravSensors[0].Sensor.CurrentMax, 3).ToString();		// just report the first sensor's value
@@ -730,7 +731,8 @@ namespace Game.Newt.Testers
             {
                 foreach (BrainStuff brain in _brains)
                 {
-                    brain.Brain.Update(elapsedTime);
+                    brain.Brain.Update_MainThread(elapsedTime);
+                    brain.Brain.Update_AnyThread(elapsedTime);
                 }
             }
 
@@ -738,7 +740,7 @@ namespace Game.Newt.Testers
 
             #region Color neurons
 
-            foreach (var neuron in UtilityHelper.Iterate(
+            foreach (var neuron in UtilityCore.Iterate(
                 _gravSensors == null ? null : _gravSensors.SelectMany(o => o.Neurons),
                 _brains == null ? null : _brains.SelectMany(o => o.Neurons),
                 _thrusters == null ? null : _thrusters.SelectMany(o => o.Neurons)))
@@ -971,7 +973,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                NeuralBucket worker = new NeuralBucket(_links.Outputs.SelectMany(o => UtilityHelper.Iterate(o.InternalLinks, o.ExternalLinks)).ToArray());
+                NeuralBucket worker = new NeuralBucket(_links.Outputs.SelectMany(o => UtilityCore.Iterate(o.InternalLinks, o.ExternalLinks)).ToArray());
 
                 worker.Tick();
             }
@@ -1021,12 +1023,12 @@ namespace Game.Newt.Testers
             try
             {
                 List<int[]> results = new List<int[]>();
-                results.Add(UtilityHelper.RandomRange(0, 10).ToArray());
-                results.Add(UtilityHelper.RandomRange(0, 100, 10).ToArray());
-                results.Add(UtilityHelper.RandomRange(0, 100, 50).ToArray());
-                results.Add(UtilityHelper.RandomRange(0, 100, -1).ToArray());
-                results.Add(UtilityHelper.RandomRange(0, 100, 0).ToArray());
-                results.Add(UtilityHelper.RandomRange(0, 100, 100).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 10).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 100, 10).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 100, 50).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 100, -1).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 100, 0).ToArray());
+                results.Add(UtilityCore.RandomRange(0, 100, 100).ToArray());
                 //results.Add(UtilityHelper.RandomRange(0, 100, 101).ToArray());		// this one throws an exception
 
                 // Check for dupes
@@ -1163,7 +1165,7 @@ namespace Game.Newt.Testers
                 Point3D[] positions = new Point3D[numTo];
                 for (int cntr = 0; cntr < numTo; cntr++)
                 {
-                    positions[cntr] = toPoint + Math3D.GetRandomVectorSpherical(1d);
+                    positions[cntr] = toPoint + Math3D.GetRandomVector_Spherical(1d);
                     inNeurons.Add(new Neuron_ZeroPos(positions[cntr]));
                 }
 
@@ -1256,7 +1258,7 @@ namespace Game.Newt.Testers
                 Point3D[] fromPositions = new Point3D[numFrom];
                 for (int cntr = 0; cntr < numFrom; cntr++)
                 {
-                    fromPositions[cntr] = fromPoint + Math3D.GetRandomVectorSpherical(1d);
+                    fromPositions[cntr] = fromPoint + Math3D.GetRandomVector_Spherical(1d);
                     inNeurons.Add(new Neuron_NegPos(fromPositions[cntr]));
                 }
 
@@ -1266,7 +1268,7 @@ namespace Game.Newt.Testers
                 Point3D[] toPositions = new Point3D[numTo];
                 for (int cntr = 0; cntr < numTo; cntr++)
                 {
-                    toPositions[cntr] = toPoint + Math3D.GetRandomVectorSpherical(1d);
+                    toPositions[cntr] = toPoint + Math3D.GetRandomVector_Spherical(1d);
                     inNeurons.Add(new Neuron_NegPos(toPositions[cntr]));
                 }
 
@@ -1676,13 +1678,13 @@ namespace Game.Newt.Testers
                 }
 
                 // Build DNA
-                PartNeuralDNA dna = new PartNeuralDNA();
+                PartDNA dna = new PartDNA();
                 dna.PartType = SensorGravity.PARTTYPE;
                 dna.Position = new Point3D(-1.5, 0, 0);
                 dna.Orientation = Quaternion.Identity;
                 dna.Scale = new Vector3D(size, size, size);
 
-                PartNeuralDNA[] gravDNA = new PartNeuralDNA[numSensors];
+                PartDNA[] gravDNA = new PartDNA[numSensors];
 
                 for (int cntr = 0; cntr < numSensors; cntr++)
                 {
@@ -1692,7 +1694,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        PartNeuralDNA dnaCopy = (PartNeuralDNA)PartDNA.Clone(dna);
+                        PartDNA dnaCopy = PartDNA.Clone(dna);
                         double angle = 360d / Convert.ToDouble(numSensors);
                         dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
 
@@ -1741,7 +1743,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Build DNA
-                PartNeuralDNA dna = new PartNeuralDNA();
+                PartDNA dna = new PartDNA();
                 dna.PartType = Brain.PARTTYPE;
                 dna.Position = new Point3D(0, 0, 0);
                 dna.Orientation = Quaternion.Identity;
@@ -1751,7 +1753,7 @@ namespace Game.Newt.Testers
                 dna.InternalLinks = null;
                 dna.ExternalLinks = null;
 
-                PartNeuralDNA[] brainDNA = new PartNeuralDNA[numBrains];
+                PartDNA[] brainDNA = new PartDNA[numBrains];
                 for (int cntr = 0; cntr < numBrains; cntr++)
                 {
                     if (numBrains == 1)
@@ -1760,7 +1762,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        PartNeuralDNA dnaCopy = (PartNeuralDNA)PartDNA.Clone(dna);
+                        PartDNA dnaCopy = PartDNA.Clone(dna);
                         double angle = 360d / Convert.ToDouble(numBrains);
                         dnaCopy.Position += new Vector3D(0, 1, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
 
@@ -1994,18 +1996,18 @@ namespace Game.Newt.Testers
             {
                 #region Extract dna
 
-                PartNeuralDNA[] gravDNA1 = null;
+                PartDNA[] gravDNA1 = null;
                 if (_gravSensors != null)
                 {
-                    gravDNA1 = _gravSensors.Select(o => (PartNeuralDNA)o.Sensor.GetNewDNA()).ToArray();		// no need to call NeuralUtility.PopulateDNALinks, only the neurons are stored
+                    gravDNA1 = _gravSensors.Select(o => o.Sensor.GetNewDNA()).ToArray();		// no need to call NeuralUtility.PopulateDNALinks, only the neurons are stored
                 }
 
-                PartNeuralDNA[] brainDNA1 = null;
+                PartDNA[] brainDNA1 = null;
                 if (_brains != null)
                 {
                     brainDNA1 = _brains.Select(o =>
                     {
-                        PartNeuralDNA dna = (PartNeuralDNA)o.Brain.GetNewDNA();
+                        PartDNA dna = o.Brain.GetNewDNA();
                         if (_links != null)
                         {
                             NeuralUtility.PopulateDNALinks(dna, o.Brain, _links.Outputs);
@@ -2037,7 +2039,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Combine the lists
-                List<PartDNA> allParts1 = UtilityHelper.Iterate<PartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
+                List<PartDNA> allParts1 = UtilityCore.Iterate<PartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
                 if (allParts1.Count == 0)
                 {
                     // There is nothing to do
@@ -2148,13 +2150,13 @@ namespace Game.Newt.Testers
 
                 PartDNA[] allParts2 = newDNA.PartsByLayer.SelectMany(o => o.Value).ToArray();
 
-                PartNeuralDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).Select(o => (PartNeuralDNA)o).ToArray();
+                PartDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).ToArray();
                 if (gravDNA2.Length > 0)
                 {
                     CreateGravSensors(gravDNA2);
                 }
 
-                PartNeuralDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).Select(o => (PartNeuralDNA)o).ToArray();
+                PartDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).ToArray();
                 if (brainDNA2.Length > 0)
                 {
                     CreateBrains(brainDNA2);
@@ -2234,7 +2236,7 @@ namespace Game.Newt.Testers
             }
             else
             {
-                neuronRadius = UtilityHelper.GetScaledValue(.03d, .007d, 20, 100, neuronCount);
+                neuronRadius = UtilityCore.GetScaledValue(.03d, .007d, 20, 100, neuronCount);
             }
 
             foreach (INeuron neuron in inNeurons)
@@ -2248,7 +2250,7 @@ namespace Game.Newt.Testers
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = material;
                 geometry.BackMaterial = material;
-                geometry.Geometry = UtilityWPF.GetSphere(2, neuronRadius);
+                geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, neuronRadius);
                 geometry.Transform = new TranslateTransform3D(neuron.Position.ToVector());
 
                 geometries.Children.Add(geometry);
@@ -2501,7 +2503,7 @@ namespace Game.Newt.Testers
             }
 
             // Reset the neuron values (leave the sensors alone, because they aren't affected by links)
-            foreach (var neuron in UtilityHelper.Iterate(
+            foreach (var neuron in UtilityCore.Iterate(
                 _brains == null ? null : _brains.SelectMany(o => o.Neurons),
                 _thrusters == null ? null : _thrusters.SelectMany(o => o.Neurons)))
             {
@@ -2518,7 +2520,7 @@ namespace Game.Newt.Testers
             _debugVisuals.Clear();
         }
 
-        private void CreateGravSensors(PartNeuralDNA[] dna)
+        private void CreateGravSensors(PartDNA[] dna)
         {
             if (_gravSensors != null)
             {
@@ -2576,7 +2578,7 @@ namespace Game.Newt.Testers
             UpdateGravity();		// this shows the gravity line
             UpdateCountReport();
         }
-        private void CreateBrains(PartNeuralDNA[] dna)
+        private void CreateBrains(PartDNA[] dna)
         {
             if (_brains != null)
             {
@@ -2836,7 +2838,7 @@ namespace Game.Newt.Testers
                 {
                     Transform3D toTransform = GetContainerTransform(containerTransforms, output.Container);
 
-                    foreach (var link in UtilityHelper.Iterate(output.InternalLinks, output.ExternalLinks))
+                    foreach (var link in UtilityCore.Iterate(output.InternalLinks, output.ExternalLinks))
                     {
                         Transform3D fromTransform = GetContainerTransform(containerTransforms, link.FromContainer);
 
@@ -2941,7 +2943,7 @@ namespace Game.Newt.Testers
             }
 
             // Hand all the links to the worker
-            NeuralBucket worker = new NeuralBucket(_links.Outputs.SelectMany(o => UtilityHelper.Iterate(o.InternalLinks, o.ExternalLinks)).ToArray());
+            NeuralBucket worker = new NeuralBucket(_links.Outputs.SelectMany(o => UtilityCore.Iterate(o.InternalLinks, o.ExternalLinks)).ToArray());
 
             _brainOperationCancel = new CancellationTokenSource();
 

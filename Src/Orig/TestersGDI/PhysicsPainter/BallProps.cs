@@ -6,7 +6,7 @@ using System.Data;
 using System.Text;
 using System.Windows.Forms;
 
-using Game.HelperClasses;
+using Game.HelperClassesCore;
 using Game.Orig.HelperClassesOrig;
 using Game.Orig.Map;
 using Game.Orig.Math3D;
@@ -211,7 +211,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
         private void trkSize_Scroll(object sender, EventArgs e)
         {
-            this.ExposedProps.SizeIfFixed = UtilityHelper.GetScaledValue(this.ExposedProps.MinRandSize, this.ExposedProps.MaxRandSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
+            this.ExposedProps.SizeIfFixed = UtilityCore.GetScaledValue(this.ExposedProps.MinRandSize, this.ExposedProps.MaxRandSize, trkSize.Minimum, trkSize.Maximum, trkSize.Value);
             toolTip1.SetToolTip(trkSize, this.ExposedProps.SizeIfFixed.ToString());
         }
 

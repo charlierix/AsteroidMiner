@@ -11,11 +11,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
-
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.HelperClasses;
-using Game.Newt.NewtonDynamics;
-using Game.HelperClasses;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.TowerWrecker
 {
@@ -137,22 +137,22 @@ namespace Game.Newt.Testers.TowerWrecker
                 _materialManager = new MaterialManager(_world);
 
                 // Terrain
-                Game.Newt.NewtonDynamics.Material material = new Game.Newt.NewtonDynamics.Material();
+                Game.Newt.v2.NewtonDynamics.Material material = new Game.Newt.v2.NewtonDynamics.Material();
                 material.Elasticity = .2d;
                 _material_Terrain = _materialManager.AddMaterial(material);
 
                 // Brick
-                material = new Game.Newt.NewtonDynamics.Material();
+                material = new Game.Newt.v2.NewtonDynamics.Material();
                 _material_Brick = _materialManager.AddMaterial(material);
 
                 // Projectile
-                material = new Game.Newt.NewtonDynamics.Material();
+                material = new Game.Newt.v2.NewtonDynamics.Material();
                 material.Elasticity = .6d;
                 material.IsContinuousCollision = true;
                 _material_Projectile = _materialManager.AddMaterial(material);
 
                 // Exploding Projectile
-                material = new Game.Newt.NewtonDynamics.Material();
+                material = new Game.Newt.v2.NewtonDynamics.Material();
                 material.IsCollidable = false;
                 _material_ExplodingProjectile = _materialManager.AddMaterial(material);
 
@@ -329,7 +329,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 {
                     Point3D bodyPosition = e.Body.Position;
 
-                    Point3D nearestPointOnLine = Math3D.GetClosestPoint_Point_Line(_rayPoint, _rayDirection, bodyPosition);
+                    Point3D nearestPointOnLine = Math3D.GetClosestPoint_Line_Point(_rayPoint, _rayDirection, bodyPosition);
                     Vector3D directionToLine = nearestPointOnLine - bodyPosition;
 
                     if (directionToLine.LengthSquared < _forceBeamSettings.Radius * _forceBeamSettings.Radius)
@@ -433,9 +433,9 @@ namespace Game.Newt.Testers.TowerWrecker
                             // This is the biggest force this brick has felt, paint it a shade of red
                             material.MaxImpulse = collision.ContactNormalSpeed;
 
-                            byte red = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(material.OrigColor.R, 255, 0, MAXIMPULSE, material.MaxImpulse));		// increase red
-                            byte green = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material.OrigColor.G, MAXIMPULSE, 0, material.MaxImpulse));		// decrease green and blue
-                            byte blue = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material.OrigColor.B, MAXIMPULSE, 0, material.MaxImpulse));
+                            byte red = Convert.ToByte(UtilityCore.GetScaledValue_Capped(material.OrigColor.R, 255, 0, MAXIMPULSE, material.MaxImpulse));		// increase red
+                            byte green = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material.OrigColor.G, MAXIMPULSE, 0, material.MaxImpulse));		// decrease green and blue
+                            byte blue = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material.OrigColor.B, MAXIMPULSE, 0, material.MaxImpulse));
 
                             material.Material.Brush = new SolidColorBrush(Color.FromArgb(255, red, green, blue));
                         }
@@ -472,9 +472,9 @@ namespace Game.Newt.Testers.TowerWrecker
                             // This is the biggest force this brick has felt, paint it a shade of red
                             material0.MaxImpulse = speed;
 
-                            byte red = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material0.OrigColor.R, MAXIMPULSE, 0, speed));		// decrease red and green
-                            byte green = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material0.OrigColor.G, MAXIMPULSE, 0, speed));
-                            byte blue = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(material0.OrigColor.B, 255, 0, MAXIMPULSE, speed));		// increase blue
+                            byte red = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material0.OrigColor.R, MAXIMPULSE, 0, speed));		// decrease red and green
+                            byte green = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material0.OrigColor.G, MAXIMPULSE, 0, speed));
+                            byte blue = Convert.ToByte(UtilityCore.GetScaledValue_Capped(material0.OrigColor.B, 255, 0, MAXIMPULSE, speed));		// increase blue
 
                             material0.Material.Brush = new SolidColorBrush(Color.FromArgb(255, red, green, blue));
                         }
@@ -486,9 +486,9 @@ namespace Game.Newt.Testers.TowerWrecker
                             // This is the biggest force this brick has felt, paint it a shade of red
                             material1.MaxImpulse = speed;
 
-                            byte red = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material1.OrigColor.R, MAXIMPULSE, 0, speed));		// decrease red and green
-                            byte green = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(0, material1.OrigColor.G, MAXIMPULSE, 0, speed));
-                            byte blue = Convert.ToByte(UtilityHelper.GetScaledValue_Capped(material1.OrigColor.B, 255, 0, MAXIMPULSE, speed));		// increase blue
+                            byte red = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material1.OrigColor.R, MAXIMPULSE, 0, speed));		// decrease red and green
+                            byte green = Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, material1.OrigColor.G, MAXIMPULSE, 0, speed));
+                            byte blue = Convert.ToByte(UtilityCore.GetScaledValue_Capped(material1.OrigColor.B, 255, 0, MAXIMPULSE, speed));		// increase blue
 
                             material1.Material.Brush = new SolidColorBrush(Color.FromArgb(255, red, green, blue));
                         }
@@ -509,13 +509,13 @@ namespace Game.Newt.Testers.TowerWrecker
                 }
 
                 // Get linear from 0 to 1
-                double speed = UtilityHelper.GetScaledValue_Capped(0d, 1d, trkSimulationSpeed.Minimum, trkSimulationSpeed.Maximum, trkSimulationSpeed.Value);
+                double speed = UtilityCore.GetScaledValue_Capped(0d, 1d, trkSimulationSpeed.Minimum, trkSimulationSpeed.Maximum, trkSimulationSpeed.Value);
 
                 // The interesting stuff happens near zero, so keep the numbers small longer
                 speed = Math.Pow(speed, 2d);
 
                 // Now scale this
-                speed = UtilityHelper.GetScaledValue_Capped(.001d, 1d, 0d, 1d, speed);
+                speed = UtilityCore.GetScaledValue_Capped(.001d, 1d, 0d, 1d, speed);
 
                 _world.SimulationSpeed = speed;
                 lblSimSpeed.Content = "sim speed: " + Math.Round(speed, 3).ToString();
@@ -814,10 +814,10 @@ namespace Game.Newt.Testers.TowerWrecker
         {
             try
             {
-                Point3D position = Math3D.GetRandomVectorSpherical2D(3).ToPoint();
+                Point3D position = Math3D.GetRandomVector_Circular(3).ToPoint();
                 position.Z = _lastTowerHeight + 5;
                 Vector3D velocity = new Vector3D(0, 0, -3);
-                Vector3D angularVelocity = new Vector3D(UtilityHelper.GetScaledValue_Capped(0d, 400d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value), 0, 0);		// AddCannonBall rotates this so it will be about the z axis
+                Vector3D angularVelocity = new Vector3D(UtilityCore.GetScaledValue_Capped(0d, 400d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value), 0, 0);		// AddCannonBall rotates this so it will be about the z axis
                 DoubleVector directionFacing = new DoubleVector(0, 0, -1, 1, 0, 0);
                 Vector3D size = new Vector3D(3d, 5d, 0d);		// x is radius, y is height
 
@@ -832,10 +832,10 @@ namespace Game.Newt.Testers.TowerWrecker
         {
             try
             {
-                Point3D position = Math3D.GetRandomVectorSpherical2D(5).ToPoint();
+                Point3D position = Math3D.GetRandomVector_Circular(5).ToPoint();
                 position.Z = _lastTowerHeight + 1d;
                 Vector3D velocity = new Vector3D(0, 0, -3);
-                Vector3D angularVelocity = new Vector3D(0, 0, UtilityHelper.GetScaledValue_Capped(5d, 200d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value));
+                Vector3D angularVelocity = new Vector3D(0, 0, UtilityCore.GetScaledValue_Capped(5d, 200d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value));
                 //DoubleVector directionFacing = _defaultDirectionFacing;		// just leaving it the same as default
                 Vector3D size = new Vector3D(50d, 2d, .25d);
 
@@ -857,7 +857,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 position = Math3D.RotateAroundAxis(position, new Vector3D(0, 0, 1), Math3D.GetNearZeroValue(Math.PI * 2d));
                 position.Z = Math3D.GetNearZeroValue(5d) + 10d;
                 Vector3D velocity = new Vector3D(0, 0, 0);
-                Vector3D angularVelocity = new Vector3D(0, 0, UtilityHelper.GetScaledValue_Capped(.1d, 5d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value));
+                Vector3D angularVelocity = new Vector3D(0, 0, UtilityCore.GetScaledValue_Capped(.1d, 5d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value));
 
                 //Vector3D dirFacingStand = new Vector3D(1, 0, Math3D.GetNearZeroValue(_rand, .01d));
                 //Vector3D dirFacingOrth = new Vector3D(0, 0, 1);
@@ -1001,7 +1001,7 @@ namespace Game.Newt.Testers.TowerWrecker
                     for (int infiniteLoopCntr = 0; infiniteLoopCntr < 100; infiniteLoopCntr++)
                     {
                         // Try this one
-                        pos2D = Math3D.GetRandomVectorSpherical2D(20d);
+                        pos2D = Math3D.GetRandomVector_Circular(20d);
 
                         havePosition = true;
                         foreach (Vector3D prevPos in prevPositions)
@@ -1477,7 +1477,7 @@ namespace Game.Newt.Testers.TowerWrecker
                     break;
 
                 case CollisionShapeType.Sphere:
-                    geometry.Geometry = UtilityWPF.GetSphere(5, size.X, size.Y, size.Z);
+                    geometry.Geometry = UtilityWPF.GetSphere_LatLon(5, size.X, size.Y, size.Z);
                     if (createHull)
                     {
                         hull = CollisionHull.CreateSphere(_world, 0, size, null);
@@ -1631,13 +1631,13 @@ namespace Game.Newt.Testers.TowerWrecker
 
             DoubleVector dirFacingColumn = new DoubleVector(0, 0, 1, -1, 0, 0);		// x becomes z
 
-            Color baseColor = UtilityWPF.GetRandomColor(255, 64, 192);
+            Color baseColor = UtilityWPF.GetRandomColor(64, 192);
 
             for (double z = 0d; z <= zLimit; z += zStep)		// start on the floor
             {
-                Color color = UtilityWPF.AlphaBlend(Colors.Black, baseColor, UtilityHelper.GetScaledValue_Capped(0d, .5d, 0, zLimit, zLimit - z));
+                Color color = UtilityWPF.AlphaBlend(Colors.Black, baseColor, UtilityCore.GetScaledValue_Capped(0d, .5d, 0, zLimit, zLimit - z));
 
-                double radius = UtilityHelper.GetScaledValue_Capped(.25d, 2d, 0d, zLimit, zLimit - z);
+                double radius = UtilityCore.GetScaledValue_Capped(.25d, 2d, 0d, zLimit, zLimit - z);
                 Vector3D size = new Vector3D(radius, zStep, 0d);		// x is radius, y is height
 
                 double mass = radius * 2d;
@@ -1693,8 +1693,8 @@ namespace Game.Newt.Testers.TowerWrecker
                 {
                     for (int z = 0; z <= zLimit; z++)		// start on the floor
                     {
-                        double brightness = UtilityHelper.GetScaledValue_Capped(30, 185, 0, zLimit, z);
-                        Color color = UtilityWPF.GetRandomColor(255, Convert.ToByte(brightness - 15), Convert.ToByte(brightness + 15));
+                        double brightness = UtilityCore.GetScaledValue_Capped(30, 185, 0, zLimit, z);
+                        Color color = UtilityWPF.GetRandomColor(Convert.ToByte(brightness - 15), Convert.ToByte(brightness + 15));
 
                         Vector3D size = new Vector3D(1.5d, 1.5d, 1d);
                         Point3D position = new Point3D(x, y, z + .5d + heightOffset);
@@ -1754,7 +1754,7 @@ namespace Game.Newt.Testers.TowerWrecker
         private Color ThickWallSprtColor(int x, int xLimit)
         {
             // Gray scale
-            double brightness = UtilityHelper.GetScaledValue_Capped(30, 185, 2 * xLimit + 2, 0, xLimit + x);
+            double brightness = UtilityCore.GetScaledValue_Capped(30, 185, 2 * xLimit + 2, 0, xLimit + x);
             return UtilityWPF.GetRandomColor(255, Convert.ToByte(brightness - 15), Convert.ToByte(brightness + 15));
         }
 
@@ -1772,7 +1772,7 @@ namespace Game.Newt.Testers.TowerWrecker
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = materials;
             geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere(3, radius, radius, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
 
             // Model Visual
             ModelVisual3D model = new ModelVisual3D();
@@ -2071,7 +2071,7 @@ namespace Game.Newt.Testers.TowerWrecker
 
                     for (int cntr = 0; cntr < 10; cntr++)
                     {
-                        Vector3D pos2D = Math3D.GetRandomVectorSpherical2D(1d);
+                        Vector3D pos2D = Math3D.GetRandomVector_Circular(1d);
                         //Vector3D vel2D = new Vector3D(pos2D.X, pos2D.Y, trkBulletSpeed.Value * 2d);
 
 

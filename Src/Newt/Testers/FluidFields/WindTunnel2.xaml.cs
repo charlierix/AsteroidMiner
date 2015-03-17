@@ -13,11 +13,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
-using Game.HelperClasses;
-using Game.Newt.AsteroidMiner2;
-using Game.Newt.HelperClasses;
-using Game.Newt.HelperClasses.Primitives3D;
-using Game.Newt.NewtonDynamics;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers.FluidFields
 {
@@ -224,7 +224,7 @@ namespace Game.Newt.Testers.FluidFields
                 #region Filter AABB
 
                 // Remove non aabb matches
-                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABBRect(o[0].AllPoints)).ToArray();
+                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).ToArray();
 
                 Rectangle3DIndexedMapped[] cells2 = cells1.Where(o =>
                 {
@@ -276,7 +276,7 @@ namespace Game.Newt.Testers.FluidFields
                 if (cells3.Length > 0)
                 {
                     // aabbs is for entire hulls.  This needs to be for each triangle in each hull
-                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABBRect(p)))).ToArray();
+                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).ToArray();
 
                     // Now compare each remaining candidate cell to each triangle of each hull
                     edgeMatches = GetBlockedCellsSprtEdgeMap(cells3).
@@ -290,7 +290,7 @@ namespace Game.Newt.Testers.FluidFields
                 #endregion
 
                 // Exit Function
-                return UtilityHelper.Iterate(cornerMatches, centerMatches, edgeMatches).ToArray();
+                return UtilityCore.Iterate(cornerMatches, centerMatches, edgeMatches).ToArray();
             }
 
             #region Private Methods
@@ -381,7 +381,7 @@ namespace Game.Newt.Testers.FluidFields
             private static bool IsEdgeMatch(Tuple<ITriangle, Rect3D> triangle1, ITriangle triangle2)
             {
                 // AABB
-                if (!triangle1.Item2.OverlapsWith(Math3D.GetAABBRect(triangle2)))
+                if (!triangle1.Item2.OverlapsWith(Math3D.GetAABB_Rect(triangle2)))
                 {
                     return false;
                 }
@@ -420,7 +420,7 @@ namespace Game.Newt.Testers.FluidFields
                 #region Filter AABB
 
                 // Remove non aabb matches
-                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABBRect(o[0].AllPoints)).ToArray();
+                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).ToArray();
 
                 Rectangle3DIndexedMapped[] cells2 = cells1.Where(o =>
                 {
@@ -444,7 +444,7 @@ namespace Game.Newt.Testers.FluidFields
                 if (cells2.Length > 0)
                 {
                     // aabbs is for entire hulls.  This needs to be for each triangle in each hull
-                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABBRect(p)))).ToArray();
+                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).ToArray();
 
                     // Now compare each remaining candidate cell to each triangle of each hull
                     edgeMatches = GetBlockedCellsSprtEdgeMap(cells2).
@@ -549,7 +549,7 @@ namespace Game.Newt.Testers.FluidFields
             private static bool IsEdgeMatch(Tuple<ITriangle, Rect3D> triangle1, ITriangle triangle2)
             {
                 // AABB
-                if (!triangle1.Item2.OverlapsWith(Math3D.GetAABBRect(triangle2)))
+                if (!triangle1.Item2.OverlapsWith(Math3D.GetAABB_Rect(triangle2)))
                 {
                     return false;
                 }
@@ -867,7 +867,7 @@ namespace Game.Newt.Testers.FluidFields
         {
             try
             {
-                MeshGeometry3D mesh = UtilityWPF.GetSphere(3, StaticRandom.NextDouble(.25, 1), StaticRandom.NextDouble(.25, 1), StaticRandom.NextDouble(.25, 1));
+                MeshGeometry3D mesh = UtilityWPF.GetSphere_LatLon(3, StaticRandom.NextDouble(.25, 1), StaticRandom.NextDouble(.25, 1), StaticRandom.NextDouble(.25, 1));
 
                 AddNewBody(mesh, true);
 
@@ -1330,10 +1330,10 @@ namespace Game.Newt.Testers.FluidFields
 
                 Color color = _colors.FluidLine;		// the property get returns a random color each time
 
-                Point3D position = Math3D.GetRandomVectorSpherical(FLUIDVISUALMAXPOS).ToPoint();
+                Point3D position = Math3D.GetRandomVector_Spherical(FLUIDVISUALMAXPOS).ToPoint();
 
                 double maxDistance = position.ToVector().Length;
-                maxDistance = UtilityHelper.GetScaledValue_Capped(maxDistance, FLUIDVISUALMAXPOS, 0d, 1d, StaticRandom.NextDouble());
+                maxDistance = UtilityCore.GetScaledValue_Capped(maxDistance, FLUIDVISUALMAXPOS, 0d, 1d, StaticRandom.NextDouble());
 
                 _fluidVisuals.Add(new FluidVisual(_viewport, modelFrom, modelTo, position, GetWorldFlow(), color, maxDistance));
             }
