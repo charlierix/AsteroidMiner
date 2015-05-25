@@ -189,7 +189,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// NOTE: It's assumed that energyTanks and ammoBoxes are actually container groups holding the actual tanks, but it
         /// could be the tanks passed in directly
         /// </summary>
-        public ConverterEnergyToAmmo(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks, IContainer ammoBoxes)
+        public ConverterEnergyToAmmo(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, IContainer ammoBoxes)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

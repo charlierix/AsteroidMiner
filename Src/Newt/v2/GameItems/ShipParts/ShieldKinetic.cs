@@ -184,7 +184,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ShieldKinetic(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer plasma)
+        public ShieldKinetic(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasma)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

@@ -655,9 +655,9 @@ namespace Game.Newt.v2.GameItems
         /// NOTE: If a derived class has custom props, then you must override this method and return your own derived dna.  Don't call
         /// base.GetDNA, but instead call base.FillDNA, which will fill out the properties that this class knows about
         /// </summary>
-        public virtual PartDNA GetDNA()
+        public virtual ShipPartDNA GetDNA()
         {
-            PartDNA retVal = new PartDNA();
+            ShipPartDNA retVal = new ShipPartDNA();
             FillDNA(retVal);
             return retVal;
         }
@@ -668,7 +668,7 @@ namespace Game.Newt.v2.GameItems
         /// NOTE: If a derived class has custom props, then you must override this method and store your own derived dna.  Don't call
         /// base.SetDNA, but instead call base.StoreDNA, which will store the properties that this class knows about
         /// </remarks>
-        public virtual void SetDNA(PartDNA dna)
+        public virtual void SetDNA(ShipPartDNA dna)
         {
             if (this.PartType != dna.PartType)
             {
@@ -693,7 +693,7 @@ namespace Game.Newt.v2.GameItems
         /// This will populate the dna class with the values from this base class.  You should only bother to override this method if your 
         /// inheritance will go 3+ deep, and each shell can fill up what it knows about
         /// </summary>
-        protected virtual void FillDNA(PartDNA dna)
+        protected virtual void FillDNA(ShipPartDNA dna)
         {
             dna.PartType = this.PartType;
             dna.Scale = this.Scale;		//NOTE: Scale, Position, Orientation used to store their values in transforms, but GetDNA could come from any thread, so I had to store a threadsafe vector as well as a transform.  ugly
@@ -709,7 +709,7 @@ namespace Game.Newt.v2.GameItems
             //    dna.ExternalLinks = 
             //}
         }
-        protected virtual void StoreDNA(PartDNA dna)
+        protected virtual void StoreDNA(ShipPartDNA dna)
         {
             if (this.PartType != dna.PartType)
             {
@@ -870,7 +870,7 @@ namespace Game.Newt.v2.GameItems
         /// 	World:
         /// 		PartDNA -> PartBase -> (which internally creates PartDesignBase)
         /// </remarks>
-        public PartBase(EditorOptions options, PartDNA dna)
+        public PartBase(EditorOptions options, ShipPartDNA dna)
         {
             if (dna.PartType != this.PartType)
             {
@@ -1027,7 +1027,7 @@ namespace Game.Newt.v2.GameItems
             private set;
         }
 
-        protected PartDNA DNA
+        protected ShipPartDNA DNA
         {
             get;
             private set;
@@ -1059,11 +1059,11 @@ namespace Game.Newt.v2.GameItems
         /// filling out the dna class.  This came about because of the need for the editor to have a certain amount of functionality, and the
         /// real world parts to have slightly more functionality.  But it's certainly a good candidate for rework
         /// </remarks>
-        public virtual PartDNA GetNewDNA()
+        public virtual ShipPartDNA GetNewDNA()
         {
             // Initially, I had this return a clone of this.DNA.  this.DNA should have the same values as the part's current properties, but the design
             // class stores the actual values.  So to remove possible errors, I decided to make this call Design.GetDNA
-            PartDNA retVal = this.Design.GetDNA();
+            ShipPartDNA retVal = this.Design.GetDNA();
 
             INeuronContainer thisCast = this as INeuronContainer;
             if (thisCast != null)
@@ -1241,7 +1241,7 @@ namespace Game.Newt.v2.GameItems
     /// 
     /// NOTE: The neurons and links can be null if the dna was built by the editor.
     /// </remarks>
-    public class PartDNA
+    public class ShipPartDNA
     {
         /// <summary>
         /// This is what type of part this is for
@@ -1332,15 +1332,60 @@ namespace Game.Newt.v2.GameItems
             set;
         }
 
-        public static PartDNA Clone(PartDNA dna)
+        public static ShipPartDNA Clone(ShipPartDNA dna)
         {
             // PartDNA could be a derived type, but since these are designed to be serializable, serialize it to do a deep clone
             using (MemoryStream stream = new MemoryStream())
             {
                 XamlServices.Save(stream, dna);
                 stream.Position = 0;
-                return XamlServices.Load(stream) as PartDNA;
+                return XamlServices.Load(stream) as ShipPartDNA;
             }
+        }
+    }
+
+    #endregion
+    #region Class: MapPartDNA
+
+    /// <summary>
+    /// This has some reuse with ShipPartDNA.  I could make a base class to hold the common items, but ship parts
+    /// and map parts will never be stored in the same list, and it just feels too formal
+    /// </summary>
+    public class MapPartDNA
+    {
+        public string PartType
+        {
+            get;
+            set;
+        }
+
+        // ShipPartDNA uses scale, but I think most map parts will just need a generic size.  May want to change this back to scale if that assumption is wrong
+        public double Radius
+        {
+            get;
+            set;
+        }
+
+        public Point3D Position
+        {
+            get;
+            set;
+        }
+        public Quaternion Orientation
+        {
+            get;
+            set;
+        }
+
+        public Vector3D Velocity
+        {
+            get;
+            set;
+        }
+        public Vector3D AngularVelocity
+        {
+            get;
+            set;
         }
     }
 

@@ -4625,7 +4625,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
                 AmmoBox ammoBox = new AmmoBox(_editorOptions, _itemOptions, dna);
                 ammoBox.RemovalMultiple = ammoBox.QuantityMax * .1d;
 
@@ -4652,7 +4652,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
                 FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 
                 double mass1 = fuelTank.TotalMass;
@@ -4675,7 +4675,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                 EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
                 double mass1 = energyTank.TotalMass;
@@ -4704,7 +4704,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < 3; cntr++)
                 {
-                    PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                    ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                     double xy = _rand.NextDouble() * 3d;
                     double z = _rand.NextDouble() * 3d;
                     dna.Scale = new Vector3D(xy, xy, z);
@@ -4782,7 +4782,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                 EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
                 dna = GetDefaultDNA(AmmoBox.PARTTYPE);
@@ -4809,7 +4809,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                 EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
                 dna = GetDefaultDNA(FuelTank.PARTTYPE);
@@ -4836,7 +4836,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
                 FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 
                 dna = GetDefaultDNA(EnergyTank.PARTTYPE);
@@ -4863,7 +4863,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                 EnergyTank energyTank = new EnergyTank(_editorOptions, _itemOptions, dna);
 
                 RadiationField radiation = new RadiationField();
@@ -4894,7 +4894,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
                 FuelTank fuelTank = new FuelTank(_editorOptions, _itemOptions, dna);
 
                 ThrusterDNA dna2 = new ThrusterDNA()
@@ -4931,7 +4931,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 
                 AmmoBox ammoBox = new AmmoBox(_editorOptions, _itemOptions, dna);
@@ -4954,7 +4954,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(AmmoBox.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 
                 AmmoBox ammoBox = new AmmoBox(_editorOptions, _itemOptions, dna);
@@ -4978,7 +4978,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
                 double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
                 dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
@@ -5002,7 +5002,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(FuelTank.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
                 double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
                 dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
@@ -5030,7 +5030,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(EnergyTank.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
                 double radius = (dna.Scale.X + dna.Scale.Y) * .5d;
                 dna.Scale = new Vector3D(radius, radius, dna.Scale.Z);
@@ -5054,7 +5054,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(ConverterEnergyToAmmo.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(ConverterEnergyToAmmo.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
                 double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
                 dna.Scale = new Vector3D(size, size, size);
@@ -5078,7 +5078,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(ConverterEnergyToFuel.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(ConverterEnergyToFuel.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
                 double size = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / 3d;
                 dna.Scale = new Vector3D(size, size, size);
@@ -5102,7 +5102,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dna = GetDefaultDNA(ConverterFuelToEnergy.PARTTYPE);
+                ShipPartDNA dna = GetDefaultDNA(ConverterFuelToEnergy.PARTTYPE);
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 
                 // It's inacurate to comment this out, but it tests the collision hull better
@@ -5195,9 +5195,9 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(-.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
-                parts.Add(new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(-.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
+                parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(.75, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
@@ -5222,8 +5222,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, .5), Orientation = Quaternion.Identity, Scale = new Vector3D(2, 2, .9) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, .5), Orientation = Quaternion.Identity, Scale = new Vector3D(2, 2, .9) });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(0, 0, -.5), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
@@ -5264,8 +5264,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1.3, 0, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-0.65, 1.125833025, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
@@ -5309,8 +5309,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(3, 0, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-0.65, .75, 2), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
@@ -5354,8 +5354,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
@@ -5399,8 +5399,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = Math3D.GetRandomVector_Circular_Shell(1.3).ToPoint(), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
@@ -5445,8 +5445,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, -1), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, .65) });
 
                 Vector3D referenceVect = new Vector3D(0, 0, 1);
 
@@ -5493,8 +5493,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
 
                 //parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
                 //parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(.5d, .5d, .5d), ThrusterType = ThrusterType.Two });
@@ -5553,8 +5553,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(3, 3, 1) });
 
                 ThrusterType thrustType = UtilityCore.GetRandomEnum<ThrusterType>(ThrusterType.Custom);
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(.5d, .5d, .5d), ThrusterDirections = ThrusterDesign.GetThrusterDirections(thrustType), ThrusterType = thrustType });
@@ -5610,8 +5610,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1.48216852903668, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1.65021551755816, 1.65021551755816, 1.65021551755816), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60730396412872, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 270), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
 
@@ -5657,8 +5657,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                List<PartDNA> parts = new List<PartDNA>();
-                parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0.0153375982352619), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
+                List<ShipPartDNA> parts = new List<ShipPartDNA>();
+                parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = new Point3D(0.611527511599856, 0, 0.0153375982352619), Orientation = new Quaternion(0, -0.706493084706277, 0, 0.707719945502605), Scale = new Vector3D(4.70545346938791, 4.70545346938791, 1.04748080326409) });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-1.48216852903668, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1.65021551755816, 1.65021551755816, 1.65021551755816), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60730396412872, 1.18811621237628, -0.0147591913688635), Orientation = new Quaternion(0, 0, -0.846976393198269, 0.531630500784946), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two_One), ThrusterType = ThrusterType.Two_Two_One });
                 parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = new Point3D(-2.60721450068017, -1.18828382189838, -0.0147591913688617), Orientation = new Quaternion(0, 0, -0.496864090131338, 0.867828367788216), Scale = new Vector3D(0.71390056433019, 0.71390056433019, 0.71390056433019), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two_One), ThrusterType = ThrusterType.Two_Two_One });
@@ -6178,8 +6178,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
                 //PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
                 //PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
@@ -6243,8 +6243,8 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -6277,8 +6277,8 @@ namespace Game.Newt.Testers
 
                 //PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
                 //PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 30), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -6980,9 +6980,9 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
         }
 
-        private static PartDNA GetDefaultDNA(string partType)
+        private static ShipPartDNA GetDefaultDNA(string partType)
         {
-            PartDNA retVal = new PartDNA();
+            ShipPartDNA retVal = new ShipPartDNA();
 
             retVal.PartType = partType;
 
@@ -6992,7 +6992,7 @@ namespace Game.Newt.Testers
 
             return retVal;
         }
-        private static void ModifyDNA(PartDNA dna, bool randSize, bool randOrientation)
+        private static void ModifyDNA(ShipPartDNA dna, bool randSize, bool randOrientation)
         {
             if (randSize)
             {

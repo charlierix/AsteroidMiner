@@ -1,4 +1,4 @@
-﻿<Window x:Class="Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2D"
+﻿<Window x:Class="Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2DWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:newton="clr-namespace:Game.Newt.v1.NewtonDynamics1;assembly=Game.Newt.v1.NewtonDynamics1"

@@ -85,6 +85,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AstMin2D\BackImageManager.cs" />
     <Compile Include="AstMin2D\CameraHelper.cs" />
     <Compile Include="AstMin2D\DefaultShips.cs" />
     <Compile Include="AstMin2D\InfoScreen.xaml.cs">
@@ -96,8 +97,10 @@
     </Compile>
     <Compile Include="AstMin2D\ItemOptionsAstMin2D.cs" />
     <Compile Include="AstMin2D\KeepItems2D.cs" />
-    <Compile Include="AstMin2D\Miner.xaml.cs">
-      <DependentUpon>Miner.xaml</DependentUpon>
+    <Compile Include="AstMin2D\MapForcesManager.cs" />
+    <Compile Include="AstMin2D\MapPopulationManager.cs" />
+    <Compile Include="AstMin2D\MinerWindow.xaml.cs">
+      <DependentUpon>MinerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="AstMin2D\MinimapHelper.cs" />
     <Compile Include="AstMin2D\Player.cs" />
@@ -138,7 +141,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="AstMin2D\Miner.xaml">
+    <Page Include="AstMin2D\MinerWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -27,8 +27,35 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
-    public partial class Miner : Window
+    /// <summary>
+    /// This is the main window of this game
+    /// </summary>
+    /// <remarks>
+    /// TODO: Emulate gravity/vector fields/jet streams
+    /// TODO: Add a sun
+    /// </remarks>
+    public partial class MinerWindow : Window
     {
+        #region Class: MineralPrice
+
+        private class MineralPrice
+        {
+            public MineralPrice(MineralType mineralType, double price, double min, double max)
+            {
+                this.MineralType = mineralType;
+                this.Price = price;
+                this.Min = min;
+                this.Max = max;
+            }
+
+            public readonly MineralType MineralType;
+            public readonly double Price;
+            public readonly double Min;
+            public readonly double Max;
+        }
+
+        #endregion
+
         #region Declaration Section
 
         /// <summary>
@@ -36,9 +63,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         /// This will be a subfolder of AsteroidMiner
         /// </summary>
         private const string FOLDER = "Miner2D";
-
-        public const double MINERAL_AVGVOLUME = .5d;
-        public const double MINERAL_DENSITYMULT = .05d;
 
         private Point3D _boundryMin;
         private Point3D _boundryMax;
@@ -51,11 +75,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private Map _map = null;
 
         private UpdateManager _updateManager = null;
+        private MapPopulationManager _mapPopulationManager = null;
+        private MapForcesManager _mapForcesManager = null;
+        private BackImageManager _backImageManager = null;
         private MinimapHelper _miniMap = null;
         private CameraHelper _cameraHelper = null;
-
-        //private DragHitShape _dragPlane = null;
-        private KeepItems2D _keep2D = null;
 
         private MaterialManager _materialManager = null;
         private int _material_Ship = -1;
@@ -86,13 +110,24 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private SpaceDockPanel _spaceDockPanel = null;      // this gets lazy loaded
         private InfoScreen _infoScreen = null;      // this gets lazy loaded
 
+        /// <summary>
+        /// This holds mineral types, prices from cheapest to most expensive
+        /// This is used when deciding what minerals to create when an asteroid explodes
+        /// </summary>
+        private static Lazy<MineralPrice[]> _pricesByMineralType = new Lazy<MineralPrice[]>(() =>
+            ((MineralType[])Enum.GetValues(typeof(MineralType))).
+                Select(o => new { MineralType = o, Price = Convert.ToDouble(ItemOptionsAstMin2D.GetCredits_Mineral(o)) * ItemOptionsAstMin2D.MINERAL_AVGVOLUME }).
+                Select(o => new MineralPrice(o.MineralType, o.Price, o.Price / 2d, o.Price * 2d)).
+                OrderBy(o => o.Price).
+                ToArray());
+
         private bool _initialized = false;
 
         #endregion
 
         #region Constructor
 
-        public Miner()
+        public MinerWindow()
         {
             InitializeComponent();
 
@@ -222,7 +257,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _map.ShouldShowSnapshotLines = false;
                 _map.ShouldSnapshotCentersDrift = true;
 
-                _map.ItemAdded += new EventHandler<MapItemArgs>(Map_ItemAdded);
                 _map.ItemRemoved += new EventHandler<MapItemArgs>(Map_ItemRemoved);
 
                 #endregion
@@ -232,19 +266,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     new Type[] { typeof(ShipPlayer), typeof(SpaceStation2D), typeof(Projectile) },
                     new Type[] { typeof(ShipPlayer) },
                     _map);
-
-                #endregion
-                #region Keep 2D
-
-                //TODO: drag plane should either be a plane or a large cylinder, based on the current (level|scene|stage|area|arena|map|place|region|zone)
-
-                // Snap everything to the XY plane
-                //_dragPlane = new DragHitShape();
-                //_dragPlane.SetShape_Plane(new Triangle(new Point3D(-1, -1, 0), new Point3D(1, -1, 0), new Point3D(0, 1, 0)));
-
-                // This will keep objects onto that plane using forces (not velocities)
-                _keep2D = new KeepItems2D();
-                //_keep2D.SnapShape = _dragPlane;
 
                 #endregion
                 #region Player
@@ -265,9 +286,25 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _cameraHelper = new CameraHelper(_player, _camera, _cameraMap, _miniMap);
 
                 #endregion
+                #region MapPopulationManager
 
-                //TODO: Don't generate all the stars at once, only what's under the view
-                CreateStars();
+                _mapPopulationManager = new MapPopulationManager(_map, _world, new Point3D(_boundryMin.X, _boundryMin.Y, 0), new Point3D(_boundryMax.X, _boundryMax.Y, 0), _material_Asteroid, _material_Mineral, GetAsteroidMassByRadius, GetMineralsFromDestroyedAsteroid, ItemOptionsAstMin2D.MINASTEROIDRADIUS);
+                _updateManager.AddNonMapItem(_mapPopulationManager, TokenGenerator.NextToken());
+
+                #endregion
+                #region MapForcesManager
+
+                _mapForcesManager = new MapForcesManager(_map, _boundryMin, _boundryMax);
+                _updateManager.AddNonMapItem(_mapForcesManager, TokenGenerator.NextToken());
+
+                #endregion
+                #region BackImageManager
+
+                _backImageManager = new BackImageManager(backgroundCanvas, _player);
+
+                #endregion
+
+                CreateStars();      //TODO: Move this to BackImageManager
                 //CreateStarsGrid();
                 //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
                 CreateShip(DefaultShipType.Basic);
@@ -292,7 +329,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 _updateManager.Dispose();
 
-                _keep2D.Dispose();
+                _mapForcesManager.Dispose();
 
                 _map.Dispose();		// this will dispose the physics bodies
                 _map = null;
@@ -312,49 +349,44 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 _updateManager.Update_MainThread(e.ElapsedTime);
 
-                _keep2D.Update(e.ElapsedTime);
-
+                _backImageManager.Update();
+                _cameraHelper.Update();
                 _miniMap.Update();
                 _progressBars.Update();
 
-                if (_player.Ship != null)
+                Point3D position = _player.Ship.PositionWorld;
+
+                #region Space Stations
+
+                SpaceStation2D currentlyOverStation = null;
+
+                foreach (SpaceStation2D station in _stations)
                 {
-                    Point3D position = _player.Ship.PositionWorld;
+                    // See if the ship is over the station
+                    Point3D stationPosition = station.PositionWorld;
+                    stationPosition.Z = 0;
 
-                    #region Space Stations
-
-                    SpaceStation2D currentlyOverStation = null;
-
-                    foreach (SpaceStation2D station in _stations)
+                    if ((stationPosition - position).LengthSquared < station.Radius * station.Radius)
                     {
-                        // See if the ship is over the station
-                        Point3D stationPosition = station.PositionWorld;
-                        stationPosition.Z = 0;
-
-                        if ((stationPosition - position).LengthSquared < station.Radius * station.Radius)
-                        {
-                            currentlyOverStation = station;
-                        }
+                        currentlyOverStation = station;
                     }
-
-                    // Store the station that the ship is over
-                    if (currentlyOverStation == null)
-                    {
-                        statusMessage.Content = "";
-                    }
-                    else
-                    {
-                        statusMessage.Content = "Press space to enter station";
-
-                        //TODO:  Play a sound if this is the first time they entered the station's range
-                    }
-
-                    _currentlyOverStation = currentlyOverStation;
-
-                    #endregion
-
-                    _cameraHelper.Update();
                 }
+
+                // Store the station that the ship is over
+                if (currentlyOverStation == null)
+                {
+                    statusMessage.Content = "";
+                }
+                else
+                {
+                    statusMessage.Content = "Press space to enter station";
+
+                    //TODO:  Play a sound if this is the first time they entered the station's range
+                }
+
+                _currentlyOverStation = currentlyOverStation;
+
+                #endregion
             }
             catch (Exception ex)
             {
@@ -362,51 +394,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private void Map_ItemAdded(object sender, MapItemArgs e)
-        {
-            try
-            {
-                if (e.Item is SpaceStation || e.Item is Projectile)     // guns are mounted above and below the plane, and if projectiles are smashed onto the plane, they sometimes collide with each other or the ship
-                {
-                    // Skip 2D
-                    return;
-                }
-
-                bool limitRotation = e.Item is Ship;
-
-                double? animateDuration = null;
-                if (e.Item is Asteroid || e.Item is Mineral)
-                {
-                    // Doing this in case the new asteroid is the child of an exploding asteroid.  The parent asteroid can shatter in 3D, then ease
-                    // back onto the plane
-                    animateDuration = 6;
-                }
-
-                _keep2D.Add(e.Item, limitRotation, animateDuration);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
         private void Map_ItemRemoved(object sender, MapItemArgs e)
         {
-            try
+            if (e.Item is IDisposable)
             {
-                _keep2D.Remove(e.Item);
-
-                if (e.Item is IDisposable)
-                {
-                    ((IDisposable)e.Item).Dispose();
-                }
-                else if (e.Item.PhysicsBody != null)
-                {
-                    e.Item.PhysicsBody.Dispose();
-                }
+                ((IDisposable)e.Item).Dispose();
             }
-            catch (Exception ex)
+            else if (e.Item.PhysicsBody != null)
             {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                e.Item.PhysicsBody.Dispose();
             }
         }
 
@@ -579,6 +575,32 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     {
                         _player.Credits += 10000M;
                     }
+                    else if (e.Key == Key.F4)
+                    {
+                        #region Refill Containers
+
+                        if (_player.Ship.Ammo != null)
+                        {
+                            _player.Ship.Ammo.QuantityCurrent = _player.Ship.Ammo.QuantityMax;
+                        }
+
+                        if (_player.Ship.Energy != null)
+                        {
+                            _player.Ship.Energy.QuantityCurrent = _player.Ship.Energy.QuantityMax;
+                        }
+
+                        if (_player.Ship.Fuel != null)
+                        {
+                            _player.Ship.Fuel.QuantityCurrent = _player.Ship.Fuel.QuantityMax;
+                        }
+
+                        if (_player.Ship.Plasma != null)
+                        {
+                            _player.Ship.Plasma.QuantityCurrent = _player.Ship.Plasma.QuantityMax;
+                        }
+
+                        #endregion
+                    }
                     else if (e.Key == Key.F5)
                     {
                         ApplyShipRotation(new Vector3D(1, 0, 0));
@@ -649,24 +671,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             try
             {
                 ShowInfoScreen();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void CheckBoxApply_Checked(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!_initialized)
-                {
-                    return;
-                }
-
-                _keep2D.ShouldApplyForces = chkApplyLinear.IsChecked.Value;
-                _keep2D.ShouldApplyTorques = chkApplyRotation.IsChecked.Value;
             }
             catch (Exception ex)
             {
@@ -766,12 +770,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private void CreateStars()
         {
-            // When the size is 400 (doubled is 800, with margins is 880), the number of stars that looks good is 1000.  So I want to keep that same density
-            const double DENSITY = 500d / (880d * 880d);
-            //const double DENSITY = 2500d / (880d * 880d);
+            // Putting the stars in 3D gives a really cool parallax effect.  Not realistic for the small distances the ship travels, but still
+            // really cool.  But you need so many stars, and its a real hit on graphics performance (especially the laptop)
+            //
+            // The stars should be a 2D image, and other debris should be 3D (or maybe just a few 2D sheets sliding at different rates)
 
-            //Vector3D starMin = new Vector3D(_boundryMin.X * 1.1, _boundryMin.Y * 1.1, _boundryMin.Z * 10);
-            //Vector3D starMax = new Vector3D(_boundryMax.X * 1.1, _boundryMax.Y * 1.1, _boundryMin.Z * 1.5);
+            // When the size is 400 (doubled is 800, with margins is 880), the number of stars that looks good is 1000.  So I want to keep that same density
+            //const double DENSITY = 500d / (880d * 880d);
+            //const double DENSITY = 2500d / (880d * 880d);
+            const double DENSITY = 200d / (880d * 880d);
+
             Vector3D starMin = new Vector3D(_boundryMin.X * 1.1, _boundryMin.Y * 1.1, _boundryMin.Z * 20);
             Vector3D starMax = new Vector3D(_boundryMax.X * 1.1, _boundryMax.Y * 1.1, _boundryMin.Z * 1.5);
 
@@ -787,12 +795,20 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             for (int cntr = 0; cntr < numStars; cntr++)
             {
+                Vector3D position = Math3D.GetRandomVector(starMin, starMax);
+                double scale = UtilityCore.GetScaledValue(1, 1.5, starMax.Z, starMin.Z, position.Z);
+
                 // Geometry Model
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = materials;
                 geometry.BackMaterial = materials;
                 geometry.Geometry = _sharedVisuals.StarMesh;
-                geometry.Transform = new TranslateTransform3D(Math3D.GetRandomVector(starMin, starMax));
+
+                Transform3DGroup transform = new Transform3DGroup();
+                transform.Children.Add(new ScaleTransform3D(scale, scale, scale));      // Making farther away stars slightly larger so that they are more visible
+                transform.Children.Add(new TranslateTransform3D(position));
+
+                geometry.Transform = transform;
 
                 geometries.Children.Add(geometry);
             }
@@ -955,9 +971,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         private void CreateAsteroids_Build(double radius, Point3D position)
         {
-            var getMass = new Func<double, ITriangleIndexed[], double>((rad, tris) => 2000d + (rad * 2000d));      // this isn't as realistic as 4/3 pi r^3, but is more fun and stable
-
-            Asteroid asteroid = new Asteroid(radius, getMass, position, _world, _map, _material_Asteroid, GetMineralsFromDestroyedAsteroid2, _material_Mineral);
+            Asteroid asteroid = new Asteroid(radius, GetAsteroidMassByRadius, position, _world, _map, _material_Asteroid, GetMineralsFromDestroyedAsteroid, _material_Mineral, ItemOptionsAstMin2D.MINASTEROIDRADIUS);
 
             asteroid.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(1d);
             asteroid.PhysicsBody.Velocity = Math3D.GetRandomVector_Circular(6d);
@@ -999,104 +1013,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             #endregion
         }
 
-        /// <summary>
-        /// This is a delagate that gets called whenever an asteroid blows up
-        /// </summary>
-        private static Asteroid.MineralDefinition[] GetMineralsFromDestroyedAsteroid1(double destroyedMass)
-        {
-            int count = StaticRandom.Next(3);
-
-            Asteroid.MineralDefinition[] retVal = new Asteroid.MineralDefinition[count];
-
-            for (int cntr = 0; cntr < count; cntr++)
-            {
-                double volume = StaticRandom.NextPercent(MINERAL_AVGVOLUME, 2);
-
-                retVal[cntr] = new Asteroid.MineralDefinition(UtilityCore.GetRandomEnum<MineralType>(), volume, MINERAL_DENSITYMULT, volume / MINERAL_AVGVOLUME);
-            }
-
-            return retVal;
-        }
-        private static Asteroid.MineralDefinition[] GetMineralsFromDestroyedAsteroid2(double destroyedMass)
-        {
-            const double MASS_MONEY_RATIO = 1d / 750d;
-
-            Random rand = StaticRandom.GetRandomForThread();
-
-            // Convert mass into money
-            double credits = destroyedMass * MASS_MONEY_RATIO;
-            credits *= rand.NextPercent(1, 1.5);
-
-            // Get a list of candidates
-            var pricesByMineralType = ((MineralType[])Enum.GetValues(typeof(MineralType))).
-                Select(o => new { MineralType = o, Price = Convert.ToDouble(ItemOptionsAstMin2D.GetCredits_Mineral(o)) * MINERAL_AVGVOLUME }).
-                Select(o => new { o.MineralType, o.Price, Min = o.Price / 2d, Max = o.Price * 2d }).
-                OrderBy(o => o.Price).
-                ToArray();
-
-            //{ MineralType = Ice, Price = 1.5, Min = 0.75, Max = 3.0 }
-            //{ MineralType = Graphite, Price = 3.0, Min = 1.5, Max = 6.0 }
-            //{ MineralType = Diamond, Price = 4.5, Min = 2.25, Max = 9.0 }
-            //{ MineralType = Emerald, Price = 5.25, Min = 2.625, Max = 10.5 }
-            //{ MineralType = Saphire, Price = 5.25, Min = 2.625, Max = 10.5 }
-            //{ MineralType = Ruby, Price = 5.25, Min = 2.625, Max = 10.5 }
-            //{ MineralType = Iron, Price = 10.5, Min = 5.25, Max = 21.0 }
-            //{ MineralType = Gold, Price = 15.0, Min = 7.5, Max = 30.0 }
-            //{ MineralType = Platinum, Price = 22.5, Min = 11.25, Max = 45.0 }
-            //{ MineralType = Rixium, Price = 75.0, Min = 37.5, Max = 150.0 }
-
-
-            List<Asteroid.MineralDefinition> retVal = new List<Asteroid.MineralDefinition>();
-
-            double remaining = credits;
-
-            while (true)
-            {
-                //var candidates = pricesByMineralType.
-                //    Where(o => o.Min < remaining).
-                //    ToArray();
-
-                var candidates = pricesByMineralType.
-                    Where(o => o.Price * .85 < remaining).
-                    ToArray();
-
-                if (candidates.Length == 0)
-                {
-                    candidates = pricesByMineralType.
-                        Where(o => o.Min < remaining).
-                        ToArray();
-
-                    if (candidates.Length == 0)
-                    {
-                        break;
-                    }
-                }
-
-                double percentIntoList = rand.NextPow(.5, isPlusMinus: false);
-
-                int index = GetIndexIntoList(percentIntoList, candidates.Length);
-
-
-                double minRange = candidates[index].Min;
-                double maxRange = candidates[index].Max;
-                if (maxRange > remaining) maxRange = remaining;
-
-                double currentCredits = rand.NextDouble(minRange, maxRange);
-                double scale = currentCredits / candidates[index].Price;
-                double currentVolume = scale * MINERAL_AVGVOLUME;
-
-                retVal.Add(new Asteroid.MineralDefinition(candidates[index].MineralType, currentVolume, MINERAL_DENSITYMULT, scale));
-
-                remaining -= currentCredits;
-            }
-
-
-            //TODO: Divide the remaining credits randomly among the minerals
-
-
-            return retVal.ToArray();
-        }
-
         private void CreateMinerals()
         {
             double minPos = 20;
@@ -1112,62 +1028,28 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             for (int cntr = 0; cntr < 15; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Iron, position);
+                CreateMineralsSprtBuild(MineralType.Graphite, position);
             }
 
-            for (int cntr = 0; cntr < 15; cntr++)
+            for (int cntr = 0; cntr < 10; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Graphite, position);
+                CreateMineralsSprtBuild(MineralType.Diamond, position);
             }
 
             for (int cntr = 0; cntr < 3; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Gold, position);
+                CreateMineralsSprtBuild(MineralType.Emerald, position);
             }
-
-            //for (int cntr = 0; cntr < 6; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Platinum, position);
-            //}
-
-            //for (int cntr = 0; cntr < 5; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Emerald, position);
-            //}
-
-            //for (int cntr = 0; cntr < 4; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Saphire, position);
-            //}
-
-            //for (int cntr = 0; cntr < 4; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Ruby, position);
-            //}
-
-            //for (int cntr = 0; cntr < 3; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Diamond, position);
-            //}
-
-            //for (int cntr = 0; cntr < 2; cntr++)
-            //{
-            //    position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-            //    CreateMineralsSprtBuild(MineralType.Rixium, position);
-            //}
         }
         private void CreateMineralsSprtBuild(MineralType mineralType, Point3D position)
         {
-            double volume = StaticRandom.NextPercent(MINERAL_AVGVOLUME, 2);
+            double volume = StaticRandom.NextPercent(ItemOptionsAstMin2D.MINERAL_AVGVOLUME, 2);
+            decimal credits = ItemOptionsAstMin2D.GetCredits_Mineral(mineralType, volume);
+            double scale = volume / ItemOptionsAstMin2D.MINERAL_AVGVOLUME;
 
-            Mineral mineral = new Mineral(mineralType, position, volume, _world, _material_Mineral, _sharedVisuals, MINERAL_DENSITYMULT, volume / MINERAL_AVGVOLUME);
+            Mineral mineral = new Mineral(mineralType, position, volume, _world, _material_Mineral, _sharedVisuals, ItemOptionsAstMin2D.MINERAL_DENSITYMULT, scale, credits);
 
             mineral.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(1d);
             mineral.PhysicsBody.Velocity = Math3D.GetRandomVector_Circular(6d);
@@ -1189,12 +1071,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private async void CreateShip_3DFlyer()
         {
-            List<PartDNA> parts = new List<PartDNA>();
+            List<ShipPartDNA> parts = new List<ShipPartDNA>();
 
-            parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1, 0, 0), Scale = new Vector3D(1, 1, 1) });
-            parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1, 0, 0), Scale = new Vector3D(1, 1, 1) });
-            parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -1), Scale = new Vector3D(1, 1, 1) });
-            parts.Add(new PartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 1), Scale = new Vector3D(1, 1, 1) });
+            parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1, 0, 0), Scale = new Vector3D(1, 1, 1) });
+            parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1, 0, 0), Scale = new Vector3D(1, 1, 1) });
+            parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -1), Scale = new Vector3D(1, 1, 1) });
+            parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 1), Scale = new Vector3D(1, 1, 1) });
 
             parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1, 0, -1), Scale = new Vector3D(0.386525690798199, 0.386525690798199, 0.386525690798199), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two_Two), ThrusterType = ThrusterType.Two_Two_Two });
             parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1, 0, -1), Scale = new Vector3D(0.386525690798199, 0.386525690798199, 0.386525690798199), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two_Two), ThrusterType = ThrusterType.Two_Two_Two });
@@ -1240,21 +1122,97 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             return ship;
         }
 
-        #endregion
-
-        //TODO: Put this into UtilityCore
-        private static int GetIndexIntoList(double percent, int count)
+        private static double GetAsteroidMassByRadius(double radius, ITriangleIndexed[] triangles)
         {
-            if (count <= 0)
+            // this isn't as realistic as 4/3 pi r^3, but is more fun and stable
+            return 4000d * Math.Pow(radius, 1.5d);
+        }
+        /// <summary>
+        /// This is a delagate that gets called whenever an asteroid blows up
+        /// </summary>
+        private static MineralDNA[] GetMineralsFromDestroyedAsteroid(double destroyedMass)
+        {
+            //const double MASS_MONEY_RATIO = 1d / 750d;
+            const double MASS_MONEY_RATIO = 1d / 600d;
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            List<MineralDNA> retVal = new List<MineralDNA>();
+
+            // Convert mass into money
+            double credits = destroyedMass * MASS_MONEY_RATIO;
+            credits *= rand.NextPercent(1, 1.5);
+
+            double remaining = credits;
+
+            #region Build minerals
+
+            while (true)
             {
-                throw new ArgumentException("Count must be greater than zero");
+                // Figure out which materials can be created
+                var candidates = _pricesByMineralType.Value.
+                    Where(o => o.Price * .85 < remaining).
+                    ToArray();
+
+                if (candidates.Length == 0)
+                {
+                    candidates = _pricesByMineralType.Value.
+                        Where(o => o.Min < remaining).
+                        ToArray();
+
+                    if (candidates.Length == 0)
+                    {
+                        break;
+                    }
+                }
+
+                // Pick a material - give a strong preference to the more valuable ones
+                double percentIntoList = rand.NextPow(.1, isPlusMinus: false);
+
+                int index = UtilityCore.GetIndexIntoList(percentIntoList, candidates.Length);
+
+                // Figure out how much money this mineral should be
+                double minRange = candidates[index].Min;
+                double maxRange = candidates[index].Max;
+                if (maxRange > remaining) maxRange = remaining;
+
+                double currentCredits = rand.NextDouble(minRange, maxRange);
+
+                remaining -= currentCredits;
+
+                // Create it
+                retVal.Add(ItemOptionsAstMin2D.GetMineral(candidates[index].MineralType, Convert.ToDecimal(currentCredits)));
+
+                if (remaining < credits * .33)
+                {
+                    // Don't want to make a bunch of tiny minerals
+                    break;
+                }
             }
 
-            int retVal = Convert.ToInt32(Math.Floor(count * percent));
-            if (retVal < 0) retVal = 0;
-            if (retVal >= count) retVal = count - 1;
+            #endregion
+            #region Distribute remainder money
 
-            return retVal;
+            // Sort it so the smallest mineral will take from the remainder first.  Since the amount taken from the remainder is just rand(0 to remainder), the first
+            // one will have the highest chance to take the most.
+            retVal = retVal.OrderBy(o => o.Volume).ToList();
+
+            for (int cntr = 0; cntr < retVal.Count; cntr++)
+            {
+                // Credits
+                double currentCredits = cntr == retVal.Count - 1 ? remaining : rand.NextDouble(remaining);      // take some portion of remaining
+                remaining -= currentCredits;
+                currentCredits += Convert.ToDouble(retVal[cntr].Credits);       // add the mineral's current credit value
+
+                // Recreate it
+                retVal[cntr] = ItemOptionsAstMin2D.GetMineral(retVal[cntr].MineralType, Convert.ToDecimal(currentCredits));
+            }
+
+            #endregion
+
+            return retVal.ToArray();
         }
+
+        #endregion
     }
 }

@@ -314,7 +314,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ShieldEnergy(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer plasma)
+        public ShieldEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasma)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -363,7 +363,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, PartDNA dna, ItemOptions itemOptions)
+        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             // Just assume it's a sphere
             double radX = dna.Scale.X * .5;

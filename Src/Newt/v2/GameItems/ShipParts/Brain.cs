@@ -422,7 +422,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public Brain(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks)
+        public Brain(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -593,9 +593,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Public Methods
 
-        public override PartDNA GetNewDNA()
+        public override ShipPartDNA GetNewDNA()
         {
-            PartDNA retVal = this.Design.GetDNA();
+            ShipPartDNA retVal = this.Design.GetDNA();
 
             //NOTE: The design class doesn't hold neurons, since it's only used by the editor, so fill out the rest of the dna here
             retVal.Neurons = _neurons.Select(o => o.Position).ToArray();
@@ -719,7 +719,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static void GetMass(out double mass, out double volume, out double radius, PartDNA dna, ItemOptions itemOptions)
+        private static void GetMass(out double mass, out double volume, out double radius, ShipPartDNA dna, ItemOptions itemOptions)
         {
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// they should be identical anyway
             radius *= BrainDesign.SCALE;		// scale it
@@ -728,7 +728,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             mass = volume * itemOptions.BrainDensity;
         }
 
-        private static Neuron_Fade[] CreateBrainChemicals(PartDNA dna, ItemOptions itemOptions)
+        private static Neuron_Fade[] CreateBrainChemicals(ShipPartDNA dna, ItemOptions itemOptions)
         {
             const double K_UP = 50d;
             const double K_DOWN = 750d;
@@ -764,7 +764,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Exit Function
             return positions.Select(o => new Neuron_Fade(o.ToPoint(), K_UP, K_DOWN, VALUECUTOFF)).ToArray();
         }
-        private static Neuron_NegPos[] CreateNeurons(PartDNA dna, ItemOptions itemOptions, Point3D[] brainChemicalPositions)
+        private static Neuron_NegPos[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, Point3D[] brainChemicalPositions)
         {
             // Figure out how many to make
             double radius, volume;
@@ -783,7 +783,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return positions.Select(o => new Neuron_NegPos(o.ToPoint())).ToArray();
         }
 
-        private static void GetNeuronVolume(out double radius, out double volume, PartDNA dna, ItemOptions itemOptions)
+        private static void GetNeuronVolume(out double radius, out double volume, ShipPartDNA dna, ItemOptions itemOptions)
         {
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway

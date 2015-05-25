@@ -199,7 +199,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterMatterToEnergy(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks)
+        public ConverterMatterToEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

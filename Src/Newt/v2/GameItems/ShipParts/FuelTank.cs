@@ -276,7 +276,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public FuelTank(EditorOptions options, ItemOptions itemOptions, PartDNA dna)
+        public FuelTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -534,7 +534,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// Got ellipse circumference equation here:
         /// http://paulbourke.net/geometry/ellipsecirc/
         /// </remarks>
-        internal static Container GetContainer(out double surfaceArea, out Vector3D actualScale, out double radius, ItemOptions itemOptions, PartDNA dna)
+        internal static Container GetContainer(out double surfaceArea, out Vector3D actualScale, out double radius, ItemOptions itemOptions, ShipPartDNA dna)
         {
             Container retVal = new Container();
 

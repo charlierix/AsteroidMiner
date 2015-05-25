@@ -60,6 +60,7 @@
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="1*"/>
@@ -119,12 +120,13 @@
                     <ListBoxItem Content="Clustered Points" Name="itemClusteredPoints" MouseUp="itemClusteredPoints_MouseUp"/>
                     <ListBoxItem Content="Shadows" Name="itemShadows" MouseUp="itemShadows_MouseUp"/>
                     <ListBoxItem Content="Curves" Name="itemCurves" MouseUp="itemCurves_MouseUp"/>
+                    <ListBoxItem Visibility="Collapsed" Content="Clouds" Name="itemClouds" MouseUp="itemClouds_MouseUp"/>
+                    <ListBoxItem Content="Flags" Name="itemFlags" MouseUp="itemFlags_MouseUp"/>
                 </ListBox>
 
                 <!-- Misc -->
                 <Label Content="Misc" Style="{StaticResource subHeaderLabel}"/>
                 <ListBox>
-                    <ListBoxItem Visibility="Collapsed" Content="Neural Net" Name="itemNeuralNet" MouseUp="itemNeuralNet_MouseUp"/>
                     <ListBoxItem Content="Fluid Painter 2D" Name="itemPainter" MouseUp="itemPainter_MouseUp"/>
                     <ListBoxItem Content="Fluid Painter 3D" Name="itemPainter3D" MouseUp="itemPainter3D_MouseUp"/>
                 </ListBox>
@@ -133,26 +135,47 @@
 
         <ScrollViewer Grid.Column="2" Grid.Row="0">
             <StackPanel>
+                <!-- Neural -->
+                <Label Content="Neural" Style="{StaticResource subHeaderLabel}"/>
+                <ListBox>
+                    <ListBoxItem Visibility="Collapsed" Content="Neural Net" Name="itemNeuralNet" MouseUp="itemNeuralNet_MouseUp"/>
+                    <ListBoxItem Content="Encog XOR" Name="itemEncogXOR" MouseUp="itemEncogXOR_MouseUp"/>
+                    <ListBoxItem Content="Encog OCR" Name="itemEncogOCR" MouseUp="itemEncogOCR_MouseUp"/>
+                    <ListBoxItem Visibility="Collapsed" Content="Image Filters" Name="itemImageFilters" MouseUp="itemImageFilters_MouseUp"/>
+                </ListBox>
+
                 <!-- Newton 2.36 -->
                 <Label Style="{StaticResource subHeaderLabel}">Newton 2.36</Label>
                 <ListBox>
                     <ListBoxItem Content="Global Item Stats" Name="itemGlobalStats" MouseUp="itemGlobalStats_MouseUp"/>
                     <ListBoxItem Content="Newton 2" Name="itemNewt2" MouseUp="itemNewt2_MouseUp"/>
-                    <ListBoxItem Content="Multi Worlds (own threads)" Name="itemMultithreadWorlds" MouseUp="itemMultithreadWorlds_MouseUp"/>
                     <ListBoxItem Content="Tower Wrecker" Name="itemTowerWrecker" Style="{StaticResource boldItem}" MouseUp="itemTowerWrecker_MouseUp"/>
-                    <ListBoxItem Content="Wind Tunnel" Name="itemWindTunnel" MouseUp="itemWindTunnel_MouseUp"/>
-                    <ListBoxItem Content="Wind Tunnel 2" Name="itemWindTunnel2" MouseUp="itemWindTunnel2_MouseUp"/>
-                    <ListBoxItem Content="Asteroid Field" Name="itemAsteroidField" MouseUp="itemAsteroidField_MouseUp"/>
-                    <ListBoxItem Content="Ship Editor" Name="itemShipEditor" Style="{StaticResource boldItem}" MouseUp="itemShipEditor_MouseUp"/>
+                    <ListBoxItem Content="Multi Worlds (own threads)" Name="itemMultithreadWorlds" MouseUp="itemMultithreadWorlds_MouseUp"/>
+                    <ListBoxItem Content="Chase Forces" Name="itemChaseForces" MouseUp="itemChaseForces_MouseUp"/>
+                    <ListBoxItem Content="Arcanorum" Name="itemArcanorum" Style="{StaticResource boldItem}" MouseUp="itemArcanorum_MouseUp"/>
+                </ListBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="3" Grid.Row="0">
+            <StackPanel>
+                <!-- Newton 2.36 -->
+                <StackPanel Orientation="Horizontal">
+                    <Label Style="{StaticResource subHeaderLabel}">Newton 2.36</Label>
+                    <Label Content="(continued)" Style="{StaticResource subHeaderLabelExtra}"/>
+                </StackPanel>
+                <ListBox>
                     <ListBoxItem Content="Ship Part Tester" Name="itemShipPartTester" MouseUp="itemShipPartTester_MouseUp"/>
                     <ListBoxItem Content="Overlapping Parts" Name="itemOverlappingPartsTester" MouseUp="itemOverlappingPartsTester_MouseUp"/>
+                    <ListBoxItem Content="Ship Editor" Name="itemShipEditor" Style="{StaticResource boldItem}" MouseUp="itemShipEditor_MouseUp"/>
                     <ListBoxItem Content="Brain Tester" Name="itemBrainTester" MouseUp="itemBrainTester_MouseUp"/>
                     <ListBoxItem Content="Brain Tester 2" Name="itemBrainTester2" MouseUp="itemBrainTester2_MouseUp"/>
                     <ListBoxItem Content="Flying Beans" Name="itemFlyingBeans" Style="{StaticResource boldItem}" MouseUp="itemFlyingBeans_MouseUp"/>
                     <ListBoxItem Content="Ship Camera Tester" Name="itemShipCameraTester" MouseUp="itemShipCameraTester_MouseUp"/>
+                    <ListBoxItem Content="Wind Tunnel" Name="itemWindTunnel" MouseUp="itemWindTunnel_MouseUp"/>
+                    <ListBoxItem Content="Wind Tunnel 2" Name="itemWindTunnel2" MouseUp="itemWindTunnel2_MouseUp"/>
                     <ListBoxItem Content="Gene Pool" Name="itemGenePool" Style="{StaticResource boldItem}" MouseUp="itemGenePool_MouseUp"/>
-                    <ListBoxItem Content="Chase Forces" Name="itemChaseForces" MouseUp="itemChaseForces_MouseUp"/>
-                    <ListBoxItem Content="Arcanorum" Name="itemArcanorum" Style="{StaticResource boldItem}" MouseUp="itemArcanorum_MouseUp"/>
+                    <ListBoxItem Content="Asteroid Field" Name="itemAsteroidField" MouseUp="itemAsteroidField_MouseUp"/>
                     <ListBoxItem Content="Asteroid Miner 2D" Name="itemAstMiner2D_2" Style="{StaticResource boldItem}" MouseUp="itemAstMiner2D_2_MouseUp"/>
                 </ListBox>
             </StackPanel>
@@ -164,7 +187,7 @@
             </CheckBox.ToolTip>
         </CheckBox>
 
-        <StackPanel Grid.Column="2" Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
+        <StackPanel Grid.Column="3" Grid.Row="2" HorizontalAlignment="Right" Orientation="Horizontal">
             <!-- Settings -->
             <TextBlock >
                 <Hyperlink Click="SettingsFolder_Click">

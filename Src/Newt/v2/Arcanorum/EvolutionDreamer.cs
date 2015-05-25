@@ -256,18 +256,18 @@ namespace Game.Newt.v2.Arcanorum
 
             #region Parts
 
-            List<PartDNA> parts = new List<PartDNA>();
+            List<ShipPartDNA> parts = new List<ShipPartDNA>();
 
             double partSize;
 
             // Homing
             partSize = rand.NextPercent(1, .5);
-            parts.Add(new PartDNA() { PartType = SensorHoming.PARTTYPE, Position = new Point3D(0, 0, 2.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+            parts.Add(new ShipPartDNA() { PartType = SensorHoming.PARTTYPE, Position = new Point3D(0, 0, 2.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
 
             // Vision
             //TODO: Support filtering by type
             partSize = rand.NextPercent(1, .5);
-            parts.Add(new PartDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+            parts.Add(new ShipPartDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
 
             // Brains
             int numBrains = 1 + Convert.ToInt32(rand.NextPow(5, 1d, false) * 4);
@@ -282,12 +282,12 @@ namespace Game.Newt.v2.Arcanorum
                     position = Math3D.GetRandomVector_Circular(1).ToPoint();
                 }
 
-                parts.Add(new PartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+                parts.Add(new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
             }
 
             // MotionController_Linear - always exactly one of these
             partSize = rand.NextPercent(1, .5);
-            parts.Add(new PartDNA() { PartType = MotionController_Linear.PARTTYPE, Position = new Point3D(0, 0, -1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+            parts.Add(new ShipPartDNA() { PartType = MotionController_Linear.PARTTYPE, Position = new Point3D(0, 0, -1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
 
             // Store it
             bot.Parts = parts.ToArray();

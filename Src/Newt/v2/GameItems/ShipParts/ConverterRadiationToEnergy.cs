@@ -219,7 +219,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return CreateGeometry(true);
         }
 
-        public override PartDNA GetDNA()
+        public override ShipPartDNA GetDNA()
         {
             ConverterRadiationToEnergyDNA retVal = new ConverterRadiationToEnergyDNA();
 
@@ -228,7 +228,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return retVal;
         }
-        public override void SetDNA(PartDNA dna)
+        public override void SetDNA(ShipPartDNA dna)
         {
             if (!(dna is ConverterRadiationToEnergyDNA))
             {
@@ -895,7 +895,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #region Class: ConverterRadiationToEnergyDNA
 
-    public class ConverterRadiationToEnergyDNA : PartDNA
+    public class ConverterRadiationToEnergyDNA : ShipPartDNA
     {
         public SolarPanelShape Shape
         {

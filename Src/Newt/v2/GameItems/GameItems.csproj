@@ -62,12 +62,14 @@
     <Compile Include="Converter.cs" />
     <Compile Include="Explosion.cs" />
     <Compile Include="Fields.cs" />
+    <Compile Include="Flag.cs" />
     <Compile Include="IMapObject.cs" />
     <Compile Include="ItemOptions.cs" />
     <Compile Include="ItemSelectDragLogic.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapObjectChase_Orientation.cs" />
     <Compile Include="MapObjectChase_Point.cs" />
+    <Compile Include="MapParts\MapDNA.cs" />
     <Compile Include="MapParts\Mineral.cs" />
     <Compile Include="MapParts\Projectile.cs" />
     <Compile Include="MutateUtility.cs" />

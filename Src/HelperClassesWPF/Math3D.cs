@@ -4108,6 +4108,39 @@ namespace Game.HelperClassesWPF
             return radians * _180_over_PI_FLOAT;
         }
 
+        public static double GetDistance(double[] vector1, double[] vector2)
+        {
+            return Math.Sqrt(GetDistanceSquared(vector1, vector2));
+        }
+        public static double GetDistanceSquared(double[] vector1, double[] vector2)
+        {
+            #region validate
+#if DEBUG
+            if (vector1 == null || vector2 == null)
+            {
+                throw new ArgumentException("Vector arrays can't be null");
+            }
+            else if (vector1.Length != vector2.Length)
+            {
+                throw new ArgumentException("Vector arrays must be the same length " + vector1.Length + ", " + vector2.Length);
+            }
+#endif
+            #endregion
+
+            //C^2 = (A1-A2)^2 + (B1-B2)^2 + .....
+
+            double retVal = 0;
+
+            for (int cntr = 0; cntr < vector1.Length; cntr++)
+            {
+                double diff = vector1[cntr] - vector2[cntr];
+
+                retVal += diff * diff;
+            }
+
+            return retVal;
+        }
+
         // I got tired of nesting min/max statements
         public static int Min(int v1, int v2, int v3)
         {
@@ -4254,6 +4287,21 @@ namespace Game.HelperClassesWPF
             retVal.X = boundryLower.X + (rand.NextDouble() * (boundryUpper.X - boundryLower.X));
             retVal.Y = boundryLower.Y + (rand.NextDouble() * (boundryUpper.Y - boundryLower.Y));
             retVal.Z = boundryLower.Z + (rand.NextDouble() * (boundryUpper.Z - boundryLower.Z));
+
+            return retVal;
+        }
+        /// <summary>
+        /// This chooses a random point somewhere between the inner rectactle and the outer one
+        /// </summary>
+        public static Vector3D GetRandomVector(Vector3D outerRect_Min, Vector3D outerRect_Max, Vector3D innerRect_Min, Vector3D innerRect_Max)
+        {
+            Vector3D retVal = new Vector3D();
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            retVal.X = GetRandomValue_Hole(rand, outerRect_Min.X, innerRect_Min.X, innerRect_Max.X, outerRect_Max.X);
+            retVal.Y = GetRandomValue_Hole(rand, outerRect_Min.Y, innerRect_Min.Y, innerRect_Max.Y, outerRect_Max.Y);
+            retVal.Z = GetRandomValue_Hole(rand, outerRect_Min.Z, innerRect_Min.Z, innerRect_Max.Z, outerRect_Max.Z);
 
             return retVal;
         }
@@ -7719,6 +7767,43 @@ namespace Game.HelperClassesWPF
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// This returns a number between LeftOuter--LeftInner or RightInner--RightOuter
+        /// </summary>
+        private static double GetRandomValue_Hole(Random rand, double outerLeft, double holeLeft, double holeRight, double outerRight)
+        {
+            double leftLength = holeLeft - outerLeft;
+            double rightLength = outerRight - holeRight;
+
+            if (leftLength.IsNearZero() && rightLength.IsNearZero())
+            {
+                return rand.NextBool() ? holeLeft : holeRight;
+            }
+            else if (leftLength < 0 && rightLength < 0)
+            {
+                throw new ArgumentException("The hole is bigger than the outer");
+            }
+            else if (leftLength <= 0)
+            {
+                return rand.NextDouble(holeRight, outerRight);
+            }
+            else if (rightLength <= 0)
+            {
+                return rand.NextDouble(outerLeft, holeLeft);
+            }
+
+            double randValue = rand.NextDouble(leftLength + rightLength);
+
+            if (randValue < leftLength)
+            {
+                return outerLeft + randValue;
+            }
+            else
+            {
+                return holeRight + (randValue - leftLength);
+            }
+        }
 
         /// <summary>
         /// This returns the normal of a polygon (The direction the polygon is facing)

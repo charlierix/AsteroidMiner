@@ -108,7 +108,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _station = station;
             _world = world;
 
-            pnlFlag.Content = _station.Flag;
+            //NOTE: Can't use pnlFlag.ActualWidth, because it could be zero when this panel is newly instantiated
+            pnlFlag.Content = new FlagVisual(pnlFlag.Width, pnlFlag.Height, _station.Flag.FlagProps);       // can't just store it directly, it's the wrong size
 
             // Stop the ship
             //TODO: Stop any other objects that were passed in
@@ -700,7 +701,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 throw new ApplicationException("finish this");
             }
 
-            if (_player.Ship.CargoBays.Add(inventory.Mineral))
+            Cargo_Mineral cargo = new Cargo_Mineral(inventory.Mineral.MineralType, inventory.Mineral.Density, inventory.Mineral.Volume);
+
+            if (_player.Ship.CargoBays.Add(cargo))
             {
                 AddShipCargoGraphic(inventory);
             }
@@ -854,7 +857,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 switch (cargo.CargoType)
                 {
                     case CargoType.Mineral:
-                        inventory = new Inventory((Cargo_Mineral)cargo);
+                        Cargo_Mineral cargoMineral = (Cargo_Mineral)cargo;
+                        inventory = new Inventory(ItemOptionsAstMin2D.GetMineral(cargoMineral.MineralType, cargoMineral.Volume));
                         break;
 
                     case CargoType.ShipPart:

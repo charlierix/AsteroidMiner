@@ -366,7 +366,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public CargoBay(EditorOptions options, ItemOptions itemOptions, PartDNA dna)
+        public CargoBay(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -694,7 +694,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return Tuple.Create(current, retVal.ToArray());
         }
 
-        private static void GetMass(out double dryMass, out double volume, out double radius, ItemOptions itemOptions, PartDNA dna)
+        private static void GetMass(out double dryMass, out double volume, out double radius, ItemOptions itemOptions, ShipPartDNA dna)
         {
             // The cargo bay is 1:1 with scale (a lot of the other parts are smaller than scale, but cargo bay is full sized)
 
@@ -1031,17 +1031,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     public class Cargo_ShipPart : Cargo
     {
-        public Cargo_ShipPart(PartDNA dna, double density, double volume)
+        public Cargo_ShipPart(ShipPartDNA dna, double density, double volume)
             : base(CargoType.ShipPart, density, volume)
         {
             this.DNA = dna;
         }
 
-        public readonly PartDNA DNA;
+        public readonly ShipPartDNA DNA;
 
         public override Cargo Clone()
         {
-            return new Cargo_ShipPart(PartDNA.Clone(this.DNA), this.Density, this.Volume);
+            return new Cargo_ShipPart(ShipPartDNA.Clone(this.DNA), this.Density, this.Volume);
         }
     }
 

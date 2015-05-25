@@ -19,7 +19,7 @@ using Game.Newt.v1.NewtonDynamics1;
 
 namespace Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153
 {
-    public partial class Miner2D : Window
+    public partial class Miner2DWindow : Window
     {
         #region Declaration Section
 
@@ -74,7 +74,7 @@ namespace Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153
 
         #region Constructor
 
-        public Miner2D()
+        public Miner2DWindow()
         {
             InitializeComponent();
 

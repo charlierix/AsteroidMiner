@@ -1678,13 +1678,13 @@ namespace Game.Newt.Testers
                 }
 
                 // Build DNA
-                PartDNA dna = new PartDNA();
+                ShipPartDNA dna = new ShipPartDNA();
                 dna.PartType = SensorGravity.PARTTYPE;
                 dna.Position = new Point3D(-1.5, 0, 0);
                 dna.Orientation = Quaternion.Identity;
                 dna.Scale = new Vector3D(size, size, size);
 
-                PartDNA[] gravDNA = new PartDNA[numSensors];
+                ShipPartDNA[] gravDNA = new ShipPartDNA[numSensors];
 
                 for (int cntr = 0; cntr < numSensors; cntr++)
                 {
@@ -1694,7 +1694,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        PartDNA dnaCopy = PartDNA.Clone(dna);
+                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
                         double angle = 360d / Convert.ToDouble(numSensors);
                         dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
 
@@ -1743,7 +1743,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Build DNA
-                PartDNA dna = new PartDNA();
+                ShipPartDNA dna = new ShipPartDNA();
                 dna.PartType = Brain.PARTTYPE;
                 dna.Position = new Point3D(0, 0, 0);
                 dna.Orientation = Quaternion.Identity;
@@ -1753,7 +1753,7 @@ namespace Game.Newt.Testers
                 dna.InternalLinks = null;
                 dna.ExternalLinks = null;
 
-                PartDNA[] brainDNA = new PartDNA[numBrains];
+                ShipPartDNA[] brainDNA = new ShipPartDNA[numBrains];
                 for (int cntr = 0; cntr < numBrains; cntr++)
                 {
                     if (numBrains == 1)
@@ -1762,7 +1762,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        PartDNA dnaCopy = PartDNA.Clone(dna);
+                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
                         double angle = 360d / Convert.ToDouble(numBrains);
                         dnaCopy.Position += new Vector3D(0, 1, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
 
@@ -1823,7 +1823,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        ThrusterDNA dnaCopy = (ThrusterDNA)PartDNA.Clone(dna);
+                        ThrusterDNA dnaCopy = (ThrusterDNA)ShipPartDNA.Clone(dna);
                         double angle = 360d / Convert.ToDouble(numThrusters);
                         dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
 
@@ -1996,18 +1996,18 @@ namespace Game.Newt.Testers
             {
                 #region Extract dna
 
-                PartDNA[] gravDNA1 = null;
+                ShipPartDNA[] gravDNA1 = null;
                 if (_gravSensors != null)
                 {
                     gravDNA1 = _gravSensors.Select(o => o.Sensor.GetNewDNA()).ToArray();		// no need to call NeuralUtility.PopulateDNALinks, only the neurons are stored
                 }
 
-                PartDNA[] brainDNA1 = null;
+                ShipPartDNA[] brainDNA1 = null;
                 if (_brains != null)
                 {
                     brainDNA1 = _brains.Select(o =>
                     {
-                        PartDNA dna = o.Brain.GetNewDNA();
+                        ShipPartDNA dna = o.Brain.GetNewDNA();
                         if (_links != null)
                         {
                             NeuralUtility.PopulateDNALinks(dna, o.Brain, _links.Outputs);
@@ -2030,8 +2030,8 @@ namespace Game.Newt.Testers
                     }).ToArray();
                 }
 
-                PartDNA energyDNA1 = null;
-                PartDNA fuelDNA1 = null;
+                ShipPartDNA energyDNA1 = null;
+                ShipPartDNA fuelDNA1 = null;
                 if (_containers != null)
                 {
                     energyDNA1 = _containers.Energy.GetNewDNA();
@@ -2039,7 +2039,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Combine the lists
-                List<PartDNA> allParts1 = UtilityCore.Iterate<PartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
+                List<ShipPartDNA> allParts1 = UtilityCore.Iterate<ShipPartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
                 if (allParts1.Count == 0)
                 {
                     // There is nothing to do
@@ -2148,21 +2148,21 @@ namespace Game.Newt.Testers
 
                 #region Rebuild Parts
 
-                PartDNA[] allParts2 = newDNA.PartsByLayer.SelectMany(o => o.Value).ToArray();
+                ShipPartDNA[] allParts2 = newDNA.PartsByLayer.SelectMany(o => o.Value).ToArray();
 
-                PartDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).ToArray();
+                ShipPartDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).ToArray();
                 if (gravDNA2.Length > 0)
                 {
                     CreateGravSensors(gravDNA2);
                 }
 
-                PartDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).ToArray();
+                ShipPartDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).ToArray();
                 if (brainDNA2.Length > 0)
                 {
                     CreateBrains(brainDNA2);
                 }
 
-                PartDNA fuelDNA2 = allParts2.Where(o => o.PartType == FuelTank.PARTTYPE).FirstOrDefault();		//NOTE: This is too simplistic if part remove/add is allowed in the mutator
+                ShipPartDNA fuelDNA2 = allParts2.Where(o => o.PartType == FuelTank.PARTTYPE).FirstOrDefault();		//NOTE: This is too simplistic if part remove/add is allowed in the mutator
                 ThrusterDNA[] thrustDNA2 = allParts2.Where(o => o.PartType == Thruster.PARTTYPE).Select(o => (ThrusterDNA)o).ToArray();
                 if (thrustDNA2.Length > 0)
                 {
@@ -2205,7 +2205,7 @@ namespace Game.Newt.Testers
 
         #region Private Methods
 
-        private static void ModifyDNA(PartDNA dna, bool randSize, bool randOrientation)
+        private static void ModifyDNA(ShipPartDNA dna, bool randSize, bool randOrientation)
         {
             if (randSize)
             {
@@ -2520,7 +2520,7 @@ namespace Game.Newt.Testers
             _debugVisuals.Clear();
         }
 
-        private void CreateGravSensors(PartDNA[] dna)
+        private void CreateGravSensors(ShipPartDNA[] dna)
         {
             if (_gravSensors != null)
             {
@@ -2578,7 +2578,7 @@ namespace Game.Newt.Testers
             UpdateGravity();		// this shows the gravity line
             UpdateCountReport();
         }
-        private void CreateBrains(PartDNA[] dna)
+        private void CreateBrains(ShipPartDNA[] dna)
         {
             if (_brains != null)
             {
@@ -2690,13 +2690,13 @@ namespace Game.Newt.Testers
 
             double offset2 = ((.1d - HEIGHT) / 2d) + (HEIGHT / 2d);
 
-            PartDNA dnaEnergy = new PartDNA();
+            ShipPartDNA dnaEnergy = new ShipPartDNA();
             dnaEnergy.PartType = EnergyTank.PARTTYPE;
             dnaEnergy.Position = new Point3D(OFFSET - offset2, 0, 0);
             dnaEnergy.Orientation = new Quaternion(new Vector3D(0, 1, 0), 90);
             dnaEnergy.Scale = new Vector3D(1.3, 1.3, HEIGHT);		// the energy tank is slightly wider than the fuel tank
 
-            PartDNA dnaFuel = new PartDNA();
+            ShipPartDNA dnaFuel = new ShipPartDNA();
             dnaFuel.PartType = FuelTank.PARTTYPE;
             dnaFuel.Position = new Point3D(OFFSET + offset2, 0, 0);
             dnaFuel.Orientation = new Quaternion(new Vector3D(0, 1, 0), 90);
@@ -2704,7 +2704,7 @@ namespace Game.Newt.Testers
 
             CreateContainers(dnaEnergy, dnaFuel);
         }
-        private void CreateContainers(PartDNA energyDNA, PartDNA fuelDNA)
+        private void CreateContainers(ShipPartDNA energyDNA, ShipPartDNA fuelDNA)
         {
             if (_containers != null)
             {

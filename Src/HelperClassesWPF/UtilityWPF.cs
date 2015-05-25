@@ -1874,10 +1874,15 @@ namespace Game.HelperClassesWPF
 
             return (Color)ColorConverter.ConvertFromString(final);
         }
-        public static string ColorToHex(Color color)
+        public static string ColorToHex(Color color, bool includeAlpha = true, bool includePound = true)
         {
             // I think color.ToString does the same thing, but this is explicit
-            return "#" + color.A.ToString("X2") + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
+            return string.Format("{0}{1}{2}{3}{4}",
+                includePound ? "#" : "",
+                includeAlpha ? color.A.ToString("X2") : "",
+                color.R.ToString("X2"),
+                color.G.ToString("X2"),
+                color.B.ToString("X2"));
         }
 
         /// <summary>
@@ -2149,6 +2154,40 @@ namespace Game.HelperClassesWPF
 
             // Not sure what it is, probably a bitmap or something, so just assume it's not transparent
             return false;
+        }
+
+        /// <summary>
+        /// This returns the distance between the two hues
+        /// </summary>
+        /// <remarks>
+        /// It gets a bit complicated, because hue wraps at 360
+        /// 
+        /// examples:
+        ///     80, 90 -> 10
+        ///     40, 30 -> 10
+        ///     0, 360 -> 0
+        ///     350, 10 -> 20
+        /// </remarks>
+        public static double GetHueDistance(double hue1, double hue2)
+        {
+            if (hue1 < 0 || hue1 > 360 || hue2 < 0 || hue2 > 360)
+            {
+                throw new ArgumentException(string.Format("The hues must be between 0 and 360.  hue1={0}, hue2={1}", hue1.ToString(), hue2.ToString()));
+            }
+
+            double retVal = Math.Abs(hue1 - hue2);
+
+            if (retVal <= 180)
+            {
+                return retVal;
+            }
+
+            // They straddle the 0 degree line.  Add 360 to the smaller one to bring it closer to the larger one
+
+            double min = Math.Min(hue1, hue2);
+            double max = Math.Max(hue1, hue2);
+
+            return Math.Abs(min + 360 - max);
         }
 
         #endregion
@@ -3657,6 +3696,13 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        /// <summary>
+        /// Makes a torus in the xy plane
+        /// </summary>
+        /// <param name="spineSegments">The number of divisions around the major radius (outer radius)</param>
+        /// <param name="fleshSegments">The number of divisions around the minor radius (inner radius)</param>
+        /// <param name="innerRadius">This is the radius of the </param>
+        /// <param name="outerRadius">This is the large radius</param>
         public static MeshGeometry3D GetTorus(int spineSegments, int fleshSegments, double innerRadius, double outerRadius)
         {
             MeshGeometry3D retVal = new MeshGeometry3D();
@@ -4533,6 +4579,26 @@ namespace Game.HelperClassesWPF
             return new Point(pointScreenPixels.x, pointScreenPixels.y);
         }
 
+        //TODO: May want to reword the name canvas to view rectangle - also, make an overload that takes Rects
+        public static Transform GetMapToCanvasTransform(Point worldMin, Point worldMax, Point canvasMin, Point canvasMax)
+        {
+            Point worldCenter = new Point((worldMin.X + worldMax.X) / 2, (worldMin.Y + worldMax.Y) / 2);
+            Point canvasCenter = new Point((canvasMax.X - canvasMin.X) / 2, (canvasMax.Y - canvasMin.Y) / 2);
+
+            // Figure out zoom
+            double zoomX = (canvasMax.X - canvasMin.X) / (worldMax.X - worldMin.X);
+            double zoomY = (canvasMax.Y - canvasMin.Y) / (worldMax.Y - worldMin.Y);
+
+            double zoom = Math.Min(zoomX, zoomY);
+
+            TransformGroup retVal = new TransformGroup();
+            retVal.Children.Add(new TranslateTransform((canvasCenter.X / zoom) - worldCenter.X, (canvasCenter.Y / zoom) - worldCenter.Y));
+            retVal.Children.Add(new ScaleTransform(zoom, zoom));
+            //retVal.Children.Add(new TranslateTransform(canvasCenter.X, canvasCenter.Y));
+
+            return retVal;
+        }
+
         /// <summary>
         /// This will cast a ray from the point (on _viewport) along the direction that the camera is looking, and returns hits
         /// against wpf visuals and the drag shape (sorted by distance from camera)
@@ -4764,21 +4830,7 @@ namespace Game.HelperClassesWPF
             // Populate a wpf bitmap with a snapshot of the visual
             BitmapSource bitmap = RenderControl(visual, width, height, isInVisualTree);
 
-            // Get a byte array
-            int stride = (width * bitmap.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
-            byte[] bytes = new byte[stride * height];
-
-            bitmap.CopyPixels(bytes, stride, 0);
-
-            // Exit Function
-            if (cacheColorsUpFront)
-            {
-                return new BitmapCustomFullyCached(bytes, width, height, stride, bitmap.Format, outOfBoundsColor);
-            }
-            else
-            {
-                return new BitmapCustomOnTheFly(bytes, width, height, stride, bitmap.Format, outOfBoundsColor);
-            }
+            return ConvertToColorArray(bitmap, cacheColorsUpFront, outOfBoundsColor);
         }
 
         /// <summary>
@@ -4812,6 +4864,30 @@ namespace Game.HelperClassesWPF
             retVal.Render(dv);      //  profiling shows this is the biggest hit
 
             return retVal;
+        }
+
+        /// <param name="cacheColorsUpFront">
+        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
+        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
+        /// </param>
+        /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
+        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool cacheColorsUpFront, Color outOfBoundsColor)
+        {
+            // Get a byte array
+            int stride = (bitmap.PixelWidth * bitmap.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
+            byte[] bytes = new byte[stride * bitmap.PixelHeight];
+
+            bitmap.CopyPixels(bytes, stride, 0);
+
+            // Exit Function
+            if (cacheColorsUpFront)
+            {
+                return new BitmapCustomFullyCached(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+            }
+            else
+            {
+                return new BitmapCustomOnTheFly(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+            }
         }
 
         /// <summary>
@@ -6806,6 +6882,9 @@ namespace Game.HelperClassesWPF
         ///    color[x + (y * width)]
         /// </remarks>
         Color[] GetColors(int x, int y, int width, int height);
+
+        int Width { get; }
+        int Height { get; }
     }
 
     #endregion
@@ -6963,6 +7042,9 @@ namespace Game.HelperClassesWPF
             // Exit Function
             return retVal;
         }
+
+        public int Width { get { return _width; } }
+        public int Height { get { return _height; } }
 
         #endregion
     }
@@ -7172,6 +7254,9 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        public int Width { get { return _width; } }
+        public int Height { get { return _height; } }
+
         #endregion
     }
 
@@ -7319,6 +7404,22 @@ namespace Game.HelperClassesWPF
         public Color ToRGB()
         {
             return UtilityWPF.HSVtoRGB(this.A, this.H, this.S, this.V);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("A {1}{0}H {2}{0}S {3}{0}V {4}", "  |  ", GetFormatedNumber(this.A), GetFormatedNumber(this.H), GetFormatedNumber(this.S), GetFormatedNumber(this.V));
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static string GetFormatedNumber(double value)
+        {
+            return Math.Round(value).
+                ToString().
+                PadLeft(3, ' ');     // padding left so columns line up (when viewing a list of colors)
         }
 
         #endregion

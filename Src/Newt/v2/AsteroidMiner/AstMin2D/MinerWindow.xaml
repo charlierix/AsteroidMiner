@@ -1,14 +1,17 @@
-﻿<Window x:Class="Game.Newt.v2.AsteroidMiner.AstMin2D.Miner"
+﻿<Window x:Class="Game.Newt.v2.AsteroidMiner.AstMin2D.MinerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         Title="Asteroid Miner 2D" WindowState="Maximized" Width="1024" Height="768"
         Loaded="Window_Loaded" Closed="Window_Closed" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp">
-    <Grid>
+    <Grid Background="#2C2C2C">
+
+        <!-- This holds the 2D star images -->
+        <Canvas Name="backgroundCanvas"/>
 
         <!-- Main Viewer -->
-        <Grid Name="grdViewPort" Background="#2C2C2C">
+        <Grid Name="grdViewPort" Background="Transparent">
             <Viewport3D Name="_viewport" IsHitTestVisible="False">
                 <!-- Camera -->
                 <Viewport3D.Camera>
@@ -28,7 +31,7 @@
         </Grid>
 
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10">
-            
+
             <!-- TODO: Restyle this to not be so obnoxious.  Probably a glass button similar to the ship editor -->
             <Button Name="btnFullMap" Content="full map" ToolTip="Show full map (Tab)" Background="#282828" Foreground="#A0A0A0" HorizontalAlignment="Left" Margin="0,0,0,36" Padding="6,2" Click="btnFullMap_Click">
                 <Button.LayoutTransform>
@@ -68,11 +71,11 @@
                 <!-- This will be populated programatically -->
                 <StackPanel Name="pnlProgressBars" VerticalAlignment="Bottom"/>
 
-                <StackPanel Visibility="Collapsed" VerticalAlignment="Bottom" Margin="20,0,0,0" CheckBox.Checked="CheckBoxApply_Checked" CheckBox.Unchecked="CheckBoxApply_Checked">
+                <!--<StackPanel VerticalAlignment="Bottom" Margin="20,0,0,0" CheckBox.Checked="CheckBoxApply_Checked" CheckBox.Unchecked="CheckBoxApply_Checked">
                     <CheckBox IsChecked="True" Name="chkApplyLinear" Content="linear" Foreground="White" Focusable="False"/>
                     <CheckBox IsChecked="True" Name="chkApplyRotation" Content="rotation" Foreground="White" Focusable="False"/>
-                </StackPanel>
-                
+                </StackPanel>-->
+
             </StackPanel>
         </StackPanel>
 
@@ -81,7 +84,7 @@
 
         <!-- This will hold panels when they are displaying (options, spacedock) -->
         <Border Visibility="Collapsed" Name="panelContainer"/>
-        
+
         <Label Name="statusMessage" VerticalAlignment="Bottom" HorizontalAlignment="Center" Foreground="White" FontSize="16" Margin="0,0,0,10"/>
 
     </Grid>

@@ -274,7 +274,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public AmmoBox(EditorOptions options, ItemOptions itemOptions, PartDNA dna)
+        public AmmoBox(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -577,7 +577,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static Container GetContainer(out double surfaceArea, out Vector3D actualScale, out double radius, ItemOptions itemOptions, PartDNA dna)
+        private static Container GetContainer(out double surfaceArea, out Vector3D actualScale, out double radius, ItemOptions itemOptions, ShipPartDNA dna)
         {
             Container retVal = new Container();
             retVal.OnlyRemoveMultiples = true;

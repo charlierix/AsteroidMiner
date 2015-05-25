@@ -309,7 +309,7 @@ namespace Game.Newt.v2.GameItems
             if (args.NeuronChanges != null)
             {
                 // Get all the parts that are dna containers
-                PartDNA[] parts = retVal.PartsByLayer.SelectMany(o => o.Value).ToArray();
+                ShipPartDNA[] parts = retVal.PartsByLayer.SelectMany(o => o.Value).ToArray();
 
                 // Call the neural specific overload
                 Mutate(parts, args.NeuronChanges);
@@ -319,7 +319,7 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        public static void Mutate(PartDNA[] parts, NeuronMutateArgs args)
+        public static void Mutate(ShipPartDNA[] parts, NeuronMutateArgs args)
         {
             if (args.NeuronMovement != null)
             {
@@ -727,7 +727,7 @@ namespace Game.Newt.v2.GameItems
                     switch (prop.PropertyName)
                     {
                         case "Scale":
-                            if (prop.Item is PartDNA)
+                            if (prop.Item is ShipPartDNA)
                             {
                                 MutateProp_Scale(prop, args);
                                 return;
@@ -763,7 +763,7 @@ namespace Game.Newt.v2.GameItems
         private static void MutateProp_Scale(PropsByPercent.PropWrapper prop, MuateFactorArgs args)
         {
             // Get the constraint for this
-            PartDNA item = (PartDNA)prop.Item;
+            ShipPartDNA item = (ShipPartDNA)prop.Item;
             PartDesignAllowedScale allowed = PartAllowedScale.GetForPart(item.PartType, true);
 
             // Cast the current value

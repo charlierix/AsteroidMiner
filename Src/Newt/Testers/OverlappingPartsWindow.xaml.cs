@@ -1199,8 +1199,8 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -1216,8 +1216,8 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-.6, -.1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.6, .1, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -1235,8 +1235,8 @@ namespace Game.Newt.Testers
             {
                 //PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
                 //PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 30), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = new Point3D(-1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, -1), 15), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(1.01, 0, 0), Orientation = new Quaternion(new Vector3D(0, 0, 1), 45), Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -1252,8 +1252,8 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -1271,8 +1271,8 @@ namespace Game.Newt.Testers
             {
                 bool isEnergy = StaticRandom.Next(2) == 0;
 
-                PartDNA dna1 = new PartDNA() { PartType = isEnergy ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(4, 4, 3) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dna1 = new ShipPartDNA() { PartType = isEnergy ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(-.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(4, 4, 3) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = new Point3D(.5, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(10, 10, 10) };
 
                 PartBase cylinder = null;
                 if (isEnergy)
@@ -1299,8 +1299,8 @@ namespace Game.Newt.Testers
                 bool isEnergy1 = StaticRandom.Next(2) == 0;
                 bool isEnergy2 = StaticRandom.Next(2) == 0;
 
-                PartDNA dna1 = new PartDNA() { PartType = isEnergy1 ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(-.5, -.1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(4, 4, 3) };
-                PartDNA dna2 = new PartDNA() { PartType = isEnergy2 ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(.5, .1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(4, 4, 3) };
+                ShipPartDNA dna1 = new ShipPartDNA() { PartType = isEnergy1 ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(-.5, -.1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(4, 4, 3) };
+                ShipPartDNA dna2 = new ShipPartDNA() { PartType = isEnergy2 ? EnergyTank.PARTTYPE : FuelTank.PARTTYPE, Position = new Point3D(.5, .1, 0), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(4, 4, 3) };
 
                 PartBase cylinder1 = null;
                 if (isEnergy1)
@@ -1337,12 +1337,12 @@ namespace Game.Newt.Testers
                 //FuelTank fuel = new FuelTank(_editorOptions, _itemOptions, dnaFuel);
                 //fuel.QuantityCurrent = fuel.QuantityMax;
 
-                PartDNA dnaEnergy = new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(-1d, 0, 0), Orientation = new Quaternion(new Vector3D(1, 1, 0), 90d), Scale = new Vector3D(.25d, .25d, 4d) };
+                ShipPartDNA dnaEnergy = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(-1d, 0, 0), Orientation = new Quaternion(new Vector3D(1, 1, 0), 90d), Scale = new Vector3D(.25d, .25d, 4d) };
                 //PartDNA dnaEnergy = new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = new Point3D(-1d, 0, 0), Orientation = new Quaternion(new Vector3D(1, 1, 0), 10d), Scale = new Vector3D(4d, 4d, .25d) };
                 EnergyTank energy = new EnergyTank(_editorOptions, _itemOptions, dnaEnergy);
                 //energy.QuantityCurrent = fuel.QuantityMax;
 
-                PartDNA dnaBrain = new PartDNA() { PartType = Brain.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(2d, 2d, 2d) };
+                ShipPartDNA dnaBrain = new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(2d, 2d, 2d) };
                 Brain brain = new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
                 //StartScene(new PartBase[] { fuel, brain });
@@ -1358,9 +1358,9 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PartDNA dnaGrav = new PartDNA() { PartType = SensorGravity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
-                PartDNA dnaVel = new PartDNA() { PartType = SensorVelocity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaGrav = new ShipPartDNA() { PartType = SensorGravity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA dnaVel = new ShipPartDNA() { PartType = SensorVelocity.PARTTYPE, Position = Math3D.GetRandomVector(2d).ToPoint(), Orientation = Math3D.GetRandomRotation(), Scale = new Vector3D(10, 10, 10) };
 
                 SensorGravity grav = new SensorGravity(_editorOptions, _itemOptions, dnaGrav, null, null);
                 SensorSpin spin = new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
@@ -1651,7 +1651,7 @@ namespace Game.Newt.Testers
                     #region Spin
 
                     double spinSize = 5d + (StaticRandom.NextDouble() * 8d);
-                    PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
+                    ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
                     return new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
 
                     #endregion
@@ -1659,7 +1659,7 @@ namespace Game.Newt.Testers
                 case 1:
                     #region Fuel
 
-                    PartDNA dnaFuel = new PartDNA() { PartType = FuelTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaFuel = new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     FuelTank fuel = new FuelTank(_editorOptions, _itemOptions, dnaFuel);
                     fuel.QuantityCurrent = fuel.QuantityMax;		// without this, the fuel tank gets tossed around because it's so light
                     return fuel;
@@ -1669,7 +1669,7 @@ namespace Game.Newt.Testers
                 case 2:
                     #region Energy
 
-                    PartDNA dnaEnergy = new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaEnergy = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new EnergyTank(_editorOptions, _itemOptions, dnaEnergy);
 
                     #endregion
@@ -1677,7 +1677,7 @@ namespace Game.Newt.Testers
                 case 3:
                     #region Brain
 
-                    PartDNA dnaBrain = new PartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
+                    ShipPartDNA dnaBrain = new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
                     return new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
                     #endregion
@@ -1701,7 +1701,7 @@ namespace Game.Newt.Testers
                 case 6:
                     #region Fuel->Energy
 
-                    PartDNA dnaBurner = new PartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaBurner = new ShipPartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterFuelToEnergy(_editorOptions, _itemOptions, dnaBurner, null, null);
 
                     #endregion
@@ -1709,7 +1709,7 @@ namespace Game.Newt.Testers
                 case 7:
                     #region Energy->Ammo
 
-                    PartDNA dnaReplicator = new PartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaReplicator = new ShipPartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dnaReplicator, null, null);
 
                     #endregion

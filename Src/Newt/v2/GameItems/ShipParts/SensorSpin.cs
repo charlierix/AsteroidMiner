@@ -188,7 +188,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public SensorSpin(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks)
+        public SensorSpin(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

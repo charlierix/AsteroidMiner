@@ -10,6 +10,12 @@
             <Setter Property="Margin" Value="4"/>
         </Style>
 
+        <Style x:Key="subHeaderText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="#505050"/>
+        </Style>
+
         <Style x:Key="ackHeader" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
@@ -64,8 +70,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- License -->
-            <TabItem Header="License">
+            <!-- zLib License -->
+            <TabItem Header="zLib License">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
@@ -73,12 +79,36 @@
                         <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="zlib license" Style="{StaticResource headerText}"/>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="zlib license" Style="{StaticResource headerText}"/>
+                        <TextBlock Text="Used by Newton Dynamics" Style="{StaticResource subHeaderText}"/>
+                    </StackPanel>
 
                     <!-- This is set in code, it was easier with all the line breaks -->
-                    <TextBox Grid.Row="1" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Name="txtLicense" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="2,0"/>
+                    <TextBox Grid.Row="1" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Name="txtLicense_zLib" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="2,4,2,0"/>
 
                     <TextBlock Grid.Row="2"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.gzip.org/zlib/zlib_license.html"/></Hyperlink></TextBlock>
+                </Grid>
+            </TabItem>
+
+            <!-- Apache License -->
+            <TabItem Header="Apache License">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Apache License" Style="{StaticResource headerText}"/>
+                        <TextBlock Text="Used by Encog" Style="{StaticResource subHeaderText}"/>
+                    </StackPanel>
+
+                    <!-- This is set in code, it was easier with all the line breaks -->
+                    <TextBox Grid.Row="1" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Name="txtLicense_Apache" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="2,4,2,0"/>
+
+                    <TextBlock Grid.Row="2"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.apache.org/licenses/LICENSE-2.0"/></Hyperlink></TextBlock>
                 </Grid>
             </TabItem>
 
@@ -93,6 +123,12 @@
                         <TextBlock Text="Newton wrapper 1.53" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="I used this for all the 1.53 stuff.  My wrapper of newton 2 is heavily inspired by this." Style="{StaticResource ackDescription}"/>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.codeproject.com/Articles/27574/Newton-Game-Dynamics-Extensions-for-the-WPF-The-Mo"/></Hyperlink></TextBlock>
+
+                        <TextBlock Text="Encog" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="This implements neural nets" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.heatonresearch.com/encog"/></Hyperlink></TextBlock>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.heatonresearch.com/wiki/Main_Page"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://github.com/encog/encog-dotnet-core/wiki/Encog-Download-Links"/></Hyperlink></TextBlock>
 
                         <TextBlock Text="3D Tools for the Windows Presentation Foundation" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="The previous link had code from here embedded in it.  Lots of good stuff" Style="{StaticResource ackDescription}"/>
@@ -152,6 +188,9 @@
             </TabItem>
         </TabControl>
 
-        <TextBlock Grid.Row="1" Margin="0,4,0,0"><Hyperlink Click="Hyperlink_Click"><Run Text="http://asteroidminer.blogspot.com"/></Hyperlink></TextBlock>
+        <StackPanel Grid.Row="1" Margin="0,4,0,0">
+            <TextBlock><Hyperlink Click="Hyperlink_Click"><Run Text="http://asteroidminer.blogspot.com"/></Hyperlink></TextBlock>
+            <TextBlock><Hyperlink Click="Hyperlink_Click"><Run Text="https://github.com/charlierix/AsteroidMiner"/></Hyperlink></TextBlock>
+        </StackPanel>
     </Grid>
 </Window>

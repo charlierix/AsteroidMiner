@@ -240,7 +240,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public SensorVision(EditorOptions options, ItemOptionsArco itemOptions, PartDNA dna, Map map, double searchRadius, Type filterType = null)
+        public SensorVision(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, Map map, double searchRadius, Type filterType = null)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -513,7 +513,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Internal Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, PartDNA dna, ItemOptions itemOptions)
+        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             double radiusLocal = ((dna.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY) + (dna.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY)) / (2d * 2d);     // scale is diameter, so divide an extra two to get radius
             double heightLocal = dna.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z;
@@ -529,7 +529,7 @@ namespace Game.Newt.v2.Arcanorum
             actualScale = new Vector3D(dna.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z);
         }
 
-        internal static Neuron_SensorPosition[] CreateNeurons(PartDNA dna, ItemOptions itemOptions, double neuronDensity, bool hasHoleInMiddle, bool ignoreSetValue)
+        internal static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity, bool hasHoleInMiddle, bool ignoreSetValue)
         {
             #region Calculate Counts
 

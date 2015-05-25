@@ -303,7 +303,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterFuelToEnergy(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer fuelTanks, IContainer energyTanks)
+        public ConverterFuelToEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer fuelTanks, IContainer energyTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -366,7 +366,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static double GetVolume(out Vector3D actualScale, PartDNA dna)
+        private static double GetVolume(out Vector3D actualScale, ShipPartDNA dna)
         {
             // In reality, it's an odd shape.  But for this, just assume an ellipse
             double radX = dna.Scale.X * ConverterFuelToEnergyDesign.RADIUSPERCENTOFSCALE;

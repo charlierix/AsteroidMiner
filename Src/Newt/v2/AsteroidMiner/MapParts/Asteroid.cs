@@ -9,6 +9,7 @@ using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
+using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.AsteroidMiner.MapParts
@@ -41,7 +42,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 }
 
                 // Mineral
-                public AsteroidOrMineralDefinition(PartSeparator_Part part, MineralDefinition mineralDefinition)
+                public AsteroidOrMineralDefinition(PartSeparator_Part part, MineralDNA mineralDefinition)
                 {
                     this.IsAsteroid = false;
                     this.Part = part;
@@ -65,7 +66,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 public readonly ITriangleIndexed[] AsteroidTriangles;
                 public readonly double AsteroidRadius;
 
-                public readonly MineralDefinition MineralDefinition;
+                public readonly MineralDNA MineralDefinition;
             }
 
             #endregion
@@ -84,10 +85,12 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
             private readonly Func<double, ITriangleIndexed[], double> _getMassByRadius;
 
-            private readonly Func<double, MineralDefinition[]> _getMineralsByDestroyedMass;
+            private readonly Func<double, MineralDNA[]> _getMineralsByDestroyedMass;
             private readonly int _mineralMaterialID;
 
             private double _damage = 0;
+            private int _numHits = 0;
+            private readonly int _maxHits = StaticRandom.Next(5, 20);
 
             private static ThreadLocal<SharedVisuals> _sharedVisuals = new ThreadLocal<SharedVisuals>(() => new SharedVisuals());
 
@@ -95,7 +98,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
             #region Constructor
 
-            public HitTracker1(World world, Map map, int materialID, Asteroid parent, ITriangleIndexed[] triangles, double minChildRadius, Func<double, ITriangleIndexed[], double> getMassByRadius, Func<double, MineralDefinition[]> getMineralsByDestroyedMass, int mineralMaterialID)
+            public HitTracker1(World world, Map map, int materialID, Asteroid parent, ITriangleIndexed[] triangles, Vector3D radius, double minChildRadius, Func<double, ITriangleIndexed[], double> getMassByRadius, Func<double, MineralDNA[]> getMineralsByDestroyedMass, int mineralMaterialID)
             {
                 _world = world;
                 _map = map;
@@ -106,13 +109,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 _getMineralsByDestroyedMass = getMineralsByDestroyedMass;
                 _mineralMaterialID = mineralMaterialID;
 
-                // The asteroid is roughly an ellipse, so get the radius of that ellipse
-                Point3D[] points = triangles.SelectMany(o => o.PointArray).ToArray();
-                _radius = new Vector3D(
-                    points.Max(o => Math.Abs(o.X)),
-                    points.Max(o => Math.Abs(o.Y)),
-                    points.Max(o => Math.Abs(o.Z)));
-
+                _radius = radius;
                 _radiusMin = Math3D.Min(_radius.X, _radius.Y, _radius.Z);
             }
 
@@ -136,7 +133,10 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 // Add that length to the total damage
                 _damage += length;
 
-                if (_damage < _radiusMin)
+                // Remember how many times this asteroid has been hit
+                _numHits++;
+
+                if (_numHits < _maxHits && _damage < _radiusMin)
                 {
                     // It's not damaged enough to split apart
                     return false;
@@ -213,7 +213,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 #endregion
                 #region Mineral sizes
 
-                MineralDefinition[] mineralDefinitions = null;
+                MineralDNA[] mineralDefinitions = null;
                 if (_getMineralsByDestroyedMass != null)
                 {
                     //double destroyedMass = GetDestroyedMass(Math3D.Avg(_radius.X, _radius.Y, _radius.Z), radius, _getMassByRadius);       // using avg had too many cases where the returned mass was negative
@@ -226,7 +226,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
                 if (mineralDefinitions == null)
                 {
-                    mineralDefinitions = new MineralDefinition[0];
+                    mineralDefinitions = new MineralDNA[0];
                 }
 
                 #endregion
@@ -256,8 +256,9 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                     else
                     {
                         // Mineral
-                        MineralDefinition mindef = children[cntr].MineralDefinition;
-                        retVal[cntr] = new Mineral(mindef.MineralType, position, mindef.VolumeInCubicMeters, _world, _mineralMaterialID, _sharedVisuals.Value, mindef.DensityMult, mindef.Scale);
+                        MineralDNA mindef = children[cntr].MineralDefinition;
+                        double densityMult = mindef.Density / Mineral.GetSettingsForMineralType(mindef.MineralType).Density;
+                        retVal[cntr] = new Mineral(mindef.MineralType, position, mindef.Volume, _world, _mineralMaterialID, _sharedVisuals.Value, densityMult, mindef.Scale);
                     }
 
                     retVal[cntr].PhysicsBody.Rotation = children[cntr].Part.Orientation;
@@ -284,6 +285,11 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 double retVal = Math3D.Max(parentRadius.X, parentRadius.Y, parentRadius.Z);
 
                 double reducePercent = UtilityCore.GetScaledValue(.75, 0, 1, maxOverDamage, overDamage);
+                if (reducePercent > .99)     // this can happen if overDamage < 1
+                {
+                    reducePercent = .99;
+                }
+
                 retVal *= reducePercent;
 
                 return retVal;
@@ -303,6 +309,11 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
                 // The stronger the hit, the more likely of smaller debris
                 int retVal = Convert.ToInt32(Math.Round(UtilityCore.GetScaledValue(1d, max, 1d, maxOverDamage / 2d, overDamage)));
+                if (retVal < 1)
+                {
+                    retVal = 1;
+                }
+
                 retVal += StaticRandom.NextDouble() < .33 ? 1 : 0;      // give a small chance of creating one extra
                 if (retVal > max)
                 {
@@ -358,7 +369,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
             /// Defines the child asteroid shapes, then finds positions/orientations for all child asteroids and minerals (makes
             /// sure nothing overlaps)
             /// </summary>
-            private AsteroidOrMineralDefinition[] PositionChildAsteroidsAndMinerals(double[] asteroidVolumes, MineralDefinition[] mineralDefinitions)
+            private AsteroidOrMineralDefinition[] PositionChildAsteroidsAndMinerals(double[] asteroidVolumes, MineralDNA[] mineralDefinitions)
             {
                 const double FOURTHIRDSPI = 4d / 3d * Math.PI;
                 const double ONETHRID = 1d / 3d;
@@ -396,9 +407,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                     Point3D[] mineralPoints = UtilityWPF.GetPointsFromMesh((MeshGeometry3D)_sharedVisuals.Value.GetMineralMesh(mineralDefinitions[cntr].MineralType));
 
                     // Mass
-                    double density = Mineral.GetSettingsForMineralType(mineralDefinitions[cntr].MineralType).Density * mineralDefinitions[cntr].DensityMult;
-
-                    double mass = density * mineralDefinitions[cntr].VolumeInCubicMeters;
+                    double mass = mineralDefinitions[cntr].Density * mineralDefinitions[cntr].Volume;
 
                     // Store it
                     mineralParts[cntr] = new PartSeparator_Part(mineralPoints, mass, Math3D.GetRandomVector_Spherical(positionRange).ToPoint(), Math3D.GetRandomRotation());
@@ -448,42 +457,76 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
         #endregion
         #region Class: MineralDefinition
 
-        public class MineralDefinition
-        {
-            public MineralDefinition(MineralType mineralType, double volumeInCubicMeters = .15d, double densityMult = 1d, double scale = 1d)
-            {
-                this.MineralType = mineralType;
-                this.VolumeInCubicMeters = volumeInCubicMeters;
-                this.DensityMult = densityMult;
-                this.Scale = scale;
-            }
+        //public class MineralDefinition
+        //{
+        //    public MineralDefinition(MineralType mineralType, double volumeInCubicMeters = .15d, double densityMult = 1d, double scale = 1d)
+        //    {
+        //        this.MineralType = mineralType;
+        //        this.VolumeInCubicMeters = volumeInCubicMeters;
+        //        this.DensityMult = densityMult;
+        //        this.Scale = scale;
+        //    }
+        //    public MineralDefinition(Mineral mineral)
+        //    {
+        //        this.MineralType = mineral.MineralType;
+        //        this.VolumeInCubicMeters = mineral.VolumeInCubicMeters;
+        //        this.DensityMult = mineral.Density / Mineral.GetSettingsForMineralType(this.MineralType).Density;
+        //        this.Scale = mineral.Scale;
+        //    }
+        //    public MineralDefinition(Cargo_Mineral mineral, double scale)
+        //    {
+        //        this.MineralType = mineral.MineralType;
+        //        this.VolumeInCubicMeters = mineral.Volume;
+        //        this.DensityMult = mineral.Density / Mineral.GetSettingsForMineralType(this.MineralType).Density;
+        //        this.Scale = scale;
+        //    }
 
-            public readonly MineralType MineralType;
-            public readonly double VolumeInCubicMeters;
-            /// <summary>
-            /// This gets multiplied by Mineral.GetSettingsForMineralType(this.MineralType).Density to get the final density
-            /// </summary>
-            public readonly double DensityMult;
-            public readonly double Scale;
-        }
+        //    public readonly MineralType MineralType;
+        //    public readonly double VolumeInCubicMeters;
+        //    /// <summary>
+        //    /// This gets multiplied by Mineral.GetSettingsForMineralType(this.MineralType).Density to get the final density
+        //    /// </summary>
+        //    public readonly double DensityMult;
+        //    public readonly double Scale;
+
+        //    public double DensityFinal
+        //    {
+        //        get
+        //        {
+        //            return Mineral.GetSettingsForMineralType(this.MineralType).Density * this.DensityMult;
+        //        }
+        //    }
+        //}
 
         #endregion
 
         #region Declaration Section
 
+        public const string PARTTYPE = "Asteroid";
+
         private readonly Map _map;
         private readonly HitTracker1 _hitTracker;
+
+        private readonly ITriangleIndexed[] _triangles;
 
         #endregion
 
         #region Constructor
 
-        public Asteroid(double radius, Func<double, ITriangleIndexed[], double> getMassByRadius, Point3D position, World world, Map map, int materialID, Func<double, MineralDefinition[]> getMineralsByDestroyedMass = null, int mineralMaterialID = -1, double minChildRadius = 1d)
+        public Asteroid(double radius, Func<double, ITriangleIndexed[], double> getMassByRadius, Point3D position, World world, Map map, int materialID, Func<double, MineralDNA[]> getMineralsByDestroyedMass = null, int mineralMaterialID = -1, double minChildRadius = 1d)
             : this(radius, getMassByRadius, position, world, map, materialID, GetHullTriangles(radius), getMineralsByDestroyedMass, mineralMaterialID, minChildRadius) { }
 
-        public Asteroid(double radius, Func<double, ITriangleIndexed[], double> getMassByRadius, Point3D position, World world, Map map, int materialID, ITriangleIndexed[] triangles, Func<double, MineralDefinition[]> getMineralsByDestroyedMass = null, int mineralMaterialID = -1, double minChildRadius = 1d)
+        public Asteroid(double radius, Func<double, ITriangleIndexed[], double> getMassByRadius, Point3D position, World world, Map map, int materialID, ITriangleIndexed[] triangles, Func<double, MineralDNA[]> getMineralsByDestroyedMass = null, int mineralMaterialID = -1, double minChildRadius = 1d)
         {
             _map = map;
+            _triangles = triangles;
+
+            // The asteroid is roughly an ellipse, so get the radius of that ellipse
+            Point3D[] points = triangles.SelectMany(o => o.PointArray).ToArray();
+            this.RadiusVect = new Vector3D(
+                points.Max(o => Math.Abs(o.X)),
+                points.Max(o => Math.Abs(o.Y)),
+                points.Max(o => Math.Abs(o.Z)));
 
             this.Radius = radius;
             double mass = getMassByRadius(radius, triangles);
@@ -531,7 +574,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
             this.CreationTime = DateTime.Now;
 
-            _hitTracker = new HitTracker1(world, map, materialID, this, triangles, minChildRadius, getMassByRadius, getMineralsByDestroyedMass, mineralMaterialID);
+            _hitTracker = new HitTracker1(world, map, materialID, this, triangles, this.RadiusVect, minChildRadius, getMassByRadius, getMineralsByDestroyedMass, mineralMaterialID);
         }
 
         #endregion
@@ -620,7 +663,31 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
         #endregion
 
+        #region Public Properties
+
+        public Vector3D RadiusVect
+        {
+            get;
+            private set;
+        }
+
+        #endregion
+
         #region Public Methods
+
+        public virtual AsteroidDNA GetNewDNA()
+        {
+            return new AsteroidDNA()
+            {
+                PartType = PARTTYPE,
+                Position = this.PositionWorld,
+                Radius = this.Radius,
+                Orientation = this.PhysicsBody.Rotation,
+                Velocity = this.PhysicsBody.Velocity,
+                AngularVelocity = this.PhysicsBody.AngularVelocity,
+                Triangles = _triangles,
+            };
+        }
 
         //NOTE: These are in world coords
         /// <summary>
@@ -658,29 +725,52 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
         {
             const double RATIO = .93;
 
-            // Get randomly generated triangles
-            ITriangleIndexed[] hull = Asteroid.GetHullTriangles_Initial(radius);
+            // This holds the mesh so far before an exception occurs
+            ITriangleIndexed[] retVal = null;
 
-            // Remove excessively thin triangles
-            ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+            // Math3D.SliceLargeTriangles_Smooth + Math3D.RemoveThinTriangles sometimes throws an exception.  So try a few times before giving up
+            for (int cntr = 0; cntr < 20; cntr++)
+            {
+                try
+                {
+                    // Get randomly generated triangles
+                    ITriangleIndexed[] hull = Asteroid.GetHullTriangles_Initial(radius);
+                    retVal = hull;
 
-            // Now round it out (which adds triangles)
-            Point3D[] hullPoints = slicedHull[0].AllPoints;
+                    // Remove excessively thin triangles
+                    ITriangleIndexed[] slicedHull = Math3D.RemoveThinTriangles(hull, RATIO);
+                    retVal = slicedHull;
 
-            double[] lengths = TriangleIndexed.GetUniqueLines(slicedHull).
-                Select(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length).
-                ToArray();
+                    // Now round it out (which adds triangles)
+                    Point3D[] hullPoints = slicedHull[0].AllPoints;
 
-            double avgLen = lengths.Average();
-            double maxLen = lengths.Max();
-            double sliceLen = UtilityCore.GetScaledValue(avgLen, maxLen, 0, 1, .333);
+                    double[] lengths = TriangleIndexed.GetUniqueLines(slicedHull).
+                        Select(o => (hullPoints[o.Item1] - hullPoints[o.Item2]).Length).
+                        ToArray();
 
-            ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, sliceLen);
+                    double avgLen = lengths.Average();
+                    double maxLen = lengths.Max();
+                    double sliceLen = UtilityCore.GetScaledValue(avgLen, maxLen, 0, 1, .333);
 
-            // Remove again
-            ITriangleIndexed[] secondSlicedHull = Math3D.RemoveThinTriangles(smoothHull, RATIO);
+                    ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, sliceLen);
+                    retVal = smoothHull;
 
-            return secondSlicedHull;
+                    // Remove again
+                    ITriangleIndexed[] secondSlicedHull = Math3D.RemoveThinTriangles(smoothHull, RATIO);
+
+                    return secondSlicedHull;
+                }
+                catch (Exception) { }
+            }
+
+            if (retVal == null)
+            {
+                throw new ApplicationException("Couldn't create a hull");
+            }
+            else
+            {
+                return retVal;
+            }
         }
 
         #endregion
@@ -783,4 +873,13 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
         #endregion
     }
+
+    #region Class: AsteroidDNA
+
+    public class AsteroidDNA : MapPartDNA
+    {
+        public ITriangleIndexed[] Triangles { get; set; }
+    }
+
+    #endregion
 }

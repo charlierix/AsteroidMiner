@@ -544,11 +544,11 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                PartDNA energyDNA = new PartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(), Scale = new Vector3D(10, 10, 10) };
+                ShipPartDNA energyDNA = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(), Scale = new Vector3D(10, 10, 10) };
                 EnergyTank energy = new EnergyTank(_editorOptions, _itemOptions, energyDNA);
                 energy.QuantityCurrent = energy.QuantityMax;
 
-                PartDNA dna = new PartDNA() { PartType = CameraColorRGB.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 1) };
+                ShipPartDNA dna = new ShipPartDNA() { PartType = CameraColorRGB.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 1) };
 
                 CameraColorRGB camera = new CameraColorRGB(_editorOptions, _itemOptions, dna, energy, _cameraPool);
 

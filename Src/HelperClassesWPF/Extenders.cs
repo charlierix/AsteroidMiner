@@ -21,9 +21,9 @@ namespace Game.HelperClassesWPF
             return UtilityWPF.RGBtoHSV(color);
         }
 
-        public static string ToHex(this Color color)
+        public static string ToHex(this Color color, bool includeAlpha = true, bool includePound = true)
         {
-            return UtilityWPF.ColorToHex(color);
+            return UtilityWPF.ColorToHex(color, includeAlpha, includePound);
         }
 
         #endregion
@@ -279,6 +279,15 @@ namespace Game.HelperClassesWPF
         #endregion
 
         #region Point3D
+
+        public static Point3D MultiplyBy(this Point3D point, double scalar)
+        {
+            return new Point3D(point.X * scalar, point.Y * scalar, point.Z * scalar);
+        }
+        public static Point3D DivideBy(this Point3D point, double scalar)
+        {
+            return new Point3D(point.X / scalar, point.Y / scalar, point.Z / scalar);
+        }
 
         public static bool IsNearZero(this Point3D point)
         {

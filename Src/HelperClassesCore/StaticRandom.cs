@@ -148,6 +148,10 @@ namespace Game.HelperClassesCore
         {
             return _localRandom.Value.Random.NextItem(items);
         }
+        public static T NextItem<T>(IList<T> items)
+        {
+            return _localRandom.Value.Random.NextItem(items);
+        }
 
         #endregion
     }

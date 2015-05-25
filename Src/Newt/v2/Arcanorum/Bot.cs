@@ -158,7 +158,7 @@ namespace Game.Newt.v2.Arcanorum
         /// But with bot, parts are just for AI
         /// </remarks>
         protected volatile PartContainer _parts = null;
-        private readonly Task<Tuple<PartContainer, PartDNA[], CollisionHull[], AIMousePlate>> _partsTask;
+        private readonly Task<Tuple<PartContainer, ShipPartDNA[], CollisionHull[], AIMousePlate>> _partsTask;
         private long _partUpdateCount_MainThread = -1;      // starting at -1 so that the first increment will bring it to 0 (skips use mod, so zero mod anything is zero, so everything will fire on the first tick)
         private long _partUpdateCount_AnyThread = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
 
@@ -821,7 +821,7 @@ namespace Game.Newt.v2.Arcanorum
 
         //NOTE: This is sort of a copy of Ship.BuildParts.  The main difference is that this does everything here.  Ship does some in BuildParts, then a bit more in a task off the constructor.
         //Ship requires a factory method that builds a ship async.  Bot kicks this off async from the constructor, so bot will run awhile before _parts gets populated.
-        private async static Task<Tuple<PartContainer, PartDNA[], CollisionHull[], AIMousePlate>> BuildParts(PartDNA[] dna, bool runNeural, bool repairPartPositions, World world, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
+        private async static Task<Tuple<PartContainer, ShipPartDNA[], CollisionHull[], AIMousePlate>> BuildParts(ShipPartDNA[] dna, bool runNeural, bool repairPartPositions, World world, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
         {
             if (dna == null)
             {
@@ -829,7 +829,7 @@ namespace Game.Newt.v2.Arcanorum
             }
 
             // Throw out parts that are too small
-            PartDNA[] usableParts = dna.Where(o => o.Scale.Length > .01d).ToArray();
+            ShipPartDNA[] usableParts = dna.Where(o => o.Scale.Length > .01d).ToArray();
             if (usableParts.Length == 0)
             {
                 return null;
@@ -856,16 +856,16 @@ namespace Game.Newt.v2.Arcanorum
 
             return Tuple.Create(container, results.DNA, results.Hulls, mousePlate);
         }
-        private static List<Tuple<PartBase, PartDNA>> BuildPartsSprtCreate(ref AIMousePlate mousePlate, PartContainerBuilding container, PartDNA[] parts, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
+        private static List<Tuple<PartBase, ShipPartDNA>> BuildPartsSprtCreate(ref AIMousePlate mousePlate, PartContainerBuilding container, ShipPartDNA[] parts, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
         {
             //TODO: Figure these out based on this.Radius
             const double SEARCHRADIUS = 10;
 
-            List<Tuple<PartBase, PartDNA>> retVal = new List<Tuple<PartBase, PartDNA>>();
+            List<Tuple<PartBase, ShipPartDNA>> retVal = new List<Tuple<PartBase, ShipPartDNA>>();
 
             //TODO: EnergyTank
 
-            foreach (PartDNA dna in parts)
+            foreach (ShipPartDNA dna in parts)
             {
                 switch (dna.PartType)
                 {
@@ -912,11 +912,11 @@ namespace Game.Newt.v2.Arcanorum
 
             return retVal;
         }
-        private static void BuildPartsSprtAdd<T>(T item, PartDNA dna, List<T> specificList, List<Tuple<PartBase, PartDNA>> combinedList) where T : PartBase
+        private static void BuildPartsSprtAdd<T>(T item, ShipPartDNA dna, List<T> specificList, List<Tuple<PartBase, ShipPartDNA>> combinedList) where T : PartBase
         {
             // This is just a helper method so one call adds to two lists
             specificList.Add(item);
-            combinedList.Add(new Tuple<PartBase, PartDNA>(item, dna));
+            combinedList.Add(new Tuple<PartBase, ShipPartDNA>(item, dna));
         }
 
         private void LevelChanged()
@@ -1551,7 +1551,7 @@ namespace Game.Newt.v2.Arcanorum
 
         public RamWeaponDNA Ram { get; set; }
 
-        public PartDNA[] Parts { get; set; }
+        public ShipPartDNA[] Parts { get; set; }
 
         // Level - also the number of shells (or somehow derived from level)
 

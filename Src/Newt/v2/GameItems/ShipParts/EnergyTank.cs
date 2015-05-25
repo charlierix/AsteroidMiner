@@ -256,7 +256,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public EnergyTank(EditorOptions options, ItemOptions itemOptions, PartDNA dna)
+        public EnergyTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -469,7 +469,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static Container GetContainer(out Vector3D actualScale, out double radius, ItemOptions itemOptions, PartDNA dna)
+        private static Container GetContainer(out Vector3D actualScale, out double radius, ItemOptions itemOptions, ShipPartDNA dna)
         {
             Container retVal = new Container();
 

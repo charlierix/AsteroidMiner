@@ -233,7 +233,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return CreateGeometry(true, true);
         }
 
-        public override PartDNA GetDNA()
+        public override ShipPartDNA GetDNA()
         {
             ThrusterDNA retVal = new ThrusterDNA();
 
@@ -243,7 +243,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return retVal;
         }
-        public override void SetDNA(PartDNA dna)
+        public override void SetDNA(ShipPartDNA dna)
         {
             if (!(dna is ThrusterDNA))
             {
@@ -1305,7 +1305,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #region Class: ThrusterDNA
 
-    public class ThrusterDNA : PartDNA
+    public class ThrusterDNA : ShipPartDNA
     {
         public ThrusterType ThrusterType
         {

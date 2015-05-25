@@ -203,7 +203,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public MotionController_Linear(EditorOptions options, ItemOptionsArco itemOptions, PartDNA dna, AIMousePlate mousePlate)
+        public MotionController_Linear(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, AIMousePlate mousePlate)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

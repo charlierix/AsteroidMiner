@@ -371,7 +371,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterMatterToFuel(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer fuelTanks)
+        public ConverterMatterToFuel(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer fuelTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -552,7 +552,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Internal Methods
 
-        internal static void GetMass(out double dryMass, out double volume, out Vector3D scale, ItemOptions itemOptions, PartDNA dna)
+        internal static void GetMass(out double dryMass, out double volume, out Vector3D scale, ItemOptions itemOptions, ShipPartDNA dna)
         {
             scale = dna.Scale * ConverterMatterToFuelDesign.SCALE;
 

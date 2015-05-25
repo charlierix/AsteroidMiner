@@ -350,7 +350,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// NOTE: It's assumed that energyTanks and fuelTanks are actually container groups holding the actual tanks, but it
         /// could be the tanks passed in directly
         /// </summary>
-        public ConverterEnergyToFuel(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks, IContainer fuelTanks)
+        public ConverterEnergyToFuel(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, IContainer fuelTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -409,7 +409,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        internal static double GetVolume(out Vector3D actualScale, PartDNA dna)
+        internal static double GetVolume(out Vector3D actualScale, ShipPartDNA dna)
         {
             // In reality, it's an odd shape.  But for this, just assume a cylinder
             double radX = dna.Scale.X * .5 * ConverterEnergyToFuelDesign.RADIUSPERCENTOFSCALE;

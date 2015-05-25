@@ -387,7 +387,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public BeamGun(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer plasma)
+        public BeamGun(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasma)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -436,7 +436,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, PartDNA dna, ItemOptions itemOptions)
+        private static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             // Just assume it's a cylinder
             double radX = dna.Scale.X * .5 * BeamGunDesign.RADIUSPERCENTOFSCALE;

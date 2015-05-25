@@ -24,6 +24,7 @@
             <Button Grid.Column="0" Name="btnBack" Content="Back" FontSize="30" FontWeight="Bold" Padding="12,4" HorizontalAlignment="Left" VerticalAlignment="Bottom" Click="btnBack_Click"/>
 
             <!-- TODO: Show the cargo along the left.  Let them dump cargo if they want -->
+            <!-- TODO: Give them the option to jettison cheap minerals when they run into better ones -->
             <!-- TODO: Also show general stats on the bottom left (money, desired accelerations) -->
 
             <Border Grid.Column="1" Background="#202020" BorderBrush="#101010" BorderThickness="2" Margin="8,0,0,0">

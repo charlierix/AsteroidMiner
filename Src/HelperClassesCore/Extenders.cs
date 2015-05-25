@@ -449,6 +449,10 @@ namespace Game.HelperClassesCore
         {
             return items[rand.Next(items.Length)];
         }
+        public static T NextItem<T>(this Random rand, IList<T> items)
+        {
+            return items[rand.Next(items.Count)];
+        }
 
         #endregion
     }

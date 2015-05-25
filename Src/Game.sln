@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Newt", "Newt", "{AF64F442-6C64-420F-9319-EB0A14A25C1B}"
 EndProject
@@ -56,6 +56,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arcanorum", "Newt\v2\Arcanorum\Arcanorum.csproj", "{ECC151BE-22FF-4D6D-9A13-27CED43257C2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenePool", "Newt\v2\GenePool\GenePool.csproj", "{65B4CECD-3124-4C42-8B02-A4B09F3C8DE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelperClassesAI", "HelperClassesAI\HelperClassesAI.csproj", "{BD763BB3-B9AB-4252-8265-CCB718B4519A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -139,6 +141,10 @@ Global
 		{65B4CECD-3124-4C42-8B02-A4B09F3C8DE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65B4CECD-3124-4C42-8B02-A4B09F3C8DE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65B4CECD-3124-4C42-8B02-A4B09F3C8DE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD763BB3-B9AB-4252-8265-CCB718B4519A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD763BB3-B9AB-4252-8265-CCB718B4519A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD763BB3-B9AB-4252-8265-CCB718B4519A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD763BB3-B9AB-4252-8265-CCB718B4519A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

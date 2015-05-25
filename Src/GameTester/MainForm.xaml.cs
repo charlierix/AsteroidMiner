@@ -138,7 +138,7 @@ namespace Game.GameTester
         }
         private void itemAstMiner2D_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2D().Show();
+            new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2DWindow().Show();
         }
         private void itemSwarmBots_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -146,7 +146,7 @@ namespace Game.GameTester
         }
 
         #endregion
-        #region WPF Tests
+        #region WPF
 
         private void itemColorVisualizer_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -192,14 +192,18 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Curves().Show();
         }
+        private void itemClouds_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Clouds().Show();
+        }
+        private void itemFlags_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.FlagGeneratorWindow().Show();
+        }
 
         #endregion
-        #region Misc Tests
+        #region Misc
 
-        private void itemNeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.NeuralTester().Show();
-        }
         private void itemPainter_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.FluidPainter2D().Show();
@@ -207,6 +211,26 @@ namespace Game.GameTester
         private void itemPainter3D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.FluidPainter3D().Show();
+        }
+
+        #endregion
+        #region Neural
+
+        private void itemNeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NeuralTester().Show();
+        }
+        private void itemEncogXOR_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.EncogXOR().Show();
+        }
+        private void itemEncogOCR_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.EncogOCR().Show();
+        }
+        private void itemImageFilters_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+
         }
 
         #endregion
@@ -220,30 +244,23 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Newt2Tester.Newt2Tester().Show();
         }
-        private void itemMultithreadWorlds_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.MultithreadWorlds().Show();
-        }
         private void itemTowerWrecker_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.TowerWrecker.TowerWreckerWindow().Show();
         }
-        private void itemWindTunnel_MouseUp(object sender, MouseButtonEventArgs e)
+        private void itemMultithreadWorlds_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.WindTunnelWindow().Show();
+            new Game.Newt.Testers.MultithreadWorlds().Show();
         }
-        private void itemWindTunnel2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void itemChaseForces_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.FluidFields.WindTunnel2().Show();
+            new Game.Newt.Testers.ChaseForces.ChaseForcesWindow().Show();
         }
-        private void itemAsteroidField_MouseUp(object sender, MouseButtonEventArgs e)
+        private void itemArcanorum_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.v2.AsteroidMiner.AstField.AsteroidFieldWindow().Show();
+            new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
         }
-        private void itemShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
-        }
+
         private void itemShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShipPartTesterWindow().Show();
@@ -251,6 +268,10 @@ namespace Game.GameTester
         private void itemOverlappingPartsTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.OverlappingPartsWindow().Show();
+        }
+        private void itemShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
         }
         private void itemBrainTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -267,6 +288,14 @@ namespace Game.GameTester
         private void itemShipCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShipCameraTester().Show();
+        }
+        private void itemWindTunnel_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.WindTunnelWindow().Show();
+        }
+        private void itemWindTunnel2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.FluidFields.WindTunnel2().Show();
         }
         private void itemGenePool_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -299,17 +328,13 @@ namespace Game.GameTester
 
             new Game.Newt.v2.GenePool.GenePoolWindow().Show();
         }
-        private void itemChaseForces_MouseUp(object sender, MouseButtonEventArgs e)
+        private void itemAsteroidField_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.ChaseForces.ChaseForcesWindow().Show();
-        }
-        private void itemArcanorum_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
+            new Game.Newt.v2.AsteroidMiner.AstField.AsteroidFieldWindow().Show();
         }
         private void itemAstMiner2D_2_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.v2.AsteroidMiner.AstMin2D.Miner().Show();
+            new Game.Newt.v2.AsteroidMiner.AstMin2D.MinerWindow().Show();
         }
 
         #endregion

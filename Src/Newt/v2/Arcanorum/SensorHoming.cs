@@ -184,7 +184,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public SensorHoming(EditorOptions options, ItemOptionsArco itemOptions, PartDNA dna, Map map, Point3D homePoint, double homeRadius)
+        public SensorHoming(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, Map map, Point3D homePoint, double homeRadius)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -443,7 +443,7 @@ namespace Game.Newt.v2.Arcanorum
             return toModelTransform.Transform(directionWorld);
         }
 
-        private static Neuron_SensorPosition[] CreateNeurons(PartDNA dna, ItemOptions itemOptions, double neuronDensity, bool ignoreSetValue)
+        private static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity, bool ignoreSetValue)
         {
             #region Calculate Counts
 

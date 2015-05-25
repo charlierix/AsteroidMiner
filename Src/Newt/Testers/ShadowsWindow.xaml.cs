@@ -7315,7 +7315,7 @@ namespace Game.Newt.Testers
                     #region Spin
 
                     double spinSize = 5d + (StaticRandom.NextDouble() * 8d);
-                    PartDNA dnaSpin = new PartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
+                    ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
                     return new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
 
                     #endregion
@@ -7323,7 +7323,7 @@ namespace Game.Newt.Testers
                 case 1:
                     #region Fuel
 
-                    PartDNA dnaFuel = new PartDNA() { PartType = FuelTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaFuel = new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     FuelTank fuel = new FuelTank(_editorOptions, _itemOptions, dnaFuel);
                     fuel.QuantityCurrent = fuel.QuantityMax;		// without this, the fuel tank gets tossed around because it's so light
                     return fuel;
@@ -7333,7 +7333,7 @@ namespace Game.Newt.Testers
                 case 2:
                     #region Energy
 
-                    PartDNA dnaEnergy = new PartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaEnergy = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new EnergyTank(_editorOptions, _itemOptions, dnaEnergy);
 
                     #endregion
@@ -7341,7 +7341,7 @@ namespace Game.Newt.Testers
                 case 3:
                     #region Brain
 
-                    PartDNA dnaBrain = new PartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
+                    ShipPartDNA dnaBrain = new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
                     return new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
                     #endregion
@@ -7365,7 +7365,7 @@ namespace Game.Newt.Testers
                 case 6:
                     #region Fuel->Energy
 
-                    PartDNA dnaBurner = new PartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaBurner = new ShipPartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterFuelToEnergy(_editorOptions, _itemOptions, dnaBurner, null, null);
 
                     #endregion
@@ -7373,7 +7373,7 @@ namespace Game.Newt.Testers
                 case 7:
                     #region Energy->Ammo
 
-                    PartDNA dnaReplicator = new PartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
+                    ShipPartDNA dnaReplicator = new ShipPartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dnaReplicator, null, null);
 
                     #endregion

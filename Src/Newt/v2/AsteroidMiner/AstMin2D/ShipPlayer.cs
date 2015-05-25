@@ -878,7 +878,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             ShipDNA retVal = UtilityCore.Clone(dna);
 
-            foreach (PartDNA part in retVal.PartsByLayer.SelectMany(o => o.Value))
+            foreach (ShipPartDNA part in retVal.PartsByLayer.SelectMany(o => o.Value))
             {
                 // Rotate the orientation
                 //part.Orientation = part.Orientation.RotateBy(rotation);

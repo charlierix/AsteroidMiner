@@ -1740,7 +1740,7 @@ namespace Game.Newt.v2.GameItems
         /// <param name="dna">This is the dna to populate</param>
         /// <param name="dnaSource">This is the container that the dna came from</param>
         /// <param name="outputs">This is all of the containers, and their links</param>
-        public static void PopulateDNALinks(PartDNA dna, INeuronContainer dnaSource, IEnumerable<ContainerOutput> outputs)
+        public static void PopulateDNALinks(ShipPartDNA dna, INeuronContainer dnaSource, IEnumerable<ContainerOutput> outputs)
         {
             // Find the output for the source passed in
             ContainerOutput output = outputs.Where(o => o.Container == dnaSource).FirstOrDefault();

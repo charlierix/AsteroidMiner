@@ -438,7 +438,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ProjectileGun(EditorOptions options, ItemOptions itemOptions, PartDNA dna, Map map, World world, int material_Projectile)
+        public ProjectileGun(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, Map map, World world, int material_Projectile)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -1449,7 +1449,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
         #region Private Methods
 
-        private static void GetMass(out double mass, out double volume, out double radius, out double barrelRadius, out Vector3D actualScale, PartDNA dna, ItemOptions itemOptions)
+        private static void GetMass(out double mass, out double volume, out double radius, out double barrelRadius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             // Just assume it's a cylinder
             double radX = dna.Scale.X * .5 * ProjectileGunDesign.RADIUSPERCENTOFSCALE;

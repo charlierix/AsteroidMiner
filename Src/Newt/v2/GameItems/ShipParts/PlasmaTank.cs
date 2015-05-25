@@ -189,7 +189,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public PlasmaTank(EditorOptions options, ItemOptions itemOptions, PartDNA dna)
+        public PlasmaTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
             : base(options, dna)
         {
             _itemOptions = itemOptions;

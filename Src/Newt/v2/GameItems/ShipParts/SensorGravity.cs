@@ -403,7 +403,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public SensorGravity(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks, IGravityField field)
+        public SensorGravity(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, IGravityField field)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -578,7 +578,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, PartDNA dna, ItemOptions itemOptions)
+        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             volume = dna.Scale.X * dna.Scale.Y * dna.Scale.Z;		// get volume of the cube
             volume *= SensorGravityDesign.SIZEPERCENTOFSCALE;		// scale it
@@ -591,7 +591,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             actualScale = new Vector3D(dna.Scale.X * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Y * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Z * SensorGravityDesign.SIZEPERCENTOFSCALE);
         }
 
-        internal static Neuron_SensorPosition[] CreateNeurons(PartDNA dna, ItemOptions itemOptions, double neuronDensity)
+        internal static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity)
         {
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent

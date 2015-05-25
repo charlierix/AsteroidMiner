@@ -428,7 +428,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public CameraColorRGB(EditorOptions options, ItemOptions itemOptions, PartDNA dna, IContainer energyTanks, CameraPool cameraPool)
+        public CameraColorRGB(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, CameraPool cameraPool)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
@@ -646,7 +646,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, PartDNA dna, ItemOptions itemOptions)
+        internal static void GetMass(out double mass, out double volume, out double radius, ShipPartDNA dna, ItemOptions itemOptions)
         {
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// they should be identical anyway
             radius *= CameraColorRGBDesign.SCALE;		// scale it
@@ -655,7 +655,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             mass = volume * itemOptions.CameraDensity;
         }
 
-        internal static void CreateNeurons(out Neuron_SensorPosition[] neuronsR, out Neuron_SensorPosition[] neuronsG, out Neuron_SensorPosition[] neuronsB, out OverlayResult[][] overlayR, out OverlayResult[][] overlayG, out OverlayResult[][] overlayB, out int pixelWidthHeight, PartDNA dna, ItemOptions itemOptions, double neuronDensity)
+        internal static void CreateNeurons(out Neuron_SensorPosition[] neuronsR, out Neuron_SensorPosition[] neuronsG, out Neuron_SensorPosition[] neuronsB, out OverlayResult[][] overlayR, out OverlayResult[][] overlayG, out OverlayResult[][] overlayB, out int pixelWidthHeight, ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity)
         {
             const int MINPIXELWIDTH = 16;
 

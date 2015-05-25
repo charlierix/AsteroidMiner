@@ -41,8 +41,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Public Properties
 
-        private FrameworkElement _flag = null;
-        public FrameworkElement Flag
+        private FlagVisual _flag = null;
+        public FlagVisual Flag
         {
             get
             {
@@ -51,12 +51,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     //TODO: Generate a more elaborite flag
                     //http://flag-designer.appspot.com/
 
-                    _flag = new Rectangle()
-                    {
-                        Width = FLAGWIDTH,
-                        Height = FLAGHEIGHT,
-                        Fill = new SolidColorBrush(UtilityWPF.GetRandomColor(0, 192))       // nothing too bright
-                    };
+                    //_flag = new Rectangle()
+                    //{
+                    //    Width = FLAGWIDTH,
+                    //    Height = FLAGHEIGHT,
+                    //    Fill = new SolidColorBrush(UtilityWPF.GetRandomColor(0, 192))       // nothing too bright
+                    //};
+
+                    _flag = new FlagVisual(FLAGWIDTH, FLAGHEIGHT, FlagGenerator.GetRandomFlag());
                 }
 
                 return _flag;
@@ -114,11 +116,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // Minerals
             inventory.AddRange(AdjustInventory(
                 this.StationInventory.Where(o => o.Mineral != null),
-                6,
+                4,
                 () =>
                 {
                     MineralType type = UtilityCore.GetRandomEnum<MineralType>();
-                    return new Inventory(new GameItems.ShipParts.Cargo_Mineral(type, Mineral.GetSettingsForMineralType(type).Density * Miner.MINERAL_DENSITYMULT, StaticRandom.NextPercent(Miner.MINERAL_AVGVOLUME, 2)));
+                    double volume = StaticRandom.NextPercent(ItemOptionsAstMin2D.MINERAL_AVGVOLUME, 2);
+                    return new Inventory(ItemOptionsAstMin2D.GetMineral(type, volume));
                 }));
 
             //TODO: Parts
@@ -131,7 +134,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         public decimal GetPrice_Buy(Inventory inventory)
         {
             decimal retVal = GetPrice_Base(inventory);
-            return retVal * .8m;
+            return retVal * 1.2m;
         }
         public decimal GetPrice_Buy_Fuel()
         {
@@ -153,7 +156,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         public decimal GetPrice_Sell(Inventory inventory)
         {
             decimal retVal = GetPrice_Base(inventory);
-            return retVal * 1.2m;
+            return retVal * .8m;
         }
 
         public static decimal GetPrice_Base(Inventory inventory)
@@ -172,7 +175,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
             else if (inventory.Mineral != null)
             {
-                return ItemOptionsAstMin2D.GetCredits_Mineral(inventory.Mineral.MineralType) * Convert.ToDecimal(inventory.Mineral.Volume);
+                //return ItemOptionsAstMin2D.GetCredits_Mineral(inventory.Mineral.MineralType, inventory.Mineral.Volume);
+                return inventory.Mineral.Credits;
             }
             else
             {

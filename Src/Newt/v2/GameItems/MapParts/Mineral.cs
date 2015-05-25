@@ -14,16 +14,20 @@ namespace Game.Newt.v2.GameItems.MapParts
     {
         #region Declaration Section
 
+        public const string PARTTYPE = "Mineral";
+
         private static ThreadLocal<SharedVisuals> _sharedVisuals = new ThreadLocal<SharedVisuals>(() => new SharedVisuals());
 
         #endregion
 
         #region Constructor
 
-        public Mineral(MineralType mineralType, Point3D position, double volumeInCubicMeters, World world, int materialID, SharedVisuals sharedVisuals, double densityMult = 1d, double scale = 1d)
+        public Mineral(MineralType mineralType, Point3D position, double volumeInCubicMeters, World world, int materialID, SharedVisuals sharedVisuals, double densityMult = 1d, double scale = 1d, decimal credits = 0m)
         {
             this.MineralType = mineralType;
             this.VolumeInCubicMeters = volumeInCubicMeters;
+            this.Scale = scale;
+            this.Credits = credits;
 
             this.Model = GetNewVisual(mineralType, sharedVisuals, scale);
 
@@ -167,6 +171,13 @@ namespace Game.Newt.v2.GameItems.MapParts
             get;
             private set;
         }
+
+        public readonly double Scale;
+
+        /// <summary>
+        /// This should just be a baseline value.  Buyers/Sellers could apply their own multipliers based on supply/desire
+        /// </summary>
+        public readonly decimal Credits;
 
         #endregion
 
@@ -455,6 +466,25 @@ namespace Game.Newt.v2.GameItems.MapParts
             }
         }
 
+        public virtual MineralDNA GetNewDNA()
+        {
+            return new MineralDNA()
+            {
+                PartType = PARTTYPE,
+                Position = this.PositionWorld,
+                Orientation = this.PhysicsBody.Rotation,
+                Radius = this.Radius,
+                Velocity = this.PhysicsBody.Velocity,
+                AngularVelocity = this.PhysicsBody.AngularVelocity,
+
+                MineralType = this.MineralType,
+                Volume = this.VolumeInCubicMeters,
+                Density = this.Density,
+                Scale = this.Scale,
+                Credits = this.Credits,
+            };
+        }
+
         #endregion
 
         #region Private Methods
@@ -585,6 +615,18 @@ namespace Game.Newt.v2.GameItems.MapParts
         public readonly double SpecularPower;
         public readonly Color EmissiveColor;
         public readonly double Density;
+    }
+
+    #endregion
+    #region Class: MineralDNA
+
+    public class MineralDNA : MapPartDNA
+    {
+        public MineralType MineralType { get; set; }
+        public double Volume { get; set; }
+        public double Density { get; set; }
+        public double Scale { get; set; }
+        public decimal Credits { get; set; }
     }
 
     #endregion

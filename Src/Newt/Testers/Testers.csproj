@@ -59,6 +59,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="encog-core-cs">
+      <HintPath>..\..\lib\Encog\3.3.0\encog-core-cs.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -127,6 +130,9 @@
     <Compile Include="ChaseForces\OrientationVelocity.xaml.cs">
       <DependentUpon>OrientationVelocity.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Clouds.xaml.cs">
+      <DependentUpon>Clouds.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ClusteredPoints.xaml.cs">
       <DependentUpon>ClusteredPoints.xaml</DependentUpon>
     </Compile>
@@ -142,8 +148,20 @@
     <Compile Include="DoubleVectorWindow.xaml.cs">
       <DependentUpon>DoubleVectorWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Encog\EncogOCR.xaml.cs">
+      <DependentUpon>EncogOCR.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Encog\EncogXOR.xaml.cs">
+      <DependentUpon>EncogXOR.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
+      <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EvenDistributionSphere.xaml.cs">
       <DependentUpon>EvenDistributionSphere.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="FlagGeneratorWindow.xaml.cs">
+      <DependentUpon>FlagGeneratorWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="FluidFields\FluidPainter2D.xaml.cs">
       <DependentUpon>FluidPainter2D.xaml</DependentUpon>
@@ -311,6 +329,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Clouds.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ClusteredPoints.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -335,9 +357,25 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="Encog\EncogOCR.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\EncogXOR.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\OCRTestDataVisualizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="EvenDistributionSphere.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="FlagGeneratorWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="FluidFields\FluidPainter2D.xaml">
       <SubType>Designer</SubType>
@@ -499,6 +537,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\HelperClassesAI\HelperClassesAI.csproj">
+      <Project>{bd763bb3-b9ab-4252-8265-ccb718b4519a}</Project>
+      <Name>HelperClassesAI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
       <Name>HelperClassesCore</Name>

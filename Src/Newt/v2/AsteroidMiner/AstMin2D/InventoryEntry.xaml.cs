@@ -103,7 +103,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             // Quantities
             lblVolume.Text = Math.Round(inventory.Volume, 2).ToString();
-            lblMass.Text = Math.Round(inventory.Volume, 2).ToString();
+            lblMass.Text = Math.Round(inventory.Mass, 2).ToString();
             lblPrice.Text = credits.ToString("N0");
 
             // Action Buttons

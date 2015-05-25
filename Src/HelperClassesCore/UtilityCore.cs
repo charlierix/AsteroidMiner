@@ -287,9 +287,15 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// This enumerates the array in a random order
         /// </summary>
-        public static IEnumerable<T> RandomOrder<T>(T[] array)
+        public static IEnumerable<T> RandomOrder<T>(T[] array, int? max = null)
         {
-            foreach (int index in RandomRange(0, array.Length))
+            int actualMax = max ?? array.Length;
+            if (actualMax > array.Length)
+            {
+                actualMax = array.Length;
+            }
+
+            foreach (int index in RandomRange(0, array.Length, actualMax))
             {
                 yield return array[index];
             }
@@ -297,9 +303,15 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// This enumerates the list in a random order
         /// </summary>
-        public static IEnumerable<T> RandomOrder<T>(IList<T> list)
+        public static IEnumerable<T> RandomOrder<T>(IList<T> list, int? max = null)
         {
-            foreach (int index in RandomRange(0, list.Count))
+            int actualMax = max ?? list.Count;
+            if (actualMax > list.Count)
+            {
+                actualMax = list.Count;
+            }
+
+            foreach (int index in RandomRange(0, list.Count, actualMax))
             {
                 yield return list[index];
             }
@@ -517,11 +529,11 @@ namespace Game.HelperClassesCore
             return retVal.ToArray();
         }
 
-        public static T GetRandomEnum<T>(T excluding)
+        public static T GetRandomEnum<T>(T excluding) where T : struct
         {
             return GetRandomEnum<T>(new T[] { excluding });
         }
-        public static T GetRandomEnum<T>(IEnumerable<T> excluding)
+        public static T GetRandomEnum<T>(IEnumerable<T> excluding) where T : struct
         {
             while (true)
             {
@@ -532,7 +544,7 @@ namespace Game.HelperClassesCore
                 }
             }
         }
-        public static T GetRandomEnum<T>()
+        public static T GetRandomEnum<T>() where T : struct
         {
             Array allValues = Enum.GetValues(typeof(T));
             if (allValues.Length == 0)
@@ -546,9 +558,31 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// This is just a wrapper to Enum.GetValues.  Makes the caller's code a bit less ugly
         /// </summary>
-        public static T[] GetEnums<T>()
+        public static T[] GetEnums<T>() where T : struct
         {
             return (T[])Enum.GetValues(typeof(T));
+        }
+
+        /// <summary>
+        /// This is a strongly typed wrapper to Enum.Parse
+        /// </summary>
+        public static T EnumParse<T>(string text, bool ignoreCase = true) where T : struct // can't constrain to enum
+        {
+            return (T)Enum.Parse(typeof(T), text, ignoreCase);
+        }
+
+        public static int GetIndexIntoList(double percent, int count)
+        {
+            if (count <= 0)
+            {
+                throw new ArgumentException("Count must be greater than zero");
+            }
+
+            int retVal = Convert.ToInt32(Math.Floor(count * percent));
+            if (retVal < 0) retVal = 0;
+            if (retVal >= count) retVal = count - 1;
+
+            return retVal;
         }
 
         /// <summary>
@@ -576,6 +610,10 @@ namespace Game.HelperClassesCore
             if (array == null)
             {
                 return items.ToArray();
+            }
+            else if(items == null)
+            {
+                return array.ToArray();
             }
 
             T[] retVal = new T[array.Length + items.Length];

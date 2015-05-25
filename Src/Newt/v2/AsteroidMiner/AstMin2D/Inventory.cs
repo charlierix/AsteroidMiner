@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Game.HelperClassesCore;
+using Game.Newt.v2.AsteroidMiner.MapParts;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipParts;
@@ -28,7 +29,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             this.Token = TokenGenerator.NextToken();
         }
-        public Inventory(PartDNA part, double scale, int count)
+        public Inventory(ShipPartDNA part, double scale, int count)
         {
             //TODO: Rebuild the dna with a changed scaled
             //PartDNA scaledPart = 
@@ -44,7 +45,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             this.Token = TokenGenerator.NextToken();
         }
-        public Inventory(Cargo_Mineral mineral)
+        public Inventory(MineralDNA mineral)
         {
             this.Ship = null;
             this.Part = null;
@@ -70,8 +71,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         // Only one of these will be set
         public readonly ShipDNA Ship;
-        public readonly PartDNA Part;
-        public readonly Cargo_Mineral Mineral;
+        public readonly ShipPartDNA Part;
+        public readonly MineralDNA Mineral;     // can't store the actual mineral, because when a cargo bay removes, it reduces volume.  Since this is a readonly property, there's no way to overwrite with the clone
 
         public readonly long Token;
     }

@@ -84,8 +84,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Asteroid.cs" />
-    <Compile Include="AsteroidMiner2D\Miner2D.xaml.cs">
-      <DependentUpon>Miner2D.xaml</DependentUpon>
+    <Compile Include="AsteroidMiner2D\Miner2DWindow.xaml.cs">
+      <DependentUpon>Miner2DWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="AsteroidMiner2D\OptionsPanel.xaml.cs">
       <DependentUpon>OptionsPanel.xaml</DependentUpon>
@@ -132,7 +132,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="AsteroidMiner2D\Miner2D.xaml">
+    <Page Include="AsteroidMiner2D\Miner2DWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

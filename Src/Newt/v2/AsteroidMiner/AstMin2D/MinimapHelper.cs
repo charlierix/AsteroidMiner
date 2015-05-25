@@ -245,8 +245,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             geometry.Material = materials;
             geometry.BackMaterial = materials;
             geometry.Geometry = _blipGeometry_Circle.Value;
-            //geometry.Transform = new ScaleTransform3D(asteroid.Radius * 1.75, asteroid.Radius * 1.75, asteroid.Radius * .4);
-            geometry.Transform = new ScaleTransform3D(asteroid.Radius * 2.2, asteroid.Radius * 2.2, asteroid.Radius * .4);
+
+            double[] astRad = new[] { asteroid.RadiusVect.X, asteroid.RadiusVect.Y, asteroid.RadiusVect.Z }.OrderByDescending(o => o).ToArray();
+            double avgRad = Math3D.Avg(asteroid.RadiusVect.X, asteroid.RadiusVect.Y, asteroid.RadiusVect.Z);
+
+            Transform3DGroup transform = new Transform3DGroup();
+            transform.Children.Add(new ScaleTransform3D(astRad[0] * 2.2, astRad[2] * 2.2, astRad[1] * .5));
+            transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), StaticRandom.NextDouble(360))));
+            geometry.Transform = transform;
 
             // Model Visual
             ModelVisual3D retVal = new ModelVisual3D();
@@ -343,7 +349,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             const double SIZE = 35;
 
             FrameworkElement flag = station.Flag;
-            BitmapSource flagImage = UtilityWPF.RenderControl(flag, Convert.ToInt32(flag.Width), Convert.ToInt32(flag.Height), false);
+            BitmapSource flagImage = UtilityWPF.RenderControl(flag, Convert.ToInt32(SpaceStation2D.FLAGWIDTH), Convert.ToInt32(SpaceStation2D.FLAGHEIGHT), false);
 
             // Material
             MaterialGroup materials = new MaterialGroup();
@@ -356,15 +362,18 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             geometry.Material = materials;
             geometry.BackMaterial = materials;
 
-            double avg = (flag.Width + flag.Height) / 2;
+            double avg = (SpaceStation2D.FLAGWIDTH + SpaceStation2D.FLAGHEIGHT) / 2;
 
-            double width = flag.Width * (SIZE / avg);
-            double height = flag.Height * (SIZE / avg);
+            double width = SpaceStation2D.FLAGWIDTH * (SIZE / avg);
+            double height = SpaceStation2D.FLAGHEIGHT * (SIZE / avg);
 
             Point max = new Point(width / 2, height / 2);
             Point min = new Point(-max.X, -max.Y);
 
             geometry.Geometry = UtilityWPF.GetSquare2D(min, max);
+
+            // The flag was upside down
+            geometry.Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 180));
 
             // Model Visual
             ModelVisual3D retVal = new ModelVisual3D();

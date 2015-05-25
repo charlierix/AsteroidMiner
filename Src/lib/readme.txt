@@ -1,0 +1,1 @@
+Newton libraries are in the corresponding NewtonDynamics projects

@@ -313,7 +313,7 @@ namespace Game.Newt.v2.GameItems
         public class BuildPartsResults
         {
             public PartBase[] AllParts = null;
-            public PartDNA[] DNA = null;
+            public ShipPartDNA[] DNA = null;
             public CollisionHull[] Hulls = null;
 
             public IPartUpdatable[] UpdatableParts_MainThread = null;
@@ -1016,11 +1016,11 @@ namespace Game.Newt.v2.GameItems
         public virtual ShipDNA GetNewDNA()
         {
             // Create dna for each part using that part's current stats
-            List<PartDNA> dnaParts = new List<PartDNA>();
+            List<ShipPartDNA> dnaParts = new List<ShipPartDNA>();
 
             foreach (PartBase part in _parts.AllParts)
             {
-                PartDNA dna = part.GetNewDNA();
+                ShipPartDNA dna = part.GetNewDNA();
 
                 if (_parts.Links != null && part is INeuronContainer)
                 {
@@ -1037,7 +1037,7 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        public async static Task<BuildPartsResults> BuildParts_Finish(List<Tuple<PartBase, PartDNA>> combined, PartDNA[] usableParts, bool runNeural, bool repairPartPositions, ItemOptions itemOptions, World world)
+        public async static Task<BuildPartsResults> BuildParts_Finish(List<Tuple<PartBase, ShipPartDNA>> combined, ShipPartDNA[] usableParts, bool runNeural, bool repairPartPositions, ItemOptions itemOptions, World world)
         {
             BuildPartsResults retVal = new BuildPartsResults();
 
@@ -1191,7 +1191,7 @@ namespace Game.Newt.v2.GameItems
         private async static Task<Tuple<ShipDNA, CollisionHull[]>> BuildParts(PartContainerBuilding container, ShipDNA shipDNA, bool runNeural, bool repairPartPositions, World world, EditorOptions options, ItemOptions itemOptions, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, int material_Projectile)
         {
             // Throw out parts that are too small
-            PartDNA[] usableParts = shipDNA.PartsByLayer.Values.SelectMany(o => o).Where(o => o.Scale.Length > .01d).ToArray();
+            ShipPartDNA[] usableParts = shipDNA.PartsByLayer.Values.SelectMany(o => o).Where(o => o.Scale.Length > .01d).ToArray();
 
             // Create the parts based on dna
             var combined = BuildParts_Create(container, usableParts, options, itemOptions, radiation, gravity, cameraPool, map, world, material_Projectile);
@@ -1207,14 +1207,14 @@ namespace Game.Newt.v2.GameItems
             ShipDNA retVal = ShipDNA.Create(shipDNA, results.DNA);
             return Tuple.Create(retVal, results.Hulls);
         }
-        private static List<Tuple<PartBase, PartDNA>> BuildParts_Create(PartContainerBuilding container, PartDNA[] parts, EditorOptions options, ItemOptions itemOptions, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, World world, int material_Projectile)
+        private static List<Tuple<PartBase, ShipPartDNA>> BuildParts_Create(PartContainerBuilding container, ShipPartDNA[] parts, EditorOptions options, ItemOptions itemOptions, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, World world, int material_Projectile)
         {
-            List<Tuple<PartBase, PartDNA>> retVal = new List<Tuple<PartBase, PartDNA>>();
+            List<Tuple<PartBase, ShipPartDNA>> retVal = new List<Tuple<PartBase, ShipPartDNA>>();
 
             #region Containers
 
             // Containers need to be built up front
-            foreach (PartDNA dna in parts)
+            foreach (ShipPartDNA dna in parts)
             {
                 switch (dna.PartType)
                 {
@@ -1268,7 +1268,7 @@ namespace Game.Newt.v2.GameItems
             #endregion
             #region Standard Parts
 
-            foreach (PartDNA dna in parts)
+            foreach (ShipPartDNA dna in parts)
             {
                 switch (dna.PartType)
                 {
@@ -1400,7 +1400,7 @@ namespace Game.Newt.v2.GameItems
 
             return retVal;
         }
-        private static Tuple<PartDNA[], CollisionHull[]> BuildParts_Move(PartBase[] allParts, PartDNA[] usableParts, bool repairPartPositions, World world)
+        private static Tuple<ShipPartDNA[], CollisionHull[]> BuildParts_Move(PartBase[] allParts, ShipPartDNA[] usableParts, bool repairPartPositions, World world)
         {
             CollisionHull[] hulls = null;
 
@@ -1464,14 +1464,14 @@ namespace Game.Newt.v2.GameItems
                 cargoBayGroup = new CargoBayGroup(cargoBays.ToArray());
             }
         }
-        private static void BuildParts_Add<T>(T item, PartDNA dna, List<T> specificList, List<Tuple<PartBase, PartDNA>> combinedList) where T : PartBase
+        private static void BuildParts_Add<T>(T item, ShipPartDNA dna, List<T> specificList, List<Tuple<PartBase, ShipPartDNA>> combinedList) where T : PartBase
         {
             // This is just a helper method so one call adds to two lists
             specificList.Add(item);
-            combinedList.Add(new Tuple<PartBase, PartDNA>(item, dna));
+            combinedList.Add(new Tuple<PartBase, ShipPartDNA>(item, dna));
         }
 
-        private static NeuralUtility.ContainerOutput[] LinkNeurons(Tuple<PartBase, PartDNA>[] parts, ItemOptions itemOptions)
+        private static NeuralUtility.ContainerOutput[] LinkNeurons(Tuple<PartBase, ShipPartDNA>[] parts, ItemOptions itemOptions)
         {
             #region Build up input args
 
@@ -1480,7 +1480,7 @@ namespace Game.Newt.v2.GameItems
             foreach (var part in parts.Where(o => o.Item1 is INeuronContainer))
             {
                 INeuronContainer container = (INeuronContainer)part.Item1;
-                PartDNA dna = part.Item2;
+                ShipPartDNA dna = part.Item2;
                 NeuralLinkDNA[] internalLinks = dna == null ? null : dna.InternalLinks;
                 NeuralLinkExternalDNA[] externalLinks = dna == null ? null : dna.ExternalLinks;
 
@@ -1558,7 +1558,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         //TODO: Account for the invisible structural filler between the parts (probably just do a convex hull and give the filler a uniform density)
-        private static void GetInertiaTensorAndCenterOfMass_Points(out MassMatrix matrix, out Point3D center, PartBase[] parts, PartDNA[] dna, double inertiaMultiplier)
+        private static void GetInertiaTensorAndCenterOfMass_Points(out MassMatrix matrix, out Point3D center, PartBase[] parts, ShipPartDNA[] dna, double inertiaMultiplier)
         {
             #region Prep work
 
@@ -1747,6 +1747,7 @@ namespace Game.Newt.v2.GameItems
 
     #region Class: ShipDNA
 
+    //TODO: Make this derive from MapPartDNA
     public class ShipDNA
     {
         //TODO: Store mutation rates
@@ -1797,7 +1798,7 @@ namespace Game.Newt.v2.GameItems
             get;
             set;
         }
-        public SortedList<int, List<PartDNA>> PartsByLayer
+        public SortedList<int, List<ShipPartDNA>> PartsByLayer
         {
             get;
             set;
@@ -1813,14 +1814,14 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// This is just a convenience if you don't care about the ship's name and layers (it always creates 1 layer)
         /// </summary>
-        public static ShipDNA Create(IEnumerable<PartDNA> parts)
+        public static ShipDNA Create(IEnumerable<ShipPartDNA> parts)
         {
             return Create(Guid.NewGuid().ToString(), parts);
         }
         /// <summary>
         /// This is just a convenience if you don't care about the layers (it always creates 1 layer)
         /// </summary>
-        public static ShipDNA Create(string name, IEnumerable<PartDNA> parts)
+        public static ShipDNA Create(string name, IEnumerable<ShipPartDNA> parts)
         {
             ShipDNA retVal = new ShipDNA();
 
@@ -1829,8 +1830,8 @@ namespace Game.Newt.v2.GameItems
             retVal.Generation = 0;
 
             retVal.LayerNames = new string[] { "layer1" }.ToList();
-            retVal.PartsByLayer = new SortedList<int, List<PartDNA>>();
-            retVal.PartsByLayer.Add(0, new List<PartDNA>(parts));
+            retVal.PartsByLayer = new SortedList<int, List<ShipPartDNA>>();
+            retVal.PartsByLayer.Add(0, new List<ShipPartDNA>(parts));
 
             return retVal;
         }
@@ -1838,7 +1839,7 @@ namespace Game.Newt.v2.GameItems
         /// NOTE: Only the ship level properties are copied from prev
         /// TODO: Try to preserve layers (comparing prev.parts with parts)
         /// </summary>
-        public static ShipDNA Create(ShipDNA prev, IEnumerable<PartDNA> parts)
+        public static ShipDNA Create(ShipDNA prev, IEnumerable<ShipPartDNA> parts)
         {
             ShipDNA retVal = new ShipDNA();
 
@@ -1849,8 +1850,8 @@ namespace Game.Newt.v2.GameItems
 
             // Copy these from parts
             retVal.LayerNames = new string[] { "layer1" }.ToList();
-            retVal.PartsByLayer = new SortedList<int, List<PartDNA>>();
-            retVal.PartsByLayer.Add(0, new List<PartDNA>(parts));
+            retVal.PartsByLayer = new SortedList<int, List<ShipPartDNA>>();
+            retVal.PartsByLayer.Add(0, new List<ShipPartDNA>(parts));
 
             return retVal;
         }

@@ -1546,6 +1546,29 @@ namespace Game.Newt.v2.GameItems
 
         public readonly bool HasChildren;
 
+        /// <summary>
+        /// This iterates over the non null child nodes
+        /// </summary>
+        /// <remarks>
+        /// If you want to walk the whole tree linq style, use the extension method in HelperClassesCore:
+        /// snapshot.Descendants(o => o.Children).Select(~~~
+        /// </remarks>
+        public IEnumerable<MapOctree> Children
+        {
+            get
+            {
+                return UtilityCore.Iterate<MapOctree>(
+                    X0_Y0_Z0,
+                    X0_Y0_Z1,
+                    X0_Y1_Z0,
+                    X0_Y1_Z1,
+                    X1_Y0_Z0,
+                    X1_Y0_Z1,
+                    X1_Y1_Z0,
+                    X1_Y1_Z1);
+            }
+        }
+
         // Since an octree has 8 children, each child corresponds to a +-X, +-Y, +-Z
         // For naming, negative is 0, positive is 1.  So X0Y0Z0 is the bottom left back cell, and X1Y1Z1 is the top right front cell
         public readonly MapOctree X0_Y0_Z0;

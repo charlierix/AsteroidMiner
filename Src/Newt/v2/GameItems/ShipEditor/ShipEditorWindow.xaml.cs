@@ -284,7 +284,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             //TODO: Validate the ship
             //ship.IsValid = 
             ship.LayerNames = layerNames;
-            ship.PartsByLayer = new SortedList<int, List<PartDNA>>();
+            ship.PartsByLayer = new SortedList<int, List<ShipPartDNA>>();
             foreach (int layerIndex in partsByLayer.Keys)
             {
                 ship.PartsByLayer.Add(layerIndex, partsByLayer[layerIndex].Select(o => o.Part3D.GetDNA()).ToList());
@@ -315,7 +315,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             editor1.SetDesign(ship.ShipName, ship.LayerNames, partsByLayer);
         }
 
-        private DesignPart CreateDesignPart(PartDNA dna)
+        private DesignPart CreateDesignPart(ShipPartDNA dna)
         {
             #region Find ToolItem
 

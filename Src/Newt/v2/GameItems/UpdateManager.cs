@@ -49,6 +49,14 @@ namespace Game.Newt.v2.GameItems
 
         private long _updateCount_Any = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
 
+        // --------------------- variables for updatable items that aren't in the map
+
+        /// <summary>
+        /// Interval Skips, Part to update, token (token only needed for remove)
+        /// </summary>
+        private readonly List<Tuple<int, IPartUpdatable, long>> _nonmapItemsMain = new List<Tuple<int, IPartUpdatable, long>>();
+        private volatile Tuple<int, IPartUpdatable, long>[] _nonmapItemsAny = null;
+
         #endregion
 
         #region Constructor
@@ -140,26 +148,41 @@ namespace Game.Newt.v2.GameItems
                 #endregion
             }
 
-            if (_typesMain == null)
-            {
-                return;
-            }
-
             _updateCount_Main++;
 
-            foreach (var type in _typesMain)
+            #region non map items
+
+            foreach (var item in _nonmapItemsMain)
             {
-                if (type.Item2 > 0 && _updateCount_Main % (type.Item2 + 1) != 0)
+                if (_updateCount_Main % (item.Item1 + 1) != 0)
                 {
                     continue;
                 }
 
-                // Update all the live instances
-                foreach (IPartUpdatable item in _map.GetItems(type.Item1, false))      // Not bothering to call these in random order, because main thread should just be graphics
+                item.Item2.Update_MainThread(elapsedTime + (elapsedTime * item.Item1));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+            }
+
+            #endregion
+            #region items in map
+
+            if (_typesMain != null)
+            {
+                foreach (var type in _typesMain)
                 {
-                    item.Update_MainThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                    if (type.Item2 > 0 && _updateCount_Main % (type.Item2 + 1) != 0)
+                    {
+                        continue;
+                    }
+
+                    // Update all the live instances
+                    foreach (IPartUpdatable item in _map.GetItems(type.Item1, false))      // Not bothering to call these in random order, because main thread should just be graphics
+                    {
+                        item.Update_MainThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                    }
                 }
             }
+
+            #endregion
         }
 
         private void TimerAnyThread_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -197,32 +220,74 @@ namespace Game.Newt.v2.GameItems
             }
 
             Tuple<Type, int>[] typesAny = _typesAny;
-            if (typesAny == null)
-            {
-                _timerAnyThread.Start();
-                return;
-            }
-
             long count = Interlocked.Increment(ref _updateCount_Any);
 
-            foreach (var type in typesAny)
-            {
-                if (type.Item2 > 0 && count % (type.Item2 + 1) != 0)
-                {
-                    continue;
-                }
+            #region non map items
 
-                // Update all the live instances in a random order
-                IMapObject[] items = _map.GetItems(type.Item1, false).ToArray();
-                foreach (int index in UtilityCore.RandomRange(0, items.Length))
+            var nonmapItems = _nonmapItemsAny;
+
+            if(nonmapItems != null)
+            {
+                foreach(var item in nonmapItems)
                 {
-                    ((IPartUpdatable)items[index]).Update_AnyThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                    if (count % (item.Item1 + 1) != 0)
+                    {
+                        continue;
+                    }
+
+                    item.Item2.Update_AnyThread(elapsedTime + (elapsedTime * item.Item1));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
                 }
             }
+
+            #endregion
+            #region items in map
+
+            if (typesAny != null)
+            {
+                foreach (var type in typesAny)
+                {
+                    if (type.Item2 > 0 && count % (type.Item2 + 1) != 0)
+                    {
+                        continue;
+                    }
+
+                    // Update all the live instances in a random order
+                    IMapObject[] items = _map.GetItems(type.Item1, false).ToArray();
+                    foreach (int index in UtilityCore.RandomRange(0, items.Length))
+                    {
+                        ((IPartUpdatable)items[index]).Update_AnyThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                    }
+                }
+            }
+
+            #endregion
 
             _disposeWait.Set();     // Dispose will hang the main thread to make sure this tick has finished
 
             _timerAnyThread.Start();        // it doesn't matter if this class is disposed, the bool is checked at the beginning of this method (no need to take the expense of checking again)
+        }
+
+        /// <summary>
+        /// This allows items to be updated that aren't added to the map
+        /// </summary>
+        public void AddNonMapItem(IPartUpdatable item, long token)
+        {
+            if (item.IntervalSkips_MainThread != null)
+            {
+                _nonmapItemsMain.Add(Tuple.Create(item.IntervalSkips_MainThread.Value, item, token));
+            }
+
+            lock (_lockTypesAny)
+            {
+                if (item.IntervalSkips_AnyThread != null)
+                {
+                    _nonmapItemsAny = UtilityCore.ArrayAdd(_nonmapItemsAny, Tuple.Create(item.IntervalSkips_AnyThread.Value, item, token));
+                }
+            }
+        }
+        public void RemoveNonMapItem(long token)
+        {
+
         }
 
         #region Private Methods
