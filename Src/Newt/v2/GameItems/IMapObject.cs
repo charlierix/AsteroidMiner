@@ -31,6 +31,7 @@ namespace Game.Newt.v2.GameItems
 
         /// <summary>
         /// This can be helpful if there are too many objects, and old ones need to be cleared
+        /// NOTE: This is DateTime.UtcNow
         /// </summary>
         /// <remarks>
         /// The physics world could be running at a different rate than real time, so this should only be used when

@@ -137,7 +137,7 @@ namespace Game.Newt.v2.Arcanorum
 
             this.ContainedTreasureDNA = containedTreasureDNA;
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

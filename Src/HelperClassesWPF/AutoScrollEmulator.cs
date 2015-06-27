@@ -325,7 +325,7 @@ namespace Game.HelperClassesWPF
         /// The time of the last occurance of Timer_Tick.  This is used to know how much actual time has elapsed between ticks,
         /// which is used to keep the scroll distance output normalized to time instead of ticks (in cases with low FPS)
         /// </summary>
-        private DateTime _lastTick = DateTime.Now;
+        private DateTime _lastTick = DateTime.UtcNow;
 
         #endregion
 
@@ -450,7 +450,7 @@ namespace Game.HelperClassesWPF
             //_centerImage.Image.RenderTransform = new TranslateTransform(placePoint.X, placePoint.Y);
             _centerImage.ShowCenterImage(mouseDownPointScreen);
 
-            _lastTick = DateTime.Now;
+            _lastTick = DateTime.UtcNow;
             _timer.Start();
         }
 
@@ -508,7 +508,7 @@ namespace Game.HelperClassesWPF
         private void Timer_Tick(object sender, EventArgs e)
         {
             // Account for slow machines
-            double elapsedTime = (DateTime.Now - _lastTick).TotalMilliseconds;
+            double elapsedTime = (DateTime.UtcNow - _lastTick).TotalMilliseconds;
             double timeStretch = elapsedTime / _timer.Interval.TotalMilliseconds;
 
             // Calculate Delta
@@ -539,7 +539,7 @@ namespace Game.HelperClassesWPF
             #endregion
 
             // Remember the current time
-            _lastTick = DateTime.Now;
+            _lastTick = DateTime.UtcNow;
         }
 
         #endregion

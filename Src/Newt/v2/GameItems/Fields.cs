@@ -422,7 +422,7 @@ namespace Game.Newt.v2.GameItems
         private void Timer_Tick(object sender, EventArgs e)
         {
             _timer.IsEnabled = false;
-            DateTime startTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
 
             MapOctree snapshot = _map.LatestSnapshot;
             if (snapshot == null || (_lastSnapshotToken != null && snapshot.Token == _lastSnapshotToken.Value))
@@ -886,7 +886,7 @@ namespace Game.Newt.v2.GameItems
 
         private void ScheduleNextTick(DateTime startTime)
         {
-            double nextSnapshotWaitTime = _map.SnapshotFequency_Milliseconds - (DateTime.Now - startTime).TotalMilliseconds;
+            double nextSnapshotWaitTime = _map.SnapshotFequency_Milliseconds - (DateTime.UtcNow - startTime).TotalMilliseconds;
             if (nextSnapshotWaitTime < 1d)
             {
                 nextSnapshotWaitTime = 1d;

@@ -51,7 +51,7 @@ namespace Game.Newt.v2.Arcanorum
                     this.PhysicsBody = new Body(hull, Matrix3D.Identity, 250, null);
                 }
 
-                this.CreationTime = DateTime.Now;
+                this.CreationTime = DateTime.UtcNow;
             }
 
             #region IMapObject Members
@@ -300,10 +300,10 @@ namespace Game.Newt.v2.Arcanorum
         private Brush _coordBrushOutline = new SolidColorBrush(UtilityWPF.ColorFromHex("70000000"));
         private Lazy<FontFamily> _strikeFont = new Lazy<FontFamily>(() => GetBestStrikeFont());
 
-        private DateTime _nextCleanup = DateTime.Now + TimeSpan.FromSeconds(60);
+        private DateTime _nextCleanup = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         private int _checkPortalCountdown = -1;
 
-        private DateTime? _clearStatusTime = DateTime.Now;
+        private DateTime? _clearStatusTime = DateTime.UtcNow;
 
         private bool _use3DPanels;      // this comes from the config
 
@@ -761,7 +761,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 _updateManager.Update_MainThread(e.ElapsedTime);
 
-                if (_clearStatusTime != null && DateTime.Now > _clearStatusTime)
+                if (_clearStatusTime != null && DateTime.UtcNow > _clearStatusTime)
                 {
                     statusMessage.Text = "";
                     _clearStatusTime = null;
@@ -801,7 +801,7 @@ namespace Game.Newt.v2.Arcanorum
                 //_fitnessAll.Update_AnyThread(e.ElapsedTime);
 
                 ////TODO: Add Age to IMapObject
-                //double age = (DateTime.Now - _player.CreationTime).TotalSeconds;
+                //double age = (DateTime.UtcNow - _player.CreationTime).TotalSeconds;
 
                 //lblFitnessFarTotal.Text = Math.Round(_fitnessFar.Score, 3).ToString();
                 //lblFitnessFarRate.Text = Math.Round(_fitnessFar.Score / age, 3).ToString();
@@ -934,7 +934,7 @@ namespace Game.Newt.v2.Arcanorum
 
                 int index = 0;
 
-                DateTime now = DateTime.Now;
+                DateTime now = DateTime.UtcNow;
 
                 while (index < _visuals2D.Count)
                 {
@@ -965,10 +965,10 @@ namespace Game.Newt.v2.Arcanorum
 
                 #endregion
 
-                if (DateTime.Now > _nextCleanup)
+                if (DateTime.UtcNow > _nextCleanup)
                 {
                     CleanupIfTooMany();
-                    _nextCleanup = DateTime.Now + TimeSpan.FromSeconds(30);
+                    _nextCleanup = DateTime.UtcNow + TimeSpan.FromSeconds(30);
                 }
             }
             catch (Exception ex)
@@ -1029,7 +1029,7 @@ namespace Game.Newt.v2.Arcanorum
                         else
                         {
                             statusMessage.Text = "Hold in shift to pick up weapon";
-                            _clearStatusTime = DateTime.Now + TimeSpan.FromSeconds(4);
+                            _clearStatusTime = DateTime.UtcNow + TimeSpan.FromSeconds(4);
                         }
                     }
                     else
@@ -1643,7 +1643,7 @@ namespace Game.Newt.v2.Arcanorum
         }
         private void CleanupIfTooMany<T>(int maxAllowed, Point3D position) where T : IMapObject
         {
-            DateTime minAge = DateTime.Now - TimeSpan.FromSeconds(30);
+            DateTime minAge = DateTime.UtcNow - TimeSpan.FromSeconds(30);
 
             // See how many items there are that are old enough to be deleted
             var items = _map.GetItems<T>(true)
@@ -2007,7 +2007,7 @@ namespace Game.Newt.v2.Arcanorum
         //TODO: Make sounds
         private void AddStrikeDamage(WeaponDamage damage, bool isPlayer)
         {
-            if(damage.Position == null)
+            if (damage.Position == null)
             {
                 return;
             }
@@ -2060,13 +2060,17 @@ namespace Game.Newt.v2.Arcanorum
 
             pnlVisuals2D.Children.Add(text);
 
-            Canvas.SetLeft(text, position2D.Value.X - (text.ActualWidth / 2));
-            Canvas.SetTop(text, position2D.Value.Y - (text.ActualHeight / 2));
+            // Force the text to calculate its size
+            text.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+            Size size = text.DesiredSize;
+
+            Canvas.SetLeft(text, position2D.Value.X - (size.Width / 2));
+            Canvas.SetTop(text, position2D.Value.Y - (size.Height / 2));
 
             UIElement[] controls = new UIElement[] { text };
 
             double seconds = UtilityCore.GetScaledValue_Capped(.4, 4, MINDAMAGE, MAXDAMAGE * 3, damage);
-            _visuals2D.Add(new Visual2DIntermediate(controls, DateTime.Now + TimeSpan.FromSeconds(seconds)));
+            _visuals2D.Add(new Visual2DIntermediate(controls, DateTime.UtcNow + TimeSpan.FromSeconds(seconds)));
         }
         private static FontFamily GetBestStrikeFont()
         {
@@ -2108,7 +2112,7 @@ namespace Game.Newt.v2.Arcanorum
                     UIElement[] controls = new UIElement[] { text };
 
                     double seconds = 15;
-                    _visuals2D.Add(new Visual2DIntermediate(controls, DateTime.Now + TimeSpan.FromSeconds(seconds)));
+                    _visuals2D.Add(new Visual2DIntermediate(controls, DateTime.UtcNow + TimeSpan.FromSeconds(seconds)));
                 }
             }
         }
@@ -2122,7 +2126,7 @@ namespace Game.Newt.v2.Arcanorum
                 Where(o => o.MapObject.Equals(item)).
                 FirstOrDefault();
 
-            DateTime removeTime = DateTime.Now + TimeSpan.FromSeconds(3d);
+            DateTime removeTime = DateTime.UtcNow + TimeSpan.FromSeconds(3d);
 
             if (existing == null)
             {

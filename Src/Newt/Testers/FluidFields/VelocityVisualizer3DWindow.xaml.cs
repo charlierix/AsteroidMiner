@@ -485,7 +485,7 @@ namespace Game.Newt.Testers.FluidFields
             int toOffset = numSlices / 2;
             int fromOffset = numSlices - toOffset - 1;
 
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             bool isOverField = false;
 
@@ -640,7 +640,7 @@ namespace Game.Newt.Testers.FluidFields
         {
             const double ELAPSEDURATIONSECONDS = 10;
 
-            if (_randPersistIndices == null || DateTime.Now > _sceneRemaining)
+            if (_randPersistIndices == null || DateTime.UtcNow > _sceneRemaining)
             {
                 // Rebuild the indices
                 bool[] blocked = _field.Blocked;
@@ -656,7 +656,7 @@ namespace Game.Newt.Testers.FluidFields
                         }).
                         ToArray();
 
-                _sceneRemaining = DateTime.Now + TimeSpan.FromSeconds(ELAPSEDURATIONSECONDS);
+                _sceneRemaining = DateTime.UtcNow + TimeSpan.FromSeconds(ELAPSEDURATIONSECONDS);
             }
 
             double[] velX = _field.VelocityX;

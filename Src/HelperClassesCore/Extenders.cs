@@ -26,6 +26,15 @@ namespace Game.HelperClassesCore
             return item >= compare - UtilityCore.NEARZERO && item <= compare + UtilityCore.NEARZERO;
         }
 
+        /// <summary>
+        /// This is useful for displaying a double value in a textbox when you don't know the range (could be
+        /// 1000001 or .1000001 or 10000.5 etc)
+        /// </summary>
+        public static string ToStringSignificantDigits(this double value, int significantDigits)
+        {
+            return UtilityCore.ToStringSignificantDigits(value, significantDigits);
+        }
+
         #endregion
 
         #region string

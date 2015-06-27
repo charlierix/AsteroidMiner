@@ -230,7 +230,7 @@ namespace Game.GameTester
         }
         private void itemImageFilters_MouseUp(object sender, MouseButtonEventArgs e)
         {
-
+            new Game.Newt.Testers.Convolution.ImageFilters().Show();
         }
 
         #endregion

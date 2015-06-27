@@ -147,7 +147,7 @@ namespace Game.HelperClassesCore
 
             #region Set up the timer
 
-            DateTime lastTick = DateTime.Now;
+            DateTime lastTick = DateTime.UtcNow;
 
             ManualResetEvent tickEvent = new ManualResetEvent(false);
 
@@ -200,7 +200,7 @@ namespace Game.HelperClassesCore
                 {
                     #region Timer ticked
 
-                    DateTime currentTick = DateTime.Now;
+                    DateTime currentTick = DateTime.UtcNow;
                     double elapsed = (currentTick - lastTick).TotalMilliseconds;
                     lastTick = currentTick;
 

@@ -392,7 +392,7 @@ namespace Game.Newt.v2.Arcanorum
                             #region Added
 
                             // See if this should die
-                            double age = (DateTime.Now - tracked.Bot.CreationTime).TotalSeconds;
+                            double age = (DateTime.UtcNow - tracked.Bot.CreationTime).TotalSeconds;
                             if (age > tracked.Lifespan)
                             {
                                 FitnessTracker rules = tracked.Rules;

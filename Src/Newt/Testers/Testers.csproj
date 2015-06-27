@@ -142,6 +142,9 @@
     <Compile Include="ColorVisualizer.xaml.cs">
       <DependentUpon>ColorVisualizer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Convolution\CompositeFilter.xaml.cs">
+      <DependentUpon>CompositeFilter.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Curves.xaml.cs">
       <DependentUpon>Curves.xaml</DependentUpon>
     </Compile>
@@ -187,6 +190,12 @@
     </Compile>
     <Compile Include="GravityCubes2.xaml.cs">
       <DependentUpon>GravityCubes2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Convolution\ImageFilterPainter.xaml.cs">
+      <DependentUpon>ImageFilterPainter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Convolution\ImageFilters.xaml.cs">
+      <DependentUpon>ImageFilters.xaml</DependentUpon>
     </Compile>
     <Compile Include="MultithreadWorlds.xaml.cs">
       <DependentUpon>MultithreadWorlds.xaml</DependentUpon>
@@ -347,6 +356,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Convolution\CompositeFilter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Curves.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -416,6 +429,14 @@
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Convolution\ImageFilterPainter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Convolution\ImageFilters.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MultithreadWorlds.xaml">
       <SubType>Designer</SubType>

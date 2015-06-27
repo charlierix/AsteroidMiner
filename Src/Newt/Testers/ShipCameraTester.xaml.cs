@@ -806,14 +806,14 @@ namespace Game.Newt.Testers
                 for (int resolution = 5; resolution < 100; resolution += 5)
                 //for (int resolution = 5; resolution < 1100; resolution += 250)
                 {
-                    DateTime start = DateTime.Now;
+                    DateTime start = DateTime.UtcNow;
 
                     for (int cntr = 0; cntr < 100; cntr++)
                     {
                         IBitmapCustom bitmap = UtilityWPF.RenderControl(_offline1.Control, resolution, resolution, true, Colors.Transparent, false);
                     }
 
-                    times.Add(Tuple.Create(resolution, DateTime.Now - start));
+                    times.Add(Tuple.Create(resolution, DateTime.UtcNow - start));
                 }
 
                 string report = string.Join("\r\n", times.Select(o => o.Item1.ToString() + ": " + Math.Round(o.Item2.TotalMilliseconds).ToString()).ToArray());

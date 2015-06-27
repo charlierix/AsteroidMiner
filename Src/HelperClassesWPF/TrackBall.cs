@@ -54,7 +54,7 @@ namespace Game.HelperClassesWPF
         /// The time of the last occurance of KeyboardTimer_Tick.  This is used to know how much actual time has elapsed between
         /// ticks, which is used to keep the scroll distance output normalized to time instead of ticks (in cases with low FPS)
         /// </summary>
-        private DateTime _lastKeyboardTick = DateTime.Now;
+        private DateTime _lastKeyboardTick = DateTime.UtcNow;
 
         private List<TrackBallMapping> _mappings = new List<TrackBallMapping>();
 
@@ -638,7 +638,7 @@ namespace Game.HelperClassesWPF
             // Make sure the timer is running
             if (!_timerKeyboard.IsEnabled)
             {
-                _lastKeyboardTick = DateTime.Now;
+                _lastKeyboardTick = DateTime.UtcNow;
                 _timerKeyboard.Start();
             }
         }
@@ -688,8 +688,8 @@ namespace Game.HelperClassesWPF
         private void KeyboardTimer_Tick(object sender, EventArgs e)
         {
             // Account for slow machines
-            double elapsedTime = (DateTime.Now - _lastKeyboardTick).TotalMilliseconds;
-            _lastKeyboardTick = DateTime.Now;
+            double elapsedTime = (DateTime.UtcNow - _lastKeyboardTick).TotalMilliseconds;
+            _lastKeyboardTick = DateTime.UtcNow;
 
             foreach (CameraMovement movement in _currentKeyboardActions)
             {

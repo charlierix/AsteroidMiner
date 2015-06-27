@@ -139,9 +139,9 @@
                 <Label Content="Neural" Style="{StaticResource subHeaderLabel}"/>
                 <ListBox>
                     <ListBoxItem Visibility="Collapsed" Content="Neural Net" Name="itemNeuralNet" MouseUp="itemNeuralNet_MouseUp"/>
-                    <ListBoxItem Content="Encog XOR" Name="itemEncogXOR" MouseUp="itemEncogXOR_MouseUp"/>
-                    <ListBoxItem Content="Encog OCR" Name="itemEncogOCR" MouseUp="itemEncogOCR_MouseUp"/>
-                    <ListBoxItem Visibility="Collapsed" Content="Image Filters" Name="itemImageFilters" MouseUp="itemImageFilters_MouseUp"/>
+                    <ListBoxItem Content="XOR" Name="itemEncogXOR" MouseUp="itemEncogXOR_MouseUp"/>
+                    <ListBoxItem Content="OCR" Name="itemEncogOCR" MouseUp="itemEncogOCR_MouseUp"/>
+                    <ListBoxItem Content="Image Filters" Name="itemImageFilters" MouseUp="itemImageFilters_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->

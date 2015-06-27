@@ -63,7 +63,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             this.PhysicsBody.GetAABB(out aabbMin, out aabbMax);
             this.Radius = (aabbMax - aabbMin).Length / 2d;
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

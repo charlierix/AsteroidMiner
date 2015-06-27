@@ -969,7 +969,7 @@ namespace Game.Newt.v2.GameItems
 
         private void BuildSnapshot()
         {
-            DateTime startTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
 
             // Get these values while in the main thread
             bool shouldCentersDrift = _shouldSnapshotCentersDrift;
@@ -997,7 +997,7 @@ namespace Game.Newt.v2.GameItems
                 //wait indefinitely for this method to finish, and this thread will be completely tied up building sna
                 if (_shouldBuildSnapshots && _snapshotTimer != null)		// it may have been turned off.  Ran into a case where the timer was set to null
                 {
-                    double nextSnapshotWaitTime = this.SnapshotFequency_Milliseconds - (DateTime.Now - startTime).TotalMilliseconds;
+                    double nextSnapshotWaitTime = this.SnapshotFequency_Milliseconds - (DateTime.UtcNow - startTime).TotalMilliseconds;
                     if (nextSnapshotWaitTime < 1d)
                     {
                         nextSnapshotWaitTime = 1d;

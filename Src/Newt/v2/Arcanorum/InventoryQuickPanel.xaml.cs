@@ -61,7 +61,7 @@ namespace Game.Newt.v2.Arcanorum
         private SolidColorBrush _filledTextStroke = new SolidColorBrush(UtilityWPF.ColorFromHex("#88FFFFFF"));
 
         private DispatcherTimer _timer = null;
-        private DateTime _lastTick = DateTime.Now;
+        private DateTime _lastTick = DateTime.UtcNow;
 
         #endregion
 
@@ -166,7 +166,7 @@ namespace Game.Newt.v2.Arcanorum
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            DateTime newTime = DateTime.Now;
+            DateTime newTime = DateTime.UtcNow;
             double elapsedTime = (newTime - _lastTick).TotalSeconds;
             _lastTick = newTime;
 

@@ -18,7 +18,7 @@ namespace Game.Newt.v1.AsteroidMiner1
         private Map _map = null;
 
         private double _currentAngle = 0d;
-        private DateTime _lastAngleUpdateTime = DateTime.Now;
+        private DateTime _lastAngleUpdateTime = DateTime.UtcNow;
 
         private Transform3DGroup _mainTransform = null;
 
@@ -298,7 +298,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             }
 
             // Figure out the new angle
-            DateTime currentTime = DateTime.Now;
+            DateTime currentTime = DateTime.UtcNow;
             double elapsedSeconds = (currentTime - _lastAngleUpdateTime).TotalSeconds;
 
             _currentAngle += _spinDegreesPerSecond * elapsedSeconds;

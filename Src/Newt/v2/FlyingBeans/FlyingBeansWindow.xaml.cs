@@ -20,8 +20,8 @@ using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.Newt.v2.GameItems;
 using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesWPF.Controls2D;
 
 namespace Game.Newt.v2.FlyingBeans
 {
@@ -293,7 +293,7 @@ namespace Game.Newt.v2.FlyingBeans
         /// </remarks>
         private SelectedBean _selectedBean = null;
 
-        private DateTime _lastWinnerScan = DateTime.Now;
+        private DateTime _lastWinnerScan = DateTime.UtcNow;
         private WinnerManager _winnerManager = null;
 
         private ScreenSpaceLines3D _boundryLines = null;
@@ -316,7 +316,21 @@ namespace Game.Newt.v2.FlyingBeans
         private Brush _statsForegroundMed = new SolidColorBrush(UtilityWPF.ColorFromHex("90F8F8F8"));
         private Brush _statsForegroundDim = new SolidColorBrush(UtilityWPF.ColorFromHex("60F0F0F0"));
 
-        private DateTime _windowStartTime = DateTime.Now;
+        // Height text on mouse over
+        private Lazy<FontFamily> _heightFont = new Lazy<FontFamily>(() => GetBestHeightFont());
+        private Brush _heightBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("FFFFFF"));
+        private Brush _heightBrushOutline = new SolidColorBrush(UtilityWPF.ColorFromHex("40000000"));
+
+        /// <summary>
+        /// This is the height text that's added to pnlVisuals2D
+        /// </summary>
+        /// <remarks>
+        /// Item1 = OutlinedTextBlock
+        /// Item2 = Remove time
+        /// </remarks>
+        private Tuple<UIElement, DateTime> _heightText = null;
+
+        private DateTime _windowStartTime = DateTime.UtcNow;
         private DateTime? _lastAutosave = null;
 
         #endregion
@@ -695,6 +709,8 @@ namespace Game.Newt.v2.FlyingBeans
 
         private void World_Updating(object sender, WorldUpdatingArgs e)
         {
+            DateTime now = DateTime.UtcNow;
+
             _updateManager.Update_MainThread(e.ElapsedTime);
 
             #region Explosions
@@ -730,24 +746,30 @@ namespace Game.Newt.v2.FlyingBeans
                 _camera.Position = _selectedBean.Bean.PositionWorld + _selectedBean.CameraOffset;
             }
 
-            if ((DateTime.Now - _lastWinnerScan).TotalSeconds > _options.TrackingScanFrequencySeconds)
+            if ((now - _lastWinnerScan).TotalSeconds > _options.TrackingScanFrequencySeconds)
             {
                 FindWinners();
                 RefreshStats();
 
-                _lastWinnerScan = DateTime.Now;
+                _lastWinnerScan = now;
+            }
+
+            if (_heightText != null && now > _heightText.Item2)
+            {
+                pnlVisuals2D.Children.Remove(_heightText.Item1);
+                _heightText = null;
             }
 
             #region Autosave
 
-            double elapsedFromStart = (DateTime.Now - _windowStartTime).TotalMinutes;
+            double elapsedFromStart = (DateTime.UtcNow - _windowStartTime).TotalMinutes;
 
             if (_lastAutosave == null)
             {
                 if (elapsedFromStart > 3)
                 {
                     _panelFile.Save(true, true, AUTOSAVESUFFIX);
-                    _lastAutosave = DateTime.Now;
+                    _lastAutosave = DateTime.UtcNow;
                 }
             }
             else
@@ -776,10 +798,10 @@ namespace Game.Newt.v2.FlyingBeans
                     autosaveElapse = 30d;		// every half hour after that
                 }
 
-                if ((DateTime.Now - _lastAutosave.Value).TotalMinutes > autosaveElapse)
+                if ((DateTime.UtcNow - _lastAutosave.Value).TotalMinutes > autosaveElapse)
                 {
                     _panelFile.Save(true, true, AUTOSAVESUFFIX);
-                    _lastAutosave = DateTime.Now;
+                    _lastAutosave = DateTime.UtcNow;
                 }
             }
 
@@ -1045,16 +1067,7 @@ namespace Game.Newt.v2.FlyingBeans
                 #endregion
                 #region Select Bean
 
-                // Fire a ray at the mouse point
-                Point clickPoint = e.GetPosition(grdViewPort);
-
-                Visual3D[] ignoreVisuals = UtilityCore.Iterate(_terrain.Visuals, _explosions.Select(o => o.Visual)).Where(o => o != null).ToArray();
-
-                RayHitTestParameters clickRay;
-                List<MyHitTestResult> hits = UtilityWPF.CastRay(out clickRay, clickPoint, grdViewPort, _camera, _viewport, true, ignoreVisuals);
-
-                // See if they clicked on a bean
-                var clickedBean = GetBeanHit(hits);
+                var clickedBean = GetMouseOverBean(e);
 
                 if (_selectedBean != null && clickedBean != null && _selectedBean.Bean.Equals(clickedBean.Item1))
                 {
@@ -1100,7 +1113,7 @@ namespace Game.Newt.v2.FlyingBeans
                         viewer.PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45"));
                         viewer.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0"));
 
-                        Point windowClickPoint = UtilityWPF.TransformToScreen(clickPoint, grdViewPort);
+                        Point windowClickPoint = UtilityWPF.TransformToScreen(clickedBean.Item3, grdViewPort);
                         Point popupPoint = new Point(windowClickPoint.X + 50, windowClickPoint.Y - (viewer.Height / 3d));
                         popupPoint = UtilityWPF.EnsureWindowIsOnScreen(popupPoint, new Size(viewer.Width, viewer.Height));		// don't let the popup straddle monitors
                         viewer.Left = popupPoint.X;
@@ -1115,6 +1128,26 @@ namespace Game.Newt.v2.FlyingBeans
                 }
 
                 #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grdViewPort_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                var bean = GetMouseOverBean(e);
+                if (bean == null)
+                {
+                    return;
+                }
+
+                // Height is just Z
+                double height = bean.Item1.PositionWorld.Z;
+
+                UpdateHeightOverlay(height, bean.Item3.X - 8, bean.Item3.Y + 3);      // Shift left a bit so the mouse cursor isn't covering the text
             }
             catch (Exception ex)
             {
@@ -1577,6 +1610,47 @@ namespace Game.Newt.v2.FlyingBeans
             grdStats.Children.Add(text);
         }
 
+        /// <summary>
+        /// This will temporarily show text at the position.  If there is existing text, it is removed.
+        /// </summary>
+        private void UpdateHeightOverlay(double height, double rightEdgeX, double centerY)
+        {
+            // Remove existing
+            if (_heightText != null)
+            {
+                pnlVisuals2D.Children.Remove(_heightText.Item1);
+                _heightText = null;
+            }
+
+            // Create text
+            OutlinedTextBlock text = new OutlinedTextBlock()
+            {
+                Text = height.ToString("N0"),
+                FontFamily = _heightFont.Value,
+                FontSize = 20,
+                FontWeight = FontWeight.FromOpenTypeWeight(800),
+                StrokeThickness = 1,
+                Fill = _heightBrush,
+                Stroke = _heightBrushOutline,
+            };
+
+            pnlVisuals2D.Children.Add(text);
+
+            // Force the text to calculate its size
+            text.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
+            Size size = text.DesiredSize;
+
+            Canvas.SetLeft(text, rightEdgeX - size.Width);
+            Canvas.SetTop(text, centerY - (size.Height / 2));
+
+            // Store it
+            _heightText = new Tuple<UIElement, DateTime>(text, DateTime.UtcNow + TimeSpan.FromMilliseconds(500));
+        }
+        private static FontFamily GetBestHeightFont()
+        {
+            return UtilityWPF.GetFont(new string[] { "Verdana", "Lucida Console", "Microsoft Sans Serif", "Arial" });
+        }
+
         private void ColorPanelButtons()
         {
             foreach (Border button in grdPanelButtons.Children)
@@ -1913,6 +1987,25 @@ namespace Game.Newt.v2.FlyingBeans
             return retVal;
         }
 
+        private Tuple<Bean, MyHitTestResult, Point> GetMouseOverBean(MouseEventArgs e)
+        {
+            // Fire a ray at the mouse point
+            Point clickPoint = e.GetPosition(grdViewPort);
+
+            Visual3D[] ignoreVisuals = UtilityCore.Iterate(_terrain.Visuals, _explosions.Select(o => o.Visual)).Where(o => o != null).ToArray();
+
+            RayHitTestParameters clickRay;
+            List<MyHitTestResult> hits = UtilityWPF.CastRay(out clickRay, clickPoint, grdViewPort, _camera, _viewport, true, ignoreVisuals);
+
+            // See if they clicked on a bean
+            var bean = GetBeanHit(hits);
+            if (bean == null)
+            {
+                return null;
+            }
+
+            return Tuple.Create(bean.Item1, bean.Item2, clickPoint);
+        }
         private Tuple<Bean, MyHitTestResult> GetBeanHit(List<MyHitTestResult> hits)
         {
             foreach (var hit in hits)		// hits are sorted by distance, so this method will only return the closest match
@@ -1923,7 +2016,7 @@ namespace Game.Newt.v2.FlyingBeans
                     continue;
                 }
 
-                Bean bean = _beans.Where(o => o.Visuals3D != null && o.Visuals3D.Any(p => p == visualHit)).FirstOrDefault();
+                Bean bean = _beans.FirstOrDefault(o => o.Visuals3D != null && o.Visuals3D.Any(p => p == visualHit));
 
                 if (bean != null)
                 {

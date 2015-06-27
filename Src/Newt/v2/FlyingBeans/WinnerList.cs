@@ -81,7 +81,7 @@ namespace Game.Newt.v2.FlyingBeans
         public WinnerList(bool tracksLivingInstances, int maxLineages, int maxPerLineage, WinningSet[] current)
             : this(tracksLivingInstances, maxLineages, maxLineages)
         {
-            _current = Tuple.Create(DateTime.Now, current);
+            _current = Tuple.Create(DateTime.UtcNow, current);
         }
 
         #endregion
@@ -419,7 +419,7 @@ namespace Game.Newt.v2.FlyingBeans
             }
 
             // Exit Function
-            return Tuple.Create(DateTime.Now, retVal.ToArray());
+            return Tuple.Create(DateTime.UtcNow, retVal.ToArray());
         }
 
         /// <summary>
@@ -466,7 +466,7 @@ namespace Game.Newt.v2.FlyingBeans
             }
 
             // Sort the list by the highest performer
-            return Tuple.Create(DateTime.Now,
+            return Tuple.Create(DateTime.UtcNow,
                 retVal.OrderByDescending(o => o.BeansByLineage.Max(p => p.Item2.Max(q => q.Score))).
                 ToArray());
         }

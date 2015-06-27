@@ -1,5 +1,2 @@
-## Allowing files that were ignored in the root ignore (that's what the ! does)
-![Bb]in/
-
 ## Dlls were never filtered in the root, but explicitly allowing there here
 !*.dll

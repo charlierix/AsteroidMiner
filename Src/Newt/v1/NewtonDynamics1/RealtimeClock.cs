@@ -15,7 +15,7 @@ namespace Game.Newt.v1.NewtonDynamics1
 
         public static void Update()
         {
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow;
 			if (!_firstCall)
 			{
 				_timeStep = (time - _lastUpdate).TotalSeconds;

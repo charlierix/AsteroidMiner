@@ -26,6 +26,11 @@ namespace Game.HelperClassesWPF
             return UtilityWPF.ColorToHex(color, includeAlpha, includePound);
         }
 
+        public static Color ToGray(this Color color)
+        {
+            return UtilityWPF.ConvertToGray(color);
+        }
+
         #endregion
 
         #region Vector

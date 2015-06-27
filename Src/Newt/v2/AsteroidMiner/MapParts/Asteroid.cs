@@ -572,7 +572,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
             #endregion
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
 
             _hitTracker = new HitTracker1(world, map, materialID, this, triangles, this.RadiusVect, minChildRadius, getMassByRadius, getMineralsByDestroyedMass, mineralMaterialID);
         }

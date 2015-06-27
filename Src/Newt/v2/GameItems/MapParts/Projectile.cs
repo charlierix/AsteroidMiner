@@ -65,7 +65,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
             #endregion
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

@@ -352,7 +352,7 @@ namespace Game.HelperClassesAI
             INeuralDataSet trainingSet = new BasicNeuralDataSet(training.Input, training.Output);
             ITrain train = new ResilientPropagation(network, trainingSet);
 
-            DateTime startTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
             TimeSpan? maxTime = maxSeconds != null ? TimeSpan.FromSeconds(maxSeconds.Value) : (TimeSpan?)null;
 
             bool success = false;
@@ -387,7 +387,7 @@ namespace Game.HelperClassesAI
                 {
                     break;
                 }
-                else if (maxTime != null && DateTime.Now - startTime > maxTime)
+                else if (maxTime != null && DateTime.UtcNow - startTime > maxTime)
                 {
                     break;
                 }

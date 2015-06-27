@@ -277,6 +277,8 @@ namespace Game.HelperClassesWPF.Controls2D
 
             _settingValueDisplay = true;
 
+            //NOTE: A simplified version of this logic was copied into UtilityCore.ToStringSignificantDigits
+
             int numMin = GetNumDecimals(this.Minimum);
             int numMax = GetNumDecimals(this.Maximum);
 

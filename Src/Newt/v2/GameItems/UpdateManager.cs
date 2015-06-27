@@ -32,7 +32,7 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// This is only used by the zero param overload of Update_MainThread
         /// </summary>
-        private DateTime _lastMainUpdate = DateTime.Now;
+        private DateTime _lastMainUpdate = DateTime.UtcNow;
 
         private long _updateCount_Main = -1;      // starting at -1 so that the first increment will bring it to 0 (skips use mod, so zero mod anything is zero, so everything will fire on the first tick)
 
@@ -45,7 +45,7 @@ namespace Game.Newt.v2.GameItems
         private volatile Tuple<Type, int>[] _typesAny = null;
         private volatile Type[] _typesAnyUnchecked = null;
 
-        private volatile object _lastAnyUpdate = DateTime.Now;
+        private volatile object _lastAnyUpdate = DateTime.UtcNow;
 
         private long _updateCount_Any = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
 
@@ -120,7 +120,7 @@ namespace Game.Newt.v2.GameItems
 
         public void Update_MainThread()
         {
-            DateTime time = DateTime.Now;
+            DateTime time = DateTime.UtcNow;
             double elapsedTime = (time - _lastMainUpdate).TotalSeconds;
             _lastMainUpdate = time;
 

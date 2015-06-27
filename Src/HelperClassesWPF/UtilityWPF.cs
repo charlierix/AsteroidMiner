@@ -1735,6 +1735,32 @@ namespace Game.HelperClassesWPF
             return GetColorCapped((sumA / sumAlphaWeight) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
         }
 
+        /// <summary>
+        /// This makes a gray version of the color
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://www.tannerhelland.com/3643/grayscale-image-algorithm-vb6/
+        /// </remarks>
+        public static Color ConvertToGray(Color color)
+        {
+            byte gray = Convert.ToByte(ConvertToGray_double(color));
+            return Color.FromArgb(color.A, gray, gray, gray);
+        }
+        /// <summary>
+        /// This converts the color into a value from 0 to 255
+        /// NOTE: Alpha isn't considered
+        /// </summary>
+        public static double ConvertToGray_double(Color color)
+        {
+            // These are some other approaches that could be used (they don't look as good though)
+            //return (color.R + color.G + color.B) / 3d;        // Averge
+            //return (Math3D.Max(color.R, color.G, color.B) + Math3D.Min(color.R, color.G, color.B)) / 2d;      // Desaturate
+            //return color.R * 0.2126 + color.G * 0.7152 + color.B * 0.0722;        // BT.709
+
+            return color.R * 0.299 + color.G * 0.587 + color.B * 0.114;     // BT.601
+        }
+
         public static Color GetRandomColor(byte min, byte max)
         {
             return GetRandomColor(255, min, max);
@@ -1908,7 +1934,7 @@ namespace Game.HelperClassesWPF
 
             double h, s, v;
 
-            v = maxValue;
+            v = maxValue;       // this should be the average(min,max), not the max?
 
             #region Get Hue
 
@@ -2188,6 +2214,258 @@ namespace Game.HelperClassesWPF
             double max = Math.Max(hue1, hue2);
 
             return Math.Abs(min + 360 - max);
+        }
+
+        #endregion
+
+        #region Bitmaps
+
+        /// <summary>
+        /// This tells a visual to render itself, and returns a custom class that returns colors at various positions
+        /// </summary>
+        /// <param name="cacheColorsUpFront">
+        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
+        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
+        /// </param>
+        /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
+        public static IBitmapCustom RenderControl(FrameworkElement visual, int width, int height, bool cacheColorsUpFront, Color outOfBoundsColor, bool isInVisualTree)
+        {
+            // Populate a wpf bitmap with a snapshot of the visual
+            BitmapSource bitmap = RenderControl(visual, width, height, isInVisualTree);
+
+            return ConvertToColorArray(bitmap, cacheColorsUpFront, outOfBoundsColor);
+        }
+
+        /// <summary>
+        /// This tells a visual to render itself to a wpf bitmap.  From there, you can get the bytes (colors), or run it through a converter
+        /// to save as jpg, bmp files.
+        /// </summary>
+        /// <remarks>
+        /// This fixes an issue where the rendered image is blank:
+        /// http://blogs.msdn.com/b/jaimer/archive/2009/07/03/rendertargetbitmap-tips.aspx
+        /// </remarks>
+        public static BitmapSource RenderControl(FrameworkElement visual, int width, int height, bool isInVisualTree)
+        {
+            if (!isInVisualTree)
+            {
+                // If the visual isn't part of the visual tree, then it needs to be forced to finish its layout
+                visual.Width = width;
+                visual.Height = height;
+                visual.Measure(new Size(width, height));        //  I thought these two statements would be expensive, but profiling shows it's mostly all on Render
+                visual.Arrange(new Rect(0, 0, width, height));
+            }
+
+            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                VisualBrush vb = new VisualBrush(visual);
+                ctx.DrawRectangle(vb, null, new Rect(new Point(0, 0), new Point(width, height)));
+            }
+
+            retVal.Render(dv);      //  profiling shows this is the biggest hit
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// Converts the color array into a bitmap that can be set as an Image.Source
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://www.i-programmer.info/programming/wpf-workings/527-writeablebitmap.html
+        /// </remarks>
+        public static BitmapSource GetBitmap(Color[] colors, int width, int height)
+        {
+            if (colors.Length != width * height)
+            {
+                throw new ArgumentException(string.Format("The array isn't the same as width*height.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, width, height));
+            }
+
+            WriteableBitmap retVal = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+
+            int pixelWidth = retVal.Format.BitsPerPixel / 8;
+            int stride = retVal.PixelWidth * pixelWidth;      // this is the length of one row of pixels
+
+            byte[] pixels = new byte[retVal.PixelHeight * stride];
+
+            for (int rowCntr = 0; rowCntr < height; rowCntr++)
+            {
+                int rowOffset = rowCntr * stride;
+                int yOffset = rowCntr * width;
+
+                for (int columnCntr = 0; columnCntr < width; columnCntr++)
+                {
+                    int offset = rowOffset + (columnCntr * pixelWidth);
+
+                    Color color = colors[columnCntr + yOffset];
+
+                    pixels[offset + 3] = color.A;
+                    pixels[offset + 2] = color.R;
+                    pixels[offset + 1] = color.G;
+                    pixels[offset + 0] = color.B;
+                }
+            }
+
+            retVal.WritePixels(new Int32Rect(0, 0, retVal.PixelWidth, retVal.PixelHeight), pixels, stride, 0);
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// This draws a small number of colors onto a larger image
+        /// WARNING: This draws each of colors as a rectangle, so if there are a lot, it gets SLOOOOW
+        /// </summary>
+        /// <remarks>
+        /// This is meant for drawing really small color patches onto a larger image control.  I couldn't figure out how to
+        /// get Image to scale up a tiny bitmap without antialiasing
+        /// </remarks>
+        public static BitmapSource GetBitmap_Aliased(Color[] colors, int colorsWidth, int colorsHeight, int imageWidth, int imageHeight)
+        {
+            if (colors.Length != colorsWidth * colorsHeight)
+            {
+                throw new ArgumentException(string.Format("The array isn't the same as colorsWidth*colorsHeight.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, colorsWidth, colorsHeight));
+            }
+
+            double scaleX = Convert.ToDouble(imageWidth) / Convert.ToDouble(colorsWidth);
+            double scaleY = Convert.ToDouble(imageHeight) / Convert.ToDouble(colorsHeight);
+
+            RenderTargetBitmap retVal = new RenderTargetBitmap(imageWidth, imageHeight, 96, 96, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                int index = 0;
+
+                for (int y = 0; y < colorsHeight; y++)
+                {
+                    for (int x = 0; x < colorsWidth; x++)
+                    {
+                        ctx.DrawRectangle(new SolidColorBrush(colors[index]), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
+
+                        index++;
+                    }
+                }
+            }
+
+            retVal.Render(dv);
+
+            return retVal;
+        }
+
+        /// <param name="cacheColorsUpFront">
+        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
+        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
+        /// </param>
+        /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
+        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool cacheColorsUpFront, Color outOfBoundsColor)
+        {
+            // Get a byte array
+            int stride = (bitmap.PixelWidth * bitmap.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
+            byte[] bytes = new byte[stride * bitmap.PixelHeight];
+
+            bitmap.CopyPixels(bytes, stride, 0);
+
+            // Exit Function
+            if (cacheColorsUpFront)
+            {
+                return new BitmapCustomFullyCached(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+            }
+            else
+            {
+                return new BitmapCustomOnTheFly(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+            }
+        }
+
+        /// <summary>
+        /// Gets a single pixel
+        /// Got this here: http://stackoverflow.com/questions/14876989/how-to-read-pixels-in-four-corners-of-a-bitmapsource
+        /// </summary>
+        /// <remarks>
+        /// If only a single pixel is needed, this method is a bit easier than RenderControl().GetColor()
+        /// </remarks>
+        public static Color GetPixelColor(BitmapSource bitmap, int x, int y)
+        {
+            int bytesPerPixel = (bitmap.Format.BitsPerPixel + 7) / 8;
+            byte[] bytes = new byte[bytesPerPixel];
+            Int32Rect rect = new Int32Rect(x, y, 1, 1);
+
+            bitmap.CopyPixels(rect, bytes, bytesPerPixel, 0);
+
+            Color color;
+            if (bitmap.Format == PixelFormats.Pbgra32)
+            {
+                color = Color.FromArgb(bytes[3], bytes[2], bytes[1], bytes[0]);
+            }
+            else if (bitmap.Format == PixelFormats.Bgr32)
+            {
+                color = Color.FromArgb(0xFF, bytes[2], bytes[1], bytes[0]);
+            }
+            // handle other required formats
+            else
+            {
+                color = Colors.Black;
+            }
+
+            return color;
+        }
+
+        /// <summary>
+        /// This converts a wpf visual into a mouse cursor (call this.RenderControl to get the bitmapsource)
+        /// NOTE: Needs to be a standard size (16x16, 32x32, etc)
+        /// TODO: Fix this for semitransparency
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://stackoverflow.com/questions/46805/custom-cursor-in-wpf
+        /// </remarks>
+        public static Cursor ConvertToCursor(BitmapSource bitmapSource, Point hotSpot)
+        {
+            int width = bitmapSource.PixelWidth;
+            int height = bitmapSource.PixelHeight;
+
+            // Get a byte array
+            int stride = (width * bitmapSource.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
+            byte[] bytes = new byte[stride * height];
+
+            bitmapSource.CopyPixels(bytes, stride, 0);
+
+            // Convert to System.Drawing.Bitmap
+            var bitmap = new System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+            for (int y = 0; y < height; y++)
+            {
+                int rowOffset = y * stride;
+                int yOffset = y * width;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int offset = rowOffset + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+                    bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(bytes[offset + 3], bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]));
+                    //bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(64, 255, 0, 0));
+                }
+            }
+
+            // Save to .ico format
+            MemoryStream stream = new MemoryStream();
+            System.Drawing.Icon.FromHandle(bitmap.GetHicon()).Save(stream);
+
+            // Convert saved file into .cur format
+            stream.Seek(2, SeekOrigin.Begin);
+            stream.WriteByte(2);        // convert to cur format
+
+            //stream.Seek(8, SeekOrigin.Begin);     // trying to wipe out the color pallete to be able to support transparency, but has no effect
+            //stream.WriteByte(0);
+            //stream.WriteByte(0);
+
+            stream.Seek(10, SeekOrigin.Begin);
+            stream.WriteByte((byte)(int)(hotSpot.X * width));
+            stream.WriteByte((byte)(int)(hotSpot.Y * height));
+            stream.Seek(0, SeekOrigin.Begin);
+
+            // Construct Cursor
+            return new Cursor(stream);
         }
 
         #endregion
@@ -4817,169 +5095,6 @@ namespace Game.HelperClassesWPF
             return new Rect(screen.WorkingArea.X, screen.WorkingArea.Y, screen.WorkingArea.Width, screen.WorkingArea.Height);
         }
 
-        /// <summary>
-        /// This tells a visual to render itself, and returns a custom class that returns colors at various positions
-        /// </summary>
-        /// <param name="cacheColorsUpFront">
-        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
-        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
-        /// </param>
-        /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
-        public static IBitmapCustom RenderControl(FrameworkElement visual, int width, int height, bool cacheColorsUpFront, Color outOfBoundsColor, bool isInVisualTree)
-        {
-            // Populate a wpf bitmap with a snapshot of the visual
-            BitmapSource bitmap = RenderControl(visual, width, height, isInVisualTree);
-
-            return ConvertToColorArray(bitmap, cacheColorsUpFront, outOfBoundsColor);
-        }
-
-        /// <summary>
-        /// This tells a visual to render itself to a wpf bitmap.  From there, you can get the bytes (colors), or run it through a converter
-        /// to save as jpg, bmp files.
-        /// </summary>
-        /// <remarks>
-        /// This fixes an issue where the rendered image is blank:
-        /// http://blogs.msdn.com/b/jaimer/archive/2009/07/03/rendertargetbitmap-tips.aspx
-        /// </remarks>
-        public static BitmapSource RenderControl(FrameworkElement visual, int width, int height, bool isInVisualTree)
-        {
-            if (!isInVisualTree)
-            {
-                // If the visual isn't part of the visual tree, then it needs to be forced to finish its layout
-                visual.Width = width;
-                visual.Height = height;
-                visual.Measure(new Size(width, height));        //  I thought these two statements would be expensive, but profiling shows it's mostly all on Render
-                visual.Arrange(new Rect(0, 0, width, height));
-            }
-
-            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
-
-            DrawingVisual dv = new DrawingVisual();
-            using (DrawingContext ctx = dv.RenderOpen())
-            {
-                VisualBrush vb = new VisualBrush(visual);
-                ctx.DrawRectangle(vb, null, new Rect(new Point(0, 0), new Point(width, height)));
-            }
-
-            retVal.Render(dv);      //  profiling shows this is the biggest hit
-
-            return retVal;
-        }
-
-        /// <param name="cacheColorsUpFront">
-        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
-        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
-        /// </param>
-        /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
-        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool cacheColorsUpFront, Color outOfBoundsColor)
-        {
-            // Get a byte array
-            int stride = (bitmap.PixelWidth * bitmap.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
-            byte[] bytes = new byte[stride * bitmap.PixelHeight];
-
-            bitmap.CopyPixels(bytes, stride, 0);
-
-            // Exit Function
-            if (cacheColorsUpFront)
-            {
-                return new BitmapCustomFullyCached(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
-            }
-            else
-            {
-                return new BitmapCustomOnTheFly(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
-            }
-        }
-
-        /// <summary>
-        /// Gets a single pixel
-        /// Got this here: http://stackoverflow.com/questions/14876989/how-to-read-pixels-in-four-corners-of-a-bitmapsource
-        /// </summary>
-        /// <remarks>
-        /// If only a single pixel is needed, this method is a bit easier than RenderControl().GetColor()
-        /// </remarks>
-        public static Color GetPixelColor(BitmapSource bitmap, int x, int y)
-        {
-            int bytesPerPixel = (bitmap.Format.BitsPerPixel + 7) / 8;
-            byte[] bytes = new byte[bytesPerPixel];
-            Int32Rect rect = new Int32Rect(x, y, 1, 1);
-
-            bitmap.CopyPixels(rect, bytes, bytesPerPixel, 0);
-
-            Color color;
-            if (bitmap.Format == PixelFormats.Pbgra32)
-            {
-                color = Color.FromArgb(bytes[3], bytes[2], bytes[1], bytes[0]);
-            }
-            else if (bitmap.Format == PixelFormats.Bgr32)
-            {
-                color = Color.FromArgb(0xFF, bytes[2], bytes[1], bytes[0]);
-            }
-            // handle other required formats
-            else
-            {
-                color = Colors.Black;
-            }
-
-            return color;
-        }
-
-        /// <summary>
-        /// This converts a wpf visual into a mouse cursor (call this.RenderControl to get the bitmapsource)
-        /// NOTE: Needs to be a standard size (16x16, 32x32, etc)
-        /// TODO: Fix this for semitransparency
-        /// </summary>
-        /// <remarks>
-        /// Got this here:
-        /// http://stackoverflow.com/questions/46805/custom-cursor-in-wpf
-        /// </remarks>
-        public static Cursor ConvertToCursor(BitmapSource bitmapSource, Point hotSpot)
-        {
-            int width = bitmapSource.PixelWidth;
-            int height = bitmapSource.PixelHeight;
-
-            // Get a byte array
-            int stride = (width * bitmapSource.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
-            byte[] bytes = new byte[stride * height];
-
-            bitmapSource.CopyPixels(bytes, stride, 0);
-
-            // Convert to System.Drawing.Bitmap
-            var bitmap = new System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
-            for (int y = 0; y < height; y++)
-            {
-                int rowOffset = y * stride;
-                int yOffset = y * width;
-
-                for (int x = 0; x < width; x++)
-                {
-                    int offset = rowOffset + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                    bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(bytes[offset + 3], bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]));
-                    //bitmap.SetPixel(x, y, System.Drawing.Color.FromArgb(64, 255, 0, 0));
-                }
-            }
-
-            // Save to .ico format
-            MemoryStream stream = new MemoryStream();
-            System.Drawing.Icon.FromHandle(bitmap.GetHicon()).Save(stream);
-
-            // Convert saved file into .cur format
-            stream.Seek(2, SeekOrigin.Begin);
-            stream.WriteByte(2);        // convert to cur format
-
-            //stream.Seek(8, SeekOrigin.Begin);     // trying to wipe out the color pallete to be able to support transparency, but has no effect
-            //stream.WriteByte(0);
-            //stream.WriteByte(0);
-
-            stream.Seek(10, SeekOrigin.Begin);
-            stream.WriteByte((byte)(int)(hotSpot.X * width));
-            stream.WriteByte((byte)(int)(hotSpot.Y * height));
-            stream.Seek(0, SeekOrigin.Begin);
-
-            // Construct Cursor
-            return new Cursor(stream);
-        }
-
         public static FontFamily GetFont(string desiredFont)
         {
             return GetFont(new[] { desiredFont });
@@ -6882,6 +6997,10 @@ namespace Game.HelperClassesWPF
         ///    color[x + (y * width)]
         /// </remarks>
         Color[] GetColors(int x, int y, int width, int height);
+        /// <summary>
+        /// This returns the colors of the whole image
+        /// </summary>
+        Color[] GetColors();
 
         int Width { get; }
         int Height { get; }
@@ -7041,6 +7160,12 @@ namespace Game.HelperClassesWPF
 
             // Exit Function
             return retVal;
+        }
+
+        public Color[] GetColors()
+        {
+            //  Just return the array (much faster than building a new one, but it assumes that they don't try to manipulate the colors)
+            return _colors;
         }
 
         public int Width { get { return _width; } }
@@ -7254,6 +7379,11 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        public Color[] GetColors()
+        {
+            return GetColors(0, 0, _width, _height);
+        }
+
         public int Width { get { return _width; } }
         public int Height { get { return _height; } }
 
@@ -7307,7 +7437,7 @@ namespace Game.HelperClassesWPF
     #region Class: MaterialDefinition
 
     /// <summary>
-    /// This defines a material, and is easy to serialize (meant to be put into classes that get serialized
+    /// This defines a material, and is easy to serialize (meant to be put into classes that get serialized)
     /// </summary>
     public class MaterialDefinition
     {

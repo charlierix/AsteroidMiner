@@ -60,7 +60,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
         /// </remarks>
         private TrackBallRoam _trackball = null;
 
-        private DateTime _debugGravityVisualsLastBuild = DateTime.Now;
+        private DateTime _debugGravityVisualsLastBuild = DateTime.UtcNow;
         private List<Visual3D> _debugGravityVisuals = null;
 
         #endregion
@@ -251,7 +251,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
         {
             _updateManager.Update_MainThread(e.ElapsedTime);
 
-            if ((SHOWGRAVITYLINES || SHOWGRAVITYMASSES) && (DateTime.Now - _debugGravityVisualsLastBuild).TotalMilliseconds > 150d)
+            if ((SHOWGRAVITYLINES || SHOWGRAVITYMASSES) && (DateTime.UtcNow - _debugGravityVisualsLastBuild).TotalMilliseconds > 150d)
             {
                 #region Show gravity lines
 
@@ -324,7 +324,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
                     #endregion
                 }
 
-                _debugGravityVisualsLastBuild = DateTime.Now;
+                _debugGravityVisualsLastBuild = DateTime.UtcNow;
 
                 #endregion
             }

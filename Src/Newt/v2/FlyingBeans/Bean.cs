@@ -111,7 +111,7 @@ namespace Game.Newt.v2.FlyingBeans
         /// </summary>
         public double GetAgeSeconds()
         {
-            return (DateTime.Now - this.CreationTime).TotalSeconds;
+            return (DateTime.UtcNow - this.CreationTime).TotalSeconds;
         }
 
         public void CollidedGround()

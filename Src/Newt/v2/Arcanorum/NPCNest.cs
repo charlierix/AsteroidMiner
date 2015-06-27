@@ -125,7 +125,7 @@ namespace Game.Newt.v2.Arcanorum
             // Finish
             this.Token = TokenGenerator.NextToken();
             this.Radius = radius;
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

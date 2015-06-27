@@ -44,7 +44,7 @@ namespace Game.Newt.Testers
 
                 this.PhysicsBody = body;
 
-                this.CreateTime = DateTime.Now;
+                this.CreateTime = DateTime.UtcNow;
                 this.MaxAge = maxAge;
 
                 this.MaxDistance = 0d;
@@ -87,7 +87,7 @@ namespace Game.Newt.Testers
             {
                 if (this.IsTimeLimited)
                 {
-                    return DateTime.Now - this.CreateTime > MaxAge;
+                    return DateTime.UtcNow - this.CreateTime > MaxAge;
                 }
                 else
                 {
@@ -1568,7 +1568,7 @@ namespace Game.Newt.Testers
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
 
                 double elapsedTime = 1d;
-                DateTime curTick = DateTime.Now;
+                DateTime curTick = DateTime.UtcNow;
                 if (_lastTick != null)
                 {
                     elapsedTime = (curTick - _lastTick.Value).TotalSeconds;
@@ -1606,7 +1606,7 @@ namespace Game.Newt.Testers
                 _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
 
                 double elapsedTime = 1d;
-                DateTime curTick = DateTime.Now;
+                DateTime curTick = DateTime.UtcNow;
                 if (_lastTick != null)
                 {
                     elapsedTime = (curTick - _lastTick.Value).TotalSeconds;
@@ -4523,7 +4523,7 @@ namespace Game.Newt.Testers
 
                 #endregion
 
-                if (radFallingSand.IsChecked.Value || (radFallingSandPlates.IsChecked.Value && (DateTime.Now - _lastSandAdd).TotalMilliseconds > 5000d))
+                if (radFallingSand.IsChecked.Value || (radFallingSandPlates.IsChecked.Value && (DateTime.UtcNow - _lastSandAdd).TotalMilliseconds > 5000d))
                 {
                     #region Falling Sand
 
@@ -4571,7 +4571,7 @@ namespace Game.Newt.Testers
                     }
 
                     // Remember when this was done
-                    _lastSandAdd = DateTime.Now;
+                    _lastSandAdd = DateTime.UtcNow;
 
                     #endregion
                 }
@@ -5708,7 +5708,7 @@ namespace Game.Newt.Testers
                 //TODO: Let the user choose a file
                 ShipDNA shipDNA = (ShipDNA)XamlServices.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Ships\Beans\2013-05-17 13.50.46.937 - boston - 137.7.xml");
 
-                DateTime startTime = DateTime.Now;
+                DateTime startTime = DateTime.UtcNow;
 
                 for (int cntr = 0; cntr < 100; cntr++)
                 {
@@ -5717,7 +5717,7 @@ namespace Game.Newt.Testers
                     //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, true)) { }        // GOOD
                 }
 
-                TimeSpan elapsed = DateTime.Now - startTime;
+                TimeSpan elapsed = DateTime.UtcNow - startTime;
 
                 //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, true, false)) { }          // BAAAAAAAAAD
 

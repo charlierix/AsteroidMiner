@@ -389,6 +389,11 @@ namespace Game.Newt.Testers.Encog
         {
             try
             {
+                if(_dots == null)
+                {
+                    return;
+                }
+
                 var hitResult = GetMouseOver(e, _dots);
                 Dot dot = hitResult.Item1;
 
@@ -869,7 +874,7 @@ namespace Game.Newt.Testers.Encog
             return new Tuple<UIElement, Image>(borderCtrl, imageCtrl);
         }
 
-        private static BitmapSource GetBitmap(double[] input)
+        private static BitmapSource GetBitmap_ORIG(double[] input)
         {
             int size = Convert.ToInt32(Math.Sqrt(input.Length));
             if (size * size != input.Length)
@@ -900,6 +905,23 @@ namespace Game.Newt.Testers.Encog
             retVal.Render(dv);
 
             return retVal;
+        }
+        private static BitmapSource GetBitmap(double[] input)
+        {
+            int size = Convert.ToInt32(Math.Sqrt(input.Length));
+            if (size * size != input.Length)
+            {
+                throw new ArgumentException("Must pass in a square image");
+            }
+
+            Color[] colors = input.Select(o =>
+                {
+                    byte alpha = Convert.ToByte(Math.Round(o * 255));
+                    return Color.FromArgb(alpha, 0, 0, 0);
+                }).
+                ToArray();
+
+            return UtilityWPF.GetBitmap(colors, size, size);
         }
 
         private static Dot[] GetNearbySketches(Dot sketch, IEnumerable<Dot> all, double radius)

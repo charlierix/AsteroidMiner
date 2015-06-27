@@ -56,7 +56,7 @@ namespace Game.Newt.v2.Arcanorum
         private Bot _bot = null;
 
         private DispatcherTimer _timer = null;
-        private DateTime _lastTick = DateTime.Now;
+        private DateTime _lastTick = DateTime.UtcNow;
 
         private List<AnimateRotation> _animationRotates = new List<AnimateRotation>();
 
@@ -136,7 +136,7 @@ namespace Game.Newt.v2.Arcanorum
         {
             if (_timer != null)
             {
-                _lastTick = DateTime.Now;
+                _lastTick = DateTime.UtcNow;
                 _timer.IsEnabled = this.IsVisible;
             }
         }
@@ -150,7 +150,7 @@ namespace Game.Newt.v2.Arcanorum
                     return;
                 }
 
-                DateTime newTime = DateTime.Now;
+                DateTime newTime = DateTime.UtcNow;
                 double elapsedTime = (newTime - _lastTick).TotalSeconds;
                 _lastTick = newTime;
 

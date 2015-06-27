@@ -44,7 +44,7 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 double retVal = 0d;
 
-                DateTime time = DateTime.Now;
+                DateTime time = DateTime.UtcNow;
 
                 // Figure out how much time has elapsed
                 if (_isFirstCall)

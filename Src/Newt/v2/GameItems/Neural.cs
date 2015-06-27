@@ -441,7 +441,7 @@ namespace Game.Newt.v2.GameItems
         {
             _position = position;
             _pulseDuration = TimeSpan.FromMinutes(1d);		// use way too long of a duration until a better value can be determined
-            _value = new Tuple<double, DateTime>(0d, DateTime.Now);
+            _value = new Tuple<double, DateTime>(0d, DateTime.UtcNow);
         }
 
         #endregion
@@ -452,7 +452,7 @@ namespace Game.Newt.v2.GameItems
             get
             {
                 var value = _value;		// since it's volatile, get a local copy
-                if (DateTime.Now < value.Item2)
+                if (DateTime.UtcNow < value.Item2)
                 {
                     // They are still within the pulse's duration
                     return value.Item1;
@@ -490,7 +490,7 @@ namespace Game.Newt.v2.GameItems
 
             //NOTE: It's harder to read, but I'm keeping all the logic in a single method so that this runs as fast as possible
 
-            DateTime now = DateTime.Now;
+            DateTime now = DateTime.UtcNow;
 
             #region Determine new value
 
@@ -801,7 +801,7 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (_countdownTillEval <= 0)		// make sure some other thread didn't already finish taking samples.  Note that the lock doesn't fully protect this variable, but it should be good enough
                     {
-                        DateTime now = DateTime.Now;
+                        DateTime now = DateTime.UtcNow;
 
                         if (_sampleCounter == 0)
                         {

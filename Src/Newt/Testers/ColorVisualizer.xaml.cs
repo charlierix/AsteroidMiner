@@ -48,7 +48,7 @@ namespace Game.Newt.Testers
         private TrackBallRoam _trackball = null;
 
         private DispatcherTimer _timer;
-        private DateTime _lastRotateSwitch = DateTime.Now;
+        private DateTime _lastRotateSwitch = DateTime.UtcNow;
 
         private MaterialGroup _material = null;
 
@@ -125,10 +125,10 @@ namespace Game.Newt.Testers
                 }
 
                 bool shouldSwitch = false;
-                if ((DateTime.Now - _lastRotateSwitch).TotalSeconds > 10)
+                if ((DateTime.UtcNow - _lastRotateSwitch).TotalSeconds > 10)
                 {
                     shouldSwitch = true;
-                    _lastRotateSwitch = DateTime.Now;
+                    _lastRotateSwitch = DateTime.UtcNow;
                 }
 
                 foreach (VisualTracker tracker in _visuals)

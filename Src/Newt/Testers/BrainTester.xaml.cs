@@ -542,7 +542,7 @@ namespace Game.Newt.Testers
         private Task _brainOperationTask = null;
         private CancellationTokenSource _brainOperationCancel = null;
 
-        private DateTime _lastUpdate = DateTime.Now;
+        private DateTime _lastUpdate = DateTime.UtcNow;
 
         private bool _isInitialized = false;
 
@@ -694,7 +694,7 @@ namespace Game.Newt.Testers
 
         private void World_Updating(object sender, WorldUpdatingArgs e)
         {
-            DateTime thisUpdate = DateTime.Now;
+            DateTime thisUpdate = DateTime.UtcNow;
             double elapsedTime = (thisUpdate - _lastUpdate).TotalSeconds;
 
             #region Refill containers

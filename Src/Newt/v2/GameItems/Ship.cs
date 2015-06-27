@@ -544,7 +544,7 @@ namespace Game.Newt.v2.GameItems
             this.ShouldRecalcMass_Large = false;
             this.ShouldRecalcMass_Small = false;
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion
@@ -905,7 +905,7 @@ namespace Game.Newt.v2.GameItems
 
         private volatile object _age = 0d;
         /// <summary>
-        /// This is the age of the ship (sum of elapsed time).  This doesn't use datetime.now, it's all based on the elapsed time passed into update
+        /// This is the age of the ship (sum of elapsed time).  This doesn't use datetime.utcnow, it's all based on the elapsed time passed into update
         /// </summary>
         public double Age
         {

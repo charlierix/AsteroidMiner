@@ -245,7 +245,7 @@ namespace Game.Newt.v2.Arcanorum
             //TODO: Calculate these based on dna
             this.ReceiveDamageMultipliers = new WeaponDamage();
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

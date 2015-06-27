@@ -30,7 +30,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             this.Radius = 2;
 
-            this.CreationTime = DateTime.Now;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion

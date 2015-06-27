@@ -97,6 +97,7 @@
     <Compile Include="Controls2D\UndoRedo.xaml.cs">
       <DependentUpon>UndoRedo.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Convolutions.cs" />
     <Compile Include="DoubleVector.cs" />
     <Compile Include="DragHitShape.cs" />
     <Compile Include="Extenders.cs" />

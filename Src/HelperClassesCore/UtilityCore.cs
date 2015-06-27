@@ -115,6 +115,16 @@ namespace Game.HelperClassesCore
         }
 
         /// <summary>
+        /// After this method: 1 = 2, 2 = 1
+        /// </summary>
+        public static void Swap<T>(ref T item1, ref T item2)
+        {
+            T temp = item1;
+            item1 = item2;
+            item2 = temp;
+        }
+
+        /// <summary>
         /// This iterates over all combinations of a set of numbers
         /// NOTE: The number of iterations is (2^inputSize) - 1, so be careful with input sizes over 10 to 15
         /// </summary>
@@ -583,6 +593,72 @@ namespace Game.HelperClassesCore
             if (retVal >= count) retVal = count - 1;
 
             return retVal;
+        }
+
+        /// <summary>
+        /// This is useful for displaying a double value in a textbox when you don't know the range (could be
+        /// 1000001 or .1000001 or 10000.5 etc)
+        /// </summary>
+        public static string ToStringSignificantDigits(double value, int significantDigits)
+        {
+            int numDecimals = GetNumDecimals(value);
+
+            if (numDecimals < 0)
+            {
+                // Unknown number of decimal places
+                return value.ToString();
+            }
+            else
+            {
+                // Get the integer portion
+                long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
+                int numInt;
+                if (intPortion == 0)
+                {
+                    numInt = 0;
+                }
+                else
+                {
+                    numInt = intPortion.ToString().Length;
+                }
+
+                // Limit the number of significant digits
+                int numPlaces;
+                if (numInt == 0)
+                {
+                    numPlaces = significantDigits;
+                }
+                else if (numInt >= significantDigits)
+                {
+                    numPlaces = 0;
+                }
+                else
+                {
+                    numPlaces = significantDigits - numInt;
+                }
+
+                // I was getting an exception from round, but couldn't recreate it, so I'm just throwing this in to avoid the exception
+                if (numPlaces < 0)
+                {
+                    numPlaces = 0;
+                }
+                else if (numPlaces > 15)
+                {
+                    numPlaces = 15;
+                }
+
+                // Show a rounded number
+                double rounded = Math.Round(value, numPlaces);
+                int numActualDecimals = GetNumDecimals(rounded);
+                if (numActualDecimals < 0)
+                {
+                    return rounded.ToString();		// it's weird, don't try to make it more readable
+                }
+                else
+                {
+                    return rounded.ToString("N" + numActualDecimals);
+                }
+            }
         }
 
         /// <summary>
@@ -1096,6 +1172,30 @@ namespace Game.HelperClassesCore
             else
             {
                 return null;
+            }
+        }
+
+        private static int GetNumDecimals(double value)
+        {
+            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
+
+            if (Regex.IsMatch(text, "[a-z]", RegexOptions.IgnoreCase))
+            {
+                // This is in exponential notation, just give up (or maybe NaN)
+                return -1;
+            }
+
+            int decimalIndex = text.IndexOf(".");
+
+            if (decimalIndex < 0)
+            {
+                // It's an integer
+                return 0;
+            }
+            else
+            {
+                // Just count the decimals
+                return (text.Length - 1) - decimalIndex;
             }
         }
 

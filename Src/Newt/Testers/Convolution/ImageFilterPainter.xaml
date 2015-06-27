@@ -1,0 +1,153 @@
+﻿<Window x:Class="Game.Newt.Testers.Convolution.ImageFilterPainter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Image Filter Painter" SizeToContent="WidthAndHeight" SizeChanged="Window_SizeChanged" KeyUp="Window_KeyUp" KeyDown="Window_KeyDown">
+
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="16"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+
+                <!-- Clear/Save -->
+                <UniformGrid Rows="1" Margin="-2,0,-2,0">
+                    <UniformGrid.Resources>
+                        <Style TargetType="Button">
+                            <Setter Property="Margin" Value="2,0"/>
+                        </Style>
+                    </UniformGrid.Resources>
+
+                    <Button Content="clear" Click="Clear_Click"/>
+                    <Button Content="random" Click="Random_Click"/>
+                    <Button Content="save" Click="Save_Click"/>
+                </UniformGrid>
+
+                <Grid Margin="0,8,0,0" TextBox.TextChanged="txtWidthHeight_TextChanged">
+                    <Grid.Resources>
+                        <Style TargetType="Label">
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                        </Style>
+                        <Style TargetType="TextBox">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="MinWidth" Value="30"/>
+                        </Style>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="1"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="2"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Width -->
+                    <Label Grid.Column="0" Grid.Row="0" Content="width"/>
+                    <TextBox Grid.Column="2" Grid.Row="0" Name="txtWidth" Text="5"/>
+
+                    <!-- Height -->
+                    <Label Grid.Column="0" Grid.Row="2" Content="height"/>
+                    <TextBox Grid.Column="2" Grid.Row="2" Name="txtHeight" Text="5"/>
+                </Grid>
+
+                <!-- Range -->
+                <StackPanel Margin="0,8,0,0" RadioButton.Checked="Range_Checked" RadioButton.Unchecked="Range_Checked">
+                    <RadioButton IsChecked="True" Name="radRangeNegPos" Content="-1 to 1"/>
+                    <RadioButton Name="radRangeZeroPos" Content="0 to 1"/>
+                </StackPanel>
+
+                <CheckBox IsChecked="True" Name="chkIsRedBlue" Content="-1 to 1 is red-blue" Margin="0,8,0,0" Checked="chkIsRedBlue_Checked" Unchecked="chkIsRedBlue_Checked"/>
+
+                <UniformGrid Margin="0,8,0,0" Columns="2">
+                    <!-- TODO: Make these buttons smaller, use icons instead of text, lay them out like arrow keys -->
+                    <Button Content="counter" ToolTip="Rotate Counter Clockwise" Click="RotateCounterClockwise_Click"/>
+                    <Button Content="clockwise" ToolTip="Rotate Clockwise" Click="RotateClockwise_Click"/>
+                </UniformGrid>
+
+                <UniformGrid Margin="0,6,0,0" Columns="2">
+                    <Button Content="left" ToolTip="Shift Left" Click="TranslateLeft_Click"/>
+                    <Button Content="right" ToolTip="Shift Right" Click="TranslateRight_Click"/>
+                    <Button Content="up" ToolTip="Shift Up" Click="TranslateUp_Click"/>
+                    <Button Content="down" ToolTip="Shift Down" Click="TranslateDown_Click"/>
+                </UniformGrid>
+
+                <Button Content="invert" ToolTip="Invert Values" Margin="0,6,0,0" Click="Invert_Click"/>
+
+                <UniformGrid Margin="0,6,0,0" Columns="2">
+                    <Button Content="To Unit" ToolTip="Values add up to 1 (and -1)" Click="ToUnit_Click"/>
+                    <Button Content="Maximize" ToolTip="Expand values to maximum height" Click="Maximize_Click"/>
+                </UniformGrid>
+            </StackPanel>
+
+            <!-- 3D Settings -->
+            <Grid Grid.Row="2" Visibility="Collapsed" IsEnabled="False" Name="grdSettings3D">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Name="txtHeight3D" VerticalAlignment="Top" TextChanged="txtHeight3D_TextChanged"/>
+                <Slider Grid.Column="2" Name="trkHeight3D" Orientation="Vertical" ValueChanged="trkHeight3D_ValueChanged"/>
+            </Grid>
+
+
+            <!-- TODO: Painter Settings -->
+
+
+        </Grid>
+
+
+
+        <TabControl Grid.Column="2" TabStripPlacement="Bottom" SelectionChanged="TabControl_SelectionChanged">
+            <!-- 3D -->
+            <TabItem Name="tab3D" Header="3D">
+
+                <!-- NOTE: Rather than messing with the tab control's template to do the background right, I'm just removing the margin -->
+                <Grid Name="grdViewPort" Background="#AABFAC" Margin="-4" MouseMove="grdViewPort_MouseMove" MouseDown="grdViewPort_MouseDown" MouseUp="grdViewPort_MouseUp">
+                    <Viewport3D Name="_viewport" IsHitTestVisible="False" Width="600" Height="600">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_camera" Position="0,-12,1" LookDirection="0,12,-1" UpDirection="0,1,12" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="-1,-1,-1" />
+                                    <DirectionalLight Color="#303030" Direction="1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+                </Grid>
+
+            </TabItem>
+
+            <!-- Painter -->
+            <TabItem Visibility="Collapsed" Name="tabPainter" Header="Painter">
+                <InkCanvas Name="canvasInk" Width="600" Height="600" Margin="-4"/>
+            </TabItem>
+        </TabControl>
+
+        <Grid Grid.Column="4">
+            <Border BorderBrush="#707070" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Top">
+                <Image Name="imagePreview"/>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
