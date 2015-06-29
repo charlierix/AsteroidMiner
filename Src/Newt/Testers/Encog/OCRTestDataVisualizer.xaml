@@ -4,7 +4,7 @@
         Title="OCR test data visualizer" Width="768" Height="768" Background="#FFFFFF" Loaded="Window_Loaded">
     <Grid Name="grdViewPort" MouseMove="grdViewPort_MouseMove" MouseDown="grdViewPort_MouseDown">
         <Grid.Background>
-            <LinearGradientBrush Opacity=".5" StartPoint="0.3305,0" EndPoint="0.5655,1">
+            <LinearGradientBrush Opacity=".66" StartPoint="0.3305,0" EndPoint="0.5655,1">
                 <LinearGradientBrush.GradientStops>
                     <GradientStop Color="#968C80" Offset="0"/>
                     <GradientStop Color="#80786E" Offset="0.289048"/>

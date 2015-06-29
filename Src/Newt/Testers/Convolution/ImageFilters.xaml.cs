@@ -1132,13 +1132,9 @@ namespace Game.Newt.Testers.Convolution
             {
                 BitmapSource bitmap = (BitmapSource)originalImage.Source;
 
-                var colors = UtilityWPF.ConvertToColorArray(bitmap, true, Colors.Transparent);
+                var colors = UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Transparent);
 
-                double[] grays = colors.GetColors().
-                    Select(o => UtilityWPF.ConvertToGray_double(o)).
-                    ToArray();
-
-                _origImageGrays = new Convolution2D(grays, bitmap.PixelWidth, bitmap.PixelHeight, false);
+                _origImageGrays = ((BitmapCustomCachedBytes)colors).ToConvolution();
             }
 
             return _origImageGrays;

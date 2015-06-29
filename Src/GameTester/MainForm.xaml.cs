@@ -232,6 +232,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Convolution.ImageFilters().Show();
         }
+        private void itemMineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.MineralIdentifier().Show();
+        }
 
         #endregion
         #region Newton 2.36

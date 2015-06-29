@@ -104,6 +104,9 @@ namespace Game.HelperClassesAI
         /// will make a satisfactory network for most cases.
         /// 
         /// TODO: Take in args that give hints about hidden layers, number of networks to try, input/output are 0to1, -1to1, autodetect
+        /// 
+        /// TODO: If a solution isn't found after a small amount of time, spin up another attempt (keep waiting for the first to finish),
+        /// instead of waiting for one at a time to completly finish or fail
         /// </remarks>
         /// <param name="numSimultaneousCandidates">Number of networks to train at a time (each on its own thread)</param>
         public static BasicNetwork GetTrainedNetwork(double[][] trainingInput, double[][] trainingOutput, double maxError = 0.001, double? maxSeconds = null, CancellationToken? cancelToken = null)

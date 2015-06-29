@@ -1,0 +1,149 @@
+﻿<Window x:Class="Game.Newt.Testers.Encog.MineralIdentifier"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MineralIdentifier" Width="900" Height="750">
+
+    <Grid Margin="8">
+        <TabControl>
+            <TabItem Header="Single Image">
+                <Grid Margin="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Mineral Chooser -->
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel >
+                            <!-- TODO: Figure out why the viewbox is ruining the ability to pan -->
+                            <Viewbox Stretch="Uniform" StretchDirection="Both">
+                                <Grid Name="grdViewPort" Background="Transparent" MinWidth="1" MinHeight="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                    <Viewport3D Name="_viewport" IsHitTestVisible="False" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                        <!-- Camera -->
+                                        <Viewport3D.Camera>
+                                            <PerspectiveCamera x:Name="_camera" Position="0,-1,0" LookDirection="0,1,0" UpDirection="0,0,1" FieldOfView="45"/>
+                                        </Viewport3D.Camera>
+                                        <!-- Lights -->
+                                        <ModelVisual3D>
+                                            <ModelVisual3D.Content>
+                                                <Model3DGroup>
+                                                    <AmbientLight x:Name="ambient" Color="#787878" />
+                                                    <DirectionalLight x:Name="directionalBright" Color="White" Direction="-1,-1,-1" />
+                                                    <DirectionalLight x:Name="directionDim" Color="#707070" Direction="1,1,1" />
+                                                </Model3DGroup>
+                                            </ModelVisual3D.Content>
+                                        </ModelVisual3D>
+                                    </Viewport3D>
+                                </Grid>
+                            </Viewbox>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <StackPanel VerticalAlignment="Top">
+                                    <TextBlock Text="Choose Mineral"/>
+                                    <ComboBox Name="cboMineral" SelectionChanged="cboMineral_SelectionChanged"/>
+                                </StackPanel>
+
+                                <StackPanel VerticalAlignment="Top" Margin="20,0,0,0">
+                                    <Button Content="Reset Camera" Click="ResetCamera_Click"/>
+                                    <Button Content="Random Camera" Click="RandomCamera_Click"/>
+
+                                    <Button Content="Reset Light Position" Margin="0,10,0,0" Click="ResetLightPos_Click"/>
+                                    <Button Content="Random Light Position" Click="RandomLightPos_Click"/>
+
+                                    <Button Content="White Light" Margin="0,10,0,0" Click="WhiteLight_Click"/>
+                                    <Button Content="Random Light" Click="RandomLight_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Snapshot Viewer -->
+                    <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <Viewbox Stretch="Uniform" StretchDirection="Both">
+                                <Image Name="image" MinWidth="1" MinHeight="1"/>
+                            </Viewbox>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Image Size"/>
+                                    <TextBox Name="txtImageSize" Text="400" MinWidth="50"/>
+                                </StackPanel>
+
+                                <StackPanel Margin="20,0,0,0">
+                                    <Button Content="Take Picture" Click="TakePicture_Click"/>
+                                </StackPanel>
+
+                                <StackPanel Margin="20,0,0,0">
+                                    <RadioButton Name="radColor" Content="Color"/>
+                                    <RadioButton Name="radGrayTransparent" Content="Gray - transparent"/>
+                                    <RadioButton IsChecked="True" Name="radGrayBlack" Content="Gray - black" ToolTip="This is how the neural net will see it"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="Create training data">
+                <Grid Margin="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Checkboxes will be added to this -->
+                        <Border Grid.Column="0" Grid.Row="0" BorderBrush="#40000000" BorderThickness="1" CornerRadius="4" Padding="8">
+                            <StackPanel Name="pnlMineralSelections" CheckBox.Checked="CheckBox_MineralSelection_Checked" CheckBox.Unchecked="CheckBox_MineralSelection_Checked"/>
+                        </Border>
+
+                        <!-- Other settings -->
+                        <StackPanel Grid.Column="2" Grid.Row="0">
+                            <TextBlock Text="Image Size"/>
+                            <TextBox Name="txtTrainingImageSize" Text="250"/>
+
+                            <TextBlock Text="NN input size" Margin="0,8,0,0"/>
+                            <TextBox Name="txtNNInputSize" Text="5"/>
+
+                            <TextBlock Text="# Sample images" Margin="0,8,0,0"/>
+                            <TextBox Name="txtNumSampleImages" Text="10"/>
+
+                            <CheckBox Name="chkRandLights" Content="Random Lights" Margin="0,8,0,0"/>
+                            <CheckBox Name="chkRandCameraDist" Content="Random camera distance" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <!-- Convolutions to use -->
+                        <WrapPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"/>
+                    </Grid>
+
+                    
+                    
+                    <!-- Only show thumbnails in the treeview -->
+                    <!-- Let them see the full image of a thumbnail in a popup -->
+                    <!-- Store each original image in a file (the convoluted can be regenerated if full view is requested) -->
+                    <!-- Put this whole treeview in a user control -->
+                    
+                    <!-- Mineral -->
+                    <!-- | Original Generated Image -->
+                    <!-- | | Convolution, Convoluted, Pooled -->
+                    <TreeView Grid.Column="2"/>
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

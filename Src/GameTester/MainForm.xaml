@@ -142,6 +142,7 @@
                     <ListBoxItem Content="XOR" Name="itemEncogXOR" MouseUp="itemEncogXOR_MouseUp"/>
                     <ListBoxItem Content="OCR" Name="itemEncogOCR" MouseUp="itemEncogOCR_MouseUp"/>
                     <ListBoxItem Content="Image Filters" Name="itemImageFilters" MouseUp="itemImageFilters_MouseUp"/>
+                    <ListBoxItem Content="Mineral Identifier" Name="itemMineralIdentifier" MouseUp="itemMineralIdentifier_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->

@@ -1744,21 +1744,20 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         public static Color ConvertToGray(Color color)
         {
-            byte gray = Convert.ToByte(ConvertToGray_double(color));
+            byte gray = Convert.ToByte(ConvertToGray(color.R, color.G, color.B));
             return Color.FromArgb(color.A, gray, gray, gray);
         }
         /// <summary>
         /// This converts the color into a value from 0 to 255
-        /// NOTE: Alpha isn't considered
         /// </summary>
-        public static double ConvertToGray_double(Color color)
+        public static double ConvertToGray(byte r, byte g, byte b)
         {
             // These are some other approaches that could be used (they don't look as good though)
-            //return (color.R + color.G + color.B) / 3d;        // Averge
-            //return (Math3D.Max(color.R, color.G, color.B) + Math3D.Min(color.R, color.G, color.B)) / 2d;      // Desaturate
-            //return color.R * 0.2126 + color.G * 0.7152 + color.B * 0.0722;        // BT.709
+            //return (r + g + b) / 3d;        // Averge
+            //return (Math3D.Max(r, g, b) + Math3D.Min(r, g, b)) / 2d;      // Desaturate
+            //return r * 0.2126 + g * 0.7152 + b * 0.0722;        // BT.709
 
-            return color.R * 0.299 + color.G * 0.587 + color.B * 0.114;     // BT.601
+            return r * 0.299 + g * 0.587 + b * 0.114;     // BT.601
         }
 
         public static Color GetRandomColor(byte min, byte max)
@@ -2312,6 +2311,46 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
+        /// <summary>
+        /// This overload is faster
+        /// Each color should be an array of 4 bytes (A,R,G,B)
+        /// </summary>
+        public static BitmapSource GetBitmap(byte[][] colors, int width, int height)
+        {
+            //if (colors.Length != width * height)
+            //{
+            //    throw new ArgumentException(string.Format("The array isn't the same as width*height.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, width, height));
+            //}
+
+            WriteableBitmap retVal = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+
+            int pixelWidth = retVal.Format.BitsPerPixel / 8;
+            int stride = retVal.PixelWidth * pixelWidth;      // this is the length of one row of pixels
+
+            byte[] pixels = new byte[retVal.PixelHeight * stride];
+
+            for (int rowCntr = 0; rowCntr < height; rowCntr++)
+            {
+                int rowOffset = rowCntr * stride;
+                int yOffset = rowCntr * width;
+
+                for (int columnCntr = 0; columnCntr < width; columnCntr++)
+                {
+                    int offset = rowOffset + (columnCntr * pixelWidth);
+
+                    byte[] color = colors[columnCntr + yOffset];
+
+                    pixels[offset + 3] = color[0];
+                    pixels[offset + 2] = color[1];
+                    pixels[offset + 1] = color[2];
+                    pixels[offset + 0] = color[3];
+                }
+            }
+
+            retVal.WritePixels(new Int32Rect(0, 0, retVal.PixelWidth, retVal.PixelHeight), pixels, stride, 0);
+
+            return retVal;
+        }
 
         /// <summary>
         /// This draws a small number of colors onto a larger image
@@ -2355,26 +2394,41 @@ namespace Game.HelperClassesWPF
         }
 
         /// <param name="cacheColorsUpFront">
-        /// True:  The entire byte array will be converted into Color structs up front (taking an up front hit, but repeated requests for colors are cheap).
-        /// False:  The byte array is stored, and any requests for colors are done on the fly (good if only a subset of the pixels will be looked at, of if you want another thread to take the hit).
+        /// True:  The entire byte array will be converted into Color structs up front
+        ///     Use this if you want color structs (expensive, but useful)
+        ///     This takes an up front cache hit, but repeated requests for colors are cheap
+        ///     Only useful if you plan to do many gets from this class
+        /// 
+        /// False:  The byte array is stored in the file's format, and any requests for colors are done on the fly
+        ///     This is more useful if you plan to get the colors in other formats (byte[][] or convolution), or if you just want an array of color[]
+        ///     Also good if only a subset of the pixels will be looked at
+        ///     Another use for this is if you want another thread to take the hit
         /// </param>
         /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
         public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool cacheColorsUpFront, Color outOfBoundsColor)
         {
+            if (bitmap.Format != PixelFormats.Pbgra32 && bitmap.Format != PixelFormats.Bgr32)
+            {
+                // I've only coded against the above two formats, so put it in that
+                bitmap = new FormatConvertedBitmap(bitmap, PixelFormats.Pbgra32, null, 0);      //http://stackoverflow.com/questions/1176910/finding-specific-pixel-colors-of-a-bitmapimage
+            }
+
             // Get a byte array
             int stride = (bitmap.PixelWidth * bitmap.Format.BitsPerPixel + 7) / 8;		//http://msdn.microsoft.com/en-us/magazine/cc534995.aspx
             byte[] bytes = new byte[stride * bitmap.PixelHeight];
 
             bitmap.CopyPixels(bytes, stride, 0);
 
+            BitmapStreamInfo info = new BitmapStreamInfo(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+
             // Exit Function
             if (cacheColorsUpFront)
             {
-                return new BitmapCustomFullyCached(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+                return new BitmapCustomCachedColors(info);
             }
             else
             {
-                return new BitmapCustomOnTheFly(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
+                return new BitmapCustomCachedBytes(info);
             }
         }
 
@@ -7007,9 +7061,12 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: BitmapCustomFullyCached
+    #region Class: BitmapCustomCachedColors
 
-    public class BitmapCustomFullyCached : IBitmapCustom
+    /// <summary>
+    /// This caches the color array in the constructor.  This is slowest, and should only be used if you need as the color struct
+    /// </summary>
+    public class BitmapCustomCachedColors : IBitmapCustom
     {
         #region Declaration Section
 
@@ -7024,60 +7081,62 @@ namespace Game.HelperClassesWPF
 
         #region Constructor
 
-        public BitmapCustomFullyCached(byte[] bytes, int width, int height, int stride, PixelFormat format, Color outOfBoundsColor)
+        public BitmapCustomCachedColors(BitmapStreamInfo info)
         {
-            _width = width;
-            _height = height;
-            _outOfBoundsColor = outOfBoundsColor;
+            _width = info.Width;
+            _height = info.Height;
+            _outOfBoundsColor = info.OutOfBoundsColor;
 
-            _colors = new Color[width * height];
+            _colors = new BitmapCustomCachedBytes(info).GetColors();
 
-            // Convert to colors
-            //NOTE: The entire loop is copied to make this as fast as possible
-            if (format == PixelFormats.Pbgra32)		// can't do a switch on format
-            {
-                #region Pbgra32
+            #region OLD
+            //// Convert to colors
+            ////NOTE: The entire loop is copied to make this as fast as possible
+            //if (format == PixelFormats.Pbgra32)		// can't do a switch on format
+            //{
+            //    #region Pbgra32
 
-                for (int rowCntr = 0; rowCntr < height; rowCntr++)
-                {
-                    int rowOffset = rowCntr * stride;
+            //    for (int rowCntr = 0; rowCntr < height; rowCntr++)
+            //    {
+            //        int rowOffset = rowCntr * stride;
 
-                    int yOffset = rowCntr * width;
+            //        int yOffset = rowCntr * width;
 
-                    for (int columnCntr = 0; columnCntr < width; columnCntr++)
-                    {
-                        int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+            //        for (int columnCntr = 0; columnCntr < width; columnCntr++)
+            //        {
+            //            int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
 
-                        _colors[columnCntr + yOffset] = Color.FromArgb(bytes[offset + 3], bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
-                    }
-                }
+            //            _colors[columnCntr + yOffset] = Color.FromArgb(bytes[offset + 3], bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
+            //        }
+            //    }
 
-                #endregion
-            }
-            else if (format == PixelFormats.Bgr32)
-            {
-                #region Bgr32
+            //    #endregion
+            //}
+            //else if (format == PixelFormats.Bgr32)
+            //{
+            //    #region Bgr32
 
-                for (int rowCntr = 0; rowCntr < height; rowCntr++)
-                {
-                    int rowOffset = rowCntr * stride;
+            //    for (int rowCntr = 0; rowCntr < height; rowCntr++)
+            //    {
+            //        int rowOffset = rowCntr * stride;
 
-                    int yOffset = rowCntr * width;
+            //        int yOffset = rowCntr * width;
 
-                    for (int columnCntr = 0; columnCntr < width; columnCntr++)
-                    {
-                        int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+            //        for (int columnCntr = 0; columnCntr < width; columnCntr++)
+            //        {
+            //            int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
 
-                        _colors[columnCntr + yOffset] = Color.FromArgb(255, bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
-                    }
-                }
+            //            _colors[columnCntr + yOffset] = Color.FromArgb(255, bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
+            //        }
+            //    }
 
-                #endregion
-            }
-            else
-            {
-                throw new ApplicationException("TODO: Handle more pixel formats: " + format.ToString());
-            }
+            //    #endregion
+            //}
+            //else
+            //{
+            //    throw new ApplicationException("TODO: Handle more pixel formats: " + format.ToString());
+            //}
+            #endregion
         }
 
         #endregion
@@ -7175,34 +7234,29 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: BitmapCustomOnTheFly
+    #region Class: BitmapCustomCachedBytes
 
-    public class BitmapCustomOnTheFly : IBitmapCustom
+    /// <summary>
+    /// This stores the stream as they come from the file.  It is more efficient if you want the colors in a format other than
+    /// a color struct
+    /// </summary>
+    /// <remarks>
+    /// Since each get from this class will need to reevaluate the original bytes, the fastest usage of this class is to do a single
+    /// conversion to your final format (convolution, byte[][])
+    /// </remarks>
+    public class BitmapCustomCachedBytes : IBitmapCustom
     {
         #region Declaration Section
 
-        private readonly int _width;
-        private readonly int _height;
-
-        private readonly byte[] _bytes;
-
-        private readonly PixelFormat _format;
-        private readonly int _stride;
-
-        private readonly Color _outOfBoundsColor;
+        private readonly BitmapStreamInfo _info;
 
         #endregion
 
         #region Constructor
 
-        public BitmapCustomOnTheFly(byte[] bytes, int width, int height, int stride, PixelFormat format, Color outOfBoundsColor)
+        public BitmapCustomCachedBytes(BitmapStreamInfo info)
         {
-            _bytes = bytes;
-            _width = width;
-            _height = height;
-            _stride = stride;
-            _format = format;
-            _outOfBoundsColor = outOfBoundsColor;
+            _info = info;
         }
 
         #endregion
@@ -7211,181 +7265,322 @@ namespace Game.HelperClassesWPF
 
         public Color GetColor(int x, int y)
         {
-            if (x < 0 || x >= _width || y < 0 || y >= _height)
-            {
-                return _outOfBoundsColor;
-            }
-
-            if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
-            {
-                #region Pbgra32
-
-                int offset = (y * _stride) + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                return Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-
-                #endregion
-            }
-            else if (_format == PixelFormats.Bgr32)
-            {
-                #region Bgr32
-
-                int offset = (y * _stride) + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                return Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-
-                #endregion
-            }
-            else
-            {
-                throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
-            }
+            byte[] bytes = _info.GetColorBytes(x, y);
+            return Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
         }
+
+        public int Width { get { return _info.Width; } }
+        public int Height { get { return _info.Height; } }
 
         public Color[] GetColors(int x, int y, int width, int height)
         {
             Color[] retVal = new Color[width * height];
 
-            //NOTE: Copying code for speed reasons
-
-            int yOffsetLeft, yOffsetRight, offset;
-
-            if (x < 0 || x + width >= _width || y < 0 || y + height >= _height)
+            for (int y1 = 0; y1 < height; y1++)
             {
-                #region Some out of bounds
+                int yOffset = y1 * width;		// offset into the return array
 
-                if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
+                for (int x1 = 0; x1 < width; x1++)
                 {
-                    #region Pbgra32
+                    byte[] color = _info.GetColorBytes(x1, y1);
 
-                    int x2, y2;
-
-                    for (int y1 = 0; y1 < height; y1++)
-                    {
-                        y2 = y + y1;
-
-                        yOffsetLeft = y1 * width;		// offset into the return array
-                        yOffsetRight = y2 * _stride;		// offset into _bytes array
-
-                        for (int x1 = 0; x1 < width; x1++)
-                        {
-                            x2 = x + x1;
-
-                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
-                            {
-                                retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
-                            }
-                            else
-                            {
-                                offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                                retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-                            }
-                        }
-                    }
-
-                    #endregion
+                    retVal[x1 + yOffset] = Color.FromArgb(color[0], color[1], color[2], color[3]);
                 }
-                else if (_format == PixelFormats.Bgr32)
-                {
-                    #region Bgr32
-
-                    int x2, y2;
-
-                    for (int y1 = 0; y1 < height; y1++)
-                    {
-                        y2 = y + y1;
-
-                        yOffsetLeft = y1 * width;		// offset into the return array
-                        yOffsetRight = y2 * _stride;		// offset into _bytes array
-
-                        for (int x1 = 0; x1 < width; x1++)
-                        {
-                            x2 = x + x1;
-
-                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
-                            {
-                                retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
-                            }
-                            else
-                            {
-                                offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                                retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-                            }
-                        }
-                    }
-
-                    #endregion
-                }
-                else
-                {
-                    throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
-                }
-
-                #endregion
-            }
-            else
-            {
-                #region All in bounds
-
-                if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
-                {
-                    #region Pbgra32
-
-                    for (int y1 = 0; y1 < height; y1++)
-                    {
-                        yOffsetLeft = y1 * width;		// offset into the return array
-                        yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
-
-                        for (int x1 = 0; x1 < width; x1++)
-                        {
-                            offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                            retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-                        }
-                    }
-
-                    #endregion
-                }
-                else if (_format == PixelFormats.Bgr32)
-                {
-                    #region Bgr32
-
-                    for (int y1 = 0; y1 < height; y1++)
-                    {
-                        yOffsetLeft = y1 * width;		// offset into the return array
-                        yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
-
-                        for (int x1 = 0; x1 < width; x1++)
-                        {
-                            offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-                            retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-                        }
-                    }
-
-                    #endregion
-                }
-                else
-                {
-                    throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
-                }
-
-                #endregion
             }
 
-            // Exit Function
+            return retVal;
+        }
+        public Color[] GetColors()
+        {
+            return GetColors(0, 0, _info.Width, _info.Height);
+        }
+
+        #region OLD
+        //public Color[] GetColors(int x, int y, int width, int height)
+        //{
+        //    Color[] retVal = new Color[width * height];
+
+        //    //NOTE: Copying code for speed reasons
+
+        //    int yOffsetLeft, yOffsetRight, offset;
+
+        //    if (x < 0 || x + width >= _width || y < 0 || y + height >= _height)
+        //    {
+        //        #region Some out of bounds
+
+        //        if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
+        //        {
+        //            #region Pbgra32
+
+        //            int x2, y2;
+
+        //            for (int y1 = 0; y1 < height; y1++)
+        //            {
+        //                y2 = y + y1;
+
+        //                yOffsetLeft = y1 * width;		// offset into the return array
+        //                yOffsetRight = y2 * _stride;		// offset into _bytes array
+
+        //                for (int x1 = 0; x1 < width; x1++)
+        //                {
+        //                    x2 = x + x1;
+
+        //                    if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+        //                    {
+        //                        retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
+        //                    }
+        //                    else
+        //                    {
+        //                        offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+        //                        retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
+        //                    }
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+        //        else if (_format == PixelFormats.Bgr32)
+        //        {
+        //            #region Bgr32
+
+        //            int x2, y2;
+
+        //            for (int y1 = 0; y1 < height; y1++)
+        //            {
+        //                y2 = y + y1;
+
+        //                yOffsetLeft = y1 * width;		// offset into the return array
+        //                yOffsetRight = y2 * _stride;		// offset into _bytes array
+
+        //                for (int x1 = 0; x1 < width; x1++)
+        //                {
+        //                    x2 = x + x1;
+
+        //                    if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+        //                    {
+        //                        retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
+        //                    }
+        //                    else
+        //                    {
+        //                        offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+        //                        retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
+        //                    }
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+        //        else
+        //        {
+        //            throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
+        //        }
+
+        //        #endregion
+        //    }
+        //    else
+        //    {
+        //        #region All in bounds
+
+        //        if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
+        //        {
+        //            #region Pbgra32
+
+        //            for (int y1 = 0; y1 < height; y1++)
+        //            {
+        //                yOffsetLeft = y1 * width;		// offset into the return array
+        //                yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
+
+        //                for (int x1 = 0; x1 < width; x1++)
+        //                {
+        //                    offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+        //                    retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+        //        else if (_format == PixelFormats.Bgr32)
+        //        {
+        //            #region Bgr32
+
+        //            for (int y1 = 0; y1 < height; y1++)
+        //            {
+        //                yOffsetLeft = y1 * width;		// offset into the return array
+        //                yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
+
+        //                for (int x1 = 0; x1 < width; x1++)
+        //                {
+        //                    offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+        //                    retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+        //        else
+        //        {
+        //            throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
+        //        }
+
+        //        #endregion
+        //    }
+
+        //    // Exit Function
+        //    return retVal;
+        //}
+        #endregion
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// This returns the entire image as byte arrays (each array is length 4: A,R,G,B).
+        /// This is faster than converting to the color struct
+        /// </summary>
+        public byte[][] GetColorBytes()
+        {
+            byte[][] retVal = new byte[_info.Width * _info.Height][];
+
+            for (int y = 0; y < _info.Height; y++)
+            {
+                int yOffset = y * _info.Width;		// offset into the return array
+
+                for (int x = 0; x < _info.Width; x++)
+                {
+                    retVal[x + yOffset] = _info.GetColorBytes(x, y);
+                }
+            }
+
             return retVal;
         }
 
-        public Color[] GetColors()
+        /// <summary>
+        /// This converts into a gray scale convolution
+        /// </summary>
+        public Convolution2D ToConvolution(double scaleTo = 255d)
         {
-            return GetColors(0, 0, _width, _height);
+            double[] values = new double[_info.Width * _info.Height];
+
+            double scale = scaleTo / 255d;
+
+            for (int y = 0; y < _info.Height; y++)
+            {
+                int yOffset = y * _info.Width;		// offset into the return array
+
+                for (int x = 0; x < _info.Width; x++)
+                {
+                    byte[] color = _info.GetColorBytes(x, y);
+
+                    double gray = UtilityWPF.ConvertToGray(color[1], color[2], color[3]);
+
+                    values[x + yOffset] = gray * scale;
+                }
+            }
+
+            return new Convolution2D(values, _info.Width, _info.Height, false);
         }
 
-        public int Width { get { return _width; } }
-        public int Height { get { return _height; } }
+        #endregion
+    }
+
+    #endregion
+    #region Class: BitmapStreamInfo
+
+    public class BitmapStreamInfo
+    {
+        #region Enum: SupportedPixelFormats
+
+        private enum SupportedPixelFormats
+        {
+            Pbgra32,
+            Bgr32,
+            NotSupported,
+        }
+
+        #endregion
+
+        #region Constructor
+
+        public BitmapStreamInfo(byte[] bytes, int width, int height, int stride, PixelFormat format, Color outOfBoundsColor)
+        {
+            this.Bytes = bytes;
+            this.Width = width;
+            this.Height = height;
+            this.Stride = stride;
+            this.Format = format;
+            this.OutOfBoundsColor = outOfBoundsColor;
+            this.OutOfBoundsBytes = new[] { outOfBoundsColor.A, outOfBoundsColor.R, outOfBoundsColor.G, outOfBoundsColor.B };
+
+            // GetPixel is likely to get called a lot, and it's slightly cheaper to do a switch than cascading if
+            if (this.Format == PixelFormats.Pbgra32)
+            {
+                _formatEnum = SupportedPixelFormats.Pbgra32;
+            }
+            else if (this.Format == PixelFormats.Bgr32)
+            {
+                _formatEnum = SupportedPixelFormats.Bgr32;
+            }
+            else
+            {
+                _formatEnum = SupportedPixelFormats.NotSupported;
+            }
+        }
+
+        #endregion
+
+        public readonly byte[] Bytes;
+
+        public readonly int Width;
+        public readonly int Height;
+
+        public readonly int Stride;
+        public readonly PixelFormat Format;
+        private readonly SupportedPixelFormats _formatEnum;
+
+        public readonly Color OutOfBoundsColor;
+        public readonly byte[] OutOfBoundsBytes;
+
+        #region Public Methods
+
+        public byte[] GetColorBytes(int x, int y)
+        {
+            if (x < 0 || x >= this.Width || y < 0 || y >= this.Height)
+            {
+                return this.OutOfBoundsBytes;
+            }
+
+            int offset;
+
+            //NOTE: Instead of coding against a ton of different formats, just use FormatConvertedBitmap to convert into one of these (look in UtilityWPF.ConvertToColorArray for example)
+            switch (_formatEnum)
+            {
+                case SupportedPixelFormats.Pbgra32:
+                    #region Pbgra32
+
+                    offset = (y * this.Stride) + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+                    return new[] { this.Bytes[offset + 3], this.Bytes[offset + 2], this.Bytes[offset + 1], this.Bytes[offset + 0] };
+
+                    #endregion
+
+                case SupportedPixelFormats.Bgr32:
+                    #region Bgr32
+
+                    offset = (y * this.Stride) + (x * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
+
+                    return new byte[] { 255, this.Bytes[offset + 2], this.Bytes[offset + 1], this.Bytes[offset + 0] };
+
+                    #endregion
+
+                default:
+                    throw new ApplicationException("TODO: Handle more pixel formats: " + this.Format.ToString());
+            }
+        }
 
         #endregion
     }
