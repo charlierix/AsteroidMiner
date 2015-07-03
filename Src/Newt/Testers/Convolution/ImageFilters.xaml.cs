@@ -21,8 +21,14 @@ using Microsoft.Win32;
 
 namespace Game.Newt.Testers.Convolution
 {
-    //TODO: Support filters other than convolutions:
-    //http://homepages.inf.ed.ac.uk/rbf/HIPR2/median.htm
+    //TODO: Create a tool that can be used to extract features from an image.  as a convolution?
+    //ex: abe lincoln's beard, pacman outline, eyes nose
+    //
+    //these extractions would be much larger than the smaller convolutions
+    //
+    //let them draw a bounding box, then give them an eraser tool
+    //
+    //or maybe a circle instead of box, then blur more as radius increases (make a sweet spot with no blur)
     public partial class ImageFilters : Window
     {
         #region Class: DragDataObject
@@ -86,19 +92,26 @@ namespace Game.Newt.Testers.Convolution
                 Direction = 0,
                 ShadowDepth = 0,
                 BlurRadius = 40,
-                Color = UtilityWPF.ColorFromHex("FFFFFF"),
+                Color = UtilityWPF.ColorFromHex("FFEB85"),
                 Opacity = 1,
             };
 
             // Context Menu
             _kernelContextMenu = (ContextMenu)this.Resources["kernelContextMenu"];
 
+            // NegPos coloring
+            foreach (ConvolutionResultNegPosColoring coloring in Enum.GetValues(typeof(ConvolutionResultNegPosColoring)))
+            {
+                cboEdgeColors.Items.Add(coloring);
+            }
+            cboEdgeColors.SelectedIndex = 0;
+
             // Source Image
             originalImage.Source = DownloadImage(GetImageURL());
 
             // Kernels
             AddDefaultKernels_Gaussian();
-            AddDefaultKernels_Edges();
+            AddDefaultKernels_Edges_Small();
             AddDefaultKernels_Composite();
             AddRandomKernels(2, false);
             AddRandomKernels(2, true);
@@ -175,6 +188,26 @@ namespace Game.Newt.Testers.Convolution
         }
 
         private void chkSubtract_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!_initialized)
+                {
+                    return;
+                }
+
+                if (_selectedKernelIndex >= 0 && _selectedKernelIndex < _kernels.Count)
+                {
+                    ApplyFilter(_kernels[_selectedKernelIndex]);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void cboEdgeColors_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             try
             {
@@ -546,123 +579,6 @@ namespace Game.Newt.Testers.Convolution
 
         #region Internal Methods
 
-        internal static Border GetKernelThumbnail(ConvolutionBase2D kernel, int thumbSize, ContextMenu contextMenu)
-        {
-            if (kernel is Convolution2D)
-            {
-                return GetKernelThumbnail_Single((Convolution2D)kernel, thumbSize, contextMenu);
-            }
-            else if (kernel is ConvolutionSet2D)
-            {
-                return GetKernelThumbnail_Set((ConvolutionSet2D)kernel, thumbSize, contextMenu);
-            }
-            else
-            {
-                throw new ArgumentException("Unknown type of kernel: " + kernel.GetType().ToString());
-            }
-        }
-
-        /// <summary>
-        /// This isn't for processing, just a visual to show to the user
-        /// </summary>
-        internal static BitmapSource GetKernelBitmap(Convolution2D kernel, int sizeMult = 20, bool isNegativeRedBlue = true)
-        {
-            double min = kernel.Values.Min(o => o);
-            double max = kernel.Values.Max(o => o);
-            double absMax = Math.Max(Math.Abs(min), Math.Abs(max));
-
-            Color[] colors = null;
-            if (!kernel.IsNegPos)
-            {
-                // 0 to 1
-                colors = kernel.Values.
-                    Select(o => GetKernelPixelColor_ZeroToOne(o, max)).
-                    ToArray();
-            }
-            else if (isNegativeRedBlue)
-            {
-                // -1 to 1 (red-blue)
-                colors = kernel.Values.
-                    Select(o => GetKernelPixelColor_NegPos_RedBlue(o, absMax)).
-                    ToArray();
-            }
-            else
-            {
-                // -1 to 1 (black-white)
-                colors = kernel.Values.
-                    Select(o => GetKernelPixelColor_NegPos_BlackWhite(o, absMax)).
-                    ToArray();
-            }
-
-            return UtilityWPF.GetBitmap_Aliased(colors, kernel.Width, kernel.Height, kernel.Width * sizeMult, kernel.Height * sizeMult);
-        }
-        internal static Color GetKernelPixelColor(double value, double min, double max, double absMax, bool isZeroToOne, bool isNegativeRedBlue = true)
-        {
-            if (isZeroToOne)
-            {
-                return GetKernelPixelColor_ZeroToOne(value, max);
-            }
-            else if (isNegativeRedBlue)
-            {
-                return GetKernelPixelColor_NegPos_RedBlue(value, absMax);
-            }
-            else
-            {
-                return GetKernelPixelColor_NegPos_BlackWhite(value, absMax);
-            }
-        }
-        internal static Color GetKernelPixelColor_ZeroToOne(double value, double max)
-        {
-            if (max.IsNearZero())
-            {
-                return Colors.Black;
-            }
-
-            double scaled = (value / max) * 255d;       // need to scale to max, because the sum of the cells is 1.  So if it's not scaled, the bitmap will be nearly black
-            if (scaled < 0)
-            {
-                scaled = 0;
-            }
-
-            byte rgb = Convert.ToByte(Math.Round(scaled));
-            return Color.FromRgb(rgb, rgb, rgb);
-        }
-        internal static Color GetKernelPixelColor_NegPos_RedBlue(double value, double absMax)
-        {
-            if (absMax.IsNearZero())
-            {
-                return Colors.White;
-            }
-
-            byte[] white = new byte[] { 255, 255, 255, 255 };
-
-            double scaled = (Math.Abs(value) / absMax) * 255d;      //NOTE: Can't use a posMax and negMax, because the black/white will be deceptive
-            byte opacity = Convert.ToByte(Math.Round(scaled));
-
-            byte[] color = new byte[4];
-            color[0] = opacity;
-            color[1] = Convert.ToByte(value < 0 ? 255 : 0);
-            color[2] = 0;
-            color[3] = Convert.ToByte(value > 0 ? 255 : 0);
-
-            color = UtilityWPF.OverlayColors(new[] { white, color });
-
-            return Color.FromRgb(color[1], color[2], color[3]);     // the white background is fully opaque, so there's no need for the alpha overload
-        }
-        internal static Color GetKernelPixelColor_NegPos_BlackWhite(double value, double absMax)
-        {
-            if (absMax.IsNearZero())
-            {
-                return Colors.Gray;
-            }
-
-            double offset = (value / absMax) * 127d;        //NOTE: Can't use a posMax and negMax, because the black/white will be deceptive
-
-            byte rgb = Convert.ToByte(128 + Math.Round(offset));
-
-            return Color.FromRgb(rgb, rgb, rgb);
-        }
-
         internal static int GetDropInsertIndex(Panel panel, DragEventArgs e, bool isHorizontal)
         {
             if (!isHorizontal)
@@ -836,31 +752,50 @@ namespace Game.Newt.Testers.Convolution
             }
         }
 
-        private void AddKernel(ConvolutionBase2D kernel)
-        {
-            Border border = GetKernelThumbnail(kernel, 40, _kernelContextMenu);
-
-            // Store them
-            panelKernels.Children.Add(border);
-            _kernels.Add(kernel);
-        }
         private void AddDefaultKernels_Gaussian()
         {
             int[] sizes = new[] { 3, 4, 5, 6, 7, 9, 15, 20, 30 };
 
             foreach (int size in sizes)
             {
-                AddKernel(Convolutions.GetGaussian(size, 1));
+                AddKernel(Convolutions.GetGaussian(size, 1), "gaussian");
             }
 
             foreach (int size in sizes)
             {
-                AddKernel(Convolutions.GetGaussian(size, 2));
+                AddKernel(Convolutions.GetGaussian(size, 2), "gaussian x2");
             }
         }
-        private void AddDefaultKernels_Edges()
+        private void AddDefaultKernels_Edges_Small()
         {
-            //TODO:
+            AddKernel(Convolutions.GetEdge_Sobel(true), "sobel");
+            AddKernel(Convolutions.GetEdge_Sobel(false), "sobel");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), true), "sobel");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), true), "sobel");
+
+            AddKernel(Convolutions.GetEdge_Prewitt(true), "prewitt");
+            AddKernel(Convolutions.GetEdge_Prewitt(false), "prewitt");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(true), true), "prewitt");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(false), true), "prewitt");
+
+            AddKernel(Convolutions.GetEdge_Compass(true), "compass");
+            AddKernel(Convolutions.GetEdge_Compass(false), "compass");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(true), true), "compass");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(false), true), "compass");
+
+            AddKernel(Convolutions.GetEdge_Kirsch(true), "kirsch");
+            AddKernel(Convolutions.GetEdge_Kirsch(false), "kirsch");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(true), true), "kirsch");
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(false), true), "kirsch");
+
+            AddKernel(Convolutions.GetEdge_Laplacian(true), "laplacian");
+            AddKernel(Convolutions.GetEdge_Laplacian(false), "laplacian");
+        }
+        private void AddDefaultKernels_Edges_Large()
+        {
+            // these should be larger.  The simple edge is good at 3x3, but these mini diagrams should be larger
+
+
             //  - | / \ + X
             //  L ^
             //  O (      also quarter circle
@@ -872,30 +807,19 @@ namespace Game.Newt.Testers.Convolution
             // =
 
 
-            // Let them specify line width
 
-
-
-            AddKernel(Convolutions.GetEdge_Sobel(true));
-            AddKernel(Convolutions.GetEdge_Sobel(false));
-
-            AddKernel(Convolutions.GetEdge_Prewitt(true));
-            AddKernel(Convolutions.GetEdge_Prewitt(false));
-
-            AddKernel(Convolutions.GetEdge_Compass(true));
-            AddKernel(Convolutions.GetEdge_Compass(false));
-
-            AddKernel(Convolutions.GetEdge_Kirsch(true));
-            AddKernel(Convolutions.GetEdge_Kirsch(false));
+            // Let them specify line width?
         }
         private void AddDefaultKernels_Composite()
         {
             // Gaussian Subtract
-            AddKernel(new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract));
+            AddKernel(new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract), "gaussian subtract");
 
             // MaxAbs Sobel
             Convolution2D vert = Convolutions.GetEdge_Sobel(true);
             Convolution2D horz = Convolutions.GetEdge_Sobel(false);
+            Convolution2D vert45 = Convolutions.Rotate_45(vert, true);
+            Convolution2D horz45 = Convolutions.Rotate_45(horz, true);
             ConvolutionSet2D first = null;
 
             foreach (int gain in new[] { 1, 2, 4 })
@@ -904,10 +828,12 @@ namespace Game.Newt.Testers.Convolution
                 {
                     new Convolution2D(vert.Values, vert.Width, vert.Height, vert.IsNegPos, gain),
                     new Convolution2D(horz.Values, horz.Width, horz.Height, horz.IsNegPos, gain),
+                    new Convolution2D(vert45.Values, vert45.Width, vert45.Height, vert45.IsNegPos, gain),
+                    new Convolution2D(horz45.Values, horz45.Width, horz45.Height, horz45.IsNegPos, gain),
                 };
 
                 ConvolutionSet2D set = new ConvolutionSet2D(singles, SetOperationType.MaxOf);
-                AddKernel(set);
+                AddKernel(set, string.Format("max of sobel{0}", gain == 1 ? "" : string.Format("\r\ngain={0}", gain)));
 
                 first = first ?? set;
             }
@@ -921,7 +847,7 @@ namespace Game.Newt.Testers.Convolution
                     first,
                 };
 
-                AddKernel(new ConvolutionSet2D(convs, SetOperationType.Standard));
+                AddKernel(new ConvolutionSet2D(convs, SetOperationType.Standard), string.Format("guass then edge\r\n{0}x{0}", size));
             }
         }
         private void AddRandomKernels(int count, bool isNegPos, bool? isSquare = null)
@@ -943,6 +869,37 @@ namespace Game.Newt.Testers.Convolution
 
                 AddKernel(kernel);
             }
+        }
+
+        private void AddKernel(ConvolutionBase2D kernel, string tooltipHeader = "")
+        {
+            Border border = Convolutions.GetKernelThumbnail(kernel, 40, _kernelContextMenu);
+
+            if (!string.IsNullOrEmpty(tooltipHeader))
+            {
+                // For simple (not composite) kernels, it's the image that gets the tooltip.  So if this is one of those, add to the tooltip
+                if (border.Child is Image)
+                {
+                    string existingTooltip = ((Image)border.Child).ToolTip as string;
+
+                    if (!string.IsNullOrEmpty(existingTooltip))
+                    {
+                        ((Image)border.Child).ToolTip = tooltipHeader + "\r\n" + existingTooltip;
+                    }
+                    else
+                    {
+                        border.ToolTip = tooltipHeader;
+                    }
+                }
+                else
+                {
+                    border.ToolTip = tooltipHeader;
+                }
+            }
+
+            // Store them
+            panelKernels.Children.Add(border);
+            _kernels.Add(kernel);
         }
 
         private static Convolution2D GetRandomFilter_Positive(bool isSquare)
@@ -1078,49 +1035,8 @@ namespace Game.Newt.Testers.Convolution
                 throw new ArgumentException("Unknown type of kernel: " + kernel.GetType().ToString());
             }
 
-            #region Convert filtered to gray
-
-            Color[] filteredColors;
-
-            //double min = filtered.Values.Min();
-            //double max = filtered.Values.Max();
-
-            if (isNegPos)
-            {
-                filteredColors = filtered.Values.Select(o =>
-                {
-                    double offset = (o / 255d) * 127d;
-                    double rgbDbl = 128 + Math.Round(offset);
-
-                    if (rgbDbl < 0) rgbDbl = 0;
-                    else if (rgbDbl > 255) rgbDbl = 255;
-
-                    byte rgb = Convert.ToByte(rgbDbl);
-                    return Color.FromRgb(rgb, rgb, rgb);
-                }).
-                ToArray();
-            }
-            else
-            {
-                filteredColors = filtered.Values.Select(o =>
-                {
-                    double rgbDbl = Math.Round(o);
-
-                    if (rgbDbl < 0) rgbDbl = 0;
-                    else if (rgbDbl > 255) rgbDbl = 255;
-
-                    byte rgb = Convert.ToByte(rgbDbl);
-                    return Color.FromRgb(rgb, rgb, rgb);
-                }).
-                ToArray();
-            }
-
-            #endregion
-
             // Show Filtered
-            modifiedImage.Source = UtilityWPF.GetBitmap(filteredColors, filtered.Width, filtered.Height);
-            //modifiedImage.Width = filtered.Width;
-            //modifiedImage.Height = filtered.Height;
+            modifiedImage.Source = Convolutions.ShowConvolutionResult(filtered, isNegPos, (ConvolutionResultNegPosColoring)cboEdgeColors.SelectedValue);
         }
 
         /// <summary>
@@ -1138,176 +1054,6 @@ namespace Game.Newt.Testers.Convolution
             }
 
             return _origImageGrays;
-        }
-
-        private static Border GetKernelThumbnail_Single(Convolution2D kernel, int thumbSize, ContextMenu contextMenu)
-        {
-            // Figure out thumb size
-            double width, height;
-            if (kernel.Width == kernel.Height)
-            {
-                width = height = thumbSize;
-            }
-            else if (kernel.Width > kernel.Height)
-            {
-                width = thumbSize;
-                height = Convert.ToDouble(kernel.Height) / Convert.ToDouble(kernel.Width) * thumbSize;
-            }
-            else
-            {
-                height = thumbSize;
-                width = Convert.ToDouble(kernel.Width) / Convert.ToDouble(kernel.Height) * thumbSize;
-            }
-
-            int pixelWidth = Convert.ToInt32(Math.Ceiling(width / kernel.Width));
-            int pixelHeight = Convert.ToInt32(Math.Ceiling(height / kernel.Height));
-
-            int pixelMult = Math.Max(pixelWidth, pixelHeight);
-            if (pixelMult < 1)
-            {
-                pixelMult = 1;
-            }
-
-            // Display it as a border and image
-            Image image = new Image()
-            {
-                Source = GetKernelBitmap(kernel, pixelMult),
-                Width = width,
-                Height = height,
-                ToolTip = string.Format("{0}x{1}", kernel.Width, kernel.Height),
-            };
-
-            Border border = new Border()
-            {
-                Child = image,
-                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("C0C0C0")),
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(6),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                ContextMenu = contextMenu,
-            };
-
-            return border;
-        }
-        private static Border GetKernelThumbnail_Set_ATTEMPT1(ConvolutionSet2D kernel, int thumbSize, ContextMenu contextMenu)
-        {
-            StackPanel children = new StackPanel()
-            {
-                Orientation = Orientation.Horizontal,
-            };
-
-            int childSize = Convert.ToInt32(thumbSize * .9);
-            double secondChildShift = thumbSize * .33;
-
-            foreach (ConvolutionBase2D child in kernel.Convolutions)
-            {
-                Border childCtrl = GetKernelThumbnail(child, childSize, null);
-
-                //NOTE: I wanted a trapazoid transform, but that is impossible with a 3x3 matrix.  The only way would be to render in 3D
-                TransformGroup tranform = new TransformGroup();
-                //tranform.Children.Add(new ScaleTransform(.75, 1));
-                tranform.Children.Add(new SkewTransform(0, -30));
-                childCtrl.LayoutTransform = tranform;
-
-                if (children.Children.Count == 0)
-                {
-                    childCtrl.Margin = new Thickness(0);
-                }
-                else
-                {
-                    //tranform.Children.Add(new TranslateTransform(-secondChildShift, 0));      // doesn't work
-                    childCtrl.Margin = new Thickness(-secondChildShift, 0, 0, 0);
-                }
-
-                children.Children.Add(childCtrl);
-            }
-
-            Border border = new Border()
-            {
-                Child = children,
-                //Width = thumbSize,
-                //Height = thumbSize,
-
-                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("28F2B702")),
-                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("F5CC05")),
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(6),
-                Padding = new Thickness(3),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                ContextMenu = contextMenu,
-            };
-
-            return border;
-        }
-        private static Border GetKernelThumbnail_Set(ConvolutionSet2D kernel, int thumbSize, ContextMenu contextMenu)
-        {
-            StackPanel children = new StackPanel()
-            {
-                Orientation = Orientation.Horizontal,
-            };
-
-            int childSize = Convert.ToInt32(thumbSize * .9);
-            double secondChildShift = thumbSize * .33;
-
-            foreach (ConvolutionBase2D child in kernel.Convolutions)
-            {
-                //NOTE: It doesn't work to apply skew transforms to a border that has children.  Instead, make a visual brush out of the child
-                Border childCtrl = GetKernelThumbnail(child, childSize, null);
-                childCtrl.Margin = new Thickness(0);
-
-                Border actualChild = new Border();
-                actualChild.Background = new VisualBrush() { Visual = childCtrl };
-
-                double width = 0;
-                double height = 0;
-                if (child is Convolution2D)
-                {
-                    width = ((FrameworkElement)childCtrl.Child).Width;
-                    height = ((FrameworkElement)childCtrl.Child).Height;
-                }
-                else //if(child is ConvolutionSet2D)
-                {
-                    // There doesn't seem to be a way to get the child composite's size (it's NaN).  Maybe there's a way to force it to do layout?
-                    width = thumbSize;
-                    height = thumbSize;
-                }
-
-                actualChild.Width = width;
-                actualChild.Height = height;
-
-                //NOTE: I wanted a trapazoid transform, but that is impossible with a 3x3 matrix.  The only way would be to render in 3D
-                TransformGroup tranform = new TransformGroup();
-                tranform.Children.Add(new ScaleTransform(.75, 1));
-                tranform.Children.Add(new SkewTransform(0, -30));
-                actualChild.LayoutTransform = tranform;
-
-                if (children.Children.Count > 0)
-                {
-                    actualChild.Margin = new Thickness(-secondChildShift, 0, 0, 0);
-                }
-
-                actualChild.IsHitTestVisible = false;       // setting this to false so that click events come from the returned border instead of the child
-
-                children.Children.Add(actualChild);
-            }
-
-            Border border = new Border()
-            {
-                Child = children,
-
-                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("28F2B702")),
-                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("F5CC05")),
-                BorderThickness = new Thickness(1),
-                Margin = new Thickness(6),
-                Padding = new Thickness(3),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-                ContextMenu = contextMenu,
-            };
-
-            return border;
         }
 
         #endregion

@@ -145,7 +145,7 @@ namespace Game.Newt.Testers.Convolution
 
                 foreach (var bar in this.Bars)
                 {
-                    Color color = ImageFilters.GetKernelPixelColor(bar.Height, min, max, absMax, isZeroToOne, isNegativeRedBlue);
+                    Color color = Convolutions.GetKernelPixelColor(bar.Height, min, max, absMax, isZeroToOne, isNegativeRedBlue);
 
                     Material material = UtilityWPF.GetUnlitMaterial(color);
                     bar.Model.BackMaterial = material;
@@ -186,6 +186,9 @@ namespace Game.Newt.Testers.Convolution
         private bool _isDragRemoving = false;
         private bool _isCtrlPressed = false;
         private bool _isShiftPressed = false;
+
+        private bool _even45ExtraClock = false;
+        private bool _even45ExtraCounter = false;
 
         private bool _isProgramaticallyChangingSettings = false;
 
@@ -493,22 +496,66 @@ namespace Game.Newt.Testers.Convolution
             }
         }
 
-        private void RotateClockwise_Click(object sender, RoutedEventArgs e)
+        private void RotateClockwise90_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                RotateValues(true);
+                RotateValues(true, true, false);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void RotateCounterClockwise_Click(object sender, RoutedEventArgs e)
+        private void RotateCounterClockwise90_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                RotateValues(false);
+                RotateValues(false, true, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void RotateClockwise45_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_width != _height)
+                {
+                    MessageBox.Show("Can't do 45 degree rotation of a non square image", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                RotateValues(true, false, _even45ExtraClock);
+
+                if (_width % 2 == 0)
+                {
+                    _even45ExtraClock = !_even45ExtraClock;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void RotateCounterClockwise45_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_width != _height)
+                {
+                    MessageBox.Show("Can't do 45 degree rotation of a non square image", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                RotateValues(false, false, _even45ExtraCounter);
+
+                if (_width % 2 == 0)
+                {
+                    _even45ExtraCounter = !_even45ExtraCounter;
+                }
             }
             catch (Exception ex)
             {
@@ -1056,29 +1103,22 @@ namespace Game.Newt.Testers.Convolution
             _isProgramaticallyChangingSettings = false;
         }
 
-        private void RotateValues(bool isClockwise)
+        private void RotateValues(bool isClockwise, bool is90, bool isEven45Extra)
         {
-            #region Create rotated array
-
-            bool revX = !isClockwise;
-            bool revY = isClockwise;
-
-            double[] newValues = new double[_values.Length];
-
-            for (int newX = 0; newX < _height; newX++)     // old height becomes new width
+            if (is90)
             {
-                for (int newY = 0; newY < _width; newY++)      // width becomes height
+                _values = Convolutions.Rotate_90(_values, _width, _height, isClockwise);
+            }
+            else
+            {
+                if (_width != _height)
                 {
-                    int oldX = revX ? _width - newY - 1 : newY;
-                    int oldY = revY ? _height - newX - 1 : newX;
-
-                    newValues[(newY * _height) + newX] = _values[(oldY * _width) + oldX];
+                    throw new InvalidOperationException("Can't do 45 degree rotation of a non square image");
                 }
+
+                _values = Convolutions.Rotate_45(_values, _width, isClockwise, isEven45Extra);
             }
 
-            #endregion
-
-            _values = newValues;
             UtilityCore.Swap(ref _width, ref _height);
 
             if (_width != _height)
@@ -1103,7 +1143,7 @@ namespace Game.Newt.Testers.Convolution
             bool isRedBlue = chkIsRedBlue.IsChecked.Value;
 
             // Show Kernel
-            BitmapSource kernelBitmap = ImageFilters.GetKernelBitmap(kernel, isNegativeRedBlue: isRedBlue);
+            BitmapSource kernelBitmap = Convolutions.GetKernelBitmap(kernel, isNegativeRedBlue: isRedBlue);
             imagePreview.Source = kernelBitmap;
             imagePreview.Width = kernelBitmap.PixelWidth;
             imagePreview.Height = kernelBitmap.PixelHeight;

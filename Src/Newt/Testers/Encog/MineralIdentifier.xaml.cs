@@ -19,9 +19,7 @@ namespace Game.Newt.Testers.Encog
 {
     public partial class MineralIdentifier : Window
     {
-        #region Declaration Section
-
-        private const double CAMERADISTANCE = 2.8;
+        #region Declaration Section - single image
 
         private Visual3D _mineralVisual = null;
 
@@ -29,6 +27,16 @@ namespace Game.Newt.Testers.Encog
         /// This listens to the mouse/keyboard and controls the camera
         /// </summary>
         private TrackBallRoam _trackball = null;
+
+        #endregion
+        #region Declaration Section - training data
+
+        private List<ConvolutionBase2D> _kernels = new List<ConvolutionBase2D>();
+
+        #endregion
+        #region Declaration Section
+
+        private const double CAMERADISTANCE = 2.8;
 
         private readonly Vector3D _lightDirection = new Vector3D(-1, -1, -1);
 
@@ -64,7 +72,8 @@ namespace Game.Newt.Testers.Encog
             #endregion
             #region Tab: Training Data
 
-            // Mineral Types
+            #region Mineral Types
+
             foreach (MineralType mineral in Enum.GetValues(typeof(MineralType)))
             {
                 CheckBox mineralCheckbox = new CheckBox()
@@ -77,8 +86,25 @@ namespace Game.Newt.Testers.Encog
                 pnlMineralSelections.Children.Add(mineralCheckbox);
             }
 
-            // Convolutions
-            //TODO: Store and display these (for now, just do the MaxAbs of horz and vert sobel)
+            #endregion
+            #region Convolutions
+
+            // Gaussian Subtract
+            AddKernel(new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract));
+
+            // MaxAbs Sobel
+            Convolution2D vert = Convolutions.GetEdge_Sobel(true);
+            Convolution2D horz = Convolutions.GetEdge_Sobel(false);
+            var singles = new[]
+                {
+                    new Convolution2D(vert.Values, vert.Width, vert.Height, vert.IsNegPos, 1),
+                    new Convolution2D(horz.Values, horz.Width, horz.Height, horz.IsNegPos, 1),
+                };
+
+            ConvolutionSet2D set = new ConvolutionSet2D(singles, SetOperationType.MaxOf);
+            AddKernel(set);
+
+            #endregion
 
             #endregion
 
@@ -283,9 +309,28 @@ namespace Game.Newt.Testers.Encog
         #endregion
         #region Event Listeners - training data
 
-        private void CheckBox_MineralSelection_Checked(object sender, RoutedEventArgs e)
+        private void GenerateTrainingData_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
+        #endregion
+
+        #region Private Methods - training data
+
+        private void AddKernel(ConvolutionBase2D kernel)
+        {
+            Border border = Convolutions.GetKernelThumbnail(kernel, 40, null);
+
+            // Store them
+            panelKernels.Children.Add(border);
+            _kernels.Add(kernel);
         }
 
         #endregion

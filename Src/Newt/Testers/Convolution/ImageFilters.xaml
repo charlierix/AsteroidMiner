@@ -80,7 +80,6 @@
                     <ColumnDefinition Width="auto"/>
                     <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="1*"/>
-                    <!--<ColumnDefinition Width="auto"/>-->
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Top">
@@ -118,8 +117,11 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
+                    <!-- Edge Colors -->
+                    <ComboBox Name="cboEdgeColors" ToolTip="Edge result colors" SelectionChanged="cboEdgeColors_SelectionChanged"/>
+
                     <!-- Gain -->
-                    <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Label Content="gain" Style="{StaticResource sliderLabel}"/>
                         <Label Name="lblGain" Content="1" Style="{StaticResource sliderLabelBold}"/>
                     </StackPanel>
@@ -134,16 +136,9 @@
                 </StackPanel>
 
                 <!-- List of filters to apply -->
-                <!-- TODO: May want to have two types of filters.  Single and composite (read about the canny) -->
-                <ScrollViewer Grid.Column="4" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Column="4" MaxHeight="200" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
                     <WrapPanel Name="panelKernels" AllowDrop="True" Background="Transparent" MouseDown="panelKernels_MouseDown" MouseMove="panelKernels_MouseMove" MouseUp="panelKernels_MouseUp" PreviewDragEnter="panelKernels_PreviewDragOver" PreviewDragOver="panelKernels_PreviewDragOver" Drop="panelKernels_Drop"/>
                 </ScrollViewer>
-
-                <!-- Current Kernel -->
-                <!--<Border Grid.Column="3" BorderBrush="#C0C0C0" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                    <Image Name="kernelImage"/>
-                </Border>-->
-
             </Grid>
         </Border>
     </Grid>

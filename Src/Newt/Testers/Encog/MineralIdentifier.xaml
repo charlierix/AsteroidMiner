@@ -104,11 +104,13 @@
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="8"/>
                             <RowDefinition Height="auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="auto"/>
                         </Grid.RowDefinitions>
 
                         <!-- Checkboxes will be added to this -->
                         <Border Grid.Column="0" Grid.Row="0" BorderBrush="#40000000" BorderThickness="1" CornerRadius="4" Padding="8">
-                            <StackPanel Name="pnlMineralSelections" CheckBox.Checked="CheckBox_MineralSelection_Checked" CheckBox.Unchecked="CheckBox_MineralSelection_Checked"/>
+                            <StackPanel Name="pnlMineralSelections"/>
                         </Border>
 
                         <!-- Other settings -->
@@ -127,7 +129,9 @@
                         </StackPanel>
 
                         <!-- Convolutions to use -->
-                        <WrapPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"/>
+                        <WrapPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" Name="panelKernels"/>
+
+                        <Button Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Content="Generate" Click="GenerateTrainingData_Click"/>
                     </Grid>
 
                     

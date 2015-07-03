@@ -17,7 +17,6 @@ using Game.HelperClassesWPF;
 namespace Game.Newt.Testers.Convolution
 {
     //TODO: This has too much logic copied from the ImageFilters window.  Make a custom control for the kernel wrap panel.  Support dragdrop, rightclick, selected event
-    //TODO: Make an overload of the constructor that takes ConvolutionSet2D
     public partial class CompositeFilter : Window
     {
         #region Events
@@ -57,7 +56,7 @@ namespace Game.Newt.Testers.Convolution
                 Direction = 0,
                 ShadowDepth = 0,
                 BlurRadius = 40,
-                Color = UtilityWPF.ColorFromHex("FFFFFF"),
+                Color = UtilityWPF.ColorFromHex("FFEB85"),
                 Opacity = 1,
             };
 
@@ -380,7 +379,7 @@ namespace Game.Newt.Testers.Convolution
 
         private void InsertKernel(ConvolutionBase2D kernel, int index = -1)
         {
-            Border border = ImageFilters.GetKernelThumbnail(kernel, 80, _kernelContextMenu);
+            Border border = Convolutions.GetKernelThumbnail(kernel, 80, _kernelContextMenu);
 
             if (index < 0)
             {

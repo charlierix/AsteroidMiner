@@ -75,8 +75,10 @@
 
                 <UniformGrid Margin="0,8,0,0" Columns="2">
                     <!-- TODO: Make these buttons smaller, use icons instead of text, lay them out like arrow keys -->
-                    <Button Content="counter" ToolTip="Rotate Counter Clockwise" Click="RotateCounterClockwise_Click"/>
-                    <Button Content="clockwise" ToolTip="Rotate Clockwise" Click="RotateClockwise_Click"/>
+                    <Button Content="counter 90" ToolTip="Rotate Counter Clockwise" Click="RotateCounterClockwise90_Click"/>
+                    <Button Content="clockwise 90" ToolTip="Rotate Clockwise" Click="RotateClockwise90_Click"/>
+                    <Button Content="counter 45" ToolTip="Rotate Counter Clockwise" Click="RotateCounterClockwise45_Click"/>
+                    <Button Content="clockwise 45" ToolTip="Rotate Clockwise" Click="RotateClockwise45_Click"/>
                 </UniformGrid>
 
                 <UniformGrid Margin="0,6,0,0" Columns="2">

@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
 {
     public static class Convolutions
     {
+        #region Main operations
+
         public static Convolution2D Convolute(Convolution2D image, ConvolutionBase2D kernel)
         {
             if (kernel is Convolution2D)
@@ -81,6 +87,14 @@ namespace Game.HelperClassesWPF
             return new Convolution2D(values, width, height, true);
         }
 
+        #endregion
+
+        #region Manipulate convolution
+
+        /// <summary>
+        /// This scales so the sum is 1 and -1
+        /// NOTE: The convolution needs to be a unit before sending to this.Convolute
+        /// </summary>
         public static double[] ToUnit(double[] values)
         {
             if (values.All(o => o.IsNearZero()))
@@ -140,6 +154,10 @@ namespace Game.HelperClassesWPF
                 return values;
             }
         }
+        /// <summary>
+        /// This scales so the largest value is one
+        /// NOTE: This amplifies differences, and is only meant for sending to a painter
+        /// </summary>
         public static double[] ToMaximized(double[] values, double max = 1d)
         {
             if (values.All(o => o.IsNearZero()))
@@ -203,6 +221,108 @@ namespace Game.HelperClassesWPF
                 return values;
             }
         }
+
+        public static Convolution2D Rotate_90(Convolution2D convolution, bool isClockwise)
+        {
+            double[] newValues = Rotate_90(convolution.Values, convolution.Width, convolution.Height, isClockwise);
+
+            //NOTE: width becomes height
+            return new Convolution2D(newValues, convolution.Height, convolution.Width, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+        }
+        public static double[] Rotate_90(double[] values, int width, int height, bool isClockwise)
+        {
+            bool revX = !isClockwise;
+            bool revY = isClockwise;
+
+            double[] retVal = new double[values.Length];
+
+            for (int newX = 0; newX < height; newX++)     // old height becomes new width
+            {
+                for (int newY = 0; newY < width; newY++)      // width becomes height
+                {
+                    int oldX = revX ? width - newY - 1 : newY;
+                    int oldY = revY ? height - newX - 1 : newX;
+
+                    retVal[(newY * height) + newX] = values[(oldY * width) + oldX];
+                }
+            }
+
+            return retVal;
+        }
+
+        public static Convolution2D Rotate_45(Convolution2D convolution, bool isClockwise, bool shouldAdvanceEvensExtra = false)
+        {
+            if(convolution.Width != convolution.Height)
+            {
+                throw new ArgumentException("Width and height must be the same for 45 degree rotations");
+            }
+
+            double[] newValues = Rotate_45(convolution.Values, convolution.Width, isClockwise, shouldAdvanceEvensExtra);
+
+            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+        }
+        /// <summary>
+        /// This rotates 45 degrees
+        /// NOTE: This just slides/swirls values around, and will look odd with larger convolutions
+        /// NOTE: This only works with square convolutions
+        /// </summary>
+        /// <param name="widthHeight">This only works on square images</param>
+        /// <param name="shouldAdvanceEvensExtra">
+        /// It's not possible to do 45 degree rotations on images that have an even width/height.  The rings will slide around
+        /// each other at different rates.  This is sort of fixed by taking a boolean that advances the odd numbered rings 1 extra,
+        /// then it's up to the caller to pass true/false every other time they call this method
+        /// </param>
+        /// <remarks>
+        /// -1 0 1
+        /// -2 0 2
+        /// -1 0 1
+        /// counter:
+        /// 0 1 2
+        /// -1 0 1
+        /// -2 -1 0
+        /// 
+        /// Quarter samples
+        ///    3x3				3x3					4x4					4x4			
+        ///    a	b	c			a	b			a	b	c	d				a	b
+        ///        a				a	c				a	b					a	c
+        ///                                                                    b	e
+        ///
+        ///5x5						5x5							6x6							6x6					
+        ///a	b	c	d	e				a	b	c			a	b	c	d	e	f					a	b	c
+        ///    a	b	c					a	b	d				a	b	c	d						a	b	d
+        ///    h	a	d					a	c	e					a	b							a	c	e
+        ///    g	f	e																				b	d	f
+        ///
+        ///7x7								7x7								
+        ///a	b	c	d	e	f	g					a	b	c	d		
+        ///    a	b	c	d	e						a	b	c	e		
+        ///        a	b	c							a	b	d	f		
+        ///            a								a	c	e	g		
+        ///
+        ///8x8									8x8							
+        ///a	b	c	d	e	f	g	h						a	b	c	d
+        ///    a	b	c	d	e	f							a	b	c	e
+        ///        a	b	c	d								a	b	d	f
+        ///            a	b									a	c	e	g
+        ///                                                    b	d	f	h
+        /// </remarks>
+        public static double[] Rotate_45(double[] values, int widthHeight, bool isClockwise, bool shouldAdvanceEvensExtra = false)
+        {
+            double[] retVal = new double[values.Length];
+
+            for (int size = widthHeight; size > 0; size -= 2)
+            {
+                Rotate45_Ring(values, retVal, size, widthHeight, isClockwise, shouldAdvanceEvensExtra);
+            }
+
+            return retVal;
+        }
+
+        //TODO: Convolution2D GetExpanded(Convolution2D conv, int toWidth, int toHeight)
+        //The border should be some kind of blur of the outermost pixels (the from convo will be centered onto the destination)
+
+        #endregion
+        #region Generators
 
         /// <summary>
         /// This returns a kernel that will blur the image.  The kernel is a bell curve
@@ -413,6 +533,208 @@ namespace Game.HelperClassesWPF
 
             return new Convolution2D(values, 3, 3, true);
         }
+        public static Convolution2D GetEdge_Laplacian(bool positive = true)
+        {
+            //Got this here:
+            //http://www.tutorialspoint.com/dip/Laplacian_Operator.htm
+
+            double[] values = null;
+            if (positive)
+            {
+                values = new[]
+                {
+                    0d, 1d, 0d,
+                    1d, -4d, 1d,
+                    0d, 1d, 0d,
+                };
+            }
+            else
+            {
+                values = new[]
+                {
+                    0d, -1d, 0d,
+                    -1d, 4d, -1d,
+                    0d, -1d, 0d,
+                };
+            }
+
+            values = ToUnit(values);
+
+            return new Convolution2D(values, 3, 3, true);
+        }
+
+        #endregion
+        #region WPF helpers
+
+        public static Border GetKernelThumbnail(ConvolutionBase2D kernel, int thumbSize, ContextMenu contextMenu)
+        {
+            if (kernel is Convolution2D)
+            {
+                return GetKernelThumbnail_Single((Convolution2D)kernel, thumbSize, contextMenu);
+            }
+            else if (kernel is ConvolutionSet2D)
+            {
+                return GetKernelThumbnail_Set((ConvolutionSet2D)kernel, thumbSize, contextMenu);
+            }
+            else
+            {
+                throw new ArgumentException("Unknown type of kernel: " + kernel.GetType().ToString());
+            }
+        }
+
+        /// <summary>
+        /// This isn't for processing, just a visual to show to the user
+        /// </summary>
+        public static BitmapSource GetKernelBitmap(Convolution2D kernel, int sizeMult = 20, bool isNegativeRedBlue = true)
+        {
+            double min = kernel.Values.Min(o => o);
+            double max = kernel.Values.Max(o => o);
+            double absMax = Math.Max(Math.Abs(min), Math.Abs(max));
+
+            Color[] colors = null;
+            if (!kernel.IsNegPos)
+            {
+                // 0 to 1
+                colors = kernel.Values.
+                    Select(o => GetKernelPixelColor_ZeroToOne(o, max)).
+                    ToArray();
+            }
+            else if (isNegativeRedBlue)
+            {
+                // -1 to 1 (red-blue)
+                colors = kernel.Values.
+                    Select(o => GetKernelPixelColor_NegPos_RedBlue(o, absMax)).
+                    ToArray();
+            }
+            else
+            {
+                // -1 to 1 (black-white)
+                colors = kernel.Values.
+                    Select(o => GetKernelPixelColor_NegPos_BlackWhite(o, absMax)).
+                    ToArray();
+            }
+
+            return UtilityWPF.GetBitmap_Aliased(colors, kernel.Width, kernel.Height, kernel.Width * sizeMult, kernel.Height * sizeMult);
+        }
+        public static Color GetKernelPixelColor(double value, double min, double max, double absMax, bool isZeroToOne, bool isNegativeRedBlue = true)
+        {
+            if (isZeroToOne)
+            {
+                return GetKernelPixelColor_ZeroToOne(value, max);
+            }
+            else if (isNegativeRedBlue)
+            {
+                return GetKernelPixelColor_NegPos_RedBlue(value, absMax);
+            }
+            else
+            {
+                return GetKernelPixelColor_NegPos_BlackWhite(value, absMax);
+            }
+        }
+
+        public static BitmapSource ShowConvolutionResult(Convolution2D result, bool isNegPos, ConvolutionResultNegPosColoring negPosColoring)
+        {
+            byte[][] colors;
+
+            if (isNegPos)
+            {
+                switch (negPosColoring)
+                {
+                    case ConvolutionResultNegPosColoring.BlackWhite:
+                        #region negpos - BlackWhite
+
+                        colors = result.Values.Select(o =>
+                        {
+                            double rgbDbl = Math.Round(Math.Abs(o));
+
+                            if (rgbDbl < 0) rgbDbl = 0;
+                            else if (rgbDbl > 255) rgbDbl = 255;
+
+                            byte rgb = Convert.ToByte(rgbDbl);
+                            return new byte[] { 255, rgb, rgb, rgb };
+                        }).
+                        ToArray();
+
+                        #endregion
+                        break;
+
+                    case ConvolutionResultNegPosColoring.Gray:
+                        #region negpos - Gray
+
+                        colors = result.Values.Select(o =>
+                        {
+                            double offset = (o / 255d) * 127d;
+                            double rgbDbl = 128 + Math.Round(offset);
+
+                            if (rgbDbl < 0) rgbDbl = 0;
+                            else if (rgbDbl > 255) rgbDbl = 255;
+
+                            byte rgb = Convert.ToByte(rgbDbl);
+                            return new byte[] { 255, rgb, rgb, rgb };
+                        }).
+                        ToArray();
+
+                        #endregion
+                        break;
+
+                    case ConvolutionResultNegPosColoring.RedBlue:
+                        #region negpos RedBlue
+
+                        byte[] back = new byte[] { 255, 255, 255, 255 };
+
+                        colors = result.Values.Select(o =>
+                        {
+                            double rgbDbl = Math.Round(o);
+
+                            if (rgbDbl < -255) rgbDbl = -255;
+                            else if (rgbDbl > 255) rgbDbl = 255;
+
+                            byte alpha = Convert.ToByte(Math.Abs(rgbDbl));
+
+                            byte[] fore = null;
+                            if (rgbDbl < 0)
+                            {
+                                fore = new byte[] { alpha, 255, 0, 0 };
+                            }
+                            else
+                            {
+                                fore = new byte[] { alpha, 0, 0, 255 };
+                            }
+
+                            return UtilityWPF.OverlayColors(new[] { back, fore });
+                        }).
+                        ToArray();
+
+                        #endregion
+                        break;
+
+                    default:
+                        throw new ApplicationException("Unknown ConvolutionResultNegPosColoring: " + negPosColoring.ToString());
+                }
+            }
+            else
+            {
+                #region 0 to 1
+
+                colors = result.Values.Select(o =>
+                {
+                    double rgbDbl = Math.Round(o);
+
+                    if (rgbDbl < 0) rgbDbl = 0;
+                    else if (rgbDbl > 255) rgbDbl = 255;
+
+                    byte rgb = Convert.ToByte(rgbDbl);
+                    return new byte[] { 255, rgb, rgb, rgb };
+                }).
+                ToArray();
+
+                #endregion
+            }
+
+            return UtilityWPF.GetBitmap(colors, result.Width, result.Height);
+        }
+
+        #endregion
 
         #region Private Methods
 
@@ -601,6 +923,262 @@ namespace Game.HelperClassesWPF
                 ToArray();
         }
 
+        private static Border GetKernelThumbnail_Single(Convolution2D kernel, int thumbSize, ContextMenu contextMenu)
+        {
+            // Figure out thumb size
+            double width, height;
+            if (kernel.Width == kernel.Height)
+            {
+                width = height = thumbSize;
+            }
+            else if (kernel.Width > kernel.Height)
+            {
+                width = thumbSize;
+                height = Convert.ToDouble(kernel.Height) / Convert.ToDouble(kernel.Width) * thumbSize;
+            }
+            else
+            {
+                height = thumbSize;
+                width = Convert.ToDouble(kernel.Width) / Convert.ToDouble(kernel.Height) * thumbSize;
+            }
+
+            int pixelWidth = Convert.ToInt32(Math.Ceiling(width / kernel.Width));
+            int pixelHeight = Convert.ToInt32(Math.Ceiling(height / kernel.Height));
+
+            int pixelMult = Math.Max(pixelWidth, pixelHeight);
+            if (pixelMult < 1)
+            {
+                pixelMult = 1;
+            }
+
+            // Display it as a border and image
+            Image image = new Image()
+            {
+                Source = GetKernelBitmap(kernel, pixelMult),
+                Width = width,
+                Height = height,
+                ToolTip = string.Format("{0}x{1}", kernel.Width, kernel.Height),
+            };
+
+            Border border = new Border()
+            {
+                Child = image,
+                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("C0C0C0")),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(6),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                ContextMenu = contextMenu,
+            };
+
+            return border;
+        }
+        private static Border GetKernelThumbnail_Set(ConvolutionSet2D kernel, int thumbSize, ContextMenu contextMenu)
+        {
+            StackPanel children = new StackPanel()
+            {
+                Orientation = Orientation.Horizontal,
+            };
+
+            int childSize = Convert.ToInt32(thumbSize * .9);
+            double secondChildShift = thumbSize * .33;
+
+            foreach (ConvolutionBase2D child in kernel.Convolutions)
+            {
+                //NOTE: It doesn't work to apply skew transforms to a border that has children.  Instead, make a visual brush out of the child
+                Border childCtrl = GetKernelThumbnail(child, childSize, null);
+                childCtrl.Margin = new Thickness(0);
+
+                Border actualChild = new Border();
+                actualChild.Background = new VisualBrush() { Visual = childCtrl };
+
+                double width = 0;
+                double height = 0;
+                if (child is Convolution2D)
+                {
+                    width = ((FrameworkElement)childCtrl.Child).Width;
+                    height = ((FrameworkElement)childCtrl.Child).Height;
+                }
+                else //if(child is ConvolutionSet2D)
+                {
+                    // There doesn't seem to be a way to get the child composite's size (it's NaN).  Maybe there's a way to force it to do layout?
+                    width = thumbSize;
+                    height = thumbSize;
+                }
+
+                actualChild.Width = width;
+                actualChild.Height = height;
+
+                //NOTE: I wanted a trapazoid transform, but that is impossible with a 3x3 matrix.  The only way would be to render in 3D
+                TransformGroup tranform = new TransformGroup();
+                tranform.Children.Add(new ScaleTransform(.75, 1));
+                tranform.Children.Add(new SkewTransform(0, -30));
+                actualChild.LayoutTransform = tranform;
+
+                if (children.Children.Count > 0)
+                {
+                    actualChild.Margin = new Thickness(-secondChildShift, 0, 0, 0);
+                }
+
+                actualChild.IsHitTestVisible = false;       // setting this to false so that click events come from the returned border instead of the child
+
+                children.Children.Add(actualChild);
+            }
+
+            Border border = new Border()
+            {
+                Child = children,
+
+                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("28F2B702")),
+                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("F5CC05")),
+                BorderThickness = new Thickness(1),
+                Margin = new Thickness(6),
+                Padding = new Thickness(3),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                ContextMenu = contextMenu,
+            };
+
+            return border;
+        }
+
+        private static Color GetKernelPixelColor_ZeroToOne(double value, double max)
+        {
+            if (max.IsNearZero())
+            {
+                return Colors.Black;
+            }
+
+            double scaled = (value / max) * 255d;       // need to scale to max, because the sum of the cells is 1.  So if it's not scaled, the bitmap will be nearly black
+            if (scaled < 0)
+            {
+                scaled = 0;
+            }
+
+            byte rgb = Convert.ToByte(Math.Round(scaled));
+            return Color.FromRgb(rgb, rgb, rgb);
+        }
+        private static Color GetKernelPixelColor_NegPos_RedBlue(double value, double absMax)
+        {
+            if (absMax.IsNearZero())
+            {
+                return Colors.White;
+            }
+
+            byte[] white = new byte[] { 255, 255, 255, 255 };
+
+            double scaled = (Math.Abs(value) / absMax) * 255d;      //NOTE: Can't use a posMax and negMax, because the black/white will be deceptive
+            byte opacity = Convert.ToByte(Math.Round(scaled));
+
+            byte[] color = new byte[4];
+            color[0] = opacity;
+            color[1] = Convert.ToByte(value < 0 ? 255 : 0);
+            color[2] = 0;
+            color[3] = Convert.ToByte(value > 0 ? 255 : 0);
+
+            color = UtilityWPF.OverlayColors(new[] { white, color });
+
+            return Color.FromRgb(color[1], color[2], color[3]);     // the white background is fully opaque, so there's no need for the alpha overload
+        }
+        private static Color GetKernelPixelColor_NegPos_BlackWhite(double value, double absMax)
+        {
+            if (absMax.IsNearZero())
+            {
+                return Colors.Gray;
+            }
+
+            double offset = (value / absMax) * 127d;        //NOTE: Can't use a posMax and negMax, because the black/white will be deceptive
+
+            byte rgb = Convert.ToByte(128 + Math.Round(offset));
+
+            return Color.FromRgb(rgb, rgb, rgb);
+        }
+
+        private static void Rotate45_Ring(double[] source, double[] destination, int size, int fullSize, bool isClockwise, bool shouldAdvanceEvensExtra)
+        {
+            int fullOffset = (fullSize - size) / 2;
+
+            if (size == 1)
+            {
+                // Center, just copy it
+                int index = (fullOffset * fullSize) + fullOffset;
+                destination[index] = source[index];
+                return;
+            }
+
+            int offset = size / 2;
+            if (size % 2 == 0)
+            {
+                // This rotates them 90
+                offset += (size / 2) - 1;
+
+                // Now cut in half to get 45
+                offset /= 2;
+
+                if (shouldAdvanceEvensExtra)
+                {
+                    offset += 1;
+                }
+            }
+
+            if (!isClockwise)
+            {
+                offset = -offset;
+            }
+
+            int size_1 = size - 1;
+            int ringLength = size_1 * 4;
+
+            // Walk around the outer ring, copying to offset
+            for (int ringIndexSrc = 0; ringIndexSrc < ringLength; ringIndexSrc++)
+            {
+                // Convert ringIndex1 into an x,y
+                var pointSrc = MapRing_1D_2D(ringIndexSrc, size_1);
+
+                int ringIndexDst = ringIndexSrc + offset;
+                if (ringIndexDst < 0)
+                {
+                    ringIndexDst += ringLength;
+                }
+                else if (ringIndexDst >= ringLength)
+                {
+                    ringIndexDst -= ringLength;
+                }
+
+                // Convert ringIndex2 into an x,y
+                var pointDst = MapRing_1D_2D(ringIndexDst, size_1);
+
+                int indexSource = ((pointSrc.Item2 + fullOffset) * fullSize) + pointSrc.Item1 + fullOffset;
+                int indexDest = ((pointDst.Item2 + fullOffset) * fullSize) + pointDst.Item1 + fullOffset;
+
+                destination[indexDest] = source[indexSource];
+            }
+        }
+        private static Tuple<int, int> MapRing_1D_2D(int index, int size_1)
+        {
+            int section = index / size_1;
+
+            switch (section)
+            {
+                case 0:     // top edge
+                    return Tuple.Create(index, 0);
+
+                case 1:     // right edge
+                    return Tuple.Create(size_1, index - size_1);
+
+                case 2:     // bottom edge
+                    int offset1 = index - size_1;
+                    return Tuple.Create(size_1 - (offset1 - size_1), size_1);
+
+                case 3:     // left edge
+                    int offset2 = index - (size_1 * 2);
+                    return Tuple.Create(0, size_1 - (offset2 - size_1));
+
+                default:
+                    throw new ApplicationException(string.Format("Unexpected section.  index={0}, size-1={1}, section={2}", index, size_1, section));
+            }
+        }
+
         #endregion
     }
 
@@ -756,6 +1334,8 @@ namespace Game.HelperClassesWPF
         Standard,
         Subtract,
         MaxOf,
+        //TODO: Sharpen - does an edge detect, then adds those edges to the original image (probably call it Add)
+        //http://www.tutorialspoint.com/dip/Concept_of_Edge_Detection.htm
     }
 
     #endregion
@@ -767,6 +1347,17 @@ namespace Game.HelperClassesWPF
         public abstract bool IsNegPos { get; }
 
         public abstract Tuple<int, int> GetReduction();
+    }
+
+    #endregion
+
+    #region Enum: ConvolutionResultNegPosColoring
+
+    public enum ConvolutionResultNegPosColoring
+    {
+        Gray,
+        BlackWhite,
+        RedBlue,
     }
 
     #endregion
