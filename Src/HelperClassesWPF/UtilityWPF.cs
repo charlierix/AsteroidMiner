@@ -2433,6 +2433,59 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
+        /// This will keep the same aspect ratio
+        /// </summary>
+        /// <param name="shouldEnlargeIfTooSmall">
+        /// True: This will enlarge if needed.
+        /// False: This will only reduce (returns the original if already smaller)
+        /// </param>
+        public static BitmapSource ResizeImage(BitmapSource bitmap, int maxSize, bool shouldEnlargeIfTooSmall = false)
+        {
+            if (!shouldEnlargeIfTooSmall && bitmap.PixelWidth <= maxSize && bitmap.PixelHeight <= maxSize)
+            {
+                return bitmap;
+            }
+
+            double aspectRatio = bitmap.PixelWidth.ToDouble() / bitmap.PixelHeight.ToDouble();
+
+            int width, height;
+
+            if (aspectRatio > 1)
+            {
+                // Width is larger
+                width = maxSize;
+                height = (width / aspectRatio).ToInt_Round();
+            }
+            else
+            {
+                // Height is larger
+                height = maxSize;
+                width = (height * aspectRatio).ToInt_Round();
+            }
+
+            if(width == bitmap.PixelWidth && height == bitmap.PixelHeight)
+            {
+                return bitmap;
+            }
+
+            return ResizeImage(bitmap, width, height);
+        }
+        public static BitmapSource ResizeImage(BitmapSource bitmap, int width, int height)
+        {
+            DrawingVisual drawingVisual = new DrawingVisual();
+            using (DrawingContext drawingContext = drawingVisual.RenderOpen())
+            {
+                //drawingContext.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
+                drawingContext.DrawImage(bitmap, new Rect(0, 0, width, height));
+            }
+
+            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            retVal.Render(drawingVisual);
+
+            return retVal;
+        }
+
+        /// <summary>
         /// Gets a single pixel
         /// Got this here: http://stackoverflow.com/questions/14876989/how-to-read-pixels-in-four-corners-of-a-bitmapsource
         /// </summary>

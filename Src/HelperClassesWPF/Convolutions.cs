@@ -252,7 +252,7 @@ namespace Game.HelperClassesWPF
 
         public static Convolution2D Rotate_45(Convolution2D convolution, bool isClockwise, bool shouldAdvanceEvensExtra = false)
         {
-            if(convolution.Width != convolution.Height)
+            if (convolution.Width != convolution.Height)
             {
                 throw new ArgumentException("Width and height must be the same for 45 degree rotations");
             }
@@ -561,6 +561,22 @@ namespace Game.HelperClassesWPF
             values = ToUnit(values);
 
             return new Convolution2D(values, 3, 3, true);
+        }
+
+        public static ConvolutionSet2D GetEdgeSet_Sobel()
+        {
+            Convolution2D vert = GetEdge_Sobel(true);
+            Convolution2D horz = GetEdge_Sobel(false);
+
+            var singles = new[]
+                {
+                    vert,
+                    horz,
+                    Rotate_45(vert, true),
+                    Rotate_45(horz, true),
+                };
+
+            return new ConvolutionSet2D(singles, SetOperationType.MaxOf);
         }
 
         #endregion
@@ -1186,6 +1202,8 @@ namespace Game.HelperClassesWPF
 
     public class Convolution2D : ConvolutionBase2D
     {
+        #region Constructor
+
         public Convolution2D(double[] values, int width, int height, bool isNegPos, double gain = 1d, int iterations = 1, bool expandBorder = false)
         {
             if (values.Length != width * height)
@@ -1201,6 +1219,8 @@ namespace Game.HelperClassesWPF
             this.Iterations = iterations;
             this.ExpandBorder = expandBorder;
         }
+
+        #endregion
 
         /// <summary>
         /// Range is either 0 to 1, or -1 to 1 (depends on this.IsNegPos)
@@ -1257,6 +1277,8 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        #region Public Methods
+
         public override Tuple<int, int> GetReduction()
         {
             int reduceX = 0;
@@ -1270,6 +1292,173 @@ namespace Game.HelperClassesWPF
 
             return Tuple.Create(reduceX, reduceY);
         }
+
+        public Convolution2D Extract(int left, int top, int width, int height, ConvolutionExtractType extractType)
+        {
+            bool isNegPos = this.IsNegPos;
+            double[] values = ExtractValues(left, top, width, height);
+
+            switch (extractType)
+            {
+                case ConvolutionExtractType.Raw:
+                    break;
+
+                case ConvolutionExtractType.RawUnit:
+                    values = Convolutions.ToUnit(values);
+                    break;
+
+                case ConvolutionExtractType.Edge:
+                    isNegPos = true;
+                    values = ConvertToEdge(values);
+                    values = Convolutions.ToUnit(values);
+                    break;
+
+                case ConvolutionExtractType.EdgeSoftBorder:
+                    isNegPos = true;
+                    values = ConvertToEdge(values);
+                    values = ApplySoftBorder(values, width, height);
+                    values = Convolutions.ToUnit(values);
+                    break;
+
+                //case ConvolutionExtractType.EdgeCircleBorder:
+                //    isNegPos = true;
+                //    values = ConvertToEdge(values);
+                //    values = ApplyCircleBorder(values);
+                //    values = Convolutions.ToUnit(values);
+                //    break;
+
+                default:
+                    throw new ApplicationException("Unknown ConvolutionExtractType: " + extractType.ToString());
+            }
+
+            return new Convolution2D(values, width, height, isNegPos, this.Gain, this.Iterations, this.ExpandBorder);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private double[] ExtractValues(int left, int top, int width, int height)
+        {
+            double[] retVal = new double[width * height];
+
+            for (int y = 0; y < height; y++)
+            {
+                int yOffsetSrc = (y + top) * this.Width;
+                int yOffsetDest = y * width;
+
+                for (int x = 0; x < width; x++)
+                {
+                    retVal[yOffsetDest + x] = this.Values[yOffsetSrc + x + left];
+                }
+            }
+
+            return retVal;
+        }
+
+        private static double[] ApplySoftBorder(double[] values, int width, int height)
+        {
+            const double MARGINPERCENT = .22;
+
+            int leftEdge = (width * MARGINPERCENT).ToInt_Round();
+            int rightEdge = width - leftEdge;
+
+            int topEdge = (height * MARGINPERCENT).ToInt_Round();
+            int bottomEdge = height - topEdge;
+
+            // Single gradient
+            ApplySoftBorder_Single(values, leftEdge, rightEdge, 0, topEdge, true, false, width);       // Top
+            ApplySoftBorder_Single(values, leftEdge, rightEdge, bottomEdge, height - 1, false, false, width);      // Bottom
+            ApplySoftBorder_Single(values, 0, leftEdge, topEdge, bottomEdge, true, true, width);      // Left
+            ApplySoftBorder_Single(values, rightEdge, width - 1, topEdge, bottomEdge, false, true, width);        // Right
+
+            // Double gradient
+            ApplySoftBorder_Double(values, 0, leftEdge, 0, topEdge, true, true, width);     // TopLeft
+            ApplySoftBorder_Double(values, rightEdge, width - 1, 0, topEdge, false, true, width);       // TopRight
+            ApplySoftBorder_Double(values, 0, leftEdge, bottomEdge, height - 1, true, false, width);       // BottomLeft
+            ApplySoftBorder_Double(values, rightEdge, width - 1, bottomEdge, height - 1, false, false, width);       // BottomRight
+
+            return values;
+        }
+        private static void ApplySoftBorder_Single(double[] values, int xFrom, int xTo, int yFrom, int yTo, bool isUp, bool useX, int width)
+        {
+            double percFrom = isUp ? 0d : 1d;
+            double percTo = isUp ? 1d : 0d;
+
+            double percent = 0;
+
+            for (int y = yFrom; y <= yTo; y++)
+            {
+                int yIndex = y * width;
+
+                if (!useX)
+                {
+                    percent = UtilityCore.GetScaledValue(percFrom, percTo, yFrom, yTo, y);
+                }
+
+                for (int x = xFrom; x <= xTo; x++)
+                {
+                    if (useX)
+                    {
+                        percent = UtilityCore.GetScaledValue(percFrom, percTo, xFrom, xTo, x);
+                    }
+
+                    values[yIndex + x] *= percent;
+                }
+            }
+        }
+        private static void ApplySoftBorder_Double(double[] values, int xFrom, int xTo, int yFrom, int yTo, bool isUpX, bool isUpY, int width)
+        {
+            double percFromX = isUpX ? 0d : 1d;
+            double percToX = isUpX ? 1d : 0d;
+
+            double percFromY = isUpY ? 0d : 1d;
+            double percToY = isUpY ? 1d : 0d;
+
+            int xFromActual = isUpX ? xFrom : xFrom + 1;      // the shift logic needs to be done here, because the full from/to are needed in order for the percents to be correct
+            int xToActual = isUpX ? xTo - 1 : xTo;
+            int yFromActual = isUpY ? yFrom : yFrom + 1;
+            int yToActual = isUpY ? yTo - 1 : yTo;
+
+            //int xFromActual = xFrom;      // the shift logic needs to be done here, because the full from/to are needed in order for the percents to be correct
+            //int xToActual = xTo;
+            //int yFromActual = yFrom;
+            //int yToActual = yTo;
+
+            for (int y = yFromActual; y <= yToActual; y++)
+            {
+                int yIndex = y * width;
+
+                double percentY = UtilityCore.GetScaledValue(percFromY, percToY, yFrom, yTo, y);
+
+                for (int x = xFromActual; x <= xToActual; x++)
+                {
+                    double percentX = UtilityCore.GetScaledValue(percFromX, percToX, xFrom, xTo, x);
+                    double percent = Math.Min(percentX, percentY);
+
+                    values[yIndex + x] *= percent;
+                }
+            }
+        }
+
+        private static double[] ApplyCircleBorder(double[] values)
+        {
+            return values;
+        }
+
+        private static double[] ConvertToEdge(double[] values)
+        {
+            var minmax = Math3D.MinMax(values);
+            double middle = Math3D.Avg(minmax.Item1, minmax.Item2);
+
+            double[] offsets = values.
+                Select(o => o - middle).
+                ToArray();
+
+            return offsets;
+        }
+
+        #endregion
     }
 
     #endregion
@@ -1358,6 +1547,21 @@ namespace Game.HelperClassesWPF
         Gray,
         BlackWhite,
         RedBlue,
+    }
+
+    #endregion
+    #region Enum: ConvolutionExtractType
+
+    public enum ConvolutionExtractType
+    {
+        Raw,
+        RawUnit,
+        Edge,
+        /// <summary>
+        /// This tapers to zero at the border
+        /// </summary>
+        EdgeSoftBorder,
+        //EdgeCircleBorder,
     }
 
     #endregion

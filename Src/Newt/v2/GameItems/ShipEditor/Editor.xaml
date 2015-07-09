@@ -148,7 +148,7 @@
         </Border>
 
         <!-- Selection Rectangle -->
-        <Canvas Name="selectionCanvas">
+        <Canvas>
             <Border Name="selectionBox" Visibility="Collapsed" BorderBrush="{Binding Path=SelectionRectangleBorder}" Background="{Binding Path=SelectionRectangleBackground}" BorderThickness="1" CornerRadius="3"/>
         </Canvas>
 

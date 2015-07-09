@@ -4000,6 +4000,8 @@ namespace Game.HelperClassesWPF
         //public const double NEARZERO = .000000001d;
         public const double NEARZERO = UtilityCore.NEARZERO;
 
+        public const double GOLDENRATIO = 1.61803398875;
+
         #endregion
 
         #region Simple
@@ -4139,6 +4141,38 @@ namespace Game.HelperClassesWPF
             }
 
             return retVal;
+        }
+
+        /// <summary>
+        /// This returns the minimum and maximum value (throws exception if empty list)
+        /// </summary>
+        public static Tuple<double, double> MinMax(IEnumerable<double> values)
+        {
+            double min = double.MaxValue;
+            double max = double.MinValue;
+            bool hasEntry = false;      // don't want to use Count(), because that would iterate the whole list
+
+            foreach (double value in values)
+            {
+                hasEntry = true;
+
+                if (value < min)
+                {
+                    min = value;
+                }
+
+                if (value > max)
+                {
+                    max = value;
+                }
+            }
+
+            if (!hasEntry)
+            {
+                throw new InvalidOperationException("Sequence contains no elements");       // this is the same error that .Max() gives
+            }
+
+            return Tuple.Create(min, max);
         }
 
         // I got tired of nesting min/max statements

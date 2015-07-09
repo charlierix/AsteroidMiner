@@ -12,6 +12,18 @@ namespace Game.HelperClassesCore
     /// </summary>
     public static class Extenders
     {
+        #region int
+
+        /// <summary>
+        /// This just does Convert.ToDouble().  It doesn't save much typing, but feels more natural
+        /// </summary>
+        public static double ToDouble(this int value)
+        {
+            return Convert.ToDouble(value);
+        }
+
+        #endregion
+
         #region double
 
         public static bool IsNearZero(this double item)
@@ -33,6 +45,19 @@ namespace Game.HelperClassesCore
         public static string ToStringSignificantDigits(this double value, int significantDigits)
         {
             return UtilityCore.ToStringSignificantDigits(value, significantDigits);
+        }
+
+        public static int ToInt_Round(this double value)
+        {
+            return Convert.ToInt32(Math.Round(value));
+        }
+        public static int ToInt_Floor(this double value)
+        {
+            return Convert.ToInt32(Math.Floor(value));
+        }
+        public static int ToInt_Ceiling(this double value)
+        {
+            return Convert.ToInt32(Math.Ceiling(value));
         }
 
         #endregion

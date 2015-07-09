@@ -265,6 +265,10 @@ namespace Game.Newt.Testers.Convolution
             RedrawAxis();
             RebuildBars();
             PixelValueChanged();
+
+            double dist = Math3D.Avg(_axis.HalfX, _axis.HalfY) * 3;
+            Vector3D newPos = _camera.Position.ToVector().ToUnit() * dist;
+            _camera.Position = newPos.ToPoint();
         }
 
         #endregion
@@ -1374,7 +1378,10 @@ namespace Game.Newt.Testers.Convolution
             axis.HalfX = (_width * axis.BarSize) / 2d;
             axis.HalfY = (_height * axis.BarSize) / 2d;
 
-            axis.ZHeight = 1;
+            axis.ZHeight = Math.Max(1, Math3D.Avg(_width, _height) / 8);
+
+            //TODO: May want to multiply this height by a slider
+            //axis.ZHeight *= trkZAxisMult.Value;
 
             if (radRangeNegPos.IsChecked.Value)
             {

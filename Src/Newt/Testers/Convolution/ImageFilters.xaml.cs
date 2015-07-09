@@ -21,14 +21,6 @@ using Microsoft.Win32;
 
 namespace Game.Newt.Testers.Convolution
 {
-    //TODO: Create a tool that can be used to extract features from an image.  as a convolution?
-    //ex: abe lincoln's beard, pacman outline, eyes nose
-    //
-    //these extractions would be much larger than the smaller convolutions
-    //
-    //let them draw a bounding box, then give them an eraser tool
-    //
-    //or maybe a circle instead of box, then blur more as radius increases (make a sweet spot with no blur)
     public partial class ImageFilters : Window
     {
         #region Class: DragDataObject
@@ -66,7 +58,14 @@ namespace Game.Newt.Testers.Convolution
         private List<ConvolutionBase2D> _kernels = new List<ConvolutionBase2D>();
         private int _selectedKernelIndex = -1;
 
+        /// <summary>
+        /// This is the kernel panel
+        /// </summary>
         private Tuple<Border, int> _mouseDownOn = null;
+        /// <summary>
+        /// This is the original image
+        /// </summary>
+        private Point? _selectionStartPoint = null;
 
         private List<Window> _childWindows = new List<Window>();
 
@@ -154,6 +153,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
+                //NOTE: Can't resize the image, because it's still downloading in the background
                 originalImage.Source = DownloadImage(GetImageURL());
             }
             catch (Exception ex)
@@ -174,12 +174,121 @@ namespace Game.Newt.Testers.Convolution
                     return;
                 }
 
-                originalImage.Source = new BitmapImage(new Uri(dialog.FileName));
+                BitmapSource bitmap = new BitmapImage(new Uri(dialog.FileName));
+
+                int limit;
+                if (chkLimitImageSize.IsChecked.Value && int.TryParse(txtSizeLimit.Text, out limit))
+                {
+                    bitmap = UtilityWPF.ResizeImage(bitmap, limit);       // this will only resize if it's too big
+                }
+
+                originalImage.Source = bitmap;
                 _origImageGrays = null;
             }
             catch (NotSupportedException)
             {
                 MessageBox.Show("Not an image file", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExtractEdgeSquare_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Convert the original image to grayscale
+                Convolution2D image = GetOriginalImageGrays();
+                if (image == null)
+                {
+                    // The original image is empty
+                    MessageBox.Show("Please load an image first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Square
+                int left, top, width, height;
+                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, true);
+
+                // Extract
+                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.Edge));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ExtractEdgeRect_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Convert the original image to grayscale
+                Convolution2D image = GetOriginalImageGrays();
+                if (image == null)
+                {
+                    // The original image is empty
+                    MessageBox.Show("Please load an image first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Rectangle
+                int left, top, width, height;
+                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, false);
+
+                // Extract
+                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.Edge));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ExtractRawSquare_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Convert the original image to grayscale
+                Convolution2D image = GetOriginalImageGrays();
+                if (image == null)
+                {
+                    // The original image is empty
+                    MessageBox.Show("Please load an image first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Square
+                int left, top, width, height;
+                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, true);
+
+                // Extract
+                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.RawUnit));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ExtractRawRect_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Convert the original image to grayscale
+                Convolution2D image = GetOriginalImageGrays();
+                if (image == null)
+                {
+                    // The original image is empty
+                    MessageBox.Show("Please load an image first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Rectangle
+                int left, top, width, height;
+                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, false);
+
+                // Extract
+                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.RawUnit));
             }
             catch (Exception ex)
             {
@@ -361,6 +470,125 @@ namespace Game.Newt.Testers.Convolution
                 senderCast.Closed -= Child_Closed;
 
                 _childWindows.Remove(senderCast);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void grdOrigImage_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (_selectionStartPoint != null)       // this should never happen
+                {
+                    return;
+                }
+
+                _selectionStartPoint = e.GetPosition(grdOrigImage);
+                grdOrigImage.CaptureMouse();
+
+                // Initial placement of the drag selection box
+                Canvas.SetLeft(selectionBox, _selectionStartPoint.Value.X);
+                Canvas.SetTop(selectionBox, _selectionStartPoint.Value.Y);
+                selectionBox.Width = 0;
+                selectionBox.Height = 0;
+
+                // Make the drag selection box visible.
+                selectionBox.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grdOrigImage_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                if (_selectionStartPoint == null)
+                {
+                    return;
+                }
+
+                Point mousePos = e.GetPosition(grdOrigImage);
+
+                double minX = Math.Min(_selectionStartPoint.Value.X, mousePos.X);
+                double minY = Math.Min(_selectionStartPoint.Value.Y, mousePos.Y);
+                double maxX = Math.Max(_selectionStartPoint.Value.X, mousePos.X);
+                double maxY = Math.Max(_selectionStartPoint.Value.Y, mousePos.Y);
+
+                Canvas.SetLeft(selectionBox, minX);
+                Canvas.SetTop(selectionBox, minY);
+                selectionBox.Width = maxX - minX;
+                selectionBox.Height = maxY - minY;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grdOrigImage_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (_selectionStartPoint == null)
+                {
+                    return;
+                }
+
+                // Clear selection
+                grdOrigImage.ReleaseMouseCapture();
+                selectionBox.Visibility = Visibility.Collapsed;
+
+                Point start = _selectionStartPoint.Value;
+                _selectionStartPoint = null;
+
+                Convolution2D image = GetOriginalImageGrays();
+                if (image == null)
+                {
+                    return;
+                }
+
+                // Screen coords
+                Point mousePos = e.GetPosition(grdOrigImage);
+
+                double minX = Math.Min(start.X, mousePos.X);
+                double minY = Math.Min(start.Y, mousePos.Y);
+                double maxX = Math.Max(start.X, mousePos.X);
+                double maxY = Math.Max(start.Y, mousePos.Y);
+
+                // Convert to convolution coords
+                double scaleX = image.Width / grdOrigImage.ActualWidth;
+                double scaleY = image.Height / grdOrigImage.ActualHeight;
+
+                int extractX1 = (minX * scaleX).ToInt_Round();
+                int extractY1 = (minY * scaleY).ToInt_Round();
+                int extractX2 = (maxX * scaleX).ToInt_Round();
+                int extractY2 = (maxY * scaleY).ToInt_Round();
+
+                if (extractX1 < 0) extractX1 = 0;
+                if (extractY1 < 0) extractY1 = 0;
+                if (extractX2 < 0) extractX2 = 0;
+                if (extractY2 < 0) extractY2 = 0;
+
+                if (extractX1 >= image.Width) extractX1 = image.Width - 1;
+                if (extractY1 >= image.Height) extractY1 = image.Height - 1;
+                if (extractX2 >= image.Width) extractX2 = image.Width - 1;
+                if (extractY2 >= image.Height) extractY2 = image.Height - 1;
+
+                int extractWidth = extractX2 - extractX1;
+                int extractHeight = extractY2 - extractY1;
+
+                if (extractWidth < 1 || extractHeight < 1)
+                {
+                    return;
+                }
+
+                // Extract
+                AddKernel(image.Extract(extractX1, extractY1, extractWidth, extractHeight, ConvolutionExtractType.Edge));
+                AddKernel(image.Extract(extractX1, extractY1, extractWidth, extractHeight, ConvolutionExtractType.EdgeSoftBorder));
             }
             catch (Exception ex)
             {
@@ -1044,16 +1272,86 @@ namespace Game.Newt.Testers.Convolution
         /// </summary>
         private Convolution2D GetOriginalImageGrays()
         {
-            if (_origImageGrays == null && originalImage.Source != null)
+            if (originalImage.Source == null)
+            {
+                return null;
+            }
+
+            int? limit = null;
+            int limitInt;
+            if (chkLimitImageSize.IsChecked.Value && int.TryParse(txtSizeLimit.Text, out limitInt))
+            {
+                limit = limitInt;
+            }
+
+            bool shouldBuild = false;
+
+            if (_origImageGrays == null)
+            {
+                shouldBuild = true;
+            }
+            else if (limit != null && (_origImageGrays.Width > limit.Value || _origImageGrays.Height > limit.Value))
+            {
+                // The current one is the wrong size
+                shouldBuild = true;
+            }
+
+            if (shouldBuild)
             {
                 BitmapSource bitmap = (BitmapSource)originalImage.Source;
 
-                var colors = UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Transparent);
+                BitmapCustomCachedBytes colors = null;
 
-                _origImageGrays = ((BitmapCustomCachedBytes)colors).ToConvolution();
+                if (limit != null)
+                {
+                    bitmap = UtilityWPF.ResizeImage(bitmap, limit.Value);       // this will only resize if it's too big
+                }
+
+                colors = (BitmapCustomCachedBytes)UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Transparent);
+
+                _origImageGrays = colors.ToConvolution();
             }
 
             return _origImageGrays;
+        }
+
+        private static void GetExtractRectangle(out int left, out int top, out int width, out int height, int imageWidth, int imageHeight, bool isSquare)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            int minSize = Math.Min(imageWidth, imageHeight);
+            double extractSizeMin = minSize / 16d;
+            double extractSizeMax = minSize / 4d;
+
+            width = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
+
+            if (isSquare)
+            {
+                height = width;
+            }
+            else
+            {
+                height = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
+
+                double ratio = width.ToDouble() / height.ToDouble();
+
+                if (ratio > Math3D.GOLDENRATIO)
+                {
+                    width = (height * Math3D.GOLDENRATIO).ToInt_Round();
+                }
+                else
+                {
+                    ratio = height.ToDouble() / width.ToDouble();
+
+                    if (ratio > Math3D.GOLDENRATIO)
+                    {
+                        height = (width * Math3D.GOLDENRATIO).ToInt_Round();
+                    }
+                }
+            }
+
+            left = rand.Next(imageWidth - width);
+            top = rand.Next(imageHeight - height);
         }
 
         #endregion
