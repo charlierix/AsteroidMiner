@@ -1281,7 +1281,22 @@ namespace Game.HelperClassesWPF
         #region Constructor
 
         public ConvolutionSet2D(ConvolutionSet2D_DNA dna)
-            : this(dna.Convolutions, dna.OperationType) { }
+        {
+            List<ConvolutionBase2D> convolutions = new List<ConvolutionBase2D>();
+
+            if (dna.Convolutions_Single != null)
+            {
+                convolutions.AddRange(dna.Convolutions_Single.Select(o => new Convolution2D(o)));
+            }
+
+            if (dna.Convolutions_Set != null)
+            {
+                convolutions.AddRange(dna.Convolutions_Set.Select(o => new ConvolutionSet2D(o)));
+            }
+
+            this.Convolutions = convolutions.ToArray();
+            this.OperationType = dna.OperationType;
+        }
 
         public ConvolutionSet2D(ConvolutionBase2D[] convolutions, SetOperationType operationType)
         {
@@ -1335,9 +1350,26 @@ namespace Game.HelperClassesWPF
 
         public ConvolutionSet2D_DNA ToDNA()
         {
+            Convolution2D_DNA[] singles = null;
+            ConvolutionSet2D_DNA[] sets = null;
+
+            if (this.Convolutions != null)
+            {
+                singles = this.Convolutions.
+                    Where(o => o is Convolution2D).
+                    Select(o => ((Convolution2D)o).ToDNA()).
+                    ToArray();
+
+                sets = this.Convolutions.
+                    Where(o => o is ConvolutionSet2D).
+                    Select(o => ((ConvolutionSet2D)o).ToDNA()).
+                    ToArray();
+            }
+
             return new ConvolutionSet2D_DNA()
             {
-                Convolutions = this.Convolutions,
+                Convolutions_Single = singles,
+                Convolutions_Set = sets,
                 IsNegPos = this.IsNegPos,
                 OperationType = this.OperationType,
             };
@@ -1736,7 +1768,9 @@ namespace Game.HelperClassesWPF
 
     public class ConvolutionSet2D_DNA : ConvolutionBase2D_DNA
     {
-        public ConvolutionBase2D[] Convolutions { get; set; }
+        public Convolution2D_DNA[] Convolutions_Single { get; set; }
+        public ConvolutionSet2D_DNA[] Convolutions_Set { get; set; }
+
         public SetOperationType OperationType { get; set; }
     }
 
@@ -1759,7 +1793,7 @@ namespace Game.HelperClassesWPF
     #endregion
     #region Class: ConvolutionBase2D_DNA
 
-    public class ConvolutionBase2D_DNA
+    public abstract class ConvolutionBase2D_DNA
     {
         public bool IsNegPos { get; set; }
     }

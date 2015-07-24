@@ -141,8 +141,8 @@
                                 <ScaleTransform ScaleX=".85" ScaleY=".85"/>
                             </StackPanel.LayoutTransform>
                             
-                            <Label Content="Pre filters" FontSize="14"/>
-                            <CheckBox IsChecked="True" Name="chkPrefilterNone" Content="None" Margin="0,-3,0,0"/>
+                            <Label Content="Pre filters" FontSize="14" Margin="0,-7, 0, -4"/>
+                            <CheckBox IsChecked="True" Name="chkPrefilterNone" Content="None"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussian" Content="Gaussian"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussianSubtract" Content="Gaussian Subtract"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterMaxAbsSobel" ToolTip="Standard edge detect" Content="MaxAbs Sobel"/>

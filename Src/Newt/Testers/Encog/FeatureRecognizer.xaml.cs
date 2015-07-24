@@ -596,6 +596,15 @@ namespace Game.Newt.Testers.Encog
                     Filename = filename,
                 };
 
+                if (extract.PreFilter != null && extract.PreFilter is Convolution2D)
+                {
+                    extract.PreFilterDNA_Single = ((Convolution2D)extract.PreFilter).ToDNA();
+                }
+                else if (extract.PreFilter != null && extract.PreFilter is ConvolutionSet2D)
+                {
+                    extract.PreFilterDNA_Set = ((ConvolutionSet2D)extract.PreFilter).ToDNA();
+                }
+
                 // Copy to the working folder
                 UtilityCore.SerializeToFile(fullFilename, extract);
 
@@ -633,31 +642,6 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
-        private void ExtractResultView_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                Border selectedCtrl = GetClickedConvolution(_extractResultContextMenu.PlacementTarget);
-                if (selectedCtrl == null)
-                {
-                    MessageBox.Show("Couldn't find selected convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                Convolution2D convolution = selectedCtrl.Tag as Convolution2D;
-                if (convolution == null)
-                {
-                    MessageBox.Show("Control.Tag doesn't contain the convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                ViewConvolution(convolution);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
         private void ExtractView_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -698,6 +682,32 @@ namespace Game.Newt.Testers.Encog
                 {
                     _selectedExtractIndex--;
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExtractResultView_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Border selectedCtrl = GetClickedConvolution(_extractResultContextMenu.PlacementTarget);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't find selected convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                Convolution2D convolution = selectedCtrl.Tag as Convolution2D;
+                if (convolution == null)
+                {
+                    MessageBox.Show("Control.Tag doesn't contain the convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                ViewConvolution(convolution);
             }
             catch (Exception ex)
             {
@@ -1129,126 +1139,291 @@ namespace Game.Newt.Testers.Encog
 
             Convolution2D imageConv = ((BitmapCustomCachedBytes)UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Transparent)).ToConvolution();
 
+            // Convolute, look for matches
             var results = await ApplyExtract_DoIt_Task(imageConv, extract, sub);
 
-            // Show results
-            #region Left Image
+            #region Show results
 
-            bool isSourceNegPos = extract.PreFilter == null ? false : extract.PreFilter.IsNegPos;
+            // Left Image
+            ApplyExtract_Draw_LeftImage(grid, results.ImageConv, extract.PreFilter, edgeColor);
 
-            Image leftImage = new Image()
-            {
-                Source = Convolutions.ShowConvolutionResult(results.ImageConv, isSourceNegPos, edgeColor),
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                ToolTip = string.Format("{0}x{1}", results.ImageConv.Width, results.ImageConv.Height),
-            };
-
-            Grid.SetColumn(leftImage, 0);
-            Grid.SetRow(leftImage, 0);
-            grid.Children.Add(leftImage);
-
-            #endregion
-            #region Right Image
-
+            // Right Image
             if (results.Filtered != null)
             {
-                Image rightImage = new Image()
-                {
-                    Source = Convolutions.ShowConvolutionResult(results.Filtered, true, edgeColor),
-                    HorizontalAlignment = HorizontalAlignment.Stretch,
-                    VerticalAlignment = VerticalAlignment.Stretch,
-                    ToolTip = string.Format("{0}x{1}", results.Filtered.Width, results.Filtered.Height),
-                };
-
-                Grid.SetColumn(rightImage, 2);
-                Grid.SetRow(leftImage, 0);
-                grid.Children.Add(rightImage);
+                ApplyExtract_Draw_RightImage(grid, results.Filtered, edgeColor);
             }
 
-            #endregion
-
-            #region Matches
-
-            if (results.Matches != null)
+            // Matches
+            if (results.Matches != null && results.Matches.Length > 0)
             {
-                StackPanel matchPanel = new StackPanel();
-                Grid.SetColumn(matchPanel, 0);
-                Grid.SetColumnSpan(matchPanel, 3);
-                Grid.SetRow(matchPanel, 2);
-                grid.Children.Add(matchPanel);
-
-                //TODO: Draw the results in a separate image (white rectangle, black dots for the hits)
-
-                foreach (var match in results.Matches)
-                {
-                    StackPanel resultsPanel = new StackPanel()
-                    {
-                        Orientation = Orientation.Horizontal,
-                    };
-
-                    //TODO: Draw a picture instead
-                    resultsPanel.Children.Add(new TextBlock() { Text = match.Item1.ToString(), VerticalAlignment = VerticalAlignment.Center });
-
-                    foreach (var patch in match.Item2)
-                    {
-                        StackPanel patchPanel = new StackPanel();
-                        resultsPanel.Children.Add(patchPanel);
-
-                        // Show convolution
-                        patchPanel.Children.Add(Convolutions.GetKernelThumbnail(patch.Patch, THUMBSIZE_EXTRACT, contextMenu));
-
-                        // Weight
-                        patchPanel.Children.Add(new TextBlock()
-                        {
-                            HorizontalAlignment = HorizontalAlignment.Center,
-                            Text = patch.IsMatch ? patch.Weight.ToStringSignificantDigits(2) : "no match",
-                        });
-                    }
-
-                    Border matchBorder = new Border()
-                    {
-                        BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("40000000")),
-                        BorderThickness = new Thickness(1),
-                        CornerRadius = new CornerRadius(4),
-                        Padding = new Thickness(4),
-                        Background = new SolidColorBrush(UtilityWPF.ColorFromHex("10000000")),
-                        Child = resultsPanel,
-                    };
-
-                    matchPanel.Children.Add(matchBorder);
-                }
+                ApplyExtract_Draw_Matches(grid, results.Matches, results.Filtered.Size, sub, contextMenu);
             }
 
             #endregion
         }
+
+        private static void ApplyExtract_Draw_LeftImage(Grid grid, Convolution2D imageConv, ConvolutionBase2D preFilter, ConvolutionResultNegPosColoring edgeColor)
+        {
+            bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
+
+            Image image = new Image()
+            {
+                Source = Convolutions.ShowConvolutionResult(imageConv, isSourceNegPos, edgeColor),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),
+            };
+
+            Grid.SetColumn(image, 0);
+            Grid.SetRow(image, 0);
+            grid.Children.Add(image);
+        }
+        private static void ApplyExtract_Draw_RightImage(Grid grid, Convolution2D imageConv, ConvolutionResultNegPosColoring edgeColor)
+        {
+            Image image = new Image()
+            {
+                Source = Convolutions.ShowConvolutionResult(imageConv, true, edgeColor),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),
+            };
+
+            Grid.SetColumn(image, 2);
+            Grid.SetRow(image, 0);
+            grid.Children.Add(image);
+        }
+        private static void ApplyExtract_Draw_Matches(Grid grid, Tuple<VectorInt, ApplyResult_Match[]>[] matches, VectorInt imageSize, FeatureRecognizer_Extract_Sub sub, ContextMenu contextMenu)
+        {
+            const int HITSSIZE_SMALL = 50;
+            const int HITSSIZE_BIG = 70;
+
+            StackPanel mainPanel = new StackPanel();
+
+            Grid headerRow = new Grid();
+            mainPanel.Children.Add(headerRow);
+
+            #region Draw all hit positions
+
+            var hits = matches.Select(o =>
+                {
+                    double weight = 0;
+                    if (o.Item2 != null && o.Item2.Length > 0)
+                    {
+                        weight = o.Item2.Max(p => p.Weight);
+                    }
+
+                    return new Tuple<VectorInt, double>(o.Item1, weight);
+                });
+
+            Border hitsMap = GetResultPositionsImage(hits, imageSize, HITSSIZE_BIG);
+
+            hitsMap.HorizontalAlignment = HorizontalAlignment.Left;
+            hitsMap.VerticalAlignment = VerticalAlignment.Bottom;
+
+            headerRow.Children.Add(hitsMap);
+
+            #endregion
+            #region Compare extracts
+
+            Grid comparesGrid = new Grid();
+            comparesGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+            comparesGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+
+            comparesGrid.HorizontalAlignment = HorizontalAlignment.Right;
+            comparesGrid.VerticalAlignment = VerticalAlignment.Bottom;
+
+            headerRow.Children.Add(comparesGrid);
+
+            // Label
+            TextBlock comparesHeading = new TextBlock() { Text = "compare to", ToolTip = "These are results from the original extract, and can be used to compare the current image's extracts against", HorizontalAlignment = HorizontalAlignment.Center };
+
+            Grid.SetRow(comparesHeading, 0);
+            comparesGrid.Children.Add(comparesHeading);
+
+            // Extracts
+            StackPanel headerExtracts = new StackPanel()
+            {
+                Orientation = Orientation.Horizontal,
+            };
+
+            foreach (Convolution2D compareResult in sub.Results.Select(o => o.Result))
+            {
+                headerExtracts.Children.Add(Convolutions.GetKernelThumbnail(compareResult, THUMBSIZE_EXTRACT, contextMenu));
+            }
+
+            Grid.SetRow(headerExtracts, 1);
+            comparesGrid.Children.Add(headerExtracts);
+
+            #endregion
+
+            foreach (var match in matches)
+            {
+                //TODO: Make a grid
+                StackPanel row = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                    Margin = new Thickness(2),
+                };
+
+                #region Position
+
+                StackPanel positionPanel = new StackPanel()
+                {
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+
+                row.Children.Add(positionPanel);
+
+                // Point map
+                Border pointMap = GetResultPositionsImage(new[] { Tuple.Create(match.Item1, 1d) }, imageSize, HITSSIZE_SMALL);
+                pointMap.HorizontalAlignment = HorizontalAlignment.Left;
+                positionPanel.Children.Add(pointMap);
+
+                // Coordinates
+                positionPanel.Children.Add(new TextBlock() { Text = match.Item1.ToString(), HorizontalAlignment = HorizontalAlignment.Center });
+
+                #endregion
+
+                foreach (var patch in match.Item2)
+                {
+                    #region Match Patch
+
+                    StackPanel patchPanel = new StackPanel();
+                    row.Children.Add(patchPanel);
+
+                    // Show convolution
+                    patchPanel.Children.Add(Convolutions.GetKernelThumbnail(patch.Patch, THUMBSIZE_EXTRACT, contextMenu));
+
+                    // Weight
+                    patchPanel.Children.Add(new TextBlock()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Text = patch.IsMatch ? patch.Weight.ToStringSignificantDigits(2) : "no match",
+                    });
+
+                    #endregion
+                }
+
+                mainPanel.Children.Add(row);
+            }
+
+            #region Return border
+
+            Border border = new Border()
+            {
+                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("40000000")),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(4),
+                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("10000000")),
+                Child = mainPanel,
+            };
+
+            Grid.SetColumn(border, 0);
+            Grid.SetColumnSpan(border, 3);
+            Grid.SetRow(border, 2);
+            grid.Children.Add(border);
+
+            #endregion
+        }
+
+        private static Image GetTreeviewImageCtrl(BitmapSource bitmap)
+        {
+            return new Image()
+            {
+                Stretch = Stretch.Fill,
+                Width = THUMBSIZE_IMAGE,
+                Height = THUMBSIZE_IMAGE,
+                Source = bitmap,
+                Margin = new Thickness(3),
+                ToolTip = string.Format("{0}x{1}", bitmap.PixelWidth, bitmap.PixelHeight)
+            };
+        }
+
+        private static Border GetResultPositionsImage(IEnumerable<Tuple<VectorInt, double>> hits, VectorInt patchSize, int returnSize)
+        {
+            const int SIZE = 150;
+            const double RADIUS = SIZE * .05;
+
+            #region Bitmap
+
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(SIZE, SIZE, 96, 96, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                foreach (var hit in hits)
+                {
+                    Point center = new Point()
+                    {
+                        X = UtilityCore.GetScaledValue(0, SIZE, 0, patchSize.X, hit.Item1.X),
+                        Y = UtilityCore.GetScaledValue(0, SIZE, 0, patchSize.Y, hit.Item1.Y),
+                    };
+
+                    double radius = UtilityCore.GetScaledValue(0, RADIUS, 0, 1, hit.Item2);
+
+                    ctx.DrawEllipse(Brushes.Black, null, center, radius, radius);
+                }
+            }
+
+            bitmap.Render(dv);
+
+            #endregion
+            #region Image/Border
+
+            Image image = new Image()
+            {
+                Source = bitmap,
+                Width = returnSize,
+                Height = returnSize,
+            };
+
+            Border border = new Border()
+            {
+                Child = image,
+                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("A0A0A0")),
+                BorderThickness = new Thickness(1),
+                Background = Brushes.White,
+                Margin = new Thickness(2),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+
+            #endregion
+
+            return border;
+        }
+
+        #endregion
+        #region Private Methods - pure workers
+
         private static Task<ApplyResult> ApplyExtract_DoIt_Task(Convolution2D imageConv, FeatureRecognizer_Extract extract, FeatureRecognizer_Extract_Sub sub)
         {
             return Task.Run(() =>
+            {
+                VectorInt totalReduce = sub.Extract.GetReduction();
+
+                Convolution2D finalImage = imageConv;
+                if (extract.PreFilter != null)
                 {
-                    VectorInt totalReduce = sub.Extract.GetReduction();
+                    finalImage = Convolutions.Convolute(imageConv, extract.PreFilter);      //TODO: The final worker method shouldn't do this if too small.  I'm just doing it to show the user something
+                    totalReduce += extract.PreFilter.GetReduction();
+                }
 
-                    Convolution2D finalImage = imageConv;
-                    if (extract.PreFilter != null)
-                    {
-                        finalImage = Convolutions.Convolute(imageConv, extract.PreFilter);      //TODO: The final worker method shouldn't do this if too small.  I'm just doing it to show the user something
-                        totalReduce += extract.PreFilter.GetReduction();
-                    }
+                if (imageConv.Width <= totalReduce.X || imageConv.Height <= totalReduce.Y)
+                {
+                    // Too small, exit early
+                    return new ApplyResult(finalImage, null, null);
+                }
 
-                    if (imageConv.Width <= totalReduce.X || imageConv.Height <= totalReduce.Y)
-                    {
-                        // Too small, exit early
-                        return new ApplyResult(finalImage, null, null);
-                    }
+                // Apply convolutions
+                Convolution2D filtered = Convolutions.Convolute(finalImage, sub.Extract);
 
-                    // Apply convolutions
-                    Convolution2D filtered = Convolutions.Convolute(finalImage, sub.Extract);
+                // Look at the brightest spots, and see if they are matches
+                var matches = AnalyzeBrightSpots(filtered, sub.Results);
 
-                    // Look at the brightest spots, and see if they are matches
-                    var matches = AnalyzeBrightSpots(filtered, sub.Results);
-
-                    return new ApplyResult(finalImage, filtered, matches);
-                });
+                return new ApplyResult(finalImage, filtered, matches);
+            });
         }
 
         /// <summary>
@@ -1309,19 +1484,6 @@ namespace Game.Newt.Testers.Encog
             }
 
             return retVal.ToArray();
-        }
-
-        private static Image GetTreeviewImageCtrl(BitmapSource bitmap)
-        {
-            return new Image()
-            {
-                Stretch = Stretch.Fill,
-                Width = THUMBSIZE_IMAGE,
-                Height = THUMBSIZE_IMAGE,
-                Source = bitmap,
-                Margin = new Thickness(3),
-                ToolTip = string.Format("{0}x{1}", bitmap.PixelWidth, bitmap.PixelHeight)
-            };
         }
 
         private static Tuple<PrefilterType, ConvolutionBase2D[]>[] GetPreFilters()
