@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers.Convolution
@@ -349,13 +350,13 @@ namespace Game.Newt.Testers.Convolution
                         return;
                     }
 
-                    Tuple<int, int> firstReduce = _kernels[0].GetReduction();
+                    VectorInt firstReduce = _kernels[0].GetReduction();
 
                     for (int cntr = 1; cntr < _kernels.Count; cntr++)
                     {
-                        Tuple<int, int> nextReduce = _kernels[cntr].GetReduction();
+                        VectorInt nextReduce = _kernels[cntr].GetReduction();
 
-                        if (firstReduce.Item1 != nextReduce.Item1 || firstReduce.Item2 != nextReduce.Item2)
+                        if (firstReduce != nextReduce)
                         {
                             MessageBox.Show("When the operation is MaxOf, then all kernels must reduce the same amount", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                             return;
@@ -487,15 +488,13 @@ namespace Game.Newt.Testers.Convolution
                 lblSelectedReduction.Content = "";
             }
 
-            int totalReduceX = 0;
-            int totalReduceY = 0;
+            VectorInt totalReduce = new VectorInt();
 
             for (int cntr = 0; cntr < _kernels.Count; cntr++)
             {
-                var childReduce = _kernels[cntr].GetReduction();
+                VectorInt childReduce = _kernels[cntr].GetReduction();
 
-                totalReduceX += childReduce.Item1;
-                totalReduceY += childReduce.Item2;
+                totalReduce += childReduce;
 
                 if (cntr == _selectedKernelIndex)
                 {
@@ -509,11 +508,11 @@ namespace Game.Newt.Testers.Convolution
                         lblSelectedSize.Content = "";
                     }
 
-                    lblSelectedReduction.Content = string.Format("{0}x{1}", childReduce.Item1, childReduce.Item2);
+                    lblSelectedReduction.Content = string.Format("{0}x{1}", childReduce.X, childReduce.Y);
                 }
             }
 
-            lblTotalReduction.Content = string.Format("{0}x{1}", totalReduceX, totalReduceY);
+            lblTotalReduction.Content = string.Format("{0}x{1}", totalReduce.X, totalReduce.Y);
         }
 
         #endregion

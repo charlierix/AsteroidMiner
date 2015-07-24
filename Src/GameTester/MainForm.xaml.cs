@@ -75,44 +75,44 @@ namespace Game.GameTester
 
         #region Original Engine
 
-        private void itemVector_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Vector_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.VectorTester().Show();
         }
-        private void itemRotateAroundPoint_MouseUp(object sender, MouseButtonEventArgs e)
+        private void RotateAroundPoint_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.RotateAroundPointTester().Show();
         }
-        private void itemBall_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Ball_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.BallTester().Show();
         }
-        private void itemSolidBall_MouseUp(object sender, MouseButtonEventArgs e)
+        private void SolidBall_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.SolidBallTester().Show();
         }
-        private void itemRigidBody1_MouseUp(object sender, MouseButtonEventArgs e)
+        private void RigidBody1_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.RigidBodyTester1().Show();
         }
-        private void itemRigidBody2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void RigidBody2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.RigidBodyTester2().Show();
         }
-        private void itemPolygon_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Polygon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.PolygonTester().Show();
         }
 
-        private void itemCollision_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Collision_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.CollisionTester().Show();
         }
-        private void itemMap_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Map_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.MapTester1().Show();
         }
-        private void itemPhysicsPainter_MouseUp(object sender, MouseButtonEventArgs e)
+        private void PhysicsPainter_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Orig.TestersGDI.PhysicsPainter.PhysicsPainterMainForm().Show();
         }
@@ -124,23 +124,23 @@ namespace Game.GameTester
         #endregion
         #region Newton 1.53
 
-        private void itemGravityCubes1_MouseUp(object sender, MouseButtonEventArgs e)
+        private void GravityCubes1_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.GravityCubes1().Show();
         }
-        private void itemGravityCubes2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void GravityCubes2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.GravityCubes2().Show();
         }
-        private void itemCollisionShapes_MouseUp(object sender, MouseButtonEventArgs e)
+        private void CollisionShapes_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.CollisionShapes().Show();
         }
-        private void itemAstMiner2D_MouseUp(object sender, MouseButtonEventArgs e)
+        private void AstMiner2D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.Miner2DWindow().Show();
         }
-        private void itemSwarmBots_MouseUp(object sender, MouseButtonEventArgs e)
+        private void SwarmBots_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153.SwarmBotTester().Show();
         }
@@ -148,55 +148,55 @@ namespace Game.GameTester
         #endregion
         #region WPF
 
-        private void itemColorVisualizer_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ColorVisualizer_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ColorVisualizer().Show();
         }
-        private void itemCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void CameraTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.CameraTester().Show();
         }
-        private void itemTransformTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void TransformTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.TransformTester().Show();
         }
-        private void itemRotateDblVect_MouseUp(object sender, MouseButtonEventArgs e)
+        private void RotateDblVect_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.DoubleVectorWindow().Show();
         }
-        private void itemTubeMeshTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void TubeMeshTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.TubeMeshTester().Show();
         }
-        private void itemSoundTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void SoundTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.SoundTester().Show();
         }
-        private void itemPotatoes_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Potatoes_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.PotatoWindow().Show();
         }
-        private void itemEvenDistribute_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EvenDistribute_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.EvenDistributionSphere().Show();
         }
-        private void itemClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ClusteredPoints().Show();
         }
-        private void itemShadows_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Shadows_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShadowsWindow().Show();
         }
-        private void itemCurves_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Curves_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Curves().Show();
         }
-        private void itemClouds_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Clouds_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Clouds().Show();
         }
-        private void itemFlags_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Flags_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FlagGeneratorWindow().Show();
         }
@@ -204,11 +204,11 @@ namespace Game.GameTester
         #endregion
         #region Misc
 
-        private void itemPainter_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Painter_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.FluidPainter2D().Show();
         }
-        private void itemPainter3D_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Painter3D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.FluidPainter3D().Show();
         }
@@ -216,23 +216,27 @@ namespace Game.GameTester
         #endregion
         #region Neural
 
-        private void itemNeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
+        private void NeuralNet_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.NeuralTester().Show();
         }
-        private void itemEncogXOR_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EncogXOR_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.EncogXOR().Show();
         }
-        private void itemEncogOCR_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EncogOCR_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.EncogOCR().Show();
         }
-        private void itemImageFilters_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ImageFilters_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Convolution.ImageFilters().Show();
         }
-        private void itemMineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
+        private void FeatureRecognizer_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.FeatureRecognizer().Show();
+        }
+        private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.MineralIdentifier().Show();
         }
@@ -240,68 +244,68 @@ namespace Game.GameTester
         #endregion
         #region Newton 2.36
 
-        private void itemGlobalStats_MouseUp(object sender, MouseButtonEventArgs e)
+        private void GlobalStats_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.GlobalItemStatsWindow().Show();
         }
-        private void itemNewt2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Newt2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Newt2Tester.Newt2Tester().Show();
         }
-        private void itemTowerWrecker_MouseUp(object sender, MouseButtonEventArgs e)
+        private void TowerWrecker_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.TowerWrecker.TowerWreckerWindow().Show();
         }
-        private void itemMultithreadWorlds_MouseUp(object sender, MouseButtonEventArgs e)
+        private void MultithreadWorlds_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.MultithreadWorlds().Show();
         }
-        private void itemChaseForces_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ChaseForces_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ChaseForces.ChaseForcesWindow().Show();
         }
-        private void itemArcanorum_MouseUp(object sender, MouseButtonEventArgs e)
+        private void Arcanorum_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
         }
 
-        private void itemShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShipPartTesterWindow().Show();
         }
-        private void itemOverlappingPartsTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void OverlappingPartsTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.OverlappingPartsWindow().Show();
         }
-        private void itemShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
         }
-        private void itemBrainTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void BrainTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.BrainTester().Show();
         }
-        private void itemBrainTester2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void BrainTester2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.BrainTester2().Show();
         }
-        private void itemFlyingBeans_MouseUp(object sender, MouseButtonEventArgs e)
+        private void FlyingBeans_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.FlyingBeans.FlyingBeansWindow().Show();
         }
-        private void itemShipCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ShipCameraTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShipCameraTester().Show();
         }
-        private void itemWindTunnel_MouseUp(object sender, MouseButtonEventArgs e)
+        private void WindTunnel_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.WindTunnelWindow().Show();
         }
-        private void itemWindTunnel2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void WindTunnel2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.WindTunnel2().Show();
         }
-        private void itemGenePool_MouseUp(object sender, MouseButtonEventArgs e)
+        private void GenePool_MouseUp(object sender, MouseButtonEventArgs e)
         {
             // This should emulate gene pool
 
@@ -332,11 +336,11 @@ namespace Game.GameTester
 
             new Game.Newt.v2.GenePool.GenePoolWindow().Show();
         }
-        private void itemAsteroidField_MouseUp(object sender, MouseButtonEventArgs e)
+        private void AsteroidField_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.AsteroidMiner.AstField.AsteroidFieldWindow().Show();
         }
-        private void itemAstMiner2D_2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void AstMiner2D_2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.AsteroidMiner.AstMin2D.MinerWindow().Show();
         }

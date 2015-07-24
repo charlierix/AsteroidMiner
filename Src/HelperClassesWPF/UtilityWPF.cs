@@ -2393,6 +2393,25 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        /// <summary>
+        /// If you use "new BitmapImage(new Uri(filename", it locks the file, even if you set the image to null.  So this method
+        /// reads the file into bytes, and returns the bitmap a different way
+        /// </summary>
+        public static BitmapSource GetBitmap(string filename)
+        {
+            BitmapImage retVal = new BitmapImage();
+
+            using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                retVal.BeginInit();
+                retVal.CacheOption = BitmapCacheOption.OnLoad;
+                retVal.StreamSource = stream;
+                retVal.EndInit();
+            }
+
+            return retVal;
+        }
+
         /// <param name="cacheColorsUpFront">
         /// True:  The entire byte array will be converted into Color structs up front
         ///     Use this if you want color structs (expensive, but useful)
@@ -2463,7 +2482,7 @@ namespace Game.HelperClassesWPF
                 width = (height * aspectRatio).ToInt_Round();
             }
 
-            if(width == bitmap.PixelWidth && height == bitmap.PixelHeight)
+            if (width == bitmap.PixelWidth && height == bitmap.PixelHeight)
             {
                 return bitmap;
             }
@@ -2475,7 +2494,6 @@ namespace Game.HelperClassesWPF
             DrawingVisual drawingVisual = new DrawingVisual();
             using (DrawingContext drawingContext = drawingVisual.RenderOpen())
             {
-                //drawingContext.DrawImage(bitmap, new Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight));
                 drawingContext.DrawImage(bitmap, new Rect(0, 0, width, height));
             }
 
@@ -2483,6 +2501,20 @@ namespace Game.HelperClassesWPF
             retVal.Render(drawingVisual);
 
             return retVal;
+        }
+
+        /// <summary>
+        /// This will create a file
+        /// NOTE: It will always store in png format, so that's the extension you should use
+        /// </summary>
+        public static void SaveBitmapPNG(BitmapSource bitmap, string filename)
+        {
+            using (var fileStream = new FileStream(filename, FileMode.Create))
+            {
+                BitmapEncoder encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                encoder.Save(fileStream);
+            }
         }
 
         /// <summary>

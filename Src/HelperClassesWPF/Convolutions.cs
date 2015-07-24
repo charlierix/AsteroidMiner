@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -322,6 +323,7 @@ namespace Game.HelperClassesWPF
         //The border should be some kind of blur of the outermost pixels (the from convo will be centered onto the destination)
 
         #endregion
+
         #region Generators
 
         /// <summary>
@@ -580,6 +582,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
+
         #region WPF helpers
 
         public static Border GetKernelThumbnail(ConvolutionBase2D kernel, int thumbSize, ContextMenu contextMenu)
@@ -752,6 +755,77 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
+        #region Misc
+
+        public static RectInt GetExtractRectangle(VectorInt imageSize, bool isSquare)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            int minSize = Math.Min(imageSize.X, imageSize.Y);
+            //double extractSizeMin = minSize / 16d;
+            //double extractSizeMax = minSize / 4d;
+            double extractSizeMin = minSize * .03;
+            double extractSizeMax = minSize * .97;
+
+            int width = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
+            int height;
+
+            if (isSquare)
+            {
+                height = width;
+            }
+            else
+            {
+                height = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
+
+                double ratio = width.ToDouble() / height.ToDouble();
+
+                if (ratio > Math3D.GOLDENRATIO)
+                {
+                    width = (height * Math3D.GOLDENRATIO).ToInt_Round();
+                }
+                else
+                {
+                    ratio = height.ToDouble() / width.ToDouble();
+
+                    if (ratio > Math3D.GOLDENRATIO)
+                    {
+                        height = (width * Math3D.GOLDENRATIO).ToInt_Round();
+                    }
+                }
+            }
+
+            return new RectInt()
+            {
+                X = rand.Next(imageSize.X - width),
+                Y = rand.Next(imageSize.Y - height),
+                Width = width,
+                Height = height,
+            };
+        }
+
+        public static bool IsTooSmall(VectorInt size, bool allow1x1 = false)
+        {
+            return IsTooSmall(size.X, size.Y, allow1x1);
+        }
+        public static bool IsTooSmall(int width, int height, bool allow1x1 = false)
+        {
+            if (width <= 0 || height <= 0)
+            {
+                return true;
+            }
+
+            if (!allow1x1 && width == 1 && height == 1)
+            {
+                // A 1x1 patch is worthless.  About the only useful case is if the value is -1, it will invert the image
+                return true;
+            }
+
+            return false;
+        }
+
+        #endregion
+
         #region Private Methods
 
         private static Convolution2D Convolute_Set(Convolution2D image, ConvolutionSet2D kernel)
@@ -789,13 +863,13 @@ namespace Game.HelperClassesWPF
                 throw new ArgumentException("MaxOf kernel set needs at least two children");
             }
 
-            Tuple<int, int> firstReduce = kernel.Convolutions[0].GetReduction();
+            VectorInt firstReduce = kernel.Convolutions[0].GetReduction();
 
             for (int cntr = 1; cntr < kernel.Convolutions.Length; cntr++)
             {
-                Tuple<int, int> nextReduce = kernel.Convolutions[cntr].GetReduction();
+                VectorInt nextReduce = kernel.Convolutions[cntr].GetReduction();
 
-                if (firstReduce.Item1 != nextReduce.Item1 || firstReduce.Item2 != nextReduce.Item2)
+                if (firstReduce.X != nextReduce.X || firstReduce.Y != nextReduce.Y)
                 {
                     throw new ArgumentException("When the operation is MaxOf, then all kernels must reduce the same amount");
                 }
@@ -985,6 +1059,7 @@ namespace Game.HelperClassesWPF
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 ContextMenu = contextMenu,
+                Tag = kernel,
             };
 
             return border;
@@ -1053,6 +1128,7 @@ namespace Game.HelperClassesWPF
                 HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center,
                 ContextMenu = contextMenu,
+                Tag = kernel,
             };
 
             return border;
@@ -1198,11 +1274,100 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
+    #region Class: ConvolutionSet2D
+
+    public class ConvolutionSet2D : ConvolutionBase2D
+    {
+        #region Constructor
+
+        public ConvolutionSet2D(ConvolutionSet2D_DNA dna)
+            : this(dna.Convolutions, dna.OperationType) { }
+
+        public ConvolutionSet2D(ConvolutionBase2D[] convolutions, SetOperationType operationType)
+        {
+            foreach (object child in convolutions)
+            {
+                if (!(child is Convolution2D) && !(child is ConvolutionSet2D))
+                {
+                    throw new ArgumentException("Object passed in must be Convolution2D or ConvolutionSet2D: " + child.GetType().ToString());
+                }
+            }
+
+            this.Convolutions = convolutions;
+            this.OperationType = operationType;
+        }
+
+        #endregion
+
+        public readonly ConvolutionBase2D[] Convolutions;
+
+        public readonly SetOperationType OperationType;
+
+        public override bool IsNegPos
+        {
+            get
+            {
+                if (this.OperationType == SetOperationType.Subtract)
+                {
+                    return true;
+                }
+
+                return this.Convolutions.Any(o => o.IsNegPos);
+            }
+        }
+
+        #region Public Methods
+
+        public override VectorInt GetReduction()
+        {
+            VectorInt retVal = new VectorInt(0, 0);
+
+            foreach (ConvolutionBase2D child in this.Convolutions)
+            {
+                var childReduce = child.GetReduction();
+
+                retVal.X += childReduce.X;
+                retVal.Y += childReduce.Y;
+            }
+
+            return retVal;
+        }
+
+        public ConvolutionSet2D_DNA ToDNA()
+        {
+            return new ConvolutionSet2D_DNA()
+            {
+                Convolutions = this.Convolutions,
+                IsNegPos = this.IsNegPos,
+                OperationType = this.OperationType,
+            };
+        }
+
+        #endregion
+    }
+
+    #endregion
+    #region Enum: SetOperationType
+
+    public enum SetOperationType
+    {
+        Standard,
+        Subtract,
+        MaxOf,
+        //TODO: Sharpen - does an edge detect, then adds those edges to the original image (probably call it Add)
+        //http://www.tutorialspoint.com/dip/Concept_of_Edge_Detection.htm
+    }
+
+    #endregion
+
     #region Class: Convolution2D
 
     public class Convolution2D : ConvolutionBase2D
     {
         #region Constructor
+
+        public Convolution2D(Convolution2D_DNA dna)
+            : this(dna.Values, dna.Width, dna.Height, dna.IsNegPos, dna.Gain, dna.Iterations, dna.ExpandBorder) { }
 
         public Convolution2D(double[] values, int width, int height, bool isNegPos, double gain = 1d, int iterations = 1, bool expandBorder = false)
         {
@@ -1277,79 +1442,146 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        public VectorInt Size
+        {
+            get
+            {
+                return new VectorInt(this.Width, this.Height);
+            }
+        }
+
         #region Public Methods
 
-        public override Tuple<int, int> GetReduction()
+        public override VectorInt GetReduction()
         {
-            int reduceX = 0;
-            int reduceY = 0;
+            VectorInt retVal = new VectorInt();
 
             if (!this.ExpandBorder)
             {
-                reduceX = (this.Width - 1) * this.Iterations;
-                reduceY = (this.Height - 1) * this.Iterations;
+                retVal.X = (this.Width - 1) * this.Iterations;
+                retVal.Y = (this.Height - 1) * this.Iterations;
             }
 
-            return Tuple.Create(reduceX, reduceY);
+            return retVal;
         }
 
-        public Convolution2D Extract(int left, int top, int width, int height, ConvolutionExtractType extractType)
+        public Convolution2D Extract(RectInt rect, ConvolutionExtractType extractType)
         {
-            bool isNegPos = this.IsNegPos;
-            double[] values = ExtractValues(left, top, width, height);
 
-            switch (extractType)
+
+            try
             {
-                case ConvolutionExtractType.Raw:
-                    break;
 
-                case ConvolutionExtractType.RawUnit:
-                    values = Convolutions.ToUnit(values);
-                    break;
 
-                case ConvolutionExtractType.Edge:
-                    isNegPos = true;
-                    values = ConvertToEdge(values);
-                    values = Convolutions.ToUnit(values);
-                    break;
+                bool isNegPos = this.IsNegPos;
+                double[] values = ExtractValues(rect);
 
-                case ConvolutionExtractType.EdgeSoftBorder:
-                    isNegPos = true;
-                    values = ConvertToEdge(values);
-                    values = ApplySoftBorder(values, width, height);
-                    values = Convolutions.ToUnit(values);
-                    break;
+                switch (extractType)
+                {
+                    case ConvolutionExtractType.Raw:
+                        break;
 
-                //case ConvolutionExtractType.EdgeCircleBorder:
-                //    isNegPos = true;
-                //    values = ConvertToEdge(values);
-                //    values = ApplyCircleBorder(values);
-                //    values = Convolutions.ToUnit(values);
-                //    break;
+                    case ConvolutionExtractType.RawUnit:
+                        values = Convolutions.ToUnit(values);
+                        break;
 
-                default:
-                    throw new ApplicationException("Unknown ConvolutionExtractType: " + extractType.ToString());
+                    case ConvolutionExtractType.Edge:
+                        isNegPos = true;
+                        values = ConvertToEdge(values);
+                        values = Convolutions.ToUnit(values);
+                        break;
+
+                    case ConvolutionExtractType.EdgeSoftBorder:
+                        isNegPos = true;
+                        values = ConvertToEdge(values);
+                        values = ApplySoftBorder(values, rect.Width, rect.Height);
+                        values = Convolutions.ToUnit(values);
+                        break;
+
+                    //case ConvolutionExtractType.EdgeCircleBorder:
+                    //    isNegPos = true;
+                    //    values = ConvertToEdge(values);
+                    //    values = ApplyCircleBorder(values);
+                    //    values = Convolutions.ToUnit(values);
+                    //    break;
+
+                    default:
+                        throw new ApplicationException("Unknown ConvolutionExtractType: " + extractType.ToString());
+                }
+
+                return new Convolution2D(values, rect.Width, rect.Height, isNegPos, this.Gain, this.Iterations, this.ExpandBorder);
+
+
+            }
+            catch (Exception ex)
+            {
+                //throw;
+                return null;
             }
 
-            return new Convolution2D(values, width, height, isNegPos, this.Gain, this.Iterations, this.ExpandBorder);
+
+
+
+        }
+
+        public Convolution2D_DNA ToDNA()
+        {
+            return new Convolution2D_DNA()
+            {
+                Values = this.Values,
+                Width = this.Width,
+                Height = this.Height,
+
+                IsNegPos = this.IsNegPos,
+
+                Gain = this.Gain,
+                Iterations = this.Iterations,
+                ExpandBorder = this.ExpandBorder,
+            };
+        }
+
+        public override string ToString()
+        {
+            StringBuilder retVal = new StringBuilder(100);
+
+            retVal.Append(string.Format("size=({0}, {1})", this.Width, this.Height));
+
+            retVal.Append(string.Format(" [is negpos={0}]", this.IsNegPos));
+
+            if (!this.Gain.IsNearValue(1))
+            {
+                retVal.Append(string.Format(" [gain={0}]", this.Gain.ToStringSignificantDigits(2)));
+            }
+
+            if (this.Iterations != 1)
+            {
+                retVal.Append(string.Format(" [iterations={0}]", this.Iterations));
+            }
+
+            if (this.ExpandBorder)
+            {
+                retVal.Append(" [expand border]");
+            }
+
+            return retVal.ToString();
         }
 
         #endregion
 
         #region Private Methods
 
-        private double[] ExtractValues(int left, int top, int width, int height)
+        private double[] ExtractValues(RectInt rect)
         {
-            double[] retVal = new double[width * height];
+            double[] retVal = new double[rect.Width * rect.Height];
 
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < rect.Height; y++)
             {
-                int yOffsetSrc = (y + top) * this.Width;
-                int yOffsetDest = y * width;
+                int yOffsetSrc = (y + rect.Y) * this.Width;
+                int yOffsetDest = y * rect.Width;
 
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < rect.Width; x++)
                 {
-                    retVal[yOffsetDest + x] = this.Values[yOffsetSrc + x + left];
+                    retVal[yOffsetDest + x] = this.Values[yOffsetSrc + x + rect.X];
                 }
             }
 
@@ -1463,79 +1695,13 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: ConvolutionSet2D
-
-    public class ConvolutionSet2D : ConvolutionBase2D
-    {
-        public ConvolutionSet2D(ConvolutionBase2D[] convolutions, SetOperationType operationType)
-        {
-            foreach (object child in convolutions)
-            {
-                if (!(child is Convolution2D) && !(child is ConvolutionSet2D))
-                {
-                    throw new ArgumentException("Object passed in must be Convolution2D or ConvolutionSet2D: " + child.GetType().ToString());
-                }
-            }
-
-            this.Convolutions = convolutions;
-            this.OperationType = operationType;
-        }
-
-        public readonly ConvolutionBase2D[] Convolutions;
-
-        public readonly SetOperationType OperationType;
-
-        public override bool IsNegPos
-        {
-            get
-            {
-                if (this.OperationType == SetOperationType.Subtract)
-                {
-                    return true;
-                }
-
-                return this.Convolutions.Any(o => o.IsNegPos);
-            }
-        }
-
-        public override Tuple<int, int> GetReduction()
-        {
-            int reduceX = 0;
-            int reduceY = 0;
-
-            foreach (ConvolutionBase2D child in this.Convolutions)
-            {
-                var childReduce = child.GetReduction();
-
-                reduceX += childReduce.Item1;
-                reduceY += childReduce.Item2;
-            }
-
-            return Tuple.Create(reduceX, reduceY);
-        }
-    }
-
-    #endregion
-    #region Enum: SetOperationType
-
-    public enum SetOperationType
-    {
-        Standard,
-        Subtract,
-        MaxOf,
-        //TODO: Sharpen - does an edge detect, then adds those edges to the original image (probably call it Add)
-        //http://www.tutorialspoint.com/dip/Concept_of_Edge_Detection.htm
-    }
-
-    #endregion
-
     #region Class: ConvolutionBase2D
 
     public abstract class ConvolutionBase2D
     {
         public abstract bool IsNegPos { get; }
 
-        public abstract Tuple<int, int> GetReduction();
+        public abstract VectorInt GetReduction();
     }
 
     #endregion
@@ -1562,6 +1728,40 @@ namespace Game.HelperClassesWPF
         /// </summary>
         EdgeSoftBorder,
         //EdgeCircleBorder,
+    }
+
+    #endregion
+
+    #region Class: ConvolutionSet2D_DNA
+
+    public class ConvolutionSet2D_DNA : ConvolutionBase2D_DNA
+    {
+        public ConvolutionBase2D[] Convolutions { get; set; }
+        public SetOperationType OperationType { get; set; }
+    }
+
+    #endregion
+    #region Class: Convolution2D_DNA
+
+    public class Convolution2D_DNA : ConvolutionBase2D_DNA
+    {
+        [TypeConverter(typeof(DblArrTypeConverter))]
+        public double[] Values { get; set; }
+
+        public int Width { get; set; }
+        public int Height { get; set; }
+
+        public bool ExpandBorder { get; set; }
+        public double Gain { get; set; }
+        public int Iterations { get; set; }
+    }
+
+    #endregion
+    #region Class: ConvolutionBase2D_DNA
+
+    public class ConvolutionBase2D_DNA
+    {
+        public bool IsNegPos { get; set; }
     }
 
     #endregion

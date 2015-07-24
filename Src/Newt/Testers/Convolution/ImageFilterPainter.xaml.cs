@@ -164,6 +164,8 @@ namespace Game.Newt.Testers.Convolution
 
         #region Declaration Section
 
+        private const string TITLE = "Image Filter Painter";
+
         private int _width = -1;
         private int _height = -1;
 
@@ -238,37 +240,27 @@ namespace Game.Newt.Testers.Convolution
 
         #region Public Methods
 
+        /// <summary>
+        /// This shows the kernel, and allows the user to edit it
+        /// </summary>
         public void EditKernel(Convolution2D kernel)
         {
-            _isProgramaticallyChangingSettings = true;
+            this.Title = TITLE;
 
-            _width = kernel.Width;
-            _height = kernel.Height;
+            panelEdit.Visibility = Visibility.Visible;
 
-            // The kernel passed in is probably unit.  Maximize the height so that it looks nice and 3D
-            _values = Convolutions.ToMaximized(kernel.Values).ToArray();       // taking ToArray to ensure it's cloned
+            StoreKernel(kernel);
+        }
+        /// <summary>
+        /// This just shows the kernel, no options to change it
+        /// </summary>
+        public void ViewKernel(Convolution2D kernel)
+        {
+            this.Title = string.Format("{0} - {1}x{2}", TITLE, kernel.Width, kernel.Height);
 
-            if (kernel.IsNegPos)
-            {
-                radRangeNegPos.IsChecked = true;
-            }
-            else
-            {
-                radRangeZeroPos.IsChecked = true;
-            }
+            panelEdit.Visibility = Visibility.Collapsed;
 
-            txtWidth.Text = _width.ToString();
-            txtHeight.Text = _height.ToString();
-
-            _isProgramaticallyChangingSettings = false;
-
-            RedrawAxis();
-            RebuildBars();
-            PixelValueChanged();
-
-            double dist = Math3D.Avg(_axis.HalfX, _axis.HalfY) * 3;
-            Vector3D newPos = _camera.Position.ToVector().ToUnit() * dist;
-            _camera.Position = newPos.ToPoint();
+            StoreKernel(kernel);
         }
 
         #endregion
@@ -1032,6 +1024,39 @@ namespace Game.Newt.Testers.Convolution
         #endregion
 
         #region Private Methods
+
+        private void StoreKernel(Convolution2D kernel)
+        {
+            _isProgramaticallyChangingSettings = true;
+
+            _width = kernel.Width;
+            _height = kernel.Height;
+
+            // The kernel passed in is probably unit.  Maximize the height so that it looks nice and 3D
+            _values = Convolutions.ToMaximized(kernel.Values).ToArray();       // taking ToArray to ensure it's cloned
+
+            if (kernel.IsNegPos)
+            {
+                radRangeNegPos.IsChecked = true;
+            }
+            else
+            {
+                radRangeZeroPos.IsChecked = true;
+            }
+
+            txtWidth.Text = _width.ToString();
+            txtHeight.Text = _height.ToString();
+
+            _isProgramaticallyChangingSettings = false;
+
+            RedrawAxis();
+            RebuildBars();
+            PixelValueChanged();
+
+            double dist = Math3D.Avg(_axis.HalfX, _axis.HalfY) * 3;
+            Vector3D newPos = _camera.Position.ToVector().ToUnit() * dist;
+            _camera.Position = newPos.ToPoint();
+        }
 
         private void ClearSelected()
         {

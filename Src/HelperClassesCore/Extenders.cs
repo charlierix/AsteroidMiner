@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -44,7 +45,64 @@ namespace Game.HelperClassesCore
         /// </summary>
         public static string ToStringSignificantDigits(this double value, int significantDigits)
         {
-            return UtilityCore.ToStringSignificantDigits(value, significantDigits);
+            int numDecimals = GetNumDecimals(value);
+
+            if (numDecimals < 0)
+            {
+                // Unknown number of decimal places
+                return value.ToString();
+            }
+            else
+            {
+                // Get the integer portion
+                long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
+                int numInt;
+                if (intPortion == 0)
+                {
+                    numInt = 0;
+                }
+                else
+                {
+                    numInt = intPortion.ToString().Length;
+                }
+
+                // Limit the number of significant digits
+                int numPlaces;
+                if (numInt == 0)
+                {
+                    numPlaces = significantDigits;
+                }
+                else if (numInt >= significantDigits)
+                {
+                    numPlaces = 0;
+                }
+                else
+                {
+                    numPlaces = significantDigits - numInt;
+                }
+
+                // I was getting an exception from round, but couldn't recreate it, so I'm just throwing this in to avoid the exception
+                if (numPlaces < 0)
+                {
+                    numPlaces = 0;
+                }
+                else if (numPlaces > 15)
+                {
+                    numPlaces = 15;
+                }
+
+                // Show a rounded number
+                double rounded = Math.Round(value, numPlaces);
+                int numActualDecimals = GetNumDecimals(rounded);
+                if (numActualDecimals < 0)
+                {
+                    return rounded.ToString();		// it's weird, don't try to make it more readable
+                }
+                else
+                {
+                    return rounded.ToString("N" + numActualDecimals);
+                }
+            }
         }
 
         public static int ToInt_Round(this double value)
@@ -486,6 +544,34 @@ namespace Game.HelperClassesCore
         public static T NextItem<T>(this Random rand, IList<T> items)
         {
             return items[rand.Next(items.Count)];
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static int GetNumDecimals(double value)
+        {
+            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
+
+            if (Regex.IsMatch(text, "[a-z]", RegexOptions.IgnoreCase))
+            {
+                // This is in exponential notation, just give up (or maybe NaN)
+                return -1;
+            }
+
+            int decimalIndex = text.IndexOf(".");
+
+            if (decimalIndex < 0)
+            {
+                // It's an integer
+                return 0;
+            }
+            else
+            {
+                // Just count the decimals
+                return (text.Length - 1) - decimalIndex;
+            }
         }
 
         #endregion

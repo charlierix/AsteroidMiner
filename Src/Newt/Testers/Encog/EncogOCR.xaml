@@ -108,7 +108,6 @@
             </ScrollViewer>
 
             <StackPanel Grid.Row="2">
-                <!--<TextBox Name="txtSession" Text="session"/>-->
                 <ComboBox Name="cboSession" IsEditable="True"/>
 
                 <UniformGrid Columns="2" Margin="0,4,0,0">

@@ -12,8 +12,15 @@ namespace Game.HelperClassesCore
 {
     public static class UtilityCore
     {
-        private const double FOURTHIRDS = 4d / 3d;
+        #region Declaration Section
+
         public const double NEARZERO = .000000001d;
+
+        private const double FOURTHIRDS = 4d / 3d;
+
+        #endregion
+
+        #region Misc
 
         /// <summary>
         /// This is good for converting a trackbar into a double
@@ -55,19 +62,6 @@ namespace Game.HelperClassesCore
 
             // Exit Function
             return retVal;
-        }
-
-        public static double GetMassForRadius(double radius, double density)
-        {
-            // Volume = 4/3 * pi * r^3
-            // Mass = Volume * Density
-            return FOURTHIRDS * Math.PI * (radius * radius * radius) * density;
-        }
-        public static double GetRadiusForMass(double mass, double density)
-        {
-            // Volume = Mass / Density
-            // r^3 = Volume / (4/3 * pi)
-            return Math.Pow((mass / density) / (FOURTHIRDS * Math.PI), .333333d);
         }
 
         /// <summary>
@@ -123,6 +117,69 @@ namespace Game.HelperClassesCore
             item1 = item2;
             item2 = temp;
         }
+
+        public static double GetMassForRadius(double radius, double density)
+        {
+            // Volume = 4/3 * pi * r^3
+            // Mass = Volume * Density
+            return FOURTHIRDS * Math.PI * (radius * radius * radius) * density;
+        }
+        public static double GetRadiusForMass(double mass, double density)
+        {
+            // Volume = Mass / Density
+            // r^3 = Volume / (4/3 * pi)
+            return Math.Pow((mass / density) / (FOURTHIRDS * Math.PI), .333333d);
+        }
+
+        #endregion
+
+        #region Enums
+
+        public static T GetRandomEnum<T>(T excluding) where T : struct
+        {
+            return GetRandomEnum<T>(new T[] { excluding });
+        }
+        public static T GetRandomEnum<T>(IEnumerable<T> excluding) where T : struct
+        {
+            while (true)
+            {
+                T retVal = GetRandomEnum<T>();
+                if (!excluding.Contains(retVal))
+                {
+                    return retVal;
+                }
+            }
+        }
+        public static T GetRandomEnum<T>() where T : struct
+        {
+            Array allValues = Enum.GetValues(typeof(T));
+            if (allValues.Length == 0)
+            {
+                throw new ArgumentException("This enum has no values");
+            }
+
+            return (T)allValues.GetValue(StaticRandom.Next(allValues.Length));
+        }
+
+        /// <summary>
+        /// This is just a wrapper to Enum.GetValues.  Makes the caller's code a bit less ugly
+        /// </summary>
+        public static T[] GetEnums<T>() where T : struct
+        {
+            return (T[])Enum.GetValues(typeof(T));
+        }
+
+        /// <summary>
+        /// This is a strongly typed wrapper to Enum.Parse
+        /// </summary>
+        public static T EnumParse<T>(string text, bool ignoreCase = true) where T : struct // can't constrain to enum
+        {
+            return (T)Enum.Parse(typeof(T), text, ignoreCase);
+        }
+
+        #endregion
+
+        #region Lists
 
         /// <summary>
         /// This iterates over all combinations of a set of numbers
@@ -539,48 +596,6 @@ namespace Game.HelperClassesCore
             return retVal.ToArray();
         }
 
-        public static T GetRandomEnum<T>(T excluding) where T : struct
-        {
-            return GetRandomEnum<T>(new T[] { excluding });
-        }
-        public static T GetRandomEnum<T>(IEnumerable<T> excluding) where T : struct
-        {
-            while (true)
-            {
-                T retVal = GetRandomEnum<T>();
-                if (!excluding.Contains(retVal))
-                {
-                    return retVal;
-                }
-            }
-        }
-        public static T GetRandomEnum<T>() where T : struct
-        {
-            Array allValues = Enum.GetValues(typeof(T));
-            if (allValues.Length == 0)
-            {
-                throw new ArgumentException("This enum has no values");
-            }
-
-            return (T)allValues.GetValue(StaticRandom.Next(allValues.Length));
-        }
-
-        /// <summary>
-        /// This is just a wrapper to Enum.GetValues.  Makes the caller's code a bit less ugly
-        /// </summary>
-        public static T[] GetEnums<T>() where T : struct
-        {
-            return (T[])Enum.GetValues(typeof(T));
-        }
-
-        /// <summary>
-        /// This is a strongly typed wrapper to Enum.Parse
-        /// </summary>
-        public static T EnumParse<T>(string text, bool ignoreCase = true) where T : struct // can't constrain to enum
-        {
-            return (T)Enum.Parse(typeof(T), text, ignoreCase);
-        }
-
         public static int GetIndexIntoList(double percent, int count)
         {
             if (count <= 0)
@@ -596,69 +611,23 @@ namespace Game.HelperClassesCore
         }
 
         /// <summary>
-        /// This is useful for displaying a double value in a textbox when you don't know the range (could be
-        /// 1000001 or .1000001 or 10000.5 etc)
+        /// This tells where to insert to keep it sorted
         /// </summary>
-        public static string ToStringSignificantDigits(double value, int significantDigits)
+        public static int GetInsertIndex<T>(IEnumerable<T> items, T newItem) where T : IComparable<T>
         {
-            int numDecimals = GetNumDecimals(value);
+            int index = 0;
 
-            if (numDecimals < 0)
+            foreach (T existing in items)
             {
-                // Unknown number of decimal places
-                return value.ToString();
+                if (existing.CompareTo(newItem) > 0)
+                {
+                    return index;
+                }
+
+                index++;
             }
-            else
-            {
-                // Get the integer portion
-                long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
-                int numInt;
-                if (intPortion == 0)
-                {
-                    numInt = 0;
-                }
-                else
-                {
-                    numInt = intPortion.ToString().Length;
-                }
 
-                // Limit the number of significant digits
-                int numPlaces;
-                if (numInt == 0)
-                {
-                    numPlaces = significantDigits;
-                }
-                else if (numInt >= significantDigits)
-                {
-                    numPlaces = 0;
-                }
-                else
-                {
-                    numPlaces = significantDigits - numInt;
-                }
-
-                // I was getting an exception from round, but couldn't recreate it, so I'm just throwing this in to avoid the exception
-                if (numPlaces < 0)
-                {
-                    numPlaces = 0;
-                }
-                else if (numPlaces > 15)
-                {
-                    numPlaces = 15;
-                }
-
-                // Show a rounded number
-                double rounded = Math.Round(value, numPlaces);
-                int numActualDecimals = GetNumDecimals(rounded);
-                if (numActualDecimals < 0)
-                {
-                    return rounded.ToString();		// it's weird, don't try to make it more readable
-                }
-                else
-                {
-                    return rounded.ToString("N" + numActualDecimals);
-                }
-            }
+            return index;
         }
 
         /// <summary>
@@ -687,7 +656,7 @@ namespace Game.HelperClassesCore
             {
                 return items.ToArray();
             }
-            else if(items == null)
+            else if (items == null)
             {
                 return array.ToArray();
             }
@@ -699,6 +668,10 @@ namespace Game.HelperClassesCore
 
             return retVal;
         }
+
+        #endregion
+
+        #region Serialization/Save
 
         /// <summary>
         /// This serializes/deserializes to do a deep clone
@@ -1003,6 +976,8 @@ namespace Game.HelperClassesCore
             return foldername;
         }
 
+        #endregion
+
         #region Private Methods
 
         // These were copied from MutateUtility.PropTracker
@@ -1172,30 +1147,6 @@ namespace Game.HelperClassesCore
             else
             {
                 return null;
-            }
-        }
-
-        private static int GetNumDecimals(double value)
-        {
-            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
-
-            if (Regex.IsMatch(text, "[a-z]", RegexOptions.IgnoreCase))
-            {
-                // This is in exponential notation, just give up (or maybe NaN)
-                return -1;
-            }
-
-            int decimalIndex = text.IndexOf(".");
-
-            if (decimalIndex < 0)
-            {
-                // It's an integer
-                return 0;
-            }
-            else
-            {
-                // Just count the decimals
-                return (text.Length - 1) - decimalIndex;
             }
         }
 

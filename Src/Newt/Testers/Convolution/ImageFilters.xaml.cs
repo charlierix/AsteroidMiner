@@ -209,11 +209,10 @@ namespace Game.Newt.Testers.Convolution
                 }
 
                 // Square
-                int left, top, width, height;
-                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, true);
+                RectInt rect = Convolutions.GetExtractRectangle(new VectorInt(image.Width, image.Height), true);
 
                 // Extract
-                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.Edge));
+                AddKernel(image.Extract(rect, ConvolutionExtractType.Edge));
             }
             catch (Exception ex)
             {
@@ -234,11 +233,10 @@ namespace Game.Newt.Testers.Convolution
                 }
 
                 // Rectangle
-                int left, top, width, height;
-                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, false);
+                RectInt rect = Convolutions.GetExtractRectangle(new VectorInt(image.Width, image.Height), false);
 
                 // Extract
-                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.Edge));
+                AddKernel(image.Extract(rect, ConvolutionExtractType.Edge));
             }
             catch (Exception ex)
             {
@@ -259,11 +257,10 @@ namespace Game.Newt.Testers.Convolution
                 }
 
                 // Square
-                int left, top, width, height;
-                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, true);
+                RectInt rect = Convolutions.GetExtractRectangle(new VectorInt(image.Width, image.Height), true);
 
                 // Extract
-                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.RawUnit));
+                AddKernel(image.Extract(rect, ConvolutionExtractType.RawUnit));
             }
             catch (Exception ex)
             {
@@ -284,11 +281,10 @@ namespace Game.Newt.Testers.Convolution
                 }
 
                 // Rectangle
-                int left, top, width, height;
-                GetExtractRectangle(out left, out top, out width, out height, image.Width, image.Height, false);
+                RectInt rect = Convolutions.GetExtractRectangle(new VectorInt(image.Width, image.Height), false);
 
                 // Extract
-                AddKernel(image.Extract(left, top, width, height, ConvolutionExtractType.RawUnit));
+                AddKernel(image.Extract(rect, ConvolutionExtractType.RawUnit));
             }
             catch (Exception ex)
             {
@@ -587,8 +583,8 @@ namespace Game.Newt.Testers.Convolution
                 }
 
                 // Extract
-                AddKernel(image.Extract(extractX1, extractY1, extractWidth, extractHeight, ConvolutionExtractType.Edge));
-                AddKernel(image.Extract(extractX1, extractY1, extractWidth, extractHeight, ConvolutionExtractType.EdgeSoftBorder));
+                AddKernel(image.Extract(new RectInt(extractX1, extractY1, extractWidth, extractHeight), ConvolutionExtractType.Edge));
+                AddKernel(image.Extract(new RectInt(extractX1, extractY1, extractWidth, extractHeight), ConvolutionExtractType.EdgeSoftBorder));
             }
             catch (Exception ex)
             {
@@ -646,6 +642,11 @@ namespace Game.Newt.Testers.Convolution
             try
             {
                 _mouseDownOn = null;
+
+                if (e.ChangedButton != MouseButton.Left)
+                {
+                    return;
+                }
 
                 Tuple<Border, int> clickedCtrl = GetSelectedKernel(e.OriginalSource);
                 if (clickedCtrl == null)
@@ -1313,45 +1314,6 @@ namespace Game.Newt.Testers.Convolution
             }
 
             return _origImageGrays;
-        }
-
-        private static void GetExtractRectangle(out int left, out int top, out int width, out int height, int imageWidth, int imageHeight, bool isSquare)
-        {
-            Random rand = StaticRandom.GetRandomForThread();
-
-            int minSize = Math.Min(imageWidth, imageHeight);
-            double extractSizeMin = minSize / 16d;
-            double extractSizeMax = minSize / 4d;
-
-            width = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
-
-            if (isSquare)
-            {
-                height = width;
-            }
-            else
-            {
-                height = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
-
-                double ratio = width.ToDouble() / height.ToDouble();
-
-                if (ratio > Math3D.GOLDENRATIO)
-                {
-                    width = (height * Math3D.GOLDENRATIO).ToInt_Round();
-                }
-                else
-                {
-                    ratio = height.ToDouble() / width.ToDouble();
-
-                    if (ratio > Math3D.GOLDENRATIO)
-                    {
-                        height = (width * Math3D.GOLDENRATIO).ToInt_Round();
-                    }
-                }
-            }
-
-            left = rand.Next(imageWidth - width);
-            top = rand.Next(imageHeight - height);
         }
 
         #endregion

@@ -157,6 +157,9 @@
     <Compile Include="Encog\EncogXOR.xaml.cs">
       <DependentUpon>EncogXOR.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Encog\FeatureRecognizer.xaml.cs">
+      <DependentUpon>FeatureRecognizer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Encog\MineralIdentifier.xaml.cs">
       <DependentUpon>MineralIdentifier.xaml</DependentUpon>
     </Compile>
@@ -378,6 +381,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Encog\EncogXOR.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\FeatureRecognizer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

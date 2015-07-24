@@ -75,10 +75,12 @@
   <ItemGroup>
     <Compile Include="DelegateComparer.cs" />
     <Compile Include="Extenders.cs" />
+    <Compile Include="MathInt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticRandom.cs" />
     <Compile Include="TimerCreateThread.cs" />
     <Compile Include="TokenGenerator.cs" />
+    <Compile Include="TypeConverters.cs" />
     <Compile Include="UtilityCore.cs" />
   </ItemGroup>
   <ItemGroup>
