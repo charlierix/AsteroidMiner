@@ -882,7 +882,7 @@ namespace Game.Newt.Testers.Encog
                 throw new ArgumentException("Must pass in a square image");
             }
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(size, size, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())

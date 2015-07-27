@@ -20,7 +20,7 @@ using Game.HelperClassesWPF;
 using Game.Newt.Testers.Convolution;
 using Microsoft.Win32;
 
-namespace Game.Newt.Testers.Encog
+namespace Game.Newt.Testers.Convolution
 {
     //TODO: Some convolutions should just be an outline (like a coffee mug)
     //Prove that setting the interior to zero will ignore any feautures in that area (logos/pictures on the mug)
@@ -42,14 +42,8 @@ namespace Game.Newt.Testers.Encog
             public double Percent { get; set; }
 
             public VectorInt ImageSize { get; set; }
-            //public int ImageWidth { get; set; }
-            //public int ImageHeight { get; set; }
 
             public RectInt Extract { get; set; }
-            //public int Left { get; set; }
-            //public int Top { get; set; }
-            //public int Width { get; set; }
-            //public int Height { get; set; }
         }
 
         #endregion
@@ -322,8 +316,10 @@ namespace Game.Newt.Testers.Encog
                     // Resize (for this tester, just force it to be square)
                     bitmap = UtilityWPF.ResizeImage(bitmap, IMAGESIZE, IMAGESIZE);
 
+                    string uniqueID = Guid.NewGuid().ToString();
+
                     // Copy to the working folder
-                    string filename = tag + " - " + Guid.NewGuid().ToString() + ".png";
+                    string filename = tag + " - " + uniqueID + ".png";
                     string fullFilename = System.IO.Path.Combine(_workingFolder, filename);
 
                     UtilityWPF.SaveBitmapPNG(bitmap, fullFilename);
@@ -332,6 +328,7 @@ namespace Game.Newt.Testers.Encog
                     FeatureRecognizer_Image entry = new FeatureRecognizer_Image()
                     {
                         Tag = tag,
+                        UniqueID = uniqueID,
                         Filename = filename,
                         ImageControl = GetTreeviewImageCtrl(bitmap),
                         Bitmap = bitmap,
@@ -435,14 +432,14 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                #region Prep
-
                 // Pick a random image
                 var image = GetSelectedImage();
                 if (image == null)
                 {
                     image = _images[StaticRandom.Next(_images.Count)];
                 }
+
+                #region Prefilter
 
                 // Figure out which pre filters to choose from
                 List<ConvolutionBase2D> prefilterCandidates = new List<ConvolutionBase2D>();
@@ -479,6 +476,10 @@ namespace Game.Newt.Testers.Encog
                     filter = prefilterCandidates[StaticRandom.Next(prefilterCandidates.Count)];
                 }
 
+                #endregion
+
+                #region Extract convolution
+
                 // Calculate largest image's size
                 VectorInt finalSize = new VectorInt()
                 {
@@ -494,9 +495,9 @@ namespace Game.Newt.Testers.Encog
                 // Extract rectangle
                 RectInt rect = Convolutions.GetExtractRectangle(finalSize, chkIsSquare.IsChecked.Value);
 
-                #endregion
-
                 List<FeatureRecognizer_Extract_Sub> subs = new List<FeatureRecognizer_Extract_Sub>();
+
+                #endregion
 
                 foreach (ReducedExtract size in GetExtractSizes(image.Bitmap, filter, rect))
                 {
@@ -526,92 +527,42 @@ namespace Game.Newt.Testers.Encog
                     // Extract
                     Convolution2D extractConv = imageConv.Extract(size.Extract, ConvolutionExtractType.EdgeSoftBorder);
 
-                    #region Result Extract
-
-                    // Apply the extract
-                    Convolution2D applied = Convolutions.Convolute(imageConv, extractConv);
-
-                    Tuple<VectorInt, double> brightestPoint = GetBrightestPoint(applied);
-
-                    // Sometimes the extract is small compared to the image, sometimes it's nearly the same size.  As the extract rect
-                    // gets bigger, the result conv gets smaller
-                    VectorInt analyzeSize = new VectorInt()
+                    // Generate results
+                    FeatureRecognizer_Extract_Sub sub = BuildExtractResult(imageConv, extractConv);
+                    if (sub != null)
                     {
-                        X = Math.Min(applied.Width, size.Extract.Width),
-                        Y = Math.Min(applied.Height, size.Extract.Height),
-                    };
-
-                    // Now extract the area around the brightest point.  This will be the ideal
-                    var results = new[] { analyzeSize / 2d, analyzeSize / 4d, analyzeSize / 8d }.
-                        Select(o => new { AnalyzeSize = o, Rectangle = GetResultRect(applied.Size, brightestPoint.Item1, o) }).
-                        Where(o => o.Rectangle != null).
-                        Select(o => new { o.AnalyzeSize, o.Rectangle, Convolution = applied.Extract(o.Rectangle.Item1, ConvolutionExtractType.Raw) }).
-                        Select(o => new { o.AnalyzeSize, o.Rectangle, o.Convolution, Weight = GetExtractWeight(o.Convolution, -brightestPoint.Item1, brightestPoint.Item2) }).
-                        //Where(o => o.Weight > .33d).      //TODO: The final code shouldn't bother with bad patches
-                        ToArray();
-
-                    #endregion
-
-                    if (results.Length == 0)
-                    {
-                        continue;
+                        subs.Add(sub);
                     }
-
-                    #region Store it
-
-                    subs.Add(new FeatureRecognizer_Extract_Sub()
-                    {
-                        InputWidth = imageConv.Width,
-                        InputHeight = imageConv.Height,
-
-                        Extract = extractConv,
-                        ExtractDNA = extractConv.ToDNA(),
-
-                        Results = results.Select(o =>
-                            new FeatureRecognizer_Extract_Result()
-                            {
-                                Offset = o.Rectangle.Item2,
-                                Rectangle = o.Rectangle.Item1,
-                                BrightestValue = brightestPoint.Item2,
-                                Weight = o.Weight,
-                                Result = o.Convolution,
-                                ResultDNA = o.Convolution.ToDNA(),
-                            }).
-                            ToArray(),
-                    });
-
-                    #endregion
                 }
 
-                // Determine filename
-                string filename = "extract - " + Guid.NewGuid().ToString() + ".xml";
-                string fullFilename = System.IO.Path.Combine(_workingFolder, filename);
+                // Finish
+                FinishBuildingExtract(filter, subs.ToArray(), image.UniqueID);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-                // Add it
-                FeatureRecognizer_Extract extract = new FeatureRecognizer_Extract()
+        private void Painter_SaveRequested(object sender, Convolution2D e)
+        {
+            try
+            {
+                ImageFilterPainter senderCast = sender as ImageFilterPainter;
+                if (senderCast == null)
                 {
-                    Extracts = subs.ToArray(),
-                    PreFilter = filter,
-                    Control = Convolutions.GetKernelThumbnail(subs[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu),
-                    Filename = filename,
-                };
-
-                if (extract.PreFilter != null && extract.PreFilter is Convolution2D)
-                {
-                    extract.PreFilterDNA_Single = ((Convolution2D)extract.PreFilter).ToDNA();
-                }
-                else if (extract.PreFilter != null && extract.PreFilter is ConvolutionSet2D)
-                {
-                    extract.PreFilterDNA_Set = ((ConvolutionSet2D)extract.PreFilter).ToDNA();
+                    MessageBox.Show("Expected sender to be the painter window", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
 
-                // Copy to the working folder
-                UtilityCore.SerializeToFile(fullFilename, extract);
+                FeatureRecognizer_Extract origExtract = senderCast.Tag as FeatureRecognizer_Extract;
+                if (origExtract == null)
+                {
+                    MessageBox.Show("Expected the painter to contain the original extract that the convolution came from", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
-                AddExtract(extract);
-
-                // Update the session file
-                SaveSession_SessionFile(_workingFolder);
+                BuildChangedExtract(origExtract, e);
             }
             catch (Exception ex)
             {
@@ -654,6 +605,46 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 ViewConvolution((Convolution2D)_extracts[selectedCtrl.Item2].Extracts[0].Extract);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ExtractEdit_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Tuple<Border, int> selectedCtrl = GetSelectedExtract(_extractContextMenu.PlacementTarget);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't identify extract", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                EditConvolution(_extracts[selectedCtrl.Item2]);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void RemoveSection_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Tuple<Border, int> selectedCtrl = GetSelectedExtract(_extractContextMenu.PlacementTarget);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't identify extract", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                FeatureRecognizer_Extract origExtract = _extracts[selectedCtrl.Item2];
+
+                Convolution2D conv = RemoveSection(origExtract.Extracts[0].Extract);
+
+                BuildChangedExtract(origExtract, conv);
             }
             catch (Exception ex)
             {
@@ -925,6 +916,64 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
+        private void BuildChangedExtract(FeatureRecognizer_Extract origExtract, Convolution2D newConv)
+        {
+            var image = _images.FirstOrDefault(o => o.UniqueID == origExtract.ImageID);
+            if (image == null)
+            {
+                throw new ApplicationException("Couldn't find the image that the original extract references");
+            }
+
+            // Image convolution
+            Convolution2D imageConv = ((BitmapCustomCachedBytes)UtilityWPF.ConvertToColorArray(image.Bitmap, false, Colors.Transparent)).ToConvolution();
+            if (origExtract.PreFilter != null)
+            {
+                imageConv = Convolutions.Convolute(imageConv, origExtract.PreFilter);
+            }
+
+            //NOTE: The original extract contains multiple sizes (reductions of the largest one).  But since this convolution is derived from
+            //the largest extract, it would be difficult to reduce.  So only keeping the highest resolution image
+            FeatureRecognizer_Extract_Sub resultPatch = BuildExtractResult(imageConv, newConv);
+
+            FinishBuildingExtract(origExtract.PreFilter, new[] { resultPatch }, origExtract.ImageID);
+        }
+        private void FinishBuildingExtract(ConvolutionBase2D filter, FeatureRecognizer_Extract_Sub[] subs, string imageID)
+        {
+            string uniqueID = Guid.NewGuid().ToString();
+
+            // Determine filename
+            string filename = "extract - " + uniqueID + ".xml";
+            string fullFilename = System.IO.Path.Combine(_workingFolder, filename);
+
+            // Add it
+            FeatureRecognizer_Extract extract = new FeatureRecognizer_Extract()
+            {
+                Extracts = subs,
+                PreFilter = filter,
+                Control = Convolutions.GetKernelThumbnail(subs[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu),
+                ImageID = imageID,
+                UniqueID = uniqueID,
+                Filename = filename,
+            };
+
+            if (extract.PreFilter != null && extract.PreFilter is Convolution2D)
+            {
+                extract.PreFilterDNA_Single = ((Convolution2D)extract.PreFilter).ToDNA();
+            }
+            else if (extract.PreFilter != null && extract.PreFilter is ConvolutionSet2D)
+            {
+                extract.PreFilterDNA_Set = ((ConvolutionSet2D)extract.PreFilter).ToDNA();
+            }
+
+            // Copy to the working folder
+            UtilityCore.SerializeToFile(fullFilename, extract);
+
+            AddExtract(extract);
+
+            // Update the session file
+            SaveSession_SessionFile(_workingFolder);
+        }
+
         private void AddImage(FeatureRecognizer_Image image)
         {
             _images.Add(image);
@@ -1014,6 +1063,20 @@ namespace Game.Newt.Testers.Encog
             _childWindows.Add(viewer);
 
             viewer.ViewKernel(convolution);
+
+            viewer.Show();
+        }
+        private void EditConvolution(FeatureRecognizer_Extract extract)
+        {
+            ImageFilterPainter viewer = new ImageFilterPainter();
+
+            viewer.Closed += Child_Closed;
+            viewer.SaveRequested += Painter_SaveRequested;
+
+            _childWindows.Add(viewer);
+
+            viewer.Tag = extract;
+            viewer.EditKernel((Convolution2D)extract.Extracts[0].Extract);      // give it the highest resolution one
 
             viewer.Show();
         }
@@ -1343,11 +1406,13 @@ namespace Game.Newt.Testers.Encog
         private static Border GetResultPositionsImage(IEnumerable<Tuple<VectorInt, double>> hits, VectorInt patchSize, int returnSize)
         {
             const int SIZE = 150;
-            const double RADIUS = SIZE * .05;
+            const double RADIUS_MAX = SIZE * .1;
+            const double RADIUS_MIN = RADIUS_MAX * .25;
+            const double MINOPACITY = .1;
 
             #region Bitmap
 
-            RenderTargetBitmap bitmap = new RenderTargetBitmap(SIZE, SIZE, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(SIZE, SIZE, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())
@@ -1360,9 +1425,11 @@ namespace Game.Newt.Testers.Encog
                         Y = UtilityCore.GetScaledValue(0, SIZE, 0, patchSize.Y, hit.Item1.Y),
                     };
 
-                    double radius = UtilityCore.GetScaledValue(0, RADIUS, 0, 1, hit.Item2);
+                    double radius = UtilityCore.GetScaledValue(RADIUS_MIN, RADIUS_MAX, 0, 1, hit.Item2);
+                    double alphaPercent = UtilityCore.GetScaledValue(MINOPACITY, 1, 0, 1, hit.Item2);
+                    Color color = UtilityWPF.AlphaBlend(Colors.Black, Colors.Transparent, alphaPercent);
 
-                    ctx.DrawEllipse(Brushes.Black, null, center, radius, radius);
+                    ctx.DrawEllipse(new SolidColorBrush(color), null, center, radius, radius);
                 }
             }
 
@@ -1427,6 +1494,75 @@ namespace Game.Newt.Testers.Encog
         }
 
         /// <summary>
+        /// This applies the extract to the image, and returns some result patches of the brightest hit
+        /// </summary>
+        /// <param name="image">This is the image after filter is applied</param>
+        /// <param name="extract">This is the extract to apply to the image</param>
+        private static FeatureRecognizer_Extract_Sub BuildExtractResult(Convolution2D image, Convolution2D extract)
+        {
+            // Apply the extract
+            Convolution2D applied = Convolutions.Convolute(image, extract);
+
+            Tuple<VectorInt, double> brightestPoint = applied.GetMax();
+
+            // Sometimes the extract is small compared to the image, sometimes it's nearly the same size.  As the extract rect
+            // gets bigger, the result conv gets smaller
+            VectorInt analyzeSize = new VectorInt()
+            {
+                X = Math.Min(applied.Width, extract.Width),
+                Y = Math.Min(applied.Height, extract.Height),
+            };
+
+            VectorInt[] sizes = new[]
+            {
+                analyzeSize / 2d,
+                analyzeSize / 4d,
+                analyzeSize / 8d,
+            };
+
+            // Now extract the area around the brightest point.  This will be the ideal
+            var results = sizes.
+                Select(o => new { AnalyzeSize = o, Rectangle = GetResultRect(applied.Size, brightestPoint.Item1, o) }).
+                Where(o => o.Rectangle != null).
+                Select(o =>
+                {
+                    var convolution = applied.Extract(o.Rectangle.Item1, ConvolutionExtractType.Raw);
+                    double score = Convolutions.GetExtractScore(convolution, brightestPoint.Item1 - o.Rectangle.Item1.Position, brightestPoint.Item2);
+
+                    return new { o.AnalyzeSize, o.Rectangle, Convolution = convolution, Score = score };
+                }).
+                Where(o => o.Score > 0).
+                ToArray();
+
+            if (results.Length == 0)
+            {
+                return null;
+            }
+
+            // Exit Function
+            return new FeatureRecognizer_Extract_Sub()
+            {
+                InputWidth = image.Width,
+                InputHeight = image.Height,
+
+                Extract = extract,
+                ExtractDNA = extract.ToDNA(),
+
+                Results = results.Select(o =>
+                    new FeatureRecognizer_Extract_Result()
+                    {
+                        Offset = o.Rectangle.Item2,
+                        Rectangle = o.Rectangle.Item1,
+                        BrightestValue = brightestPoint.Item2,
+                        Score = o.Score,
+                        Result = o.Convolution,
+                        ResultDNA = o.Convolution.ToDNA(),
+                    }).
+                    ToArray(),
+            };
+        }
+
+        /// <summary>
         /// Find the brightest spot, then find the next brightest spot that is outside the result rectangle, etc.
         /// Stop when that value is less than some % of original
         /// </summary>
@@ -1438,13 +1574,13 @@ namespace Game.Newt.Testers.Encog
 
             // The compare patches are sorted descending by size, so the largest patch will also be sure to contain the brightest value (the
             // brightest value should be the same for all, because they are centered on it)
-            double minBrightness = comparePatches[0].BrightestValue * .5;
-            double minWeight = comparePatches[0].Weight * .5;
+            double minBrightness = comparePatches[0].BrightestValue * .33;
+            double minWeight = comparePatches[0].Score * .5;
 
             while (true)
             {
                 // Find the brightest point in the image passed in
-                var brightest = GetBrightestPoint(image, previous);
+                var brightest = image.GetMax(previous);
                 if (brightest == null || brightest.Item2 < minBrightness)
                 {
                     break;
@@ -1455,29 +1591,28 @@ namespace Game.Newt.Testers.Encog
                 foreach (FeatureRecognizer_Extract_Result comparePatch in comparePatches)
                 {
                     RectInt patchRect = new RectInt(brightest.Item1 + comparePatch.Offset, comparePatch.Result.Size);
+                    patchRect = RectInt.Intersect(patchRect, new RectInt(0, 0, image.Width, image.Height)).Value;
 
                     previous.Add(patchRect);
 
-                    if (patchRect.X < 0 || patchRect.Y < 0 || patchRect.Right >= image.Width || patchRect.Bottom >= image.Height)
-                    {
-                        //TODO: reduce the rectangle and compare patch
-                        continue;
-                    }
-
                     Convolution2D patchConv = image.Extract(patchRect, ConvolutionExtractType.Raw);
 
+                    VectorInt brightestPos = brightest.Item1 - patchRect.Position;
+
                     // Initial check (pure algorithm)
-                    double weight1 = GetExtractWeight(patchConv, brightest.Item1, comparePatch.BrightestValue);        // this method should be pure algorithm
+                    double weight1 = Convolutions.GetExtractScore(patchConv, brightestPos, comparePatch.BrightestValue);        // this method should be pure algorithm
                     if (weight1 < minWeight)
                     {
                         patches.Add(new ApplyResult_Match(false, weight1, patchConv));
                         continue;
                     }
 
-                    // Second check (compare with the original patch)
-                    double weight2 = GetExtractWeight(patchConv, brightest.Item1, comparePatch.BrightestValue, comparePatch.Result, -comparePatch.Offset);       // this method should subtract the two patches and compare the difference
+                    patches.Add(new ApplyResult_Match(true, weight1, patchConv));
 
-                    patches.Add(new ApplyResult_Match(true, weight2, patchConv));
+                    // Second check (compare with the original patch)
+                    //double weight2 = Convolutions.GetExtractScore(patchConv, brightestPos, comparePatch.Result, -comparePatch.Offset, comparePatch.BrightestValue);       // this method should subtract the two patches and compare the difference
+
+                    //patches.Add(new ApplyResult_Match(true, weight2, patchConv));
                 }
 
                 retVal.Add(Tuple.Create(brightest.Item1, patches.ToArray()));
@@ -1645,79 +1780,204 @@ namespace Game.Newt.Testers.Encog
             return Tuple.Create(rect.Value, offset);
         }
 
-        private static Tuple<VectorInt, double> GetBrightestPoint(Convolution2D conv)
-        {
-            double brightest = double.MinValue;
-            int index = -1;
+        #endregion
 
-            double[] values = conv.Values;
+        private static Convolution2D RemoveSection(Convolution2D conv)
+        {
+            //Convolution2D mask = GetMask_ScatterShot(conv.Width, conv.Height);
+            Convolution2D mask = GetMask_Ellipse(conv.Width, conv.Height, StaticRandom.Next(1, 4));
+
+            double[] values = new double[conv.Values.Length];
 
             for (int cntr = 0; cntr < values.Length; cntr++)
             {
-                if (values[cntr] > brightest)
+                values[cntr] = conv.Values[cntr] * mask.Values[cntr];
+            }
+
+            values = Convolutions.ToUnit(values);
+
+            return new Convolution2D(values, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder);
+        }
+
+        /// <summary>
+        /// This returns a 0 to 1 convolution.  This should be used as an opacity mask, multiply another convolution's values
+        /// by each of mask's values
+        /// </summary>
+        /// <remarks>
+        /// TODO: Take in settings to fine tune the shapes
+        /// </remarks>
+        private static Convolution2D GetMask_ScatterShot(int width, int height, double percentKeep = .25)
+        {
+            //TODO: Create a white bitmap and draw random semitransparent black shapes on it
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double[] values = Enumerable.Range(0, width * height).
+                Select(o => rand.NextDouble() < percentKeep ? 1d : rand.NextDouble()).
+                ToArray();
+
+            return new Convolution2D(values, width, height, false);
+        }
+        private static Convolution2D GetMask_Ellipse(int width, int height, int count = 1)
+        {
+            const double POWER = 2d;        // this gives larger probability of smaller values
+            const double MINPERCENT = .05;
+            const double MAXPERCENT = .8d;
+            const double MARGIN = .3;
+            const double MAXCENTERPERCENT = 1.2;
+            const double MAXASPECT = Math3D.GOLDENRATIO * 3d;
+
+            Point center = new Point(width / 2d, height / 2d);
+
+            double avgSize = Math3D.Avg(width, height);
+            double minRadius = avgSize * MINPERCENT;
+            double maxRadius = avgSize * MAXPERCENT;
+
+            double marginX = width * MARGIN;
+            double marginY = height * MARGIN;
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                for (int cntr = 0; cntr < count; cntr++)
                 {
-                    brightest = values[cntr];
-                    index = cntr;
+                    #region Position/Radius
+
+                    Point position = new Point();
+                    double radiusX = 0d;
+                    double radiusY = 0d;
+
+                    // Keep trying until the ellipse is over the image
+                    while (true)
+                    {
+                        position = center + new Vector(Math3D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math3D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
+
+                        radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
+                        radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
+
+                        if(radiusX > radiusY)
+                        {
+                            double aspect = radiusX / radiusY;
+                            if(aspect > MAXASPECT)
+                            {
+                                radiusY = radiusX / MAXASPECT;
+                            }
+                        }
+                        else
+                        {
+                            double aspect = radiusY / radiusX;
+                            if (aspect > MAXASPECT)
+                            {
+                                radiusX = radiusY / MAXASPECT;
+                            }
+                        }
+
+                        if (position.X + radiusX < marginX)
+                        {
+                            continue;
+                        }
+                        else if (position.X - radiusX > width - marginX)
+                        {
+                            continue;
+                        }
+                        else if (position.Y + radiusY < marginY)
+                        {
+                            continue;
+                        }
+                        else if (position.Y - radiusY > height - marginY)
+                        {
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    #endregion
+                    #region Opacity - FAIL
+
+                    //TODO: Instead of subtracting from 255, just change the inputs to the rand statements
+
+                    ////double fromTransparency = rand.NextDouble(.5);
+                    ////double toTransparency = rand.NextDouble(.7, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    ////double fromTransparency = rand.NextDouble(.1);
+                    ////double toTransparency = rand.NextDouble(.3, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    //double fromTransparency = rand.NextDouble(.3);
+                    //double toTransparency = rand.NextDouble(.85, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    //double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    //byte fromAlpha = Convert.ToByte(255 - (fromTransparency * 255).ToInt_Round());
+                    //byte midAlpha = Convert.ToByte(255 - (midTransparency * 255).ToInt_Round());
+                    //byte toAlpha = toTransparency > 1d ? (byte)0 : Convert.ToByte(255 - (toTransparency * 255).ToInt_Round());
+
+                    ////double fromOffset = rand.NextDouble(0, .08);
+                    ////double toOffset = rand.NextDouble(.8, 1.5);
+                    ////double midOffset = rand.NextDouble(.1, .75);
+
+                    //double fromOffset = rand.NextDouble(0, .4);
+                    //double toOffset = rand.NextDouble(.95, 1.05);
+                    //double midOffset = rand.NextDouble(fromOffset, toOffset);
+
+                    //RadialGradientBrush brush = new RadialGradientBrush()
+                    //{
+                    //    //GradientOrigin = new Point(.5, .5),
+                    //    RadiusX = radiusY,
+                    //    RadiusY = radiusY,
+                    //};
+
+                    ////fromAlpha = (byte)255;
+                    ////midAlpha = (byte)128;
+                    ////toAlpha = (byte)0;
+
+                    //fromAlpha = (byte)0;
+                    //midAlpha = (byte)255;
+                    //toAlpha = (byte)0;
+
+                    //fromOffset = 0;
+                    //midOffset = .5;
+                    //toOffset = 1;
+
+
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(fromAlpha, 255, 255, 255), fromOffset));
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(midAlpha, 255, 255, 255), midOffset));
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(toAlpha, 255, 255, 255), toOffset));
+
+                    ////<RadialGradientBrush>
+                    ////    <RadialGradientBrush.GradientStops>
+                    ////        <GradientStop Offset="0" Color="#FF000000"/>
+                    ////        <GradientStop Offset=".7" Color="#80000000"/>
+                    ////        <GradientStop Offset="1" Color="#00000000"/>
+                    ////    </RadialGradientBrush.GradientStops>
+                    ////</RadialGradientBrush>
+
+                    #endregion
+
+                    //TODO: May want to randomize the alphas a bit (or get the failed region working with 3 stops)
+                    RadialGradientBrush brush = new RadialGradientBrush(Color.FromArgb(255, 255, 255, 255), Color.FromArgb(128, 255, 255, 255));
+
+                    ctx.DrawEllipse(brush, null, position, radiusX, radiusY);
                 }
             }
 
-            int y = index / conv.Width;
-            int x = index - (y * conv.Width);
+            dv.Transform = new RotateTransform(rand.NextDouble(360), center.X, center.Y);
 
-            return Tuple.Create(new VectorInt(x, y), brightest);
-        }
-        private static Tuple<VectorInt, double> GetBrightestPoint(Convolution2D conv, IEnumerable<RectInt> ignore)
-        {
-            double brightest = double.MinValue;
-            int bX = -1;
-            int bY = -1;
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(width, height, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
+            bitmap.Render(dv);
 
-            double[] values = conv.Values;
+            // Convert to a convolution
+            Convolution2D retVal = UtilityWPF.ConvertToConvolution(bitmap, 1d);
 
-            //TODO: Instead of doing a test for each pixel, get a set of patches that are unblocked
-            //Tuple<AxisFor, AxisFor> openPatches = 
+            double test = retVal.Values.Max();
 
-            for (int y = 0; y < conv.Height; y++)
-            {
-                int offsetY = y * conv.Width;
+            //NOTE: It's easier to let the background default to black, and draw white shapes on it.  Now it needs to be reversed
+            retVal = Convolutions.Invert(retVal, 1d);
 
-                for (int x = 0; x < conv.Width; x++)
-                {
-                    if (ignore.Any(o => o.Contains(x, y)))
-                    {
-                        continue;
-                    }
-
-                    if (values[offsetY + x] > brightest)
-                    {
-                        brightest = values[offsetY + x];
-                        bX = x;
-                        bY = y;
-                    }
-                }
-            }
-
-            return Tuple.Create(new VectorInt(bX, bY), brightest);
-        }
-
-        #endregion
-
-        //TODO: Move these to convolutions
-        private static double GetExtractWeight(Convolution2D patch, VectorInt brightestPoint, double compareValue)
-        {
-            if (patch.Width < 5 || patch.Height < 5)
-            {
-                return 0;
-            }
-
-            //TODO: Finish this
-            return 1;
-        }
-        private static double GetExtractWeight(Convolution2D patch, VectorInt brightestPoint, double compareValue, Convolution2D compareTo, VectorInt comparePoint)
-        {
-            //TODO: Subtract patches?
-            //TODO: Align points before subtracting? ---- shouldn't need to.  The rectanges were extracted around the brightest points
-            return 1;
+            return retVal;
         }
     }
 
@@ -1743,6 +2003,14 @@ namespace Game.Newt.Testers.Encog
     public class FeatureRecognizer_Image
     {
         public string Tag { get; set; }
+
+        /// <summary>
+        /// This is a guid, and should be the same as what's in the filename
+        /// </summary>
+        /// <remarks>
+        /// Extracts need a way to reference images, so this is the value that they'll store
+        /// </remarks>
+        public string UniqueID { get; set; }
 
         public string Filename { get; set; }
 
@@ -1771,6 +2039,16 @@ namespace Game.Newt.Testers.Encog
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIElement Control { get; set; }
+
+        /// <summary>
+        /// This is the image that this was created from
+        /// </summary>
+        public string ImageID { get; set; }
+
+        /// <summary>
+        /// This is the same as what's in the filename, and can be used to reference this instance
+        /// </summary>
+        public string UniqueID { get; set; }
 
         public string Filename { get; set; }
     }
@@ -1818,7 +2096,7 @@ namespace Game.Newt.Testers.Encog
         /// <summary>
         /// This is the score given from the pure algorithm
         /// </summary>
-        public double Weight { get; set; }
+        public double Score { get; set; }
 
         /// <summary>
         /// This holds a snippet of what to expect.  Subtract this from your image, and if the values are near zero, it's a match

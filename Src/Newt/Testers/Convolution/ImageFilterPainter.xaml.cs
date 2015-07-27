@@ -132,11 +132,6 @@ namespace Game.Newt.Testers.Convolution
             /// </summary>
             public List<Tuple<int, Visual3D>> Selected = new List<Tuple<int, Visual3D>>();
 
-            //private int _selectedIndex = -1;
-            //public int SelectedIndex { get { return _selectedIndex; } set { _selectedIndex = value; } }
-
-            //public Visual3D SelectedVisual { get; set; }
-
             public void UpdateColors(bool isZeroToOne, bool isNegativeRedBlue)
             {
                 double min = this.Bars.Min(o => o.Height);
@@ -453,6 +448,70 @@ namespace Game.Newt.Testers.Convolution
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void txtWidth_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (!_initialized || _isProgramaticallyChangingSettings)
+                {
+                    return;
+                }
+
+                int width;
+                if (!int.TryParse(txtWidth.Text, out width))
+                {
+                    return;
+                }
+
+                if (e.Key == Key.Up)
+                {
+                    txtWidth.Text = (width + 1).ToString();
+                }
+                else if (e.Key == Key.Down)
+                {
+                    if (width > 1)
+                    {
+                        txtWidth.Text = (width - 1).ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void txtHeight_PreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            try
+            {
+                if (!_initialized || _isProgramaticallyChangingSettings)
+                {
+                    return;
+                }
+
+                int height;
+                if (!int.TryParse(txtHeight.Text, out height))
+                {
+                    return;
+                }
+
+                if (e.Key == Key.Up)
+                {
+                    txtHeight.Text = (height + 1).ToString();
+                }
+                else if (e.Key == Key.Down)
+                {
+                    if (height > 1)
+                    {
+                        txtHeight.Text = (height - 1).ToString();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void Range_Checked(object sender, RoutedEventArgs e)
         {
@@ -563,22 +622,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                //TODO: Use AxisFor
-
-                for (int y = 0; y < _height; y++)
-                {
-                    int yIndex = y * _width;
-
-                    for (int x = 0; x < _width - 1; x++)
-                    {
-                        _values[yIndex + x] = _values[yIndex + x + 1];
-                    }
-
-                    _values[yIndex + _width - 1] = 0;
-                }
-
-                RebuildBars();
-                PixelValueChanged();
+                TranslateValues(new AxisFor(Axis.Y, 0, _height - 1), new AxisFor(Axis.X, 0, _width - 1));
             }
             catch (Exception ex)
             {
@@ -589,20 +633,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                for (int y = 0; y < _height; y++)
-                {
-                    int yIndex = y * _width;
-
-                    for (int x = _width - 1; x > 0; x--)
-                    {
-                        _values[yIndex + x] = _values[yIndex + x - 1];
-                    }
-
-                    _values[yIndex] = 0;
-                }
-
-                RebuildBars();
-                PixelValueChanged();
+                TranslateValues(new AxisFor(Axis.Y, 0, _height - 1), new AxisFor(Axis.X, _width - 1, 0));
             }
             catch (Exception ex)
             {
@@ -613,26 +644,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                for (int y = 0; y < _height - 1; y++)
-                {
-                    int yIndex0 = y * _width;
-                    int yIndex1 = (y + 1) * _width;
-
-                    for (int x = 0; x < _width; x++)
-                    {
-                        _values[yIndex0 + x] = _values[yIndex1 + x];
-                    }
-                }
-
-                int yIndex = (_height - 1) * _width;
-
-                for (int x = 0; x < _width; x++)
-                {
-                    _values[yIndex + x] = 0;
-                }
-
-                RebuildBars();
-                PixelValueChanged();
+                TranslateValues(new AxisFor(Axis.X, 0, _width - 1), new AxisFor(Axis.Y, 0, _height - 1));
             }
             catch (Exception ex)
             {
@@ -643,24 +655,30 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                for (int y = _height - 1; y > 0; y--)
-                {
-                    int yIndex0 = y * _width;
-                    int yIndex1 = (y - 1) * _width;
+                TranslateValues(new AxisFor(Axis.X, 0, _width - 1), new AxisFor(Axis.Y, _height - 1, 0));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
-                    for (int x = 0; x < _width; x++)
-                    {
-                        _values[yIndex0 + x] = _values[yIndex1 + x];
-                    }
-                }
-
-                for (int x = 0; x < _width; x++)
-                {
-                    _values[x] = 0;
-                }
-
-                RebuildBars();
-                PixelValueChanged();
+        private void Reduce_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                MultiplySelectedValues(.9);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Increase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                MultiplySelectedValues(1.1);
             }
             catch (Exception ex)
             {
@@ -672,19 +690,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                bool isNegPos = radRangeNegPos.IsChecked.Value;
-
-                for (int cntr = 0; cntr < _values.Length; cntr++)
-                {
-                    if (isNegPos)
-                    {
-                        _values[cntr] *= -1d;
-                    }
-                    else
-                    {
-                        _values[cntr] = .5 - (_values[cntr] - .5);
-                    }
-                }
+                _values = Convolutions.Invert(_values, radRangeNegPos.IsChecked.Value, 1);
 
                 RebuildBars();
                 PixelValueChanged();
@@ -815,26 +821,7 @@ namespace Game.Newt.Testers.Convolution
 
                 if (_isDraggingMouse && overBar != null)
                 {
-                    #region Selected/Unselect Bar
-
-                    bool isAlreadySelected = _bars.Selected.Any(o => o.Item1 == overBar.Index);
-
-                    if (_isDragRemoving)
-                    {
-                        if (isAlreadySelected)
-                        {
-                            RemoveSelected(overBar);
-                        }
-                    }
-                    else
-                    {
-                        if (!isAlreadySelected)
-                        {
-                            AddSelected(overBar);
-                        }
-                    }
-
-                    #endregion
+                    SelectUnselect(overBar);
                 }
 
                 #region Hover Visual
@@ -907,13 +894,11 @@ namespace Game.Newt.Testers.Convolution
                 bool isAlreadySelected = _bars.Selected.Any(o => o.Item1 == overBar.Index);
                 if (_isCtrlPressed && !_isShiftPressed && isAlreadySelected)
                 {
-                    RemoveSelected(overBar);
                     _isDragRemoving = true;
                 }
-                else if (!isAlreadySelected)
-                {
-                    AddSelected(overBar);
-                }
+
+                // Commit selection
+                SelectUnselect(overBar);
             }
             catch (Exception ex)
             {
@@ -1021,6 +1006,23 @@ namespace Game.Newt.Testers.Convolution
             _isProgramaticallyChangingSettings = false;
         }
 
+        private void MultiplySelectedValues(double mult)
+        {
+            foreach (var selected in _bars.Selected)
+            {
+                var bar = _bars.Bars[selected.Item1];
+
+                double height = bar.Height * mult;
+
+                bar.Height = height;
+                _values[bar.Index] = height;
+            }
+
+            _bars.UpdateColors(radRangeZeroPos.IsChecked.Value, chkIsRedBlue.IsChecked.Value);
+
+            PixelValueChanged();
+        }
+
         #endregion
 
         #region Private Methods
@@ -1056,6 +1058,23 @@ namespace Game.Newt.Testers.Convolution
             double dist = Math3D.Avg(_axis.HalfX, _axis.HalfY) * 3;
             Vector3D newPos = _camera.Position.ToVector().ToUnit() * dist;
             _camera.Position = newPos.ToPoint();
+        }
+
+        private void SelectUnselect(Bar3DProps overBar)
+        {
+            foreach (Bar3DProps bar in GetSurroundingBars(overBar, trkBrushSize.Value.ToInt_Round()))
+            {
+                bool isSelected = _bars.Selected.Any(o => o.Item1 == bar.Index);
+
+                if (_isDragRemoving && isSelected)
+                {
+                    RemoveSelected(bar);
+                }
+                else if (!_isDragRemoving && !isSelected)
+                {
+                    AddSelected(bar);
+                }
+            }
         }
 
         private void ClearSelected()
@@ -1130,6 +1149,49 @@ namespace Game.Newt.Testers.Convolution
             grdSettings3D.IsEnabled = false;
 
             _isProgramaticallyChangingSettings = false;
+        }
+
+        /// <summary>
+        /// Shifts values (the new margins get zero)
+        /// </summary>
+        /// <param name="sweep">The other axis (if x's are getting shifted, then do it for each y)</param>
+        /// <param name="shift">The row/column that has values changing. ex: [x] = [x+1]</param>
+        private void TranslateValues(AxisFor sweep, AxisFor shift)
+        {
+            int amount;
+            if (!int.TryParse(txtMoveAmount.Text, out amount))
+            {
+                amount = 1;
+            }
+
+            amount *= shift.IsPos ? 1 : -1;
+
+            foreach (int sweepIndex in sweep.Iterate())
+            {
+                foreach (int shiftIndex in shift.Iterate())
+                {
+                    int toX = -1;
+                    int toY = -1;
+                    sweep.Set2DIndex(ref toX, ref toY, sweepIndex);
+                    shift.Set2DIndex(ref toX, ref toY, shiftIndex);
+
+                    int fromX = -1;
+                    int fromY = -1;
+                    sweep.Set2DIndex(ref fromX, ref fromY, sweepIndex);
+                    shift.Set2DIndex(ref fromX, ref fromY, shiftIndex + amount);
+
+                    double value = 0;
+                    if (fromX >= 0 && fromX < _width && fromY >= 0 && fromY < _height)
+                    {
+                        value = _values[fromY * _width + fromX];
+                    }
+
+                    _values[toY * _width + toX] = value;
+                }
+            }
+
+            RebuildBars();
+            PixelValueChanged();
         }
 
         private void RotateValues(bool isClockwise, bool is90, bool isEven45Extra)
@@ -1670,6 +1732,47 @@ namespace Game.Newt.Testers.Convolution
             }
 
             return null;
+        }
+
+        private Bar3DProps[] GetSurroundingBars(Bar3DProps bar, int brushSize, bool isCircle = true)
+        {
+            int half = brushSize / 2;
+            if (brushSize % 2 == 0)
+            {
+                half--;     // without this, the box will be shifted up/left one more than is intuitive (the rectange will still be the same size)
+            }
+
+            Point center = brushSize % 2 == 0 ?
+                new Point(bar.X + 1, bar.Y + 1) :       // the center of the circle sits at the corner one pixel over
+                new Point(bar.X + .5, bar.Y + .5);      // the center of the circle sits at the center of a pixel (pixel width of one)
+            double radiusSquared = (brushSize / 2d) * (brushSize / 2d);
+
+            RectInt rect = RectInt.Intersect(new RectInt(bar.X - half, bar.Y - half, brushSize, brushSize), new RectInt(_width, _height)).Value;
+
+            List<Bar3DProps> retVal = new List<Bar3DProps>();
+
+            for (int y = rect.Top; y < rect.Bottom; y++)
+            {
+                int offsetY = y * _width;
+
+                for (int x = rect.Left; x < rect.Right; x++)
+                {
+                    if (isCircle && (center - new Point(x + .5, y + .5)).LengthSquared > radiusSquared)
+                    {
+                        continue;
+                    }
+
+                    Bar3DProps barAdd = _bars.Bars[offsetY + x];
+                    if (barAdd.X != x || barAdd.Y != y)
+                    {
+                        throw new ApplicationException("Bar isn't where it should be");
+                    }
+
+                    retVal.Add(barAdd);
+                }
+            }
+
+            return retVal.ToArray();
         }
 
         #endregion

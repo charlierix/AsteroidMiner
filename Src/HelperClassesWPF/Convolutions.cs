@@ -319,6 +319,49 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        public static Convolution2D Invert(Convolution2D convolution, double? maxValue = null)
+        {
+            double[] newValues = Invert(convolution.Values, convolution.IsNegPos, maxValue);
+            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+        }
+        /// <summary>
+        /// This will invert the values
+        /// </summary>
+        /// <param name="isNegPos">
+        /// True: the values will just be multiplied by -1
+        /// False: the values go from 0 to maxValue, and will be flipped relative to the halfway point
+        /// </param>
+        /// <param name="maxValue">
+        /// Only needed when isNegPos is false.  If left null, the max will be calculated.
+        /// NOTE: If you know what the max should be, pass it in.  Otherwise there's a good chance the the current max is less than that, and the cells will be flipped around a halfway point less than they should be
+        /// </param>
+        public static double[] Invert(double[] values, bool isNegPos, double? maxValue = null)
+        {
+            double[] retVal = new double[values.Length];
+
+            if (isNegPos)
+            {
+                // Has negative
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    retVal[cntr] = values[cntr] * -1d;
+                }
+            }
+            else
+            {
+                // Zero to Max
+                double actualMaxValue = maxValue ?? values.Max();
+                double halfMax = actualMaxValue / 2d;
+
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    retVal[cntr] = halfMax - (values[cntr] - halfMax);
+                }
+            }
+
+            return retVal;
+        }
+
         //TODO: Convolution2D GetExpanded(Convolution2D conv, int toWidth, int toHeight)
         //The border should be some kind of blur of the outermost pixels (the from convo will be centered onto the destination)
 
@@ -762,8 +805,6 @@ namespace Game.HelperClassesWPF
             Random rand = StaticRandom.GetRandomForThread();
 
             int minSize = Math.Min(imageSize.X, imageSize.Y);
-            //double extractSizeMin = minSize / 16d;
-            //double extractSizeMax = minSize / 4d;
             double extractSizeMin = minSize * .03;
             double extractSizeMax = minSize * .97;
 
@@ -822,6 +863,86 @@ namespace Game.HelperClassesWPF
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// This looks at a patch that is extracted from the result of an image and a convolution.  This patch should be a relatively
+        /// small rectangle centered around a bright spot (convolution.GetMax()).  This returns a score from 0 to 1.  This is looking
+        /// for a peak that drops off (ideally a very large difference between the max pixel and min pixel)
+        /// </summary>
+        /// <remarks>
+        /// TODO: May want another overload that takes a sample ideal patch to compare to:
+        ///     Subtract patches, compare differences
+        ///         line up the brightest point before subtracting
+        ///         allow larger differences farther away from center
+        /// </remarks>
+        public static double GetExtractScore(Convolution2D patch, VectorInt brightestPoint, double? idealBrightness = null)
+        {
+            const double PERCENT_POS_MIN = .25;
+            const double PERCENT_POS_MAX = .75;
+
+            const double PERCENT_NEG_MIN = -.25;
+            const double PERCENT_NEG_MAX = .5;
+
+            if (patch.Width < 3 || patch.Height < 3)
+            {
+                return 0;
+            }
+
+            double max = patch[brightestPoint];
+
+            // Get the min.  If not enough difference from max, then return zero
+            var min = patch.GetMin();
+
+            double percent = min.Item2 / max;
+
+            double retVal = 0;
+
+            if (patch.IsNegPos)
+            {
+                #region Neg/Pos
+
+                if (percent < PERCENT_NEG_MIN)
+                {
+                    retVal = 1;
+                }
+                else if (percent < PERCENT_NEG_MAX)
+                {
+                    retVal = UtilityCore.GetScaledValue(1, 0, PERCENT_NEG_MIN, PERCENT_NEG_MAX, percent);
+                }
+                else
+                {
+                    return 0;
+                }
+
+                #endregion
+            }
+            else
+            {
+                #region Positive
+
+                if (percent < PERCENT_POS_MIN)
+                {
+                    retVal = 1;
+                }
+                else if (percent < PERCENT_POS_MAX)
+                {
+                    retVal = UtilityCore.GetScaledValue(1, 0, PERCENT_POS_MIN, PERCENT_POS_MAX, percent);
+                }
+                else
+                {
+                    return 0;
+                }
+
+                #endregion
+            }
+
+            if (idealBrightness == null || max >= idealBrightness.Value)
+            {
+                return retVal;
+            }
+
+            return retVal * (max / idealBrightness.Value);
         }
 
         #endregion
@@ -1419,6 +1540,8 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
+        #region Public Properties
+
         /// <summary>
         /// Range is either 0 to 1, or -1 to 1 (depends on this.IsNegPos)
         /// </summary>
@@ -1473,6 +1596,17 @@ namespace Game.HelperClassesWPF
                 this.Values[(y * this.Width) + x] = value;
             }
         }
+        public double this[VectorInt pos]
+        {
+            get
+            {
+                return this.Values[(pos.Y * this.Width) + pos.X];
+            }
+            set
+            {
+                this.Values[(pos.Y * this.Width) + pos.X] = value;
+            }
+        }
 
         public VectorInt Size
         {
@@ -1481,6 +1615,8 @@ namespace Game.HelperClassesWPF
                 return new VectorInt(this.Width, this.Height);
             }
         }
+
+        #endregion
 
         #region Public Methods
 
@@ -1499,61 +1635,145 @@ namespace Game.HelperClassesWPF
 
         public Convolution2D Extract(RectInt rect, ConvolutionExtractType extractType)
         {
+            bool isNegPos = this.IsNegPos;
+            double[] values = ExtractValues(rect);
 
-
-            try
+            switch (extractType)
             {
+                case ConvolutionExtractType.Raw:
+                    break;
 
+                case ConvolutionExtractType.RawUnit:
+                    values = Convolutions.ToUnit(values);
+                    break;
 
-                bool isNegPos = this.IsNegPos;
-                double[] values = ExtractValues(rect);
+                case ConvolutionExtractType.Edge:
+                    isNegPos = true;
+                    values = ConvertToEdge(values);
+                    values = Convolutions.ToUnit(values);
+                    break;
 
-                switch (extractType)
+                case ConvolutionExtractType.EdgeSoftBorder:
+                    isNegPos = true;
+                    values = ConvertToEdge(values);
+                    values = ApplySoftBorder(values, rect.Width, rect.Height);
+                    values = Convolutions.ToUnit(values);
+                    break;
+
+                //case ConvolutionExtractType.EdgeCircleBorder:
+                //    isNegPos = true;
+                //    values = ConvertToEdge(values);
+                //    values = ApplyCircleBorder(values);
+                //    values = Convolutions.ToUnit(values);
+                //    break;
+
+                default:
+                    throw new ApplicationException("Unknown ConvolutionExtractType: " + extractType.ToString());
+            }
+
+            return new Convolution2D(values, rect.Width, rect.Height, isNegPos, this.Gain, this.Iterations, this.ExpandBorder);
+        }
+
+        public Tuple<VectorInt, double> GetMin()
+        {
+            double min = double.MaxValue;
+            int index = -1;
+
+            for (int cntr = 0; cntr < this.Values.Length; cntr++)
+            {
+                if (this.Values[cntr] < min)
                 {
-                    case ConvolutionExtractType.Raw:
-                        break;
-
-                    case ConvolutionExtractType.RawUnit:
-                        values = Convolutions.ToUnit(values);
-                        break;
-
-                    case ConvolutionExtractType.Edge:
-                        isNegPos = true;
-                        values = ConvertToEdge(values);
-                        values = Convolutions.ToUnit(values);
-                        break;
-
-                    case ConvolutionExtractType.EdgeSoftBorder:
-                        isNegPos = true;
-                        values = ConvertToEdge(values);
-                        values = ApplySoftBorder(values, rect.Width, rect.Height);
-                        values = Convolutions.ToUnit(values);
-                        break;
-
-                    //case ConvolutionExtractType.EdgeCircleBorder:
-                    //    isNegPos = true;
-                    //    values = ConvertToEdge(values);
-                    //    values = ApplyCircleBorder(values);
-                    //    values = Convolutions.ToUnit(values);
-                    //    break;
-
-                    default:
-                        throw new ApplicationException("Unknown ConvolutionExtractType: " + extractType.ToString());
+                    min = this.Values[cntr];
+                    index = cntr;
                 }
-
-                return new Convolution2D(values, rect.Width, rect.Height, isNegPos, this.Gain, this.Iterations, this.ExpandBorder);
-
-
             }
-            catch (Exception ex)
+
+            int y = index / this.Width;
+            int x = index - (y * this.Width);
+
+            return Tuple.Create(new VectorInt(x, y), min);
+        }
+        public Tuple<VectorInt, double> GetMin(IEnumerable<RectInt> ignore)
+        {
+            double min = double.MaxValue;
+            int bX = -1;
+            int bY = -1;
+
+            //TODO: Instead of doing a test for each pixel, get a set of patches that are unblocked
+            //Tuple<AxisFor, AxisFor> openPatches = 
+
+            for (int y = 0; y < this.Height; y++)
             {
-                //throw;
-                return null;
+                int offsetY = y * this.Width;
+
+                for (int x = 0; x < this.Width; x++)
+                {
+                    if (ignore.Any(o => o.Contains(x, y)))
+                    {
+                        continue;
+                    }
+
+                    if (this.Values[offsetY + x] < min)
+                    {
+                        min = this.Values[offsetY + x];
+                        bX = x;
+                        bY = y;
+                    }
+                }
             }
 
+            return Tuple.Create(new VectorInt(bX, bY), min);
+        }
 
+        public Tuple<VectorInt, double> GetMax()
+        {
+            double max = double.MinValue;
+            int index = -1;
 
+            for (int cntr = 0; cntr < this.Values.Length; cntr++)
+            {
+                if (this.Values[cntr] > max)
+                {
+                    max = this.Values[cntr];
+                    index = cntr;
+                }
+            }
 
+            int y = index / this.Width;
+            int x = index - (y * this.Width);
+
+            return Tuple.Create(new VectorInt(x, y), max);
+        }
+        public Tuple<VectorInt, double> GetMax(IEnumerable<RectInt> ignore)
+        {
+            double max = double.MinValue;
+            int bX = -1;
+            int bY = -1;
+
+            //TODO: Instead of doing a test for each pixel, get a set of patches that are unblocked
+            //Tuple<AxisFor, AxisFor> openPatches = 
+
+            for (int y = 0; y < this.Height; y++)
+            {
+                int offsetY = y * this.Width;
+
+                for (int x = 0; x < this.Width; x++)
+                {
+                    if (ignore.Any(o => o.Contains(x, y)))
+                    {
+                        continue;
+                    }
+
+                    if (this.Values[offsetY + x] > max)
+                    {
+                        max = this.Values[offsetY + x];
+                        bX = x;
+                        bY = y;
+                    }
+                }
+            }
+
+            return Tuple.Create(new VectorInt(bX, bY), max);
         }
 
         public Convolution2D_DNA ToDNA()

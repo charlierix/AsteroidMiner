@@ -1273,6 +1273,10 @@ namespace Game.HelperClassesWPF
 
         #region Declaration Section
 
+        /// <summary>
+        /// This is the dpi to use when creating a RenderTargetBitmap
+        /// </summary>
+        public const double DPI = 96;
         private const double INV256 = 1d / 256d;
 
         [StructLayout(LayoutKind.Sequential)]
@@ -2254,7 +2258,7 @@ namespace Game.HelperClassesWPF
                 visual.Arrange(new Rect(0, 0, width, height));
             }
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, DPI, DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())
@@ -2282,7 +2286,7 @@ namespace Game.HelperClassesWPF
                 throw new ArgumentException(string.Format("The array isn't the same as width*height.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, width, height));
             }
 
-            WriteableBitmap retVal = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+            WriteableBitmap retVal = new WriteableBitmap(width, height, DPI, DPI, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
 
             int pixelWidth = retVal.Format.BitsPerPixel / 8;
             int stride = retVal.PixelWidth * pixelWidth;      // this is the length of one row of pixels
@@ -2322,7 +2326,7 @@ namespace Game.HelperClassesWPF
             //    throw new ArgumentException(string.Format("The array isn't the same as width*height.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, width, height));
             //}
 
-            WriteableBitmap retVal = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+            WriteableBitmap retVal = new WriteableBitmap(width, height, DPI, DPI, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
 
             int pixelWidth = retVal.Format.BitsPerPixel / 8;
             int stride = retVal.PixelWidth * pixelWidth;      // this is the length of one row of pixels
@@ -2370,7 +2374,7 @@ namespace Game.HelperClassesWPF
             double scaleX = Convert.ToDouble(imageWidth) / Convert.ToDouble(colorsWidth);
             double scaleY = Convert.ToDouble(imageHeight) / Convert.ToDouble(colorsHeight);
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(imageWidth, imageHeight, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(imageWidth, imageHeight, DPI, DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())
@@ -2451,6 +2455,12 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        public static Convolution2D ConvertToConvolution(BitmapSource bitmap, double scaleTo = 255d)
+        {
+            // This got tedious to write, so I made a simpler method around it
+            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).ToConvolution(scaleTo);
+        }
+
         /// <summary>
         /// This will keep the same aspect ratio
         /// </summary>
@@ -2497,7 +2507,7 @@ namespace Game.HelperClassesWPF
                 drawingContext.DrawImage(bitmap, new Rect(0, 0, width, height));
             }
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, DPI, DPI, PixelFormats.Pbgra32);
             retVal.Render(drawingVisual);
 
             return retVal;
@@ -7561,9 +7571,10 @@ namespace Game.HelperClassesWPF
                 {
                     byte[] color = _info.GetColorBytes(x, y);
 
+                    double percent = color[0] / 255d;
                     double gray = UtilityWPF.ConvertToGray(color[1], color[2], color[3]);
 
-                    values[x + yOffset] = gray * scale;
+                    values[x + yOffset] = percent * gray * scale;
                 }
             }
 
@@ -7888,6 +7899,25 @@ namespace Game.HelperClassesWPF
                 case Axis.Z:
                     z = index2D;
                     break;
+
+                default:
+                    throw new ApplicationException("Unknown Axis: " + this.Axis.ToString());
+            }
+        }
+        public void Set2DIndex(ref int x, ref int y, int index2D)
+        {
+            switch (this.Axis)
+            {
+                case Axis.X:
+                    x = index2D;
+                    break;
+
+                case Axis.Y:
+                    y = index2D;
+                    break;
+
+                case Axis.Z:
+                    throw new ApplicationException("Didn't expect Z axis");
 
                 default:
                     throw new ApplicationException("Unknown Axis: " + this.Axis.ToString());

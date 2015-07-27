@@ -1257,7 +1257,7 @@ namespace Game.Newt.Testers.Encog
                 throw new ArgumentException("Must pass in a square image");
             }
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(size, size, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())
@@ -1371,7 +1371,7 @@ namespace Game.Newt.Testers.Encog
                 reduce = UtilityCore.GetScaledValue(.8, 1, .05, .2, scale);
             }
 
-            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
+            RenderTargetBitmap retVal = new RenderTargetBitmap(width, height, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
 
             DrawingVisual dv = new DrawingVisual();
             using (DrawingContext ctx = dv.RenderOpen())

@@ -108,6 +108,21 @@ namespace Game.HelperClassesCore
     {
         #region Constructor
 
+        public RectInt(int width, int height)
+        {
+            _x = 0;
+            _y = 0;
+            _width = width;
+            _height = height;
+        }
+        public RectInt(VectorInt size)
+        {
+            _x = 0;
+            _y = 0;
+            _width = size.X;
+            _height = size.Y;
+        }
+
         public RectInt(VectorInt location, VectorInt size)
         {
             _x = location.X;

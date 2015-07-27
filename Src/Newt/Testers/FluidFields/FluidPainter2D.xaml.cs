@@ -165,7 +165,7 @@ namespace Game.Newt.Testers.FluidFields
                 grdFluid.Children.Add(img);
 
                 // Create the bitmap, and set
-                _bitmap = new WriteableBitmap(_field.XSize, _field.YSize, 96, 96, PixelFormats.Bgra32, null);
+                _bitmap = new WriteableBitmap(_field.XSize, _field.YSize, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Bgra32, null);
 
                 img.Source = _bitmap;
                 img.Stretch = Stretch.Fill;
