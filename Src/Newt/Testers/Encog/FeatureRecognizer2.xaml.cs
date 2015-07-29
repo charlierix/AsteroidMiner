@@ -21,6 +21,7 @@ using Microsoft.Win32;
 namespace Game.Newt.Testers.Encog
 {
     //TODO: Serialize session
+    //TODO: Context menus
     public partial class FeatureRecognizer2 : Window
     {
         #region Enum: PrefilterType
@@ -40,6 +41,8 @@ namespace Game.Newt.Testers.Encog
         private const int IMAGESIZE = 300;
         private const int THUMBSIZE_EXTRACT = 40;
 
+        private List<Window> _childWindows = new List<Window>();
+
         private List<FeatureRecognizer_Image> _images = new List<FeatureRecognizer_Image>();
 
         /// <summary>
@@ -47,7 +50,18 @@ namespace Game.Newt.Testers.Encog
         /// </summary>
         private readonly Tuple<PrefilterType, ConvolutionBase2D[]>[] _preFilters;
 
+        private List<FeatureRecognizer2_FeatureConv> _featureConvs = new List<FeatureRecognizer2_FeatureConv>();
+        private int _selectedFeatureConvIndex = -1;
+
+        private List<FeatureRecognizer2_FeatureAnalyzer> _analyzers = new List<FeatureRecognizer2_FeatureAnalyzer>();
+        private int _selectedAnalyzerIndex = -1;
+
+        private List<FeatureRecognizer2_FeatureRecognizer> _recognizers = new List<FeatureRecognizer2_FeatureRecognizer>();
+        private int _selectedRecognizerIndex = -1;
+
         private readonly DropShadowEffect _selectEffect;
+
+        private readonly ContextMenu _featureExtractContextMenu;
 
         #endregion
 
@@ -68,15 +82,67 @@ namespace Game.Newt.Testers.Encog
                 Direction = 0,
                 ShadowDepth = 0,
                 BlurRadius = 13,
-                Color = UtilityWPF.ColorFromHex("66E825"),
+                Color = UtilityWPF.ColorFromHex("6DF727"),
                 Opacity = .9,
             };
 
+            // Context Menus
+            _featureExtractContextMenu = (ContextMenu)this.Resources["featureExtractContextMenu"];
+
+            // FeatureExtract Combobox
+            cboExtractType.Items.Add(ConvolutionExtractType.EdgeSoftBorder);
+            cboExtractType.Items.Add(ConvolutionExtractType.Edge);
+            cboExtractType.SelectedIndex = 0;
         }
 
         #endregion
 
         #region Event Listeners
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            try
+            {
+                #region Child windows
+
+                foreach (Window child in _childWindows.ToArray())        // taking the array so that the list can be removed from while in the for loop (it shouldn't happen, but just in case)
+                {
+                    child.Closed -= Child_Closed;
+                    child.Close();
+                }
+
+                _childWindows.Clear();
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Child_Closed(object sender, EventArgs e)
+        {
+            try
+            {
+                Window senderCast = sender as Window;
+                if (senderCast == null)
+                {
+                    return;
+                }
+
+                senderCast.Closed -= Child_Closed;
+
+                _childWindows.Remove(senderCast);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+        #region Event Listeners - Images
 
         private void btnAddImage_Click(object sender, RoutedEventArgs e)
         {
@@ -166,6 +232,10 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
+        #endregion
+        #region Event Listeners - Feature Convolutions
+
+        //TODO: This method only deals with full size images, full size extract.  Once deciding a rectangle, figure out how much reduction to use
         private void RandomExtract_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -177,7 +247,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Image
-                var image = GetSelectedImage();
+                var image = GetSelected_Image();
                 if (image == null)
                 {
                     image = _images[StaticRandom.Next(_images.Count)];
@@ -186,11 +256,22 @@ namespace Game.Newt.Testers.Encog
                 // Prefilter (could be null)
                 ConvolutionBase2D preFilter = GetRandomPreFilter();
 
+                // Image convolution
+                Convolution2D imageConv = UtilityWPF.ConvertToConvolution(image.Bitmap);
 
+                if (preFilter != null)
+                {
+                    imageConv = Convolutions.Convolute(imageConv, preFilter);
+                }
 
+                // Extract
+                RectInt extractSize = GetExtractSize(image, preFilter, chkIsExtractSquare.IsChecked.Value, trkExtractSizePercent.Value);
 
+                ConvolutionExtractType extractType = UtilityCore.EnumParse<ConvolutionExtractType>(cboExtractType.Text);
+                Convolution2D extractConv = imageConv.Extract(extractSize, extractType);
 
-
+                // Add it
+                AddFeatureConvolution(extractConv, preFilter);
             }
             catch (Exception ex)
             {
@@ -198,7 +279,8 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
-        private void panelExtracts_MouseUp(object sender, MouseButtonEventArgs e)
+        //TODO: Show an image and the convolution with this extract
+        private void panelFeatureConvolutions_MouseUp(object sender, MouseButtonEventArgs e)
         {
             try
             {
@@ -207,13 +289,228 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                //Tuple<Border, int> clickedCtrl = GetSelectedExtract(e.OriginalSource);
-                //if (clickedCtrl == null)
+                Tuple<Border, int> clickedCtrl = GetSelected_FeatureConv(e.OriginalSource, false);
+                if (clickedCtrl == null)
+                {
+                    Select_FeatureConv(-1);
+                }
+                else
+                {
+                    Select_FeatureConv(clickedCtrl.Item2);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void FeatureConvView_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Tuple<Border, int> selectedCtrl = GetSelected_FeatureConv(_featureExtractContextMenu.PlacementTarget, false);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't identify feature convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                ViewConvolution(_featureConvs[selectedCtrl.Item2].Convolution);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void FeatureConvEdit_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Tuple<Border, int> selectedCtrl = GetSelected_FeatureConv(_featureExtractContextMenu.PlacementTarget, false);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't identify feature convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                EditConvolution(_featureConvs[selectedCtrl.Item2].Convolution, _featureConvs[selectedCtrl.Item2], FeatureConvolution_SaveRequested);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void FeatureConvRemoveSection_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //Tuple<Border, int> selectedCtrl = GetSelectedExtract(_extractContextMenu.PlacementTarget);
+                //if (selectedCtrl == null)
                 //{
+                //MessageBox.Show("Couldn't identify feature convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                 //    return;
                 //}
 
-                //SelectExtract(clickedCtrl.Item2);
+                //FeatureRecognizer_Extract origExtract = _extracts[selectedCtrl.Item2];
+
+                //Convolution2D conv = Convolutions.RemoveSection(origExtract.Extracts[0].Extract);
+
+                //BuildChangedExtract(origExtract, conv);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void FeatureConvDelete_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Tuple<Border, int> selectedCtrl = GetSelected_FeatureConv(_featureExtractContextMenu.PlacementTarget, false);
+                if (selectedCtrl == null)
+                {
+                    MessageBox.Show("Couldn't identify feature convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                panelFeatureConvolutions.Children.Remove(selectedCtrl.Item1);
+                _featureConvs.RemoveAt(selectedCtrl.Item2);
+
+                if (_selectedFeatureConvIndex == selectedCtrl.Item2)
+                {
+                    _selectedFeatureConvIndex = -1;
+                }
+                else if (_selectedFeatureConvIndex > selectedCtrl.Item2)
+                {
+                    _selectedFeatureConvIndex--;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void FeatureConvolution_SaveRequested(object sender, Convolution2D e)
+        {
+            try
+            {
+                ImageFilterPainter senderCast = sender as ImageFilterPainter;
+                if (senderCast == null)
+                {
+                    MessageBox.Show("Expected sender to be the painter window", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                FeatureRecognizer2_FeatureConv origExtract = senderCast.Tag as FeatureRecognizer2_FeatureConv;
+                if (origExtract == null)
+                {
+                    MessageBox.Show("Expected the painter to contain the original feature convolution", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                AddFeatureConvolution(e, origExtract.PreFilter);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+        #region Event Listeners - Analyzers
+
+        private void RandomAnalyzer_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_featureConvs.Count == 0)
+                {
+                    MessageBox.Show("Add a feature convolution first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Feature Convolution
+                FeatureRecognizer2_FeatureConv featConv = _selectedFeatureConvIndex < 0 ?
+                    _featureConvs[StaticRandom.Next(_featureConvs.Count)] :
+                    _featureConvs[_selectedFeatureConvIndex];
+
+                //TODO: Ideal Pattern
+
+                double idealBrightness = StaticRandom.NextDouble(170, 255);
+
+                AddAnalyzer(featConv, null, idealBrightness);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        //TODO: Show an image and the convolution and scores
+        private void panelFeatureAnalyzers_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.ChangedButton != MouseButton.Left)
+                {
+                    return;
+                }
+
+                Tuple<Border, int> clickedCtrl = GetSelected_Analyzer(e.OriginalSource, false);
+                if (clickedCtrl == null)
+                {
+                    Select_Analyzer(-1);
+                }
+                else
+                {
+                    Select_Analyzer(clickedCtrl.Item2);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+        #region Event Listeners - Recognizers
+
+        private void RandomRecognizer_Click(object sender, RoutedEventArgs e)
+        {
+            const int MAXANALYZERS = 5;
+
+            try
+            {
+                if (_analyzers.Count == 0)
+                {
+                    MessageBox.Show("Add a feature analyzer first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int numAnalyzers = StaticRandom.Next(1, Math.Min(_analyzers.Count, MAXANALYZERS));
+
+                FeatureRecognizer2_FeatureAnalyzer[] analyzers = UtilityCore.RandomRange(0, _analyzers.Count, numAnalyzers).
+                    Select(o => _analyzers[o]).
+                    ToArray();
+
+                //TODO: Use some algorithm to come up with this value......
+                int inputSize = StaticRandom.Next(3, 12);
+
+                AddRecognizer(analyzers, inputSize);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void panelFeatureRecognizers_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+
             }
             catch (Exception ex)
             {
@@ -225,7 +522,92 @@ namespace Game.Newt.Testers.Encog
 
         #region Private Methods
 
-        private FeatureRecognizer_Image GetSelectedImage()
+        private void AddFeatureConvolution(Convolution2D conv, ConvolutionBase2D preFilter)
+        {
+            FeatureRecognizer2_FeatureConv item = new FeatureRecognizer2_FeatureConv()
+            {
+                UniqueID = Guid.NewGuid().ToString(),
+
+                Convolution = conv,
+                ConvolutionDNA = conv.ToDNA(),
+
+                PreFilter = preFilter,
+
+                Control = Convolutions.GetKernelThumbnail(conv, THUMBSIZE_EXTRACT, _featureExtractContextMenu),
+            };
+
+            // Prefilter DNA
+            if (preFilter != null)
+            {
+                if (preFilter is Convolution2D)
+                {
+                    item.PreFilterDNA_Single = ((Convolution2D)preFilter).ToDNA();
+                }
+                else if (preFilter is ConvolutionSet2D)
+                {
+                    item.PreFilterDNA_Set = ((ConvolutionSet2D)preFilter).ToDNA();
+                }
+                else
+                {
+                    throw new ApplicationException("Unknown type of convolution: " + preFilter.GetType().ToString());
+                }
+            }
+
+            // Add it
+            _featureConvs.Add(item);
+            panelFeatureConvolutions.Children.Add(item.Control);
+        }
+        private void AddAnalyzer(FeatureRecognizer2_FeatureConv featConv, object idealPattern, double idealBrightness)
+        {
+            FeatureRecognizer2_FeatureAnalyzer analyzer = new FeatureRecognizer2_FeatureAnalyzer()
+            {
+                UniqueID = Guid.NewGuid().ToString(),
+
+                FeatureConv_UniqueID = featConv.UniqueID,
+                FeatureConvolution = featConv,
+
+                IdealBrightness = idealBrightness,
+
+                //IdealPattern_UniqueID = ,
+                //IdealPatternConvolution = ,
+
+                Control = Convolutions.GetKernelThumbnail(featConv.Convolution, THUMBSIZE_EXTRACT, null),
+            };
+
+            _analyzers.Add(analyzer);
+            panelAnalyzers.Children.Add(analyzer.Control);
+        }
+        private void AddRecognizer(FeatureRecognizer2_FeatureAnalyzer[] analyzers, int inputSize)
+        {
+            FeatureRecognizer2_FeatureRecognizer recognizer = new FeatureRecognizer2_FeatureRecognizer()
+            {
+                UniqueID = Guid.NewGuid().ToString(),
+
+                Analyzers = analyzers,
+                AnalyzerIDs = analyzers.
+                    Select(o => o.UniqueID).
+                    ToArray(),
+
+                InputSize = inputSize,
+
+                Control = new Rectangle()
+                {
+                    Fill = new SolidColorBrush(UtilityWPF.GetRandomColor(0, 255)),
+                    Width = THUMBSIZE_EXTRACT,
+                    Height = THUMBSIZE_EXTRACT,
+                    Margin = new Thickness(6),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    //ContextMenu = contextMenu,
+                    //Tag = kernel,
+                },
+            };
+
+            _recognizers.Add(recognizer);
+            panelRecognizers.Children.Add(recognizer.Control);
+        }
+
+        private FeatureRecognizer_Image GetSelected_Image()
         {
             Image selected = treeImages.SelectedItem as Image;
             if (selected == null)
@@ -234,6 +616,143 @@ namespace Game.Newt.Testers.Encog
             }
 
             return _images.FirstOrDefault(o => o.ImageControl == selected);
+        }
+        private Tuple<Border, int> GetSelected_FeatureConv(object source, bool showErrorMsg)
+        {
+            Border clickedCtrl = GetClickedConvolution(source);
+
+            // Get the index
+            int index = panelFeatureConvolutions.Children.IndexOf(clickedCtrl);
+            if (index < 0)
+            {
+                if (showErrorMsg)
+                {
+                    throw new ApplicationException("Couldn't find clicked item");
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            if (_featureConvs.Count != panelFeatureConvolutions.Children.Count)
+            {
+                throw new ApplicationException("_featureConvs and panelFeatureConvolutions are out of sync");
+            }
+
+            return Tuple.Create(clickedCtrl, index);
+        }
+        private Tuple<Border, int> GetSelected_Analyzer(object source, bool showErrorMsg)
+        {
+            Border clickedCtrl = GetClickedConvolution(source);
+
+            // Get the index
+            int index = panelAnalyzers.Children.IndexOf(clickedCtrl);
+            if (index < 0)
+            {
+                if (showErrorMsg)
+                {
+                    throw new ApplicationException("Couldn't find clicked item");
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            if (_analyzers.Count != panelAnalyzers.Children.Count)
+            {
+                throw new ApplicationException("_featureAnalyzers and panelAnalyzers are out of sync");
+            }
+
+            return Tuple.Create(clickedCtrl, index);
+        }
+
+        private void Select_FeatureConv(int index)
+        {
+            // Set the effect
+            int childIndex = 0;
+            foreach (UIElement child in panelFeatureConvolutions.Children)
+            {
+                if (childIndex == index)
+                {
+                    child.Effect = _selectEffect;
+                }
+                else
+                {
+                    child.Effect = null;
+                }
+
+                childIndex++;
+            }
+
+            // Remember which is selected
+            _selectedFeatureConvIndex = index;
+        }
+        private void Select_Analyzer(int index)
+        {
+            // Set the effect
+            int childIndex = 0;
+            foreach (UIElement child in panelAnalyzers.Children)
+            {
+                if (childIndex == index)
+                {
+                    child.Effect = _selectEffect;
+                }
+                else
+                {
+                    child.Effect = null;
+                }
+
+                childIndex++;
+            }
+
+            // Remember which is selected
+            _selectedAnalyzerIndex = index;
+        }
+
+        private static Border GetClickedConvolution(object source)
+        {
+            if (source is Border)
+            {
+                return (Border)source;
+            }
+            else if (source is Image)
+            {
+                Image image = (Image)source;
+                return (Border)image.Parent;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private void ViewConvolution(Convolution2D convolution)
+        {
+            ImageFilterPainter viewer = new ImageFilterPainter();
+
+            viewer.Closed += Child_Closed;
+
+            _childWindows.Add(viewer);
+
+            viewer.ViewKernel(convolution);
+
+            viewer.Show();
+        }
+        private void EditConvolution(Convolution2D convolution, FeatureRecognizer2_FeatureConv source, EventHandler<Convolution2D> saveMethod)
+        {
+            ImageFilterPainter viewer = new ImageFilterPainter();
+
+            viewer.Closed += Child_Closed;
+            viewer.SaveRequested += saveMethod;
+
+            _childWindows.Add(viewer);
+
+            viewer.Tag = source;
+            viewer.EditKernel(convolution);
+
+            viewer.Show();
         }
 
         private ConvolutionBase2D GetRandomPreFilter()
@@ -353,6 +872,24 @@ namespace Game.Newt.Testers.Encog
             return retVal.ToArray();
         }
 
+        private static RectInt GetExtractSize(FeatureRecognizer_Image image, ConvolutionBase2D filter, bool isSquare, double sizePercent)
+        {
+            // Calculate largest image's size
+            VectorInt finalSize = new VectorInt()
+            {
+                X = image.Bitmap.PixelWidth,
+                Y = image.Bitmap.PixelHeight,
+            };
+
+            if (filter != null)
+            {
+                finalSize -= filter.GetReduction();
+            }
+
+            // Extract rectangle
+            return Convolutions.GetExtractRectangle(finalSize, isSquare, sizePercent);
+        }
+
         #endregion
     }
 
@@ -360,12 +897,10 @@ namespace Game.Newt.Testers.Encog
 
     public class FeatureRecognizer2_FeatureConv
     {
-        // Only one of these two will be populated
-        public Convolution2D_DNA ConvolutionDNA_Single { get; set; }
-        public ConvolutionSet2D_DNA ConvolutionDNA_Set { get; set; }
+        public Convolution2D_DNA ConvolutionDNA { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ConvolutionBase2D Convolution { get; set; }
+        public Convolution2D Convolution { get; set; }
 
         // Only one of these two (if any) will be populated
         public Convolution2D_DNA PreFilterDNA_Single { get; set; }
@@ -394,8 +929,49 @@ namespace Game.Newt.Testers.Encog
 
     public class FeatureRecognizer2_FeatureAnalyzer
     {
+        public string UniqueID { get; set; }
+
         //TODO: The referenced convolution is full size.  This class may want to store a smaller version of it, and reduce any image by the same percent
         public string FeatureConv_UniqueID { get; set; }
+
+        public string IdealPattern_UniqueID { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public FeatureRecognizer2_FeatureConv FeatureConvolution { get; set; }
+
+        //TODO: Reference the class that holds this convolution instead
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Convolution2D IdealPatternConvolution { get; set; }
+
+        public double IdealBrightness { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIElement Control { get; set; }
+    }
+
+    #endregion
+    #region Class: FeatureRecognizer2_FeatureRecognizer
+
+    public class FeatureRecognizer2_FeatureRecognizer
+    {
+        public string UniqueID { get; set; }
+
+        public string[] AnalyzerIDs { get; set; }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public FeatureRecognizer2_FeatureAnalyzer[] Analyzers { get; set; }
+
+        /// <summary>
+        /// This is the width and height of each analyzer's output convolution
+        /// </summary>
+        public int InputSize { get; set; }
+
+
+        //TODO: Store the trained NN
+
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIElement Control { get; set; }
     }
 
     #endregion

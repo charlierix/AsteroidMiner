@@ -1247,7 +1247,7 @@ namespace Game.Newt.Testers.Convolution
             bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
 
             string tooltip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height);
-            if(preFilter != null)
+            if (preFilter != null)
             {
                 tooltip = preFilter.Description + "\r\n" + tooltip;
             }

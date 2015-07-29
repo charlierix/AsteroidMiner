@@ -857,17 +857,25 @@ namespace Game.HelperClassesWPF
 
         #region Misc
 
+        private const double MINPERCENT = .03;
+        private const double MAXPERCENT = .97;
+
         public static RectInt GetExtractRectangle(VectorInt imageSize, bool isSquare)
         {
             Random rand = StaticRandom.GetRandomForThread();
 
+            // Min Size
             int minSize = Math.Min(imageSize.X, imageSize.Y);
-            double extractSizeMin = minSize * .03;
-            double extractSizeMax = minSize * .97;
+            double extractSizeMin, extractSizeMax;
 
+            extractSizeMin = minSize * MINPERCENT;
+            extractSizeMax = minSize * MAXPERCENT;
+
+            // Width
             int width = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
             int height;
 
+            // Height
             if (isSquare)
             {
                 height = width;
@@ -893,6 +901,62 @@ namespace Game.HelperClassesWPF
                 }
             }
 
+            // Rectangle
+            return new RectInt()
+            {
+                X = rand.Next(imageSize.X - width),
+                Y = rand.Next(imageSize.Y - height),
+                Width = width,
+                Height = height,
+            };
+        }
+        public static RectInt GetExtractRectangle(VectorInt imageSize, bool isSquare, double sizePercent)
+        {
+            const double PERCENTDIFF = .02;
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            // Min Size
+            int minSize = Math.Min(imageSize.X, imageSize.Y);
+
+            // Percents
+            double scaledPercent = UtilityCore.GetScaledValue_Capped(MINPERCENT + PERCENTDIFF, MAXPERCENT - PERCENTDIFF, 0, 1, sizePercent);
+
+            double minPercent = scaledPercent - PERCENTDIFF;
+            double maxPercent = scaledPercent + PERCENTDIFF;
+
+            // Size
+            double extractSizeMin = minSize * minPercent;
+            double extractSizeMax = minSize * maxPercent;
+
+            // Width
+            int width = rand.NextDouble(extractSizeMin, extractSizeMax).ToInt_Round();
+            int height;
+
+            // Height
+            if (isSquare)
+            {
+                height = width;
+            }
+            else
+            {
+                if (scaledPercent > .5)
+                {
+                    height = rand.NextDouble(width / Math3D.GOLDENRATIO, width).ToInt_Round();      // Reduce
+                }
+                else
+                {
+                    height = rand.NextDouble(width, width * Math3D.GOLDENRATIO).ToInt_Round();      // Increase
+                }
+            }
+
+            // Random chance of swapping so height might be taller
+            if (rand.NextBool())
+            {
+                UtilityCore.Swap(ref width, ref height);
+            }
+
+            // Rectangle
             return new RectInt()
             {
                 X = rand.Next(imageSize.X - width),

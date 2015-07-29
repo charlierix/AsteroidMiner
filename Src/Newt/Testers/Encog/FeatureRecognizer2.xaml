@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.Encog.FeatureRecognizer2"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Feature Recognizer 2" Width="1000" Height="750">
+        Title="Feature Recognizer 2" Width="1000" Height="750" Closed="Window_Closed">
     <Window.Resources>
 
         <Style x:Key="expanderBorder" TargetType="Border">
@@ -20,6 +20,18 @@
             <Setter Property="Background" Value="White"/>
         </Style>
 
+        <Style x:Key="panelScroller" TargetType="ScrollViewer">
+            <Setter Property="MaxWidth" Value="200"/>
+            <Setter Property="MaxHeight" Value="500"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        </Style>
+
+        <Style x:Key="iconPanel" TargetType="WrapPanel">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="MinHeight" Value="40"/>
+        </Style>
+
         <Style x:Key="toolButton" TargetType="Button">
             <Setter Property="Padding" Value="3,0"/>
             <Setter Property="LayoutTransform">
@@ -28,6 +40,17 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <ContextMenu x:Key="featureExtractContextMenu">
+            <MenuItem Header="View" Click="FeatureConvView_Click"/>
+            <MenuItem Header="Edit" Click="FeatureConvEdit_Click"/>
+            <MenuItem Header="Remove Section" Click="FeatureConvRemoveSection_Click">
+                <MenuItem.ToolTip>
+                    <TextBlock>Puts a random dead spot in the convolution<LineBreak/>(good for suppressing features that don't matter)</TextBlock>
+                </MenuItem.ToolTip>
+            </MenuItem>
+            <MenuItem Header="Delete" Click="FeatureConvDelete_Click"/>
+        </ContextMenu>
 
     </Window.Resources>
 
@@ -61,7 +84,7 @@
 
                             <!-- Treeview -->
                             <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" BorderThickness="1" BorderBrush="#18000000" Background="#18FFFFFF" Padding="4">
-                                <TreeView Name="treeImages" BorderBrush="Transparent" Background="Transparent" MinHeight="40"/>
+                                <TreeView Name="treeImages" BorderBrush="Transparent" Background="Transparent" MinHeight="40" MaxHeight="500"/>
                             </Border>
 
                             <!-- Expand/Collapse all -->
@@ -98,18 +121,21 @@
                 </Expander>
 
                 <!-- Feature Convolutions -->
-                <Expander Header="Feature Convolutions">
+                <Expander IsExpanded="True" Header="Feature Convolutions">
                     <Border Style="{StaticResource expanderBorder}">
                         <StackPanel>
-                            <CheckBox Name="chkIsSquare" Content="is square"/>
-                            <Slider Minimum="0" Maximum="1" Value=".5" ToolTip="Size % of image"/>
+                            <CheckBox Name="chkIsExtractSquare" Content="is square"/>
+                            <Slider Minimum="0" Maximum="1" Value=".15" x:Name="trkExtractSizePercent" ToolTip="Size % of image"/>
+                            <ComboBox Name="cboExtractType"/>
                             <Button Content="Random Extract" Click="RandomExtract_Click" Margin="0,3,0,0"/>
-                            
+
                             <!-- TODO: User defined extract -->
                             <!-- TODO: Vector extract -->
 
                             <Border Margin="0,10,0,0" Style="{StaticResource panelBorder}">
-                                <WrapPanel Name="panelFeatureConvolutions" Background="Transparent" MinHeight="40" MouseUp="panelExtracts_MouseUp"/>
+                                <ScrollViewer Style="{StaticResource panelScroller}">
+                                    <WrapPanel Name="panelFeatureConvolutions" Style="{StaticResource iconPanel}" MouseUp="panelFeatureConvolutions_MouseUp"/>
+                                </ScrollViewer>
                             </Border>
                         </StackPanel>
                     </Border>
@@ -117,17 +143,37 @@
 
                 <!-- Ideal Patterns -->
                 <Expander Header="Ideal Patterns">
-
+                    <TextBlock Text="finish this" Foreground="Red"/>
                 </Expander>
 
                 <!-- Feature Analyzers -->
-                <Expander Header="Feature Analyzers">
+                <Expander IsExpanded="True" Header="Feature Analyzers">
+                    <Border Style="{StaticResource expanderBorder}">
+                        <StackPanel>
+                            <Button Content="Random Analyzer" Click="RandomAnalyzer_Click"/>
 
+                            <Border Margin="0,10,0,0" Style="{StaticResource panelBorder}">
+                                <ScrollViewer Style="{StaticResource panelScroller}">
+                                    <WrapPanel Name="panelAnalyzers" Style="{StaticResource iconPanel}" MouseUp="panelFeatureAnalyzers_MouseUp"/>
+                                </ScrollViewer>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </Expander>
 
                 <!-- Recognizers -->
-                <Expander Header="Feature Recognizers">
+                <Expander IsExpanded="True" Header="Feature Recognizers">
+                    <Border Style="{StaticResource expanderBorder}">
+                        <StackPanel>
+                            <Button Content="Random Recognizer" Click="RandomRecognizer_Click"/>
 
+                            <Border Margin="0,10,0,0" Style="{StaticResource panelBorder}">
+                                <ScrollViewer Style="{StaticResource panelScroller}">
+                                    <WrapPanel Name="panelRecognizers" Style="{StaticResource iconPanel}" MouseUp="panelFeatureRecognizers_MouseUp"/>
+                                </ScrollViewer>
+                            </Border>
+                        </StackPanel>
+                    </Border>
                 </Expander>
             </StackPanel>
         </ScrollViewer>
