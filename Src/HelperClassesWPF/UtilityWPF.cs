@@ -2455,10 +2455,10 @@ namespace Game.HelperClassesWPF
             }
         }
 
-        public static Convolution2D ConvertToConvolution(BitmapSource bitmap, double scaleTo = 255d)
+        public static Convolution2D ConvertToConvolution(BitmapSource bitmap, double scaleTo = 255d, string description = "")
         {
             // This got tedious to write, so I made a simpler method around it
-            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).ToConvolution(scaleTo);
+            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).ToConvolution(scaleTo, description);
         }
 
         /// <summary>
@@ -7557,7 +7557,7 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// This converts into a gray scale convolution
         /// </summary>
-        public Convolution2D ToConvolution(double scaleTo = 255d)
+        public Convolution2D ToConvolution(double scaleTo = 255d, string description = "")
         {
             double[] values = new double[_info.Width * _info.Height];
 
@@ -7578,7 +7578,7 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            return new Convolution2D(values, _info.Width, _info.Height, false);
+            return new Convolution2D(values, _info.Width, _info.Height, false, description: description);
         }
 
         #endregion

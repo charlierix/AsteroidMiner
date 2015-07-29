@@ -14,6 +14,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
@@ -216,7 +217,7 @@ namespace Game.Newt.Testers.Convolution
                 if (_workingFolder.StartsWith(UtilityCore.GetOptionsFolder(), StringComparison.OrdinalIgnoreCase))      // it always should start with this, but I'd rather leave a folder laying around than delete a hijacked foldername
                 {
                     //_images.Clear();
-                    //pnlImages.Items.Clear();
+                    //treeImages.Items.Clear();
 
                     Directory.Delete(_workingFolder, true);
                 }
@@ -332,11 +333,10 @@ namespace Game.Newt.Testers.Convolution
                         Filename = filename,
                         ImageControl = GetTreeviewImageCtrl(bitmap),
                         Bitmap = bitmap,
-                        Token = TokenGenerator.NextToken(),
                     };
 
                     // Store it
-                    AddImage(entry);
+                    AddImage(entry, _images, treeImages, cboImageLabel);
                 }
 
                 // Update the session file
@@ -397,7 +397,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                foreach (TreeViewItem node in pnlImages.Items)
+                foreach (TreeViewItem node in treeImages.Items)
                 {
                     node.IsExpanded = false;
                 }
@@ -411,7 +411,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                foreach (TreeViewItem node in pnlImages.Items)
+                foreach (TreeViewItem node in treeImages.Items)
                 {
                     node.IsExpanded = true;
                 }
@@ -642,7 +642,7 @@ namespace Game.Newt.Testers.Convolution
 
                 FeatureRecognizer_Extract origExtract = _extracts[selectedCtrl.Item2];
 
-                Convolution2D conv = RemoveSection(origExtract.Extracts[0].Extract);
+                Convolution2D conv = Convolutions.RemoveSection(origExtract.Extracts[0].Extract);
 
                 BuildChangedExtract(origExtract, conv);
             }
@@ -708,6 +708,72 @@ namespace Game.Newt.Testers.Convolution
 
         #endregion
 
+        #region Internal Methods
+
+        internal static Image GetTreeviewImageCtrl(BitmapSource bitmap)
+        {
+            return new Image()
+            {
+                Stretch = Stretch.Fill,
+                Width = THUMBSIZE_IMAGE,
+                Height = THUMBSIZE_IMAGE,
+                Source = bitmap,
+                Margin = new Thickness(3),
+                ToolTip = string.Format("{0}x{1}", bitmap.PixelWidth, bitmap.PixelHeight)
+            };
+        }
+
+        internal static void AddImage(FeatureRecognizer_Image image, List<FeatureRecognizer_Image> images, TreeView treeview, ComboBox combobox)
+        {
+            images.Add(image);
+
+            List<string> tags = new List<string>();
+
+            // Find existing name node
+            TreeViewItem nameNode = null;
+            foreach (TreeViewItem node in treeview.Items)
+            {
+                string header = (string)node.Header;
+                tags.Add(header);
+
+                if (header.Equals(image.Tag, StringComparison.OrdinalIgnoreCase))
+                {
+                    nameNode = node;
+                    break;
+                }
+            }
+
+            if (nameNode == null)
+            {
+                // Create new
+                nameNode = new TreeViewItem() { Header = image.Tag };
+
+                // Store this alphabetically
+                int insertIndex = UtilityCore.GetInsertIndex(tags, image.Tag);
+                treeview.Items.Insert(insertIndex, nameNode);
+            }
+
+            // Add the image control to this name node
+            nameNode.Items.Add(image.ImageControl);
+
+            nameNode.IsExpanded = true;
+
+            #region Update tag combobox
+
+            string currentText = combobox.Text;
+            combobox.Items.Clear();
+
+            foreach (string comboItem in images.Select(o => o.Tag).Distinct().OrderBy(o => o))
+            {
+                combobox.Items.Add(comboItem);
+            }
+
+            combobox.Text = currentText;
+
+            #endregion
+        }
+
+        #endregion
         #region Private Methods
 
         private void ClearEverything()
@@ -726,7 +792,7 @@ namespace Game.Newt.Testers.Convolution
 
             // Images
             _images.Clear();
-            pnlImages.Items.Clear();
+            treeImages.Items.Clear();
             cboImageLabel.Items.Clear();
 
             // Extracts
@@ -868,7 +934,7 @@ namespace Game.Newt.Testers.Convolution
 
                     image.ImageControl = GetTreeviewImageCtrl(image.Bitmap);
 
-                    AddImage(image);
+                    AddImage(image, _images, treeImages, cboImageLabel);
                 }
 
                 #endregion
@@ -974,55 +1040,6 @@ namespace Game.Newt.Testers.Convolution
             SaveSession_SessionFile(_workingFolder);
         }
 
-        private void AddImage(FeatureRecognizer_Image image)
-        {
-            _images.Add(image);
-
-            List<string> tags = new List<string>();
-
-            // Find existing name node
-            TreeViewItem nameNode = null;
-            foreach (TreeViewItem node in pnlImages.Items)
-            {
-                string header = (string)node.Header;
-                tags.Add(header);
-
-                if (header.Equals(image.Tag, StringComparison.OrdinalIgnoreCase))
-                {
-                    nameNode = node;
-                    break;
-                }
-            }
-
-            if (nameNode == null)
-            {
-                // Create new
-                nameNode = new TreeViewItem() { Header = image.Tag };
-
-                // Store this alphabetically
-                int insertIndex = UtilityCore.GetInsertIndex(tags, image.Tag);
-                pnlImages.Items.Insert(insertIndex, nameNode);
-            }
-
-            // Add the image control to this name node
-            nameNode.Items.Add(image.ImageControl);
-
-            nameNode.IsExpanded = true;
-
-            #region Update tag combobox
-
-            string currentText = cboImageLabel.Text;
-            cboImageLabel.Items.Clear();
-
-            foreach (string comboItem in _images.Select(o => o.Tag).Distinct().OrderBy(o => o))
-            {
-                cboImageLabel.Items.Add(comboItem);
-            }
-
-            cboImageLabel.Text = currentText;
-
-            #endregion
-        }
         private void AddExtract(FeatureRecognizer_Extract extract)
         {
             panelExtracts.Children.Add(extract.Control);
@@ -1083,7 +1100,7 @@ namespace Game.Newt.Testers.Convolution
 
         private FeatureRecognizer_Image GetSelectedImage()
         {
-            Image selected = pnlImages.SelectedItem as Image;
+            Image selected = treeImages.SelectedItem as Image;
             if (selected == null)
             {
                 return null;
@@ -1229,12 +1246,18 @@ namespace Game.Newt.Testers.Convolution
         {
             bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
 
+            string tooltip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height);
+            if(preFilter != null)
+            {
+                tooltip = preFilter.Description + "\r\n" + tooltip;
+            }
+
             Image image = new Image()
             {
                 Source = Convolutions.ShowConvolutionResult(imageConv, isSourceNegPos, edgeColor),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),
+                ToolTip = tooltip,
             };
 
             Grid.SetColumn(image, 0);
@@ -1388,19 +1411,6 @@ namespace Game.Newt.Testers.Convolution
             grid.Children.Add(border);
 
             #endregion
-        }
-
-        private static Image GetTreeviewImageCtrl(BitmapSource bitmap)
-        {
-            return new Image()
-            {
-                Stretch = Stretch.Fill,
-                Width = THUMBSIZE_IMAGE,
-                Height = THUMBSIZE_IMAGE,
-                Source = bitmap,
-                Margin = new Thickness(3),
-                ToolTip = string.Format("{0}x{1}", bitmap.PixelWidth, bitmap.PixelHeight)
-            };
         }
 
         private static Border GetResultPositionsImage(IEnumerable<Tuple<VectorInt, double>> hits, VectorInt patchSize, int returnSize)
@@ -1643,7 +1653,7 @@ namespace Game.Newt.Testers.Convolution
             #region Gaussian Subtract
 
             convolutions.Clear();
-            convolutions.Add(new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract));
+            convolutions.Add(Convolutions.GetEdgeSet_GaussianSubtract());
 
             retVal.Add(Tuple.Create(PrefilterType.Gaussian_Subtract, convolutions.ToArray()));
 
@@ -1652,26 +1662,9 @@ namespace Game.Newt.Testers.Convolution
 
             convolutions.Clear();
 
-            Convolution2D vert = Convolutions.GetEdge_Sobel(true);
-            Convolution2D horz = Convolutions.GetEdge_Sobel(false);
-            Convolution2D vert45 = Convolutions.Rotate_45(vert, true);
-            Convolution2D horz45 = Convolutions.Rotate_45(horz, true);
-            ConvolutionSet2D first = null;
-
             foreach (int gain in new[] { 1, 2 })
             {
-                var singles = new[]
-                {
-                    new Convolution2D(vert.Values, vert.Width, vert.Height, vert.IsNegPos, gain),
-                    new Convolution2D(horz.Values, horz.Width, horz.Height, horz.IsNegPos, gain),
-                    new Convolution2D(vert45.Values, vert45.Width, vert45.Height, vert45.IsNegPos, gain),
-                    new Convolution2D(horz45.Values, horz45.Width, horz45.Height, horz45.IsNegPos, gain),
-                };
-
-                ConvolutionSet2D set = new ConvolutionSet2D(singles, SetOperationType.MaxOf);
-                convolutions.Add(set);
-
-                first = first ?? set;
+                convolutions.Add(Convolutions.GetEdgeSet_Sobel(gain));
             }
 
             retVal.Add(Tuple.Create(PrefilterType.MaxAbs_Sobel, convolutions.ToArray()));
@@ -1683,13 +1676,7 @@ namespace Game.Newt.Testers.Convolution
 
             foreach (int size in new[] { 3, 5, 7 })
             {
-                ConvolutionBase2D[] convs = new ConvolutionBase2D[]
-                {
-                    Convolutions.GetGaussian(size, 1),
-                    first,
-                };
-
-                convolutions.Add(new ConvolutionSet2D(convs, SetOperationType.Standard));
+                convolutions.Add(Convolutions.GetEdgeSet_GuassianThenEdge(size));
             }
 
             retVal.Add(Tuple.Create(PrefilterType.Gaussian_Edge, convolutions.ToArray()));
@@ -1781,204 +1768,6 @@ namespace Game.Newt.Testers.Convolution
         }
 
         #endregion
-
-        private static Convolution2D RemoveSection(Convolution2D conv)
-        {
-            //Convolution2D mask = GetMask_ScatterShot(conv.Width, conv.Height);
-            Convolution2D mask = GetMask_Ellipse(conv.Width, conv.Height, StaticRandom.Next(1, 4));
-
-            double[] values = new double[conv.Values.Length];
-
-            for (int cntr = 0; cntr < values.Length; cntr++)
-            {
-                values[cntr] = conv.Values[cntr] * mask.Values[cntr];
-            }
-
-            values = Convolutions.ToUnit(values);
-
-            return new Convolution2D(values, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder);
-        }
-
-        /// <summary>
-        /// This returns a 0 to 1 convolution.  This should be used as an opacity mask, multiply another convolution's values
-        /// by each of mask's values
-        /// </summary>
-        /// <remarks>
-        /// TODO: Take in settings to fine tune the shapes
-        /// </remarks>
-        private static Convolution2D GetMask_ScatterShot(int width, int height, double percentKeep = .25)
-        {
-            //TODO: Create a white bitmap and draw random semitransparent black shapes on it
-
-            Random rand = StaticRandom.GetRandomForThread();
-
-            double[] values = Enumerable.Range(0, width * height).
-                Select(o => rand.NextDouble() < percentKeep ? 1d : rand.NextDouble()).
-                ToArray();
-
-            return new Convolution2D(values, width, height, false);
-        }
-        private static Convolution2D GetMask_Ellipse(int width, int height, int count = 1)
-        {
-            const double POWER = 2d;        // this gives larger probability of smaller values
-            const double MINPERCENT = .05;
-            const double MAXPERCENT = .8d;
-            const double MARGIN = .3;
-            const double MAXCENTERPERCENT = 1.2;
-            const double MAXASPECT = Math3D.GOLDENRATIO * 3d;
-
-            Point center = new Point(width / 2d, height / 2d);
-
-            double avgSize = Math3D.Avg(width, height);
-            double minRadius = avgSize * MINPERCENT;
-            double maxRadius = avgSize * MAXPERCENT;
-
-            double marginX = width * MARGIN;
-            double marginY = height * MARGIN;
-
-            Random rand = StaticRandom.GetRandomForThread();
-
-            DrawingVisual dv = new DrawingVisual();
-            using (DrawingContext ctx = dv.RenderOpen())
-            {
-                for (int cntr = 0; cntr < count; cntr++)
-                {
-                    #region Position/Radius
-
-                    Point position = new Point();
-                    double radiusX = 0d;
-                    double radiusY = 0d;
-
-                    // Keep trying until the ellipse is over the image
-                    while (true)
-                    {
-                        position = center + new Vector(Math3D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math3D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
-
-                        radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
-                        radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
-
-                        if(radiusX > radiusY)
-                        {
-                            double aspect = radiusX / radiusY;
-                            if(aspect > MAXASPECT)
-                            {
-                                radiusY = radiusX / MAXASPECT;
-                            }
-                        }
-                        else
-                        {
-                            double aspect = radiusY / radiusX;
-                            if (aspect > MAXASPECT)
-                            {
-                                radiusX = radiusY / MAXASPECT;
-                            }
-                        }
-
-                        if (position.X + radiusX < marginX)
-                        {
-                            continue;
-                        }
-                        else if (position.X - radiusX > width - marginX)
-                        {
-                            continue;
-                        }
-                        else if (position.Y + radiusY < marginY)
-                        {
-                            continue;
-                        }
-                        else if (position.Y - radiusY > height - marginY)
-                        {
-                            continue;
-                        }
-
-                        break;
-                    }
-
-                    #endregion
-                    #region Opacity - FAIL
-
-                    //TODO: Instead of subtracting from 255, just change the inputs to the rand statements
-
-                    ////double fromTransparency = rand.NextDouble(.5);
-                    ////double toTransparency = rand.NextDouble(.7, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
-                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
-
-                    ////double fromTransparency = rand.NextDouble(.1);
-                    ////double toTransparency = rand.NextDouble(.3, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
-                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
-
-                    //double fromTransparency = rand.NextDouble(.3);
-                    //double toTransparency = rand.NextDouble(.85, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
-                    //double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
-
-                    //byte fromAlpha = Convert.ToByte(255 - (fromTransparency * 255).ToInt_Round());
-                    //byte midAlpha = Convert.ToByte(255 - (midTransparency * 255).ToInt_Round());
-                    //byte toAlpha = toTransparency > 1d ? (byte)0 : Convert.ToByte(255 - (toTransparency * 255).ToInt_Round());
-
-                    ////double fromOffset = rand.NextDouble(0, .08);
-                    ////double toOffset = rand.NextDouble(.8, 1.5);
-                    ////double midOffset = rand.NextDouble(.1, .75);
-
-                    //double fromOffset = rand.NextDouble(0, .4);
-                    //double toOffset = rand.NextDouble(.95, 1.05);
-                    //double midOffset = rand.NextDouble(fromOffset, toOffset);
-
-                    //RadialGradientBrush brush = new RadialGradientBrush()
-                    //{
-                    //    //GradientOrigin = new Point(.5, .5),
-                    //    RadiusX = radiusY,
-                    //    RadiusY = radiusY,
-                    //};
-
-                    ////fromAlpha = (byte)255;
-                    ////midAlpha = (byte)128;
-                    ////toAlpha = (byte)0;
-
-                    //fromAlpha = (byte)0;
-                    //midAlpha = (byte)255;
-                    //toAlpha = (byte)0;
-
-                    //fromOffset = 0;
-                    //midOffset = .5;
-                    //toOffset = 1;
-
-
-                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(fromAlpha, 255, 255, 255), fromOffset));
-                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(midAlpha, 255, 255, 255), midOffset));
-                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(toAlpha, 255, 255, 255), toOffset));
-
-                    ////<RadialGradientBrush>
-                    ////    <RadialGradientBrush.GradientStops>
-                    ////        <GradientStop Offset="0" Color="#FF000000"/>
-                    ////        <GradientStop Offset=".7" Color="#80000000"/>
-                    ////        <GradientStop Offset="1" Color="#00000000"/>
-                    ////    </RadialGradientBrush.GradientStops>
-                    ////</RadialGradientBrush>
-
-                    #endregion
-
-                    //TODO: May want to randomize the alphas a bit (or get the failed region working with 3 stops)
-                    RadialGradientBrush brush = new RadialGradientBrush(Color.FromArgb(255, 255, 255, 255), Color.FromArgb(128, 255, 255, 255));
-
-                    ctx.DrawEllipse(brush, null, position, radiusX, radiusY);
-                }
-            }
-
-            dv.Transform = new RotateTransform(rand.NextDouble(360), center.X, center.Y);
-
-            RenderTargetBitmap bitmap = new RenderTargetBitmap(width, height, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
-            bitmap.Render(dv);
-
-            // Convert to a convolution
-            Convolution2D retVal = UtilityWPF.ConvertToConvolution(bitmap, 1d);
-
-            double test = retVal.Values.Max();
-
-            //NOTE: It's easier to let the background default to black, and draw white shapes on it.  Now it needs to be reversed
-            retVal = Convolutions.Invert(retVal, 1d);
-
-            return retVal;
-        }
     }
 
     #region Class: FeatureRecognizer_Session
@@ -2019,8 +1808,6 @@ namespace Game.Newt.Testers.Convolution
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public BitmapSource Bitmap { get; set; }
-
-        public long Token { get; set; }
     }
 
     #endregion

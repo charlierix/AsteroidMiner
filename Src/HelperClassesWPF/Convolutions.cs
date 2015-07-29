@@ -16,15 +16,15 @@ namespace Game.HelperClassesWPF
     {
         #region Main operations
 
-        public static Convolution2D Convolute(Convolution2D image, ConvolutionBase2D kernel)
+        public static Convolution2D Convolute(Convolution2D image, ConvolutionBase2D kernel, string description = "")
         {
             if (kernel is Convolution2D)
             {
-                return Convolute_Single(image, (Convolution2D)kernel);
+                return Convolute_Single(image, (Convolution2D)kernel, description);
             }
             else if (kernel is ConvolutionSet2D)
             {
-                return Convolute_Set(image, (ConvolutionSet2D)kernel);
+                return Convolute_Set(image, (ConvolutionSet2D)kernel, description);
             }
             else
             {
@@ -33,7 +33,7 @@ namespace Game.HelperClassesWPF
         }
 
         //NOTE: This ignores gain and iterations
-        public static Convolution2D Subtract(Convolution2D orig, Convolution2D filtered)
+        public static Convolution2D Subtract(Convolution2D orig, Convolution2D filtered, string description = "")
         {
             int width = Math.Min(orig.Width, filtered.Width);
             int height = Math.Min(orig.Height, filtered.Height);
@@ -85,7 +85,7 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            return new Convolution2D(values, width, height, true);
+            return new Convolution2D(values, width, height, true, description: description);
         }
 
         #endregion
@@ -228,7 +228,7 @@ namespace Game.HelperClassesWPF
             double[] newValues = Rotate_90(convolution.Values, convolution.Width, convolution.Height, isClockwise);
 
             //NOTE: width becomes height
-            return new Convolution2D(newValues, convolution.Height, convolution.Width, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+            return new Convolution2D(newValues, convolution.Height, convolution.Width, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder, convolution.Description);
         }
         public static double[] Rotate_90(double[] values, int width, int height, bool isClockwise)
         {
@@ -260,7 +260,7 @@ namespace Game.HelperClassesWPF
 
             double[] newValues = Rotate_45(convolution.Values, convolution.Width, isClockwise, shouldAdvanceEvensExtra);
 
-            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder, convolution.Description);
         }
         /// <summary>
         /// This rotates 45 degrees
@@ -322,7 +322,7 @@ namespace Game.HelperClassesWPF
         public static Convolution2D Invert(Convolution2D convolution, double? maxValue = null)
         {
             double[] newValues = Invert(convolution.Values, convolution.IsNegPos, maxValue);
-            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder);
+            return new Convolution2D(newValues, convolution.Width, convolution.Height, convolution.IsNegPos, convolution.Gain, convolution.Iterations, convolution.ExpandBorder, convolution.Description);
         }
         /// <summary>
         /// This will invert the values
@@ -360,6 +360,24 @@ namespace Game.HelperClassesWPF
             }
 
             return retVal;
+        }
+
+        //TODO: Take an enum or something that lets the user pick what type of removals to choose from
+        public static Convolution2D RemoveSection(Convolution2D conv)
+        {
+            //Convolution2D mask = GetMask_ScatterShot(conv.Width, conv.Height);
+            Convolution2D mask = GetMask_Ellipse(conv.Width, conv.Height, StaticRandom.Next(1, 4));
+
+            double[] values = new double[conv.Values.Length];
+
+            for (int cntr = 0; cntr < values.Length; cntr++)
+            {
+                values[cntr] = conv.Values[cntr] * mask.Values[cntr];
+            }
+
+            values = Convolutions.ToUnit(values);
+
+            return new Convolution2D(values, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder, conv.Description);
         }
 
         //TODO: Convolution2D GetExpanded(Convolution2D conv, int toWidth, int toHeight)
@@ -456,10 +474,16 @@ namespace Game.HelperClassesWPF
                 values[cntr] /= sum;
             }
 
-            return new Convolution2D(values, size, size, false);
+            string description = "gaussian";
+            if (!standardDeviationMultiplier.IsNearValue(1))
+            {
+                description += " x" + standardDeviationMultiplier.ToStringSignificantDigits(1);
+            }
+
+            return new Convolution2D(values, size, size, false, description: description);
         }
 
-        public static Convolution2D GetEdge_Sobel(bool vertical = true)
+        public static Convolution2D GetEdge_Sobel(bool vertical = true, double gain = 1d)
         {
             //Got this here:
             //http://www.imagemagick.org/Usage/convolve/#sobel
@@ -489,9 +513,10 @@ namespace Game.HelperClassesWPF
 
             values = ToUnit(values);
 
-            return new Convolution2D(values, 3, 3, true);
+            string description = string.Format("sobel{0}", gain.IsNearValue(1) ? "" : string.Format(" [gain={0}]", gain.ToStringSignificantDigits(1)));
+            return new Convolution2D(values, 3, 3, true, gain, description: description);
         }
-        public static Convolution2D GetEdge_Prewitt(bool vertical = true)
+        public static Convolution2D GetEdge_Prewitt(bool vertical = true, double gain = 1d)
         {
             //Got this here:
             //http://www.imagemagick.org/Usage/convolve/#prewitt
@@ -518,9 +543,10 @@ namespace Game.HelperClassesWPF
 
             values = ToUnit(values);
 
-            return new Convolution2D(values, 3, 3, true);
+            string description = string.Format("prewitt{0}", gain.IsNearValue(1) ? "" : string.Format(" [gain={0}]", gain.ToStringSignificantDigits(1)));
+            return new Convolution2D(values, 3, 3, true, gain, description: description);
         }
-        public static Convolution2D GetEdge_Compass(bool vertical = true)
+        public static Convolution2D GetEdge_Compass(bool vertical = true, double gain = 1d)
         {
             //Got this here:
             //http://www.imagemagick.org/Usage/convolve/#compass
@@ -547,9 +573,10 @@ namespace Game.HelperClassesWPF
 
             values = ToUnit(values);
 
-            return new Convolution2D(values, 3, 3, true);
+            string description = string.Format("compass{0}", gain.IsNearValue(1) ? "" : string.Format(" [gain={0}]", gain.ToStringSignificantDigits(1)));
+            return new Convolution2D(values, 3, 3, true, gain, description: description);
         }
-        public static Convolution2D GetEdge_Kirsch(bool vertical = true)
+        public static Convolution2D GetEdge_Kirsch(bool vertical = true, double gain = 1d)
         {
             //Got this here:
             //http://www.imagemagick.org/Usage/convolve/#kirsch
@@ -576,9 +603,10 @@ namespace Game.HelperClassesWPF
 
             values = ToUnit(values);
 
-            return new Convolution2D(values, 3, 3, true);
+            string description = string.Format("kirsch{0}", gain.IsNearValue(1) ? "" : string.Format(" [gain={0}]", gain.ToStringSignificantDigits(1)));
+            return new Convolution2D(values, 3, 3, true, gain, description: description);
         }
-        public static Convolution2D GetEdge_Laplacian(bool positive = true)
+        public static Convolution2D GetEdge_Laplacian(bool positive = true, double gain = 1d)
         {
             //Got this here:
             //http://www.tutorialspoint.com/dip/Laplacian_Operator.htm
@@ -605,13 +633,18 @@ namespace Game.HelperClassesWPF
 
             values = ToUnit(values);
 
-            return new Convolution2D(values, 3, 3, true);
+            string description = string.Format("laplacian{0}", gain.IsNearValue(1) ? "" : string.Format(" [gain={0}]", gain.ToStringSignificantDigits(1)));
+            return new Convolution2D(values, 3, 3, true, gain, description: description);
         }
 
-        public static ConvolutionSet2D GetEdgeSet_Sobel()
+        public static ConvolutionSet2D GetEdgeSet_GaussianSubtract()
         {
-            Convolution2D vert = GetEdge_Sobel(true);
-            Convolution2D horz = GetEdge_Sobel(false);
+            return new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract, "gaussian subtract");
+        }
+        public static ConvolutionSet2D GetEdgeSet_Sobel(double gain = 1d)
+        {
+            Convolution2D vert = GetEdge_Sobel(true, gain);
+            Convolution2D horz = GetEdge_Sobel(false, gain);
 
             var singles = new[]
                 {
@@ -621,7 +654,31 @@ namespace Game.HelperClassesWPF
                     Rotate_45(horz, true),
                 };
 
-            return new ConvolutionSet2D(singles, SetOperationType.MaxOf);
+            return new ConvolutionSet2D(singles, SetOperationType.MaxOf, "max of " + vert.Description);
+        }
+        public static ConvolutionSet2D GetEdgeSet_GuassianThenEdge(int guassianSize = 3, double guassianStandardDeviationMultiplier = 1d, double edgeGain = 1d)
+        {
+            ConvolutionBase2D[] convs = new ConvolutionBase2D[]
+            {
+                GetGaussian(guassianSize, guassianStandardDeviationMultiplier),
+                GetEdgeSet_Sobel(edgeGain),
+            };
+
+            string guassianDescription = string.Format("gaussian {0}", guassianSize);
+            if (!guassianStandardDeviationMultiplier.IsNearValue(1))
+            {
+                guassianDescription += " x" + guassianStandardDeviationMultiplier.ToStringSignificantDigits(1);
+            }
+
+            string edgeDescription = "edge";
+            if (!edgeGain.IsNearValue(1))
+            {
+                edgeDescription += string.Format(" [gain={0}]", edgeGain.ToStringSignificantDigits(1));
+            }
+
+            string description = string.Format("{0} then {1}", guassianDescription, edgeDescription);
+
+            return new ConvolutionSet2D(convs, SetOperationType.Standard, description);
         }
 
         #endregion
@@ -945,33 +1002,217 @@ namespace Game.HelperClassesWPF
             return retVal * (max / idealBrightness.Value);
         }
 
+        /// <summary>
+        /// This returns a 0 to 1 convolution.  This should be used as an opacity mask, multiply another convolution's values
+        /// by each of mask's values
+        /// </summary>
+        /// <remarks>
+        /// TODO: Take in settings to fine tune the shapes
+        /// </remarks>
+        public static Convolution2D GetMask_ScatterShot(int width, int height, double percentKeep = .25)
+        {
+            //TODO: Create a white bitmap and draw random semitransparent black shapes on it
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double[] values = Enumerable.Range(0, width * height).
+                Select(o => rand.NextDouble() < percentKeep ? 1d : rand.NextDouble()).
+                ToArray();
+
+            return new Convolution2D(values, width, height, false, description: "scatter shot mask");
+        }
+        public static Convolution2D GetMask_Ellipse(int width, int height, int count = 1)
+        {
+            const double POWER = 2d;        // this gives larger probability of smaller values
+            const double MINPERCENT = .05;
+            const double MAXPERCENT = .8d;
+            const double MARGIN = .3;
+            const double MAXCENTERPERCENT = 1.2;
+            const double MAXASPECT = Math3D.GOLDENRATIO * 3d;
+
+            Point center = new Point(width / 2d, height / 2d);
+
+            double avgSize = Math3D.Avg(width, height);
+            double minRadius = avgSize * MINPERCENT;
+            double maxRadius = avgSize * MAXPERCENT;
+
+            double marginX = width * MARGIN;
+            double marginY = height * MARGIN;
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                for (int cntr = 0; cntr < count; cntr++)
+                {
+                    #region Position/Radius
+
+                    Point position = new Point();
+                    double radiusX = 0d;
+                    double radiusY = 0d;
+
+                    // Keep trying until the ellipse is over the image
+                    while (true)
+                    {
+                        position = center + new Vector(Math3D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math3D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
+
+                        radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
+                        radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
+
+                        if (radiusX > radiusY)
+                        {
+                            double aspect = radiusX / radiusY;
+                            if (aspect > MAXASPECT)
+                            {
+                                radiusY = radiusX / MAXASPECT;
+                            }
+                        }
+                        else
+                        {
+                            double aspect = radiusY / radiusX;
+                            if (aspect > MAXASPECT)
+                            {
+                                radiusX = radiusY / MAXASPECT;
+                            }
+                        }
+
+                        if (position.X + radiusX < marginX)
+                        {
+                            continue;
+                        }
+                        else if (position.X - radiusX > width - marginX)
+                        {
+                            continue;
+                        }
+                        else if (position.Y + radiusY < marginY)
+                        {
+                            continue;
+                        }
+                        else if (position.Y - radiusY > height - marginY)
+                        {
+                            continue;
+                        }
+
+                        break;
+                    }
+
+                    #endregion
+                    #region Opacity - FAIL
+
+                    //TODO: Instead of subtracting from 255, just change the inputs to the rand statements
+
+                    ////double fromTransparency = rand.NextDouble(.5);
+                    ////double toTransparency = rand.NextDouble(.7, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    ////double fromTransparency = rand.NextDouble(.1);
+                    ////double toTransparency = rand.NextDouble(.3, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    ////double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    //double fromTransparency = rand.NextDouble(.3);
+                    //double toTransparency = rand.NextDouble(.85, 1.1);       // going a bit beyond 1 to give a higher chance of transparent
+                    //double midTransparency = rand.NextDouble(fromTransparency, toTransparency);
+
+                    //byte fromAlpha = Convert.ToByte(255 - (fromTransparency * 255).ToInt_Round());
+                    //byte midAlpha = Convert.ToByte(255 - (midTransparency * 255).ToInt_Round());
+                    //byte toAlpha = toTransparency > 1d ? (byte)0 : Convert.ToByte(255 - (toTransparency * 255).ToInt_Round());
+
+                    ////double fromOffset = rand.NextDouble(0, .08);
+                    ////double toOffset = rand.NextDouble(.8, 1.5);
+                    ////double midOffset = rand.NextDouble(.1, .75);
+
+                    //double fromOffset = rand.NextDouble(0, .4);
+                    //double toOffset = rand.NextDouble(.95, 1.05);
+                    //double midOffset = rand.NextDouble(fromOffset, toOffset);
+
+                    //RadialGradientBrush brush = new RadialGradientBrush()
+                    //{
+                    //    //GradientOrigin = new Point(.5, .5),
+                    //    RadiusX = radiusY,
+                    //    RadiusY = radiusY,
+                    //};
+
+                    ////fromAlpha = (byte)255;
+                    ////midAlpha = (byte)128;
+                    ////toAlpha = (byte)0;
+
+                    //fromAlpha = (byte)0;
+                    //midAlpha = (byte)255;
+                    //toAlpha = (byte)0;
+
+                    //fromOffset = 0;
+                    //midOffset = .5;
+                    //toOffset = 1;
+
+
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(fromAlpha, 255, 255, 255), fromOffset));
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(midAlpha, 255, 255, 255), midOffset));
+                    //brush.GradientStops.Add(new GradientStop(Color.FromArgb(toAlpha, 255, 255, 255), toOffset));
+
+                    ////<RadialGradientBrush>
+                    ////    <RadialGradientBrush.GradientStops>
+                    ////        <GradientStop Offset="0" Color="#FF000000"/>
+                    ////        <GradientStop Offset=".7" Color="#80000000"/>
+                    ////        <GradientStop Offset="1" Color="#00000000"/>
+                    ////    </RadialGradientBrush.GradientStops>
+                    ////</RadialGradientBrush>
+
+                    #endregion
+
+                    //TODO: May want to randomize the alphas a bit (or get the failed region working with 3 stops)
+                    RadialGradientBrush brush = new RadialGradientBrush(Color.FromArgb(255, 255, 255, 255), Color.FromArgb(128, 255, 255, 255));
+
+                    ctx.DrawEllipse(brush, null, position, radiusX, radiusY);
+                }
+            }
+
+            dv.Transform = new RotateTransform(rand.NextDouble(360), center.X, center.Y);
+
+            RenderTargetBitmap bitmap = new RenderTargetBitmap(width, height, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
+            bitmap.Render(dv);
+
+            // Convert to a convolution
+            Convolution2D retVal = UtilityWPF.ConvertToConvolution(bitmap, 1d, "ellipse mask");
+
+            double test = retVal.Values.Max();
+
+            //NOTE: It's easier to let the background default to black, and draw white shapes on it.  Now it needs to be reversed
+            return Convolutions.Invert(retVal, 1d);
+        }
+        private static Convolution2D GetMask_Triangle(int width, int height, int count = 1)
+        {
+            // Define a random triangle, define a random linear gradient brush for the opacity
+            throw new ApplicationException("finish this");
+        }
+
         #endregion
 
         #region Private Methods
 
-        private static Convolution2D Convolute_Set(Convolution2D image, ConvolutionSet2D kernel)
+        private static Convolution2D Convolute_Set(Convolution2D image, ConvolutionSet2D kernel, string description)
         {
             if (kernel.OperationType == SetOperationType.MaxOf)
             {
                 // This is special, because it needs to convolute each child, then pick the values it wants to keep.  Also, each child will need to be the same size
-                return Convolute_Set_MaxOf(image, kernel);
+                return Convolute_Set_MaxOf(image, kernel, description);
             }
 
             Convolution2D retVal = image;
 
             foreach (ConvolutionBase2D child in kernel.Convolutions)
             {
-                retVal = Convolute(retVal, child);
+                retVal = Convolute(retVal, child, description);
             }
 
             if (kernel.OperationType == SetOperationType.Subtract)
             {
-                retVal = Convolutions.Subtract(image, retVal);
+                retVal = Convolutions.Subtract(image, retVal, description);
             }
 
             return retVal;
         }
-        private static Convolution2D Convolute_Set_MaxOf(Convolution2D image, ConvolutionSet2D kernel)
+        private static Convolution2D Convolute_Set_MaxOf(Convolution2D image, ConvolutionSet2D kernel, string description)
         {
             #region validate
 #if DEBUG
@@ -999,7 +1240,7 @@ namespace Game.HelperClassesWPF
             #endregion
 
             Convolution2D[] children = kernel.Convolutions.
-                Select(o => Convolute(image, o)).
+                Select(o => Convolute(image, o, description)).
                 ToArray();
 
             double[] retVal = new double[children[0].Values.Length];
@@ -1022,7 +1263,7 @@ namespace Game.HelperClassesWPF
                 retVal[index] = maxValue;
             }
 
-            return new Convolution2D(retVal, children[0].Width, children[0].Height, image.IsNegPos || children.Any(o => o.IsNegPos));
+            return new Convolution2D(retVal, children[0].Width, children[0].Height, image.IsNegPos || children.Any(o => o.IsNegPos), description: description);
         }
         /// <summary>
         /// This applies the convolution kernel to the image
@@ -1042,7 +1283,7 @@ namespace Game.HelperClassesWPF
         /// False: The output image will be smaller (output.W = image.W - kernel.W + 1, same with height)
         /// </param>
         /// <returns></returns>
-        private static Convolution2D Convolute_Single(Convolution2D image, Convolution2D kernel)
+        private static Convolution2D Convolute_Single(Convolution2D image, Convolution2D kernel, string description)
         {
             Convolution2D retVal = image;
 
@@ -1050,22 +1291,22 @@ namespace Game.HelperClassesWPF
             {
                 if (kernel.ExpandBorder)
                 {
-                    retVal = Convolute_ExpandedBorder(retVal, kernel);
+                    retVal = Convolute_ExpandedBorder(retVal, kernel, description);
                 }
                 else
                 {
-                    retVal = Convolute_Standard(retVal, kernel);
+                    retVal = Convolute_Standard(retVal, kernel, description);
                 }
             }
 
             return retVal;
         }
 
-        private static Convolution2D Convolute_ExpandedBorder(Convolution2D image, Convolution2D kernel)
+        private static Convolution2D Convolute_ExpandedBorder(Convolution2D image, Convolution2D kernel, string description)
         {
             throw new ApplicationException("finish this");
         }
-        private static Convolution2D Convolute_Standard(Convolution2D image, Convolution2D kernel)
+        private static Convolution2D Convolute_Standard(Convolution2D image, Convolution2D kernel, string description)
         {
             int returnWidth = image.Width - kernel.Width + 1;
             int returnHeight = image.Height - kernel.Height + 1;
@@ -1102,7 +1343,7 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            return new Convolution2D(values, returnWidth, returnHeight, image.IsNegPos || kernel.IsNegPos);
+            return new Convolution2D(values, returnWidth, returnHeight, image.IsNegPos || kernel.IsNegPos, description: description);
         }
 
         private static int Subtract_GetOffset(int diff)
@@ -1162,13 +1403,19 @@ namespace Game.HelperClassesWPF
                 pixelMult = 1;
             }
 
+            string tooltip = string.Format("{0}x{1}", kernel.Width, kernel.Height);
+            if (!string.IsNullOrEmpty(kernel.Description))
+            {
+                tooltip = kernel.Description + "\r\n" + tooltip;
+            }
+
             // Display it as a border and image
             Image image = new Image()
             {
                 Source = GetKernelBitmap(kernel, pixelMult),
                 Width = width,
                 Height = height,
-                ToolTip = string.Format("{0}x{1}", kernel.Width, kernel.Height),
+                ToolTip = tooltip,
             };
 
             Border border = new Border()
@@ -1251,6 +1498,11 @@ namespace Game.HelperClassesWPF
                 ContextMenu = contextMenu,
                 Tag = kernel,
             };
+
+            if (!string.IsNullOrEmpty(kernel.Description))
+            {
+                border.ToolTip = kernel.Description;
+            }
 
             return border;
         }
@@ -1417,9 +1669,10 @@ namespace Game.HelperClassesWPF
 
             this.Convolutions = convolutions.ToArray();
             this.OperationType = dna.OperationType;
+            _description = dna.Description;
         }
 
-        public ConvolutionSet2D(ConvolutionBase2D[] convolutions, SetOperationType operationType)
+        public ConvolutionSet2D(ConvolutionBase2D[] convolutions, SetOperationType operationType, string description = "")
         {
             foreach (object child in convolutions)
             {
@@ -1431,6 +1684,7 @@ namespace Game.HelperClassesWPF
 
             this.Convolutions = convolutions;
             this.OperationType = operationType;
+            _description = description;
         }
 
         #endregion
@@ -1449,6 +1703,15 @@ namespace Game.HelperClassesWPF
                 }
 
                 return this.Convolutions.Any(o => o.IsNegPos);
+            }
+        }
+
+        private readonly string _description;
+        public override string Description
+        {
+            get
+            {
+                return _description;
             }
         }
 
@@ -1493,6 +1756,7 @@ namespace Game.HelperClassesWPF
                 Convolutions_Set = sets,
                 IsNegPos = this.IsNegPos,
                 OperationType = this.OperationType,
+                Description = this.Description,
             };
         }
 
@@ -1520,9 +1784,9 @@ namespace Game.HelperClassesWPF
         #region Constructor
 
         public Convolution2D(Convolution2D_DNA dna)
-            : this(dna.Values, dna.Width, dna.Height, dna.IsNegPos, dna.Gain, dna.Iterations, dna.ExpandBorder) { }
+            : this(dna.Values, dna.Width, dna.Height, dna.IsNegPos, dna.Gain, dna.Iterations, dna.ExpandBorder, dna.Description) { }
 
-        public Convolution2D(double[] values, int width, int height, bool isNegPos, double gain = 1d, int iterations = 1, bool expandBorder = false)
+        public Convolution2D(double[] values, int width, int height, bool isNegPos, double gain = 1d, int iterations = 1, bool expandBorder = false, string description = "")
         {
             if (values.Length != width * height)
             {
@@ -1533,6 +1797,7 @@ namespace Game.HelperClassesWPF
             this.Width = width;
             this.Height = height;
             _isNegPos = isNegPos;
+            _description = description;
             this.Gain = gain;
             this.Iterations = iterations;
             this.ExpandBorder = expandBorder;
@@ -1556,6 +1821,15 @@ namespace Game.HelperClassesWPF
             get
             {
                 return _isNegPos;
+            }
+        }
+
+        private readonly string _description;
+        public override string Description
+        {
+            get
+            {
+                return _description;
             }
         }
 
@@ -1785,6 +2059,7 @@ namespace Game.HelperClassesWPF
                 Height = this.Height,
 
                 IsNegPos = this.IsNegPos,
+                Description = this.Description,
 
                 Gain = this.Gain,
                 Iterations = this.Iterations,
@@ -1813,6 +2088,11 @@ namespace Game.HelperClassesWPF
             if (this.ExpandBorder)
             {
                 retVal.Append(" [expand border]");
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.Description))
+            {
+                retVal.Append(string.Format(" \"{0}\"", this.Description));
             }
 
             return retVal.ToString();
@@ -1953,6 +2233,8 @@ namespace Game.HelperClassesWPF
     {
         public abstract bool IsNegPos { get; }
 
+        public abstract string Description { get; }
+
         public abstract VectorInt GetReduction();
     }
 
@@ -1988,6 +2270,8 @@ namespace Game.HelperClassesWPF
 
     public class ConvolutionSet2D_DNA : ConvolutionBase2D_DNA
     {
+        public string Description { get; set; }
+
         public Convolution2D_DNA[] Convolutions_Single { get; set; }
         public ConvolutionSet2D_DNA[] Convolutions_Set { get; set; }
 
@@ -1999,6 +2283,8 @@ namespace Game.HelperClassesWPF
 
     public class Convolution2D_DNA : ConvolutionBase2D_DNA
     {
+        public string Description { get; set; }
+
         [TypeConverter(typeof(DblArrTypeConverter))]
         public double[] Values { get; set; }
 

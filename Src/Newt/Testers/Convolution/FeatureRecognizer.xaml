@@ -104,7 +104,7 @@
 
                     <!-- Treeview -->
                     <Border Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" BorderThickness="1" BorderBrush="#18000000" Background="#18FFFFFF" Padding="4">
-                        <TreeView Name="pnlImages" BorderBrush="Transparent" Background="Transparent" MinWidth="120" SelectedItemChanged="pnlImages_SelectedItemChanged"/>
+                        <TreeView Name="treeImages" BorderBrush="Transparent" Background="Transparent" MinWidth="120" SelectedItemChanged="pnlImages_SelectedItemChanged"/>
                     </Border>
 
                     <!-- Expand/Collapse all -->
@@ -147,7 +147,6 @@
                                 <ScaleTransform ScaleX=".85" ScaleY=".85"/>
                             </StackPanel.LayoutTransform>
 
-                            <Label Content="Pre filters" FontSize="14" Margin="0,-7, 0, -4"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterNone" Content="None"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussian" Content="Gaussian"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussianSubtract" Content="Gaussian Subtract"/>

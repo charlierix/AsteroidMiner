@@ -143,6 +143,7 @@
                     <ListBoxItem Content="OCR" MouseUp="EncogOCR_MouseUp"/>
                     <ListBoxItem Content="Image Filters" MouseUp="ImageFilters_MouseUp"/>
                     <ListBoxItem Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
+                    <ListBoxItem Content="Feature Recognizer 2" MouseUp="FeatureRecognizer2_MouseUp"/>
                     <ListBoxItem Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 

@@ -987,38 +987,38 @@ namespace Game.Newt.Testers.Convolution
 
             foreach (int size in sizes)
             {
-                AddKernel(Convolutions.GetGaussian(size, 1), "gaussian");
+                AddKernel(Convolutions.GetGaussian(size, 1));
             }
 
             foreach (int size in sizes)
             {
-                AddKernel(Convolutions.GetGaussian(size, 2), "gaussian x2");
+                AddKernel(Convolutions.GetGaussian(size, 2));
             }
         }
         private void AddDefaultKernels_Edges_Small()
         {
-            AddKernel(Convolutions.GetEdge_Sobel(true), "sobel");
-            AddKernel(Convolutions.GetEdge_Sobel(false), "sobel");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), true), "sobel");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), true), "sobel");
+            AddKernel(Convolutions.GetEdge_Sobel(true));
+            AddKernel(Convolutions.GetEdge_Sobel(false));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), true));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), true));
 
-            AddKernel(Convolutions.GetEdge_Prewitt(true), "prewitt");
-            AddKernel(Convolutions.GetEdge_Prewitt(false), "prewitt");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(true), true), "prewitt");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(false), true), "prewitt");
+            AddKernel(Convolutions.GetEdge_Prewitt(true));
+            AddKernel(Convolutions.GetEdge_Prewitt(false));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(true), true));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Prewitt(false), true));
 
-            AddKernel(Convolutions.GetEdge_Compass(true), "compass");
-            AddKernel(Convolutions.GetEdge_Compass(false), "compass");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(true), true), "compass");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(false), true), "compass");
+            AddKernel(Convolutions.GetEdge_Compass(true));
+            AddKernel(Convolutions.GetEdge_Compass(false));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(true), true));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Compass(false), true));
 
-            AddKernel(Convolutions.GetEdge_Kirsch(true), "kirsch");
-            AddKernel(Convolutions.GetEdge_Kirsch(false), "kirsch");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(true), true), "kirsch");
-            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(false), true), "kirsch");
+            AddKernel(Convolutions.GetEdge_Kirsch(true));
+            AddKernel(Convolutions.GetEdge_Kirsch(false));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(true), true));
+            AddKernel(Convolutions.Rotate_45(Convolutions.GetEdge_Kirsch(false), true));
 
-            AddKernel(Convolutions.GetEdge_Laplacian(true), "laplacian");
-            AddKernel(Convolutions.GetEdge_Laplacian(false), "laplacian");
+            AddKernel(Convolutions.GetEdge_Laplacian(true));
+            AddKernel(Convolutions.GetEdge_Laplacian(false));
         }
         private void AddDefaultKernels_Edges_Large()
         {
@@ -1042,41 +1042,18 @@ namespace Game.Newt.Testers.Convolution
         private void AddDefaultKernels_Composite()
         {
             // Gaussian Subtract
-            AddKernel(new ConvolutionSet2D(new[] { Convolutions.GetGaussian(3, 1) }, SetOperationType.Subtract), "gaussian subtract");
+            AddKernel(Convolutions.GetEdgeSet_GaussianSubtract());
 
             // MaxAbs Sobel
-            Convolution2D vert = Convolutions.GetEdge_Sobel(true);
-            Convolution2D horz = Convolutions.GetEdge_Sobel(false);
-            Convolution2D vert45 = Convolutions.Rotate_45(vert, true);
-            Convolution2D horz45 = Convolutions.Rotate_45(horz, true);
-            ConvolutionSet2D first = null;
-
             foreach (int gain in new[] { 1, 2, 4 })
             {
-                var singles = new[]
-                {
-                    new Convolution2D(vert.Values, vert.Width, vert.Height, vert.IsNegPos, gain),
-                    new Convolution2D(horz.Values, horz.Width, horz.Height, horz.IsNegPos, gain),
-                    new Convolution2D(vert45.Values, vert45.Width, vert45.Height, vert45.IsNegPos, gain),
-                    new Convolution2D(horz45.Values, horz45.Width, horz45.Height, horz45.IsNegPos, gain),
-                };
-
-                ConvolutionSet2D set = new ConvolutionSet2D(singles, SetOperationType.MaxOf);
-                AddKernel(set, string.Format("max of sobel{0}", gain == 1 ? "" : string.Format("\r\ngain={0}", gain)));
-
-                first = first ?? set;
+                AddKernel(Convolutions.GetEdgeSet_Sobel(gain));
             }
 
             // Gausian then edge
             foreach (int size in new[] { 3, 5, 7 })
             {
-                ConvolutionBase2D[] convs = new ConvolutionBase2D[]
-                {
-                    Convolutions.GetGaussian(size, 1),
-                    first,
-                };
-
-                AddKernel(new ConvolutionSet2D(convs, SetOperationType.Standard), string.Format("guass then edge\r\n{0}x{0}", size));
+                AddKernel(Convolutions.GetEdgeSet_GuassianThenEdge(size));
             }
         }
         private void AddRandomKernels(int count, bool isNegPos, bool? isSquare = null)
@@ -1100,31 +1077,31 @@ namespace Game.Newt.Testers.Convolution
             }
         }
 
-        private void AddKernel(ConvolutionBase2D kernel, string tooltipHeader = "")
+        private void AddKernel(ConvolutionBase2D kernel)
         {
             Border border = Convolutions.GetKernelThumbnail(kernel, 40, _kernelContextMenu);
 
-            if (!string.IsNullOrEmpty(tooltipHeader))
-            {
-                // For simple (not composite) kernels, it's the image that gets the tooltip.  So if this is one of those, add to the tooltip
-                if (border.Child is Image)
-                {
-                    string existingTooltip = ((Image)border.Child).ToolTip as string;
+            //if (!string.IsNullOrEmpty(tooltipHeader))
+            //{
+            //    // For simple (not composite) kernels, it's the image that gets the tooltip.  So if this is one of those, add to the tooltip
+            //    if (border.Child is Image)
+            //    {
+            //        string existingTooltip = ((Image)border.Child).ToolTip as string;
 
-                    if (!string.IsNullOrEmpty(existingTooltip))
-                    {
-                        ((Image)border.Child).ToolTip = tooltipHeader + "\r\n" + existingTooltip;
-                    }
-                    else
-                    {
-                        border.ToolTip = tooltipHeader;
-                    }
-                }
-                else
-                {
-                    border.ToolTip = tooltipHeader;
-                }
-            }
+            //        if (!string.IsNullOrEmpty(existingTooltip))
+            //        {
+            //            ((Image)border.Child).ToolTip = tooltipHeader + "\r\n" + existingTooltip;
+            //        }
+            //        else
+            //        {
+            //            border.ToolTip = tooltipHeader;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        border.ToolTip = tooltipHeader;
+            //    }
+            //}
 
             // Store them
             panelKernels.Children.Add(border);

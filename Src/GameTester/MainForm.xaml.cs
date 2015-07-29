@@ -236,6 +236,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Convolution.FeatureRecognizer().Show();
         }
+        private void FeatureRecognizer2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.FeatureRecognizer2().Show();
+        }
         private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.MineralIdentifier().Show();
