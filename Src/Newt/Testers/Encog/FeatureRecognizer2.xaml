@@ -54,14 +54,18 @@
 
     </Window.Resources>
 
-    <Grid>
+    <Grid Margin="8">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="5"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
 
-        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Column="0" Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <!-- Images -->
                 <Expander IsExpanded="True" Header="Images">
@@ -114,6 +118,7 @@
                             <CheckBox IsChecked="True" Name="chkPrefilterNone" Content="None"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussian" Content="Gaussian"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussianSubtract" Content="Gaussian Subtract"/>
+
                             <CheckBox IsChecked="True" Name="chkPrefilterMaxAbsSobel" ToolTip="Standard edge detect" Content="MaxAbs Sobel"/>
                             <CheckBox IsChecked="True" Name="chkPrefilterGaussianEdge" ToolTip="Guassian, then edge detect" Content="Gaussian+Edge"/>
                         </StackPanel>
@@ -177,5 +182,13 @@
                 </Expander>
             </StackPanel>
         </ScrollViewer>
+
+        <Border Grid.Column="0" Grid.Row="1" Style="{StaticResource expanderBorder}">
+            <!-- Edge Colors -->
+            <ComboBox Name="cboEdgeColors" ToolTip="Edge result colors" Margin="4"/>
+        </Border>
+
+        <!-- This is populated by codebehind -->
+        <Border Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Name="panelRight" Margin="8,0,0,0"/>
     </Grid>
 </Window>

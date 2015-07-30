@@ -163,6 +163,9 @@
     <Compile Include="Encog\FeatureRecognizer2.xaml.cs">
       <DependentUpon>FeatureRecognizer2.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Encog\FeatureRecognizer3.xaml.cs">
+      <DependentUpon>FeatureRecognizer3.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Encog\MineralIdentifier.xaml.cs">
       <DependentUpon>MineralIdentifier.xaml</DependentUpon>
     </Compile>
@@ -392,6 +395,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Encog\FeatureRecognizer2.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\FeatureRecognizer3.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

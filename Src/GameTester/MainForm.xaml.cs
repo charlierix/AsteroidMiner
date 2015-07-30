@@ -240,6 +240,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Encog.FeatureRecognizer2().Show();
         }
+        private void FeatureRecognizer3_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.FeatureRecognizer3().Show();
+        }
         private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.MineralIdentifier().Show();

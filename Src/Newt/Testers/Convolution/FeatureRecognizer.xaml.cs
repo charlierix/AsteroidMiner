@@ -582,10 +582,12 @@ namespace Game.Newt.Testers.Convolution
                 Tuple<Border, int> clickedCtrl = GetSelectedExtract(e.OriginalSource);
                 if (clickedCtrl == null)
                 {
-                    return;
+                    SelectExtract(-1);
                 }
-
-                SelectExtract(clickedCtrl.Item2);
+                else
+                {
+                    SelectExtract(clickedCtrl.Item2);
+                }
             }
             catch (Exception ex)
             {
@@ -1116,7 +1118,8 @@ namespace Game.Newt.Testers.Convolution
             int index = panelExtracts.Children.IndexOf(clickedCtrl);
             if (index < 0)
             {
-                throw new ApplicationException("Couldn't find clicked item");
+                //throw new ApplicationException("Couldn't find clicked item");
+                return null;
             }
 
             if (_extracts.Count != panelExtracts.Children.Count)

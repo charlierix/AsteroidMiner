@@ -30,6 +30,8 @@ namespace Game.Newt.Testers.Encog
         {
             Gaussian,
             Gaussian_Subtract,
+            Individual_Sobel,
+
             MaxAbs_Sobel,
             Gaussian_Edge,
         }
@@ -88,6 +90,13 @@ namespace Game.Newt.Testers.Encog
 
             // Context Menus
             _featureExtractContextMenu = (ContextMenu)this.Resources["featureExtractContextMenu"];
+
+            // NegPos coloring
+            foreach (ConvolutionResultNegPosColoring coloring in Enum.GetValues(typeof(ConvolutionResultNegPosColoring)))
+            {
+                cboEdgeColors.Items.Add(coloring);
+            }
+            cboEdgeColors.SelectedIndex = 0;
 
             // FeatureExtract Combobox
             cboExtractType.Items.Add(ConvolutionExtractType.EdgeSoftBorder);
@@ -688,6 +697,16 @@ namespace Game.Newt.Testers.Encog
 
             // Remember which is selected
             _selectedFeatureConvIndex = index;
+
+            // Choose an image
+            var image = GetSelected_Image();
+            if (image == null)
+            {
+                image = _images[StaticRandom.Next(_images.Count)];
+            }
+
+            // Apply this kernel to the original image
+            ApplyFeatureConv(image, _featureConvs[_selectedFeatureConvIndex]);
         }
         private void Select_Analyzer(int index)
         {
@@ -754,6 +773,72 @@ namespace Game.Newt.Testers.Encog
 
             viewer.Show();
         }
+
+
+        private void ApplyFeatureConv(FeatureRecognizer_Image image, FeatureRecognizer2_FeatureConv conv)
+        {
+            ConvolutionResultNegPosColoring edgeColor = (ConvolutionResultNegPosColoring)cboEdgeColors.SelectedValue;
+
+            // Create a panel that will hold the result
+            Grid grid = new Grid();
+
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            panelRight.Child = grid;
+
+            // Left
+            Convolution2D imageConv = UtilityWPF.ConvertToConvolution(image.Bitmap);
+            if (conv.PreFilter != null)
+            {
+                imageConv = Convolutions.Convolute(imageConv, conv.PreFilter);
+            }
+
+            ApplyFeatureConv_LeftImage(grid, imageConv, conv.PreFilter, edgeColor);
+
+            // Right
+            //Convolutions.
+
+
+
+
+        }
+        private static void ApplyFeatureConv_LeftImage(Grid grid, Convolution2D imageConv, ConvolutionBase2D preFilter, ConvolutionResultNegPosColoring edgeColor)
+        {
+            bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
+
+            string tooltip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height);
+            if (preFilter != null)
+            {
+                tooltip = preFilter.Description + "\r\n" + tooltip;
+            }
+
+            Image image = new Image()
+            {
+                Source = Convolutions.ShowConvolutionResult(imageConv, isSourceNegPos, edgeColor),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                ToolTip = tooltip,
+            };
+
+            Grid.SetColumn(image, 0);
+            grid.Children.Add(image);
+        }
+        private static void ApplyFeatureConv_RightImage(Grid grid, Convolution2D imageConv, ConvolutionResultNegPosColoring edgeColor)
+        {
+            Image image = new Image()
+            {
+                Source = Convolutions.ShowConvolutionResult(imageConv, true, edgeColor),
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),
+            };
+
+            Grid.SetColumn(image, 2);
+            grid.Children.Add(image);
+        }
+
 
         private ConvolutionBase2D GetRandomPreFilter()
         {
