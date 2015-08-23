@@ -737,5 +737,46 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
+
+        #region TreeView
+
+        /// <summary>
+        /// There is no native easy way to clear a treeview's selection, so I added this
+        /// </summary>
+        public static void ClearSelection(this TreeView treeview)
+        {
+            ClearTreeViewSelection(treeview.Items, treeview.ItemContainerGenerator);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Treeview doesn't have a simple clear selection
+        /// </summary>
+        /// <remarks>
+        /// Got this here:
+        /// http://stackoverflow.com/questions/676819/wpf-treeview-clear-selection
+        /// </remarks>
+        private static void ClearTreeViewSelection(ItemCollection items, ItemContainerGenerator containerGenerator)
+        {
+            if (items != null && containerGenerator != null)
+            {
+                for (int cntr = 0; cntr < items.Count; cntr++)
+                {
+                    // Can't use item directly, because it could be any UIElement
+                    TreeViewItem itemContainer = containerGenerator.ContainerFromIndex(cntr) as TreeViewItem;
+                    if (itemContainer != null)
+                    {
+                        // Recurse
+                        ClearTreeViewSelection(itemContainer.Items, itemContainer.ItemContainerGenerator);
+                        itemContainer.IsSelected = false;
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }

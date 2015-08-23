@@ -389,7 +389,7 @@ namespace Game.Newt.Testers.Encog
         {
             try
             {
-                if(_dots == null)
+                if (_dots == null)
                 {
                     return;
                 }
@@ -572,9 +572,7 @@ namespace Game.Newt.Testers.Encog
             }
 
             // Run it through the network
-            double[] output = new double[_networkOutputs.Size];
-            _network.Net.Network.Compute(dot.NNInput, output);
-            dot.NNOutput = output;
+            dot.NNOutput = _network.Net.Network.Compute(dot.NNInput);
 
             #endregion
 

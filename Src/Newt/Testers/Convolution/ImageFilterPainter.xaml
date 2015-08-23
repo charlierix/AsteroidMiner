@@ -142,7 +142,8 @@
                 <Grid Name="grdViewPort" Background="#AABFAC" Margin="-4" MouseMove="grdViewPort_MouseMove" MouseDown="grdViewPort_MouseDown" MouseUp="grdViewPort_MouseUp">
                     <Viewport3D Name="_viewport" IsHitTestVisible="False" Width="600" Height="600">
                         <Viewport3D.Camera>
-                            <PerspectiveCamera x:Name="_camera" Position="0,-12,1" LookDirection="0,12,-1" UpDirection="0,1,12" FieldOfView="45"/>
+                            <!--<PerspectiveCamera x:Name="_camera" Position="0,-12,1" LookDirection="0,12,-1" UpDirection="0,1,12" FieldOfView="45"/>-->
+                            <PerspectiveCamera x:Name="_camera" Position="0,0,12" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
                         </Viewport3D.Camera>
                         <ModelVisual3D>
                             <ModelVisual3D.Content>

@@ -172,7 +172,7 @@ namespace Game.Newt.Testers.Encog
                     BasicNetwork network = null;
                     try
                     {
-                        network = UtilityEncog.GetTrainedNetwork(inputs.ToArray(), outputs.ToArray(), maxSeconds: 300, cancelToken: cancelToken);
+                        network = UtilityEncog.GetTrainedNetwork(inputs.ToArray(), outputs.ToArray(), UtilityEncog.ERROR, 20, 300, cancelToken).NetworkOrNull;
                     }
                     catch (Exception) { }
 
@@ -1154,10 +1154,7 @@ namespace Game.Newt.Testers.Encog
             }
 
             // Recognize
-            double[] input = _currentSketch.NNInput;
-            double[] output = new double[_network.Outputs.Length];
-
-            _network.Network.Compute(input, output);
+            double[] output = _network.Network.Compute(_currentSketch.NNInput);
 
             var allOutputs = output.
                 Select((o, i) => new { Value = o, Index = i, Name = _network.Outputs[i] }).

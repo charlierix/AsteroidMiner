@@ -2396,6 +2396,41 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
+        public static BitmapSource GetBitmap_Aliased(byte[][] colors, int colorsWidth, int colorsHeight, int imageWidth, int imageHeight)
+        {
+            if (colors.Length != colorsWidth * colorsHeight)
+            {
+                throw new ArgumentException(string.Format("The array isn't the same as colorsWidth*colorsHeight.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, colorsWidth, colorsHeight));
+            }
+
+            double scaleX = Convert.ToDouble(imageWidth) / Convert.ToDouble(colorsWidth);
+            double scaleY = Convert.ToDouble(imageHeight) / Convert.ToDouble(colorsHeight);
+
+            RenderTargetBitmap retVal = new RenderTargetBitmap(imageWidth, imageHeight, DPI, DPI, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                int index = 0;
+
+                for (int y = 0; y < colorsHeight; y++)
+                {
+                    for (int x = 0; x < colorsWidth; x++)
+                    {
+                        Color color = Color.FromArgb(colors[index][0], colors[index][1], colors[index][2], colors[index][3]);
+
+                        ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
+
+                        index++;
+                    }
+                }
+            }
+
+            retVal.Render(dv);
+
+            return retVal;
+        }
+
 
         /// <summary>
         /// If you use "new BitmapImage(new Uri(filename", it locks the file, even if you set the image to null.  So this method
@@ -7881,6 +7916,14 @@ namespace Game.HelperClassesWPF
         public readonly int Increment;
         public readonly bool IsPos;
 
+        public int Length
+        {
+            get
+            {
+                return Math.Abs(this.Stop - this.Start) + 1;
+            }
+        }
+
         /// <summary>
         /// This will set one of the output x,y,z to index2D based on this.Axis
         /// </summary>
@@ -7975,6 +8018,18 @@ namespace Game.HelperClassesWPF
             for (int cntr = Start; IsPos ? cntr <= Stop : cntr >= Stop; cntr += Increment)
             {
                 yield return cntr;
+            }
+        }
+
+        public bool IsBetween(int test)
+        {
+            if (this.IsPos)
+            {
+                return test >= this.Start && test <= this.Stop;
+            }
+            else
+            {
+                return test >= this.Stop && test <= this.Start;
             }
         }
     }

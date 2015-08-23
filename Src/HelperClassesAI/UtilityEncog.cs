@@ -96,6 +96,14 @@ namespace Game.HelperClassesAI
 
         #endregion
 
+        #region Declaration Section
+
+        public const double ERROR = 0.001;
+
+        #endregion
+
+        #region Training
+
         /// <summary>
         /// This looks at the training data, and builds a neural net for it
         /// </summary>
@@ -109,9 +117,8 @@ namespace Game.HelperClassesAI
         /// instead of waiting for one at a time to completly finish or fail
         /// </remarks>
         /// <param name="numSimultaneousCandidates">Number of networks to train at a time (each on its own thread)</param>
-        public static BasicNetwork GetTrainedNetwork(double[][] trainingInput, double[][] trainingOutput, double maxError = 0.001, double? maxSeconds = null, CancellationToken? cancelToken = null)
+        public static EncogTrainingResponse GetTrainedNetwork(double[][] trainingInput, double[][] trainingOutput, double maxError = ERROR, double? maxSeconds_PerAttempt = null, double? maxSeconds_Total = null, CancellationToken? cancelToken = null)
         {
-            //const double MULTGROWTH = .33333;
             const double MULTGROWTH = .1;
 
             CancellationToken cancelTokenActual = cancelToken ?? CancellationToken.None;        // can't default to CancellationToken.None in the params (compiler complains)
@@ -121,77 +128,104 @@ namespace Game.HelperClassesAI
             Stopwatch elapsed = new Stopwatch();
             elapsed.Start();
 
+            //NOTE: Even if a network is a failure, it will still be stored here until a better one is made
+            EncogTrainingResponse retVal = null;
+
             for (int cntr = 0; cntr < 1000; cntr++)
             {
-                if(cancelTokenActual.IsCancellationRequested)
+                if (cancelTokenActual.IsCancellationRequested)
                 {
-                    return null;
+                    break;
                 }
 
-                double hiddenMultActual = 1d + (cntr * MULTGROWTH);
-
                 double? maxSecActual = null;
-                if (maxSeconds != null)
+                if (maxSeconds_Total != null)
                 {
-                    maxSecActual = maxSeconds.Value - elapsed.Elapsed.TotalSeconds;
+                    maxSecActual = maxSeconds_Total.Value - elapsed.Elapsed.TotalSeconds;
                     if (maxSecActual.Value < 0)
                     {
                         break;
                     }
                 }
 
-                var network = GetTrainedNetworkAsync(training, hiddenMultActual, maxError, cancelTokenActual, maxSecActual).Result;
-
-                if (network.Item1 != null)
+                if (maxSecActual != null && maxSeconds_PerAttempt != null && maxSeconds_PerAttempt.Value < maxSecActual.Value)
                 {
-                    return network.Item1;
+                    maxSecActual = maxSeconds_PerAttempt.Value;
+                }
+                else if(maxSecActual == null && maxSeconds_PerAttempt != null)
+                {
+                    maxSecActual = maxSeconds_PerAttempt.Value;
+                }
+
+                // Train it
+                double hiddenMultActual = 1d + (cntr * MULTGROWTH);
+                EncogTrainingResponse network = GetTrainedNetworkAsync(training, hiddenMultActual, maxError, cancelTokenActual, maxSecActual).Result;
+
+                if (network.IsSuccess)
+                {
+                    return network;
+                }
+                else if (retVal == null || network.Error < retVal.Error)
+                {
+                    retVal = network;
+                }
+
+                if (cancelTokenActual.IsCancellationRequested || (maxSeconds_Total != null && elapsed.Elapsed.TotalSeconds >= maxSeconds_Total.Value))
+                {
+                    break;
                 }
             }
 
-            throw new ApplicationException("Couldn't find a solution");
+            return retVal;
         }
 
-        // This is a failed attempt.  Threading didn't help, and there's no need to try to improve the error - once one is found, that's enough
-        private static BasicNetwork GetTrainedNetwork(double[][] trainingInput, double[][] trainingOutput, int numSimultaneousCandidates = 7, double maxError = 0.001, double? maxSeconds = null)
-        {
-            //TODO: Instead of trying many variants at the same time, only do one or two at a time, and ramp up the complexity of the hidden layer after each failure
-            //TODO: Don't WaitAll, be more granular, cancel other threads once one has success
+        #region OLD
+        //// This is a failed attempt.  Threading didn't help, and there's no need to try to improve the error - once one is found, that's enough
+        //private static BasicNetwork GetTrainedNetwork(double[][] trainingInput, double[][] trainingOutput, int numSimultaneousCandidates = 7, double maxError = 0.001, double? maxSeconds = null)
+        //{
+        //    //TODO: Instead of trying many variants at the same time, only do one or two at a time, and ramp up the complexity of the hidden layer after each failure
+        //    //TODO: Don't WaitAll, be more granular, cancel other threads once one has success
 
-            const int NUMITERATIONS = 4;
+        //    const int NUMITERATIONS = 4;
 
-            TrainingData training = new TrainingData(trainingInput, trainingOutput);
+        //    TrainingData training = new TrainingData(trainingInput, trainingOutput);
 
-            double hiddenMultiplier = 1d;
-            double? maxSecondsDivided = maxSeconds != null ? maxSeconds.Value / NUMITERATIONS : (double?)null;
+        //    double hiddenMultiplier = 1d;
+        //    double? maxSecondsDivided = maxSeconds != null ? maxSeconds.Value / NUMITERATIONS : (double?)null;
 
-            for (int cntr = 0; cntr < NUMITERATIONS; cntr++)
-            {
-                // Train a bunch of networks
-                //NOTE: Initially, I had all the runs use the same multiplier, but I think having several different sizes competing at the same time gives better variety
-                var candidateTasks = Enumerable.Range(0, numSimultaneousCandidates).
-                    Select(o => GetTrainedNetworkAsync(training, hiddenMultiplier * (o % 2) * 1.5, maxError, CancellationToken.None, maxSecondsDivided)).
-                    ToArray();
+        //    for (int cntr = 0; cntr < NUMITERATIONS; cntr++)
+        //    {
+        //        // Train a bunch of networks
+        //        //NOTE: Initially, I had all the runs use the same multiplier, but I think having several different sizes competing at the same time gives better variety
+        //        var candidateTasks = Enumerable.Range(0, numSimultaneousCandidates).
+        //            Select(o => GetTrainedNetworkAsync(training, hiddenMultiplier * (o % 2) * 1.5, maxError, CancellationToken.None, maxSecondsDivided)).
+        //            ToArray();
 
-                Task.WaitAll(candidateTasks);
+        //        Task.WaitAll(candidateTasks);
 
-                // Find a network with the least error
-                var candidates = candidateTasks.
-                    Select(o => o.Result).
-                    Where(o => o.Item1 != null).
-                    OrderBy(o => o.Item2).
-                    ToArray();
+        //        // Find a network with the least error
+        //        var candidates = candidateTasks.
+        //            Select(o => o.Result).
+        //            Where(o => o.Item1 != null).
+        //            OrderBy(o => o.Item2).
+        //            ToArray();
 
-                if (candidates.Length > 0)
-                {
-                    return candidates[0].Item1;
-                }
+        //        if (candidates.Length > 0)
+        //        {
+        //            return candidates[0].Item1;
+        //        }
 
-                // No networks worked, increase the size of the hidden layers
-                hiddenMultiplier *= 2d;
-            }
+        //        // No networks worked, increase the size of the hidden layers
+        //        hiddenMultiplier *= 2d;
+        //    }
 
-            throw new ApplicationException("Couldn't find a solution");
-        }
+        //    throw new ApplicationException("Couldn't find a solution");
+        //}
+        #endregion
+
+        #endregion
+
+        #region Serialization
 
         // These map to/from a dna class.  The dna class is designed to be easily serialized/deserialized
         public static EncogDNA ToDNA(BasicNetwork network)
@@ -202,6 +236,10 @@ namespace Game.HelperClassesAI
         {
             throw new ApplicationException("finish this");
         }
+
+        #endregion
+
+        #region Misc
 
         /// <summary>
         /// This is a helper method for recognizers that have one output neuron per item.  In order for it to be a match, only one of the outputs can
@@ -247,13 +285,40 @@ namespace Game.HelperClassesAI
             return retVal;
         }
 
+        /// <summary>
+        /// This creates one entry per output category
+        /// </summary>
+        /// <remarks>
+        /// If you pass in 4, you will get:
+        ///     1 0 0 0
+        ///     0 1 0 0
+        ///     0 0 1 0
+        ///     0 0 0 1
+        /// </remarks>
+        public static double[][] GetOutputLayer(int count)
+        {
+            double[][] retVal = new double[count][];
+
+            for (int cntr = 0; cntr < count; cntr++)
+            {
+                double[] entry = new double[count];     // all values default to zero
+                entry[cntr] = 1;        // set the pin for this category to 1
+
+                retVal[cntr] = entry;
+            }
+
+            return retVal;
+        }
+
+        #endregion
+
         #region Private Methods
 
         /// <summary>
         /// This trains a network on a separate thread
         /// </summary>
         /// <param name="hiddenMultiplier">The method calculates how many hidden layers and neurons per layer (with a bit of randomization), then multiplies those values by this multiplier</param>
-        private static Task<Tuple<BasicNetwork, double>> GetTrainedNetworkAsync(TrainingData training, double hiddenMultiplier, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
+        private static Task<EncogTrainingResponse> GetTrainedNetworkAsync(TrainingData training, double hiddenMultiplier, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
         {
             return Task.Run(() =>
             {
@@ -262,16 +327,7 @@ namespace Game.HelperClassesAI
                 BasicNetwork network = CreateNetwork(training, hiddenMultiplier, false);
 
                 // Train the network
-                double? error = TrainNetwork(network, training, maxError, cancelToken, maxSeconds);        // lower score is better
-
-                if (error == null)
-                {
-                    return new Tuple<BasicNetwork, double>(null, 0);
-                }
-                else
-                {
-                    return Tuple.Create(network, error.Value);
-                }
+                return TrainNetwork(network, training, maxError, cancelToken, maxSeconds);        // lower score is better
             }, cancelToken);
         }
 
@@ -348,7 +404,7 @@ namespace Game.HelperClassesAI
         /// ResilientPropagation is a good general purpose training algorithm:
         /// http://www.heatonresearch.com/wiki/Training
         /// </remarks>
-        private static double? TrainNetwork(BasicNetwork network, TrainingData training, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
+        private static EncogTrainingResponse TrainNetwork(BasicNetwork network, TrainingData training, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
         {
             const int MAXITERATIONS = 5000;
 
@@ -400,14 +456,7 @@ namespace Game.HelperClassesAI
 
             train.FinishTraining();
 
-            if (!success)
-            {
-                return null;
-            }
-
-            //TODO: May want to further validate that the outputs are within some % of desired for each input
-
-            return error;
+            return new EncogTrainingResponse(network, success, error, iteration, (DateTime.UtcNow - startTime).TotalSeconds);
         }
 
         /// <summary>
@@ -460,6 +509,47 @@ namespace Game.HelperClassesAI
 
         #endregion
     }
+
+    #region Class: EncogTrainingResponse
+
+    public class EncogTrainingResponse
+    {
+        public EncogTrainingResponse(BasicNetwork network, bool isSuccess, double error, int iterations, double seconds)
+        {
+            this.Network = network;
+            this.IsSuccess = isSuccess;
+            this.Error = error;
+            this.Iterations = iterations;
+            this.Seconds = seconds;
+        }
+
+        public readonly BasicNetwork Network;
+        /// <summary>
+        /// This is just a helper that returns null if !IsSuccess
+        /// </summary>
+        public BasicNetwork NetworkOrNull
+        {
+            get
+            {
+                if(this.IsSuccess)
+                {
+                    return this.Network;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        public readonly bool IsSuccess;
+
+        public readonly double Error;
+        public readonly int Iterations;
+        public readonly double Seconds;
+    }
+
+    #endregion
 
     #region Class: EncogDNA
 

@@ -103,7 +103,8 @@ namespace Game.Newt.Testers.Encog
 
         #region Declaration Section
 
-        private readonly double? MAXSECONDS = 30d;
+        private readonly double? MAXSECONDSPER = 10d;
+        private readonly double? MAXSECONDSTOTAL = 40d;
 
         private Random _rand = new Random();
 
@@ -410,7 +411,7 @@ namespace Game.Newt.Testers.Encog
 
                 #endregion
 
-                BasicNetwork network = UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds: MAXSECONDS);
+                BasicNetwork network= UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds_PerAttempt: MAXSECONDSPER, maxSeconds_Total: MAXSECONDSTOTAL).NetworkOrNull;
 
                 #region Test
 
@@ -548,7 +549,7 @@ namespace Game.Newt.Testers.Encog
 
                 #endregion
 
-                BasicNetwork network = UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds: MAXSECONDS);
+                BasicNetwork network = UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds_PerAttempt: MAXSECONDSPER, maxSeconds_Total: MAXSECONDSTOTAL).NetworkOrNull;
 
                 #region Test
 

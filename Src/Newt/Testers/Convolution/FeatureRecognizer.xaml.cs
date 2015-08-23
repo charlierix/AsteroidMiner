@@ -328,7 +328,7 @@ namespace Game.Newt.Testers.Convolution
                     // Build entry
                     FeatureRecognizer_Image entry = new FeatureRecognizer_Image()
                     {
-                        Tag = tag,
+                        Category = tag,
                         UniqueID = uniqueID,
                         Filename = filename,
                         ImageControl = GetTreeviewImageCtrl(bitmap),
@@ -714,12 +714,21 @@ namespace Game.Newt.Testers.Convolution
 
         internal static Image GetTreeviewImageCtrl(BitmapSource bitmap)
         {
+            int width = THUMBSIZE_IMAGE;
+            double height = THUMBSIZE_IMAGE * (Convert.ToDouble(bitmap.PixelHeight) / Convert.ToDouble(bitmap.PixelWidth));
+
+            BitmapSource resized = bitmap;
+            if(bitmap.PixelWidth > width)
+            {
+                resized = UtilityWPF.ResizeImage(bitmap, width, height.ToInt_Round());
+            }
+
             return new Image()
             {
                 Stretch = Stretch.Fill,
-                Width = THUMBSIZE_IMAGE,
-                Height = THUMBSIZE_IMAGE,
-                Source = bitmap,
+                Width = width,
+                Height = height,
+                Source = resized,
                 Margin = new Thickness(3),
                 ToolTip = string.Format("{0}x{1}", bitmap.PixelWidth, bitmap.PixelHeight)
             };
@@ -738,7 +747,7 @@ namespace Game.Newt.Testers.Convolution
                 string header = (string)node.Header;
                 tags.Add(header);
 
-                if (header.Equals(image.Tag, StringComparison.OrdinalIgnoreCase))
+                if (header.Equals(image.Category, StringComparison.OrdinalIgnoreCase))
                 {
                     nameNode = node;
                     break;
@@ -748,10 +757,10 @@ namespace Game.Newt.Testers.Convolution
             if (nameNode == null)
             {
                 // Create new
-                nameNode = new TreeViewItem() { Header = image.Tag };
+                nameNode = new TreeViewItem() { Header = image.Category };
 
                 // Store this alphabetically
-                int insertIndex = UtilityCore.GetInsertIndex(tags, image.Tag);
+                int insertIndex = UtilityCore.GetInsertIndex(tags, image.Category);
                 treeview.Items.Insert(insertIndex, nameNode);
             }
 
@@ -765,7 +774,7 @@ namespace Game.Newt.Testers.Convolution
             string currentText = combobox.Text;
             combobox.Items.Clear();
 
-            foreach (string comboItem in images.Select(o => o.Tag).Distinct().OrderBy(o => o))
+            foreach (string comboItem in images.Select(o => o.Category).Distinct().OrderBy(o => o))
             {
                 combobox.Items.Add(comboItem);
             }
@@ -968,7 +977,7 @@ namespace Game.Newt.Testers.Convolution
                         }
                     }
 
-                    extract.Control = Convolutions.GetKernelThumbnail(extract.Extracts[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu);
+                    extract.Control = Convolutions.GetThumbnail(extract.Extracts[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu);
 
                     AddExtract(extract);
                 }
@@ -1018,7 +1027,7 @@ namespace Game.Newt.Testers.Convolution
             {
                 Extracts = subs,
                 PreFilter = filter,
-                Control = Convolutions.GetKernelThumbnail(subs[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu),
+                Control = Convolutions.GetThumbnail(subs[0].Extract, THUMBSIZE_EXTRACT, _extractContextMenu),
                 ImageID = imageID,
                 UniqueID = uniqueID,
                 Filename = filename,
@@ -1247,8 +1256,6 @@ namespace Game.Newt.Testers.Convolution
 
         private static void ApplyExtract_Draw_LeftImage(Grid grid, Convolution2D imageConv, ConvolutionBase2D preFilter, ConvolutionResultNegPosColoring edgeColor)
         {
-            bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
-
             string tooltip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height);
             if (preFilter != null)
             {
@@ -1257,7 +1264,7 @@ namespace Game.Newt.Testers.Convolution
 
             Image image = new Image()
             {
-                Source = Convolutions.ShowConvolutionResult(imageConv, isSourceNegPos, edgeColor),
+                Source = Convolutions.GetBitmap(imageConv, edgeColor),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 ToolTip = tooltip,
@@ -1271,7 +1278,7 @@ namespace Game.Newt.Testers.Convolution
         {
             Image image = new Image()
             {
-                Source = Convolutions.ShowConvolutionResult(imageConv, true, edgeColor),
+                Source = Convolutions.GetBitmap(imageConv, edgeColor),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),
@@ -1337,7 +1344,7 @@ namespace Game.Newt.Testers.Convolution
 
             foreach (Convolution2D compareResult in sub.Results.Select(o => o.Result))
             {
-                headerExtracts.Children.Add(Convolutions.GetKernelThumbnail(compareResult, THUMBSIZE_EXTRACT, contextMenu));
+                headerExtracts.Children.Add(Convolutions.GetThumbnail(compareResult, THUMBSIZE_EXTRACT, contextMenu));
             }
 
             Grid.SetRow(headerExtracts, 1);
@@ -1381,7 +1388,7 @@ namespace Game.Newt.Testers.Convolution
                     row.Children.Add(patchPanel);
 
                     // Show convolution
-                    patchPanel.Children.Add(Convolutions.GetKernelThumbnail(patch.Patch, THUMBSIZE_EXTRACT, contextMenu));
+                    patchPanel.Children.Add(Convolutions.GetThumbnail(patch.Patch, THUMBSIZE_EXTRACT, contextMenu));
 
                     // Weight
                     patchPanel.Children.Add(new TextBlock()
@@ -1794,7 +1801,7 @@ namespace Game.Newt.Testers.Convolution
 
     public class FeatureRecognizer_Image
     {
-        public string Tag { get; set; }
+        public string Category { get; set; }
 
         /// <summary>
         /// This is a guid, and should be the same as what's in the filename

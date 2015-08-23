@@ -141,11 +141,11 @@
                     <ListBoxItem Visibility="Collapsed" Content="Neural Net" MouseUp="NeuralNet_MouseUp"/>
                     <ListBoxItem Content="XOR" MouseUp="EncogXOR_MouseUp"/>
                     <ListBoxItem Content="OCR" MouseUp="EncogOCR_MouseUp"/>
+                    <ListBoxItem Content="Extend Border" MouseUp="ExtendBorder_MouseUp"/>
                     <ListBoxItem Content="Image Filters" MouseUp="ImageFilters_MouseUp"/>
                     <ListBoxItem Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
-                    <ListBoxItem Content="Feature Recognizer 2" MouseUp="FeatureRecognizer2_MouseUp"/>
-                    <ListBoxItem Content="Feature Recognizer 3" MouseUp="FeatureRecognizer3_MouseUp"/>
-                    <ListBoxItem Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
+                    <ListBoxItem Content="Convolution Chains" MouseUp="ConvolutionChains_MouseUp"/>
+                    <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->

@@ -326,7 +326,7 @@ namespace Game.Newt.Testers.Encog
 
         private void AddKernel(ConvolutionBase2D kernel)
         {
-            Border border = Convolutions.GetKernelThumbnail(kernel, 40, null);
+            Border border = Convolutions.GetThumbnail(kernel, 40, null);
 
             // Store them
             panelKernels.Children.Add(border);

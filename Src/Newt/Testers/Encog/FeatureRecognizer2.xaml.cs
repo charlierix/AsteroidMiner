@@ -20,8 +20,7 @@ using Microsoft.Win32;
 
 namespace Game.Newt.Testers.Encog
 {
-    //TODO: Serialize session
-    //TODO: Context menus
+    //TODO: Delete this tester once all thoughts have been extracted from it
     public partial class FeatureRecognizer2 : Window
     {
         #region Enum: PrefilterType
@@ -192,7 +191,7 @@ namespace Game.Newt.Testers.Encog
                     // Build entry
                     FeatureRecognizer_Image entry = new FeatureRecognizer_Image()
                     {
-                        Tag = tag,
+                        Category = tag,
                         UniqueID = uniqueID,
                         //Filename = filename,
                         ImageControl = FeatureRecognizer.GetTreeviewImageCtrl(bitmap),
@@ -244,7 +243,6 @@ namespace Game.Newt.Testers.Encog
         #endregion
         #region Event Listeners - Feature Convolutions
 
-        //TODO: This method only deals with full size images, full size extract.  Once deciding a rectangle, figure out how much reduction to use
         private void RandomExtract_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -542,7 +540,7 @@ namespace Game.Newt.Testers.Encog
 
                 PreFilter = preFilter,
 
-                Control = Convolutions.GetKernelThumbnail(conv, THUMBSIZE_EXTRACT, _featureExtractContextMenu),
+                Control = Convolutions.GetThumbnail(conv, THUMBSIZE_EXTRACT, _featureExtractContextMenu),
             };
 
             // Prefilter DNA
@@ -564,7 +562,8 @@ namespace Game.Newt.Testers.Encog
 
             // Add it
             _featureConvs.Add(item);
-            panelFeatureConvolutions.Children.Add(item.Control);
+            //panelFeatureConvolutions.Children.Add(item.Control);
+            lstFeatureConvolutions.Items.Add(item.Control);
         }
         private void AddAnalyzer(FeatureRecognizer2_FeatureConv featConv, object idealPattern, double idealBrightness)
         {
@@ -580,7 +579,7 @@ namespace Game.Newt.Testers.Encog
                 //IdealPattern_UniqueID = ,
                 //IdealPatternConvolution = ,
 
-                Control = Convolutions.GetKernelThumbnail(featConv.Convolution, THUMBSIZE_EXTRACT, null),
+                Control = Convolutions.GetThumbnail(featConv.Convolution, THUMBSIZE_EXTRACT, null),
             };
 
             _analyzers.Add(analyzer);
@@ -806,8 +805,6 @@ namespace Game.Newt.Testers.Encog
         }
         private static void ApplyFeatureConv_LeftImage(Grid grid, Convolution2D imageConv, ConvolutionBase2D preFilter, ConvolutionResultNegPosColoring edgeColor)
         {
-            bool isSourceNegPos = preFilter == null ? false : preFilter.IsNegPos;
-
             string tooltip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height);
             if (preFilter != null)
             {
@@ -816,7 +813,7 @@ namespace Game.Newt.Testers.Encog
 
             Image image = new Image()
             {
-                Source = Convolutions.ShowConvolutionResult(imageConv, isSourceNegPos, edgeColor),
+                Source = Convolutions.GetBitmap(imageConv, edgeColor),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 ToolTip = tooltip,
@@ -829,7 +826,7 @@ namespace Game.Newt.Testers.Encog
         {
             Image image = new Image()
             {
-                Source = Convolutions.ShowConvolutionResult(imageConv, true, edgeColor),
+                Source = Convolutions.GetBitmap(imageConv, edgeColor),
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 ToolTip = string.Format("{0}x{1}", imageConv.Width, imageConv.Height),

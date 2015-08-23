@@ -41,6 +41,17 @@
             </Setter>
         </Style>
 
+        <Style x:Key="wrapListbox" TargetType="ListBox">
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel IsItemsHost="True" Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <ContextMenu x:Key="featureExtractContextMenu">
             <MenuItem Header="View" Click="FeatureConvView_Click"/>
             <MenuItem Header="Edit" Click="FeatureConvEdit_Click"/>
@@ -128,7 +139,7 @@
                 <!-- Feature Convolutions -->
                 <Expander IsExpanded="True" Header="Feature Convolutions">
                     <Border Style="{StaticResource expanderBorder}">
-                        <StackPanel>
+                        <StackPanel MaxWidth="200">
                             <CheckBox Name="chkIsExtractSquare" Content="is square"/>
                             <Slider Minimum="0" Maximum="1" Value=".15" x:Name="trkExtractSizePercent" ToolTip="Size % of image"/>
                             <ComboBox Name="cboExtractType"/>
@@ -137,11 +148,14 @@
                             <!-- TODO: User defined extract -->
                             <!-- TODO: Vector extract -->
 
-                            <Border Margin="0,10,0,0" Style="{StaticResource panelBorder}">
+                            <Border Visibility="Collapsed" Margin="0,10,0,0" Style="{StaticResource panelBorder}">
                                 <ScrollViewer Style="{StaticResource panelScroller}">
                                     <WrapPanel Name="panelFeatureConvolutions" Style="{StaticResource iconPanel}" MouseUp="panelFeatureConvolutions_MouseUp"/>
                                 </ScrollViewer>
                             </Border>
+
+                            <ListBox Name="lstFeatureConvolutions" MinHeight="40" Margin="0,10,0,0" Style="{StaticResource wrapListbox}"/>
+
                         </StackPanel>
                     </Border>
                 </Expander>

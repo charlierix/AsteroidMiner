@@ -228,6 +228,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Encog.EncogOCR().Show();
         }
+        private void ExtendBorder_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Convolution.ExtendBorder().Show();
+        }
         private void ImageFilters_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Convolution.ImageFilters().Show();
@@ -236,13 +240,9 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Convolution.FeatureRecognizer().Show();
         }
-        private void FeatureRecognizer2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void ConvolutionChains_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.Encog.FeatureRecognizer2().Show();
-        }
-        private void FeatureRecognizer3_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.Encog.FeatureRecognizer3().Show();
+            new Game.Newt.Testers.Encog.ConvolutionChains().Show();
         }
         private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {

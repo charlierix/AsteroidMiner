@@ -1,0 +1,339 @@
+﻿<Window x:Class="Game.Newt.Testers.Encog.ConvolutionChains"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Convolution Chains" ResizeMode="CanResizeWithGrip" Background="#C0C9BF" Width="1000" Height="750" Closed="Window_Closed">
+    <Window.Resources>
+
+        <Style x:Key="toolButton" TargetType="Button">
+            <Setter Property="Padding" Value="3,0"/>
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX=".8" ScaleY=".8"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="panelBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#20000000"/>
+            <Setter Property="Background" Value="#28FFFFFF"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <Style x:Key="wrapListbox" TargetType="ListBox">
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <WrapPanel IsItemsHost="True" Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,1"/>
+        </Style>
+
+        <Style x:Key="unselectButton" TargetType="Button">
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <ScaleTransform ScaleX=".9" ScaleY=".9"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <ContextMenu x:Key="chainContextMenu">
+            <MenuItem Header="Add Primitive" Click="ChainAddPrimitive_Click"/>
+            <MenuItem Header="Add Extract" Click="ChainAddExtract_Click"/>
+            <MenuItem Header="Delete" Click="ChainDelete_Click"/>
+        </ContextMenu>
+
+        <ContextMenu x:Key="convolutionContextMenu">
+            <MenuItem Header="View" Click="ConvolutionView_Click"/>
+        </ContextMenu>
+
+        <ContextMenu x:Key="nnContextMenu">
+            <!--<MenuItem Header="View network"/>
+            <MenuItem Header="View result map"/>
+            <MenuItem Header="View trained images / scores"/>-->
+            <MenuItem Header="Delete" Click="NNDelete_Click"/>
+        </ContextMenu>
+
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <!-- TODO: Grid Splitters -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Images Column -->
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="4"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Add Image -->
+            <Expander Grid.Row="0" Header="Images">
+                <Border Style="{StaticResource panelBorder}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*"/>
+                            <ColumnDefinition Width="5"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <ComboBox Grid.Column="0" Grid.Row="0" Name="cboImageLabel" IsEditable="True" MinWidth="80"/>
+                        <Button Grid.Column="2" Grid.Row="0" Name="btnAddImage" Content="Add image..." Click="btnAddImage_Click"/>
+                        <Button Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1" Name="btnAddFolder" Content="Add folders..." Margin="0,4,0,0" Click="btnAddFolder_Click"/>
+                    </Grid>
+                </Border>
+            </Expander>
+
+            <!-- Treeview -->
+            <Border Grid.Row="2" Style="{StaticResource panelBorder}">
+                <TreeView Name="treeImages" BorderBrush="Transparent" Background="Transparent" SelectedItemChanged="treeImages_SelectedItemChanged"/>
+            </Border>
+
+            <!-- Expand/Collapse all -->
+            <Grid Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.IsSharedSizeScope="True" Margin="0,-8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" SharedSizeGroup="a"/>
+                    <ColumnDefinition Width="2"/>
+                    <ColumnDefinition Width="auto" SharedSizeGroup="a"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Name="btnCollapseAll" Content="-" ToolTip="Collapse All" Style="{StaticResource toolButton}" Click="btnCollapseAll_Click"/>
+                <Button Grid.Column="2" Name="btnExpandAll" Content="+" ToolTip="Expand All" Style="{StaticResource toolButton}" Click="btnExpandAll_Click"/>
+            </Grid>
+
+            <StackPanel Grid.Row="4">
+                <Button Content="unselect" Style="{StaticResource unselectButton}" Click="UnselectImage_Click"/>
+                <Button Content="delete all" Margin="0,2,0,0" Style="{StaticResource unselectButton}" Click="DeleteImages_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Convolutions Column -->
+        <Grid Grid.Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="4"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <Label Content="convolution chains" FontSize="10" Foreground="#C0000000"/>
+
+                <Expander Header="Primitives">
+                    <Border Style="{StaticResource panelBorder}">
+                        <StackPanel>
+                            <!-- Image Size -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="1*" MinWidth="50"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="Image Size" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" Name="txtImageSizePrimitives" Text="150"/>
+                            </Grid>
+
+                            <!-- Pimitive Type -->
+                            <StackPanel Margin="0,8,0,0">
+                                <CheckBox IsChecked="True" Name="chkPrimitiveGaussian" Content="Gaussian"/>
+                                <CheckBox IsChecked="True" Name="chkPrimitiveLaplacian" Content="Laplacian"/>
+                                <CheckBox IsChecked="True" Name="chkPrimitiveGaussianSubtract" Content="Gaussian Subtract"/>
+                                <CheckBox IsChecked="True" Name="chkPrimitiveSingleSobel" ToolTip="Standard edge detect" Content="Sobel"/>
+                                <CheckBox IsChecked="True" Name="chkPrimitiveMaxAbsSobel" ToolTip="Standard edge detect" Content="MaxAbs Sobel"/>
+                                <CheckBox IsChecked="True" Name="chkPrimitiveGaussianEdge" ToolTip="Guassian, then edge detect" Content="Gaussian+Edge"/>
+                            </StackPanel>
+
+                            <!-- Filter Button -->
+                            <Button Content="Create simple filter" ToolTip="Starts a new convolution chain" Margin="0,8,0,0" Click="CreateChain_Primitive_Click"/>
+                            <Button Content="Append simple filter" ToolTip="Adds to an existing chain" Margin="0,4,0,0" Click="GrowChain_Primitive_Click"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <Expander Header="Extracts">
+                    <Border Style="{StaticResource panelBorder}">
+                        <StackPanel>
+                            <!-- Image Size -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="1*" MinWidth="40"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="Image Size" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" Name="txtImageSizeExtracts" Text="150"/>
+                            </Grid>
+
+                            <!-- Extract Options -->
+                            <CheckBox IsChecked="True" Name="chkExtractIsRectangle" Content="Is Rectangle" Margin="0,8,0,0"/>
+                            <CheckBox IsChecked="True" Name="chkExtractIsSquare" Content="Is Square"/>
+
+                            <Slider Name="trkExtractSizePercentMin" Minimum="0" Maximum="1" Value=".12" ToolTip="Size % of image (min)" Margin="0,8,0,0"/>
+                            <Slider Name="trkExtractSizePercentMax" Minimum="0" Maximum="1" Value=".45" ToolTip="Size % of image (max)"/>
+
+                            <CheckBox IsChecked="False" Name="chkExtractRaw" Content="Raw" ToolTip="Simplly a copy from the original (acts like a blur)" Margin="0,8,0,0"/>
+                            <CheckBox IsChecked="True" Name="chkExtractEdge" Content="Edge" ToolTip="The extract will be turned into an edge detect (values from -1 to 1)"/>
+
+                            <CheckBox IsChecked="True" Name="chkExtractFullBorder" Content="Full Border" Margin="0,8,0,0"/>
+                            <CheckBox IsChecked="True" Name="chkExtractSoftBorder" Content="Soft Border"/>
+
+                            <CheckBox IsChecked="True" Name="chkExtractHoles" Margin="0,8,0,0" Content="Add holes"/>
+                            <UniformGrid Rows="1">
+                                <TextBox Name="txtMinHoles" ToolTip="Min Holes" Text="3" Margin="0,0,2,0"/>
+                                <TextBox Name="txtMaxHoles" ToolTip="Max Holes" Text="8" Margin="2,0,0,0"/>
+                            </UniformGrid>
+
+                            <!-- Extract Button -->
+                            <Button Content="Create new extract" ToolTip="Extract from unfiltered image" Margin="0,8,0,0" Click="CreateChain_Extract_Click"/>
+                            <Button Content="Append Extract" ToolTip="Adds an extract from the last link of an existing chain (adds extract to the end)" Margin="0,4,0,0" Click="GrowChain_Extract_Click"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+            </StackPanel>
+
+            <Border Grid.Row="2" MaxWidth="250" Style="{StaticResource panelBorder}">
+                <ListBox Name="lstConvChains" BorderBrush="Transparent" Background="Transparent" Style="{StaticResource wrapListbox}" SelectionChanged="lstConvChains_SelectionChanged"/>
+            </Border>
+
+            <StackPanel Grid.Row="4">
+                <Button Content="10 random" ToolTip="This creates 10 random chains" Style="{StaticResource unselectButton}" Click="TenRandomChains_Click"/>
+                <Button Content="unselect" Margin="0,2,0,0" Style="{StaticResource unselectButton}" Click="UnselectChain_Click"/>
+                <Button Content="delete all" Margin="0,2,0,0" Style="{StaticResource unselectButton}" Click="DeleteChains_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- NN Column -->
+        <Grid Grid.Column="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="4"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Expander Header="NNs">
+                <Border Style="{StaticResource panelBorder}">
+                    <StackPanel Grid.IsSharedSizeScope="True">
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="nn"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="1*" MinWidth="30" SharedSizeGroup="min"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="1*" MinWidth="30" SharedSizeGroup="max"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Input Size -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Input Size" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtNNInputSizeMin" Text="9"/>
+                            <TextBox Grid.Column="4" Grid.Row="0" Name="txtNNInputSizeMax" Text="18"/>
+
+                            <!-- # Chains -->
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="# Input Chains" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="2" Grid.Row="1" Name="txtNNInputChainsMin" Text="1"/>
+                            <TextBox Grid.Column="4" Grid.Row="1" Name="txtNNInputChainsMax" Text="4"/>
+                        </Grid>
+
+                        <CheckBox IsChecked="True" Name="chkNNNoChain" Content="No chain" ToolTip="Have a chance of not using a chain, the image is directly fed to the neural net" Margin="0,8,0,0"/>
+
+                        <!-- Positive Only -->
+                        <CheckBox IsChecked="True" Name="chkNNNegPos" Content="Neg/Pos input" Margin="0,8,0,0"/>
+                        <CheckBox IsChecked="True" Name="chkNNPositiveOnly" Content="Positive only input"/>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="nn"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="1*" MinWidth="30" SharedSizeGroup="min"/>
+                                <ColumnDefinition Width="5"/>
+                                <ColumnDefinition Width="1*" MinWidth="30" SharedSizeGroup="max"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Number of categories -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Categerories" ToolTip="Number of categories" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtNNCategoriesMin" Text="2"/>
+                            <TextBox Grid.Column="4" Grid.Row="0" Name="txtNNCategoriesMax" Text="4"/>
+
+                            <!-- Max images per category -->
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Images per" ToolTip="Max images per category" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="2" Grid.Row="1" Name="txtNNImagesPerCategoryMin" Text="4"/>
+                            <TextBox Grid.Column="4" Grid.Row="1" Name="txtNNImagesPerCategoryMax" Text="8"/>
+                        </Grid>
+
+                        <Button Content="Create neural net" Margin="0,8,0,0" Click="CreateNN_Click"/>
+                    </StackPanel>
+                </Border>
+            </Expander>
+
+            <Border Grid.Row="2" MaxWidth="250" Style="{StaticResource panelBorder}">
+                <ListBox Name="lstNNs" BorderBrush="Transparent" Background="Transparent" Style="{StaticResource wrapListbox}" SelectionChanged="lstNNs_SelectionChanged"/>
+            </Border>
+
+            <StackPanel Grid.Row="4">
+                <Button Visibility="Collapsed" Content="test - tasks" Click="TestTasks_Click"/>
+                <Button Visibility="Collapsed" Content="test - asparallel" Click="TestAsParallel_Click"/>
+                <Button Visibility="Collapsed" Content="test - cache final" Click="TestCacheFinal_Click"/>
+                <Button Visibility="Collapsed" Content="test - cache final2" Click="TestCacheFinal2_Click"/>
+                <Button Content="unselect" Style="{StaticResource unselectButton}" Click="UnselectNNs_Click"/>
+                <Button Content="delete all" Margin="0,2,0,0" Style="{StaticResource unselectButton}" Click="DeleteNNs_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Result Column -->
+        <Grid Grid.Column="6">
+            <!-- Display Column -->
+            <Border Style="{StaticResource panelBorder}">
+                <ScrollViewer Name="panelResult" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="8"/>
+            </Border>
+
+            <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,-6,0,0">
+                <!-- Edge Colors -->
+                <ComboBox Name="cboEdgeColors" ToolTip="Edge result colors" SelectionChanged="cboEdgeColors_SelectionChanged"/>
+
+                <!-- Invert Positive -->
+                <CheckBox Name="chkIsPosWhiteBlack" Content="pos invert" ToolTip="Force positive only to WhiteBlack instead of BlackWhite" Margin="0,4,0,0" Checked="chkIsPosWhiteBlack_Checked" Unchecked="chkIsPosWhiteBlack_Checked"/>
+
+                <!-- Redraw -->
+                <Button Content="redraw" Margin="0,4,0,0" Click="Redraw_Click"/>
+            </StackPanel>
+
+            <!-- Zoom -->
+            <Slider Name="trkZoom" Minimum="1" Maximum="15" Value="1" ToolTip="Zoom" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="250" Margin="30" ValueChanged="trkZoom_ValueChanged"/>
+        </Grid>
+    </Grid>
+</Window>

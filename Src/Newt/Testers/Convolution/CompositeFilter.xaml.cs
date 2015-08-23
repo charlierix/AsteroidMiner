@@ -47,7 +47,7 @@ namespace Game.Newt.Testers.Convolution
 
         #region Constructor
 
-        public CompositeFilter(ConvolutionSet2D set = null)
+        public CompositeFilter(ConvolutionSet2D set = null, bool isEditor = true)
         {
             InitializeComponent();
 
@@ -82,6 +82,11 @@ namespace Game.Newt.Testers.Convolution
                 cboPostOperation.SelectedValue = set.OperationType;
 
                 lblInstructions.Visibility = Visibility.Collapsed;
+
+                if (!isEditor)
+                {
+                    btnSave.Visibility = Visibility.Collapsed;
+                }
             }
 
             _initialized = true;
@@ -380,7 +385,7 @@ namespace Game.Newt.Testers.Convolution
 
         private void InsertKernel(ConvolutionBase2D kernel, int index = -1)
         {
-            Border border = Convolutions.GetKernelThumbnail(kernel, 80, _kernelContextMenu);
+            Border border = Convolutions.GetThumbnail(kernel, 80, _kernelContextMenu);
 
             if (index < 0)
             {

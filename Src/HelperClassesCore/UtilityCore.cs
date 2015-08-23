@@ -33,6 +33,11 @@ namespace Game.HelperClassesCore
         /// <returns>Somewhere between minReturn and maxReturn</returns>
         public static double GetScaledValue(double minReturn, double maxReturn, double minRange, double maxRange, double valueRange)
         {
+            if(minRange.IsNearValue(maxRange))
+            {
+                return minReturn;
+            }
+
             // Get the percent of value within the range
             double percent = (valueRange - minRange) / (maxRange - minRange);
 
@@ -116,6 +121,38 @@ namespace Game.HelperClassesCore
             T temp = item1;
             item1 = item2;
             item2 = temp;
+        }
+
+        /// <summary>
+        /// This makes sure that min is less than max.  If they are passed in backward, they get swapped
+        /// </summary>
+        public static void MinMax(ref int min, ref int max)
+        {
+            if (max < min)
+            {
+                Swap(ref min, ref max);
+            }
+        }
+        public static void MinMax(ref double min, ref double max)
+        {
+            if (max < min)
+            {
+                Swap(ref min, ref max);
+            }
+        }
+        public static void MinMax(ref decimal min, ref decimal max)
+        {
+            if (max < min)
+            {
+                Swap(ref min, ref max);
+            }
+        }
+        public static void MinMax(ref byte min, ref byte max)
+        {
+            if (max < min)
+            {
+                Swap(ref min, ref max);
+            }
         }
 
         public static double GetMassForRadius(double radius, double density)
@@ -388,6 +425,9 @@ namespace Game.HelperClassesCore
         /// I had a case where I had several arrays that may or may not be null, and wanted to iterate over all of the non null ones
         /// Usage: foreach(T item in Iterate(array1, array2, array3))
         /// </summary>
+        /// <remarks>
+        /// I just read about a method called Concat, which seems to be very similar to this Iterate (but iterate can handle null inputs)
+        /// </remarks>
         public static IEnumerable<T> Iterate<T>(IEnumerable<T> list1 = null, IEnumerable<T> list2 = null, IEnumerable<T> list3 = null, IEnumerable<T> list4 = null, IEnumerable<T> list5 = null, IEnumerable<T> list6 = null, IEnumerable<T> list7 = null, IEnumerable<T> list8 = null)
         {
             if (list1 != null)
@@ -480,6 +520,59 @@ namespace Game.HelperClassesCore
                 else
                 {
                     throw new ArgumentException(string.Format("Unexpected type ({0}).  Should have been singular or enumerable ({1})", item.GetType().ToString(), typeof(T).ToString()));
+                }
+            }
+        }
+
+        /// <summary>
+        /// This returns all combinations of the lists passed in.  This is a nested loop, which makes it easier to
+        /// write linq statements against
+        /// </summary>
+        public static IEnumerable<Tuple<T1, T2>> Collate<T1, T2>(IEnumerable<T1> t1s, IEnumerable<T2> t2s)
+        {
+            T2[] t2Arr = t2s.ToArray();
+
+            foreach (T1 t1 in t1s)
+            {
+                foreach (T2 t2 in t2Arr)
+                {
+                    yield return Tuple.Create(t1, t2);
+                }
+            }
+        }
+        public static IEnumerable<Tuple<T1, T2, T3>> Collate<T1, T2, T3>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s)
+        {
+            T2[] t2Arr = t2s.ToArray();
+            T3[] t3Arr = t3s.ToArray();
+
+            foreach (T1 t1 in t1s)
+            {
+                foreach (T2 t2 in t2Arr)
+                {
+                    foreach (T3 t3 in t3Arr)
+                    {
+                        yield return Tuple.Create(t1, t2, t3);
+                    }
+                }
+            }
+        }
+        public static IEnumerable<Tuple<T1, T2, T3, T4>> Collate<T1, T2, T3, T4>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s, IEnumerable<T4> t4s)
+        {
+            T2[] t2Arr = t2s.ToArray();
+            T3[] t3Arr = t3s.ToArray();
+            T4[] t4Arr = t4s.ToArray();
+
+            foreach (T1 t1 in t1s)
+            {
+                foreach (T2 t2 in t2Arr)
+                {
+                    foreach (T3 t3 in t3Arr)
+                    {
+                        foreach (T4 t4 in t4Arr)
+                        {
+                            yield return Tuple.Create(t1, t2, t3, t4);
+                        }
+                    }
                 }
             }
         }

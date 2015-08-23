@@ -1,0 +1,78 @@
+﻿<Window x:Class="Game.Newt.Testers.Convolution.ExtendBorder"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ExtendBorder" ResizeMode="CanResizeWithGrip" Width="1000" Height="750" Background="#DFD8C6">
+    <Window.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="9"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel -->
+        <Border Grid.Column="0" CornerRadius="4" BorderThickness="2" BorderBrush="#4094AD3D" Background="#A89F94">
+            <StackPanel Margin="8">
+                <Button Content="Browse..." HorizontalAlignment="Stretch" Click="Browse_Click"/>
+
+                <Grid Name="grdSize" Visibility="Collapsed" Margin="0,30,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="5"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="200"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="10"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Column="0" Grid.Row="0" Name="lblOrigWidth" ToolTip="Original Width" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Grid.Row="0" Name="lblOrigHeight" ToolTip="Original Height" HorizontalAlignment="Center"/>
+
+                    <Slider Grid.Column="0" Grid.Row="2" Name="trkWidth" SmallChange="1" LargeChange="1" Interval="1" Orientation="Vertical" ValueChanged="trkWidth_ValueChanged"/>
+                    <Slider Grid.Column="2" Grid.Row="2" Name="trkHeight" SmallChange="1" LargeChange="1" Interval="1" Orientation="Vertical" ValueChanged="trkHeight_ValueChanged"/>
+
+                    <TextBlock Grid.Column="0" Grid.Row="4" Name="lblWidth" ToolTip="New Width" HorizontalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Grid.Row="4" Name="lblHeight" ToolTip="New Height" HorizontalAlignment="Center"/>
+
+                    <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6" IsChecked="True" Name="chkContinuous" Content="Repeat" Checked="chkContinuous_Checked" Unchecked="chkContinuous_Checked"/>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Right Panel -->
+        <Border Grid.Column="2" CornerRadius="4" BorderThickness="1" BorderBrush="#200092B2" Background="#F7F5F0" Margin="3">
+            <Border.Effect>
+                <DropShadowEffect Color="#FF0092B2" BlurRadius="16" Opacity="0.4" Direction="0" ShadowDepth="0" />
+            </Border.Effect>
+
+            <Grid Margin="4">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <Image Name="_image" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image.LayoutTransform>
+                            <ScaleTransform x:Name="_imageScale" ScaleX="1" ScaleY="1"/>
+                        </Image.LayoutTransform>
+                    </Image>
+                </ScrollViewer>
+
+                <Slider Name="trkZoom" Minimum="1" Maximum="20" Value="1" ToolTip="Zoom" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="250" Margin="25" ValueChanged="trkZoom_ValueChanged"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

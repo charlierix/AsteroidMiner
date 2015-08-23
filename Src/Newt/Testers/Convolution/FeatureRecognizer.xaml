@@ -173,7 +173,12 @@
                     <!-- Selected extract results -->
                     <Border Grid.Row="2" Style="{StaticResource majorBorder}">
                         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <StackPanel Name="pnlExtractResults"/>
+                            <StackPanel Name="pnlExtractResults">
+                                <Rectangle Height="80"/>
+                                <TextBlock Text="NOTE: This tester is a flawed design" FontSize="20" Foreground="Red"/>
+                                <TextBlock Text="Analyze bright spots is too expensive (could be optimized, but not enough)" FontSize="14" Foreground="Red"/>
+                                <TextBlock Text="Convolution chains and/or MaxPool and a simple neural net could do the job better" FontSize="14" Foreground="Red"/>
+                            </StackPanel>
                         </ScrollViewer>
                     </Border>
                 </Grid>

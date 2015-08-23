@@ -49,59 +49,11 @@ namespace Game.HelperClassesCore
 
             if (numDecimals < 0)
             {
-                // Unknown number of decimal places
-                return value.ToString();
+                return ToStringSignificantDigits_PossibleScientific(value, significantDigits);
             }
             else
             {
-                // Get the integer portion
-                long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
-                int numInt;
-                if (intPortion == 0)
-                {
-                    numInt = 0;
-                }
-                else
-                {
-                    numInt = intPortion.ToString().Length;
-                }
-
-                // Limit the number of significant digits
-                int numPlaces;
-                if (numInt == 0)
-                {
-                    numPlaces = significantDigits;
-                }
-                else if (numInt >= significantDigits)
-                {
-                    numPlaces = 0;
-                }
-                else
-                {
-                    numPlaces = significantDigits - numInt;
-                }
-
-                // I was getting an exception from round, but couldn't recreate it, so I'm just throwing this in to avoid the exception
-                if (numPlaces < 0)
-                {
-                    numPlaces = 0;
-                }
-                else if (numPlaces > 15)
-                {
-                    numPlaces = 15;
-                }
-
-                // Show a rounded number
-                double rounded = Math.Round(value, numPlaces);
-                int numActualDecimals = GetNumDecimals(rounded);
-                if (numActualDecimals < 0)
-                {
-                    return rounded.ToString();		// it's weird, don't try to make it more readable
-                }
-                else
-                {
-                    return rounded.ToString("N" + numActualDecimals);
-                }
+                return ToStringSignificantDigits_Standard(value, significantDigits, true);
             }
         }
 
@@ -572,6 +524,73 @@ namespace Game.HelperClassesCore
                 // Just count the decimals
                 return (text.Length - 1) - decimalIndex;
             }
+        }
+
+        private static string ToStringSignificantDigits_Standard(double value, int significantDigits, bool useN)
+        {
+            // Get the integer portion
+            long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
+            int numInt;
+            if (intPortion == 0)
+            {
+                numInt = 0;
+            }
+            else
+            {
+                numInt = intPortion.ToString().Length;
+            }
+
+            // Limit the number of significant digits
+            int numPlaces;
+            if (numInt == 0)
+            {
+                numPlaces = significantDigits;
+            }
+            else if (numInt >= significantDigits)
+            {
+                numPlaces = 0;
+            }
+            else
+            {
+                numPlaces = significantDigits - numInt;
+            }
+
+            // I was getting an exception from round, but couldn't recreate it, so I'm just throwing this in to avoid the exception
+            if (numPlaces < 0)
+            {
+                numPlaces = 0;
+            }
+            else if (numPlaces > 15)
+            {
+                numPlaces = 15;
+            }
+
+            // Show a rounded number
+            double rounded = Math.Round(value, numPlaces);
+            int numActualDecimals = GetNumDecimals(rounded);
+            if (numActualDecimals < 0 || !useN)
+            {
+                return rounded.ToString();		// it's weird, don't try to make it more readable
+            }
+            else
+            {
+                return rounded.ToString("N" + numActualDecimals);
+            }
+        }
+        private static string ToStringSignificantDigits_PossibleScientific(double value, int significantDigits)
+        {
+            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
+
+            Match match = Regex.Match(text, @"^(?<num>\d\.\d+)(?<exp>E(-|)\d+)$");
+            if (!match.Success)
+            {
+                // Unknown
+                return value.ToString();
+            }
+
+            string standard = ToStringSignificantDigits_Standard(Convert.ToDouble(match.Groups["num"].Value), significantDigits, false);
+
+            return standard + match.Groups["exp"].Value;
         }
 
         #endregion

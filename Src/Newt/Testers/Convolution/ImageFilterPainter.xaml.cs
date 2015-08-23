@@ -134,17 +134,49 @@ namespace Game.Newt.Testers.Convolution
 
             public void UpdateColors(bool isZeroToOne, bool isNegativeRedBlue)
             {
+                // Coloring
+                ConvolutionResultNegPosColoring coloring;
+                if (isZeroToOne)
+                {
+                    coloring = ConvolutionResultNegPosColoring.BlackWhite;
+                }
+                else if (isNegativeRedBlue)
+                {
+                    coloring = ConvolutionResultNegPosColoring.RedBlue;
+                }
+                else
+                {
+                    coloring = ConvolutionResultNegPosColoring.Gray;
+                }
+
+                // Maximize color range
                 double min = this.Bars.Min(o => o.Height);
                 double max = this.Bars.Max(o => o.Height);
                 double absMax = Math.Max(Math.Abs(min), Math.Abs(max));
 
-                foreach (var bar in this.Bars)
+                double scale;
+                if (Math3D.IsInvalid(absMax) || Math3D.IsNearZero(absMax))
                 {
-                    Color color = Convolutions.GetKernelPixelColor(bar.Height, min, max, absMax, isZeroToOne, isNegativeRedBlue);
+                    scale = 1d;
+                }
+                else
+                {
+                    scale = 255d / absMax;
+                }
+
+                // Get colors
+                double[] values = this.Bars.Select(o => o.Height).ToArray();
+                Convolution2D conv = new Convolution2D(values, values.Length, 1, !isZeroToOne);
+                byte[][] colors = Convolutions.GetColors(conv, coloring, scale);
+
+                // Apply colors
+                for (int cntr = 0; cntr < this.Bars.Length; cntr++)
+                {
+                    Color color = Color.FromRgb(colors[cntr][1], colors[cntr][2], colors[cntr][3]);
 
                     Material material = UtilityWPF.GetUnlitMaterial(color);
-                    bar.Model.BackMaterial = material;
-                    bar.Model.Material = material;
+                    this.Bars[cntr].Model.BackMaterial = material;
+                    this.Bars[cntr].Model.Material = material;
                 }
             }
         }
@@ -1231,10 +1263,10 @@ namespace Game.Newt.Testers.Convolution
         private void PixelValueChanged()
         {
             Convolution2D kernel = new Convolution2D(_values, _width, _height, radRangeNegPos.IsChecked.Value);
-            bool isRedBlue = chkIsRedBlue.IsChecked.Value;
+            ConvolutionResultNegPosColoring coloring = chkIsRedBlue.IsChecked.Value ? ConvolutionResultNegPosColoring.RedBlue : ConvolutionResultNegPosColoring.BlackWhite;
 
             // Show Kernel
-            BitmapSource kernelBitmap = Convolutions.GetKernelBitmap(kernel, isNegativeRedBlue: isRedBlue);
+            BitmapSource kernelBitmap = Convolutions.GetBitmap_Aliased(kernel, negPosColoring: coloring);
             imagePreview.Source = kernelBitmap;
             imagePreview.Width = kernelBitmap.PixelWidth;
             imagePreview.Height = kernelBitmap.PixelHeight;

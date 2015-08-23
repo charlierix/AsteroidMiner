@@ -145,6 +145,9 @@
     <Compile Include="Convolution\CompositeFilter.xaml.cs">
       <DependentUpon>CompositeFilter.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Convolution\ExtendBorder.xaml.cs">
+      <DependentUpon>ExtendBorder.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Curves.xaml.cs">
       <DependentUpon>Curves.xaml</DependentUpon>
     </Compile>
@@ -165,6 +168,9 @@
     </Compile>
     <Compile Include="Encog\FeatureRecognizer3.xaml.cs">
       <DependentUpon>FeatureRecognizer3.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Encog\ConvolutionChains.xaml.cs">
+      <DependentUpon>ConvolutionChains.xaml</DependentUpon>
     </Compile>
     <Compile Include="Encog\MineralIdentifier.xaml.cs">
       <DependentUpon>MineralIdentifier.xaml</DependentUpon>
@@ -372,6 +378,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Convolution\ExtendBorder.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Curves.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -399,6 +409,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Encog\FeatureRecognizer3.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\ConvolutionChains.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

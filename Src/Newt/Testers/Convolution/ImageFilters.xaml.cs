@@ -135,7 +135,7 @@ namespace Game.Newt.Testers.Convolution
         {
             try
             {
-                foreach (Window child in _childWindows.ToArray())        // taking the array so that the list can be removed from while in the for loop (it shouldn't happen, but just in case)
+                foreach (Window child in _childWindows.ToArray())        // taking the array so that the list can be removed from while in the for loop
                 {
                     child.Closed -= Child_Closed;
                     child.Close();
@@ -1079,7 +1079,7 @@ namespace Game.Newt.Testers.Convolution
 
         private void AddKernel(ConvolutionBase2D kernel)
         {
-            Border border = Convolutions.GetKernelThumbnail(kernel, 40, _kernelContextMenu);
+            Border border = Convolutions.GetThumbnail(kernel, 40, _kernelContextMenu);
 
             //if (!string.IsNullOrEmpty(tooltipHeader))
             //{
@@ -1193,7 +1193,6 @@ namespace Game.Newt.Testers.Convolution
                 return;
             }
 
-            bool isNegPos = false;
             Convolution2D filtered = null;
 
             if (kernel is Convolution2D)
@@ -1214,12 +1213,9 @@ namespace Game.Newt.Testers.Convolution
 
                 filtered = Convolutions.Convolute(image, kernelFinal);
 
-                isNegPos = kernelSingle.IsNegPos;
-
                 if (chkSubtract.IsChecked.Value)
                 {
                     filtered = Convolutions.Subtract(image, filtered);
-                    isNegPos = true;
                 }
 
                 #endregion
@@ -1232,8 +1228,6 @@ namespace Game.Newt.Testers.Convolution
 
                 filtered = Convolutions.Convolute(image, kernelSet);
 
-                isNegPos = kernelSet.IsNegPos;
-
                 #endregion
             }
             else
@@ -1242,7 +1236,7 @@ namespace Game.Newt.Testers.Convolution
             }
 
             // Show Filtered
-            modifiedImage.Source = Convolutions.ShowConvolutionResult(filtered, isNegPos, (ConvolutionResultNegPosColoring)cboEdgeColors.SelectedValue);
+            modifiedImage.Source = Convolutions.GetBitmap(filtered, (ConvolutionResultNegPosColoring)cboEdgeColors.SelectedValue);
         }
 
         /// <summary>
