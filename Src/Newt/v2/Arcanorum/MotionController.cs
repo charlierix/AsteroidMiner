@@ -364,7 +364,7 @@ namespace Game.Newt.v2.Arcanorum
         {
             var top = _neurons.OrderByDescending(o => o.Value).FirstOrDefault();
 
-            if (top != null && !Math3D.IsNearZero(top.Value))
+            if (top != null && !Math1D.IsNearZero(top.Value))
             {
                 // Map this to the mouse plate
                 Point point = new Point(top.Position.X * _distanceMult, top.Position.Y * _distanceMult);        // no need to look at Z.  The neurons should have been laid out on the XY plane
@@ -487,7 +487,7 @@ namespace Game.Newt.v2.Arcanorum
             if (distances.Count == 0)
             {
                 avgDist = points[0].ToVector().Length;
-                if (Math3D.IsNearZero(avgDist))
+                if (Math1D.IsNearZero(avgDist))
                 {
                     avgDist = .1;
                 }

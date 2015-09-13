@@ -404,7 +404,7 @@ namespace Game.Newt.Testers
                 _circleVisuals[cntr] = new Ellipse();
 
                 Point3D center = _triangles[cntr].Triangle.GetCenterPoint();
-                double radius = Math3D.Min(
+                double radius = Math1D.Min(
                     Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point0, _triangles[cntr].Triangle.Point1 - _triangles[cntr].Triangle.Point0, center),
                     Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point1, _triangles[cntr].Triangle.Point2 - _triangles[cntr].Triangle.Point1, center),
                     Math3D.GetClosestDistance_Line_Point(_triangles[cntr].Triangle.Point2, _triangles[cntr].Triangle.Point0 - _triangles[cntr].Triangle.Point2, center));

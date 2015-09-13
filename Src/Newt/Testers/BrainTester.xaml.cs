@@ -2333,7 +2333,7 @@ namespace Game.Newt.Testers
                 #region Calculations
 
                 double workingLength = newLength - GAP;
-                if (Math3D.IsNearValue(length, newLength))
+                if (Math1D.IsNearValue(length, newLength))
                 {
                     // Logic above didn't use a gap, so don't do one here either
                     workingLength = length;

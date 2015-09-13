@@ -334,7 +334,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             RotateTransform3D randomRotation = null;
             if (randomOrientation)
             {
-                randomRotation = new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(1d), Math3D.GetNearZeroValue(360d)));
+                randomRotation = new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(1d), Math1D.GetNearZeroValue(360d)));
             }
 
             if (_mineralType == MineralType.Rixium)

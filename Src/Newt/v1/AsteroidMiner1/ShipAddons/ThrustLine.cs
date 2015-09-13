@@ -84,7 +84,7 @@ namespace Game.Newt.v1.AsteroidMiner1.ShipAddons
             }
             else
             {
-                _initialRotate = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+                _initialRotate = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
             }
 
             //// Transform

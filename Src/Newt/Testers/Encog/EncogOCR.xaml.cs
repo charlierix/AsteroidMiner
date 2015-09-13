@@ -218,7 +218,7 @@ namespace Game.Newt.Testers.Encog
                 // Figure out which pixels of each sketch are black
                 bool[][] isBlack = sketches.
                     Select(o => o.BitmapColors.GetColors(0, 0, o.BitmapColors.Width, o.BitmapColors.Height)).
-                    Select(o => o.Select(p => p.A > 200 && Math3D.Avg(p.R, p.G, p.B) < 20).ToArray()).
+                    Select(o => o.Select(p => p.A > 200 && Math1D.Avg(p.R, p.G, p.B) < 20).ToArray()).
                     ToArray();
 
                 // Or the images together
@@ -694,13 +694,13 @@ namespace Game.Newt.Testers.Encog
 
                 // This is a percent of the canvas's size (each sketch could come from a different size canvas)
                 double avgStroke = _prevSketches.
-                    Select(o => new { CanvasSize = Math3D.Avg(o.InkCanvasSize.Width, o.InkCanvasSize.Height), Sizes = o.Strokes.Select(p => p.Thickness) }).
+                    Select(o => new { CanvasSize = Math1D.Avg(o.InkCanvasSize.Width, o.InkCanvasSize.Height), Sizes = o.Strokes.Select(p => p.Thickness) }).
                     Select(o => o.Sizes.Select(p => p / o.CanvasSize)).
                     SelectMany(o => o).
                     Average();
 
                 // Now figure out the stroke size for this current canvas
-                double strokeSize = Math3D.Avg(canvasInk.ActualWidth, canvasInk.ActualHeight);
+                double strokeSize = Math1D.Avg(canvasInk.ActualWidth, canvasInk.ActualHeight);
                 strokeSize = avgStroke * strokeSize;
 
                 DrawingAttributes attrib = new DrawingAttributes()
@@ -752,7 +752,7 @@ namespace Game.Newt.Testers.Encog
                 Color[] inverseColors = colors.
                     Select(o =>
                     {
-                        bool isBlack = (o.A > 200 && Math3D.Avg(o.R, o.G, o.B) < 20);
+                        bool isBlack = (o.A > 200 && Math1D.Avg(o.R, o.G, o.B) < 20);
 
                         // Invert the color
                         return isBlack ? Colors.Transparent : Colors.Black;
@@ -786,7 +786,7 @@ namespace Game.Newt.Testers.Encog
 
                 bool[] isBlack = Enumerable.Range(0, colors[0].Length).
                     AsParallel().
-                    Select(o => new { Index = o, IsBlack = colors.Any(p => p[o].A > 200 && Math3D.Avg(p[o].R, p[o].G, p[o].B) < 20) }).
+                    Select(o => new { Index = o, IsBlack = colors.Any(p => p[o].A > 200 && Math1D.Avg(p[o].R, p[o].G, p[o].B) < 20) }).
                     OrderBy(o => o.Index).
                     Select(o => o.IsBlack).
                     ToArray();
@@ -1334,7 +1334,7 @@ namespace Game.Newt.Testers.Encog
             this.BitmapColors = UtilityWPF.ConvertToColorArray(this.Bitmap, true, Colors.Transparent);
 
             this.NNInput = this.BitmapColors.GetColors(0, 0, imageSize, imageSize).
-                Select(o => (o.A / 255d) * (255d - Math3D.Avg(o.R, o.G, o.B)) / 255d).     // 0 should be 1d, 255 should be 0d
+                Select(o => (o.A / 255d) * (255d - Math1D.Avg(o.R, o.G, o.B)) / 255d).     // 0 should be 1d, 255 should be 0d
                 ToArray();
         }
         public void GenerateImageControl()
@@ -1361,7 +1361,7 @@ namespace Game.Newt.Testers.Encog
         private static BitmapSource DrawStrokes(IEnumerable<EncogOCR_StrokeDefinition> strokes, int width, int height, double origWidth, double origHeight)
         {
             //NOTE: InkCanvas draws lines smoother than this method.  This is a crude way to approximate the thickness/darkeness of the lines
-            double scale = Math3D.Avg(width, height) / Math3D.Avg(origWidth, origHeight);
+            double scale = Math1D.Avg(width, height) / Math1D.Avg(origWidth, origHeight);
             double reduce = 1;
             if (scale < .2)
             {
@@ -1422,7 +1422,7 @@ namespace Game.Newt.Testers.Encog
                     ToArray();
 
             this.Color = stroke.DrawingAttributes.Color.ToHex();
-            this.Thickness = Math3D.Avg(stroke.DrawingAttributes.Width, stroke.DrawingAttributes.Height);
+            this.Thickness = Math1D.Avg(stroke.DrawingAttributes.Width, stroke.DrawingAttributes.Height);
         }
 
         public Point[] Points { get; set; }

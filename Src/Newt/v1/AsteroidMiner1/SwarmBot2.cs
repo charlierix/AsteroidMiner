@@ -516,7 +516,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, this.OrigThrustDirection, directionToGo);
 
             // Thrust Direction
-            this.ThrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            this.ThrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength (I'll set this with a standard algorithm.  The caller can always set it however they want)
             double maxStrength = PERCENTSTANDARD;

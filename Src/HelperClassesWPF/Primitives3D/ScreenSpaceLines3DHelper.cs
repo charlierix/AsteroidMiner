@@ -18,8 +18,8 @@ namespace Game.HelperClassesWPF.Primitives3D
 
         private static void AddArc(ScreenSpaceLines3D line, Point3D center, double radius, int segments, double startAngle, double stopAngle, bool closeEnd)
         {
-            startAngle = Math3D.DegreesToRadians(startAngle);
-            stopAngle = Math3D.DegreesToRadians(stopAngle);
+            startAngle = Math1D.DegreesToRadians(startAngle);
+            stopAngle = Math1D.DegreesToRadians(stopAngle);
 
             // swap angles
             if (startAngle > stopAngle)

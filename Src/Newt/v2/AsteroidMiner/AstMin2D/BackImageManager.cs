@@ -383,10 +383,10 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             /// <param name="pos">The position within the box (values are always between 0 and 1)</param>
             private static Vector LERP(Vector ul, Vector ur, Vector bl, Vector br, double percentX, double percentY)
             {
-                Vector upper = Math3D.LERP(ul, ur, percentX);
-                Vector bottom = Math3D.LERP(bl, br, percentX);
+                Vector upper = Math2D.LERP(ul, ur, percentX);
+                Vector bottom = Math2D.LERP(bl, br, percentX);
 
-                return Math3D.LERP(upper, bottom, percentY);
+                return Math2D.LERP(upper, bottom, percentY);
             }
 
             #endregion

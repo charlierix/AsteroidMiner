@@ -303,7 +303,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                         CreateGeometry(true, false);        // passing false, because this may be executing in a different thread
                     }
 
-                    double maxScale = Math3D.Max(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE, scale.Z);
+                    double maxScale = Math1D.Max(scale.X * RADIUSPERCENTOFSCALE, scale.Y * RADIUSPERCENTOFSCALE, scale.Z);
 
                     //NOTE: _pointsForHull comes off the wpf model points, and is already rotated properly
                     Point3D[] points = _pointsForHull.Select(o => new Point3D(o.X * maxScale, o.Y * maxScale, o.Z * maxScale)).ToArray();
@@ -1165,7 +1165,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                double maxSize = Math3D.Max(this.Design.Scale.X, this.Design.Scale.Y, this.Design.Scale.Z);		// they should all be the same
+                double maxSize = Math1D.Max(this.Design.Scale.X, this.Design.Scale.Y, this.Design.Scale.Z);		// they should all be the same
 
                 return maxSize * .5d;
             }

@@ -130,8 +130,8 @@ namespace Game.Newt.v1.NewtonDynamics1
 
             joint.BallSetConeLimits(
                 BodyToWorld(this.ChildBody, Direction),
-                (float)Math3D.DegreesToRadians(MaxConeAngle),
-                (float)Math3D.DegreesToRadians(MaxTwistAngle));
+                (float)Math1D.DegreesToRadians(MaxConeAngle),
+                (float)Math1D.DegreesToRadians(MaxTwistAngle));
 
             joint.Ball += InternalUserCallback;
 
@@ -163,8 +163,8 @@ namespace Game.Newt.v1.NewtonDynamics1
                 {
                     NetwonJoint.BallSetConeLimits(
                         BodyToWorld(this.ChildBody, Direction),
-                        (float)Math3D.DegreesToRadians(MaxConeAngle),
-                        (float)Math3D.DegreesToRadians(MaxTwistAngle));
+                        (float)Math1D.DegreesToRadians(MaxConeAngle),
+                        (float)Math1D.DegreesToRadians(MaxTwistAngle));
 
                     _needsUpdate = false;
                 }

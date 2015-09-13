@@ -195,7 +195,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             triangles = rhomb.Squares_Orth.
                 SelectMany(o => o).
-                Where(o => o.IndexArray.All(p => Math3D.IsNearValue(Math.Abs(o.AllPoints[p].X * 2), SIZE))).
+                Where(o => o.IndexArray.All(p => Math1D.IsNearValue(Math.Abs(o.AllPoints[p].X * 2), SIZE))).
                 ToArray();
 
             geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
@@ -216,7 +216,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             triangles = rhomb.Squares_Orth.
                 SelectMany(o => o).
-                Where(o => o.IndexArray.All(p => Math3D.IsNearValue(Math.Abs(o.AllPoints[p].Y * 2), SIZE))).
+                Where(o => o.IndexArray.All(p => Math1D.IsNearValue(Math.Abs(o.AllPoints[p].Y * 2), SIZE))).
                 ToArray();
 
             geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
@@ -237,7 +237,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             triangles = rhomb.Squares_Orth.
                 SelectMany(o => o).
-                Where(o => o.IndexArray.All(p => Math3D.IsNearValue(Math.Abs(o.AllPoints[p].Z * 2), SIZE))).
+                Where(o => o.IndexArray.All(p => Math1D.IsNearValue(Math.Abs(o.AllPoints[p].Z * 2), SIZE))).
                 ToArray();
 
             geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);

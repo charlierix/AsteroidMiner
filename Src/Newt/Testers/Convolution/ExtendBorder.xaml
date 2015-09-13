@@ -73,6 +73,5 @@
                 <Slider Name="trkZoom" Minimum="1" Maximum="20" Value="1" ToolTip="Zoom" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="250" Margin="25" ValueChanged="trkZoom_ValueChanged"/>
             </Grid>
         </Border>
-
     </Grid>
 </Window>

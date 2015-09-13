@@ -93,7 +93,7 @@ namespace Game.Newt.v2.GameItems
             {
                 if (value < 0d)
                 {
-                    if (Math3D.IsNearZero(value))
+                    if (Math1D.IsNearZero(value))
                     {
                         value = 0d;
                     }
@@ -124,7 +124,7 @@ namespace Game.Newt.v2.GameItems
             {
                 if (value < 0d)
                 {
-                    if (Math3D.IsNearZero(value))
+                    if (Math1D.IsNearZero(value))
                     {
                         value = 0d;
                     }
@@ -193,7 +193,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -219,7 +219,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -264,14 +264,14 @@ namespace Game.Newt.v2.GameItems
             }
 
             // See if it wants even multiples
-            if (container.OnlyRemoveMultiples && !Math3D.IsDivisible(retVal, container.RemovalMultiple))
+            if (container.OnlyRemoveMultiples && !Math1D.IsDivisible(retVal, container.RemovalMultiple))
             {
                 // Remove as many multiples of the requested amount as possible
                 retVal = Math.Floor(retVal / container.RemovalMultiple) * container.RemovalMultiple;
             }
 
             // Exact amount
-            if (exactAmountOnly && !Math3D.IsNearValue(retVal, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(retVal, amount))
             {
                 retVal = 0d;
             }
@@ -490,7 +490,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -551,7 +551,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -615,14 +615,14 @@ namespace Game.Newt.v2.GameItems
             }
 
             //NOTE: Only looking at the whole, not each individual container
-            if (_onlyRemoveMultiples && !Math3D.IsDivisible(actualAmount, _removalMultiple))
+            if (_onlyRemoveMultiples && !Math1D.IsDivisible(actualAmount, _removalMultiple))
             {
                 // Remove as many multiples of the requested amount as possible
                 actualAmount = Math.Floor(actualAmount / _removalMultiple) * _removalMultiple;
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -847,7 +847,7 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (value < 0d)
                     {
-                        if (Math3D.IsNearZero(value))
+                        if (Math1D.IsNearZero(value))
                         {
                             value = 0d;
                         }
@@ -884,7 +884,7 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (value < 0d)
                     {
-                        if (Math3D.IsNearZero(value))
+                        if (Math1D.IsNearZero(value))
                         {
                             value = 0d;
                         }
@@ -971,7 +971,7 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 //if (exactAmountOnly && actualAmount != amount)
-                if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+                if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
                 {
                     actualAmount = 0d;
                 }
@@ -1000,7 +1000,7 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 //if (exactAmountOnly && actualAmount != amount)
-                if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+                if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
                 {
                     actualAmount = 0d;
                 }
@@ -1058,7 +1058,7 @@ namespace Game.Newt.v2.GameItems
             {
                 double removalMultiple = container.RemovalMultiple;
 
-                if (!Math3D.IsDivisible(retVal, removalMultiple))
+                if (!Math1D.IsDivisible(retVal, removalMultiple))
                 {
                     // Remove as many multiples of the requested amount as possible
                     retVal = Math.Floor(retVal / removalMultiple) * removalMultiple;
@@ -1066,7 +1066,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             // Exact amount
-            if (exactAmountOnly && !Math3D.IsNearValue(retVal, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(retVal, amount))
             {
                 retVal = 0d;
             }
@@ -1254,14 +1254,14 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 //NOTE: Only looking at the whole, not each individual container
-                if (_onlyRemoveMultiples && !Math3D.IsDivisible(actualAmount, _removalMultiple))
+                if (_onlyRemoveMultiples && !Math1D.IsDivisible(actualAmount, _removalMultiple))
                 {
                     // Remove as many multiples of the requested amount as possible
                     actualAmount = Math.Floor(actualAmount / _removalMultiple) * _removalMultiple;
                 }
 
                 //if (exactAmountOnly && actualAmount != amount)
-                if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+                if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
                 {
                     actualAmount = 0d;
                 }
@@ -1555,7 +1555,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -1616,7 +1616,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             //if (exactAmountOnly && actualAmount != amount)
-            if (exactAmountOnly && !Math3D.IsNearValue(actualAmount, amount))
+            if (exactAmountOnly && !Math1D.IsNearValue(actualAmount, amount))
             {
                 actualAmount = 0d;
             }
@@ -1674,7 +1674,7 @@ namespace Game.Newt.v2.GameItems
         {
             double maxQuantity = GetQuantityMax();
 
-            if (Math3D.IsNearZero(maxQuantity))
+            if (Math1D.IsNearZero(maxQuantity))
             {
                 _ratios = Enumerable.Range(0, _containers.Count).Select(o => 0d).ToList();
             }

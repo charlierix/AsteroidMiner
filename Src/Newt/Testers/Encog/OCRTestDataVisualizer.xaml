@@ -19,7 +19,8 @@
         <Viewport3D Name="_viewport" IsHitTestVisible="False">
             <!-- Camera -->
             <Viewport3D.Camera>
-                <PerspectiveCamera x:Name="_camera" Position="0,-3,.25" LookDirection="0,3,-.25" UpDirection="0,0,1" FieldOfView="45"/>
+                <!--<PerspectiveCamera x:Name="_camera" Position="0,-3,.25" LookDirection="0,3,-.25" UpDirection="0,0,1" FieldOfView="45"/>-->
+                <PerspectiveCamera x:Name="_camera" Position="0,-1.8,.25" LookDirection="0,1.8,-.25" UpDirection="0,.25,-1.8" FieldOfView="45"/>
             </Viewport3D.Camera>
             <!-- Lights -->
             <ModelVisual3D>

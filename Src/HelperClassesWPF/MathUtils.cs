@@ -109,7 +109,7 @@ namespace Game.HelperClassesWPF
             // WPF the camera's horizontal rather the vertical
             // field-of-view is specified.
 
-            double hFoV = Math3D.DegreesToRadians(camera.FieldOfView);
+            double hFoV = Math1D.DegreesToRadians(camera.FieldOfView);
             double zn = camera.NearPlaneDistance;
             double zf = camera.FarPlaneDistance;
 

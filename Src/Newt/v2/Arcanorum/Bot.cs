@@ -1595,7 +1595,7 @@ namespace Game.Newt.v2.Arcanorum
             BotShellColorsDNA retVal = new BotShellColorsDNA();
 
             retVal.InnerColorDiffuse = UtilityWPF.GetRandomColor(0, 96).ToHex();
-            retVal.DiffuseDrift = Math3D.GetNearZeroValue(60);      // up to 60 degree drift in hue between shells
+            retVal.DiffuseDrift = Math1D.GetNearZeroValue(60);      // up to 60 degree drift in hue between shells
 
             retVal.EmissiveColor = UtilityWPF.GetRandomColor(64, 192).ToHex();
 

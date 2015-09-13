@@ -651,9 +651,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 return 1d;
             }
-            else if (Math3D.IsNearZero(max))		// can't divide by zero
+            else if (Math1D.IsNearZero(max))		// can't divide by zero
             {
-                if (Math3D.IsNearZero(current))
+                if (Math1D.IsNearZero(current))
                 {
                     return 0d;
                 }

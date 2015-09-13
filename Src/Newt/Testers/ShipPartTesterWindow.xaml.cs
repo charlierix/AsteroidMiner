@@ -989,7 +989,7 @@ namespace Game.Newt.Testers
                     // Opposition is a single line
                     // If cumulative's length is longer, then the other is overwhelmed
                     // If the dot product isn't one, then they aren't lined up (cumulative has already been negated)
-                    return cumulative.LengthSquared <= others[0].LengthSquared && Math3D.IsNearValue(Vector3D.DotProduct(cumulative.ToUnit(), others[0].ToUnit()), 1d);
+                    return cumulative.LengthSquared <= others[0].LengthSquared && Math1D.IsNearValue(Vector3D.DotProduct(cumulative.ToUnit(), others[0].ToUnit()), 1d);
 
                     #endregion
                 }
@@ -999,7 +999,7 @@ namespace Game.Newt.Testers
 
                     // Opposition forms a parallelagram
                     Triangle triangle = new Triangle(new Point3D(0, 0, 0), others[0].ToPoint(), others[1].ToPoint());
-                    if (!Math3D.IsNearZero(Vector3D.DotProduct(triangle.Normal, cumulative)))
+                    if (!Math1D.IsNearZero(Vector3D.DotProduct(triangle.Normal, cumulative)))
                     {
                         return false;
                     }
@@ -1245,7 +1245,7 @@ namespace Game.Newt.Testers
                     // Opposition is a single line
                     // If cumulative's length is longer, then the other is overwhelmed
                     // If the dot product isn't one, then they aren't lined up (cumulative has already been negated)
-                    return cumulative.LengthSquared <= others[0].LengthSquared && Math3D.IsNearValue(Vector3D.DotProduct(cumulative.ToUnit(), others[0].ToUnit()), 1d);
+                    return cumulative.LengthSquared <= others[0].LengthSquared && Math1D.IsNearValue(Vector3D.DotProduct(cumulative.ToUnit(), others[0].ToUnit()), 1d);
 
                     #endregion
                 }
@@ -1255,7 +1255,7 @@ namespace Game.Newt.Testers
 
                     // Opposition forms a parallelagram
                     Triangle triangle = new Triangle(new Point3D(0, 0, 0), others[0].ToPoint(), others[1].ToPoint());
-                    if (!Math3D.IsNearZero(Vector3D.DotProduct(triangle.Normal, cumulative)))
+                    if (!Math1D.IsNearZero(Vector3D.DotProduct(triangle.Normal, cumulative)))
                     {
                         return false;
                     }
@@ -1623,7 +1623,7 @@ namespace Game.Newt.Testers
                 {
                     direction = new Vector3D(0, 0, 1);
 
-                    if(_useSimple)
+                    if (_useSimple)
                     {
                         thrusterSets.Add(FireThrustLinear1(e, elapsedTime, direction).ToArray());
                     }
@@ -1897,7 +1897,7 @@ namespace Game.Newt.Testers
                 // I think that fixing torque drif is much more important than linear drift
 
 
-                if (!Math3D.IsNearZero(alongCombinedForceAndTorque.Item2.LengthSquared))
+                if (!Math1D.IsNearZero(alongCombinedForceAndTorque.Item2.LengthSquared))
                 {
                     // There is a net torque
 
@@ -1908,7 +1908,7 @@ namespace Game.Newt.Testers
 
 
 
-                if (!Math3D.IsNearValue(Vector3D.DotProduct(alongCombinedForceAndTorque.Item1.ToUnit(), direction), 1d))
+                if (!Math1D.IsNearValue(Vector3D.DotProduct(alongCombinedForceAndTorque.Item1.ToUnit(), direction), 1d))
                 {
                     // There is a linear drift
 
@@ -2117,7 +2117,7 @@ namespace Game.Newt.Testers
                             Vector3D dir1 = thrusters[outer].Thruster.ThrusterDirectionsModel[thrusters[outer].Index];
                             Vector3D dir2 = thrusters[inner].Thruster.ThrusterDirectionsModel[thrusters[inner].Index];
 
-                            if (Math3D.IsNearValue(Vector3D.DotProduct(dir1, dir2), -1d))
+                            if (Math1D.IsNearValue(Vector3D.DotProduct(dir1, dir2), -1d))
                             {
                                 retVal.Add(new Tuple<int, int>(outer, inner));
                             }
@@ -2229,7 +2229,7 @@ namespace Game.Newt.Testers
                     double percent = 1d;
 
                     // Figure out the percent.  The smaller one fires at 100%.  The other is a fraction of that
-                    if (!Math3D.IsNearValue(lengthThis, lengthOther) && lengthThis > lengthOther)
+                    if (!Math1D.IsNearValue(lengthThis, lengthOther) && lengthThis > lengthOther)
                     {
                         percent = lengthOther / lengthThis;
                     }
@@ -3493,7 +3493,7 @@ namespace Game.Newt.Testers
                             min = percents[seedIndex] * minMaxScaled[cntr].X;
                             max = percents[seedIndex] * minMaxScaled[cntr].Y;
                         }
-                        else if (!Math3D.IsNearZero(percents[seedIndex]))		// can't divide by zero
+                        else if (!Math1D.IsNearZero(percents[seedIndex]))		// can't divide by zero
                         {
                             min = (minMaxScaled[cntr].X * minMaxScaled[maxIndex].X) / percents[seedIndex];
                             max = (minMaxScaled[cntr].Y * minMaxScaled[maxIndex].Y) / percents[seedIndex];
@@ -3735,7 +3735,7 @@ namespace Game.Newt.Testers
                             min = retVal[seedIndex] * minMaxScaled[cntr].X;
                             max = retVal[seedIndex] * minMaxScaled[cntr].Y;
                         }
-                        else if (!Math3D.IsNearZero(retVal[seedIndex]))		// can't divide by zero
+                        else if (!Math1D.IsNearZero(retVal[seedIndex]))		// can't divide by zero
                         {
                             min = (minMaxScaled[cntr].X * minMaxScaled[maxIndex].X) / retVal[seedIndex];
                             max = (minMaxScaled[cntr].Y * minMaxScaled[maxIndex].Y) / retVal[seedIndex];
@@ -4941,7 +4941,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -4965,7 +4965,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(ammoBox.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -4989,7 +4989,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5017,7 +5017,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(fuelTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5041,7 +5041,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(energyTank.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5065,7 +5065,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5089,7 +5089,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5115,7 +5115,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(converter.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5147,7 +5147,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(solar.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -5178,7 +5178,7 @@ namespace Game.Newt.Testers
 
                 if (chkStandaloneShowMassBreakdown.IsChecked.Value)
                 {
-                    double cellSize = Math3D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
+                    double cellSize = Math1D.Max(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) * UtilityCore.GetScaledValue_Capped(.1d, .3d, 0d, 1d, _rand.NextDouble());
                     DrawMassBreakdown(thruster.GetMassBreakdown(cellSize), cellSize);
                 }
             }
@@ -6534,7 +6534,7 @@ namespace Game.Newt.Testers
                 Point3D[] points3D = new Point3D[200];
                 for (int cntr = 0; cntr < points3D.Length; cntr++)
                 {
-                    points3D[cntr] = Math3D.FromBarycentric(triangle, new Vector(Math3D.GetNearZeroValue(2d), Math3D.GetNearZeroValue(2d)));
+                    points3D[cntr] = Math3D.FromBarycentric(triangle, new Vector(Math1D.GetNearZeroValue(2d), Math1D.GetNearZeroValue(2d)));
                 }
 
                 #endregion
@@ -7163,7 +7163,7 @@ namespace Game.Newt.Testers
 
                 if (retVal == null)
                 {
-                    if (!Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
+                    if (!Math1D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
                     {
                         // These two lines aren't colinear.  Found the second line
                         retVal = new Triangle(points[0], points[0] + line1.Value, points[cntr]);
@@ -7173,7 +7173,7 @@ namespace Game.Newt.Testers
                 }
 
                 double dot = Vector3D.DotProduct(retVal.Normal, line);
-                if (!Math3D.IsNearZero(dot))
+                if (!Math1D.IsNearZero(dot))
                 {
                     // This point isn't coplanar with the triangle
                     return null;

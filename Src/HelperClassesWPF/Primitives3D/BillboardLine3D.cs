@@ -282,7 +282,7 @@ namespace Game.HelperClassesWPF.Primitives3D
             Vector3D direction = _toPoint - _fromPoint;
             double directionLength = direction.Length;
 
-            if (Math3D.IsInvalid(directionLength) || Math3D.IsNearZero(directionLength))
+            if (Math1D.IsInvalid(directionLength) || Math1D.IsNearZero(directionLength))
             {
                 this.Model.Transform = new ScaleTransform3D(0, 0, 0);
                 return;

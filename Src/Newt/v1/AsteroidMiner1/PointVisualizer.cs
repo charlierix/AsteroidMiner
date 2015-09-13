@@ -484,7 +484,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             if (radians != 0d)
             {
-                retVal.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians))));
+                retVal.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians))));
             }
 
             // Translation

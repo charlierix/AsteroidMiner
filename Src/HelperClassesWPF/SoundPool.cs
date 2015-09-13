@@ -176,7 +176,7 @@ namespace Game.HelperClassesWPF
 
             double intensityRatio = 1d;
             double offsetLength = offset.Length;
-            if (_distanceFalloffRatio == 0d || Math3D.IsNearZero(offsetLength))
+            if (_distanceFalloffRatio == 0d || Math1D.IsNearZero(offsetLength))
             {
                 volume = sourceVolume;
             }
@@ -201,7 +201,7 @@ namespace Game.HelperClassesWPF
             double angle = Vector3D.AngleBetween(new Vector3D(1, 0, 0), new Vector3D(offset.X, offset.Y, 0));
 
             // cos(0) is 1, cos(90) is 0, cos(180) is -1.  Exactly what I need
-            balance = Math.Cos(Math3D.DegreesToRadians(angle));
+            balance = Math.Cos(Math1D.DegreesToRadians(angle));
 
             //NOTE:  The problem with a pure cosine is that if a loud sound is sitting very near the person, but on the left, then in reality, the right
             // ear would hear something, but a simple cosine would be all the way -1

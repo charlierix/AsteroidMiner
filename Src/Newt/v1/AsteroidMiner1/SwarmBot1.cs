@@ -447,7 +447,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -497,7 +497,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -524,7 +524,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D currentVelocity = this.VelocityWorld;
 
-            if (!Math3D.IsNearZero(currentVelocity.LengthSquared))
+            if (!Math1D.IsNearZero(currentVelocity.LengthSquared))
             {
                 currentVelocity = this.PhysicsBody.DirectionFromWorld(currentVelocity);
 
@@ -539,7 +539,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 if (Math.Abs(radians) < Math.PI * .4d)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
             }
 
@@ -570,7 +570,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D currentVelocity = this.VelocityWorld;
 
-            if (!Math3D.IsNearZero(currentVelocity.LengthSquared))
+            if (!Math1D.IsNearZero(currentVelocity.LengthSquared))
             {
                 currentVelocity = this.PhysicsBody.DirectionFromWorld(currentVelocity);
 
@@ -585,7 +585,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 if (Math.Abs(radians) < Math.PI * .4d)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
             }
 
@@ -595,7 +595,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -637,7 +637,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, flockCenterDirection);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -699,7 +699,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -726,7 +726,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
                 // I need to invert this, because the greater the distance, the less the influence
                 double offsetLength = offsetLocal.Length;
-                if (Math3D.IsNearZero(offsetLength))
+                if (Math1D.IsNearZero(offsetLength))
                 {
                     // Can't divide by zero.  For now, I'll just skip this bot
                     continue;
@@ -799,7 +799,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)
@@ -885,7 +885,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
 
             // Thrust Strength
             if (_isAttacking)

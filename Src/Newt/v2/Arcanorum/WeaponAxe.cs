@@ -819,7 +819,7 @@ namespace Game.Newt.v2.Arcanorum
             Transform3DGroup transform = new Transform3DGroup();
             transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 90)));      // the tube is built along z, rotate so it's along y
 
-            if (!Math3D.IsNearZero(yOffset))
+            if (!Math1D.IsNearZero(yOffset))
             {
                 transform.Children.Add(new TranslateTransform3D(0, yOffset, 0));
             }
@@ -848,7 +848,7 @@ namespace Game.Newt.v2.Arcanorum
             Transform3DGroup transform = new Transform3DGroup();
             transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), -90)));      // the tube is built along z, rotate so it's along x
 
-            if (!Math3D.IsNearZero(yOffset))
+            if (!Math1D.IsNearZero(yOffset))
             {
                 transform.Children.Add(new TranslateTransform3D(0, yOffset, 0));
             }

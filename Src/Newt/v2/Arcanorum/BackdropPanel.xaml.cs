@@ -557,8 +557,8 @@ namespace Game.Newt.v2.Arcanorum
 
             Point[] points = new Point[numSegments];
 
-            double deltaTheta = Math3D.DegreesToRadians((thetaStop - thetaStart) / (numSegments - 1));        //NOTE: This will fail if theta start/stop goes past 0/360
-            double theta = Math3D.DegreesToRadians(thetaStart);
+            double deltaTheta = Math1D.DegreesToRadians((thetaStop - thetaStart) / (numSegments - 1));        //NOTE: This will fail if theta start/stop goes past 0/360
+            double theta = Math1D.DegreesToRadians(thetaStart);
 
             for (int cntr = 0; cntr < numSegments; cntr++)
             {

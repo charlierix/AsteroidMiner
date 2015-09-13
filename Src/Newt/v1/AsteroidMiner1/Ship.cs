@@ -455,14 +455,14 @@ namespace Game.Newt.v1.AsteroidMiner1
             #region Thrusters
 
             // These need to be definded before the visuals are created
-            double radians = Math3D.DegreesToRadians(225);
+            double radians = Math1D.DegreesToRadians(225);
             _thrusterOffset_BottomLeft = new Vector3D(this.RadiusX * Math.Cos(radians), this.RadiusY * Math.Sin(radians), 0);
-            radians = Math3D.DegreesToRadians(135);
+            radians = Math1D.DegreesToRadians(135);
             _thrusterOffset_TopLeft = new Vector3D(this.RadiusX * Math.Cos(radians), this.RadiusY * Math.Sin(radians), 0);
 
-            radians = Math3D.DegreesToRadians(315);
+            radians = Math1D.DegreesToRadians(315);
             _thrusterOffset_BottomRight = new Vector3D(this.RadiusX * Math.Cos(radians), this.RadiusY * Math.Sin(radians), 0);
-            radians = Math3D.DegreesToRadians(45);
+            radians = Math1D.DegreesToRadians(45);
             _thrusterOffset_TopRight = new Vector3D(this.RadiusX * Math.Cos(radians), this.RadiusY * Math.Sin(radians), 0);
 
             _thrustForce = 100d;

@@ -762,7 +762,7 @@ namespace Game.Newt.Testers
                     toIndex = rand.Next(toCount);
                 }
 
-                weight = Math3D.GetNearZeroValue(MAXWEIGHT);
+                weight = Math1D.GetNearZeroValue(MAXWEIGHT);
 
                 Tuple<int, int> key = new Tuple<int, int>(fromIndex, toIndex);
 

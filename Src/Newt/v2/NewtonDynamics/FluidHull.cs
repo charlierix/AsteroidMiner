@@ -326,7 +326,7 @@ namespace Game.Newt.v2.NewtonDynamics
                         forces[cntr] *= avgNormalLength * (.5d * flowsAt[cntr].Item2);
 
                         // Apply the force to the body
-                        if (this.Body != null && !Math3D.IsNearZero(forces[cntr].LengthSquared))
+                        if (this.Body != null && !Math1D.IsNearZero(forces[cntr].LengthSquared))
                         {
                             this.Body.AddForceAtPoint(forces[cntr], forcesAt[cntr]);
                         }
@@ -380,10 +380,10 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 var velocities = this.Field.GetForce(new[] { new Point3D(0, 0, 0) }, 1);
 
-                isZeroForce = Math3D.IsNearZero(velocities[0].Item1.LengthSquared);
+                isZeroForce = Math1D.IsNearZero(velocities[0].Item1.LengthSquared);
             }
 
-            if (isZeroForce && (this.Body == null || (Math3D.IsNearZero(this.Body.Velocity.LengthSquared) && Math3D.IsNearZero(this.Body.AngularVelocity.LengthSquared))))
+            if (isZeroForce && (this.Body == null || (Math1D.IsNearZero(this.Body.Velocity.LengthSquared) && Math1D.IsNearZero(this.Body.AngularVelocity.LengthSquared))))
             {
                 return true;
             }

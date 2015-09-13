@@ -340,7 +340,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
             Vector3D force = _gravityField.GetForce(e.Body.Position);
 
             double origLength = force.Length;
-            if (Math3D.IsNearZero(origLength))
+            if (Math1D.IsNearZero(origLength))
             {
                 return;
             }
@@ -447,7 +447,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
             const double DENSITY = 1000d / (800d * 800d);
             const double STARSIZE = 1d / 1500d;
 
-            double innerRadius = Math3D.Max(Math.Abs(_boundryMax.X), Math.Abs(_boundryMax.Y), Math.Abs(_boundryMax.Z));
+            double innerRadius = Math1D.Max(Math.Abs(_boundryMax.X), Math.Abs(_boundryMax.Y), Math.Abs(_boundryMax.Z));
             innerRadius *= 2;
             double outerRadius = innerRadius * 2d;
 
@@ -584,7 +584,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
         {
             SpaceStation spaceStation = new SpaceStation(position, _world, _material_SpaceStation, Math3D.GetRandomRotation());
 
-            spaceStation.SpinDegreesPerSecond = Math3D.GetNearZeroValue(.33, 1.1);
+            spaceStation.SpinDegreesPerSecond = Math1D.GetNearZeroValue(.33, 1.1);
 
             //double angularSpeed = Math3D.GetNearZeroValue(.33d, .66d);
             //spaceStation.PhysicsBody.AngularVelocity = spaceStation.PhysicsBody.DirectionToWorld(new Vector3D(0, 0, angularSpeed));
@@ -819,7 +819,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
 
             // Position
             Vector3D posXY = Math3D.GetRandomVector_Circular(_boundryMax.X * (percent - .03), _boundryMax.X * (percent + .03));
-            double z = Math3D.GetNearZeroValue(_boundryMax.Z) * .15;
+            double z = Math1D.GetNearZeroValue(_boundryMax.Z) * .15;
 
             Point3D position = new Point3D(posXY.X, posXY.Y, z);
 

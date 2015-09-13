@@ -587,7 +587,7 @@ namespace Game.Newt.v2.GameItems
         }
         public static Quaternion Mutate_RandPercent(Quaternion value, double factor)
         {
-            return value.RotateBy(new Quaternion(Math3D.GetRandomVector_Spherical_Shell(1d), Math3D.GetNearZeroValue(factor * 360d)));
+            return value.RotateBy(new Quaternion(Math3D.GetRandomVector_Spherical_Shell(1d), Math1D.GetNearZeroValue(factor * 360d)));
         }
         public static Quaternion Mutate_RandPercent(out double remainder, Quaternion value, double factor)
         {
@@ -619,7 +619,7 @@ namespace Game.Newt.v2.GameItems
         }
         public static Quaternion Mutate_RandDistance(Quaternion value, double factor)
         {
-            return value.RotateBy(new Quaternion(Math3D.GetRandomVector_Spherical_Shell(1d), Math3D.GetNearZeroValue(factor)));
+            return value.RotateBy(new Quaternion(Math3D.GetRandomVector_Spherical_Shell(1d), Math1D.GetNearZeroValue(factor)));
         }
         public static Quaternion Mutate_RandDistance(out double remainder, Quaternion value, double factor)
         {

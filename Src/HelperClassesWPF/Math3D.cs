@@ -428,11 +428,23 @@ namespace Game.HelperClassesWPF
 
                 Vector3D[] forces = new Vector3D[dots.Length];
 
+                bool hasRepulseMultipliers = dots.Any(o => !o.RepulseMultiplier.IsNearValue(1d));
+
                 do
                 {
                     // Calculate forces
                     GetInwardForces(forces, dots);
-                    smallestLength = GetRepulsionForces_Continuous(forces, dots, calcDist);
+
+                    //NOTE: Ideally, there would only be one GetRepulsionForces method.  Continuous is much better at obeying the max
+                    //radius, but doesn't look at the repulse modifier property.  So only using the standard method if repulse modifiers are used
+                    if (hasRepulseMultipliers)
+                    {
+                        smallestLength = GetRepulsionForces(forces, dots, calcDist);
+                    }
+                    else
+                    {
+                        smallestLength = GetRepulsionForces_Continuous(forces, dots, calcDist);
+                    }
 
                     // While testing, I didn't see any nonzeros
                     //double[] nonZero = forces.Where(o => !Math3D.IsNearZero(o.Z)).Select(o => o.Z).ToArray();
@@ -990,7 +1002,7 @@ namespace Game.HelperClassesWPF
                 // Get the largest radius of all the points
                 double maxLength = dots.Max(o => o.Position.Length);
 
-                if (Math3D.IsNearValue(maxLength, radius) || Math3D.IsNearZero(maxLength))
+                if (Math1D.IsNearValue(maxLength, radius) || Math1D.IsNearZero(maxLength))
                 {
                     // Nothing to fix (or divisor would be zero which is bad)
                     return;
@@ -1372,7 +1384,7 @@ namespace Game.HelperClassesWPF
                         maxDistance = distance;
                         retVal = pointIndicies[cntr];
                     }
-                    else if (Math3D.IsNearZero(distance) && Math3D.IsNearZero(maxDistance))		// this is for a coplanar point that can have a very slightly negative distance
+                    else if (Math1D.IsNearZero(distance) && Math1D.IsNearZero(maxDistance))		// this is for a coplanar point that can have a very slightly negative distance
                     {
                         // Can't trust the previous bary check, need another one (maybe it's false because it never went through that first check?)
                         Vector bary = Math3D.ToBarycentric(triangle, allPoints[pointIndicies[cntr]]);
@@ -1416,7 +1428,7 @@ namespace Game.HelperClassesWPF
                 // Need to subtract the far point from some point on this triangle, so that it's a vector from the triangle to the
                 // far point, and not from the origin
                 double dot = Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector());
-                if (dot >= 0d || Math3D.IsNearZero(dot))		// 0 is coplanar, -1 is the opposite side
+                if (dot >= 0d || Math1D.IsNearZero(dot))		// 0 is coplanar, -1 is the opposite side
                 {
                     // This triangle is visible to the point.  Remove it (recurse)
                     ProcessTriangleSprtRemove(triangle, removedTriangles, removedRim, farPoint);
@@ -1602,7 +1614,7 @@ namespace Game.HelperClassesWPF
                         retVal.Add(index);
                         pointIndicies.Remove(index);		// an outside point can only belong to one triangle
                     }
-                    else if (Math3D.IsNearZero(res))
+                    else if (Math1D.IsNearZero(res))
                     {
                         // This point is coplanar.  Only consider it an outside point if it is outside the bounds of this triangle
                         Vector bary = Math3D.ToBarycentric(triangle, allPoints[index]);
@@ -3655,7 +3667,7 @@ namespace Game.HelperClassesWPF
                     {
                         #region asserts
 #if DEBUG
-                        if (!Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(axis_PrevCurrent, GetAxisUnit(current.Edge, nextEdge.Edge))), 1d))
+                        if (!Math1D.IsNearValue(Math.Abs(Vector3D.DotProduct(axis_PrevCurrent, GetAxisUnit(current.Edge, nextEdge.Edge))), 1d))
                         {
                             throw new ApplicationException("Looped around, but it's not coplanar");
                         }
@@ -3670,7 +3682,7 @@ namespace Game.HelperClassesWPF
                     Vector3D axis_CurrentNext = GetAxisUnit(current.Edge, nextEdge.Edge);
 
                     // See if they are the same axis (taking abs, because the vector may be in the opposite direction)
-                    if (Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(axis_PrevCurrent, axis_CurrentNext)), 1d))
+                    if (Math1D.IsNearValue(Math.Abs(Vector3D.DotProduct(axis_PrevCurrent, axis_CurrentNext)), 1d))
                     {
                         if (endedAsLoop != null)
                         {
@@ -3985,32 +3997,17 @@ namespace Game.HelperClassesWPF
 
         #region Declaration Section
 
-        private const double _180_over_PI = (180d / Math.PI);
-        private const double _PI_over_180 = (Math.PI / 180d);
-
-        private const float _180_over_PI_FLOAT = (180f / (float)Math.PI);
-        private const float _PI_over_180_FLOAT = ((float)Math.PI / 180f);
-
         public static readonly Matrix3D ZeroMatrix = new Matrix3D(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         public static readonly Vector3D ScaleIdentity = new Vector3D(1, 1, 1);
-
-        public const double Radian360 = 360 * _PI_over_180;
 
         //public const double NEARZERO = .000001d;
         //public const double NEARZERO = .000000001d;
         public const double NEARZERO = UtilityCore.NEARZERO;
 
-        public const double GOLDENRATIO = 1.61803398875;
-
         #endregion
 
         #region Simple
 
-        //NOTE: I made an operator overload =~ that does these
-        public static bool IsNearZero(double testValue)
-        {
-            return Math.Abs(testValue) <= NEARZERO;
-        }
         public static bool IsNearZero(Vector3D testVect)
         {
             return Math.Abs(testVect.X) <= NEARZERO && Math.Abs(testVect.Y) <= NEARZERO && Math.Abs(testVect.Z) <= NEARZERO;
@@ -4018,10 +4015,6 @@ namespace Game.HelperClassesWPF
         public static bool IsNearZero(Point3D testPoint)
         {
             return Math.Abs(testPoint.X) <= NEARZERO && Math.Abs(testPoint.Y) <= NEARZERO && Math.Abs(testPoint.Z) <= NEARZERO;
-        }
-        public static bool IsNearValue(double testValue, double compareTo)
-        {
-            return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
         }
         public static bool IsNearValue(Vector3D testVect, Vector3D compareTo)
         {
@@ -4043,266 +4036,19 @@ namespace Game.HelperClassesWPF
                         testQuat.W >= compareTo.W - NEARZERO && testQuat.W <= compareTo.W + NEARZERO;
         }
 
-        //TODO: Come up with a better name for these.  The test value must exceed a threshold before these return true (a value that IsNearZero would call true won't make these true)
-        public static bool IsNearNegative(double testValue)
-        {
-            return testValue < -NEARZERO;
-        }
-        public static bool IsNearPositive(double testValue)
-        {
-            return testValue > NEARZERO;
-        }
-
-        /// <summary>
-        /// Returns true if the double is NaN or Infinity
-        /// </summary>
-        public static bool IsInvalid(double testValue)
-        {
-            return double.IsNaN(testValue) || double.IsInfinity(testValue);
-        }
         /// <summary>
         /// Returns true if the vector contains NaN or Infinity
         /// </summary>
         public static bool IsInvalid(Vector3D testVect)
         {
-            return IsInvalid(testVect.X) || IsInvalid(testVect.Y) || IsInvalid(testVect.Z);
+            return Math1D.IsInvalid(testVect.X) || Math1D.IsInvalid(testVect.Y) || Math1D.IsInvalid(testVect.Z);
         }
         /// <summary>
         /// Returns true if the point contains NaN or Infinity
         /// </summary>
         public static bool IsInvalid(Point3D testPoint)
         {
-            return IsInvalid(testPoint.X) || IsInvalid(testPoint.Y) || IsInvalid(testPoint.Z);
-        }
-
-        public static bool IsDivisible(double larger, double smaller)
-        {
-            if (Math3D.IsNearZero(smaller))
-            {
-                // Divide by zero.  Nothing is divisible by zero, not even zero.  (I looked up "is zero divisible by zero", and got very
-                // technical reasons why it's not.  It would be cool to be able to view the world the way math people do.  Visualizing
-                // complex equations, etc)
-                return false;
-            }
-
-            // Divide the larger by the smaller.  If the result is an integer (or very close to an integer), then they are divisible
-            double division = larger / smaller;
-            double divisionInt = Math.Round(division);
-
-            return Math3D.IsNearValue(division, divisionInt);
-        }
-
-        public static double DegreesToRadians(double degrees)
-        {
-            return degrees * _PI_over_180;
-        }
-        public static float DegreesToRadians(float degrees)
-        {
-            return degrees * _PI_over_180_FLOAT;
-        }
-
-        public static double RadiansToDegrees(double radians)
-        {
-            return radians * _180_over_PI;
-        }
-        public static float RadiansToDegrees(float radians)
-        {
-            return radians * _180_over_PI_FLOAT;
-        }
-
-        public static double GetDistance(double[] vector1, double[] vector2)
-        {
-            return Math.Sqrt(GetDistanceSquared(vector1, vector2));
-        }
-        public static double GetDistanceSquared(double[] vector1, double[] vector2)
-        {
-            #region validate
-#if DEBUG
-            if (vector1 == null || vector2 == null)
-            {
-                throw new ArgumentException("Vector arrays can't be null");
-            }
-            else if (vector1.Length != vector2.Length)
-            {
-                throw new ArgumentException("Vector arrays must be the same length " + vector1.Length + ", " + vector2.Length);
-            }
-#endif
-            #endregion
-
-            //C^2 = (A1-A2)^2 + (B1-B2)^2 + .....
-
-            double retVal = 0;
-
-            for (int cntr = 0; cntr < vector1.Length; cntr++)
-            {
-                double diff = vector1[cntr] - vector2[cntr];
-
-                retVal += diff * diff;
-            }
-
-            return retVal;
-        }
-
-        /// <summary>
-        /// This returns the minimum and maximum value (throws exception if empty list)
-        /// </summary>
-        public static Tuple<double, double> MinMax(IEnumerable<double> values)
-        {
-            double min = double.MaxValue;
-            double max = double.MinValue;
-            bool hasEntry = false;      // don't want to use Count(), because that would iterate the whole list
-
-            foreach (double value in values)
-            {
-                hasEntry = true;
-
-                if (value < min)
-                {
-                    min = value;
-                }
-
-                if (value > max)
-                {
-                    max = value;
-                }
-            }
-
-            if (!hasEntry)
-            {
-                throw new InvalidOperationException("Sequence contains no elements");       // this is the same error that .Max() gives
-            }
-
-            return Tuple.Create(min, max);
-        }
-
-        // I got tired of nesting min/max statements
-        public static int Min(int v1, int v2, int v3)
-        {
-            return Math.Min(Math.Min(v1, v2), v3);
-        }
-        public static int Min(int v1, int v2, int v3, int v4)
-        {
-            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
-        }
-
-        public static double Min(double v1, double v2, double v3)
-        {
-            return Math.Min(Math.Min(v1, v2), v3);
-        }
-        public static double Min(double v1, double v2, double v3, double v4)
-        {
-            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
-        }
-
-        public static int Max(int v1, int v2, int v3)
-        {
-            return Math.Max(Math.Max(v1, v2), v3);
-        }
-        public static int Max(int v1, int v2, int v3, int v4)
-        {
-            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-        }
-
-        public static double Max(double v1, double v2, double v3)
-        {
-            return Math.Max(Math.Max(v1, v2), v3);
-        }
-        public static double Max(double v1, double v2, double v3, double v4)
-        {
-            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-        }
-
-        public static double Avg(double v1, double v2)
-        {
-            return (v1 + v2) / 2d;
-        }
-        public static double Avg(double v1, double v2, double v3)
-        {
-            return (v1 + v2 + v3) / 3d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4)
-        {
-            return (v1 + v2 + v3 + v4) / 4d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5)
-        {
-            return (v1 + v2 + v3 + v4 + v5) / 5d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6) / 6d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6 + v7) / 7d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 8d;
+            return Math1D.IsInvalid(testPoint.X) || Math1D.IsInvalid(testPoint.Y) || Math1D.IsInvalid(testPoint.Z);
         }
 
         #endregion
@@ -4346,9 +4092,9 @@ namespace Game.HelperClassesWPF
         {
             Vector3D retVal = new Vector3D();
 
-            retVal.X = GetNearZeroValue(maxValue);
-            retVal.Y = GetNearZeroValue(maxValue);
-            retVal.Z = GetNearZeroValue(maxValue);
+            retVal.X = Math1D.GetNearZeroValue(maxValue);
+            retVal.Y = Math1D.GetNearZeroValue(maxValue);
+            retVal.Z = Math1D.GetNearZeroValue(maxValue);
 
             return retVal;
         }
@@ -4539,7 +4285,7 @@ namespace Game.HelperClassesWPF
 
         public static Quaternion GetRandomRotation()
         {
-            return new Quaternion(GetRandomVector_Spherical_Shell(1d), GetNearZeroValue(360d));
+            return new Quaternion(GetRandomVector_Spherical_Shell(1d), Math1D.GetNearZeroValue(360d));
         }
 
         /// <remarks>
@@ -4662,80 +4408,6 @@ namespace Game.HelperClassesWPF
             // Exit Function
             return retVal;
         }
-        private static void GetRandomPoints_OnHullSprtSizes(out int[] trianglePointers, out double[] triangleSizes, ITriangle[] hull)
-        {
-            trianglePointers = Enumerable.Range(0, hull.Length).ToArray();
-            triangleSizes = new double[hull.Length];
-
-            // Get the size of each triangle
-            for (int cntr = 0; cntr < hull.Length; cntr++)
-            {
-                triangleSizes[cntr] = hull[cntr].NormalLength / 2d;
-            }
-
-            // Sort them (I'd sort descending if I could.  That would make the find method easier to read, but the call to reverse
-            // is an unnecessary expense)
-            Array.Sort(triangleSizes, trianglePointers);
-
-            // Normalize them so the sum is 1.  Note that after this, each item in sizes will be that item's percent of the whole
-            double totalSize = triangleSizes.Sum();
-            for (int cntr = 0; cntr < triangleSizes.Length; cntr++)
-            {
-                triangleSizes[cntr] = triangleSizes[cntr] / totalSize;
-            }
-        }
-        private static int GetRandomPoints_OnHullSprtFindTriangle(int[] trianglePointers, double[] triangleSizes, double percent)
-        {
-            double accumSize = 1d;
-
-            // Find the triangle that is this occupying this percent of the total size (walking backward will cut down on
-            // the number of triangles that need to be searched through)
-            for (int cntr = triangleSizes.Length - 1; cntr > 0; cntr--)
-            {
-                if (accumSize - triangleSizes[cntr] < percent)
-                {
-                    return trianglePointers[cntr];
-                }
-
-                accumSize -= triangleSizes[cntr];
-            }
-
-            // This should only happen if the requested percent is zero
-            return trianglePointers[0];
-        }
-
-        /// <summary>
-        /// Gets a value between -maxValue and maxValue
-        /// </summary>
-        public static double GetNearZeroValue(double maxValue)
-        {
-            Random rand = StaticRandom.GetRandomForThread();
-
-            double retVal = rand.NextDouble() * maxValue;
-
-            if (rand.Next(0, 2) == 1)
-            {
-                retVal *= -1d;
-            }
-
-            return retVal;
-        }
-        /// <summary>
-        /// This gets a value between minValue and maxValue, and has a 50/50 chance of negating that
-        /// </summary>
-        public static double GetNearZeroValue(double minValue, double maxValue)
-        {
-            Random rand = StaticRandom.GetRandomForThread();
-
-            double retVal = minValue + (rand.NextDouble() * (maxValue - minValue));
-
-            if (rand.Next(0, 2) == 1)
-            {
-                retVal *= -1d;
-            }
-
-            return retVal;
-        }
 
         /// <summary>
         /// This function will pick an arbitrary orthogonal to the vector passed in
@@ -4802,7 +4474,7 @@ namespace Game.HelperClassesWPF
             if (shouldTestCoplanar)
             {
                 double distFromPlane = DistanceFromPlane(triangle, testPoint);
-                if (!IsNearZero(distFromPlane))
+                if (!Math1D.IsNearZero(distFromPlane))
                 {
                     return false;
                 }
@@ -4810,7 +4482,7 @@ namespace Game.HelperClassesWPF
 
             // Ensure inside triangle
             Vector bary = Math3D.ToBarycentric(triangle, testPoint);
-            if (Math3D.IsNearNegative(bary.X) || Math3D.IsNearNegative(bary.Y) || Math3D.IsNearPositive(bary.X + bary.Y - 1d))
+            if (Math1D.IsNearNegative(bary.X) || Math1D.IsNearNegative(bary.Y) || Math1D.IsNearPositive(bary.X + bary.Y - 1d))
             {
                 return false;
             }
@@ -4982,7 +4654,7 @@ namespace Game.HelperClassesWPF
         public static Vector3D RotateAroundAxis(Vector3D vector, Vector3D rotateAround, double radians)
         {
             // Create a quaternion that represents the axis and angle passed in
-            Quaternion rotationQuat = new Quaternion(rotateAround, RadiansToDegrees(radians));
+            Quaternion rotationQuat = new Quaternion(rotateAround, Math1D.RadiansToDegrees(radians));
 
             Matrix3D matrix = new Matrix3D();
             matrix.Rotate(rotationQuat);
@@ -5038,7 +4710,7 @@ namespace Game.HelperClassesWPF
         public static void GetRotation(out Vector3D axis, out double radians, Vector3D from, Vector3D to)
         {
             // Grab the angle
-            radians = DegreesToRadians(Vector3D.AngleBetween(from, to));
+            radians = Math1D.DegreesToRadians(Vector3D.AngleBetween(from, to));
             if (Double.IsNaN(radians))
             {
                 radians = 0;
@@ -5111,7 +4783,7 @@ namespace Game.HelperClassesWPF
             }
 
             // Detect Parallel
-            if (IsNearValue(Math.Abs(Vector3D.DotProduct(fromNormalUnit, toNormalUnit)), 1d))
+            if (Math1D.IsNearValue(Math.Abs(Vector3D.DotProduct(fromNormalUnit, toNormalUnit)), 1d))
             {
                 return Math3D.GetRotation(from1, to1);
             }
@@ -5138,38 +4810,6 @@ namespace Game.HelperClassesWPF
             return Vector3D.CrossProduct(cross, standard);		// now get an orthogonal pointing in the same direction as direction
         }
 
-        /// <summary>
-        /// This returns the center of position of the points
-        /// </summary>
-        public static Point GetCenter(IEnumerable<Point> points)
-        {
-            if (points == null)
-            {
-                return new Point(0, 0);
-            }
-
-            double x = 0d;
-            double y = 0d;
-
-            int length = 0;
-
-            foreach (Point point in points)
-            {
-                x += point.X;
-                y += point.Y;
-
-                length++;
-            }
-
-            if (length == 0)
-            {
-                return new Point(0, 0);
-            }
-
-            double oneOverLen = 1d / Convert.ToDouble(length);
-
-            return new Point(x * oneOverLen, y * oneOverLen);
-        }
         /// <summary>
         /// This returns the center of position of the points
         /// </summary>
@@ -5205,33 +4845,49 @@ namespace Game.HelperClassesWPF
             return new Point3D(x * oneOverLen, y * oneOverLen, z * oneOverLen);
         }
         /// <summary>
-        /// This returns the center of mass of the points
+        /// This returns the center of position of the points
         /// </summary>
-        public static Point GetCenter(Tuple<Point, double>[] pointsMasses)
+        public static double[] GetCenter(IEnumerable<double[]> points)
         {
-            if (pointsMasses == null || pointsMasses.Length == 0)
+            if (points == null)
             {
-                return new Point(0, 0);
+                throw new ArgumentException("Unknown number of dimensions");
             }
 
-            double totalMass = pointsMasses.Sum(o => o.Item2);
-            if (IsNearZero(totalMass))
+            double[] retVal = null;
+
+            int length = 0;
+
+            foreach (double[] point in points)
             {
-                return GetCenter(pointsMasses.Select(o => o.Item1).ToArray());
+                if (retVal == null)
+                {
+                    retVal = new double[point.Length];      // waiting until the first vector is seen to initialize the return array (I don't want to ask how many dimensions there are when it's defined by the points)
+                }
+
+                // Add this point to the total
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    retVal[cntr] += point[cntr];
+                }
+
+                length++;
             }
 
-            double x = 0d;
-            double y = 0d;
-
-            foreach (var pointMass in pointsMasses)
+            if (length == 0)
             {
-                x += pointMass.Item1.X * pointMass.Item2;
-                y += pointMass.Item1.Y * pointMass.Item2;
+                throw new ArgumentException("Unknown number of dimensions");
             }
 
-            double totalMassInverse = 1d / totalMass;
+            double oneOverLen = 1d / Convert.ToDouble(length);
 
-            return new Point(x * totalMassInverse, y * totalMassInverse);
+            // Divide by count
+            for (int cntr = 0; cntr < retVal.Length; cntr++)
+            {
+                retVal[cntr] *= oneOverLen;
+            }
+
+            return retVal;
         }
         /// <summary>
         /// This returns the center of mass of the points
@@ -5244,7 +4900,7 @@ namespace Game.HelperClassesWPF
             }
 
             double totalMass = pointsMasses.Sum(o => o.Item2);
-            if (IsNearZero(totalMass))
+            if (Math1D.IsNearZero(totalMass))
             {
                 return GetCenter(pointsMasses.Select(o => o.Item1).ToArray());
             }
@@ -5265,39 +4921,6 @@ namespace Game.HelperClassesWPF
             return new Point3D(x * totalMassInverse, y * totalMassInverse, z * totalMassInverse);
         }
 
-        /// <summary>
-        /// This is identical to GetCenter.  (with points, that is thought of as the center.  With vectors, that's thought of as the
-        /// average - even though it's the same logic)
-        /// </summary>
-        public static Vector GetAverage(IEnumerable<Vector> vectors)
-        {
-            if (vectors == null)
-            {
-                return new Vector(0, 0);
-            }
-
-            double x = 0d;
-            double y = 0d;
-
-            int length = 0;
-
-            foreach (Vector vector in vectors)
-            {
-                x += vector.X;
-                y += vector.Y;
-
-                length++;
-            }
-
-            if (length == 0)
-            {
-                return new Vector(0, 0);
-            }
-
-            double oneOverLen = 1d / Convert.ToDouble(length);
-
-            return new Vector(x * oneOverLen, y * oneOverLen);
-        }
         /// <summary>
         /// This is identical to GetCenter.  (with points, that is thought of as the center.  With vectors, that's thought of as the
         /// average - even though it's the same logic)
@@ -5334,24 +4957,6 @@ namespace Game.HelperClassesWPF
             return new Vector3D(x * oneOverLen, y * oneOverLen, z * oneOverLen);
         }
 
-        public static Vector GetSum(IEnumerable<Vector> vectors)
-        {
-            if (vectors == null)
-            {
-                return new Vector(0, 0);
-            }
-
-            double x = 0d;
-            double y = 0d;
-
-            foreach (Vector vector in vectors)
-            {
-                x += vector.X;
-                y += vector.Y;
-            }
-
-            return new Vector(x, y);
-        }
         public static Vector3D GetSum(IEnumerable<Vector3D> vectors)
         {
             if (vectors == null)
@@ -5374,20 +4979,6 @@ namespace Game.HelperClassesWPF
         }
 
         //TODO: See if there is a way to do something like points.Distinct((o,p) => IsNearValue(o,p))
-        public static Point[] GetUnique(IEnumerable<Point> points)
-        {
-            List<Point> retVal = new List<Point>();
-
-            foreach (Point point in points)
-            {
-                if (!retVal.Any(o => Math2D.IsNearValue(o, point)))
-                {
-                    retVal.Add(point);
-                }
-            }
-
-            return retVal.ToArray();
-        }
         public static Point3D[] GetUnique(IEnumerable<Point3D> points)
         {
             List<Point3D> retVal = new List<Point3D>();
@@ -5397,20 +4988,6 @@ namespace Game.HelperClassesWPF
                 if (!retVal.Any(o => IsNearValue(o, point)))
                 {
                     retVal.Add(point);
-                }
-            }
-
-            return retVal.ToArray();
-        }
-        public static Vector[] GetUnique(IEnumerable<Vector> vectors)
-        {
-            List<Vector> retVal = new List<Vector>();
-
-            foreach (Vector vector in vectors)
-            {
-                if (!retVal.Any(o => Math2D.IsNearValue(o, vector)))
-                {
-                    retVal.Add(vector);
                 }
             }
 
@@ -5516,18 +5093,6 @@ namespace Game.HelperClassesWPF
             return new Rect3D(aabb.Item1, (aabb.Item2 - aabb.Item1).ToSize());
         }
 
-        public static Point LERP(Point a, Point b, double percent)
-        {
-            return new Point(
-                a.X + (b.X - a.X) * percent,
-                a.Y + (b.Y - a.Y) * percent);
-        }
-        public static Vector LERP(Vector a, Vector b, double percent)
-        {
-            return new Vector(
-                a.X + (b.X - a.X) * percent,
-                a.Y + (b.Y - a.Y) * percent);
-        }
         public static Point3D LERP(Point3D a, Point3D b, double percent)
         {
             return new Point3D(
@@ -5757,6 +5322,35 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        public static Tuple<int, int, double>[] GetDistancesBetween(Point3D[] positions)
+        {
+            List<Tuple<int, int, double>> retVal = new List<Tuple<int, int, double>>();
+
+            for (int outer = 0; outer < positions.Length - 1; outer++)
+            {
+                for (int inner = outer + 1; inner < positions.Length; inner++)
+                {
+                    double distance = (positions[outer] - positions[inner]).Length;
+                    retVal.Add(Tuple.Create(outer, inner, distance));
+                }
+            }
+
+            return retVal.ToArray();
+        }
+
+        public static Point3D[] ApplyBallOfSprings(Point3D[] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
+        {
+            double[][] pos = positions.
+                Select(o => new[] { o.X, o.Y, o.Z }).
+                ToArray();
+
+            double[][] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
+
+            return retVal.
+                Select(o => new Point3D(o[0], o[1], o[2])).
+                ToArray();
+        }
+
         #endregion
 
         #region Intersections
@@ -5919,7 +5513,7 @@ namespace Game.HelperClassesWPF
             {
                 return true;        // above the plane
             }
-            else if (trueIfOnPlane && IsNearZero(res))
+            else if (trueIfOnPlane && Math1D.IsNearZero(res))
             {
                 return true;        // on the plane
             }
@@ -6113,7 +5707,7 @@ namespace Game.HelperClassesWPF
             Vector3D segmentDirLen = lineSegmentStop - lineSegmentStart;
             Vector3D resultDirLen = result2.Value - lineSegmentStart;
 
-            if (!IsNearValue(Vector3D.DotProduct(segmentDirLen.ToUnit(), resultDirLen.ToUnit()), 1d))
+            if (!Math1D.IsNearValue(Vector3D.DotProduct(segmentDirLen.ToUnit(), resultDirLen.ToUnit()), 1d))
             {
                 // It's the other direction (beyond segment start)
                 resultPointsLine = new Point3D[0];
@@ -6322,7 +5916,7 @@ namespace Game.HelperClassesWPF
 
             // Make a plane that the circle sits in (this is used by code shared with the circle/line intersect)
             //NOTE: The plane is using nearestAxisPoint, and not the arbitrary point that was passed in (this makes later logic easier)
-            Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? GetArbitraryOrhonganal(axisDirection) : nearestLine;
+            Vector3D circlePlaneLine1 = Math1D.IsNearZero(nearestDistance) ? GetArbitraryOrhonganal(axisDirection) : nearestLine;
             Vector3D circlePlaneLine2 = Vector3D.CrossProduct(axisDirection, circlePlaneLine1);
             ITriangle circlePlane = new Triangle(nearestAxisPoint.Value, nearestAxisPoint.Value + circlePlaneLine1, nearestAxisPoint.Value + circlePlaneLine2);
 
@@ -6380,7 +5974,7 @@ namespace Game.HelperClassesWPF
 
             // Make a plane that the circle sits in (this is used by code shared with the circel/line intersect)
             //NOTE: The plane is oriented along the shortest path line
-            Vector3D circlePlaneLine1 = IsNearZero(nearestDistance) ? new Vector3D(1, 0, 0) : nearestLine;
+            Vector3D circlePlaneLine1 = Math1D.IsNearZero(nearestDistance) ? new Vector3D(1, 0, 0) : nearestLine;
             Vector3D circlePlaneLine2 = lineDirection;
             ITriangle circlePlane = new Triangle(centerPoint, centerPoint + circlePlaneLine1, centerPoint + circlePlaneLine2);
 
@@ -6615,7 +6209,7 @@ namespace Game.HelperClassesWPF
             double distance2 = -plane2.PlaneDistance;
 
             double offDiagonal = Vector3D.DotProduct(normal1, normal2);
-            if (IsNearValue(Math.Abs(offDiagonal), 1d))
+            if (Math1D.IsNearValue(Math.Abs(offDiagonal), 1d))
             {
                 // The planes are parallel
                 point = new Point3D();
@@ -7033,7 +6627,7 @@ namespace Game.HelperClassesWPF
                 // Subtract the point from the next vertex
                 Vector3D vB = polygon2D[(i + 1) % verticeCount] - intersectionPoint;
 
-                Angle += DegreesToRadians(Vector3D.AngleBetween(vA, vB));	// Find the angle between the 2 vectors and add them all up as we go along
+                Angle += Math1D.DegreesToRadians(Vector3D.AngleBetween(vA, vB));	// Find the angle between the 2 vectors and add them all up as we go along
             }
 
             // Now that we have the total angles added up, we need to check if they add up to 360 degrees.
@@ -7284,15 +6878,15 @@ namespace Game.HelperClassesWPF
             double test = Math.Cos(vRot.X);
             if (Math.Abs(test) > threshold)
             {
-                vRot.Y = RadiansToDegrees(Math.Atan2(/*mRot.M31*/vCols[2].X, /*mRot.M33*/vCols[2].Z));
-                vRot.Z = RadiansToDegrees(Math.Atan2(/*mRot.M12*/vCols[0].Y, /*mRot.M22*/vCols[1].Y));
+                vRot.Y = Math1D.RadiansToDegrees(Math.Atan2(/*mRot.M31*/vCols[2].X, /*mRot.M33*/vCols[2].Z));
+                vRot.Z = Math1D.RadiansToDegrees(Math.Atan2(/*mRot.M12*/vCols[0].Y, /*mRot.M22*/vCols[1].Y));
             }
             else
             {
                 vRot.Y = 0.0;
-                vRot.Z = RadiansToDegrees(Math.Atan2(-/*mRot.M21*/vCols[1].X, /*mRot.M11*/vCols[0].X));
+                vRot.Z = Math1D.RadiansToDegrees(Math.Atan2(-/*mRot.M21*/vCols[1].X, /*mRot.M11*/vCols[0].X));
             }
-            vRot.X = RadiansToDegrees(vRot.X);
+            vRot.X = Math1D.RadiansToDegrees(vRot.X);
         }
 
         public static Vector3D GetMatrixScale(ref Matrix3D mat)
@@ -7405,9 +6999,9 @@ namespace Game.HelperClassesWPF
         /// 
         public static Matrix3D CreateYawPitchRollMatrix(double xPitchDegrees, double yYawDegrees, double zRollDegrees)
         {
-            double x = DegreesToRadians(xPitchDegrees);
-            double y = DegreesToRadians(yYawDegrees);
-            double z = DegreesToRadians(zRollDegrees);
+            double x = Math1D.DegreesToRadians(xPitchDegrees);
+            double y = Math1D.DegreesToRadians(yYawDegrees);
+            double z = Math1D.DegreesToRadians(zRollDegrees);
 
             double cx = Math.Cos(x);
             double cy = Math.Cos(y);
@@ -7690,7 +7284,6 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-
         #region Duplication with wpf
 
         /*
@@ -7801,6 +7394,48 @@ namespace Game.HelperClassesWPF
         #endregion
 
         #region Private Methods
+
+        private static void GetRandomPoints_OnHullSprtSizes(out int[] trianglePointers, out double[] triangleSizes, ITriangle[] hull)
+        {
+            trianglePointers = Enumerable.Range(0, hull.Length).ToArray();
+            triangleSizes = new double[hull.Length];
+
+            // Get the size of each triangle
+            for (int cntr = 0; cntr < hull.Length; cntr++)
+            {
+                triangleSizes[cntr] = hull[cntr].NormalLength / 2d;
+            }
+
+            // Sort them (I'd sort descending if I could.  That would make the find method easier to read, but the call to reverse
+            // is an unnecessary expense)
+            Array.Sort(triangleSizes, trianglePointers);
+
+            // Normalize them so the sum is 1.  Note that after this, each item in sizes will be that item's percent of the whole
+            double totalSize = triangleSizes.Sum();
+            for (int cntr = 0; cntr < triangleSizes.Length; cntr++)
+            {
+                triangleSizes[cntr] = triangleSizes[cntr] / totalSize;
+            }
+        }
+        private static int GetRandomPoints_OnHullSprtFindTriangle(int[] trianglePointers, double[] triangleSizes, double percent)
+        {
+            double accumSize = 1d;
+
+            // Find the triangle that is this occupying this percent of the total size (walking backward will cut down on
+            // the number of triangles that need to be searched through)
+            for (int cntr = triangleSizes.Length - 1; cntr > 0; cntr--)
+            {
+                if (accumSize - triangleSizes[cntr] < percent)
+                {
+                    return trianglePointers[cntr];
+                }
+
+                accumSize -= triangleSizes[cntr];
+            }
+
+            // This should only happen if the requested percent is zero
+            return trianglePointers[0];
+        }
 
         /// <summary>
         /// This returns a number between LeftOuter--LeftInner or RightInner--RightOuter
@@ -7940,7 +7575,7 @@ namespace Game.HelperClassesWPF
             Vector3D segmentDir = segmentStop - segmentStart;
             Vector3D testDir = point - segmentStart;
 
-            if (!IsNearValue(Vector3D.DotProduct(segmentDir.ToUnit(), testDir.ToUnit()), 1d))
+            if (!Math1D.IsNearValue(Vector3D.DotProduct(segmentDir.ToUnit(), testDir.ToUnit()), 1d))
             {
                 // It's the other direction (beyond segment start)
                 return null;
@@ -8286,7 +7921,7 @@ namespace Game.HelperClassesWPF
 
             // Detect perpendicular
             double dot = Vector3D.DotProduct(args.CirclePlane.NormalUnit, args.LineDirection.ToUnit());
-            if (IsNearValue(Math.Abs(dot), 1d))
+            if (Math1D.IsNearValue(Math.Abs(dot), 1d))
             {
                 return GetClosestPointsBetweenLineCircleSprtPerpendicular(out circlePoints, out linePoints, args);
             }
@@ -8295,7 +7930,7 @@ namespace Game.HelperClassesWPF
             CirclePlaneIntersectProps planeIntersect = GetClosestPointsBetweenLineCircleSprtPlaneIntersect(args);
 
             // There's less to do if the line is parallel
-            if (IsNearZero(dot))
+            if (Math1D.IsNearZero(dot))
             {
                 GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
             }
@@ -8401,7 +8036,7 @@ namespace Game.HelperClassesWPF
                 {
                     double localDistance = (linePoints1[cntr] - circlePoints1[cntr]).Length;
 
-                    if (IsNearValue(localDistance, distance))
+                    if (Math1D.IsNearValue(localDistance, distance))
                     {
                         circlePointList.Add(circlePoints1[cntr]);
                         linePointList.Add(linePoints1[cntr]);
@@ -8423,7 +8058,7 @@ namespace Game.HelperClassesWPF
                 {
                     double localDistance = (linePoints2[cntr] - circlePoints2[cntr]).Length;
 
-                    if (IsNearValue(localDistance, distance))
+                    if (Math1D.IsNearValue(localDistance, distance))
                     {
                         circlePointList.Add(circlePoints2[cntr]);
                         linePointList.Add(linePoints2[cntr]);
@@ -8476,7 +8111,7 @@ namespace Game.HelperClassesWPF
             Vector3D centerToIntersect = planeIntersect - args.CircleCenter;
             double centerToIntersectLength = centerToIntersect.Length;
 
-            if (IsNearZero(centerToIntersectLength))
+            if (Math1D.IsNearZero(centerToIntersectLength))
             {
                 circlePoints = null;
                 linePoints = null;
@@ -8490,7 +8125,7 @@ namespace Game.HelperClassesWPF
         private static void GetClosestPointsBetweenLineCircleSprtInsidePerps(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
         {
             // See if the line passes through the center
-            if (IsNearZero(planeIntersect.CenterToNearestLength))
+            if (Math1D.IsNearZero(planeIntersect.CenterToNearestLength))
             {
                 //Vector3D lineDirUnit = args.LineDirection.ToUnit();
                 Vector3D lineDirUnit = planeIntersect.LineDirection.ToUnit();
@@ -8567,7 +8202,7 @@ namespace Game.HelperClassesWPF
                 double distance = (linePoints[cntr] - circlePoints[cntr]).LengthSquared;
                 double originDistance = (linePoints[cntr] - rayOrigin).LengthSquared;
 
-                bool isEqualDistance = IsNearValue(distance, minDistance);
+                bool isEqualDistance = Math1D.IsNearValue(distance, minDistance);
 
                 //NOTE: I can't just say distance < minDistance, because for a sphere, it kept jittering between the near
                 // side and far side, so it has to be closer by a decisive amount

@@ -169,12 +169,12 @@ namespace Game.Newt.Testers
                 List<OverlayResult> retVal = new List<OverlayResult>();
 
                 Point min = new Point(
-                    Math3D.Min(triangle.Point0.X, triangle.Point1.X, triangle.Point2.X),
-                    Math3D.Min(triangle.Point0.Y, triangle.Point1.Y, triangle.Point2.Y));
+                    Math1D.Min(triangle.Point0.X, triangle.Point1.X, triangle.Point2.X),
+                    Math1D.Min(triangle.Point0.Y, triangle.Point1.Y, triangle.Point2.Y));
 
                 Point max = new Point(
-                    Math3D.Max(triangle.Point0.X, triangle.Point1.X, triangle.Point2.X),
-                    Math3D.Max(triangle.Point0.Y, triangle.Point1.Y, triangle.Point2.Y));
+                    Math1D.Max(triangle.Point0.X, triangle.Point1.X, triangle.Point2.X),
+                    Math1D.Max(triangle.Point0.Y, triangle.Point1.Y, triangle.Point2.Y));
 
                 foreach (var tile in tiles)
                 {
@@ -380,7 +380,7 @@ namespace Game.Newt.Testers
                 double bDotDPerp = (b.X * d.Y) - (b.Y * d.X);
 
                 // if b dot d == 0, it means the lines are parallel so have infinite intersection points
-                if (Math3D.IsNearZero(bDotDPerp))
+                if (Math1D.IsNearZero(bDotDPerp))
                     return null;
 
                 Vector c = Vector.Subtract(b1, a1);
@@ -1008,12 +1008,12 @@ namespace Game.Newt.Testers
 
                 // Random
                 Point[] poly1 = new Point[] {
-				    new Point(Math3D.GetNearZeroValue(MAX), Math3D.GetNearZeroValue(MAX)),
-				    new Point(Math3D.GetNearZeroValue(MAX), Math3D.GetNearZeroValue(MAX)),
-				    new Point(Math3D.GetNearZeroValue(MAX), Math3D.GetNearZeroValue(MAX)) };
+				    new Point(Math1D.GetNearZeroValue(MAX), Math1D.GetNearZeroValue(MAX)),
+				    new Point(Math1D.GetNearZeroValue(MAX), Math1D.GetNearZeroValue(MAX)),
+				    new Point(Math1D.GetNearZeroValue(MAX), Math1D.GetNearZeroValue(MAX)) };
 
                 Rect rect = new Rect(
-                    new Point(Math3D.GetNearZeroValue(MAX), Math3D.GetNearZeroValue(MAX)),
+                    new Point(Math1D.GetNearZeroValue(MAX), Math1D.GetNearZeroValue(MAX)),
                     new Size(StaticRandom.NextDouble() * MAX, StaticRandom.NextDouble() * MAX));
 
 

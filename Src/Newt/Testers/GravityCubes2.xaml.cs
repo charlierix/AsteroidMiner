@@ -276,7 +276,7 @@ namespace Game.Newt.Testers
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math1D.GetNearZeroValue(360d))));
                 transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector(_boundryMin, _boundryMax)));
 
                 // Model Visual
@@ -531,7 +531,7 @@ namespace Game.Newt.Testers
 
                 // Transform
                 Transform3DGroup transform = new Transform3DGroup();		// rotate needs to be added before translate
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math3D.GetNearZeroValue(360d))));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(Math3D.GetRandomVector_Spherical(10), Math1D.GetNearZeroValue(360d))));
                 transform.Children.Add(new TranslateTransform3D(Math3D.GetRandomVector(_boundryMin, _boundryMax)));
 
                 // Model Visual

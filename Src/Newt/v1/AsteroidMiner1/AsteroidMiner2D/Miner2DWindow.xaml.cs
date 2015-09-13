@@ -704,7 +704,7 @@ namespace Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153
 
             // Make one right next to the player at startup (always a distance of 10*sqrt(2), but at a random angle, just so it's not boring)
             Vector3D homeLocation = new Vector3D(14.142, 0, 0);
-            homeLocation = homeLocation.GetRotatedVector(new Vector3D(0, 0, 1), Math3D.GetNearZeroValue(360d));
+            homeLocation = homeLocation.GetRotatedVector(new Vector3D(0, 0, 1), Math1D.GetNearZeroValue(360d));
 
             CreateSpaceStationsSprtBuild(new Point3D(homeLocation.X, homeLocation.Y, zCoord));
 
@@ -748,7 +748,7 @@ namespace Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153
         private void CreateSpaceStationsSprtBuild(Point3D position)
         {
             SpaceStation spaceStation = new SpaceStation();
-            spaceStation.SpinDegreesPerSecond = Math3D.GetNearZeroValue(10d);
+            spaceStation.SpinDegreesPerSecond = Math1D.GetNearZeroValue(10d);
             spaceStation.HullColor = UtilityWPF.AlphaBlend(UtilityWPF.GetRandomColor(108, 148), Colors.Gray, .25);
             spaceStation.CreateStation(_map, position);
 

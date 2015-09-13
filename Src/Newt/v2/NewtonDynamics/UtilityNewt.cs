@@ -1354,11 +1354,11 @@ namespace Game.Newt.v2.NewtonDynamics
                     // t1 solution on is ON THE RAY.
                     return t1;
                 }
-                else if (Math3D.IsNearZero(t1))
+                else if (Math1D.IsNearZero(t1))
                 {
                     return 0d;
                 }
-                else if (Math3D.IsNearValue(t1, 1d))
+                else if (Math1D.IsNearValue(t1, 1d))
                 {
                     return 1d;
                 }
@@ -1373,11 +1373,11 @@ namespace Game.Newt.v2.NewtonDynamics
                     // t2 solution on is ON THE RAY.
                     return t2;
                 }
-                else if (Math3D.IsNearZero(t2))
+                else if (Math1D.IsNearZero(t2))
                 {
                     return 0d;
                 }
-                else if (Math3D.IsNearValue(t2, 1d))
+                else if (Math1D.IsNearValue(t2, 1d))
                 {
                     return 1d;
                 }

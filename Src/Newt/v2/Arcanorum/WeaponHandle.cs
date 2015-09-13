@@ -202,7 +202,7 @@ namespace Game.Newt.v2.Arcanorum
             rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring1", from, to, rand.NextPercent(.5, PERCENT)), false, maxX1 * .5, maxY1 * 1, false));
             rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring2", from, to, rand.NextPercent(2, PERCENT)), false, maxX1 * .4, maxY1 * .8, false));
 
-            rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring3", from, to, rand.NextPercent(5, PERCENT)), false, Math3D.Avg(maxX1, maxX2) * .35, Math3D.Avg(maxY1, maxY2) * .75, false));
+            rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring3", from, to, rand.NextPercent(5, PERCENT)), false, Math1D.Avg(maxX1, maxX2) * .35, Math1D.Avg(maxY1, maxY2) * .75, false));
 
             rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring4", from, to, rand.NextPercent(5, PERCENT)), false, maxX2 * .4, maxY2 * .8, false));
             rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("ring5", from, to, rand.NextPercent(2, PERCENT)), false, maxX2 * .5, maxY2 * 1, false));

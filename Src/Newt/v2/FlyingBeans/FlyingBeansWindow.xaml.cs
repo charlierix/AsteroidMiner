@@ -91,7 +91,7 @@ namespace Game.Newt.v2.FlyingBeans
                 _equationConstant = this.StrengthHalf / Math.Pow((_boundryStop - _boundryStart) * .5d, this.Exponent);
 
                 // Ratios
-                if (Math3D.IsNearZero(offset.X))
+                if (Math1D.IsNearZero(offset.X))
                 {
                     _ratioX = 1d;
                 }
@@ -100,7 +100,7 @@ namespace Game.Newt.v2.FlyingBeans
                     _ratioX = maxValue / offset.X;
                 }
 
-                if (Math3D.IsNearZero(offset.Y))
+                if (Math1D.IsNearZero(offset.Y))
                 {
                     _ratioY = 1d;
                 }

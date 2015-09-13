@@ -1,0 +1,250 @@
+﻿<Window x:Class="Game.Newt.Testers.Encog.SelfOrganizingMaps"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+        Title="Self Organizing Maps" Width="1000" Height="750" Background="#959595" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="15" FontWeight="480" Foreground="#4F5452"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+        </Style>
+
+        <Style x:Key="panelBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#1A6F6148"/>
+            <Setter Property="Background" Value="#12CCBFA7"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <Style x:Key="goButton" TargetType="Button">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="480"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+
+        <Style x:Key="minorButton" TargetType="Button">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="300"/>
+            <Setter Property="Padding" Value="4,1"/>
+        </Style>
+
+        <Style x:Key="promptText" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="valueText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="500"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="slider" TargetType="helpctrl:SliderShowValues">
+            <Setter Property="Margin" Value="0,2"/>
+            <!--<Setter Property="MinWidth" Value="175"/>-->
+            <!-- NOTE: Without this being set, the mouseover trigger only works intermittantly, and leaves multiple sliders visible at a time -->
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="False">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type helpctrl:SliderShowValues}">
+                                <TextBlock Text="{TemplateBinding ValueDisplay}" MinWidth="60" Margin="3,0,0,0" Background="Transparent" HorizontalAlignment="Stretch" Style="{StaticResource valueText}"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="MinWidth" Value="120"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="9"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel -->
+        <Border Grid.Column="0" CornerRadius="4" BorderThickness="2" BorderBrush="#80717550" Background="#EFEAE1">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Images -->
+                        <Expander IsExpanded="True" Header="Images">
+                            <Border Style="{StaticResource panelBorder}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="8"/>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
+                                        <Button Content="Add Folder..." Style="{StaticResource goButton}" Click="AddFolder_Click"/>
+                                        <Button Content="Clear" Margin="0,4,0,0" Style="{StaticResource minorButton}" Click="ClearImages_Click"/>
+                                    </StackPanel>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="# images" Style="{StaticResource promptText}" Height="16" Margin="0,0,4,1" Width="48"/>
+                                    <TextBlock Grid.Column="2" Grid.Row="2" Name="lblNumImages" Text="0" Style="{StaticResource valueText}" Height="17"/>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <!-- Simple -->
+                        <Expander IsExpanded="True" Header="Simple">
+                            <Border Style="{StaticResource panelBorder}">
+                                <StackPanel>
+                                    <!-- Average Color -->
+                                    <ComboBox Name="cboSimpleInputColor" ToolTip="The color sheme of the average color"/>
+                                    <Button Content="Avg Color" ToolTip="Each image is reduced to a single pixel (average color of the image)" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="SimpleAvgColor_Click"/>
+
+                                    <!-- 3 Pixels -->
+                                    <ComboBox Name="cboThreePixelsTop" ToolTip="Top pixel color component" Margin="0,16,0,0"/>
+                                    <ComboBox Name="cboThreePixelsMid" ToolTip="Middle pixel color component" Margin="0,2,0,0"/>
+                                    <ComboBox Name="cboThreePixelsBot" ToolTip="Bottom pixel color component" Margin="0,2,0,0"/>
+                                    <Button Content="3 Pixels" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="SimpleThreePixels_Click">
+                                        <Button.ToolTip>
+                                            <TextBlock>Each image is shrunk to 3 pixels.  The average of that row is the value of that pixel<LineBreak/>This button is a bit silly - it's just an arbitrary way to convert an image into a 3D vector</TextBlock>
+                                        </Button.ToolTip>
+                                    </Button>
+
+                                    <!-- Output Color -->
+                                    <TextBlock Text="Output color" Margin="0,16,0,0"/>
+                                    <ComboBox Name="cboSimpleOutputColor" ToolTip="How to map the outputs to color"/>
+
+                                    <!-- Node Layout -->
+                                    <TextBlock Text="Node layout" Margin="0,4,0,0"/>
+                                    <ComboBox Name="cboSimpleNodeLayout" ToolTip="Where to render the nodes"/>
+
+                                    <CheckBox Name="chkSimpleNodes" Content="Draw nodes" Margin="0,16,0,0"/>
+                                    <CheckBox Name="chkSimpleLinks" Content="Draw links" Margin="0,2,0,0"/>
+
+                                    <!-- Attempt at adjusting -->
+                                    <UniformGrid Columns="2" Rows="1" Margin="0,16,0,0">
+                                        <Button Content="Prep" ToolTip="Colors based on ratio between polygon area and number of images" Click="SimplePrep_Click"/>
+                                        <Button Content="Step" Click="SimpleStep_Click">
+                                            <Button.ToolTip>
+                                                <TextBlock>Tries to move so that area more closely matches number of images<LineBreak/>This is a failure, and I don't feel like trying to fix it<LineBreak/>The better approach is to draw blobs instead of a fully filled voronoi circle</TextBlock>
+                                            </Button.ToolTip>
+                                        </Button>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Convolution -->
+                        <Expander Visibility="Collapsed" Header="Convolution">
+
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- SOM Training -->
+                <Expander Grid.Row="2" Header="SOM Training">
+                    <Border Style="{StaticResource panelBorder}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="2"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="2"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="2"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="2"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- TODO: Show popups that graph trends from first iteration to last -->
+
+                            <!-- Max Inputs -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="max inputs" Style="{StaticResource promptText}"/>
+                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkMaxInputs" Minimum="50" Maximum="200" Value="100" IsInteger="True" Style="{StaticResource slider}"/>
+
+                            <!-- Number of nodes -->
+                            <TextBlock Grid.Column="0" Grid.Row="2" Text="# nodes" Style="{StaticResource promptText}"/>
+                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkNumNodes" Minimum="2" Maximum="60" Value="20" IsInteger="True" Style="{StaticResource slider}"/>
+
+                            <!-- Number of iterations -->
+                            <TextBlock Grid.Column="0" Grid.Row="4" Text="# iterations" Style="{StaticResource promptText}"/>
+                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkNumIterations" Minimum="1000" Maximum="20000" Value="2000" IsInteger="True" Style="{StaticResource slider}"/>
+
+                            <!-- Initial Radius % -->
+                            <TextBlock Grid.Column="0" Grid.Row="6" Text="initial radius %" Style="{StaticResource promptText}">
+                                <TextBlock.ToolTip>
+                                    <TextBlock>This is how far to look for neighbor nodes<LineBreak/>This decays each step<LineBreak/>Larger values will tend to cause everything to merge into one<LineBreak/>Smaller values will create a lot of islands</TextBlock>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkInitialRadiusPercent" Minimum="0" Maximum="75" Value="33" IsInteger="True" Style="{StaticResource slider}"/>
+
+                            <!-- Learning Rate -->
+                            <TextBlock Grid.Column="0" Grid.Row="8" Text="learning rate" Style="{StaticResource promptText}">
+                                <TextBlock.ToolTip>
+                                    <TextBlock>Larger values will cause the nodes to move toward training inputs quicker<LineBreak/>This decays each step<LineBreak/>This causes similar effects as radius% (smaller creates islands, larger merges into 1),<LineBreak/>but the influence isn't as strong</TextBlock>
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkLearningRate" Minimum=".01" Maximum=".5" Value=".1" Style="{StaticResource slider}"/>
+                        </Grid>
+                    </Border>
+                </Expander>
+            </Grid>
+        </Border>
+
+        <!-- Right Panel -->
+        <!-- TODO: The gradient is relying on color from the drop shadow, and varying transparency.  Figure out the final colors and use them.  Then increase the top shadow a bit -->
+        <!-- TODO: May want to put some of the gradient in front of the content -->
+        <Border Grid.Column="2" CornerRadius="4" Name="panelDisplay" BorderThickness="1" BorderBrush="#603F3F3F" Margin="1" Padding="4">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.0857843,-0.0209863" EndPoint="1.18194,-0.0209863">
+                    <LinearGradientBrush.RelativeTransform>
+                        <TransformGroup>
+                            <SkewTransform CenterX="0.0857843" CenterY="-0.0209863" AngleX="-4.85977" AngleY="0"/>
+                            <RotateTransform CenterX="0.0857843" CenterY="-0.0209863" Angle="70.8786"/>
+                        </TransformGroup>
+                    </LinearGradientBrush.RelativeTransform>
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Color="#B0C9CCCB" Offset="0"/>
+                        <GradientStop Color="#A0AAAFAD" Offset="0.285255"/>
+                        <GradientStop Color="#908B9390" Offset="0.507326"/>
+                        <GradientStop Color="#80808986" Offset="0.60665"/>
+                        <GradientStop Color="#7075807C" Offset="0.765568"/>
+                        <GradientStop Color="#5071807A" Offset="0.998168"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect Color="#A4CFBE" BlurRadius="16" Opacity="0.35" Direction="0" ShadowDepth="0" />
+            </Border.Effect>
+
+            <!-- Visuals will be added programatically -->
+
+        </Border>
+
+        <Canvas Grid.Column="2" Name="panelOverlay" IsHitTestVisible="False"/>
+    </Grid>
+</Window>

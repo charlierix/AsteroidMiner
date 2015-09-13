@@ -379,7 +379,7 @@ namespace Game.Newt.v2.Arcanorum
                     Transform3DGroup transform = new Transform3DGroup();
 
                     // Translate
-                    Vector3D translate = Math3D.GetRandomVector_Circular(.5, 1).ToVector2D().ToVector3D(Math3D.GetNearZeroValue(.375));
+                    Vector3D translate = Math3D.GetRandomVector_Circular(.5, 1).ToVector2D().ToVector3D(Math1D.GetNearZeroValue(.375));
                     transform.Children.Add(new TranslateTransform3D(translate));
 
                     // Rotate from Z to X
@@ -430,7 +430,7 @@ namespace Game.Newt.v2.Arcanorum
             }
 
             double damangeMult = GetDamageMultiplier();
-            if (Math3D.IsNearZero(damangeMult))
+            if (Math1D.IsNearZero(damangeMult))
             {
                 return null;
             }
@@ -544,7 +544,7 @@ namespace Game.Newt.v2.Arcanorum
             Vector3D axis = Vector3D.CrossProduct(xAxis, velocity);
             double angle = Vector3D.AngleBetween(xAxis, velocity);
 
-            if (Math3D.IsNearZero(axis) || Math3D.IsNearZero(angle))
+            if (Math3D.IsNearZero(axis) || Math1D.IsNearZero(angle))
             {
                 _rotate.Quaternion = Quaternion.Identity;
             }

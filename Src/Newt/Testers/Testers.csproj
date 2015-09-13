@@ -163,12 +163,6 @@
     <Compile Include="Convolution\FeatureRecognizer.xaml.cs">
       <DependentUpon>FeatureRecognizer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Encog\FeatureRecognizer2.xaml.cs">
-      <DependentUpon>FeatureRecognizer2.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Encog\FeatureRecognizer3.xaml.cs">
-      <DependentUpon>FeatureRecognizer3.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Encog\ConvolutionChains.xaml.cs">
       <DependentUpon>ConvolutionChains.xaml</DependentUpon>
     </Compile>
@@ -177,6 +171,12 @@
     </Compile>
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Encog\SelfOrganizingMaps.xaml.cs">
+      <DependentUpon>SelfOrganizingMaps.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EvenDistributionCircle.xaml.cs">
+      <DependentUpon>EvenDistributionCircle.xaml</DependentUpon>
     </Compile>
     <Compile Include="EvenDistributionSphere.xaml.cs">
       <DependentUpon>EvenDistributionSphere.xaml</DependentUpon>
@@ -404,14 +404,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Encog\FeatureRecognizer2.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Encog\FeatureRecognizer3.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Encog\ConvolutionChains.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -421,6 +413,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Encog\OCRTestDataVisualizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Encog\SelfOrganizingMaps.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EvenDistributionCircle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

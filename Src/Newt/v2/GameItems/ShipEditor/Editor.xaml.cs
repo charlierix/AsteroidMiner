@@ -1012,7 +1012,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     // Hide the drag selection box.
                     selectionBox.Visibility = Visibility.Collapsed;
 
-                    if (Math3D.IsNearZero(selectionBox.Width) || Math3D.IsNearZero(selectionBox.Height))
+                    if (Math1D.IsNearZero(selectionBox.Width) || Math1D.IsNearZero(selectionBox.Height))
                     {
                         // This is a miss, because the only way to start a selction box is to not click on anything
                         return;
@@ -2029,10 +2029,10 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 }
                 _debugVisuals.Clear();
 
-                Point3D point1 = new Point3D(-100, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                Vector3D dir1 = new Vector3D(200, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                Point3D point2 = new Point3D(-100, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                Vector3D dir2 = new Vector3D(200, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
+                Point3D point1 = new Point3D(-100, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                Vector3D dir1 = new Vector3D(200, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                Point3D point2 = new Point3D(-100, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                Vector3D dir2 = new Vector3D(200, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
 
                 ScreenSpaceLines3D lines = new ScreenSpaceLines3D(true);
                 lines.Color = Colors.Red;
@@ -2182,13 +2182,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 Vector3D lineDir;
                 if (StaticRandom.Next(2) == 0)
                 {
-                    linePoint = new Point3D(-100, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                    lineDir = new Vector3D(200, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
+                    linePoint = new Point3D(-100, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                    lineDir = new Vector3D(200, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
                 }
                 else
                 {
-                    linePoint = new Point3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), -100);
-                    lineDir = new Vector3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), 200);
+                    linePoint = new Point3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), -100);
+                    lineDir = new Vector3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), 200);
                 }
                 //linePoint = new Point3D(0, 0, -100);
                 //linePoint = new Point3D(Math3D.GetNearZeroValue(_rand, RANGE), Math3D.GetNearZeroValue(_rand, RANGE), -100);
@@ -2209,7 +2209,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 Triangle circlePlane = new Triangle(centerPoint, Math3D.GetRandomVector_Spherical(3d).ToPoint(), Math3D.GetRandomVector_Spherical(3d).ToPoint());
                 //Point3D centerPoint = new Point3D(0, 0, 0);
                 //Triangle circlePlane = new Triangle(centerPoint, new Point3D(1, 0, 0), new Point3D(0, 1, 0));
-                double radius = 2.1d + Math3D.GetNearZeroValue(2d);
+                double radius = 2.1d + Math1D.GetNearZeroValue(2d);
 
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = new DiffuseMaterial(Brushes.Red);
@@ -2267,13 +2267,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 Vector3D lineDir;
                 if (StaticRandom.Next(2) == 0)
                 {
-                    linePoint = new Point3D(-100, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                    lineDir = new Vector3D(200, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
+                    linePoint = new Point3D(-100, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                    lineDir = new Vector3D(200, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
                 }
                 else
                 {
-                    linePoint = new Point3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), -100);
-                    lineDir = new Vector3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), 200);
+                    linePoint = new Point3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), -100);
+                    lineDir = new Vector3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), 200);
                 }
 
                 ScreenSpaceLines3D line = new ScreenSpaceLines3D(true);
@@ -2287,7 +2287,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 // Cylinder
                 Point3D axisPoint = Math3D.GetRandomVector_Spherical(3d).ToPoint();
                 Vector3D axisDirection = Math3D.GetRandomVector_Spherical(3d);
-                double radius = 2.1d + Math3D.GetNearZeroValue(2d);
+                double radius = 2.1d + Math1D.GetNearZeroValue(2d);
 
                 GeometryModel3D geometry = new GeometryModel3D();
                 Material material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(32, 255, 0, 0)));
@@ -2380,13 +2380,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 Vector3D lineDir;
                 if (StaticRandom.Next(2) == 0)
                 {
-                    linePoint = new Point3D(-100, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
-                    lineDir = new Vector3D(200, Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE));
+                    linePoint = new Point3D(-100, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
+                    lineDir = new Vector3D(200, Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE));
                 }
                 else
                 {
-                    linePoint = new Point3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), -100);
-                    lineDir = new Vector3D(Math3D.GetNearZeroValue(RANGE), Math3D.GetNearZeroValue(RANGE), 200);
+                    linePoint = new Point3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), -100);
+                    lineDir = new Vector3D(Math1D.GetNearZeroValue(RANGE), Math1D.GetNearZeroValue(RANGE), 200);
                 }
 
                 ScreenSpaceLines3D line = new ScreenSpaceLines3D(true);
@@ -2399,7 +2399,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 // Sphere
                 Point3D centerPoint = Math3D.GetRandomVector_Spherical(3d).ToPoint();
-                double radius = 2.1d + Math3D.GetNearZeroValue(2d);
+                double radius = 2.1d + Math1D.GetNearZeroValue(2d);
 
                 GeometryModel3D geometry = new GeometryModel3D();
                 Material material = new DiffuseMaterial(new SolidColorBrush(Color.FromArgb(32, 255, 0, 0)));

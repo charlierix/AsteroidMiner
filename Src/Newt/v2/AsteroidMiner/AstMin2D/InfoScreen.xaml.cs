@@ -295,7 +295,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private void RedrawCanvas()
         {
-            if (Math3D.IsNearZero(canvasMap.ActualWidth) || Math3D.IsNearZero(canvasMap.ActualHeight))
+            if (Math1D.IsNearZero(canvasMap.ActualWidth) || Math1D.IsNearZero(canvasMap.ActualHeight))
             {
                 return;
             }
@@ -533,7 +533,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #endregion
 
-        private readonly double _tangent = Math.Tan(Math3D.DegreesToRadians(45 / 2));       // camera's field of view is 45, half of that is a right triangle
+        private readonly double _tangent = Math.Tan(Math1D.DegreesToRadians(45 / 2));       // camera's field of view is 45, half of that is a right triangle
 
         //TODO: If this stays being used, get constants from CameraHelper
         private void ShowCameraView()

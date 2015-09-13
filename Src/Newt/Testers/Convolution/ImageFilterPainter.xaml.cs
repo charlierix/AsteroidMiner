@@ -103,7 +103,7 @@ namespace Game.Newt.Testers.Convolution
 
                 if (retVal.IsNearZero())
                 {
-                    retVal = Math3D.GetNearZeroValue(.0001);
+                    retVal = Math1D.GetNearZeroValue(.0001);
                 }
 
                 return retVal;
@@ -155,7 +155,7 @@ namespace Game.Newt.Testers.Convolution
                 double absMax = Math.Max(Math.Abs(min), Math.Abs(max));
 
                 double scale;
-                if (Math3D.IsInvalid(absMax) || Math3D.IsNearZero(absMax))
+                if (Math1D.IsInvalid(absMax) || Math1D.IsNearZero(absMax))
                 {
                     scale = 1d;
                 }
@@ -1087,7 +1087,7 @@ namespace Game.Newt.Testers.Convolution
             RebuildBars();
             PixelValueChanged();
 
-            double dist = Math3D.Avg(_axis.HalfX, _axis.HalfY) * 3;
+            double dist = Math1D.Avg(_axis.HalfX, _axis.HalfY) * 3;
             Vector3D newPos = _camera.Position.ToVector().ToUnit() * dist;
             _camera.Position = newPos.ToPoint();
         }
@@ -1293,7 +1293,7 @@ namespace Game.Newt.Testers.Convolution
             axis.HalfX = (_width * axis.BarSize) / 2d;
             axis.HalfY = (_height * axis.BarSize) / 2d;
 
-            axis.ZHeight = Math.Min(Math3D.Avg(_width, _height), 2);
+            axis.ZHeight = Math.Min(Math1D.Avg(_width, _height), 2);
 
             if (radRangeNegPos.IsChecked.Value)
             {
@@ -1497,7 +1497,7 @@ namespace Game.Newt.Testers.Convolution
             axis.HalfX = (_width * axis.BarSize) / 2d;
             axis.HalfY = (_height * axis.BarSize) / 2d;
 
-            axis.ZHeight = Math.Max(1, Math3D.Avg(_width, _height) / 8);
+            axis.ZHeight = Math.Max(1, Math1D.Avg(_width, _height) / 8);
 
             //TODO: May want to multiply this height by a slider
             //axis.ZHeight *= trkZAxisMult.Value;

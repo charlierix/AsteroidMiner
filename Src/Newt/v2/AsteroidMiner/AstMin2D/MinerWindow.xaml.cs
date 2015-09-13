@@ -921,7 +921,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             SpaceStation2D retVal = new SpaceStation2D(position, _world, _material_SpaceStation, rotation);
 
-            retVal.SpinDegreesPerSecond = Math3D.GetNearZeroValue(.33, 1.1);
+            retVal.SpinDegreesPerSecond = Math1D.GetNearZeroValue(.33, 1.1);
 
             retVal.RandomizeInventory(true);
 

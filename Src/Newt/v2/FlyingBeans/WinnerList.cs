@@ -1123,7 +1123,7 @@ namespace Game.Newt.v2.FlyingBeans
 
                 if (numStarted >= this.FinalistCount && numStarted == finalist.NumFinished)
                 {
-                    if (!Math3D.IsNearZero(finalist.GetAverage()))		// don't let zero scores into the final (the way to get a zero score is to become a candidate, but then each attempt resulted in a zero score)
+                    if (!Math1D.IsNearZero(finalist.GetAverage()))		// don't let zero scores into the final (the way to get a zero score is to become a candidate, but then each attempt resulted in a zero score)
                     {
                         finalists.Add(finalist);
                     }

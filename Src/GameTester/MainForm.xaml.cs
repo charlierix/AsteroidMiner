@@ -176,7 +176,11 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.PotatoWindow().Show();
         }
-        private void EvenDistribute_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EvenDistribute2D_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.EvenDistributionCircle().Show();
+        }
+        private void EvenDistribute3D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.EvenDistributionSphere().Show();
         }
@@ -243,6 +247,10 @@ namespace Game.GameTester
         private void ConvolutionChains_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Encog.ConvolutionChains().Show();
+        }
+        private void SelfOrganizingMaps_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Encog.SelfOrganizingMaps().Show();
         }
         private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {

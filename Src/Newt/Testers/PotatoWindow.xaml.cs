@@ -945,7 +945,7 @@ namespace Game.Newt.Testers
                         Select(o => new
                         {
                             Edge = o,
-                            Points = points.Where(p => Math3D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                            Points = points.Where(p => Math1D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
                         }).
                         Where(o => o.Points.Length > 0).
                         ToArray();
@@ -1097,13 +1097,13 @@ namespace Game.Newt.Testers
                     double centerDot = Vector3D.DotProduct(hullCenter - triangle.Triangle.Point0, triangle.Triangle.Normal);
                     double ctrlDot = Vector3D.DotProduct(ctrlPoint - triangle.Triangle.Point0, triangle.Triangle.Normal);
 
-                    if (Math3D.IsNearZero(centerDot) || Math3D.IsNearZero(centerDot))
+                    if (Math1D.IsNearZero(centerDot) || Math1D.IsNearZero(centerDot))
                     {
                         continue;
                     }
 
                     // If they are both the same sign, then the control point is on the same side of the patch as the center (meaning: interior)
-                    results.Add(Math3D.IsNearPositive(centerDot) == Math3D.IsNearPositive(ctrlDot));
+                    results.Add(Math1D.IsNearPositive(centerDot) == Math1D.IsNearPositive(ctrlDot));
                 }
 
                 if (results.Count == 0)
@@ -1297,7 +1297,7 @@ namespace Game.Newt.Testers
                     Select(o => new
                     {
                         Edge = o,
-                        Points = points.Where(p => Math3D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                        Points = points.Where(p => Math1D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
                     }).
                     Where(o => o.Points.Length > 0).
                     ToArray();
@@ -5252,7 +5252,7 @@ namespace Game.Newt.Testers
 
                 double avgLen = lengths.Average();
                 double maxLen = lengths.Max();
-                double sliceLen = Math3D.Avg(avgLen, maxLen);
+                double sliceLen = Math1D.Avg(avgLen, maxLen);
 
                 // Another thin triangle slice
                 ITriangleIndexed[] smoothHull = Math3D.SliceLargeTriangles_Smooth(slicedHull, sliceLen);
@@ -10865,7 +10865,7 @@ namespace Game.Newt.Testers
 
             #region Calculate error distance
 
-            double smallestAxis = Math3D.Min(maxValues[0] - minValues[0], maxValues[1] - minValues[1], maxValues[2] - minValues[2]);
+            double smallestAxis = Math1D.Min(maxValues[0] - minValues[0], maxValues[1] - minValues[1], maxValues[2] - minValues[2]);
             coplanarDistance = smallestAxis * .001;
 
             #endregion
@@ -11784,7 +11784,7 @@ namespace Game.Newt.Testers
                     maxDistance = distance;
                     retVal = pointIndicies[cntr];
                 }
-                else if (Math3D.IsNearZero(distance) && Math3D.IsNearZero(maxDistance))		// this is for a coplanar point that can have a very slightly negative distance
+                else if (Math1D.IsNearZero(distance) && Math1D.IsNearZero(maxDistance))		// this is for a coplanar point that can have a very slightly negative distance
                 {
                     // Can't trust the previous bary check, need another one (maybe it's false because it never went through that first check?)
                     Vector bary = Math3D.ToBarycentric(triangle, allPoints[pointIndicies[cntr]]);
@@ -11828,7 +11828,7 @@ namespace Game.Newt.Testers
             // Need to subtract the far point from some point on this triangle, so that it's a vector from the triangle to the
             // far point, and not from the origin
             double dot = Vector3D.DotProduct(triangle.Normal, (farPoint - triangle.Point0).ToVector());
-            if (dot >= 0d || Math3D.IsNearZero(dot))		// 0 is coplanar, -1 is the opposite side
+            if (dot >= 0d || Math1D.IsNearZero(dot))		// 0 is coplanar, -1 is the opposite side
             {
                 // This triangle is visible to the point.  Remove it (recurse)
                 ProcessTriangleSprtRemove(triangle, removedTriangles, removedRim, farPoint);
@@ -12014,7 +12014,7 @@ namespace Game.Newt.Testers
                     retVal.Add(index);
                     pointIndicies.Remove(index);		// an outside point can only belong to one triangle
                 }
-                else if (Math3D.IsNearZero(res))
+                else if (Math1D.IsNearZero(res))
                 {
                     // This point is coplanar.  Only consider it an outside point if it is outside the bounds of this triangle
                     Vector bary = Math3D.ToBarycentric(triangle, allPoints[index]);

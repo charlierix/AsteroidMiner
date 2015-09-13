@@ -28,9 +28,13 @@ namespace Game.Newt.Testers.Encog
     //https://github.com/lejon/T-SNE-Java/tree/master/tsne-core/src/main/java/com/jujutsu/tsne
 
 
-    // Have a way to show how many images are at/near each pure point
+    // Have a way to show how many images are at/near each pure point --- just give an option to show as voronoi blobs instead of points
     //
-    // When they click one of those points, show a bubble, and inside use a t-SNE on the imput's coords
+    // When they click one of those points, show a bubble, and inside use a t-SNE on the imput's coords --- when they click a point or region, throw only those nearby points into a new viewer
+
+    //----------------------------------------------
+
+    //TODO: Instead of dividing forces by sqrt(dimension), leave the positions at whatever scale they want to be, and have a final render transform that scales everything to fit a constant size (real AABB scales to visual AABB)
 
     public partial class OCRTestDataVisualizer : Window
     {
@@ -57,6 +61,8 @@ namespace Game.Newt.Testers.Encog
             {
                 this.Size = size;
 
+                this.DistanceMult = 1.5d / Math.Sqrt(this.Size);        // the 1.5 doesn't mean anything.  It just helps push them apart a little more
+
                 int imageSize = Convert.ToInt32(Math.Sqrt(size));
                 if (imageSize * imageSize != size)
                 {
@@ -70,6 +76,9 @@ namespace Game.Newt.Testers.Encog
             /// This is how many neurons there are in the input layer (image size squared)
             /// </summary>
             public readonly int Size;
+
+            // Distances need to be multiplied by these to keep the overall radius constant.  They are 1/sqrt(dimension)
+            public readonly double DistanceMult;
 
             /// <summary>
             /// This is the height and width of a sketch
@@ -91,6 +100,8 @@ namespace Game.Newt.Testers.Encog
             {
                 this.Size = names.Length;
                 this.Names = names;
+
+                this.DistanceMult = 1.5d / Math.Sqrt(this.Size);        // the 1.5 doesn't mean anything.  It just helps push them apart a little more
 
                 this.Hues = CreateHues(this.Size);
 
@@ -125,6 +136,9 @@ namespace Game.Newt.Testers.Encog
             #endregion
 
             public readonly int Size;
+
+            // Distances need to be multiplied by these to keep the overall radius constant.  They are 1/sqrt(dimension)
+            public readonly double DistanceMult;
 
             public readonly string[] Names;
 
@@ -232,7 +246,7 @@ namespace Game.Newt.Testers.Encog
         #region Declaration Section
 
         private const double RADIUS = .5;
-        private const double DOTRADIUS = .035;
+        private const double DOTRADIUS = .01;
 
         private const double SKETCHSIZE_LARGE = 200;
         private const double SKETCHSIZE_SMALL = 100;
@@ -617,10 +631,10 @@ namespace Game.Newt.Testers.Encog
 
             foreach (Dot other in _dots.Dots.Where(o => o.Token != dot.Token && o.NNInput != null && o.NNOutput != null))       // when the network gets reset, it sets all the dots' NNInput/Output to null.  Then goes through each dot and reconstructs.  So if I/O is null, it just hasn't been reconstructed yet
             {
-                double distance = Math3D.GetDistance(dot.NNInput, other.NNInput);
+                double distance = MathND.GetDistance(dot.NNInput, other.NNInput) * _networkInputs.DistanceMult;
                 inputs.Add(Tuple.Create(dot, other, distance));
 
-                distance = Math3D.GetDistance(dot.NNOutput, other.NNOutput);
+                distance = MathND.GetDistance(dot.NNOutput, other.NNOutput) * _networkOutputs.DistanceMult;
                 outputs.Add(Tuple.Create(dot, other, distance));
             }
 
@@ -684,7 +698,7 @@ namespace Game.Newt.Testers.Encog
                     double difference = o.Item3 - springLength;
                     difference *= mult;
 
-                    if (Math3D.IsNearZero(springLength))
+                    if (Math1D.IsNearZero(springLength))
                     {
                         spring = Math3D.GetRandomVector_Spherical_Shell(Math.Abs(difference));
                     }
@@ -872,38 +886,6 @@ namespace Game.Newt.Testers.Encog
             return new Tuple<UIElement, Image>(borderCtrl, imageCtrl);
         }
 
-        private static BitmapSource GetBitmap_ORIG(double[] input)
-        {
-            int size = Convert.ToInt32(Math.Sqrt(input.Length));
-            if (size * size != input.Length)
-            {
-                throw new ArgumentException("Must pass in a square image");
-            }
-
-            RenderTargetBitmap retVal = new RenderTargetBitmap(size, size, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32);
-
-            DrawingVisual dv = new DrawingVisual();
-            using (DrawingContext ctx = dv.RenderOpen())
-            {
-                int index = 0;
-
-                for (int y = 0; y < size; y++)
-                {
-                    for (int x = 0; x < size; x++)
-                    {
-                        int colorIndex = Convert.ToInt32(Math.Round(input[index] * 255));
-
-                        ctx.DrawRectangle(_grayBrushes_TransparentBlack.Value[colorIndex], null, new Rect(x, y, 1, 1));
-
-                        index++;
-                    }
-                }
-            }
-
-            retVal.Render(dv);
-
-            return retVal;
-        }
         private static BitmapSource GetBitmap(double[] input)
         {
             int size = Convert.ToInt32(Math.Sqrt(input.Length));
@@ -912,10 +894,10 @@ namespace Game.Newt.Testers.Encog
                 throw new ArgumentException("Must pass in a square image");
             }
 
-            Color[] colors = input.Select(o =>
+            byte[][] colors = input.Select(o =>
                 {
                     byte alpha = Convert.ToByte(Math.Round(o * 255));
-                    return Color.FromArgb(alpha, 0, 0, 0);
+                    return new byte[] { alpha, 0, 0, 0 };
                 }).
                 ToArray();
 

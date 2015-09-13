@@ -749,7 +749,7 @@ namespace Game.Newt.Testers.FluidFields
             double width = relativeTo.ActualWidth;
             double height = relativeTo.ActualHeight;
 
-            if (Math3D.IsNearZero(width) || Math3D.IsNearZero(height))
+            if (Math1D.IsNearZero(width) || Math1D.IsNearZero(height))
             {
                 return new Point(0, 0);
             }

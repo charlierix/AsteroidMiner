@@ -520,7 +520,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 //double sumVolume = this.UsedVolume + cargo.Volume;
                 double sumVolume = _cargo.Sum(o => o.Volume) + cargo.Volume;        // inlining this.UsedVolume because of the lock
 
-                if (sumVolume <= this.MaxVolume || Math3D.IsNearValue(sumVolume, this.MaxVolume))
+                if (sumVolume <= this.MaxVolume || Math1D.IsNearValue(sumVolume, this.MaxVolume))
                 {
                     Add(_cargo, cargo);
                     return true;
@@ -583,7 +583,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     cargoHold.Insert(cntr, cargo);
                     return;
                 }
-                else if (Math3D.IsNearValue(cargo.Density, cargoHold[cntr].Density) && cargo.Volume < cargoHold[cntr].Volume)
+                else if (Math1D.IsNearValue(cargo.Density, cargoHold[cntr].Density) && cargo.Volume < cargoHold[cntr].Volume)
                 {
                     // This is the same density, but has less volume, so put it here
                     cargoHold.Insert(cntr, cargo);
@@ -605,7 +605,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 double mass = cargo[0].Density * cargo[0].Volume;
 
-                if (current + mass < amount || Math3D.IsNearValue(current + mass, amount))
+                if (current + mass < amount || Math1D.IsNearValue(current + mass, amount))
                 {
                     // Eat this whole piece of cargo
                     current += mass;
@@ -714,7 +714,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 // Try to pull this much volume out of the cargo bays
                 var cargo = _cargoBays.RemoveMineral_Volume(needScaled);
 
-                if (Math3D.IsNearZero(cargo.Item1))
+                if (Math1D.IsNearZero(cargo.Item1))
                 {
                     // The cargo bays are empty
                     return false;
@@ -821,7 +821,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                     for (int cntr = 0; cntr < remaining.Length; cntr++)
                     {
-                        if (remaining[cntr] > 0d && !Math3D.IsNearZero(remaining[cntr]))
+                        if (remaining[cntr] > 0d && !Math1D.IsNearZero(remaining[cntr]))
                         {
                             if (cargo[0].Volume < remaining[cntr])
                             {

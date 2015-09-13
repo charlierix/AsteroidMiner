@@ -163,14 +163,14 @@ namespace Game.Newt.v1.NewtonDynamics1
 
 		private void joint_Hinge(object sender, CHingeEventArgs e)
         {
-            double newAngle = Math3D.RadiansToDegrees(NewtonJoint.HingeAngle);
+            double newAngle = Math1D.RadiansToDegrees(NewtonJoint.HingeAngle);
             double angle = this.Angle + AngleDiffence(this.Angle, newAngle);
             SetValue(AnglePropertyKey, angle);
 
             if (this.SetAngle != null)
             {
                 e.Desc.m_Accel = NewtonJoint.HingeCalculateStopAlpha(e.Desc,
-                                                                     Math3D.DegreesToRadians((float)MathUtils.MinMax(this.MinAngle, (double)this.SetAngle, this.MaxAngle)))
+                                                                     Math1D.DegreesToRadians((float)MathUtils.MinMax(this.MinAngle, (double)this.SetAngle, this.MaxAngle)))
 
                                                                      * (float)this.SetAngleStiffness;
                 e.ApplyConstraint = true;
@@ -178,13 +178,13 @@ namespace Game.Newt.v1.NewtonDynamics1
             else if ((this.MinAngle != null) && (angle < (double)this.MinAngle))
             {
                 e.Desc.m_Accel = NewtonJoint.HingeCalculateStopAlpha(e.Desc,
-                                                                     (float)Math3D.DegreesToRadians((double)this.MinAngle));
+                                                                     (float)Math1D.DegreesToRadians((double)this.MinAngle));
                 e.ApplyConstraint = true;
             }
             else if ((this.MaxAngle != null) && (angle > (double)this.MaxAngle))
             {
                 e.Desc.m_Accel = NewtonJoint.HingeCalculateStopAlpha(e.Desc,
-                                                                     (float)Math3D.DegreesToRadians((double)this.MaxAngle));
+                                                                     (float)Math1D.DegreesToRadians((double)this.MaxAngle));
                 e.ApplyConstraint = true;
             }
             else

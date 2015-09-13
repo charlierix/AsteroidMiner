@@ -753,7 +753,7 @@ namespace Game.Newt.v2.GameItems
                 double? ammoVolumeAtRecalc = (double?)_ammoVolumeAtRecalc;
                 double ammoMassCur = _parts.AmmoGroup.QuantityCurrent;
 
-                if (ammoVolumeAtRecalc != null && !Math3D.IsNearValue(ammoVolumeAtRecalc.Value, ammoMassCur))
+                if (ammoVolumeAtRecalc != null && !Math1D.IsNearValue(ammoVolumeAtRecalc.Value, ammoMassCur))
                 {
                     this.ShouldRecalcMass_Medium = true;
                 }
@@ -1563,7 +1563,7 @@ namespace Game.Newt.v2.GameItems
             #region Prep work
 
             // Break the mass of the parts into pieces
-            double cellSize = dna.Select(o => Math3D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z)).Max() * .2d;		// break the largest object up into roughly 5x5x5
+            double cellSize = dna.Select(o => Math1D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z)).Max() * .2d;		// break the largest object up into roughly 5x5x5
             UtilityNewt.IObjectMassBreakdown[] massBreakdowns = parts.Select(o => o.GetMassBreakdown(cellSize)).ToArray();
 
             double cellSphereMultiplier = (cellSize * .5d) * (cellSize * .5d) * .4d;		// 2/5 * r^2

@@ -761,7 +761,7 @@ namespace Game.Newt.Testers
 
             // Get angle
             double radians = ROTATESPEED * Math.Sqrt((dx * dx) + (dy * dy));
-            double degrees = Math3D.RadiansToDegrees(radians);
+            double degrees = Math1D.RadiansToDegrees(radians);
 
             // Exit Function
             return new Quaternion(axis, degrees);
@@ -1089,7 +1089,7 @@ namespace Game.Newt.Testers
             // Calculate angle
             //double radians = ROTATESPEED * Math.Sqrt(Math.Pow(dx, 2) + Math.Pow(dy, 2));
             double radians = ROTATESPEED * Math.Sqrt((dx * dx) + (dy * dy));
-            double degrees = Math3D.RadiansToDegrees(radians);
+            double degrees = Math1D.RadiansToDegrees(radians);
 
             if (radians < 0)
             {

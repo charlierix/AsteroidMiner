@@ -110,7 +110,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 _mineralMaterialID = mineralMaterialID;
 
                 _radius = radius;
-                _radiusMin = Math3D.Min(_radius.X, _radius.Y, _radius.Z);
+                _radiusMin = Math1D.Min(_radius.X, _radius.Y, _radius.Z);
             }
 
             #endregion
@@ -217,7 +217,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 if (_getMineralsByDestroyedMass != null)
                 {
                     //double destroyedMass = GetDestroyedMass(Math3D.Avg(_radius.X, _radius.Y, _radius.Z), radius, _getMassByRadius);       // using avg had too many cases where the returned mass was negative
-                    double destroyedMass = GetDestroyedMass(Math3D.Max(_radius.X, _radius.Y, _radius.Z), radius, _getMassByRadius);
+                    double destroyedMass = GetDestroyedMass(Math1D.Max(_radius.X, _radius.Y, _radius.Z), radius, _getMassByRadius);
                     if (destroyedMass > 0)      // child radius is calculated using max of _radius, but avg was passed to the getmass method.  So there's a chance that getmass returns negative
                     {
                         mineralDefinitions = _getMineralsByDestroyedMass(destroyedMass);
@@ -282,7 +282,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
             /// </summary>
             private static double GetTotalChildRadius(Vector3D parentRadius, double overDamage, double maxOverDamage)
             {
-                double retVal = Math3D.Max(parentRadius.X, parentRadius.Y, parentRadius.Z);
+                double retVal = Math1D.Max(parentRadius.X, parentRadius.Y, parentRadius.Z);
 
                 double reducePercent = UtilityCore.GetScaledValue(.75, 0, 1, maxOverDamage, overDamage);
                 if (reducePercent > .99)     // this can happen if overDamage < 1

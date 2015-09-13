@@ -690,7 +690,7 @@ namespace Game.Newt.v2.GameItems.Controls
                 neuronRadius = UtilityCore.GetScaledValue(.03d, .007d, 20, 100, neuronCount);
             }
 
-            if (!Math3D.IsNearZero(neuronScale) && !Math3D.IsInvalid(neuronScale))
+            if (!Math1D.IsNearZero(neuronScale) && !Math1D.IsInvalid(neuronScale))
             {
                 neuronRadius *= neuronScale;
             }
@@ -788,7 +788,7 @@ namespace Game.Newt.v2.GameItems.Controls
                 #region Calculations
 
                 double workingLength = newLength - GAP;
-                if (Math3D.IsNearValue(length, newLength))
+                if (Math1D.IsNearValue(length, newLength))
                 {
                     // Logic above didn't use a gap, so don't do one here either
                     workingLength = length;
@@ -865,7 +865,7 @@ namespace Game.Newt.v2.GameItems.Controls
                 // Get the largest neuron position, and create a scale so that it fits inside of the container's scale
                 double maxRadius = Math.Sqrt(container.Neruons_All.Max(o => o.Position.ToVector().LengthSquared));
 
-                if (maxRadius > container.Radius && !Math3D.IsNearZero(maxRadius))
+                if (maxRadius > container.Radius && !Math1D.IsNearZero(maxRadius))
                 {
                     double scale = container.Radius / maxRadius;
 

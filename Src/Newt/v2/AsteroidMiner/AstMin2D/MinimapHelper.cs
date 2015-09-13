@@ -247,7 +247,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             geometry.Geometry = _blipGeometry_Circle.Value;
 
             double[] astRad = new[] { asteroid.RadiusVect.X, asteroid.RadiusVect.Y, asteroid.RadiusVect.Z }.OrderByDescending(o => o).ToArray();
-            double avgRad = Math3D.Avg(asteroid.RadiusVect.X, asteroid.RadiusVect.Y, asteroid.RadiusVect.Z);
+            double avgRad = Math1D.Avg(asteroid.RadiusVect.X, asteroid.RadiusVect.Y, asteroid.RadiusVect.Z);
 
             Transform3DGroup transform = new Transform3DGroup();
             transform.Children.Add(new ScaleTransform3D(astRad[0] * 2.2, astRad[2] * 2.2, astRad[1] * .5));

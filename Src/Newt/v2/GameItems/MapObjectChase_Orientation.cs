@@ -130,7 +130,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             // According to the newton wiki, angular velociy is radians per second
-            Vector3D newAngVel = rotation.Axis.ToUnit() * Math3D.DegreesToRadians(rotation.Angle);
+            Vector3D newAngVel = rotation.Axis.ToUnit() * Math1D.DegreesToRadians(rotation.Angle);
             newAngVel *= _multiplier;
 
             if (this.MaxVelocity != null && newAngVel.LengthSquared > this.MaxVelocity.Value * this.MaxVelocity.Value)

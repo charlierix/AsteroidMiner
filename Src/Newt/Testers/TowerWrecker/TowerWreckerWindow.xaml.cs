@@ -854,8 +854,8 @@ namespace Game.Newt.Testers.TowerWrecker
 
                 // I want this to act like a sword, so I don't want it starting in the center
                 Vector3D position = new Vector3D(150, 0, 0);
-                position = Math3D.RotateAroundAxis(position, new Vector3D(0, 0, 1), Math3D.GetNearZeroValue(Math.PI * 2d));
-                position.Z = Math3D.GetNearZeroValue(5d) + 10d;
+                position = Math3D.RotateAroundAxis(position, new Vector3D(0, 0, 1), Math1D.GetNearZeroValue(Math.PI * 2d));
+                position.Z = Math1D.GetNearZeroValue(5d) + 10d;
                 Vector3D velocity = new Vector3D(0, 0, 0);
                 Vector3D angularVelocity = new Vector3D(0, 0, UtilityCore.GetScaledValue_Capped(.1d, 5d, trkBulletSpeed.Minimum, trkBulletSpeed.Maximum, trkBulletSpeed.Value));
 
@@ -864,7 +864,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 //dirFacingOrth = dirFacingOrth.GetRotatedVector(new Vector3D(0, -1, 0), Vector3D.AngleBetween(new Vector3D(1, 0, 0), dirFacingStand));
                 //DoubleVector directionFacing = new DoubleVector(dirFacingStand, dirFacingOrth);
 
-                DoubleVector directionFacing = _defaultDirectionFacing.GetRotatedVector(new Vector3D(0, 1, 0), Math3D.GetNearZeroValue(1d));
+                DoubleVector directionFacing = _defaultDirectionFacing.GetRotatedVector(new Vector3D(0, 1, 0), Math1D.GetNearZeroValue(1d));
 
                 Vector3D size = new Vector3D(350d, 7d, .25d);
 
@@ -1395,7 +1395,7 @@ namespace Game.Newt.Testers.TowerWrecker
         private Vector3D GetCannonVelocity()
         {
             return new Vector3D(trkBulletSpeed.Value,
-                                                Math3D.GetNearZeroValue(8),
+                                                Math1D.GetNearZeroValue(8),
                                                 2 + (StaticRandom.NextDouble() * 5d));
 
         }

@@ -1318,17 +1318,17 @@ namespace Game.HelperClassesWPF
 
                 double ratio = width.ToDouble() / height.ToDouble();
 
-                if (ratio > Math3D.GOLDENRATIO)
+                if (ratio > Math1D.GOLDENRATIO)
                 {
-                    width = (height * Math3D.GOLDENRATIO).ToInt_Round();
+                    width = (height * Math1D.GOLDENRATIO).ToInt_Round();
                 }
                 else
                 {
                     ratio = height.ToDouble() / width.ToDouble();
 
-                    if (ratio > Math3D.GOLDENRATIO)
+                    if (ratio > Math1D.GOLDENRATIO)
                     {
-                        height = (width * Math3D.GOLDENRATIO).ToInt_Round();
+                        height = (width * Math1D.GOLDENRATIO).ToInt_Round();
                     }
                 }
             }
@@ -1379,11 +1379,11 @@ namespace Game.HelperClassesWPF
             {
                 if (scaledPercent > .5)
                 {
-                    height = rand.NextDouble(width / Math3D.GOLDENRATIO, width).ToInt_Round();      // Reduce
+                    height = rand.NextDouble(width / Math1D.GOLDENRATIO, width).ToInt_Round();      // Reduce
                 }
                 else
                 {
-                    height = rand.NextDouble(width, width * Math3D.GOLDENRATIO).ToInt_Round();      // Increase
+                    height = rand.NextDouble(width, width * Math1D.GOLDENRATIO).ToInt_Round();      // Increase
                 }
             }
 
@@ -1531,11 +1531,11 @@ namespace Game.HelperClassesWPF
             const double MAXPERCENT = .8d;
             const double MARGIN = .3;
             const double MAXCENTERPERCENT = 1.2;
-            const double MAXASPECT = Math3D.GOLDENRATIO * 3d;
+            const double MAXASPECT = Math1D.GOLDENRATIO * 3d;
 
             Point center = new Point(width / 2d, height / 2d);
 
-            double avgSize = Math3D.Avg(width, height);
+            double avgSize = Math1D.Avg(width, height);
             double minRadius = avgSize * MINPERCENT;
             double maxRadius = avgSize * MAXPERCENT;
 
@@ -1558,7 +1558,7 @@ namespace Game.HelperClassesWPF
                     // Keep trying until the ellipse is over the image
                     while (true)
                     {
-                        position = center + new Vector(Math3D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math3D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
+                        position = center + new Vector(Math1D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math1D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
 
                         radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
                         radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
@@ -1868,7 +1868,7 @@ namespace Game.HelperClassesWPF
         {
             double currentSum = Math.Abs(values.Sum());     // need to take the absolute value, or the final sign would be lost (-1/-4 would be positive)
 
-            if (Math3D.IsNearValue(currentSum, sumTo))
+            if (Math1D.IsNearValue(currentSum, sumTo))
             {
                 return values.ToArray();
             }
@@ -2071,7 +2071,7 @@ namespace Game.HelperClassesWPF
                 double max = conv.Values.Max(o => o);
                 double absMax = Math.Max(Math.Abs(min), Math.Abs(max));
 
-                if (Math3D.IsInvalid(absMax) || Math3D.IsNearZero(absMax))
+                if (Math1D.IsInvalid(absMax) || Math1D.IsNearZero(absMax))
                 {
                     return 1d;
                 }
@@ -2082,7 +2082,7 @@ namespace Game.HelperClassesWPF
             }
             else
             {
-                if (Math3D.IsInvalid(absMaxValue.Value) || Math3D.IsNearZero(absMaxValue.Value))
+                if (Math1D.IsInvalid(absMaxValue.Value) || Math1D.IsNearZero(absMaxValue.Value))
                 {
                     return 1d;
                 }
@@ -3059,8 +3059,8 @@ namespace Game.HelperClassesWPF
 
         private static double[] ConvertToEdge(double[] values)
         {
-            var minmax = Math3D.MinMax(values);
-            double middle = Math3D.Avg(minmax.Item1, minmax.Item2);
+            var minmax = Math1D.MinMax(values);
+            double middle = Math1D.Avg(minmax.Item1, minmax.Item2);
 
             double[] offsets = values.
                 Select(o => o - middle).

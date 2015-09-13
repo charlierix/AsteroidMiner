@@ -350,7 +350,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 //double sumVolume = this.UsedVolume + cargo.Volume;
                 double sumVolume = _cargo.Sum(o => o.Volume) + cargo.Volume;        // inlined this.UsedVolume because of the lock
 
-                if (sumVolume <= this.MaxVolume || Math3D.IsNearValue(sumVolume, this.MaxVolume))
+                if (sumVolume <= this.MaxVolume || Math1D.IsNearValue(sumVolume, this.MaxVolume))
                 {
                     ConverterMatterToFuel.Add(_cargo, cargo);
                     return true;

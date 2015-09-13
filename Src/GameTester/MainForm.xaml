@@ -116,7 +116,8 @@
                     <ListBoxItem Content="TubeMesh" MouseUp="TubeMeshTester_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Sound" MouseUp="SoundTester_MouseUp"/>
                     <ListBoxItem Content="Potatoes" MouseUp="Potatoes_MouseUp"/>
-                    <ListBoxItem Content="Evenly distribute points" MouseUp="EvenDistribute_MouseUp"/>
+                    <!--<ListBoxItem Content="Evenly distribute points 2D" MouseUp="EvenDistribute2D_MouseUp"/>-->
+                    <ListBoxItem Content="Evenly distribute points 3D" MouseUp="EvenDistribute3D_MouseUp"/>
                     <ListBoxItem Content="Clustered Points" MouseUp="ClusteredPoints_MouseUp"/>
                     <ListBoxItem Content="Shadows" MouseUp="Shadows_MouseUp"/>
                     <ListBoxItem Content="Curves" MouseUp="Curves_MouseUp"/>
@@ -145,6 +146,7 @@
                     <ListBoxItem Content="Image Filters" MouseUp="ImageFilters_MouseUp"/>
                     <ListBoxItem Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
                     <ListBoxItem Content="Convolution Chains" MouseUp="ConvolutionChains_MouseUp"/>
+                    <ListBoxItem Content="Self Organizing Maps" MouseUp="SelfOrganizingMaps_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 

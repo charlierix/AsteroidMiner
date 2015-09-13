@@ -713,7 +713,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     double amountToPull = this.AmountToPull;
 
-                    if (!Math3D.IsNearValue(value.RemovalMultiple, amountToPull))
+                    if (!Math1D.IsNearValue(value.RemovalMultiple, amountToPull))
                     {
                         throw new ArgumentException(string.Format("The ammo boxes passed in must have RemovalMultiple equal to this.AmountToPull (Use ProjectileGun.AssignAmmoBoxes to distribute ammo boxes to guns)\r\nAmountToPull={0}\r\nAmmo.RemovalMultiple={1}", amountToPull.ToString(), value.RemovalMultiple.ToString()));
                     }
@@ -1349,7 +1349,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Commit the boxes to an array that will be reused for each combination of guns
             AmmoBox[] sortedBoxes = boxes.
-                Where(o => o.QuantityMax >= smallestDemand && Math3D.Min(o.ScaleActual.X, o.ScaleActual.Y, o.ScaleActual.Z) >= smallestCaliber).        // only keep what will fit the smallest gun
+                Where(o => o.QuantityMax >= smallestDemand && Math1D.Min(o.ScaleActual.X, o.ScaleActual.Y, o.ScaleActual.Z) >= smallestCaliber).        // only keep what will fit the smallest gun
                 OrderByDescending(o => o.QuantityMax).      // order the boxes descending so that the largest gets assigned first
                 ToArray();
 
@@ -1374,7 +1374,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             for (int cntr = 0; cntr < boxesDescending.Length; cntr++)
             {
                 double boxVolume = boxesDescending[cntr].QuantityMax;
-                double boxMinDimension = Math3D.Min(boxesDescending[cntr].ScaleActual.X, boxesDescending[cntr].ScaleActual.Y, boxesDescending[cntr].ScaleActual.Z);
+                double boxMinDimension = Math1D.Min(boxesDescending[cntr].ScaleActual.X, boxesDescending[cntr].ScaleActual.Y, boxesDescending[cntr].ScaleActual.Z);
                 long boxToken = boxesDescending[cntr].Token;
 
                 // Find the gun that most needs this box

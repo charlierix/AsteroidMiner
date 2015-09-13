@@ -944,7 +944,7 @@ namespace Game.Newt.v2.Arcanorum
                     {
                         Visual2DHitPoint visualCast = (Visual2DHitPoint)_visuals2D[index];
                         visualCast.Update();
-                        isDead = Math3D.IsNearZero(visualCast.TakesDamage.HitPoints.QuantityCurrent);
+                        isDead = Math1D.IsNearZero(visualCast.TakesDamage.HitPoints.QuantityCurrent);
                     }
 
                     // See if it should be removed
@@ -1738,7 +1738,7 @@ namespace Game.Newt.v2.Arcanorum
         private double GetRandomDropRadius(Point3D center, double percentMapSize)
         {
             //TODO: take center into account
-            double retVal = Math3D.Min(Math.Abs(_boundryMax.X - center.X), Math.Abs(_boundryMax.Y - center.Y), Math.Abs(_boundryMax.Z - center.Z),
+            double retVal = Math1D.Min(Math.Abs(_boundryMax.X - center.X), Math.Abs(_boundryMax.Y - center.Y), Math.Abs(_boundryMax.Z - center.Z),
                 Math.Abs(_boundryMin.X - center.X), Math.Abs(_boundryMin.Y - center.Y), Math.Abs(_boundryMin.Z - center.Z))
                 * percentMapSize;
 
@@ -1778,13 +1778,13 @@ namespace Game.Newt.v2.Arcanorum
                 WeaponHandleDNA handleDNA = WeaponHandleDNA.GetRandomDNA(material);
 
                 WeaponSpikeBallDNA leftBallDNA = null;
-                if (!Math3D.IsNearZero(handleDNA.AttachPointPercent))
+                if (!Math1D.IsNearZero(handleDNA.AttachPointPercent))
                 {
                     leftBallDNA = WeaponSpikeBallDNA.GetRandomDNA(handleDNA);
                 }
 
                 WeaponSpikeBallDNA rightBallDNA = null;
-                if (!Math3D.IsNearValue(handleDNA.AttachPointPercent, 1d))
+                if (!Math1D.IsNearValue(handleDNA.AttachPointPercent, 1d))
                 {
                     rightBallDNA = WeaponSpikeBallDNA.GetRandomDNA(handleDNA);
                 }

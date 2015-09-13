@@ -244,7 +244,7 @@ namespace Game.Newt.v2.Arcanorum
 
             // Figure out the scale
             Rect3D aabb = model.Bounds;
-            double halfSize = Math3D.Max(aabb.SizeX, aabb.SizeY, aabb.SizeZ) / 2d;
+            double halfSize = Math1D.Max(aabb.SizeX, aabb.SizeY, aabb.SizeZ) / 2d;
 
             double scale = (radius * .66d) / halfSize;
             model.Transform = new ScaleTransform3D(scale, scale, scale);

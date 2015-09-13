@@ -289,7 +289,7 @@ namespace Game.Newt.Testers.ChaseForces
             }
 
             double lastGradX = gradient[gradient.Length - 1].Item1;
-            if (!Math3D.IsNearZero(lastGradX) && lastGradX > 0)
+            if (!Math1D.IsNearZero(lastGradX) && lastGradX > 0)
             {
                 Polyline polyLine = new Polyline();
                 Polygon polyFill = new Polygon();

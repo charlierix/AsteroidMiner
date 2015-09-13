@@ -2575,7 +2575,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             // Assign random weights
-            return possibleLinks.Select(o => new Tuple<int, int, double>(o.Item1, o.Item2, Math3D.GetNearZeroValue(maxWeight))).ToArray();
+            return possibleLinks.Select(o => new Tuple<int, int, double>(o.Item1, o.Item2, Math1D.GetNearZeroValue(maxWeight))).ToArray();
         }
         private static Tuple<int, int, double>[] GetRandomLinksSprtWeight(IEnumerable<Tuple<int, int>> links, double maxWeight)
         {
@@ -2583,7 +2583,7 @@ namespace Game.Newt.v2.GameItems
 
             foreach (var link in links)
             {
-                retVal.Add(new Tuple<int, int, double>(link.Item1, link.Item2, Math3D.GetNearZeroValue(maxWeight)));
+                retVal.Add(new Tuple<int, int, double>(link.Item1, link.Item2, Math1D.GetNearZeroValue(maxWeight)));
             }
 
             return retVal.ToArray();
@@ -2695,7 +2695,7 @@ namespace Game.Newt.v2.GameItems
 
             for (int cntr = 0; cntr < count; cntr++)
             {
-                retVal[cntr] = Math3D.GetNearZeroValue(maxWeight);
+                retVal[cntr] = Math1D.GetNearZeroValue(maxWeight);
             }
 
             return retVal;

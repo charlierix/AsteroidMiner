@@ -172,7 +172,7 @@ namespace Game.Newt.Testers.Encog
                 Vector3D lookDirection = position * -1;
 
                 Vector3D rotateAxis = Math3D.GetRandomVector_Cone(Math3D.GetArbitraryOrhonganal(lookDirection), 20);
-                Quaternion rotate = new Quaternion(rotateAxis, Math3D.GetNearZeroValue(20));
+                Quaternion rotate = new Quaternion(rotateAxis, Math1D.GetNearZeroValue(20));
 
                 lookDirection = rotate.GetRotatedVector(lookDirection);
 

@@ -52,11 +52,11 @@ namespace Game.Newt.v2.Arcanorum
             {
                 throw new ArgumentException("dna must have a handle");
             }
-            else if (Math3D.IsNearZero(dna.Handle.AttachPointPercent) && dna.HeadLeft != null)
+            else if (Math1D.IsNearZero(dna.Handle.AttachPointPercent) && dna.HeadLeft != null)
             {
                 throw new ApplicationException("can't have a weapon head on the left (that's where the attach point is)");
             }
-            else if (Math3D.IsNearValue(dna.Handle.AttachPointPercent, 1d) && dna.HeadRight != null)
+            else if (Math1D.IsNearValue(dna.Handle.AttachPointPercent, 1d) && dna.HeadRight != null)
             {
                 throw new ApplicationException("can't have a weapon head on the right (that's where the attach point is)");
             }
@@ -192,7 +192,7 @@ namespace Game.Newt.v2.Arcanorum
             this.AttachPoint = new Point3D(-(this.DNA.Handle.Length / 2d) + (this.DNA.Handle.Length * this.DNA.Handle.AttachPointPercent), 0, 0);
             //this.AttachPoint = new Point3D((this.DNA.Handle.Length / 2d) - (this.DNA.Handle.Length * this.DNA.Handle.AttachPointPercent), 0, 0);
 
-            if (Math3D.IsNearZero(this.DNA.Handle.AttachPointPercent) || Math3D.IsNearValue(this.DNA.Handle.AttachPointPercent, 1d))
+            if (Math1D.IsNearZero(this.DNA.Handle.AttachPointPercent) || Math1D.IsNearValue(this.DNA.Handle.AttachPointPercent, 1d))
             {
                 _isAttachInMiddle = false;
                 _massLeft = _mass;      // these masses shouldn't be used anyway
@@ -642,7 +642,7 @@ namespace Game.Newt.v2.Arcanorum
             foreach (var model in models)
             {
                 // Apply a transform to slide this part
-                if (!Math3D.IsNearZero(model.Item2))
+                if (!Math1D.IsNearZero(model.Item2))
                 {
                     // The weapon is built along the x axis
                     TranslateTransform3D translate = new TranslateTransform3D(model.Item2, 0, 0);
@@ -1045,7 +1045,7 @@ namespace Game.Newt.v2.Arcanorum
             WeaponHandleDNA handle = WeaponHandleDNA.GetRandomDNA();
 
             WeaponPartDNA leftHead = null;
-            if (!Math3D.IsNearZero(handle.AttachPointPercent) && StaticRandom.NextDouble() < .25)
+            if (!Math1D.IsNearZero(handle.AttachPointPercent) && StaticRandom.NextDouble() < .25)
             {
                 if(StaticRandom.NextBool())
                 {
@@ -1058,7 +1058,7 @@ namespace Game.Newt.v2.Arcanorum
             }
 
             WeaponPartDNA rightHead = null;
-            if (!Math3D.IsNearValue(handle.AttachPointPercent, 1d) && StaticRandom.NextDouble() < .25)
+            if (!Math1D.IsNearValue(handle.AttachPointPercent, 1d) && StaticRandom.NextDouble() < .25)
             {
                 if (StaticRandom.NextBool())
                 {
@@ -1151,7 +1151,7 @@ namespace Game.Newt.v2.Arcanorum
         }
         public static bool GetKeyValue_Bool(string key, SortedList<string, double> from, SortedList<string, double> to, bool valueIfNew)
         {
-            return Math3D.IsNearZero(GetKeyValue(key, from, to, valueIfNew ? 0d : 1d));
+            return Math1D.IsNearZero(GetKeyValue(key, from, to, valueIfNew ? 0d : 1d));
         }
 
         #endregion

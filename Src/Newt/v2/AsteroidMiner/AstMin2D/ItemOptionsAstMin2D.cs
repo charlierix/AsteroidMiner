@@ -152,7 +152,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             decimal baseAmt = GetCredits_ShipPart_Base(dna.PartType ?? "");
 
-            decimal scale = Convert.ToDecimal(Math3D.Avg(dna.Scale.X, dna.Scale.Y, dna.Scale.Z));
+            decimal scale = Convert.ToDecimal(Math1D.Avg(dna.Scale.X, dna.Scale.Y, dna.Scale.Z));
 
             return baseAmt * scale;
         }

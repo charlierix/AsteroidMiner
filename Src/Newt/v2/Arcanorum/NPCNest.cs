@@ -447,7 +447,7 @@ namespace Game.Newt.v2.Arcanorum
             //    // Not ready to create a new egg
             //    return;
             //}
-            else if (!Math3D.IsNearZero(_energy.RemoveQuantity(_itemOptions.NestEnergy_Egg, true)))
+            else if (!Math1D.IsNearZero(_energy.RemoveQuantity(_itemOptions.NestEnergy_Egg, true)))
             {
                 // Not enough energy to create an egg
                 return;

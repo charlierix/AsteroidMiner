@@ -102,7 +102,7 @@ namespace Game.Newt.Testers
                     Vector3D axis;
                     double radians;
                     Math3D.GetRotation(out axis, out radians, new Vector3D(-1, 0, 0), _worldFlow);
-                    _worldFlowRotation = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+                    _worldFlowRotation = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
                 }
             }
 
@@ -815,7 +815,7 @@ namespace Game.Newt.Testers
             Point3D anchorPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(3, 0, 0));
             //Point3D bodyAttachPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(.25, 0, 0));
             //Point3D anchorPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(.5, 0, 0));
-            AddRope(bodyAttachPoint, anchorPoint, Math3D.DegreesToRadians(1d));
+            AddRope(bodyAttachPoint, anchorPoint, Math1D.DegreesToRadians(1d));
 
             // Add to the viewport
             _viewport.Children.Add(modelFluidBlade);
@@ -1000,7 +1000,7 @@ namespace Game.Newt.Testers
             Point3D anchorPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(3, 0, 0));
             //Point3D bodyAttachPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(0, 0, 0));
             //Point3D anchorPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(.33, 0, 0));
-            AddRope(bodyAttachPoint, anchorPoint, Math3D.DegreesToRadians(1d));
+            AddRope(bodyAttachPoint, anchorPoint, Math1D.DegreesToRadians(1d));
 
             // Add to the viewport
             _viewport.Children.Add(modelFluidBlade);
@@ -1095,7 +1095,7 @@ namespace Game.Newt.Testers
                 // Rope
                 Point3D bodyAttachPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(.25, 0, 0));
                 Point3D anchorPoint = _modelOrientationTrackball.Transform.Transform(new Point3D(3, 0, 0));
-                AddRope(bodyAttachPoint, anchorPoint, Math3D.DegreesToRadians(1d));
+                AddRope(bodyAttachPoint, anchorPoint, Math1D.DegreesToRadians(1d));
 
                 // Add to the viewport
                 foreach (ModelVisual3D model in modelBlades)
@@ -1397,7 +1397,7 @@ namespace Game.Newt.Testers
                 Vector3D axisStandard;
                 double radiansStandard;
                 Math3D.GetRotation(out axisStandard, out radiansStandard, _defaultDirectionFacing.Standard, dirDbl.Standard);
-                Quaternion rotationStandard = new Quaternion(axisStandard, Math3D.RadiansToDegrees(radiansStandard));
+                Quaternion rotationStandard = new Quaternion(axisStandard, Math1D.RadiansToDegrees(radiansStandard));
 
                 //Vector3D axisOrth;
                 //double radiansOrth;
@@ -1538,7 +1538,7 @@ namespace Game.Newt.Testers
         {
             for (int cntr = 0; cntr < count; cntr++)
             {
-                double length = .5d + Math.Abs(Math3D.GetNearZeroValue(3d));
+                double length = .5d + Math.Abs(Math1D.GetNearZeroValue(3d));
                 Point3D modelFrom = new Point3D(-length, 0, 0);
                 Point3D modelTo = new Point3D(length, 0, 0);
 

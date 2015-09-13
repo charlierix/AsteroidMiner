@@ -679,7 +679,33 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
+        #region Rect
+
+        public static double CenterX(this Rect rect)
+        {
+            return rect.X + (rect.Width / 2d);
+        }
+        public static double CenterY(this Rect rect)
+        {
+            return rect.Y + (rect.Height / 2d);
+        }
+
+        #endregion
+
         #region Rect3D
+
+        public static double CenterX(this Rect3D rect)
+        {
+            return rect.X + (rect.SizeX / 2d);
+        }
+        public static double CenterY(this Rect3D rect)
+        {
+            return rect.Y + (rect.SizeY / 2d);
+        }
+        public static double CenterZ(this Rect3D rect)
+        {
+            return rect.Z + (rect.SizeZ / 2d);
+        }
 
         /// <summary>
         /// Returns true if either rectangle is inside the other or touching

@@ -214,7 +214,7 @@ namespace Game.Newt.Testers.ChaseForces
             {
                 posVect = Math3D.GetRandomVector_Spherical_Shell(orbitRadius);
             }
-            else if (!Math3D.IsNearValue(this.Position.ToVector().LengthSquared, orbitRadius * orbitRadius))
+            else if (!Math1D.IsNearValue(this.Position.ToVector().LengthSquared, orbitRadius * orbitRadius))
             {
                 posVect = posVect.ToUnit() * orbitRadius;
             }

@@ -648,7 +648,7 @@ namespace Game.Newt.Testers.FluidFields
             double width = relativeTo.ActualWidth;
             double height = relativeTo.ActualHeight;
 
-            if (Math3D.IsNearZero(width) || Math3D.IsNearZero(height))
+            if (Math1D.IsNearZero(width) || Math1D.IsNearZero(height))
             {
                 // The window has no size
                 return new Point3D(0, 0, 0);
@@ -815,7 +815,7 @@ namespace Game.Newt.Testers.FluidFields
 
                         double inkCell = ink[index];
 
-                        if (Math3D.IsNearZero(inkCell))
+                        if (Math1D.IsNearZero(inkCell))
                         {
                             continue;
                         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -196,7 +197,7 @@ namespace Game.Newt.Testers.Encog
             public int MaxImagesPerCategoryMax { get; set; }
 
             public FeatureRecognizer_Image[] Images { get; set; }
-            public FeatureRecognizer4_ConvChain[] Chains { get; set; }
+            public ConvChain_ConvChain[] Chains { get; set; }
         }
 
         #endregion
@@ -220,7 +221,7 @@ namespace Game.Newt.Testers.Encog
 
         private class ChainOutput
         {
-            public ChainOutput(FeatureRecognizer_Image image, Tuple<FeatureRecognizer4_ConvChain, Convolution2D>[] chainOutputs)
+            public ChainOutput(FeatureRecognizer_Image image, Tuple<ConvChain_ConvChain, Convolution2D>[] chainOutputs)
             {
                 this.Image = image;
                 this.ChainOutputs = chainOutputs;
@@ -234,7 +235,7 @@ namespace Game.Newt.Testers.Encog
             /// <summary>
             /// These are in the order that the neural net specifies
             /// </summary>
-            public readonly Tuple<FeatureRecognizer4_ConvChain, Convolution2D>[] ChainOutputs;
+            public readonly Tuple<ConvChain_ConvChain, Convolution2D>[] ChainOutputs;
             public readonly double[] FullOutput;
         }
 
@@ -275,9 +276,9 @@ namespace Game.Newt.Testers.Encog
 
         private List<FeatureRecognizer_Image> _images = new List<FeatureRecognizer_Image>();
 
-        private List<FeatureRecognizer4_ConvChain> _chains = new List<FeatureRecognizer4_ConvChain>();
+        private List<ConvChain_ConvChain> _chains = new List<ConvChain_ConvChain>();
 
-        private List<FeatureRecognizer4_NeuralNet> _neuralNets = new List<FeatureRecognizer4_NeuralNet>();
+        private List<ConvChain_NeuralNet> _neuralNets = new List<ConvChain_NeuralNet>();
 
         private List<Window> _childWindows = new List<Window>();
 
@@ -475,7 +476,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddPrimitiveToChain(instructions);
+                ConvChain_ConvChain conv = AddPrimitiveToChain(instructions);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image size probably too small)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -500,7 +501,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_ConvChain sourceChain = _chains[StaticRandom.Next(_chains.Count)];
+                ConvChain_ConvChain sourceChain = _chains[StaticRandom.Next(_chains.Count)];
 
                 // Parse the gui
                 InstructionsPrimitive instructions = GetInstructionsPrimitive();
@@ -510,7 +511,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddPrimitiveToChain(instructions, sourceChain);
+                ConvChain_ConvChain conv = AddPrimitiveToChain(instructions, sourceChain);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image size probably too small)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -536,7 +537,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddExtractToChain(instructions);
+                ConvChain_ConvChain conv = AddExtractToChain(instructions);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image probably blank)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -561,7 +562,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_ConvChain sourceChain = _chains[StaticRandom.Next(_chains.Count)];
+                ConvChain_ConvChain sourceChain = _chains[StaticRandom.Next(_chains.Count)];
 
                 // Parse the gui
                 InstructionsExtract instructions = GetInstructionsExtract();
@@ -571,7 +572,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddExtractToChain(instructions, sourceChain);
+                ConvChain_ConvChain conv = AddExtractToChain(instructions, sourceChain);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image probably blank)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -632,7 +633,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_ConvChain sourceChain = senderCast.Tag as FeatureRecognizer4_ConvChain;
+                ConvChain_ConvChain sourceChain = senderCast.Tag as ConvChain_ConvChain;
                 if (sourceChain == null)
                 {
                     return;
@@ -646,7 +647,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddPrimitiveToChain(instructions, sourceChain);
+                ConvChain_ConvChain conv = AddPrimitiveToChain(instructions, sourceChain);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image size probably too small)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -671,7 +672,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_ConvChain sourceChain = senderCast.Tag as FeatureRecognizer4_ConvChain;
+                ConvChain_ConvChain sourceChain = senderCast.Tag as ConvChain_ConvChain;
                 if (sourceChain == null)
                 {
                     return;
@@ -685,7 +686,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Create it
-                FeatureRecognizer4_ConvChain conv = AddExtractToChain(instructions, sourceChain);
+                ConvChain_ConvChain conv = AddExtractToChain(instructions, sourceChain);
                 if (conv == null)
                 {
                     MessageBox.Show("Unable to create (image probably blank)", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -709,7 +710,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_ConvChain chain = senderCast.Tag as FeatureRecognizer4_ConvChain;
+                ConvChain_ConvChain chain = senderCast.Tag as ConvChain_ConvChain;
                 if (chain == null)
                 {
                     return;
@@ -733,7 +734,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_NeuralNet item = CreateRandomNN(instr);
+                ConvChain_NeuralNet item = CreateRandomNN(instr);
 
                 TextBlock status = AddNN(item);
 
@@ -756,7 +757,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_NeuralNet item = CreateRandomNN(instr);
+                ConvChain_NeuralNet item = CreateRandomNN(instr);
 
                 TextBlock status = AddNN(item);
 
@@ -783,7 +784,7 @@ namespace Game.Newt.Testers.Encog
                     return;
                 }
 
-                FeatureRecognizer4_NeuralNet nn = senderCast.Tag as FeatureRecognizer4_NeuralNet;
+                ConvChain_NeuralNet nn = senderCast.Tag as ConvChain_NeuralNet;
                 if (nn == null)
                 {
                     return;
@@ -1287,7 +1288,7 @@ namespace Game.Newt.Testers.Encog
             return retVal;
         }
 
-        private static FeatureRecognizer4_ConvChain CreateRandomChain(InstructionsPrimitive instrPrimitive, InstructionsExtract instrExtract)
+        private static ConvChain_ConvChain CreateRandomChain(InstructionsPrimitive instrPrimitive, InstructionsExtract instrExtract)
         {
             const int MINLENGTH = 2;
             const int MAXLENGTH = 5;
@@ -1296,7 +1297,7 @@ namespace Game.Newt.Testers.Encog
             Random rand = StaticRandom.GetRandomForThread();
 
             // Create the initial chain
-            FeatureRecognizer4_ConvChain retVal = null;
+            ConvChain_ConvChain retVal = null;
 
             // Figure out how many links to add
             int length = rand.Next(MINLENGTH, MAXLENGTH + 1);
@@ -1322,11 +1323,11 @@ namespace Game.Newt.Testers.Encog
 
             return retVal;
         }
-        private static FeatureRecognizer4_ConvChain AddPrimitiveToChain(InstructionsPrimitive instr, FeatureRecognizer4_ConvChain sourceChain = null)
+        private static ConvChain_ConvChain AddPrimitiveToChain(InstructionsPrimitive instr, ConvChain_ConvChain sourceChain = null)
         {
             if (sourceChain == null)
             {
-                sourceChain = new FeatureRecognizer4_ConvChain() { ImageSize = instr.ImageSize };
+                sourceChain = new ConvChain_ConvChain() { ImageSize = instr.ImageSize };
             }
 
             ConvolutionBase2D primitive = instr.GetCandidate();
@@ -1339,20 +1340,20 @@ namespace Game.Newt.Testers.Encog
                 return null;
             }
 
-            return new FeatureRecognizer4_ConvChain()
+            return new ConvChain_ConvChain()
             {
                 UniqueID = Guid.NewGuid().ToString(),
                 ImageSize = sourceChain.ImageSize,
                 Convolutions = UtilityCore.ArrayAdd(sourceChain.Convolutions, primitive),
             };
         }
-        private static FeatureRecognizer4_ConvChain AddExtractToChain(InstructionsExtract instr, FeatureRecognizer4_ConvChain sourceChain = null)
+        private static ConvChain_ConvChain AddExtractToChain(InstructionsExtract instr, ConvChain_ConvChain sourceChain = null)
         {
             Random rand = StaticRandom.GetRandomForThread();
 
             if (sourceChain == null)
             {
-                sourceChain = new FeatureRecognizer4_ConvChain() { ImageSize = instr.ImageSize };
+                sourceChain = new ConvChain_ConvChain() { ImageSize = instr.ImageSize };
             }
 
             #region get bitmap
@@ -1439,7 +1440,7 @@ namespace Game.Newt.Testers.Encog
             #endregion
 
             // Create it
-            return new FeatureRecognizer4_ConvChain()
+            return new ConvChain_ConvChain()
             {
                 UniqueID = Guid.NewGuid().ToString(),
                 ImageSize = sourceChain.ImageSize,
@@ -1447,7 +1448,7 @@ namespace Game.Newt.Testers.Encog
             };
         }
 
-        private static FeatureRecognizer4_NeuralNet CreateRandomNN(InstructionsNN instr)
+        private static ConvChain_NeuralNet CreateRandomNN(InstructionsNN instr)
         {
             //NOTE: This just creates a definition, it doesn't train it
 
@@ -1473,10 +1474,10 @@ namespace Game.Newt.Testers.Encog
             }
 
             int numInputChains = rand.Next(minChains, maxChains + 1);
-            FeatureRecognizer4_ConvChain[] chains;
+            ConvChain_ConvChain[] chains;
             if (numInputChains <= 0)
             {
-                chains = new FeatureRecognizer4_ConvChain[0];
+                chains = new ConvChain_ConvChain[0];
             }
             else
             {
@@ -1495,7 +1496,7 @@ namespace Game.Newt.Testers.Encog
                 OrderBy(o => o).
                 ToArray();
 
-            return new FeatureRecognizer4_NeuralNet()
+            return new ConvChain_NeuralNet()
             {
                 UniqueID = Guid.NewGuid().ToString(),
                 UseNonChain = useNonChain,
@@ -1525,7 +1526,7 @@ namespace Game.Newt.Testers.Encog
             // Store it
             FeatureRecognizer.AddImage(entry, _images, treeImages, cboImageLabel);
         }
-        private void AddChain(FeatureRecognizer4_ConvChain chain)
+        private void AddChain(ConvChain_ConvChain chain)
         {
             StackPanel stack = new StackPanel();
 
@@ -1554,7 +1555,7 @@ namespace Game.Newt.Testers.Encog
             _chains.Add(chain);
             lstConvChains.Items.Add(chain.Control);
         }
-        private TextBlock AddNN(FeatureRecognizer4_NeuralNet nn)
+        private TextBlock AddNN(ConvChain_NeuralNet nn)
         {
             const int FONTSIZE = 10;
 
@@ -1609,7 +1610,7 @@ namespace Game.Newt.Testers.Encog
             return status;
         }
 
-        private void DeleteChain(FeatureRecognizer4_ConvChain chain)
+        private void DeleteChain(ConvChain_ConvChain chain)
         {
             // Listbox
             bool removedFromListbox = false;
@@ -1621,7 +1622,7 @@ namespace Game.Newt.Testers.Encog
                     throw new ApplicationException("Expected chain control to be a border");
                 }
 
-                FeatureRecognizer4_ConvChain childChain = childCtrl.Tag as FeatureRecognizer4_ConvChain;
+                ConvChain_ConvChain childChain = childCtrl.Tag as ConvChain_ConvChain;
                 if (childChain == null)
                 {
                     throw new ApplicationException("Expected tag to be a FeatureRecognizer4_ConvChain");
@@ -1654,7 +1655,7 @@ namespace Game.Newt.Testers.Encog
 
             _chains.RemoveAt(removeIndex.Index);
         }
-        private void DeleteNN(FeatureRecognizer4_NeuralNet nn)
+        private void DeleteNN(ConvChain_NeuralNet nn)
         {
             nn.Cancel.Cancel();
 
@@ -1668,7 +1669,7 @@ namespace Game.Newt.Testers.Encog
                     throw new ApplicationException("Expected chain control to be a border");
                 }
 
-                FeatureRecognizer4_NeuralNet childNN = childCtrl.Tag as FeatureRecognizer4_NeuralNet;
+                ConvChain_NeuralNet childNN = childCtrl.Tag as ConvChain_NeuralNet;
                 if (childNN == null)
                 {
                     throw new ApplicationException("Expected tag to be a FeatureRecognizer4_ConvChain");
@@ -1712,7 +1713,7 @@ namespace Game.Newt.Testers.Encog
 
             return _images.FirstOrDefault(o => o.ImageControl == selected);
         }
-        private FeatureRecognizer4_ConvChain GetSelected_ConvChain()
+        private ConvChain_ConvChain GetSelected_ConvChain()
         {
             Border selected = lstConvChains.SelectedItem as Border;
             if (selected == null)
@@ -1720,7 +1721,7 @@ namespace Game.Newt.Testers.Encog
                 return null;
             }
 
-            FeatureRecognizer4_ConvChain retVal = selected.Tag as FeatureRecognizer4_ConvChain;
+            ConvChain_ConvChain retVal = selected.Tag as ConvChain_ConvChain;
             if (retVal == null)
             {
                 throw new ApplicationException("Expected tag to contain the chain");
@@ -1728,7 +1729,7 @@ namespace Game.Newt.Testers.Encog
 
             return retVal;
         }
-        private FeatureRecognizer4_NeuralNet GetSelected_NN()
+        private ConvChain_NeuralNet GetSelected_NN()
         {
             Border selected = lstNNs.SelectedItem as Border;
             if (selected == null)
@@ -1736,7 +1737,7 @@ namespace Game.Newt.Testers.Encog
                 return null;
             }
 
-            FeatureRecognizer4_NeuralNet retVal = selected.Tag as FeatureRecognizer4_NeuralNet;
+            ConvChain_NeuralNet retVal = selected.Tag as ConvChain_NeuralNet;
             if (retVal == null)
             {
                 throw new ApplicationException("Expected tag to contain the neural net");
@@ -1829,7 +1830,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         // ***** no cache
-        private static async void TrainAndTestNN(FeatureRecognizer4_NeuralNet item, TextBlock status, FeatureRecognizer_Image[] images, int maxImagesPerCategory)
+        private static async void TrainAndTestNN(ConvChain_NeuralNet item, TextBlock status, FeatureRecognizer_Image[] images, int maxImagesPerCategory)
         {
             #region Group images by category
 
@@ -1953,7 +1954,7 @@ namespace Game.Newt.Testers.Encog
             item.Network = network.Network;
         }
 
-        private static ChainOutput[] GetChainConvolutions(FeatureRecognizer_Image[] images, bool useNonChain, FeatureRecognizer4_ConvChain[] chains, int finalSize, bool isPositiveOnly)
+        private static ChainOutput[] GetChainConvolutions(FeatureRecognizer_Image[] images, bool useNonChain, ConvChain_ConvChain[] chains, int finalSize, bool isPositiveOnly)
         {
             if (images == null || images.Length == 0)
             {
@@ -2002,11 +2003,11 @@ namespace Game.Newt.Testers.Encog
                 Select(o => new ImageConvsBySize(o.Image, o.BySize.Select(p => Tuple.Create(p.Size, p.Convolution)).ToArray())).
                 ToArray();
         }
-        private static ChainOutput[] GetFinalImageSizes(ImageConvsBySize[] imagesBySize, bool useNonChain, FeatureRecognizer4_ConvChain[] chains, int finalSize, bool isPositiveOnly, object chainDependencies = null)
+        private static ChainOutput[] GetFinalImageSizes(ImageConvsBySize[] imagesBySize, bool useNonChain, ConvChain_ConvChain[] chains, int finalSize, bool isPositiveOnly, object chainDependencies = null)
         {
             //TODO: Identify chains that are additions to prior ones and use their results as a starting point (use chainDependencies graph)
 
-            List<FeatureRecognizer4_ConvChain> actualChains = new List<FeatureRecognizer4_ConvChain>();
+            List<ConvChain_ConvChain> actualChains = new List<ConvChain_ConvChain>();
 
             if (useNonChain)
             {
@@ -2029,7 +2030,7 @@ namespace Game.Newt.Testers.Encog
                         // Kick off this chain
                         return new
                         {
-                            Chain = (FeatureRecognizer4_ConvChain)null,
+                            Chain = (ConvChain_ConvChain)null,
                             Image = o.Item2,
                             ConvResultTask = Task.Run(() => isPositiveOnly ? Convolutions.Abs(match.Item2) : match.Item2),
                         };
@@ -2057,11 +2058,11 @@ namespace Game.Newt.Testers.Encog
                     ImageConvsBySize image = result.First().Image;      // this is grouped by imageID, so all entries will be the same image
 
                     // Make sure the chain convolutions are in the same order that was passed in
-                    var orderedChains = new List<Tuple<FeatureRecognizer4_ConvChain, Convolution2D>>();
+                    var orderedChains = new List<Tuple<ConvChain_ConvChain, Convolution2D>>();
 
                     if (useNonChain)
                     {
-                        orderedChains.Add(Tuple.Create((FeatureRecognizer4_ConvChain)null, result.First(p => p.Chain == null).ConvResultTask.Result));
+                        orderedChains.Add(Tuple.Create((ConvChain_ConvChain)null, result.First(p => p.Chain == null).ConvResultTask.Result));
                     }
 
                     orderedChains.AddRange(chains.
@@ -2141,7 +2142,7 @@ namespace Game.Newt.Testers.Encog
 
             #endregion
         }
-        private static Tuple<int, Tuple<FeatureRecognizer_Image, Convolution2D>[]>[] BuildImageCache(FeatureRecognizer_Image[] images, IEnumerable<FeatureRecognizer4_ConvChain> chains)
+        private static Tuple<int, Tuple<FeatureRecognizer_Image, Convolution2D>[]>[] BuildImageCache(FeatureRecognizer_Image[] images, IEnumerable<ConvChain_ConvChain> chains)
         {
             return chains.
                 Select(o => o.ImageSize).
@@ -2164,7 +2165,7 @@ namespace Game.Newt.Testers.Encog
         /// Runs more examples through that net and comes up with a score
         /// Stores that score in the status textblock.
         /// </summary>
-        private static async void TrainAndTestNN2(FeatureRecognizer4_NeuralNet item, TextBlock status, FeatureRecognizer_Image[] images, int maxImagesPerCategory, Tuple<int, Tuple<FeatureRecognizer_Image, Convolution2D>[]>[] cachedImages)
+        private static async void TrainAndTestNN2(ConvChain_NeuralNet item, TextBlock status, FeatureRecognizer_Image[] images, int maxImagesPerCategory, Tuple<int, Tuple<FeatureRecognizer_Image, Convolution2D>[]>[] cachedImages)
         {
             #region Group images by category
 
@@ -2302,7 +2303,7 @@ namespace Game.Newt.Testers.Encog
             item.Network = network.Network;
         }
 
-        private static ChainOutput[] GetChainConvolutions2(FeatureRecognizer_Image[] images, bool useNonChain, FeatureRecognizer4_ConvChain[] chains, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
+        private static ChainOutput[] GetChainConvolutions2(FeatureRecognizer_Image[] images, bool useNonChain, ConvChain_ConvChain[] chains, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
             if (images == null || images.Length == 0)
             {
@@ -2328,11 +2329,11 @@ namespace Game.Newt.Testers.Encog
             // Apply convolution chains
             return GetFinalImageSizes2(images, useNonChain, chains, finalSize, isPositiveOnly, getImageConv);
         }
-        private static ChainOutput[] GetFinalImageSizes2(FeatureRecognizer_Image[] images, bool useNonChain, FeatureRecognizer4_ConvChain[] chains, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
+        private static ChainOutput[] GetFinalImageSizes2(FeatureRecognizer_Image[] images, bool useNonChain, ConvChain_ConvChain[] chains, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
             #region Get list of chains
 
-            List<FeatureRecognizer4_ConvChain> actualChains = new List<FeatureRecognizer4_ConvChain>();
+            List<ConvChain_ConvChain> actualChains = new List<ConvChain_ConvChain>();
 
             if (useNonChain)
             {
@@ -2358,7 +2359,7 @@ namespace Game.Newt.Testers.Encog
 
                         return new
                         {
-                            Chain = (FeatureRecognizer4_ConvChain)null,
+                            Chain = (ConvChain_ConvChain)null,
                             Image = o.Item2,
                             ConvResult = isPositiveOnly ? Convolutions.Abs(conv) : conv,
                         };
@@ -2386,11 +2387,11 @@ namespace Game.Newt.Testers.Encog
                 FeatureRecognizer_Image image = result.First().Image;      // this is grouped by imageID, so all entries will be the same image
 
                 // Make sure the chain convolutions are in the same order that was passed in
-                var orderedChains = new List<Tuple<FeatureRecognizer4_ConvChain, Convolution2D>>();
+                var orderedChains = new List<Tuple<ConvChain_ConvChain, Convolution2D>>();
 
                 if (useNonChain)
                 {
-                    orderedChains.Add(Tuple.Create((FeatureRecognizer4_ConvChain)null, result.First(p => p.Chain == null).ConvResult));
+                    orderedChains.Add(Tuple.Create((ConvChain_ConvChain)null, result.First(p => p.Chain == null).ConvResult));
                 }
 
                 orderedChains.AddRange(chains.
@@ -2403,7 +2404,7 @@ namespace Game.Newt.Testers.Encog
             #endregion
         }
 
-        private static Convolution2D ApplyConvolutionChain2(FeatureRecognizer_Image image, FeatureRecognizer4_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
+        private static Convolution2D ApplyConvolutionChain2(FeatureRecognizer_Image image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
             Convolution2D retVal = chain.ApplyChain(image, getImageConv);
 
@@ -2446,7 +2447,7 @@ namespace Game.Newt.Testers.Encog
 
                 // Score is the distance from ideal
                 //TODO: See if there is a more statistically sound way of calculating distance (least mean squares, or something?)
-                double distance = Math3D.GetDistance(output, idealOutputs[categoryIndex]);
+                double distance = MathND.GetDistance(output, idealOutputs[categoryIndex]);
 
                 sampleCounts_all[categoryIndex]++;
                 sumErrors_all[categoryIndex] += distance;
@@ -2553,7 +2554,7 @@ namespace Game.Newt.Testers.Encog
 
             _lastShown = LastShown.NN;
         }
-        private void ShowResult_NN(FeatureRecognizer_Image image, FeatureRecognizer4_NeuralNet nn)
+        private void ShowResult_NN(FeatureRecognizer_Image image, ConvChain_NeuralNet nn)
         {
             ConvolutionResultNegPosColoring edgeColor = (ConvolutionResultNegPosColoring)cboEdgeColors.SelectedValue;
 
@@ -2762,7 +2763,7 @@ namespace Game.Newt.Testers.Encog
 
             _lastShown = LastShown.Chain;
         }
-        private static Tuple<Grid, Convolution2D> ShowResult_Chain(FeatureRecognizer_Image image, FeatureRecognizer4_ConvChain chain, int finalSize, ConvolutionResultNegPosColoring edgeColor, bool invertPos, ContextMenu convContextMenu)
+        private static Tuple<Grid, Convolution2D> ShowResult_Chain(FeatureRecognizer_Image image, ConvChain_ConvChain chain, int finalSize, ConvolutionResultNegPosColoring edgeColor, bool invertPos, ContextMenu convContextMenu)
         {
             // Init grid
             Grid grid = new Grid();
@@ -2846,7 +2847,7 @@ namespace Game.Newt.Testers.Encog
             return retVal;
         }
 
-        private static Convolution2D ApplyConvolutionChain(Convolution2D image, FeatureRecognizer4_ConvChain chain, int finalSize, bool isPositiveOnly)
+        private static Convolution2D ApplyConvolutionChain(Convolution2D image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly)
         {
             Convolution2D retVal = image;
 
@@ -3021,7 +3022,7 @@ namespace Game.Newt.Testers.Encog
             grid.Children.Add(text);
         }
 
-        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Tasks(FeatureRecognizer_Image[] images, FeatureRecognizer4_ConvChain chain, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Tasks(FeatureRecognizer_Image[] images, ConvChain_ConvChain chain, int finalSize)
         {
             var initialConvs = GetImageConvolutions_TEST_Tasks(images, new[] { chain.ImageSize });
 
@@ -3062,7 +3063,7 @@ namespace Game.Newt.Testers.Encog
 
             return new ThreadIDLog<ImageConvsBySize[]>(array, threadIDs);
         }
-        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_Tasks(ImageConvsBySize[] imagesBySize, FeatureRecognizer4_ConvChain[] chains, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_Tasks(ImageConvsBySize[] imagesBySize, ConvChain_ConvChain[] chains, int finalSize)
         {
             //NOTE: I decided to use Task.Run instead of AsParallel to make sure each runs in its own task (applying the chain can be expensive)
             var chainResults = UtilityCore.Collate(chains, imagesBySize).
@@ -3157,7 +3158,7 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
-        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_AsParallel(FeatureRecognizer_Image[] images, FeatureRecognizer4_ConvChain chain, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_AsParallel(FeatureRecognizer_Image[] images, ConvChain_ConvChain chain, int finalSize)
         {
             var initialConvs = GetImageConvolutions_TEST_Tasks(images, new[] { chain.ImageSize });      // no need to change this method, it's already as parallel
 
@@ -3167,7 +3168,7 @@ namespace Game.Newt.Testers.Encog
 
             return new ThreadIDLog<ChainOutput[]>(finished.Item, threadIDs);
         }
-        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_AsParallel(ImageConvsBySize[] imagesBySize, FeatureRecognizer4_ConvChain[] chains, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_AsParallel(ImageConvsBySize[] imagesBySize, ConvChain_ConvChain[] chains, int finalSize)
         {
             var chainResults = UtilityCore.Collate(chains, imagesBySize).
                 AsParallel().
@@ -3233,7 +3234,7 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
-        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Cache(FeatureRecognizer_Image[] images, FeatureRecognizer4_ConvChain chain, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Cache(FeatureRecognizer_Image[] images, ConvChain_ConvChain chain, int finalSize)
         {
             //NOTE: When there's only one chain, there's no need to cache the image convolutions.  Final code will need to cache these as well
             Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv = new Func<FeatureRecognizer_Image, int, Convolution2D>((img, size) =>
@@ -3245,7 +3246,7 @@ namespace Game.Newt.Testers.Encog
 
             return new ThreadIDLog<ChainOutput[]>(finished.Item, finished.ThreadIDs);
         }
-        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_Cache(FeatureRecognizer_Image[] images, FeatureRecognizer4_ConvChain[] chains, int finalSize, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
+        private static ThreadIDLog<ChainOutput[]> GetFinalImageSizes_TEST_Cache(FeatureRecognizer_Image[] images, ConvChain_ConvChain[] chains, int finalSize, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
             var chainResults = UtilityCore.Collate(chains, images).
                 AsParallel().
@@ -3280,7 +3281,7 @@ namespace Game.Newt.Testers.Encog
             return new ThreadIDLog<ChainOutput[]>(resultPairs, chainResults.SelectMany(o => o).Select(o => o.ThreadID));
         }
 
-        private static Convolution2D ApplyConvolutionChain_Cache(FeatureRecognizer_Image image, FeatureRecognizer4_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
+        private static Convolution2D ApplyConvolutionChain_Cache(FeatureRecognizer_Image image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
             Convolution2D retVal = chain.ApplyChain(image, getImageConv);
 
@@ -3325,9 +3326,9 @@ namespace Game.Newt.Testers.Encog
             }
         }
 
-        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Cache2(FeatureRecognizer_Image[] images, FeatureRecognizer4_ConvChain chain, int finalSize)
+        private static ThreadIDLog<ChainOutput[]> GetChainConvolutions_TEST_Cache2(FeatureRecognizer_Image[] images, ConvChain_ConvChain chain, int finalSize)
         {
-            FeatureRecognizer4_ConvChain[] chains = new[] { chain };
+            ConvChain_ConvChain[] chains = new[] { chain };
 
             ThreadIDLog<ImageConvsBySize[]> imagesBySize = GetImageConvolutions_TEST_Tasks(images, chains.Select(o => o.ImageSize).Distinct().ToArray());
 
@@ -3345,10 +3346,10 @@ namespace Game.Newt.Testers.Encog
         #endregion
     }
 
-    #region Class: FeatureRecognizer4_ConvChain
+    #region Class: ConvChain_ConvChain
 
     //TODO: Make properties so that this is serializable
-    public class FeatureRecognizer4_ConvChain
+    public class ConvChain_ConvChain
     {
         #region Declaration Section
 
@@ -3448,19 +3449,19 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region Class: FeatureRecognizer4_NeuralNet
+    #region Class: ConvChain_NeuralNet
 
     //TODO: Make properties so that this is serializable
-    public class FeatureRecognizer4_NeuralNet
+    public class ConvChain_NeuralNet
     {
         public string UniqueID { get; set; }
 
         public bool UseNonChain { get; set; }
 
         public string[] ChainIDs { get; set; }
-        public FeatureRecognizer4_ConvChain[] Chains { get; set; }
+        public ConvChain_ConvChain[] Chains { get; set; }
 
-        public IEnumerable<FeatureRecognizer4_ConvChain> GetChains()
+        public IEnumerable<ConvChain_ConvChain> GetChains()
         {
             if (this.UseNonChain)
             {

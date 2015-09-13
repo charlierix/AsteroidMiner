@@ -698,7 +698,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             #region Polygons around neurons
 
             // Figure out which pixels each neuron intersects with
-            Voronoi2DResult[] voronoi = new Voronoi2DResult[3];
+            VoronoiResult2D[] voronoi = new VoronoiResult2D[3];
             voronoi[0] = Math2D.CapVoronoiCircle(Math2D.GetVoronoi(positions[0].Select(o => new Point(o.X, o.Y)).ToArray(), true));
             voronoi[1] = Math2D.CapVoronoiCircle(Math2D.GetVoronoi(positions[1].Select(o => new Point(o.X, o.Y)).ToArray(), true));
             voronoi[2] = Math2D.CapVoronoiCircle(Math2D.GetVoronoi(positions[2].Select(o => new Point(o.X, o.Y)).ToArray(), true));
@@ -979,15 +979,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        private static Point[][] GetPolygons(Voronoi2DResult voronoi, Vector offset)
+        private static Point[][] GetPolygons(VoronoiResult2D voronoi, Vector offset)
         {
             Point[][] retVal = new Point[voronoi.ControlPoints.Length][];
 
             for (int cntr = 0; cntr < voronoi.ControlPoints.Length; cntr++)
             {
-                Edge2D[] edges = voronoi.EdgesByControlPoint[cntr].Select(o => voronoi.Edges[o]).ToArray();
-
-                retVal[cntr] = Edge2D.GetPolygon(edges, 1d).Select(o => o + offset).ToArray();       // don't need to worry about ray length, they are all segments.  shifting the points by offset
+                retVal[cntr] = voronoi.GetPolygon(cntr, 1).     // don't need to worry about ray length, they are all segments
+                    Select(o => o + offset).        // shifting the points by offset
+                    ToArray();
             }
 
             return retVal;
@@ -1167,7 +1167,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double bDotDPerp = (b.X * d.Y) - (b.Y * d.X);
 
             // if b dot d == 0, it means the lines are parallel so have infinite intersection points
-            if (Math3D.IsNearZero(bDotDPerp))
+            if (Math1D.IsNearZero(bDotDPerp))
                 return null;
 
             Vector c = Vector.Subtract(b1, a1);

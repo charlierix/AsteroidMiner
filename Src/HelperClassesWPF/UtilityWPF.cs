@@ -2037,7 +2037,7 @@ namespace Game.HelperClassesWPF
         public static Color HSVtoRGB(byte a, double h, double s, double v)
         {
             // Scale the Saturation and Value components to be between 0 and 1
-            double hue = h;
+            double hue = GetHueCapped(h);
             double sat = s / 100d;
             double val = v / 100d;
 
@@ -2431,7 +2431,6 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
-
         /// <summary>
         /// If you use "new BitmapImage(new Uri(filename", it locks the file, even if you set the image to null.  So this method
         /// reads the file into bytes, and returns the bitmap a different way
@@ -2451,7 +2450,7 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
-        /// <param name="cacheColorsUpFront">
+        /// <param name="convertToColors">
         /// True:  The entire byte array will be converted into Color structs up front
         ///     Use this if you want color structs (expensive, but useful)
         ///     This takes an up front cache hit, but repeated requests for colors are cheap
@@ -2463,7 +2462,7 @@ namespace Game.HelperClassesWPF
         ///     Another use for this is if you want another thread to take the hit
         /// </param>
         /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
-        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool cacheColorsUpFront, Color outOfBoundsColor)
+        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool convertToColors, Color outOfBoundsColor)
         {
             if (bitmap.Format != PixelFormats.Pbgra32 && bitmap.Format != PixelFormats.Bgr32)
             {
@@ -2480,7 +2479,7 @@ namespace Game.HelperClassesWPF
             BitmapStreamInfo info = new BitmapStreamInfo(bytes, bitmap.PixelWidth, bitmap.PixelHeight, stride, bitmap.Format, outOfBoundsColor);
 
             // Exit Function
-            if (cacheColorsUpFront)
+            if (convertToColors)
             {
                 return new BitmapCustomCachedColors(info);
             }
@@ -4616,7 +4615,7 @@ namespace Game.HelperClassesWPF
 
             Vector3D offset = Math3D.GetCenter(vertices).ToVector();
 
-            if (!Math3D.IsNearZero(depth))      // only make an edge if there is depth
+            if (!Math1D.IsNearZero(depth))      // only make an edge if there is depth
             {
                 // Convert to triangles (centered at origin)
                 Point3D[] allPoints = vertices.Select(o => o - offset).ToArray();
@@ -4643,7 +4642,7 @@ namespace Game.HelperClassesWPF
             Material textMaterial = ConvertToTextMaterial(faceMaterial, textGeometry);
 
             double[] zs;
-            if (Math3D.IsNearZero(depth))
+            if (Math1D.IsNearZero(depth))
             {
                 zs = new double[] { 0 };        // no depth, so just create one
             }
@@ -6177,6 +6176,27 @@ namespace Game.HelperClassesWPF
             return Color.FromArgb(Convert.ToByte(a), Convert.ToByte(r), Convert.ToByte(g), Convert.ToByte(b));
         }
 
+        private static double GetHueCapped(double hue)
+        {
+            double retVal = hue;
+
+            while (true)
+            {
+                if (retVal < 0)
+                {
+                    retVal += 360;
+                }
+                else if (retVal >= 360)
+                {
+                    retVal -= 360;
+                }
+                else
+                {
+                    return retVal;
+                }
+            }
+        }
+
         private static byte GetByteCapped(double value)
         {
             if (value < 0)
@@ -6242,7 +6262,7 @@ namespace Game.HelperClassesWPF
                         allPoints);
 
                     double normalLength = triangle.NormalLength;
-                    if (!Math3D.IsNearZero(normalLength) && !Math3D.IsInvalid(normalLength))      // don't include bad triangles (the mesh seems to be ok with bad triangles, so just skip them)
+                    if (!Math1D.IsNearZero(normalLength) && !Math1D.IsInvalid(normalLength))      // don't include bad triangles (the mesh seems to be ok with bad triangles, so just skip them)
                     {
                         retVal.Add(triangle);
                     }
@@ -6326,7 +6346,7 @@ namespace Game.HelperClassesWPF
                         allPoints);
 
                     double normalLength = triangle.NormalLength;
-                    if (!Math3D.IsNearZero(normalLength) && !Math3D.IsInvalid(normalLength))      // don't include bad triangles (the mesh seems to be ok with bad triangles, so just skip them)
+                    if (!Math1D.IsNearZero(normalLength) && !Math1D.IsInvalid(normalLength))      // don't include bad triangles (the mesh seems to be ok with bad triangles, so just skip them)
                     {
                         retVal.Add(triangle);
                     }
@@ -6469,7 +6489,7 @@ namespace Game.HelperClassesWPF
             // Find the center point's distance from the origin
             double centerPointDist = centerPoint.ToVector().Length;
 
-            if (Math3D.IsNearValue(centerPointDist, radius))
+            if (Math1D.IsNearValue(centerPointDist, radius))
             {
                 // The center point is already at the desired radius.  Nothing left to do
                 return centerPoint;
@@ -8054,7 +8074,7 @@ namespace Game.HelperClassesWPF
             {
                 throw new ArgumentException("steps must be positive: " + steps.ToString());
             }
-            else if (Math3D.IsNearValue(start, stop))
+            else if (Math1D.IsNearValue(start, stop))
             {
                 throw new ArgumentException("start and stop can't be the same value: " + start.ToString());
             }
@@ -8113,7 +8133,7 @@ namespace Game.HelperClassesWPF
         {
             double retVal = this.Start;
 
-            while ((this.IsPos ? retVal < this.Stop : retVal > this.Stop) || Math3D.IsNearValue(retVal, this.Stop))
+            while ((this.IsPos ? retVal < this.Stop : retVal > this.Stop) || Math1D.IsNearValue(retVal, this.Stop))
             {
                 yield return retVal;
                 retVal += this.Increment;

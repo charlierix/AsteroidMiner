@@ -21,7 +21,7 @@ namespace Game.Newt.v2.GenePool.MapParts
         {
             // The radius should be 20% the size of the adult ship
             this.Radius = dna.PartsByLayer.SelectMany(o => o.Value).
-                Max(o => o.Position.ToVector().Length + Math3D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z))
+                Max(o => o.Position.ToVector().Length + Math1D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z))
                 * .2d;
 
             Vector3D scale = new Vector3D(.75d, .75d, 1d);

@@ -762,6 +762,31 @@ namespace Game.HelperClassesCore
             return retVal;
         }
 
+        /// <summary>
+        /// Returns true if both lists share the same item
+        /// </summary>
+        /// <remarks>
+        /// Example of True:
+        ///     { 1, 2, 3, 4 }
+        ///     { 5, 6, 7, 2 }
+        /// 
+        /// Example of False:
+        ///     { 1, 2, 3, 4 }
+        ///     { 5, 6, 7, 8 }
+        /// </remarks>
+        public static bool SharesItem<T>(IEnumerable<T> list1, IEnumerable<T> list2)
+        {
+            foreach(T item1 in list1)
+            {
+                if(list2.Any(item2 => item2.Equals(item1)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Serialization/Save

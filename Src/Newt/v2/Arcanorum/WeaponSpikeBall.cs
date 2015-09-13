@@ -162,18 +162,18 @@ namespace Game.Newt.v2.Arcanorum
                     break;
 
                 case 1:
-                    zs = new double[] { WeaponDNA.GetKeyValue("ringZ1", from, to, Math3D.GetNearZeroValue(ballRadius * .75)) };
+                    zs = new double[] { WeaponDNA.GetKeyValue("ringZ1", from, to, Math1D.GetNearZeroValue(ballRadius * .75)) };
                     break;
 
                 case 2:
-                    double z1 = WeaponDNA.GetKeyValue("ringZ1", from, to, Math3D.GetNearZeroValue(ballRadius * .75));
+                    double z1 = WeaponDNA.GetKeyValue("ringZ1", from, to, Math1D.GetNearZeroValue(ballRadius * .75));
                     double z2 = 0;
 
                     if (from == null || !from.TryGetValue("ringZ2", out z2))
                     {
                         do
                         {
-                            z2 = Math3D.GetNearZeroValue(ballRadius * .75);
+                            z2 = Math1D.GetNearZeroValue(ballRadius * .75);
                         } while (Math.Abs(z1 - z2) < ballRadius * .4);
 
                         to.Add("ringZ2", z2);
@@ -248,7 +248,7 @@ namespace Game.Newt.v2.Arcanorum
                 rings.Add(new TubeRingPoint(WeaponDNA.GetKeyValue("spikeLen" + cntr.ToString(), from, to, rand.NextDouble(spikeLength * .9, spikeLength * 1.1)), false));
 
                 int numSegments = Convert.ToInt32(WeaponDNA.GetKeyValue("spikeSegs" + cntr.ToString(), from, to, rand.Next(3, 6)));
-                bool isSoft = Math3D.IsNearZero(WeaponDNA.GetKeyValue("spikeSoft" + cntr.ToString(), from, to, rand.Next(2)));
+                bool isSoft = Math1D.IsNearZero(WeaponDNA.GetKeyValue("spikeSoft" + cntr.ToString(), from, to, rand.Next(2)));
                 geometry.Geometry = UtilityWPF.GetMultiRingedTube(numSegments, rings, isSoft, false, transform);
 
                 retVal.Children.Add(geometry);

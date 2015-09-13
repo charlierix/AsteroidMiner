@@ -152,10 +152,6 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Window_Closed(object sender, EventArgs e)
-        {
-
-        }
 
         private void CalcDist_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -300,12 +296,6 @@ namespace Game.Newt.Testers
                     #endregion
                 }
 
-                if (chkShowNearest.IsChecked.Value)
-                {
-                    #region Show nearest neighbors
-                    #endregion
-                }
-
                 UpdateReport();
             }
             catch (Exception ex)
@@ -402,7 +392,7 @@ namespace Game.Newt.Testers
                     double maxRadius = _dots.Where(o => !o.IsStatic).Max(o => o.Position.ToVector().Length);
                     Visual3D visual = null;
 
-                    if (Math3D.IsNearValue(radius, maxRadius))
+                    if (Math1D.IsNearValue(radius, maxRadius))
                     {
                         // Draw one green one
                         visual = GetSphereVisual(radius, UtilityWPF.ColorFromHex("1000FF00"));

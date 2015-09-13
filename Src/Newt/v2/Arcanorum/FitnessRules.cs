@@ -222,7 +222,7 @@ namespace Game.Newt.v2.Arcanorum
 
             double score;
 
-            if (Math3D.IsInvalid(dot))
+            if (Math1D.IsInvalid(dot))
             {
                 score = .5d;        // not sure what to do here
             }

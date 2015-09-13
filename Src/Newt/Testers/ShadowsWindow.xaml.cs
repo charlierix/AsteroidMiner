@@ -485,7 +485,7 @@ namespace Game.Newt.Testers
                     towardResult.Normalize();
 
                     // Make sure it's along the guide direction
-                    if (!Math3D.IsNearValue(Vector3D.DotProduct(towardResult, guideDirection), 1d))
+                    if (!Math1D.IsNearValue(Vector3D.DotProduct(towardResult, guideDirection), 1d))
                     {
                         continue;
                     }
@@ -5442,7 +5442,7 @@ namespace Game.Newt.Testers
                     {
                         double distance = (intermediate[0][outer] - intermediate[0][inner]).Length;
 
-                        distances.Add(Tuple.Create(outer, inner, distance, Math3D.IsNearZero(distance)));
+                        distances.Add(Tuple.Create(outer, inner, distance, Math1D.IsNearZero(distance)));
                     }
                 }
 

@@ -640,7 +640,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D currentVelocity = this.VelocityWorld;
 
-            if (!Math3D.IsNearZero(currentVelocity.LengthSquared))
+            if (!Math1D.IsNearZero(currentVelocity.LengthSquared))
             {
                 currentVelocity = _physicsBody.DirectionFromWorld(currentVelocity);
 
@@ -650,14 +650,14 @@ namespace Game.Newt.v1.AsteroidMiner1
                 // the angle will be zero, so negating won't make a difference)
                 radians *= -1;
 
-                if (Math3D.IsNearZero(radians) || Math3D.IsNearValue(radians, PI_DIV_TWO))
+                if (Math1D.IsNearZero(radians) || Math1D.IsNearValue(radians, PI_DIV_TWO))
                 {
                     // No modification needed
                 }
                 else if (Math.Abs(radians) < PI_DIV_TWO)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
                 else if (Math.Abs(radians) >= PI_DIV_TWO)
                 {
@@ -694,11 +694,11 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D currentVelocity = this.VelocityWorld;
 
-            if (Math3D.IsNearZero(currentVelocity.LengthSquared))
+            if (Math1D.IsNearZero(currentVelocity.LengthSquared))
             {
                 #region Currently Stopped
 
-                if (Math3D.IsNearZero(directionToGo.LengthSquared))
+                if (Math1D.IsNearZero(directionToGo.LengthSquared))
                 {
                     // Already sitting on the target.  STAY!!!
                     return new Vector3D(0, 0, 0);
@@ -784,7 +784,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 //    // No modification needed (I don't think this if statement is really needed)
                 //}
 
-                if (Math3D.IsNearValue(radians, Math.PI))
+                if (Math1D.IsNearValue(radians, Math.PI))
                 {
                     // Flying directly away from the target.  Turn around
                     directionToGo = currentVelocity * -1d;
@@ -792,7 +792,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)		// PI_DIV_TWO is waiting too long, PI_DIV_FOUR is capping off too early
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
                 //else if (Math.Abs(radians) >= PI_DIV_TWO)
                 //{
@@ -811,7 +811,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
                 // Don't jitter back and forth at full throttle when at the boundry
@@ -891,11 +891,11 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D currentVelocity = this.VelocityWorld;
 
-            if (Math3D.IsNearZero(currentVelocity.LengthSquared))
+            if (Math1D.IsNearZero(currentVelocity.LengthSquared))
             {
                 #region Currently Stopped
 
-                if (Math3D.IsNearZero(directionToGo.LengthSquared))
+                if (Math1D.IsNearZero(directionToGo.LengthSquared))
                 {
                     // Already sitting on the target.  STAY!!!
                     return new Vector3D(0, 0, 0);
@@ -1003,7 +1003,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 //    // No modification needed (I don't think this if statement is really needed)
                 //}
 
-                if (Math3D.IsNearValue(radians, Math.PI))
+                if (Math1D.IsNearValue(radians, Math.PI))
                 {
                     // Flying directly away from the target.  Turn around
                     directionToGo = currentVelocity * -1d;
@@ -1013,13 +1013,13 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
                 else
                 {
                     if (_shouldShowDebugVisuals)
                     {
-                        Vector3D vectTryTurn = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                        Vector3D vectTryTurn = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                         vectTryTurn.Normalize();
                         _pointVisualizer_VelAware2.Update(7, positionWorld, _physicsBody.DirectionToWorld(vectTryTurn));
                     }
@@ -1031,7 +1031,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
 
@@ -1239,7 +1239,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 //    // No modification needed (I don't think this if statement is really needed)
                 //}
 
-                if (Math3D.IsNearValue(radians, Math.PI))
+                if (Math1D.IsNearValue(radians, Math.PI))
                 {
                     // Flying directly away from the target.  Turn around
                     directionToGo = currentVelocity * -1d;
@@ -1247,7 +1247,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)		// PI_DIV_TWO is waiting too long, PI_DIV_FOUR is capping off too early
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
                 }
                 //else if (Math.Abs(radians) >= PI_DIV_TWO)
                 //{
@@ -1266,7 +1266,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math3D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
                 // Don't jitter back and forth at full throttle when at the boundry
@@ -1516,7 +1516,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 // Subtract the two radii (it's should be the distance between the bots, not their centers)
                 double distanceBetween = offsetLength - this.Radius - bot.Radius;
 
-                if (Math3D.IsNearZero(distanceBetween) || distanceBetween < 0)
+                if (Math1D.IsNearZero(distanceBetween) || distanceBetween < 0)
                 {
                     // Can't divide by zero.  For now, I'll just skip this bot
                     //TODO:  May want to create an arbitrary vector with a length of 10
@@ -1582,7 +1582,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 //TODO:  Figure out the radius of the other body (or rough radius based on a ray cast into it?
                 double distanceBetween = offsetLength - this.Radius;
 
-                if (Math3D.IsNearZero(distanceBetween) || distanceBetween < 0)
+                if (Math1D.IsNearZero(distanceBetween) || distanceBetween < 0)
                 {
                     // Can't divide by zero.  For now, I'll just skip this bot
                     //TODO:  May want to create an arbitrary vector with a length of 10

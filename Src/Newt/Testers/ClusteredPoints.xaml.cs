@@ -1298,7 +1298,7 @@ namespace Game.Newt.Testers
 
                     foreach (var triangle in triangles.Item2)
                     {
-                        double averageHeight = Math3D.Avg(triangles.Item1[triangle.Index0].Value, triangles.Item1[triangle.Index1].Value, triangles.Item1[triangle.Index2].Value);
+                        double averageHeight = Math1D.Avg(triangles.Item1[triangle.Index0].Value, triangles.Item1[triangle.Index1].Value, triangles.Item1[triangle.Index2].Value);
                         Color color = UtilityWPF.AlphaBlend(Colors.Black, Colors.White, averageHeight);
 
                         // Material
@@ -1445,7 +1445,7 @@ namespace Game.Newt.Testers
             if (distances.Count == 0)
             {
                 avgDist = points[0].Point.ToVector().Length;
-                if (Math3D.IsNearZero(avgDist))
+                if (Math1D.IsNearZero(avgDist))
                 {
                     avgDist = .1;
                 }

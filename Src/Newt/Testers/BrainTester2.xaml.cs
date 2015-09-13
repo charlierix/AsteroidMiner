@@ -127,7 +127,7 @@ namespace Game.Newt.Testers
                 }
                 else
                 {
-                    this.Center = Math3D.GetCenter(this.Positions);
+                    this.Center = Math2D.GetCenter(this.Positions);
                 }
             }
 
@@ -205,7 +205,7 @@ namespace Game.Newt.Testers
 
         private static class Worker2D_Simple
         {
-            public static Tuple<int, int>[] LinkBrainsToIO_Voronoi(Voronoi2DResult voronoi, Point[] brains, Point[] io)
+            public static Tuple<int, int>[] LinkBrainsToIO_Voronoi(VoronoiResult2D voronoi, Point[] brains, Point[] io)
             {
                 if (brains.Length == 0)
                 {
@@ -593,7 +593,7 @@ namespace Game.Newt.Testers
                 Set[] brainSets = IOLinks_PreMergeBrains(brains, allBrainLinks);
 
                 // Link IO to each brain set
-                Voronoi2DResult voronoi = Math2D.GetVoronoi(brainSets.Select(o => o.Center).ToArray(), true);
+                VoronoiResult2D voronoi = Math2D.GetVoronoi(brainSets.Select(o => o.Center).ToArray(), true);
                 Tuple<int, int>[] initial = IOLinks_Initial(brainSets, io, voronoi);
 
                 //TODO: If a brain set is saturated, and there is an under used brainset nearby, transfer some links
@@ -692,7 +692,7 @@ namespace Game.Newt.Testers
                 return retVal.ToArray();
             }
 
-            private static Tuple<int, int>[] IOLinks_Initial(Set[] brains, Item2D[] io, Voronoi2DResult voronoi)
+            private static Tuple<int, int>[] IOLinks_Initial(Set[] brains, Item2D[] io, VoronoiResult2D voronoi)
             {
                 List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
                 List<int> remainingIO = Enumerable.Range(0, io.Length).ToList();        // store the remaining so that they can be removed as found (avoid unnecessary IsInside checks)
@@ -1136,7 +1136,7 @@ namespace Game.Newt.Testers
         private List<Item2D> _outputs2D = new List<Item2D>();
         private List<Item2D> _brains2D = new List<Item2D>();
 
-        private Voronoi2DResult _voronoi2D = null;
+        private VoronoiResult2D _voronoi2D = null;
         private List<Item2D> _voronoiLines2D = new List<Item2D>();
 
         /// <summary>
@@ -1584,7 +1584,7 @@ namespace Game.Newt.Testers
 
                 Worker2D_Voronoi.GetLinks(out brainLinks, out ioLinks, _brains2D.ToArray(), io);
 
-                Point[] brainSetPoints = Math3D.GetUnique(ioLinks.Select(o => o.Brains.Center));
+                Point[] brainSetPoints = Math2D.GetUnique(ioLinks.Select(o => o.Brains.Center));
                 if (brainSetPoints.Length > 1)
                 {
                     _voronoi2D = Math2D.GetVoronoi(brainSetPoints, true);       // this is redundant, since the worker has to get this too, but it's just a tester, and I don't want to complicate the interface
@@ -1668,7 +1668,7 @@ namespace Game.Newt.Testers
 
                 Worker2D_Distance.GetLinks(out brainLinks, out ioLinks, _brains2D.ToArray(), io, GetIOLinkupPriority(cbo2DIOLinkupPriority), trk2DLinkResistMult.Value);
 
-                Point[] brainSetPoints = Math3D.GetUnique(ioLinks.Select(o => o.Brains.Center));
+                Point[] brainSetPoints = Math2D.GetUnique(ioLinks.Select(o => o.Brains.Center));
 
                 #region Draw
 
@@ -5002,7 +5002,7 @@ freedom to the galaxy….";
             _clickRays3D.Clear();
         }
 
-        private Item2D[] DrawVoronoi(Voronoi2DResult voronoi, Brush brush, double width = 2)
+        private Item2D[] DrawVoronoi(VoronoiResult2D voronoi, Brush brush, double width = 2)
         {
             List<Item2D> retVal = new List<Item2D>();
 

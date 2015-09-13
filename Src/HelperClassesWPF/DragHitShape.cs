@@ -1011,7 +1011,7 @@ namespace Game.HelperClassesWPF
                         throw new ApplicationException("Unexpected cntr: " + cntr.ToString());
                 }
 
-                if (Math3D.IsNearZero(Vector3D.DotProduct(testVectors.Standard, testVectors.Orth)))
+                if (Math1D.IsNearZero(Vector3D.DotProduct(testVectors.Standard, testVectors.Orth)))
                 {
                     break;
                 }

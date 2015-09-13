@@ -109,7 +109,7 @@ namespace Game.Newt.Testers.FluidFields
                     Vector3D axis;
                     double radians;
                     Math3D.GetRotation(out axis, out radians, new Vector3D(-1, 0, 0), _worldFlow);
-                    _worldFlowRotation = new RotateTransform3D(new AxisAngleRotation3D(axis, Math3D.RadiansToDegrees(radians)));
+                    _worldFlowRotation = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
                 }
             }
 
@@ -1019,7 +1019,7 @@ namespace Game.Newt.Testers.FluidFields
 
             ITriangleIndexed[] modelHull = UtilityWPF.GetTrianglesFromMesh(mesh);
 
-            double farthestPosition = mesh.Positions.AsEnumerable().Max(o => Math3D.Max(Math.Abs(o.X), Math.Abs(o.Y), Math.Abs(o.Z)));
+            double farthestPosition = mesh.Positions.AsEnumerable().Max(o => Math1D.Max(Math.Abs(o.X), Math.Abs(o.Y), Math.Abs(o.Z)));
 
             if (shouldChangeFieldSize)
             {
@@ -1324,7 +1324,7 @@ namespace Game.Newt.Testers.FluidFields
         {
             for (int cntr = 0; cntr < count; cntr++)
             {
-                double length = .5d + Math.Abs(Math3D.GetNearZeroValue(3d));
+                double length = .5d + Math.Abs(Math1D.GetNearZeroValue(3d));
                 Point3D modelFrom = new Point3D(-length, 0, 0);
                 Point3D modelTo = new Point3D(length, 0, 0);
 

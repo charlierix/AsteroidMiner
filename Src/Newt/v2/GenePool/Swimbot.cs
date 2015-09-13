@@ -121,7 +121,7 @@ namespace Game.Newt.v2.GenePool
                 this.ShouldRecalcMass_Large = true;
             }
 
-            if (Math3D.IsNearValue(vomit.Item1, mass))
+            if (Math1D.IsNearValue(vomit.Item1, mass))
             {
                 // There was enough in the cargo bay to balance out the poison
                 return;
@@ -174,7 +174,7 @@ namespace Game.Newt.v2.GenePool
             double unmet = container.RemoveQuantity(needed, false);
 
             // If unmet is zero, then there was enough in this container
-            if (Math3D.IsNearZero(unmet))
+            if (Math1D.IsNearZero(unmet))
             {
                 mass = 0d;
                 return true;

@@ -1886,7 +1886,7 @@ namespace Game.HelperClassesWPF
             {
                 #region Constructor
 
-                public RebuildVars(Voronoi2DResult voronoi, ControlPointStats[] unboundControlPoints, int[] outsideEdgePoints, Point[] circle, double circleRadius)
+                public RebuildVars(VoronoiResult2D voronoi, ControlPointStats[] unboundControlPoints, int[] outsideEdgePoints, Point[] circle, double circleRadius)
                 {
                     this.Voronoi = voronoi;
                     this.UnboundControlPoints = unboundControlPoints;
@@ -1899,7 +1899,7 @@ namespace Game.HelperClassesWPF
 
                 #region Public Properties
 
-                public readonly Voronoi2DResult Voronoi;
+                public readonly VoronoiResult2D Voronoi;
 
                 public readonly ControlPointStats[] UnboundControlPoints;
                 public readonly int[] OutsideEdgePoints;
@@ -2015,7 +2015,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            public static Voronoi2DResult GetVoronoi(Point[] points, bool returnEdgesByPoint)
+            public static VoronoiResult2D GetVoronoi(Point[] points, bool returnEdgesByPoint)
             {
                 //TODO: Dedupe the points that are handed to the worker (but leave the dupes in the final return, it won't hurt anything
 
@@ -2103,14 +2103,14 @@ namespace Game.HelperClassesWPF
                 }
 
                 //  Exit Function
-                return new Voronoi2DResult(points, edgePoints, edges, edgesByPoint);
+                return new VoronoiResult2D(points, edgePoints, edges, edgesByPoint);
             }
 
             /// <summary>
             /// This assumes that the points are spread around in a circular disc.  It calculates how big of a radius to cap the rays, and returns
             /// a result that has only line segments that don't go beyond that radius
             /// </summary>
-            public static Voronoi2DResult CapCircle(Voronoi2DResult voronoi)
+            public static VoronoiResult2D CapCircle(VoronoiResult2D voronoi)
             {
                 if (voronoi.EdgesByControlPoint == null)
                 {
@@ -2406,7 +2406,7 @@ namespace Game.HelperClassesWPF
             #endregion
             #region Private Methods - cap
 
-            private static Voronoi2DResult CapCircle_One(Voronoi2DResult voronoi)
+            private static VoronoiResult2D CapCircle_One(VoronoiResult2D voronoi)
             {
                 // Get the distance from the point to the origin
                 double radius;
@@ -2430,7 +2430,7 @@ namespace Game.HelperClassesWPF
                 // Exit Function
                 return BuildResult(vars, new NewCell[] { cell });
             }
-            private static Voronoi2DResult CapCircle_Two(Voronoi2DResult voronoi)
+            private static VoronoiResult2D CapCircle_Two(VoronoiResult2D voronoi)
             {
                 if (voronoi.Edges[0].EdgeType != EdgeType.Line)
                 {
@@ -2511,7 +2511,7 @@ namespace Game.HelperClassesWPF
             /// <summary>
             /// This returns control points that are surrounded by cells that have a ray or line in the edges
             /// </summary>
-            private static ControlPointStats[] GetUnboundControlPoints(Voronoi2DResult voronoi)
+            private static ControlPointStats[] GetUnboundControlPoints(VoronoiResult2D voronoi)
             {
                 // Figure out which edges are rays or lines
                 List<int> edgeIndices = new List<int>();
@@ -2538,7 +2538,7 @@ namespace Game.HelperClassesWPF
                 // Exit Function
                 return GetUnboundControlPointsSprtStats(voronoi, pointIndices.ToArray());
             }
-            private static ControlPointStats[] GetUnboundControlPointsSprtStats(Voronoi2DResult voronoi, int[] unboundPoints)
+            private static ControlPointStats[] GetUnboundControlPointsSprtStats(VoronoiResult2D voronoi, int[] unboundPoints)
             {
                 ControlPointStats[] retVal = new ControlPointStats[unboundPoints.Length];
 
@@ -2571,7 +2571,7 @@ namespace Game.HelperClassesWPF
             /// <summary>
             /// This returns the indices of edge points that sit outside or the radius passed in
             /// </summary>
-            private static int[] GetOutsideEdgePoints(Voronoi2DResult voronoi, double radius)
+            private static int[] GetOutsideEdgePoints(VoronoiResult2D voronoi, double radius)
             {
                 List<int> retVal = new List<int>();
 
@@ -2741,7 +2741,7 @@ namespace Game.HelperClassesWPF
                 return vars.AddEdge(pointIndex0.Value, pointIndex1.Value);
             }
 
-            private static Voronoi2DResult BuildResult(RebuildVars vars, NewCell[] newCells)
+            private static VoronoiResult2D BuildResult(RebuildVars vars, NewCell[] newCells)
             {
                 if (vars.Voronoi.ControlPoints.Length != newCells.Length)
                 {
@@ -2775,7 +2775,7 @@ namespace Game.HelperClassesWPF
                 }
 
                 // Exit Function
-                return new Voronoi2DResult(vars.Voronoi.ControlPoints.ToArray(), edgePoints, edges, edgesByControlPoint);
+                return new VoronoiResult2D(vars.Voronoi.ControlPoints.ToArray(), edgePoints, edges, edgesByControlPoint);
             }
 
             #endregion
@@ -2811,12 +2811,12 @@ namespace Game.HelperClassesWPF
                 }
 
                 Point[] points2D = null;
-                if (points.All(o => Math3D.IsNearValue(o.Z, points[0].Z)))
+                if (points.All(o => Math1D.IsNearValue(o.Z, points[0].Z)))
                 {
                     // They are already in the xy plane
                     points2D = points.Select(o => new Point(o.X, o.Y)).ToArray();
 
-                    if (!Math3D.IsNearZero(points[0].Z))        // if it's null, leave the transform null
+                    if (!Math1D.IsNearZero(points[0].Z))        // if it's null, leave the transform null
                     {
                         // There is no Z, so just directly convert the points (leave transform null)
                         transformTo2D = new TranslateTransform3D(0, 0, -points[0].Z);
@@ -4003,7 +4003,7 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
-        #region Misc
+        #region Simple
 
         public static bool IsNearZero(Vector testVect)
         {
@@ -4026,11 +4026,159 @@ namespace Game.HelperClassesWPF
 
         public static bool IsInvalid(Vector testVect)
         {
-            return Math3D.IsInvalid(testVect.X) || Math3D.IsInvalid(testVect.Y);
+            return Math1D.IsInvalid(testVect.X) || Math1D.IsInvalid(testVect.Y);
         }
         public static bool IsInvalid(Point testVect)
         {
-            return Math3D.IsInvalid(testVect.X) || Math3D.IsInvalid(testVect.Y);
+            return Math1D.IsInvalid(testVect.X) || Math1D.IsInvalid(testVect.Y);
+        }
+
+        #endregion
+
+        #region Misc
+
+        /// <summary>
+        /// This returns the center of position of the points
+        /// </summary>
+        public static Point GetCenter(IEnumerable<Point> points)
+        {
+            if (points == null)
+            {
+                return new Point(0, 0);
+            }
+
+            double x = 0d;
+            double y = 0d;
+
+            int length = 0;
+
+            foreach (Point point in points)
+            {
+                x += point.X;
+                y += point.Y;
+
+                length++;
+            }
+
+            if (length == 0)
+            {
+                return new Point(0, 0);
+            }
+
+            double oneOverLen = 1d / Convert.ToDouble(length);
+
+            return new Point(x * oneOverLen, y * oneOverLen);
+        }
+        /// <summary>
+        /// This returns the center of mass of the points
+        /// </summary>
+        public static Point GetCenter(Tuple<Point, double>[] pointsMasses)
+        {
+            if (pointsMasses == null || pointsMasses.Length == 0)
+            {
+                return new Point(0, 0);
+            }
+
+            double totalMass = pointsMasses.Sum(o => o.Item2);
+            if (Math1D.IsNearZero(totalMass))
+            {
+                return GetCenter(pointsMasses.Select(o => o.Item1).ToArray());
+            }
+
+            double x = 0d;
+            double y = 0d;
+
+            foreach (var pointMass in pointsMasses)
+            {
+                x += pointMass.Item1.X * pointMass.Item2;
+                y += pointMass.Item1.Y * pointMass.Item2;
+            }
+
+            double totalMassInverse = 1d / totalMass;
+
+            return new Point(x * totalMassInverse, y * totalMassInverse);
+        }
+
+        /// <summary>
+        /// This is identical to GetCenter.  (with points, that is thought of as the center.  With vectors, that's thought of as the
+        /// average - even though it's the same logic)
+        /// </summary>
+        public static Vector GetAverage(IEnumerable<Vector> vectors)
+        {
+            if (vectors == null)
+            {
+                return new Vector(0, 0);
+            }
+
+            double x = 0d;
+            double y = 0d;
+
+            int length = 0;
+
+            foreach (Vector vector in vectors)
+            {
+                x += vector.X;
+                y += vector.Y;
+
+                length++;
+            }
+
+            if (length == 0)
+            {
+                return new Vector(0, 0);
+            }
+
+            double oneOverLen = 1d / Convert.ToDouble(length);
+
+            return new Vector(x * oneOverLen, y * oneOverLen);
+        }
+
+        public static Vector GetSum(IEnumerable<Vector> vectors)
+        {
+            if (vectors == null)
+            {
+                return new Vector(0, 0);
+            }
+
+            double x = 0d;
+            double y = 0d;
+
+            foreach (Vector vector in vectors)
+            {
+                x += vector.X;
+                y += vector.Y;
+            }
+
+            return new Vector(x, y);
+        }
+
+        public static Point[] GetUnique(IEnumerable<Point> points)
+        {
+            List<Point> retVal = new List<Point>();
+
+            foreach (Point point in points)
+            {
+                if (!retVal.Any(o => Math2D.IsNearValue(o, point)))
+                {
+                    retVal.Add(point);
+                }
+            }
+
+            return retVal.ToArray();
+        }
+        public static Vector[] GetUnique(IEnumerable<Vector> vectors)
+        {
+            List<Vector> retVal = new List<Vector>();
+
+            foreach (Vector vector in vectors)
+            {
+                if (!retVal.Any(o => Math2D.IsNearValue(o, vector)))
+                {
+                    retVal.Add(vector);
+                }
+            }
+
+            return retVal.ToArray();
         }
 
         /// <summary>
@@ -4254,7 +4402,7 @@ namespace Game.HelperClassesWPF
             {
                 double distance = (Math2D.GetNearestPoint_Edge_Point(edge, testPoint) - testPoint).Length;
 
-                if (Math3D.IsNearZero(distance))
+                if (Math1D.IsNearZero(distance))
                 {
                     return true;
                 }
@@ -4436,6 +4584,109 @@ namespace Game.HelperClassesWPF
             // Exit Function
             return Tuple.Create(new Point(minX, minY), new Point(maxX, maxY));
         }
+        public static Tuple<Vector, Vector> GetAABB(IEnumerable<Vector> points)
+        {
+            //NOTE: Copied for speed
+
+            bool foundOne = false;
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+
+            foreach (Vector point in points)
+            {
+                foundOne = true;        // it's too expensive to look at points.Count()
+
+                if (point.X < minX)
+                {
+                    minX = point.X;
+                }
+
+                if (point.Y < minY)
+                {
+                    minY = point.Y;
+                }
+
+                if (point.X > maxX)
+                {
+                    maxX = point.X;
+                }
+
+                if (point.Y > maxY)
+                {
+                    maxY = point.Y;
+                }
+            }
+
+            if (!foundOne)
+            {
+                // There were no points passed in
+                //TODO: May want an exception
+                return Tuple.Create(new Vector(0, 0), new Vector(0, 0));
+            }
+
+            // Exit Function
+            return Tuple.Create(new Vector(minX, minY), new Vector(maxX, maxY));
+        }
+        public static Rect GetAABB(IEnumerable<Rect> rectangles)
+        {
+            //NOTE: Copied for speed
+
+            bool foundOne = false;
+            double minX = double.MaxValue;
+            double minY = double.MaxValue;
+            double maxX = double.MinValue;
+            double maxY = double.MinValue;
+
+            foreach (Rect rect in rectangles)
+            {
+                foundOne = true;        // it's too expensive to look at points.Count()
+
+                if (rect.X < minX)
+                {
+                    minX = rect.X;
+                }
+
+                if (rect.Y < minY)
+                {
+                    minY = rect.Y;
+                }
+
+                if (rect.Right > maxX)
+                {
+                    maxX = rect.Right;
+                }
+
+                if (rect.Bottom > maxY)
+                {
+                    maxY = rect.Bottom;
+                }
+            }
+
+            if (!foundOne)
+            {
+                // There were no rectangles passed in
+                //TODO: May want an exception
+                return new Rect(0, 0, 0, 0);
+            }
+
+            // Exit Function
+            return new Rect(minX, minY, maxX - minX, maxY - minY);
+        }
+
+        public static Point LERP(Point a, Point b, double percent)
+        {
+            return new Point(
+                a.X + (b.X - a.X) * percent,
+                a.Y + (b.Y - a.Y) * percent);
+        }
+        public static Vector LERP(Vector a, Vector b, double percent)
+        {
+            return new Vector(
+                a.X + (b.X - a.X) * percent,
+                a.Y + (b.Y - a.Y) * percent);
+        }
 
         /// <summary>
         /// This is the same as calling the other overload, and not ensuring coplanar.  Just removing the hassle of ignoring
@@ -4574,7 +4825,7 @@ namespace Game.HelperClassesWPF
 
                 if (retVal == null)
                 {
-                    if (!Math3D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
+                    if (!Math1D.IsNearValue(Math.Abs(Vector3D.DotProduct(line1Unit.Value, line.ToUnit())), 1d))
                     {
                         // These two lines aren't colinear.  Found the second line
                         retVal = new Triangle(points[0], points[0] + line1.Value, points[cntr]);
@@ -4583,7 +4834,7 @@ namespace Game.HelperClassesWPF
                     continue;
                 }
 
-                if (!Math3D.IsNearZero(Vector3D.DotProduct(retVal.Normal, line)))
+                if (!Math1D.IsNearZero(Vector3D.DotProduct(retVal.Normal, line)))
                 {
                     // This point isn't coplanar with the triangle
                     return null;
@@ -4594,6 +4845,35 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        public static Tuple<int, int, double>[] GetDistancesBetween(Point[] positions)
+        {
+            List<Tuple<int, int, double>> retVal = new List<Tuple<int, int, double>>();
+
+            for (int outer = 0; outer < positions.Length - 1; outer++)
+            {
+                for (int inner = outer + 1; inner < positions.Length; inner++)
+                {
+                    double distance = (positions[outer] - positions[inner]).Length;
+                    retVal.Add(Tuple.Create(outer, inner, distance));
+                }
+            }
+
+            return retVal.ToArray();
+        }
+
+        public static Point[] ApplyBallOfSprings(Point[] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
+        {
+            double[][] pos = positions.
+                Select(o => new[] { o.X, o.Y }).
+                ToArray();
+
+            double[][] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
+
+            return retVal.
+                Select(o => new Point(o[0], o[1])).
+                ToArray();
+        }
+
         #endregion
 
         #region Hulls/Graphs/Triangulation
@@ -4602,11 +4882,11 @@ namespace Game.HelperClassesWPF
         /// Voronoi algorithm takes a bunch of points, and returns polygons where all points inside of a polygon are closer to the contained
         /// point (that was passed in) than any others
         /// </summary>
-        public static Voronoi2DResult GetVoronoi(Point[] points, bool returnEdgesByPoint)
+        public static VoronoiResult2D GetVoronoi(Point[] points, bool returnEdgesByPoint)
         {
             return VoronoiUtil.GetVoronoi(points, returnEdgesByPoint);
         }
-        public static Voronoi2DResult CapVoronoiCircle(Voronoi2DResult voronoi)
+        public static VoronoiResult2D CapVoronoiCircle(VoronoiResult2D voronoi)
         {
             return VoronoiUtil.CapCircle(voronoi);
         }
@@ -4767,7 +5047,7 @@ namespace Game.HelperClassesWPF
             double dotPerp = (direction1.X * direction2.Y) - (direction1.Y * direction2.X);
 
             // If it's 0, it means the lines are parallel so have infinite intersection points
-            if (Math3D.IsNearZero(dotPerp))
+            if (Math1D.IsNearZero(dotPerp))
             {
                 return null;
             }
@@ -4802,7 +5082,7 @@ namespace Game.HelperClassesWPF
             double dotPerp = (direction1.X * direction2.Y) - (direction1.Y * direction2.X);
 
             // If it's 0, it means the lines are parallel so have infinite intersection points
-            if (Math3D.IsNearZero(dotPerp))
+            if (Math1D.IsNearZero(dotPerp))
             {
                 return null;
             }
@@ -5005,7 +5285,7 @@ namespace Game.HelperClassesWPF
         public static Point GetNearestPoint_LineSegment_Point(Point start, Point stop, Point test)
         {
             double segmentLenSqr = (stop - start).LengthSquared;
-            if (Math3D.IsNearZero(segmentLenSqr))
+            if (Math1D.IsNearZero(segmentLenSqr))
             {
                 return start;       //  line segment is just a point, so return that point
             }
@@ -5033,7 +5313,7 @@ namespace Game.HelperClassesWPF
 
         public static Point GetNearestPoint_Ray_Point(Point start, Vector direction, Point test)
         {
-            if (Math3D.IsNearZero(direction.LengthSquared))
+            if (Math1D.IsNearZero(direction.LengthSquared))
             {
                 return start;       //  the dirction is zero, so just return the start of the ray
             }
@@ -5057,7 +5337,7 @@ namespace Game.HelperClassesWPF
 
         public static Point GetNearestPoint_Line_Point(Point pointOnLine, Vector direction, Point test)
         {
-            if (Math3D.IsNearZero(direction.LengthSquared))
+            if (Math1D.IsNearZero(direction.LengthSquared))
             {
                 return pointOnLine;       //  the dirction is zero, so just return the point (this isn't tecnically correct, but the user should never pass in a zero length direction)
             }
@@ -5327,7 +5607,7 @@ namespace Game.HelperClassesWPF
             }
 
             // Only return a value if it's now in the z plane, which will only work if the point passed in is in the same plane as this.Points
-            if (Math3D.IsNearZero(transformed.Z))
+            if (Math1D.IsNearZero(transformed.Z))
             {
                 return new Point(transformed.X, transformed.Y);
             }
@@ -5349,13 +5629,13 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: Voronoi2DResult
+    #region Class: VoronoiResult2D
 
-    public class Voronoi2DResult
+    public class VoronoiResult2D
     {
         #region Constructor
 
-        public Voronoi2DResult(Point[] controlPoints, Point[] edgePoints, Edge2D[] edges, int[][] edgesByControlPoint)
+        public VoronoiResult2D(Point[] controlPoints, Point[] edgePoints, Edge2D[] edges, int[][] edgesByControlPoint)
         {
             this.ControlPoints = controlPoints;
             this.EdgePoints = edgePoints;
@@ -5386,6 +5666,76 @@ namespace Game.HelperClassesWPF
         /// EdgesByControlPoint[control points index][i]
         /// </remarks>
         public readonly int[][] EdgesByControlPoint;
+
+        /// <summary>
+        /// Tells whether the cell is a closed polygon, or contains rays
+        /// </summary>
+        public bool IsClosed(int controlPointIndex)
+        {
+            return this.EdgesByControlPoint[controlPointIndex].
+                All(o => this.Edges[o].EdgeType == EdgeType.Segment);
+        }
+
+        public Point[] GetPolygon(int controlPointIndex, double rayLength)
+        {
+            Edge2D[] edges = this.EdgesByControlPoint[controlPointIndex].
+                Select(o => this.Edges[o]).
+                ToArray();
+
+            return Edge2D.GetPolygon(edges, rayLength);
+        }
+
+        /// <summary>
+        /// This returns which control points are neighbors for each control point
+        /// </summary>
+        /// <remarks>
+        /// return[control point index][neighbor control point indices]
+        /// </remarks>
+        public int[][] GetNeighbors()
+        {
+            // Not all nodes may share an edge. ex: 8.  But edge points will get shared
+            int[][] edgePointsByControlPoint = this.EdgesByControlPoint.
+                Select(o =>
+                    o.SelectMany(p => UtilityCore.Iterate<int>(this.Edges[p].Index0, this.Edges[p].Index1)).
+                    Distinct().
+                    ToArray()).
+                ToArray();
+
+            int[][] retVal = new int[this.ControlPoints.Length][];
+
+            for (int outer = 0; outer < this.ControlPoints.Length; outer++)
+            {
+                List<int> neighbors = new List<int>();
+
+                for (int inner = 0; inner < this.ControlPoints.Length; inner++)
+                {
+                    if (inner == outer)
+                    {
+                        continue;
+                    }
+
+                    if (UtilityCore.SharesItem(edgePointsByControlPoint[outer], edgePointsByControlPoint[inner]))
+                    {
+                        neighbors.Add(inner);
+                    }
+                }
+
+                retVal[outer] = neighbors.ToArray();
+            }
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// This returns the neighbor information as a list of pairs
+        /// </summary>
+        public Tuple<int, int>[] GetNeighborLinks()
+        {
+            return this.GetNeighbors().
+                SelectMany((o, i) => o.Select(p => Tuple.Create(Math.Min(i, p), Math.Max(i, p)))).
+                Distinct().
+                ToArray();
+        }
     }
 
     #endregion
