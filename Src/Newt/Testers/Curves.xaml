@@ -49,9 +49,11 @@
                                 <Slider Name="trkSingleLine2Segments2DPercent" Minimum="0" Maximum="1" Value=".25" ValueChanged="trkSingleLine2Segments2DPercent_ValueChanged"/>
 
                                 <Button Name="btnSingleLineMultiSegments3D" Content="Multi segments 3D" Margin="0,12,0,0" Click="btnSingleLineMultiSegments3D_Click"/>
+                                <Button Name="btnPolygon3D" Content="Polygon 3D" Click="btnPolygon3D_Click"/>
                                 <Slider Name="trkSingleLineMultiSegments3DPercent" Minimum="0" Maximum=".5" Value=".25" ValueChanged="trkSingleLineMultiSegments3DPercent_ValueChanged"/>
+                                <CheckBox Name="chkIsClosed3D" Content="Closed" Checked="chkIsClosed3D_Checked" Unchecked="chkIsClosed3D_Checked"/>
 
-                                <CheckBox IsChecked="True" Name="chkShowDots" Content="Show Dots" Foreground="White" Margin="0,20,0,0"/>
+                                <CheckBox IsChecked="True" Name="chkShowDots" Content="Show Dots" Margin="0,20,0,0" Checked="chkShowDots_Checked" Unchecked="chkShowDots_Checked"/>
                             </StackPanel>
                         </Border>
                     </Expander>

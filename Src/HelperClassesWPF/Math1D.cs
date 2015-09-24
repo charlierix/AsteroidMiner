@@ -118,6 +118,25 @@ namespace Game.HelperClassesWPF
             return radians * _180_over_PI_FLOAT;
         }
 
+        /// <remarks>
+        /// http://www.mathsisfun.com/data/standard-deviation.html
+        /// </remarks>
+        private static double GetStandardDeviation(IEnumerable<double> values)
+        {
+            double mean = values.Average();
+
+            // Variance is the average of the of the distance squared from the mean
+            double variance = values.
+                Select(o =>
+                {
+                    double diff = o - mean;
+                    return diff * diff;     // squaring makes sure it's positive
+                }).
+                    Average();
+
+            return Math.Sqrt(variance);
+        }
+
         /// <summary>
         /// This returns the minimum and maximum value (throws exception if empty list)
         /// </summary>
@@ -279,5 +298,141 @@ namespace Game.HelperClassesWPF
         {
             return (v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 8d;
         }
+
+        /// <summary>
+        /// This will try various inputs and come up with an input that produces the desired output
+        /// NOTE: This method will only try positive inputs
+        /// NOTE: This method assumes an increase in input causes the output to increase
+        /// </summary>
+        /// <remarks>
+        /// NOTE: This first attempt doesn't try to guess the power of the equation (linear, square, sqrt, etc).
+        /// It starts at 1, then either keeps multiplying or dividing by 10 until a high and low are found
+        /// Then it does a binary search between high and low
+        /// 
+        /// TODO: Take a parameter: Approximate function
+        ///     this is the definition of a function that could be run in reverse to approximate a good starting point, and help with coming up with
+        ///     decent input attempts.  This should be refined within this method and returned by this method.  Use Math.NET's Fit.Polynomial?
+        /// http://stackoverflow.com/questions/20786756/use-math-nets-fit-polynomial-method-on-functions-of-multiple-parameters
+        /// http://www.mathdotnet.com/
+        ///     
+        /// TODO: Think about how to make this method more robust.  It could be a helper for a controller (thrust controller)
+        /// </remarks>
+        public static double GetInputForDesiredOutput_PosInput_PosCorrelation(double desiredOutput, double allowableError, Func<double, double> getOutput, int? maxIterations = 5000)
+        {
+            if (allowableError <= 0)
+            {
+                throw new ArgumentException("allowableError must be positive: " + allowableError.ToString());
+            }
+
+            // Start with an input of 1
+            Tuple<double, double> current = Tuple.Create(1d, getOutput(1d));
+
+            if (IsInRange(current.Item2, desiredOutput, allowableError))
+            {
+                return current.Item1;       // lucky guess
+            }
+
+            // See if it's above or below the desired output
+            Tuple<double, double> low = null;
+            Tuple<double, double> high = null;
+            if (current.Item2 < desiredOutput)
+            {
+                low = current;
+            }
+            else
+            {
+                high = current;
+            }
+
+            int count = 0;
+
+            while (maxIterations == null || count < maxIterations.Value)
+            {
+                double nextInput;
+
+                if (low == null)
+                {
+                    #region too high
+
+                    // Floor hasn't been found.  Try something smaller
+
+                    nextInput = high.Item1 / 10d;
+
+                    current = Tuple.Create(nextInput, getOutput(nextInput));
+
+                    if (current.Item2 < desiredOutput)
+                    {
+                        low = current;      // floor and ceiling are now known
+                    }
+                    else if (current.Item2 < high.Item2)
+                    {
+                        high = current;     // floor still isn't known, but this is closer than the previous ceiling
+                    }
+
+                    #endregion
+                }
+                else if (high == null)
+                {
+                    #region too low
+
+                    // Ceiling hasn't been found.  Try something larger
+
+                    nextInput = low.Item1 * 10d;
+
+                    current = Tuple.Create(nextInput, getOutput(nextInput));
+
+                    if (current.Item2 > desiredOutput)
+                    {
+                        high = current;     // floor and ceiling are now known
+                    }
+                    else if (current.Item2 > low.Item2)
+                    {
+                        low = current;      // ceiling still isn't known, but this is closer than the previous floor
+                    }
+
+                    #endregion
+                }
+                else
+                {
+                    #region straddle
+
+                    // Floor and ceiling are known.  Try an input that is between them
+
+                    nextInput = Math1D.Avg(low.Item1, high.Item1);
+
+                    current = Tuple.Create(nextInput, getOutput(nextInput));
+
+                    if (current.Item2 < desiredOutput && current.Item2 > low.Item2)
+                    {
+                        low = current;      // increase the floor
+                    }
+                    else if (current.Item2 > desiredOutput && current.Item2 < high.Item2)
+                    {
+                        high = current;     // decrease the ceiling
+                    }
+
+                    #endregion
+                }
+
+                if (IsInRange(current.Item2, desiredOutput, allowableError))
+                {
+                    return current.Item1;
+                }
+
+                count++;
+            }
+
+            //TODO: Take in a param whether to throw an exception or return the best guess
+            throw new ApplicationException("Couldn't find a solution");
+        }
+
+        #region Private Methods
+
+        private static bool IsInRange(double testValue, double compareTo, double allowableError)
+        {
+            return testValue >= compareTo - allowableError && testValue <= compareTo + allowableError;
+        }
+
+        #endregion
     }
 }

@@ -4064,9 +4064,9 @@ namespace Game.HelperClassesWPF
 
             Random rand = StaticRandom.GetRandomForThread();
 
-            retVal.X = boundryLower.X + (rand.NextDouble() * (boundryUpper.X - boundryLower.X));
-            retVal.Y = boundryLower.Y + (rand.NextDouble() * (boundryUpper.Y - boundryLower.Y));
-            retVal.Z = boundryLower.Z + (rand.NextDouble() * (boundryUpper.Z - boundryLower.Z));
+            retVal.X = rand.NextDouble(boundryLower.X, boundryUpper.X);
+            retVal.Y = rand.NextDouble(boundryLower.Y, boundryUpper.Y);
+            retVal.Z = rand.NextDouble(boundryLower.Z, boundryUpper.Z);
 
             return retVal;
         }
@@ -4843,51 +4843,6 @@ namespace Game.HelperClassesWPF
             double oneOverLen = 1d / Convert.ToDouble(length);
 
             return new Point3D(x * oneOverLen, y * oneOverLen, z * oneOverLen);
-        }
-        /// <summary>
-        /// This returns the center of position of the points
-        /// </summary>
-        public static double[] GetCenter(IEnumerable<double[]> points)
-        {
-            if (points == null)
-            {
-                throw new ArgumentException("Unknown number of dimensions");
-            }
-
-            double[] retVal = null;
-
-            int length = 0;
-
-            foreach (double[] point in points)
-            {
-                if (retVal == null)
-                {
-                    retVal = new double[point.Length];      // waiting until the first vector is seen to initialize the return array (I don't want to ask how many dimensions there are when it's defined by the points)
-                }
-
-                // Add this point to the total
-                for (int cntr = 0; cntr < retVal.Length; cntr++)
-                {
-                    retVal[cntr] += point[cntr];
-                }
-
-                length++;
-            }
-
-            if (length == 0)
-            {
-                throw new ArgumentException("Unknown number of dimensions");
-            }
-
-            double oneOverLen = 1d / Convert.ToDouble(length);
-
-            // Divide by count
-            for (int cntr = 0; cntr < retVal.Length; cntr++)
-            {
-                retVal[cntr] *= oneOverLen;
-            }
-
-            return retVal;
         }
         /// <summary>
         /// This returns the center of mass of the points

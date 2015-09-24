@@ -2279,7 +2279,7 @@ namespace Game.HelperClassesWPF
         /// <param name="orthIndex">The row being copied to</param>
         private static void OverlayBlurredPixels(double[] values, int width, int orthHeight, int orthIndex, int orthInc, int edgeMidStart, int edgeMidStop, AxisFor orth, AxisFor edge, Convolution2D gauss, /*int opacityDistance,*/ Random rand)
         {
-            if (orthHeight < 2)
+            if (orthHeight < 2 || edgeMidStop < edgeMidStart)
             {
                 // There's not enough to do a full 3x3 blur.  A smaller sized blur could be done, but that's a lot of extra logic, and not really worth the trouble
                 return;

@@ -3667,11 +3667,29 @@ namespace Game.Newt.Testers
                     Select(o => Math3D.GetRandomVector(halfSize).ToPoint()).
                     ToArray();
 
-                if (_savedEnds.Length > 2 && StaticRandom.NextBool())
-                {
-                    // Make this a closed path
-                    _savedEnds = UtilityCore.ArrayAdd(_savedEnds, _savedEnds[0]);
-                }
+                TestMultiSegment3D(_savedEnds);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnPolygon3D_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Use a random voronoi to build random convex polygon
+                Point[] points = Enumerable.Range(0, StaticRandom.Next(6, 13)).
+                    Select(o => Math3D.GetRandomVector_Circular(4).ToPoint2D()).
+                    ToArray();
+
+                VoronoiResult2D voronoi = Math2D.CapVoronoiCircle(Math2D.GetVoronoi(points, true));
+
+                points = voronoi.GetPolygon(StaticRandom.Next(voronoi.ControlPoints.Length), 1);
+
+                _savedEnds = points.
+                    Select(o => o.ToPoint3D()).
+                    ToArray();
 
                 TestMultiSegment3D(_savedEnds);
             }
@@ -3690,6 +3708,48 @@ namespace Game.Newt.Testers
                 }
 
                 TestMultiSegment3D(_savedEnds);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void chkIsClosed3D_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_savedEnds == null || _savedEnds.Length < 2)
+                {
+                    return;
+                }
+
+                TestMultiSegment3D(_savedEnds);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void chkShowDots_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_savedEnds == null || _savedEnds.Length < 2)
+                {
+                    return;
+                }
+
+                bool is3D = _viewport.Visibility == Visibility.Visible;
+
+                if (!is3D && _savedEnds.Length == 3)
+                {
+                    Test2Segments2D(_savedEnds[0].ToPoint2D(), _savedEnds[1].ToPoint2D(), _savedEnds[2].ToPoint2D());
+                }
+                else
+                {
+                    TestMultiSegment3D(_savedEnds);
+                }
             }
             catch (Exception ex)
             {
@@ -4115,7 +4175,7 @@ namespace Game.Newt.Testers
         }
         private void TestMultiSegment3D(Point3D[] ends)
         {
-            BezierSegmentDef[] segments = BezierSegmentDef.GetBezierSegments(ends, trkSingleLineMultiSegments3DPercent.Value);
+            BezierSegmentDef[] segments = BezierSegmentDef.GetBezierSegments(ends, trkSingleLineMultiSegments3DPercent.Value, chkIsClosed3D.IsChecked.Value ? true : (bool?)null);
 
             Point3D[] bezierPoints = Math3D.GetBezierPath(200, segments);
 
@@ -4125,6 +4185,11 @@ namespace Game.Newt.Testers
             for (int cntr = 0; cntr < bezierPoints.Length - 1; cntr++)
             {
                 AddLine(bezierPoints[cntr], bezierPoints[cntr + 1], _mainLineC, 2);
+            }
+
+            if (chkIsClosed3D.IsChecked.Value)
+            {
+                AddLine(bezierPoints[bezierPoints.Length - 1], bezierPoints[0], _mainLineC, 2);
             }
 
             if (chkShowDots.IsChecked.Value)
@@ -4154,7 +4219,6 @@ namespace Game.Newt.Testers
                     }
                 }
             }
-
         }
 
         private void TestAxeSimple1(AxeSimple1 arg)
@@ -4451,7 +4515,7 @@ namespace Game.Newt.Testers
                     {
                         endCapTriangles = endCapTriangles.Select(o => new TriangleIndexed(o.Index0, o.Index2, o.Index1, o.AllPoints)).ToArray();        // need to do this so the normals point in the proper direction
                     }
-                   
+
                     DrawPolyPlate(endCapTriangles, middleColor, false);
 
                     //AddLines(endCapTriangles.Select(o => Tuple.Create(o.GetCenterPoint(), o.GetCenterPoint() + o.Normal)), _controlLineC, 2);

@@ -60,7 +60,7 @@ namespace Game.HelperClassesWPF
                     ToArray();
 
                 // Give them a very slight pull toward the origin so that the cloud doesn't drift away
-                double[] center = Math3D.GetCenter(positions);
+                double[] center = MathND.GetCenter(positions);
                 double centerMult = mult * -5;
 
                 double[] centerPullForce = MathND.Multiply(center, centerMult);
@@ -227,6 +227,9 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        /// <summary>
+        /// This scales the values so that the length of the vector is one
+        /// </summary>
         public static double[] ToUnit(double[] vector, bool useNaNIfInvalid = true)
         {
             double length = GetLength(vector);
@@ -254,6 +257,23 @@ namespace Game.HelperClassesWPF
             }
 
             return Divide(vector, length);
+        }
+
+        /// <summary>
+        /// This scales the values between -1 and 1
+        /// NOTE: This is different than ToUnit
+        /// </summary>
+        public static double[] Normalize(double[] vector)
+        {
+            double min = vector.Min();
+            double max = vector.Max();
+
+            double minReturn = min <= 0 ? -1 : 0;
+            double maxReturn = max <= 0 ? 0 : 1;
+
+            return vector.
+                Select(o => UtilityCore.GetScaledValue(minReturn, maxReturn, min, max, o)).
+                ToArray();
         }
 
         public static double[] Add(double[] vector1, double[] vector2)
@@ -319,6 +339,23 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        /// <summary>
+        /// Get a random vector between boundry lower and boundry upper
+        /// </summary>
+        public static double[] GetRandomVector(double[] boundryLower, double[] boundryUpper)
+        {
+            double[] retVal = new double[boundryLower.Length];
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            for (int cntr = 0; cntr < retVal.Length; cntr++)
+            {
+                retVal[cntr] = rand.NextDouble(boundryLower[cntr], boundryUpper[cntr]);
+            }
+
+            return retVal;
+        }
+
         #endregion
 
         #region Misc
@@ -358,6 +395,88 @@ namespace Game.HelperClassesWPF
             return Tuple.Create(min, max);
         }
 
+        /// <summary>
+        /// This changes the size of aabb by percent
+        /// </summary>
+        /// <param name="percent">If less than 1, this will reduce the size.  If greater than 1, this will increase the size</param>   
+        public static Tuple<double[], double[]> ResizeAABB(Tuple<double[], double[]> aabb, double percent)
+        {
+            double[] center = GetCenter(new[] { aabb.Item1, aabb.Item2 });
+
+            double[] dirMin = Subtract(aabb.Item1, center);
+            dirMin = Multiply(dirMin, percent);
+
+            double[] dirMax = Subtract(aabb.Item2, center);
+            dirMax = Multiply(dirMax, percent);
+
+            return Tuple.Create(Add(center, dirMin), Add(center, dirMax));
+        }
+
+        /// <summary>
+        /// This returns the center of position of the points
+        /// </summary>
+        public static double[] GetCenter(IEnumerable<double[]> points)
+        {
+            if (points == null)
+            {
+                throw new ArgumentException("Unknown number of dimensions");
+            }
+
+            double[] retVal = null;
+
+            int length = 0;
+
+            foreach (double[] point in points)
+            {
+                if (retVal == null)
+                {
+                    retVal = new double[point.Length];      // waiting until the first vector is seen to initialize the return array (I don't want to ask how many dimensions there are when it's defined by the points)
+                }
+
+                // Add this point to the total
+                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                {
+                    retVal[cntr] += point[cntr];
+                }
+
+                length++;
+            }
+
+            if (length == 0)
+            {
+                throw new ArgumentException("Unknown number of dimensions");
+            }
+
+            double oneOverLen = 1d / Convert.ToDouble(length);
+
+            // Divide by count
+            for (int cntr = 0; cntr < retVal.Length; cntr++)
+            {
+                retVal[cntr] *= oneOverLen;
+            }
+
+            return retVal;
+        }
+
+        /// <remarks>
+        /// http://www.mathsisfun.com/data/standard-deviation.html
+        /// </remarks>
+        public static double GetStandardDeviation(IEnumerable<double[]> values)
+        {
+            double[] mean = GetCenter(values);
+
+            // Variance is the average of the of the distance squared from the mean
+            double variance = values.
+                Select(o =>
+                {
+                    double[] diff = Subtract(o, mean);
+                    return GetLengthSquared(diff);
+                }).
+                Average();
+
+            return Math.Sqrt(variance);
+        }
+
         public static Tuple<int, int, double>[] GetDistancesBetween(double[][] positions)
         {
             List<Tuple<int, int, double>> retVal = new List<Tuple<int, int, double>>();
@@ -377,6 +496,19 @@ namespace Game.HelperClassesWPF
         public static double[][] ApplyBallOfSprings(double[][] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
         {
             return BallOfSprings.ApplyBallOfSprings(positions, desiredDistances, numIterations);
+        }
+
+        public static bool IsInside(Tuple<double[], double[]> aabb, double[] testPoint)
+        {
+            for (int cntr = 0; cntr < testPoint.Length; cntr++)
+            {
+                if (testPoint[cntr] < aabb.Item1[cntr] || testPoint[cntr] > aabb.Item2[cntr])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion

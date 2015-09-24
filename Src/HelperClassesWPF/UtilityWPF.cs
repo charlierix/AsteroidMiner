@@ -2526,6 +2526,9 @@ namespace Game.HelperClassesWPF
                 width = (height * aspectRatio).ToInt_Round();
             }
 
+            if (width < 1) width = 1;
+            if (height < 1) height = 1;
+
             if (width == bitmap.PixelWidth && height == bitmap.PixelHeight)
             {
                 return bitmap;

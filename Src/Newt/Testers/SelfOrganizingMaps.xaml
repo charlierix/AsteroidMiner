@@ -1,4 +1,4 @@
-﻿<Window x:Class="Game.Newt.Testers.Encog.SelfOrganizingMaps"
+﻿<Window x:Class="Game.Newt.Testers.SelfOrganizingMaps"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
@@ -86,7 +86,7 @@
                 <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <!-- Images -->
-                        <Expander IsExpanded="True" Header="Images">
+                        <Expander IsExpanded="False" Header="Images">
                             <Border Style="{StaticResource panelBorder}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -111,7 +111,7 @@
                         </Expander>
 
                         <!-- Simple -->
-                        <Expander IsExpanded="True" Header="Simple">
+                        <Expander IsExpanded="False" Header="Simple">
                             <Border Style="{StaticResource panelBorder}">
                                 <StackPanel>
                                     <!-- Average Color -->
@@ -153,65 +153,141 @@
                         </Expander>
 
                         <!-- Convolution -->
-                        <Expander Visibility="Collapsed" Header="Convolution">
+                        <Expander IsExpanded="True" Header="Convolution">
+                            <Border Style="{StaticResource panelBorder}">
+                                <StackPanel Grid.IsSharedSizeScope="True">
 
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" SharedSizeGroup="convLeft"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Image Size -->
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="width height" ToolTip="The width and height of the images" Style="{StaticResource promptText}"/>
+                                        <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkConvImageSize" Minimum="1" Maximum="15" Value="7" IsInteger="True" Style="{StaticResource slider}"/>
+
+                                        <!-- Normalization Type -->
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="normalization" Style="{StaticResource promptText}"/>
+                                        <ComboBox Grid.Column="2" Grid.Row="2" Name="cboConvNormalization"/>
+
+                                        <!-- Axis Value (doesn't matter) -->
+                                        <TextBlock Visibility="Collapsed" Grid.Column="0" Grid.Row="4" Text="value" ToolTip="This is what to scale the value of the weights to" Style="{StaticResource promptText}"/>
+                                        <helpctrl:SliderShowValues Visibility="Collapsed" Grid.Column="2" Grid.Row="4" Name="trkConvValue" Minimum="1" Maximum="100" Value="1" Style="{StaticResource slider}"/>
+                                    </Grid>
+
+                                    <Button Content="Resized Image" ToolTip="Each image is resized and grayscaled" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="ResizedImage_Click"/>
+                                    <Button Content="Edge, Maxpool" ToolTip="Each image is resized to 100, then edge detect, then maxpooled to the final size" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="EdgeMaxpool_Click"/>
+                                    <Button Content="Edge, Maxpool x 10" ToolTip="Same as Edge Maxpool, but done several times" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="EdgeMaxpoolMult_Click"/>
+
+                                    <Grid Margin="0,12,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" SharedSizeGroup="convLeft"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- Max spread % -->
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="max spread %" ToolTip="" Style="{StaticResource promptText}"/>
+                                        <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkConvMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
+                                    </Grid>
+
+                                    <Button Content="Edge, Maxpool 2" ToolTip="Same as Edge Maxpool, but recurses if too many/too much spread" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="EdgeMaxpool2_Click"/>
+                                </StackPanel>
+                            </Border>
                         </Expander>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- SOM Training -->
-                <Expander Grid.Row="2" Header="SOM Training">
-                    <Border Style="{StaticResource panelBorder}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto"/>
-                                <ColumnDefinition Width="4"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="2"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="2"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="2"/>
-                                <RowDefinition Height="auto"/>
-                                <RowDefinition Height="2"/>
-                                <RowDefinition Height="auto"/>
-                            </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- SOM Training -->
+                        <Expander Header="SOM Training">
+                            <Border Style="{StaticResource panelBorder}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
 
-                            <!-- TODO: Show popups that graph trends from first iteration to last -->
+                                    <!-- TODO: Show popups that graph trends from first iteration to last -->
 
-                            <!-- Max Inputs -->
-                            <TextBlock Grid.Column="0" Grid.Row="0" Text="max inputs" Style="{StaticResource promptText}"/>
-                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkMaxInputs" Minimum="50" Maximum="200" Value="100" IsInteger="True" Style="{StaticResource slider}"/>
+                                    <!-- Max Inputs -->
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="max inputs" Style="{StaticResource promptText}"/>
+                                    <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkMaxInputs" Minimum="50" Maximum="200" Value="100" IsInteger="True" Style="{StaticResource slider}"/>
 
-                            <!-- Number of nodes -->
-                            <TextBlock Grid.Column="0" Grid.Row="2" Text="# nodes" Style="{StaticResource promptText}"/>
-                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkNumNodes" Minimum="2" Maximum="60" Value="20" IsInteger="True" Style="{StaticResource slider}"/>
+                                    <!-- Number of nodes -->
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="# nodes" Style="{StaticResource promptText}"/>
+                                    <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkNumNodes" Minimum="2" Maximum="60" Value="20" IsInteger="True" Style="{StaticResource slider}"/>
 
-                            <!-- Number of iterations -->
-                            <TextBlock Grid.Column="0" Grid.Row="4" Text="# iterations" Style="{StaticResource promptText}"/>
-                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkNumIterations" Minimum="1000" Maximum="20000" Value="2000" IsInteger="True" Style="{StaticResource slider}"/>
+                                    <!-- Number of iterations -->
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="# iterations" Style="{StaticResource promptText}"/>
+                                    <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkNumIterations" Minimum="1000" Maximum="20000" Value="2000" IsInteger="True" Style="{StaticResource slider}"/>
 
-                            <!-- Initial Radius % -->
-                            <TextBlock Grid.Column="0" Grid.Row="6" Text="initial radius %" Style="{StaticResource promptText}">
-                                <TextBlock.ToolTip>
-                                    <TextBlock>This is how far to look for neighbor nodes<LineBreak/>This decays each step<LineBreak/>Larger values will tend to cause everything to merge into one<LineBreak/>Smaller values will create a lot of islands</TextBlock>
-                                </TextBlock.ToolTip>
+                                    <!-- Initial Radius % -->
+                                    <TextBlock Grid.Column="0" Grid.Row="6" Text="initial radius %" Style="{StaticResource promptText}">
+                                        <TextBlock.ToolTip>
+                                            <TextBlock>This is how far to look for neighbor nodes<LineBreak/>This decays each step<LineBreak/>Larger values will tend to cause everything to merge into one<LineBreak/>Smaller values will create a lot of islands</TextBlock>
+                                        </TextBlock.ToolTip>
                             </TextBlock>
-                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkInitialRadiusPercent" Minimum="0" Maximum="75" Value="33" IsInteger="True" Style="{StaticResource slider}"/>
+                                    <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkInitialRadiusPercent" Minimum="0" Maximum="75" Value="33" IsInteger="True" Style="{StaticResource slider}"/>
 
-                            <!-- Learning Rate -->
-                            <TextBlock Grid.Column="0" Grid.Row="8" Text="learning rate" Style="{StaticResource promptText}">
-                                <TextBlock.ToolTip>
-                                    <TextBlock>Larger values will cause the nodes to move toward training inputs quicker<LineBreak/>This decays each step<LineBreak/>This causes similar effects as radius% (smaller creates islands, larger merges into 1),<LineBreak/>but the influence isn't as strong</TextBlock>
-                                </TextBlock.ToolTip>
+                                    <!-- Learning Rate -->
+                                    <TextBlock Grid.Column="0" Grid.Row="8" Text="learning rate" Style="{StaticResource promptText}">
+                                        <TextBlock.ToolTip>
+                                            <TextBlock>Larger values will cause the nodes to move toward training inputs quicker<LineBreak/>This decays each step<LineBreak/>This causes similar effects as radius% (smaller creates islands, larger merges into 1),<LineBreak/>but the influence isn't as strong</TextBlock>
+                                        </TextBlock.ToolTip>
                             </TextBlock>
-                            <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkLearningRate" Minimum=".01" Maximum=".5" Value=".1" Style="{StaticResource slider}"/>
-                        </Grid>
-                    </Border>
-                </Expander>
+                                    <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkLearningRate" Minimum=".01" Maximum=".5" Value=".1" Style="{StaticResource slider}"/>
+                                </Grid>
+                            </Border>
+                        </Expander>
+
+                        <Expander Header="Display">
+                            <Border Style="{StaticResource panelBorder}">
+                                <StackPanel>
+                                    <CheckBox Name="chkPreviewCount" Content="Count" ToolTip="How many images matched"/>
+
+                                    <CheckBox Name="chkPreviewNodeHash" Content="Node Hash" ToolTip="Show the node's hash as well (above cursor)"/>
+                                    <CheckBox Name="chkPreviewImageHash" Content="Image Hash" ToolTip="Preview original file or hash used by algorithm"/>
+                                    
+                                    <CheckBox Name="chkPreviewSpread" Content="Spread" ToolTip="Show the spread of distances"/>
+                                    <CheckBox Name="chkPreviewPerImageSpread" Content="Each image spread" ToolTip="How far the image is from the center (as a percent of that node's max distance)"/>
+
+                                    <!--<RadioButton Content="2D"/>
+                                    <RadioButton Content="3D"/>-->
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Border>
 

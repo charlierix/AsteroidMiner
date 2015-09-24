@@ -154,6 +154,13 @@ namespace Game.HelperClassesCore
                 Swap(ref min, ref max);
             }
         }
+        public static void MinMax(ref string min, ref string max)
+        {
+            if (max.CompareTo(min) < 0)
+            {
+                Swap(ref min, ref max);
+            }
+        }
 
         public static double GetMassForRadius(double radius, double density)
         {
