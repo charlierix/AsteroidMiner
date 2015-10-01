@@ -33,7 +33,7 @@ namespace Game.HelperClassesCore
         /// <returns>Somewhere between minReturn and maxReturn</returns>
         public static double GetScaledValue(double minReturn, double maxReturn, double minRange, double maxRange, double valueRange)
         {
-            if(minRange.IsNearValue(maxRange))
+            if (minRange.IsNearValue(maxRange))
             {
                 return minReturn;
             }
@@ -783,15 +783,22 @@ namespace Game.HelperClassesCore
         /// </remarks>
         public static bool SharesItem<T>(IEnumerable<T> list1, IEnumerable<T> list2)
         {
-            foreach(T item1 in list1)
+            foreach (T item1 in list1)
             {
-                if(list2.Any(item2 => item2.Equals(item1)))
+                if (list2.Any(item2 => item2.Equals(item1)))
                 {
                     return true;
                 }
             }
 
             return false;
+        }
+
+        public static T[][] ConvertJaggedArray<T>(object[][] jagged)
+        {
+            return jagged.
+                Select(o => o.Select(p => (T)p).ToArray()).
+                ToArray();
         }
 
         #endregion

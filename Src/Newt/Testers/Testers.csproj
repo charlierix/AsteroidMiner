@@ -172,8 +172,8 @@
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SelfOrganizingMaps.xaml.cs">
-      <DependentUpon>SelfOrganizingMaps.xaml</DependentUpon>
+    <Compile Include="SelfOrganizingMapsWindow.xaml.cs">
+      <DependentUpon>SelfOrganizingMapsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EvenDistributionCircle.xaml.cs">
       <DependentUpon>EvenDistributionCircle.xaml</DependentUpon>
@@ -416,7 +416,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SelfOrganizingMaps.xaml">
+    <Page Include="SelfOrganizingMapsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

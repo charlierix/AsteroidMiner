@@ -174,6 +174,16 @@ namespace Game.HelperClassesWPF
 
         #region Simple
 
+        public static bool IsNearZero(double[] vector)
+        {
+            return vector.All(o => Math.Abs(o) <= Math3D.NEARZERO);
+        }
+        public static bool IsNearValue(double[] vector1, double[] vector2)
+        {
+            return Enumerable.Range(0, vector1.Length).
+                All(o => vector1[o] >= vector2[o] - Math3D.NEARZERO && vector1[o] <= vector2[o] + Math3D.NEARZERO);
+        }
+
         public static double GetLength(double[] vector)
         {
             return Math.Sqrt(GetLengthSquared(vector));
