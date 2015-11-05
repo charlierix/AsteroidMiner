@@ -49,6 +49,8 @@
     <Compile Include="Extenders.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelfOrganizingMaps.cs" />
+    <Compile Include="SelfOrganizingMapsDB.cs" />
+    <Compile Include="SelfOrganizingMapsWPF.cs" />
     <Compile Include="UtilityEncog.cs" />
     <Compile Include="UtilityEncogWPF.cs" />
   </ItemGroup>

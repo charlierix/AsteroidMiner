@@ -250,7 +250,11 @@ namespace Game.GameTester
         }
         private void SelfOrganizingMaps_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.SelfOrganizingMapsWindow().Show();
+            new Game.Newt.Testers.SOM.SelfOrganizingMapsWindow().Show();
+        }
+        private void SelfOrganizingMapsDB_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.SOM.SelfOrganizingMapsDBWindow().Show();
         }
         private void MineralIdentifier_MouseUp(object sender, MouseButtonEventArgs e)
         {

@@ -172,7 +172,13 @@
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SelfOrganizingMapsWindow.xaml.cs">
+    <Compile Include="SOM\DBRowsDetail.xaml.cs">
+      <DependentUpon>DBRowsDetail.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SOM\SelfOrganizingMapsDBWindow.xaml.cs">
+      <DependentUpon>SelfOrganizingMapsDBWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="SOM\SelfOrganizingMapsWindow.xaml.cs">
       <DependentUpon>SelfOrganizingMapsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EvenDistributionCircle.xaml.cs">
@@ -416,7 +422,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SelfOrganizingMapsWindow.xaml">
+    <Page Include="SOM\DBRowsDetail.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SOM\SelfOrganizingMapsDBWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="SOM\SelfOrganizingMapsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

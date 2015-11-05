@@ -147,6 +147,7 @@
                     <ListBoxItem Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
                     <ListBoxItem Content="Convolution Chains" MouseUp="ConvolutionChains_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps" MouseUp="SelfOrganizingMaps_MouseUp"/>
+                    <ListBoxItem Content="Self Organizing Maps DB" MouseUp="SelfOrganizingMapsDB_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 

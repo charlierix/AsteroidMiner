@@ -175,6 +175,45 @@ namespace Game.HelperClassesCore
             return Math.Pow((mass / density) / (FOURTHIRDS * Math.PI), .333333d);
         }
 
+        public static bool IsWhitespace(char text)
+        {
+            //http://stackoverflow.com/questions/18169006/all-the-whitespace-characters-is-it-language-independent
+
+            // Here are some more chars that could be space
+            //http://www.fileformat.info/info/unicode/category/Zs/list.htm
+
+            switch (text)
+            {
+                case '\0':
+                case '\t':
+                case '\r':
+                case '\v':
+                case '\f':
+                case '\n':
+                case ' ':
+                case '\u00A0':      // NO-BREAK SPACE
+                case '\u1680':      // OGHAM SPACE MARK
+                case '\u2000':      // EN QUAD
+                case '\u2001':      // EM QUAD
+                case '\u2002':      // EN SPACE
+                case '\u2003':      // EM SPACE
+                case '\u2004':      // THREE-PER-EM SPACE
+                case '\u2005':      // FOUR-PER-EM SPACE
+                case '\u2006':      // SIX-PER-EM SPACE
+                case '\u2007':      // FIGURE SPACE
+                case '\u2008':      // PUNCTUATION SPACE
+                case '\u2009':      // THIN SPACE
+                case '\u200A':      // HAIR SPACE
+                case '\u202F':      // NARROW NO-BREAK SPACE
+                case '\u205F':      // MEDIUM MATHEMATICAL SPACE
+                case '\u3000':      // IDEOGRAPHIC SPACE
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
+
         #endregion
 
         #region Enums
@@ -339,7 +378,8 @@ namespace Game.HelperClassesCore
         {
             if (iterateCount > rangeCount)
             {
-                throw new ArgumentOutOfRangeException(string.Format("iterateCount can't be greater than rangeCount.  iterateCount={0}, rangeCount={1}", iterateCount.ToString(), rangeCount.ToString()));
+                //throw new ArgumentOutOfRangeException(string.Format("iterateCount can't be greater than rangeCount.  iterateCount={0}, rangeCount={1}", iterateCount.ToString(), rangeCount.ToString()));
+                iterateCount = rangeCount;
             }
 
             if (iterateCount < rangeCount / 3)

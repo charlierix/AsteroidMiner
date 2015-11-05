@@ -42,7 +42,7 @@ namespace Game.HelperClassesAI
         /// <param name="returnEmptyNodes">This shouldn't even be an option.  Empty nodes are just artifacts that polute the final result</param>
         public static SOMResult TrainSOM(ISOMInput[] inputs, SOMRules rules, bool isDisplay2D, bool returnEmptyNodes = false)
         {
-            double[][] nodeWeights = GetRandomNodeWeights(rules.NumIterations, inputs);
+            double[][] nodeWeights = GetRandomNodeWeights(rules.NumNodes, inputs);
 
             SOMNode[] nodes = nodeWeights.
                 Select(o => new SOMNode() { Weights = o }).
@@ -165,6 +165,27 @@ namespace Game.HelperClassesAI
             return Math.Sqrt(distancesSquared);
         }
 
+        public static Tuple<SOMNode, int> GetClosest(SOMNode[] nodes, ISOMInput input)
+        {
+            int closestIndex = -1;
+            double closest = double.MaxValue;
+            SOMNode retVal = null;
+
+            for (int cntr = 0; cntr < nodes.Length; cntr++)
+            {
+                double distSquared = MathND.GetDistanceSquared(nodes[cntr].Weights, input.Weights);
+
+                if (distSquared < closest)
+                {
+                    closestIndex = cntr;
+                    closest = distSquared;
+                    retVal = nodes[cntr];
+                }
+            }
+
+            return Tuple.Create(retVal, closestIndex);
+        }
+
         #endregion
 
         #region Private Methods
@@ -226,27 +247,6 @@ namespace Game.HelperClassesAI
             }
 
             return retVal;
-        }
-
-        private static Tuple<SOMNode, int> GetClosest(SOMNode[] nodes, ISOMInput input)
-        {
-            int closestIndex = -1;
-            double closest = double.MaxValue;
-            SOMNode retVal = null;
-
-            for (int cntr = 0; cntr < nodes.Length; cntr++)
-            {
-                double distSquared = MathND.GetDistanceSquared(nodes[cntr].Weights, input.Weights);
-
-                if (distSquared < closest)
-                {
-                    closestIndex = cntr;
-                    closest = distSquared;
-                    retVal = nodes[cntr];
-                }
-            }
-
-            return Tuple.Create(retVal, closestIndex);
         }
 
         private static Tuple<SOMNode, double>[] GetNeighbors(SOMNode[] nodes, SOMNode match, double maxDistance)

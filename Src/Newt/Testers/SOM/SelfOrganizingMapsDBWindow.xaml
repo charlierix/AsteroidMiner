@@ -1,0 +1,136 @@
+﻿<Window x:Class="Game.Newt.Testers.SOM.SelfOrganizingMapsDBWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+        Title="Self Organizing Maps DB" ResizeMode="CanResizeWithGrip" Width="1000" Height="750" Background="#E3DFDA" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="14" FontWeight="480" Foreground="#666A73"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+        </Style>
+
+        <Style x:Key="panelBorder" TargetType="Border">
+            <Setter Property="Margin" Value="2,1,2,6"/>
+        </Style>
+
+        <Style x:Key="textSummaryHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="500"/>
+            <Setter Property="Foreground" Value="#2F3540"/>
+        </Style>
+        <Style x:Key="textSummaryItemFull" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#666A73"/>
+        </Style>
+        <Style x:Key="textSummaryItemPrompt" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#666A73"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="textSummaryItemValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#2F3540"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="textSummarySlider" TargetType="helpctrl:SliderShowValues">
+            <!--<Setter Property="MinWidth" Value="175"/>-->
+            <!-- NOTE: Without this being set, the mouseover trigger only works intermittantly, and leaves multiple sliders visible at a time -->
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="False">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type helpctrl:SliderShowValues}">
+                                <TextBlock Text="{TemplateBinding ValueDisplay}" MinWidth="60" Background="Transparent" HorizontalAlignment="Stretch" Style="{StaticResource textSummaryItemValue}"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="MinWidth" Value="120"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="detailsHeader" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="9"/>
+            <Setter Property="Foreground" Value="DimGray"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="1,0"/>
+        </Style>
+        <Style x:Key="detailsBody" TargetType="TextBlock">
+            <Setter Property="Margin" Value="2,0"/>
+        </Style>
+
+        <Style x:Key="textboxScroll" TargetType="TextBox">
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="AcceptsReturn" Value="True"/>
+        </Style>
+
+    </Window.Resources>
+
+    <!-- Theme: 2F3540, 666A73, F2F0ED, E3DFDA, 8C8681 -->
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="4"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Margin="6,6,0,6" MaxWidth="500">
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <!-- Query -->
+                    <Expander IsExpanded="True" Header="Query">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel TextBox.TextChanged="SQL_TextChanged">
+
+                                <Label Content="Connection String"/>
+                                <TextBox Name="txtConnectString" Style="{StaticResource textboxScroll}"/>
+
+                                <Label Content="Select Statement"/>
+                                <TextBox Name="txtQuery" Style="{StaticResource textboxScroll}"/>
+
+                                <TextBlock Name="lblQueryStatus" Margin="0,6,0,0" Foreground="#666A73"/>
+
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Columns -->
+                    <Expander IsExpanded="True" Header="Columns">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel>
+
+                                <Label Content="Group Columns"/>
+                                <TextBox Name="txtColumns" TextChanged="SQL_TextChanged" Style="{StaticResource textboxScroll}"/>
+
+                                <StackPanel Name="pnlColumns" Grid.IsSharedSizeScope="True" Margin="0,8,0,0"/>
+
+                                <!-- TODO: Create graphs for numeric and datetime -->
+
+                                <!-- TODO: If they click one of the individual columns, show SOM of that column (plus more detailed graph if numeric or date) -->
+                                <!-- TODO: Add a button to show SOM of selected columns -->
+
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="2" Name="panelDisplay" Background="#F2F0ED" BorderBrush="#40666A73" BorderThickness="1" CornerRadius="2" Margin="0,4,4,4" SizeChanged="panelDisplay_SizeChanged"/>
+
+        <Canvas Grid.Column="2" Name="panelOverlay" IsHitTestVisible="False"/>
+
+        <!-- TODO: Come up with some kind of spinning visual to show that it's working -->
+        <TextBlock Grid.Column="2" Name="lblErrorMessage" HorizontalAlignment="Left" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="16" FontWeight="480" Foreground="#A32619" Margin="12"/>
+
+    </Grid>
+</Window>

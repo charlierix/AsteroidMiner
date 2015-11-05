@@ -23,38 +23,7 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
-        /// <summary>
-        /// Gets a value between -maxValue and maxValue
-        /// </summary>
-        public static double GetNearZeroValue(double maxValue)
-        {
-            Random rand = StaticRandom.GetRandomForThread();
-
-            double retVal = rand.NextDouble() * maxValue;
-
-            if (rand.Next(0, 2) == 1)
-            {
-                retVal *= -1d;
-            }
-
-            return retVal;
-        }
-        /// <summary>
-        /// This gets a value between minValue and maxValue, and has a 50/50 chance of negating that
-        /// </summary>
-        public static double GetNearZeroValue(double minValue, double maxValue)
-        {
-            Random rand = StaticRandom.GetRandomForThread();
-
-            double retVal = minValue + (rand.NextDouble() * (maxValue - minValue));
-
-            if (rand.Next(0, 2) == 1)
-            {
-                retVal *= -1d;
-            }
-
-            return retVal;
-        }
+        #region Simple
 
         public static bool IsNearZero(double testValue)
         {
@@ -100,6 +69,43 @@ namespace Game.HelperClassesWPF
             return IsNearValue(division, divisionInt);
         }
 
+        #endregion
+
+        #region Misc
+
+        /// <summary>
+        /// Gets a value between -maxValue and maxValue
+        /// </summary>
+        public static double GetNearZeroValue(double maxValue)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double retVal = rand.NextDouble() * maxValue;
+
+            if (rand.Next(0, 2) == 1)
+            {
+                retVal *= -1d;
+            }
+
+            return retVal;
+        }
+        /// <summary>
+        /// This gets a value between minValue and maxValue, and has a 50/50 chance of negating that
+        /// </summary>
+        public static double GetNearZeroValue(double minValue, double maxValue)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double retVal = minValue + (rand.NextDouble() * (maxValue - minValue));
+
+            if (rand.Next(0, 2) == 1)
+            {
+                retVal *= -1d;
+            }
+
+            return retVal;
+        }
+
         public static double DegreesToRadians(double degrees)
         {
             return degrees * _PI_over_180;
@@ -121,7 +127,7 @@ namespace Game.HelperClassesWPF
         /// <remarks>
         /// http://www.mathsisfun.com/data/standard-deviation.html
         /// </remarks>
-        private static double GetStandardDeviation(IEnumerable<double> values)
+        public static Tuple<double, double> Get_Average_StandardDeviation(IEnumerable<double> values)
         {
             double mean = values.Average();
 
@@ -132,9 +138,23 @@ namespace Game.HelperClassesWPF
                     double diff = o - mean;
                     return diff * diff;     // squaring makes sure it's positive
                 }).
-                    Average();
+                Average();
 
-            return Math.Sqrt(variance);
+            return Tuple.Create(mean, Math.Sqrt(variance));
+        }
+        public static Tuple<DateTime, TimeSpan> Get_Average_StandardDeviation(IEnumerable<DateTime> dates)
+        {
+            // I don't know if this is the best way (timezones and all that craziness)
+
+            DateTime first = dates.First();
+
+            double[] hours = dates.
+                Select(o => (o - first).TotalHours).
+                ToArray();
+
+            Tuple<double, double> retVal = Get_Average_StandardDeviation(hours);
+
+            return Tuple.Create(first + TimeSpan.FromHours(retVal.Item1), TimeSpan.FromHours(retVal.Item2));
         }
 
         /// <summary>
@@ -425,6 +445,8 @@ namespace Game.HelperClassesWPF
             //TODO: Take in a param whether to throw an exception or return the best guess
             throw new ApplicationException("Couldn't find a solution");
         }
+
+        #endregion
 
         #region Private Methods
 

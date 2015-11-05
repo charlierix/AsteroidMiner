@@ -521,6 +521,41 @@ namespace Game.HelperClassesWPF
             return true;
         }
 
+        /// <summary>
+        /// This converts a base10 number into an arbitrary base
+        /// </summary>
+        /// <remarks>
+        /// Silly example:
+        ///     136 converted to base 10 will return { 1, 3, 6 }
+        /// 
+        /// Other examples:
+        ///     5 -> base2 = { 1, 0, 1 }
+        ///     6 -> base2 = { 1, 1, 0 }
+        ///     
+        ///     7 -> base16 = { 7 }
+        ///     15 -> base16 = { 15 }
+        ///     18 -> base16 = { 1, 2 }
+        /// </remarks>
+        /// <param name="base10">A number in base10</param>
+        /// <param name="baseConvertTo">The base to convert to</param>
+        public static int[] ConvertToBase(long base10, int baseConvertTo)
+        {
+            List<int> retVal = new List<int>();
+
+            long num = base10;
+
+            while (num != 0)
+            {
+                int remainder = Convert.ToInt32(num % baseConvertTo);
+                num = num / baseConvertTo;
+                retVal.Add(remainder);
+            }
+
+            retVal.Reverse();
+
+            return retVal.ToArray();
+        }
+
         #endregion
     }
 }

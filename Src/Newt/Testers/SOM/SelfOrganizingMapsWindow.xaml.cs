@@ -20,9 +20,8 @@ using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
 using Game.Newt.Testers.Convolution;
 
-namespace Game.Newt.Testers
+namespace Game.Newt.Testers.SOM
 {
-    //TODO: Make a SelfOrganizingMapsWPF helper class that generates views, handles mouse events
     public partial class SelfOrganizingMapsWindow : Window
     {
         #region Enum: SimpleColorScheme
@@ -104,28 +103,11 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region Class: NodePositions
-
-        private class NodePositions
-        {
-            public NodePositions(double[][] positions, double mapRadius, double cellSize)
-            {
-                this.Positions = positions;
-                this.MapRadius = mapRadius;
-                this.CellSize = cellSize;
-            }
-
-            public readonly double[][] Positions;
-            public double MapRadius;
-            public double CellSize;
-        }
-
-        #endregion
         #region Class: OverlayPolygonStats
 
         private class OverlayPolygonStats
         {
-            public OverlayPolygonStats(SOMNode node, ImageInput[] images, Rect canvasAABB, Vector cursorOffset, Canvas overlay)
+            public OverlayPolygonStats(SOMNode node, ISOMInput[] images, Rect canvasAABB, Vector cursorOffset, Canvas overlay)
             {
                 this.Node = node;
                 this.Images = images;
@@ -135,7 +117,7 @@ namespace Game.Newt.Testers
             }
 
             public readonly SOMNode Node;
-            public readonly ImageInput[] Images;
+            public readonly ISOMInput[] Images;
 
             public readonly Rect CanvasAABB;
             public readonly Vector CursorOffset;
@@ -228,7 +210,7 @@ namespace Game.Newt.Testers
 
         // These are helpers for the attempt at adjusting
         private SOMNode[] _nodes = null;
-        private ImageInput[][] _imagesByNode = null;
+        private ISOMInput[][] _imagesByNode = null;
         private bool _wasEllipseTransferred = false;
 
         #endregion
@@ -324,7 +306,44 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void Polygon_MouseMove(object sender, MouseEventArgs e)
+        private void Polygon_MouseMove(Polygon poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
+        {
+            try
+            {
+                if (_overlayPolyStats == null || _overlayPolyStats.Node.Token != node.Token)
+                {
+                    BuildOverlay2D(node, inputs, chkPreviewCount.IsChecked.Value, chkPreviewNodeHash.IsChecked.Value, chkPreviewImageHash.IsChecked.Value, chkPreviewSpread.IsChecked.Value, chkPreviewPerImageSpread.IsChecked.Value);
+                }
+
+                Point mousePos = e.GetPosition(panelDisplay);
+
+                double left = mousePos.X + _overlayPolyStats.CanvasAABB.Left + _overlayPolyStats.CursorOffset.X - 1;
+                //double top = mousePos.Y + _overlayPolyStats.CanvasAABB.Top + _overlayPolyStats.CursorOffset.Y - 1;
+                //double top = mousePos.Y + _overlayPolyStats.CanvasAABB.Top - _overlayPolyStats.CursorOffset.Y - 1;
+                double top = mousePos.Y + _overlayPolyStats.CanvasAABB.Top - 1;     // Y is already centered
+
+                Canvas.SetLeft(_overlayPolyStats.Overlay, left);
+                Canvas.SetTop(_overlayPolyStats.Overlay, top);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Polygon_MouseLeave()
+        {
+            try
+            {
+                _overlayPolyStats = null;
+                panelOverlay.Children.Clear();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Polygon_MouseMove_OLD(object sender, MouseEventArgs e)
         {
             try
             {
@@ -360,7 +379,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Polygon_MouseLeave(object sender, MouseEventArgs e)
+        private void Polygon_MouseLeave_OLD(object sender, MouseEventArgs e)
         {
             try
             {
@@ -565,7 +584,13 @@ namespace Game.Newt.Testers
                     break;
 
                 case NodeDisplayLayout.Blobs:
-                    ShowResults_Blobs(panelDisplay, result, getNodeColor);
+                    var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
+                    SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+
+                    // This is for the manual manipulate buttons
+                    _nodes = result.Nodes;
+                    _imagesByNode = result.InputsByNode;
+                    _wasEllipseTransferred = false;
                     break;
 
                 //case NodeDisplayLayout.Grid_UniformSize:
@@ -763,7 +788,16 @@ namespace Game.Newt.Testers
 
             SOMResult result = SelfOrganizingMaps.TrainSOM(inputs, rules, true, false);
 
-            ShowResults_Blobs(panelDisplay, result, _getNodeColor_Random);
+            var getNodeColor = chkRandomNodeColors.IsChecked.Value ? _getNodeColor_Random : SelfOrganizingMapsWPF.GetNodeColor;
+
+            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
+
+            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+
+            // This is for the manual manipulate buttons
+            _nodes = result.Nodes;
+            _imagesByNode = result.InputsByNode;
+            _wasEllipseTransferred = false;
         }
         private void DoConvolution2(ImageInput[] inputs, double maxSpreadPercent, int minNodeItemsForSplit)
         {
@@ -771,7 +805,16 @@ namespace Game.Newt.Testers
 
             SOMResult result = SelfOrganizingMaps.TrainSOM(inputs, rules, maxSpreadPercent, true, false);
 
-            ShowResults_Blobs(panelDisplay, result, _getNodeColor_Random);
+            var getNodeColor = chkRandomNodeColors.IsChecked.Value ? _getNodeColor_Random : SelfOrganizingMapsWPF.GetNodeColor;
+
+            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
+
+            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+
+            // This is for the manual manipulate buttons
+            _nodes = result.Nodes;
+            _imagesByNode = result.InputsByNode;
+            _wasEllipseTransferred = false;
         }
 
         private static double[] GetValuesFromImage_ResizeGray(FeatureRecognizer_Image image, int size, double scaleValue)
@@ -835,31 +878,6 @@ namespace Game.Newt.Testers
             _imagesByNode = imagesByNode;
             _wasEllipseTransferred = false;
         }
-        private void ShowResults_Blobs(Border border, SOMResult result, Func<SOMNode, Color> getNodeColor)
-        {
-            Point[] points = result.Nodes.
-                Select(o => new Point(o.Position[0], o.Position[1])).
-                ToArray();
-
-            VoronoiResult2D voronoi = Math2D.GetVoronoi(points, true);
-            voronoi = Math2D.CapVoronoiCircle(voronoi);
-
-            Color[] colors = result.Nodes.
-                Select(o => getNodeColor(o)).
-                ToArray();
-
-            ImageInput[][] imagesByNode = UtilityCore.ConvertJaggedArray<ImageInput>(result.InputsByNode);
-
-            Vector size = new Vector(border.ActualWidth - border.Padding.Left - border.Padding.Right, border.ActualHeight - border.Padding.Top - border.Padding.Bottom);
-            Canvas canvas = DrawVoronoiBlobs(voronoi, colors, result.Nodes, imagesByNode, size.X.ToInt_Floor(), size.Y.ToInt_Floor());
-
-            border.Child = canvas;
-
-            // This is for the manual manipulate buttons
-            _nodes = result.Nodes;
-            _imagesByNode = imagesByNode;
-            _wasEllipseTransferred = false;
-        }
 
         private Canvas DrawVoronoi(VoronoiResult2D voronoi, Color[] colors, SOMNode[] nodes, ImageInput[][] images, int imageWidth, int imageHeight)
         {
@@ -907,8 +925,8 @@ namespace Game.Newt.Testers
 
                 polygon.Tag = Tuple.Create(nodes[cntr], images[cntr]);
 
-                polygon.MouseMove += Polygon_MouseMove;
-                polygon.MouseLeave += Polygon_MouseLeave;
+                polygon.MouseMove += Polygon_MouseMove_OLD;
+                polygon.MouseLeave += Polygon_MouseLeave_OLD;
 
                 retVal.Children.Add(polygon);
 
@@ -916,152 +934,12 @@ namespace Game.Newt.Testers
             }
 
             return retVal;
-        }
-
-        private Canvas DrawVoronoiBlobs(VoronoiResult2D voronoi, Color[] colors, SOMNode[] nodes, ImageInput[][] imagesByNode, int imageWidth, int imageHeight)
-        {
-            const double MARGINPERCENT = 1.05;
-
-            // Analyze size ratios
-            double[] areas = AnalyzeVoronoiCellSizes(voronoi, imagesByNode);
-
-            #region transform
-
-            var aabb = Math2D.GetAABB(voronoi.EdgePoints);
-            aabb = Tuple.Create((aabb.Item1.ToVector() * MARGINPERCENT).ToPoint(), (aabb.Item2.ToVector() * MARGINPERCENT).ToPoint());
-
-            TransformGroup transform = new TransformGroup();
-            transform.Children.Add(new TranslateTransform(-aabb.Item1.X, -aabb.Item1.Y));
-            transform.Children.Add(new ScaleTransform(imageWidth / (aabb.Item2.X - aabb.Item1.X), imageHeight / (aabb.Item2.Y - aabb.Item1.Y)));
-
-            #endregion
-
-            Canvas retVal = new Canvas();
-
-            for (int cntr = 0; cntr < voronoi.ControlPoints.Length; cntr++)
-            {
-                #region polygon
-
-                Polygon polygon = new Polygon();
-
-                if (voronoi.EdgesByControlPoint[cntr].Length < 3)
-                {
-                    throw new ApplicationException("Expected at least three edge points");
-                }
-
-                Edge2D[] edges = voronoi.EdgesByControlPoint[cntr].Select(o => voronoi.Edges[o]).ToArray();
-                Point[] edgePoints = Edge2D.GetPolygon(edges, 1d);
-
-                // Resize to match the desired area
-                edgePoints = ResizeConvexPolygon(edgePoints, areas[cntr]);
-
-                // Convert into a smooth blob
-                BezierSegmentDef[] bezier = BezierSegmentDef.GetBezierSegments(edgePoints.Select(o => o.ToPoint3D()).ToArray(), .25, true);
-                edgePoints = Math3D.GetBezierPath(75, bezier).
-                    Select(o => o.ToPoint2D()).
-                    ToArray();
-
-                // Transform to canvas coords
-                edgePoints = edgePoints.
-                    Select(o => transform.Transform(o)).
-                    ToArray();
-
-                foreach (Point point in edgePoints)
-                {
-                    polygon.Points.Add(point);
-                }
-
-                polygon.Fill = new SolidColorBrush(colors[cntr]);
-                polygon.Stroke = null; // new SolidColorBrush(UtilityWPF.OppositeColor(colors[cntr], false));
-                polygon.StrokeThickness = 1;
-
-                polygon.Tag = Tuple.Create(nodes[cntr], imagesByNode[cntr]);
-
-                polygon.MouseMove += Polygon_MouseMove;
-                polygon.MouseLeave += Polygon_MouseLeave;
-
-                retVal.Children.Add(polygon);
-
-                #endregion
-            }
-
-            return retVal;
-        }
-
-        private static double[] AnalyzeVoronoiCellSizes(VoronoiResult2D voronoi, ImageInput[][] imagesByNode)
-        {
-            // Calculate area, density of each node
-            var sizes = Enumerable.Range(0, voronoi.ControlPoints.Length).
-                Select(o =>
-                {
-                    double area = Math2D.GetAreaPolygon(voronoi.GetPolygon(o, 1));        // there are no rays
-                    double imageCount = imagesByNode[o].Length.ToDouble();
-
-                    return new
-                    {
-                        ImagesCount = imageCount,
-                        Area = area,
-                        Density = imageCount / area,
-                    };
-                }).
-                ToArray();
-
-            // Don't let any node have an area smaller than this
-            double minArea = sizes.Min(o => o.Area) * .25;
-
-            // Find the node with the largest density.  This is the density to use when drawing all cells
-            var largestDensity = sizes.
-                OrderByDescending(o => o.Density).
-                First();
-
-            return sizes.Select(o =>
-            {
-                // Figure out how much area it would take using the highest density
-                double area = o.ImagesCount / largestDensity.Density;
-                if (area < minArea)
-                {
-                    area = minArea;
-                }
-
-                return area;
-            }).
-            ToArray();
-        }
-
-        private static Point[] ResizeConvexPolygon(Point[] polygon, double newArea)
-        {
-            Point center = Math2D.GetCenter(polygon);
-
-            // Create a delagate that returns the area of the polygon based on the percent size
-            Func<double, double> getOutput = new Func<double, double>(o =>
-            {
-                Point[] polyPoints = GetPolygon(center, polygon, o);
-                return Math2D.GetAreaPolygon(polyPoints);
-            });
-
-            // Find a percent that returns the desired area
-            double percent = Math1D.GetInputForDesiredOutput_PosInput_PosCorrelation(newArea, newArea * .01, getOutput);
-
-            // Return the sized polygon
-            return GetPolygon(center, polygon, percent);
-        }
-
-        private static Point[] GetPolygon(Point center, Point[] polygon, double percent)
-        {
-            return polygon.
-                Select(o =>
-                {
-                    Vector displace = o - center;
-                    displace *= percent;
-                    return center + displace;
-                }).
-                ToArray();
         }
 
         #endregion
         #region Private Methods - tooltip
 
-        private void BuildOverlay2D(SOMNode node, ImageInput[] images, bool showCount, bool showNodeHash, bool showImageHash, bool showSpread, bool showPerImageDistance)
+        private void BuildOverlay2D(SOMNode node, ISOMInput[] images, bool showCount, bool showNodeHash, bool showImageHash, bool showSpread, bool showPerImageDistance)
         {
             const int IMAGESIZE = 80;
             const int NODEHASHSIZE = 100;
@@ -1085,7 +963,7 @@ namespace Game.Newt.Testers
 
             #region cursor rectangle
 
-            var cursorRect = GetMouseCursorRect(0);
+            var cursorRect = SelfOrganizingMapsWPF.GetMouseCursorRect(0);
             rectangles.Add(cursorRect.Item1);
 
             // This is just for debugging
@@ -1113,19 +991,19 @@ namespace Game.Newt.Testers
                 };
 
                 // "images "
-                OutlinedTextBlock text = GetOutlineText("images ", SMALLFONT1, SMALLLINE1);
+                OutlinedTextBlock text = SelfOrganizingMapsWPF.GetOutlineText("images ", SMALLFONT1, SMALLLINE1);
                 text.Margin = new Thickness(0, 0, 4, 0);
                 textPanel.Children.Add(text);
 
                 // count
-                text = GetOutlineText(images.Length.ToString("N0"), LARGEFONT1, LARGELINE1);
+                text = SelfOrganizingMapsWPF.GetOutlineText(images.Length.ToString("N0"), LARGEFONT1, LARGELINE1);
                 textPanel.Children.Add(text);
 
                 // Place on canvas
                 textPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));       // aparently, the infinity is important to get an accurate desired size
                 Size textSize = textPanel.DesiredSize;
 
-                Rect textRect = GetFreeSpot(textSize, new Point(0, 0), new Vector(0, 1), rectangles);
+                Rect textRect = SelfOrganizingMapsWPF.GetFreeSpot(textSize, new Point(0, 0), new Vector(0, 1), rectangles);
                 rectangles.Add(textRect);
 
                 Canvas.SetLeft(textPanel, textRect.Left);
@@ -1143,7 +1021,7 @@ namespace Game.Newt.Testers
             double nodeSpread = images.Length == 0 ? 0d : SelfOrganizingMaps.GetTotalSpread(nodeImages);
             double totalSpread = SelfOrganizingMaps.GetTotalSpread(allImages);
 
-            if (showSpread)
+            if (showSpread && images.Length > 0)
             {
                 double nodeStandDev = MathND.GetStandardDeviation(nodeImages);
                 double totalStandDev = MathND.GetStandardDeviation(allImages);
@@ -1184,7 +1062,7 @@ namespace Game.Newt.Testers
                 spreadPanel.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));       // aparently, the infinity is important to get an accurate desired size
                 Size spreadSize = spreadPanel.DesiredSize;
 
-                Rect spreadRect = GetFreeSpot(spreadSize, new Point(0, 0), new Vector(0, 1), rectangles);
+                Rect spreadRect = SelfOrganizingMapsWPF.GetFreeSpot(spreadSize, new Point(0, 0), new Vector(0, 1), rectangles);
                 rectangles.Add(spreadRect);
 
                 Canvas.SetLeft(spreadPanel, spreadRect.Left);
@@ -1209,7 +1087,7 @@ namespace Game.Newt.Testers
                 Tuple<UIElement, VectorInt> nodeCtrl = GetPreviewImage(nodeImage, true, NODEHASHSIZE, showPerImageDistance, nodeDistPercent);
 
                 // Place on canvas
-                Rect nodeRect = GetFreeSpot(new Size(nodeCtrl.Item2.X, nodeCtrl.Item2.Y), new Point(0, 0), new Vector(0, -1), rectangles);
+                Rect nodeRect = SelfOrganizingMapsWPF.GetFreeSpot(new Size(nodeCtrl.Item2.X, nodeCtrl.Item2.Y), new Point(0, 0), new Vector(0, -1), rectangles);
                 rectangles.Add(nodeRect);
 
                 Canvas.SetLeft(nodeCtrl.Item1, nodeRect.Left);
@@ -1243,7 +1121,7 @@ namespace Game.Newt.Testers
                     {
                         Vector direction = Math3D.GetRandomVector_Circular_Shell(1).ToVector2D();
 
-                        Rect imageRect2 = GetFreeSpot(new Size(imageCtrl.Item2.X, imageCtrl.Item2.Y), new Point(0, 0), direction, rectangles);
+                        Rect imageRect2 = SelfOrganizingMapsWPF.GetFreeSpot(new Size(imageCtrl.Item2.X, imageCtrl.Item2.Y), new Point(0, 0), direction, rectangles);
 
                         return new { Rect = imageRect2, Distance = new Vector(imageRect2.CenterX(), imageRect2.CenterY()).LengthSquared };
                     }).
@@ -1274,13 +1152,13 @@ namespace Game.Newt.Testers
 
         private static void AddTextRow(Grid grid, int row, string leftText, string rightText, double fontSizeLeft, double fontSizeRight, double strokeThicknessLeft, double strokeThicknessRight, bool invert)
         {
-            OutlinedTextBlock text = GetOutlineText(leftText, fontSizeLeft, strokeThicknessLeft, invert);
+            OutlinedTextBlock text = SelfOrganizingMapsWPF.GetOutlineText(leftText, fontSizeLeft, strokeThicknessLeft, invert);
             text.HorizontalAlignment = HorizontalAlignment.Right;
             Grid.SetColumn(text, 0);
             Grid.SetRow(text, row);
             grid.Children.Add(text);
 
-            text = GetOutlineText(rightText, fontSizeRight, strokeThicknessRight, invert);
+            text = SelfOrganizingMapsWPF.GetOutlineText(rightText, fontSizeRight, strokeThicknessRight, invert);
             text.HorizontalAlignment = HorizontalAlignment.Left;
             Grid.SetColumn(text, 2);
             Grid.SetRow(text, row);
@@ -1341,94 +1219,6 @@ namespace Game.Newt.Testers
             retVal.Children.Add(GetPercentVisual(bitmap.PixelWidth, 10, imageDistPercent));
 
             return new Tuple<UIElement, VectorInt>(retVal, new VectorInt(bitmap.PixelWidth, bitmap.PixelHeight + 10));
-        }
-
-        private static Tuple<Rect, Vector> GetMouseCursorRect(double marginPercent = .1)
-        {
-            // Get system size
-            double width = SystemParameters.CursorWidth;
-            double height = SystemParameters.CursorHeight;
-
-            // Offset (so the center will be center of the cursor, and not topleft)
-            //NOTE: Doing this before margin is applied
-            Vector offset = new Vector(width / 2d, height / 2d);
-
-            // Apply margin
-            width *= 1 + marginPercent;
-            height *= 1 + marginPercent;
-
-            // Build return
-            double halfWidth = width / 2d;
-            double halfHeight = height / 2d;
-            Rect rect = new Rect(-halfWidth, -halfHeight, width, height);
-
-            return Tuple.Create(rect, offset);
-        }
-
-        /// <summary>
-        /// This looks long direction until a spot large enough to hold size is available
-        /// </summary>
-        /// <param name="size">The size of the rectangle to return</param>
-        /// <param name="start">The point that the rectangle would like to be centered over</param>
-        /// <param name="direction">
-        /// The direction to slide the rectangle until an empty space is found
-        /// NOTE: Set dir.Y to be negative to match screen coords
-        /// </param>
-        private static Rect GetFreeSpot(Size size, Point desiredPos, Vector direction, List<Rect> existing)
-        {
-            double halfWidth = size.Width / 2d;
-            double halfHeight = size.Height / 2d;
-
-            if (existing.Count == 0)
-            {
-                // There is nothing blocking this, center the rectangle over the position
-                return new Rect(desiredPos.X - halfWidth, desiredPos.Y - halfHeight, size.Width, size.Height);
-            }
-
-            // Direction unit
-            Vector dirUnit = direction.ToUnit();
-            if (Math2D.IsInvalid(dirUnit))
-            {
-                dirUnit = Math3D.GetRandomVector_Circular_Shell(1).ToVector2D();
-            }
-
-            // Calculate step distance (5% of the average of all the sizes)
-            double stepDist = UtilityCore.Iterate<Size>(size, existing.Select(o => o.Size)).
-                SelectMany(o => new[] { o.Width, o.Height }).
-                Average();
-
-            stepDist *= .05;
-
-            // Keep walking along direction until the rectangle doesn't intersect any existing rectangles
-            Point point = new Point();
-            Rect rect = new Rect();
-
-            for (int cntr = 0; cntr < 5000; cntr++)
-            {
-                point = desiredPos + (dirUnit * (stepDist * cntr));
-                rect = new Rect(point.X - halfWidth, point.Y - halfHeight, size.Width, size.Height);
-
-                if (!existing.Any(o => o.IntersectsWith(rect)))
-                {
-                    break;
-                }
-            }
-
-            return rect;
-        }
-
-        private static OutlinedTextBlock GetOutlineText(string text, double fontSize, double strokeThickness, bool invert = false)
-        {
-            return new OutlinedTextBlock()
-            {
-                Text = text,
-                FontSize = fontSize,
-                FontWeight = FontWeight.FromOpenTypeWeight(900),
-                StrokeThickness = strokeThickness,
-                Fill = invert ? Brushes.Black : Brushes.White,
-                Stroke = invert ? Brushes.White : Brushes.Black,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
         }
 
         private static UIElement GetPercentVisual(double width, double height, double percent)
@@ -1622,79 +1412,6 @@ namespace Game.Newt.Testers
                 default:
                     throw new ApplicationException("Unknown NormalizationType: " + normalizationType.ToString());
             }
-        }
-
-        /// <summary>
-        /// This overload lays them out in 2D (easy to display results)
-        /// </summary>
-        private static NodePositions GetNodePositions2D(int numNodes, NodeDisplayLayout layout)
-        {
-            Vector[] positions = null;
-            double mapRadius = -1;
-            double cellSize = -1d;      // only used when grid
-
-            switch (layout)
-            {
-                //case NodeDisplayLayout.Grid_UniformSize:
-                //    #region Grid
-
-                //    // Make sure the count is a square
-                //    int widthHeight = Math.Sqrt(numNodes).ToInt_Ceiling();
-                //    numNodes = widthHeight * widthHeight;
-
-                //    positions = new Vector[numNodes];
-
-                //    // Just use a cell size of 1.  The choice is arbitrary, since the algorithm will be based off of map size, and the render will scale to fit
-                //    cellSize = 1d;
-                //    double halfCellSize = cellSize / 2d;
-
-                //    mapRadius = ((widthHeight + 1) * cellSize) / 2d;
-
-                //    for (int y = 0; y < widthHeight; y++)
-                //    {
-                //        int yOffset = y * widthHeight;
-
-                //        for (int x = 0; x < widthHeight; x++)
-                //        {
-                //            positions[yOffset + x] = new Vector((x * cellSize) + halfCellSize, (y * cellSize) + halfCellSize);
-                //        }
-                //    }
-
-                //    #endregion
-                //    break;
-
-                case NodeDisplayLayout.Disk_All:
-                case NodeDisplayLayout.Disk_NonZero:
-                case NodeDisplayLayout.Blobs:
-                    #region Disk
-
-                    positions = Math3D.GetRandomVectors_Circular_EvenDist(numNodes, 1);
-
-                    var aabb = Math2D.GetAABB(positions);
-                    mapRadius = Math1D.Avg(aabb.Item2.X - aabb.Item1.X, aabb.Item2.Y - aabb.Item1.Y) / 2d;
-
-                    // Delaunay tries to link the points up into equilateral triangles
-                    double avgEdgeLength = Math2D.GetDelaunayTriangulation(positions.Select(o => o.ToPoint()).ToArray(), true).
-                        Select(o => (positions[o.Item1] - positions[o.Item2]).Length).
-                        Average();
-
-                    // Assuming the triangles are roughly equilateral, the radius can be calculated with some trig
-                    //https://www.quora.com/An-equilateral-triangle-of-side-6cm-is-inscribed-in-a-circle-How-do-I-find-the-radius-of-the-circle
-                    cellSize = avgEdgeLength / Math.Sqrt(3);
-                    cellSize *= 2;      // need size, not radius
-
-                    #endregion
-                    break;
-
-                default:
-                    throw new ApplicationException("Unknown SimpleNodeLayout: " + layout.ToString());
-            }
-
-            double[][] positionsGeneric = positions.
-                Select(o => new[] { o.X, o.Y }).
-                ToArray();
-
-            return new NodePositions(positionsGeneric, mapRadius, cellSize);
         }
 
         #endregion
