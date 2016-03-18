@@ -776,6 +776,20 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
+        #region Random
+
+        public static double NextBell(this Random rand, RandomBellArgs args)
+        {
+            double retVal = BezierUtil.GetPoint(rand.NextDouble(), args.Bezier).Y;
+
+            if (retVal < 0) retVal = 0;
+            else if (retVal > 1) retVal = 1;
+
+            return retVal;
+        }
+
+        #endregion
+
         #region Private Methods
 
         /// <summary>

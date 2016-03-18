@@ -289,7 +289,7 @@ namespace Game.Newt.Testers.Encog
                 }
 
                 // Convert to gray
-                var colors = bitmap.GetColorBytes().
+                var colors = bitmap.GetColors_Byte().
                     Select(o =>
                     {
                         byte gray = Convert.ToByte(UtilityWPF.ConvertToGray(o[1], o[2], o[3]));

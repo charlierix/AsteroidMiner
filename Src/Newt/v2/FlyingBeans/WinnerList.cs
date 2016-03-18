@@ -44,7 +44,7 @@ namespace Game.Newt.v2.FlyingBeans
                 this.Score = score;
                 this.Age = age;
             }
-            public WinningBean(Ship ship, double score, double age)
+            public WinningBean(Bot ship, double score, double age)
             {
                 this.Ship = ship;
                 this.DNA = null;
@@ -54,7 +54,7 @@ namespace Game.Newt.v2.FlyingBeans
             }
 
             // Only one of these two will be set
-            public readonly Ship Ship;
+            public readonly Bot Ship;
             public readonly ShipDNA DNA;
 
             public readonly double Score;
@@ -866,7 +866,7 @@ namespace Game.Newt.v2.FlyingBeans
 
         #region Public Methods
 
-        public void ShipCreated(long candidateToken, Ship ship)
+        public void ShipCreated(long candidateToken, Bot ship)
         {
             // Find the candidate list that this referes to
             TrackingCandidate finalist = _finalists.Where(o => o.Token == candidateToken).FirstOrDefault();
@@ -878,7 +878,7 @@ namespace Game.Newt.v2.FlyingBeans
             // Store the ship's token
             finalist.StartedShip(ship.PhysicsBody.Token);
         }
-        public void ShipDied(Ship ship)
+        public void ShipDied(Bot ship)
         {
             _removedTokens.Add(ship.PhysicsBody.Token);
         }

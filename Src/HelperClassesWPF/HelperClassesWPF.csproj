@@ -84,6 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoScrollEmulator.cs" />
+    <Compile Include="Bezier.cs" />
     <Compile Include="BindingHelper.cs" />
     <Compile Include="CameraHelper.cs" />
     <Compile Include="Clipper\Clipper.cs" />
@@ -161,6 +162,7 @@
     <Compile Include="Rectangle3DIndexed.cs" />
     <Compile Include="SoundPool.cs" />
     <Compile Include="StaTaskScheduler.cs" />
+    <Compile Include="StaticRandomWPF.cs" />
     <Compile Include="Tetrahedron.cs" />
     <Compile Include="TrackBall.cs" />
     <Compile Include="TrackballGrabber.cs" />

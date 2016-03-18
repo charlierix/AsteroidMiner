@@ -53,7 +53,7 @@ namespace Game.Newt.v2.Arcanorum
         private DragDropItem _draggingItem = null;
 
         private Shop _shop = null;
-        private Bot _bot = null;
+        private ArcBot _bot = null;
 
         private DispatcherTimer _timer = null;
         private DateTime _lastTick = DateTime.UtcNow;
@@ -105,7 +105,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Public Methods
 
-        public void ShowInventories(Shop shop, Bot bot)
+        public void ShowInventories(Shop shop, ArcBot bot)
         {
             _shop = shop;
             _bot = bot;
@@ -118,7 +118,7 @@ namespace Game.Newt.v2.Arcanorum
             else
             {
                 this.AttachedWeaponID = bot.Weapon.DNA.UniqueID;
-                bot.AttachWeapon(null, Bot.ItemToFrom.Nowhere, Bot.ItemToFrom.Inventory);
+                bot.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Inventory);
             }
 
             //TODO: When the user can create weapons in the shop, this will need to be recalculated, and all item cameras need to be adjusted

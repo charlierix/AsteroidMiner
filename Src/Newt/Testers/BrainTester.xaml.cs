@@ -151,7 +151,10 @@ namespace Game.Newt.Testers
                 // Don't allow too many divisions
                 if (nearNodes.Count > MAXDIVISIONS)
                 {
-                    nearNodes = nearNodes.OrderBy(o => o.Item2).Take(MAXDIVISIONS).ToList();
+                    nearNodes = nearNodes.
+                        OrderBy(o => o.Item2).
+                        Take(MAXDIVISIONS).
+                        ToList();
                 }
 
                 // Figure out what percent of the weight to give these nodes (based on the ratio of their distances to the search point)
@@ -187,7 +190,10 @@ namespace Game.Newt.Testers
                 // Don't allow too many divisions
                 if (nearNodes.Count > maxReturn)
                 {
-                    nearNodes = nearNodes.OrderBy(o => o.Item2).Take(maxReturn).ToList();
+                    nearNodes = nearNodes.
+                        OrderBy(o => o.Item2).
+                        Take(maxReturn).
+                        ToList();
                 }
 
                 // Figure out what percent of the weight to give these nodes (based on the ratio of their distances to the search point)
@@ -240,6 +246,14 @@ namespace Game.Newt.Testers
 
 
             }
+            /// <summary>
+            /// Test2 takes an original point, and chooses the nearest X items from the new positions.
+            /// 
+            /// Say two of those original points had a link.  Now you could have several new points that correspond to one
+            /// of the originals, linked to several that correspond to the second original
+            /// 
+            /// This method creates links from one set to the other
+            /// </summary>
             public static LinkResult3[] Test4(LinkResult2[] from, LinkResult2[] to, int maxReturn)
             {
                 // Find the combinations that have the highest percentage
@@ -260,12 +274,18 @@ namespace Game.Newt.Testers
                 }
                 else
                 {
-                    topProducts = products.OrderByDescending(o => o.Item3).Take(maxReturn).ToArray();
+                    topProducts = products.
+                        OrderByDescending(o => o.Item3).
+                        Take(maxReturn).
+                        ToArray();
                 }
 
                 // Normalize
                 double totalPercent = topProducts.Sum(o => o.Item3);
-                LinkResult3[] retVal = topProducts.Select(o => new LinkResult3(from[o.Item1], to[o.Item2], o.Item3 / totalPercent)).ToArray();
+
+                LinkResult3[] retVal = topProducts.
+                    Select(o => new LinkResult3(from[o.Item1], to[o.Item2], o.Item3 / totalPercent)).
+                    ToArray();
 
                 return retVal;
             }
@@ -343,7 +363,7 @@ namespace Game.Newt.Testers
                 // Figure out what the maximum possible distance would be
                 double maxRange = (min * searchRadiusMultiplier) - min;
 
-                // Figure out ratios base on distance
+                // Figure out ratios based on distance
                 double[] ratios = new double[distances.Count];
                 for (int cntr = 0; cntr < ratios.Length; cntr++)
                 {
@@ -1215,6 +1235,8 @@ namespace Game.Newt.Testers
         {
             try
             {
+                #region Parse Textboxes
+
                 int numFrom;
                 if (!int.TryParse(txtFuzzyLinkTest2FromCount.Text, out numFrom))
                 {
@@ -1242,6 +1264,8 @@ namespace Game.Newt.Testers
                     MessageBox.Show("Couldn't parse the max final as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                #endregion
 
                 btnClear_Click(this, new RoutedEventArgs());
 
@@ -1322,6 +1346,260 @@ namespace Game.Newt.Testers
                 _debugVisuals.Add(model);
                 _viewportNeural.Children.Add(model);
 
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnFuzzyLinkTest2New_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                #region Parse Gui
+
+                int numFrom;
+                if (!int.TryParse(txtFuzzyLinkTest2FromCount.Text, out numFrom))
+                {
+                    MessageBox.Show("Couldn't parse the from count as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int numTo;
+                if (!int.TryParse(txtFuzzyLinkTest2ToCount.Text, out numTo))
+                {
+                    MessageBox.Show("Couldn't parse the to count as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int maxIntermediate;
+                if (!int.TryParse(txtFuzzyLinkTest2MaxIntermediate.Text, out maxIntermediate))
+                {
+                    MessageBox.Show("Couldn't parse the max intermediate as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int maxFinal;
+                if (!int.TryParse(txtFuzzyLinkTest2MaxFinal.Text, out maxFinal))
+                {
+                    MessageBox.Show("Couldn't parse the max final as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                #endregion
+
+                btnClear_Click(this, new RoutedEventArgs());
+
+                #region Create Neurons
+
+                Point3D fromPoint = new Point3D(-1.1, 0, 0);
+                Point3D toPoint = new Point3D(1.1, 0, 0);
+
+                List<INeuron> inNeurons = new List<INeuron>();
+
+                // From
+                inNeurons.Add(new Neuron_ZeroPos(fromPoint));		// old from
+
+                Point3D[] fromPositions = new Point3D[numFrom];
+                for (int cntr = 0; cntr < numFrom; cntr++)
+                {
+                    fromPositions[cntr] = fromPoint + Math3D.GetRandomVector_Spherical(1d);
+                    inNeurons.Add(new Neuron_NegPos(fromPositions[cntr]));
+                }
+
+                // To
+                inNeurons.Add(new Neuron_ZeroPos(toPoint));		// old to
+
+                Point3D[] toPositions = new Point3D[numTo];
+                for (int cntr = 0; cntr < numTo; cntr++)
+                {
+                    toPositions[cntr] = toPoint + Math3D.GetRandomVector_Spherical(1d);
+                    inNeurons.Add(new Neuron_NegPos(toPositions[cntr]));
+                }
+
+                Point3D[] allNew = fromPositions.
+                    Concat(toPositions).
+                    ToArray();
+
+                // Draw neurons
+                List<Tuple<INeuron, SolidColorBrush>> outNeurons;
+                ModelVisual3D model;
+                BuildNeuronVisuals(out outNeurons, out model, inNeurons, new NeruonContainerShell(new Point3D(0, 0, 0), Quaternion.Identity, null), _colors);
+
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                #endregion
+
+                var existingLinks = new[]
+                {
+                    Tuple.Create(fromPoint, toPoint, 1d),
+                };
+
+                var newLinks = ItemLinker.FuzzyLink(existingLinks, allNew, maxFinal, maxIntermediate);
+
+                #region Draw Links
+
+                // Draw links
+                Model3DGroup posLines = null, negLines = null;
+                DiffuseMaterial posDiffuse = null, negDiffuse = null;
+
+                // Draw initial results
+                BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, fromPoint, toPoint, -1d, null, _colors);
+
+                // Draw final results
+                foreach (var result in newLinks)
+                {
+                    BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, allNew[result.Item1], allNew[result.Item2], result.Item3 * 4d, null, _colors);
+                }
+
+                model = new ModelVisual3D();
+                model.Content = posLines;
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                model = new ModelVisual3D();
+                model.Content = negLines;
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnFuzzyLinkTest3_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                #region parse gui
+
+                int numPoints;
+                if (!int.TryParse(txtFuzzyLinkTest3Points.Text, out numPoints))
+                {
+                    MessageBox.Show("Couldn't parse the number of points as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int initialLinkCount;
+                if (!int.TryParse(txtFuzzyLinkTest3Links.Text, out initialLinkCount))
+                {
+                    MessageBox.Show("Couldn't parse initial links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int maxIntermediateLinkCount;
+                if (!int.TryParse(txtFuzzyLinkTest3MaxIntermediate.Text, out maxIntermediateLinkCount))
+                {
+                    MessageBox.Show("Couldn't parse max intermediate links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int maxFinalLinkCount;
+                if (!int.TryParse(txtFuzzyLinkTest3MaxFinal.Text, out maxFinalLinkCount))
+                {
+                    MessageBox.Show("Couldn't parse max final links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                #endregion
+
+                btnClear_Click(this, new RoutedEventArgs());
+
+                #region create a cloud of points
+
+                List<INeuron> initialNeurons = new List<INeuron>();
+
+                Point3D[] initialPositions = new Point3D[numPoints];
+                for (int cntr = 0; cntr < numPoints; cntr++)
+                {
+                    initialPositions[cntr] = Math3D.GetRandomVector_Spherical(2.5d).ToPoint();
+                    initialNeurons.Add(new Neuron_ZeroPos(initialPositions[cntr]));
+                }
+
+                #endregion
+
+                #region create some initial links
+
+                var initialLinks = UtilityCore.GetRandomPairs(numPoints, initialLinkCount).
+                    ToArray();
+
+                #endregion
+
+                #region create a new cloud of points
+
+                List<INeuron> finalNeurons = new List<INeuron>();
+
+                Point3D[] finalPositions = new Point3D[numPoints];
+                for (int cntr = 0; cntr < numPoints; cntr++)
+                {
+                    finalPositions[cntr] = Math3D.GetRandomVector_Spherical(2.5d).ToPoint();
+                    finalNeurons.Add(new Neuron_NegPos(finalPositions[cntr]));
+                }
+
+                #endregion
+
+                #region relink
+
+                var initialLinkPoints = initialLinks.
+                    Select(o => Tuple.Create(initialPositions[o.Item1], initialPositions[o.Item2], 1d)).
+                    ToArray();
+
+                var newLinks = ItemLinker.FuzzyLink(initialLinkPoints, finalPositions, maxFinalLinkCount, maxIntermediateLinkCount);
+
+                #endregion
+
+                #region draw neurons
+
+                // Initial (don't want to draw all of them, that's just distracting)
+                var initialFiltered = initialLinks.SelectMany(o => new[] { o.Item1, o.Item2 }).
+                    Distinct().
+                    Select(o => initialNeurons[o]);
+
+                List<Tuple<INeuron, SolidColorBrush>> outNeurons;
+                ModelVisual3D model;
+                BuildNeuronVisuals(out outNeurons, out model, initialFiltered, new NeruonContainerShell(new Point3D(0, 0, 0), Quaternion.Identity, null), _colors);
+
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                // Final
+                BuildNeuronVisuals(out outNeurons, out model, finalNeurons, new NeruonContainerShell(new Point3D(0, 0, 0), Quaternion.Identity, null), _colors);
+
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                #endregion
+                #region draw links
+
+                Model3DGroup posLines = null, negLines = null;
+                DiffuseMaterial posDiffuse = null, negDiffuse = null;
+
+                // Initial
+                foreach (var link in initialLinks)
+                {
+                    BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, initialPositions[link.Item1], initialPositions[link.Item2], -1d, null, _colors);
+                }
+
+                // Final
+                foreach (var result in newLinks)
+                {
+                    BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, finalPositions[result.Item1], finalPositions[result.Item2], result.Item3 * 4d, null, _colors);
+                }
+
+                model = new ModelVisual3D();
+                model.Content = posLines;
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
+
+                model = new ModelVisual3D();
+                model.Content = negLines;
+                _debugVisuals.Add(model);
+                _viewportNeural.Children.Add(model);
 
                 #endregion
             }
@@ -2769,7 +3047,7 @@ namespace Game.Newt.Testers
                 {
                     // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
                     // neuron containers can hook to it
-                    inputs.Add(new NeuralUtility.ContainerInput(sensor.Sensor, NeuronContainerType.Sensor, sensor.Sensor.Position, sensor.Sensor.Orientation, null, null, 0, null, null));
+                    inputs.Add(new NeuralUtility.ContainerInput(sensor.Body.Token, sensor.Sensor, NeuronContainerType.Sensor, sensor.Sensor.Position, sensor.Sensor.Orientation, null, null, 0, null, null));
                 }
             }
 
@@ -2778,6 +3056,7 @@ namespace Game.Newt.Testers
                 foreach (BrainStuff brain in _brains)
                 {
                     inputs.Add(new NeuralUtility.ContainerInput(
+                        brain.Body.Token,
                         brain.Brain, NeuronContainerType.Brain,
                         brain.Brain.Position, brain.Brain.Orientation,
                         _itemOptions.BrainLinksPerNeuron_Internal,
@@ -2799,6 +3078,7 @@ namespace Game.Newt.Testers
                     //TODO: Consider existing links
                     //NOTE: This won't be fed by other manipulators
                     inputs.Add(new NeuralUtility.ContainerInput(
+                        thrust.Body.Token,
                         thrust.Thrust, NeuronContainerType.Manipulator,
                         thrust.Thrust.Position, thrust.Thrust.Orientation,
                         null,

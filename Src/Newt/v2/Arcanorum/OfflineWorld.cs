@@ -305,8 +305,8 @@ namespace Game.Newt.v2.Arcanorum
             #region Update Manager
 
             retVal.UpdateManager = new UpdateManager(
-                new Type[] { typeof(Bot), typeof(BotNPC) },
-                new Type[] { typeof(Bot), typeof(BotNPC) },
+                new Type[] { typeof(ArcBot), typeof(ArcBotNPC) },
+                new Type[] { typeof(ArcBot), typeof(ArcBotNPC) },
                 retVal.Map, interval);
 
             #endregion
@@ -389,7 +389,7 @@ namespace Game.Newt.v2.Arcanorum
         private static void AddBot(AddBotArgs dna, WorldVars arg)
         {
             // Bot
-            BotNPC bot = new BotNPC(dna.Bot, dna.Level, dna.Position, arg.World, arg.Map, arg.Keep2D, arg.MaterialIDs, null, arg.EditorOptions, arg.ItemOptions, arg.Gravity, arg.DragPlane, dna.HomingPoint, dna.HomingRadius, true, true);
+            ArcBotNPC bot = new ArcBotNPC(dna.Bot, dna.Level, dna.Position, arg.World, arg.Map, arg.Keep2D, arg.MaterialIDs, null, arg.EditorOptions, arg.ItemOptions, arg.Gravity, arg.DragPlane, dna.HomingPoint, dna.HomingRadius, true, true);
 
             if (dna.AngularVelocity != null)
             {

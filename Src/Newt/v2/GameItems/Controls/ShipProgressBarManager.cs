@@ -43,18 +43,18 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #region Public Properties
 
-        //TODO: Have an option of being given a ship, or an array of parts
-        private Ship _ship = null;
-        public Ship Ship
+        //TODO: Have an option of being given a bot, or an array of parts
+        private Bot _bot = null;
+        public Bot Bot
         {
             get
             {
-                return _ship;
+                return _bot;
             }
             set
             {
                 ClearProgressBars();
-                _ship = value;
+                _bot = value;
             }
         }
 
@@ -85,54 +85,54 @@ namespace Game.Newt.v2.GameItems.Controls
         {
             //NOTE: The ship's containers shouldn't switch to/from null during the lifetime of the ship, but this method is made to be robust
 
-            if (_ship == null)
+            if (_bot == null)
             {
                 return;
             }
 
             // Energy
-            if (_energy != null && _ship.Energy != null)
+            if (_energy != null && _bot.Energy != null)
             {
-                _energy.Maximum = _ship.Energy.QuantityMax;
-                _energy.Value = _ship.Energy.QuantityCurrent;
+                _energy.Maximum = _bot.Energy.QuantityMax;
+                _energy.Value = _bot.Energy.QuantityCurrent;
             }
-            else if (_energy == null && _ship.Energy != null)
+            else if (_energy == null && _bot.Energy != null)
             {
-                _energy = CreateProgressBar(_ship.Energy.QuantityCurrent, _ship.Energy.QuantityMax, "energy", WorldColors.EnergyTank);
+                _energy = CreateProgressBar(_bot.Energy.QuantityCurrent, _bot.Energy.QuantityMax, "energy", WorldColors.EnergyTank);
             }
-            else if (_energy != null && _ship.Energy == null)
+            else if (_energy != null && _bot.Energy == null)
             {
                 _panel.Children.Remove(_energy);
                 _energy = null;
             }
 
             // Fuel
-            if (_fuel != null && _ship.Fuel != null)
+            if (_fuel != null && _bot.Fuel != null)
             {
-                _fuel.Maximum = _ship.Fuel.QuantityMax;
-                _fuel.Value = _ship.Fuel.QuantityCurrent;
+                _fuel.Maximum = _bot.Fuel.QuantityMax;
+                _fuel.Value = _bot.Fuel.QuantityCurrent;
             }
-            else if (_fuel == null && _ship.Fuel != null)
+            else if (_fuel == null && _bot.Fuel != null)
             {
-                _fuel = CreateProgressBar(_ship.Fuel.QuantityCurrent, _ship.Fuel.QuantityMax, "fuel", WorldColors.FuelTank);
+                _fuel = CreateProgressBar(_bot.Fuel.QuantityCurrent, _bot.Fuel.QuantityMax, "fuel", WorldColors.FuelTank);
             }
-            else if (_fuel != null && _ship.Fuel == null)
+            else if (_fuel != null && _bot.Fuel == null)
             {
                 _panel.Children.Remove(_fuel);
                 _fuel = null;
             }
 
             // Plasma
-            if (_plasma != null && _ship.Plasma != null)
+            if (_plasma != null && _bot.Plasma != null)
             {
-                _plasma.Maximum = _ship.Plasma.QuantityMax;
-                _plasma.Value = _ship.Plasma.QuantityCurrent;
+                _plasma.Maximum = _bot.Plasma.QuantityMax;
+                _plasma.Value = _bot.Plasma.QuantityCurrent;
             }
-            else if (_plasma == null && _ship.Plasma != null)
+            else if (_plasma == null && _bot.Plasma != null)
             {
-                _plasma = CreateProgressBar(_ship.Plasma.QuantityCurrent, _ship.Plasma.QuantityMax, "plasma", WorldColors.PlasmaTank);
+                _plasma = CreateProgressBar(_bot.Plasma.QuantityCurrent, _bot.Plasma.QuantityMax, "plasma", WorldColors.PlasmaTank);
             }
-            else if (_plasma != null && _ship.Plasma == null)
+            else if (_plasma != null && _bot.Plasma == null)
             {
                 _panel.Children.Remove(_plasma);
                 _plasma = null;
@@ -140,9 +140,9 @@ namespace Game.Newt.v2.GameItems.Controls
 
             // Cargo
             Tuple<double, double> cargo = null;
-            if (_ship.CargoBays != null)
+            if (_bot.CargoBays != null)
             {
-                cargo = _ship.CargoBays.CargoVolume;
+                cargo = _bot.CargoBays.CargoVolume;
             }
 
             if (cargo != null && cargo.Item2 > 0d)
@@ -165,16 +165,16 @@ namespace Game.Newt.v2.GameItems.Controls
 
             // Ammo
             //TODO: Break this down by caliber
-            if (_ammo != null && _ship.Ammo != null)
+            if (_ammo != null && _bot.Ammo != null)
             {
-                _ammo.Maximum = _ship.Ammo.QuantityMax;
-                _ammo.Value = _ship.Ammo.QuantityCurrent;
+                _ammo.Maximum = _bot.Ammo.QuantityMax;
+                _ammo.Value = _bot.Ammo.QuantityCurrent;
             }
-            else if (_ammo == null && _ship.Ammo != null)
+            else if (_ammo == null && _bot.Ammo != null)
             {
-                _ammo = CreateProgressBar(_ship.Ammo.QuantityCurrent, _ship.Ammo.QuantityMax, "ammo", WorldColors.AmmoBox);
+                _ammo = CreateProgressBar(_bot.Ammo.QuantityCurrent, _bot.Ammo.QuantityMax, "ammo", WorldColors.AmmoBox);
             }
-            else if (_ammo != null && _ship.Ammo == null)
+            else if (_ammo != null && _bot.Ammo == null)
             {
                 _panel.Children.Remove(_ammo);
                 _ammo = null;

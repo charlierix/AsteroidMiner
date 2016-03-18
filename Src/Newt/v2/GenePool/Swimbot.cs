@@ -16,7 +16,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GenePool
 {
-    public class Swimbot : Ship
+    public class Swimbot : Bot
     {
         #region Declaration Section
 
@@ -26,19 +26,12 @@ namespace Game.Newt.v2.GenePool
 
         #endregion
 
-        #region Constructor/Factory
+        #region Constructor
 
-        public static async Task<Swimbot> GetNewSwimbotAsync(EditorOptions options, ItemOptions itemOptions, ShipDNA dna, World world, int material_Ship, int material_Projectile, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map)
-        {
-            var construction = await GetNewShipConstructionAsync(options, itemOptions, dna, world, material_Ship, material_Projectile, radiation, gravity, cameraPool, map, true, true);
-
-            return new Swimbot(construction, map);
-        }
-
-        protected Swimbot(ShipConstruction construction, Map map)
+        public Swimbot(BotConstruction_Result construction)
             : base(construction)
         {
-            _map = map;
+            _map = construction.ArgsCore.Map;
 
             _cargoBays = base.Parts.Where(o => o is CargoBay).Select(o => (CargoBay)o).ToArray();
         }

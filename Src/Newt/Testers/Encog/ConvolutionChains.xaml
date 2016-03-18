@@ -1,6 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.Encog.ConvolutionChains"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:helpctrl="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
         Title="Convolution Chains" ResizeMode="CanResizeWithGrip" Background="#C0C9BF" Width="1000" Height="750" Closed="Window_Closed">
     <Window.Resources>
 
@@ -42,6 +43,33 @@
                     <ScaleTransform ScaleX=".9" ScaleY=".9"/>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="sliderValueText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="500"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="slider" TargetType="helpctrl:SliderShowValues">
+            <Setter Property="Margin" Value="0,2"/>
+            <!--<Setter Property="MinWidth" Value="175"/>-->
+            <!-- NOTE: Without this being set, the mouseover trigger only works intermittantly, and leaves multiple sliders visible at a time -->
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="False">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type helpctrl:SliderShowValues}">
+                                <TextBlock Text="{TemplateBinding ValueDisplay}" MinWidth="60" Margin="3,0,0,0" Background="Transparent" HorizontalAlignment="Stretch" Style="{StaticResource sliderValueText}"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="MinWidth" Value="120"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <ContextMenu x:Key="chainContextMenu">
@@ -211,6 +239,56 @@
                             <!-- Extract Button -->
                             <Button Content="Create new extract" ToolTip="Extract from unfiltered image" Margin="0,8,0,0" Click="CreateChain_Extract_Click"/>
                             <Button Content="Append Extract" ToolTip="Adds an extract from the last link of an existing chain (adds extract to the end)" Margin="0,4,0,0" Click="GrowChain_Extract_Click"/>
+                        </StackPanel>
+                    </Border>
+                </Expander>
+
+                <Expander Header="SOM" ToolTip="Self Organizing Maps">
+                    <Border Style="{StaticResource panelBorder}">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="5"/>
+                                    <ColumnDefinition Width="1*" MinWidth="40"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="2"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="2"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Image Size -->
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="Image Size" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" Grid.Row="0" Name="txtImageSizeSOM" Text="80"/>
+
+                                <!-- Vector Size -->
+                                <TextBlock Grid.Column="0" Grid.Row="2" Text="Vector Size" ToolTip="The actual vector size will be this value squared" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                <TextBox Grid.Column="2" Grid.Row="2" Name="txtVectorSizeSOM" Text="7"/>
+
+                                <!-- Max spread % -->
+                                <CheckBox Grid.Column="0" Grid.Row="4" Name="chkSOMMaxSpreadPercent" Content="max spread %" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <CheckBox.ToolTip>
+                                        <TextBlock>Recurses on nodes if their range is too wide<LineBreak/>WARNING: This is still a bit flawed (choosing child node weights)</TextBlock>
+                                    </CheckBox.ToolTip>
+                                </CheckBox>
+                                <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkSOMMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
+
+
+                                <!-- TODO: Image filter (none, edge) -->
+                                <!-- TODO: Normalization -->
+                                
+                            </Grid>
+
+                            <!-- TODO: May want to expose SOM rules -->
+
+                            <Button Content="Generate" Margin="0,8,0,0" Click="GenerateSOM_Click">
+                                <Button.ToolTip>
+                                    <TextBlock>Group images using self organized map<LineBreak/>Use som node centers as convolutions</TextBlock>
+                                </Button.ToolTip>
+                            </Button>
                         </StackPanel>
                     </Border>
                 </Expander>

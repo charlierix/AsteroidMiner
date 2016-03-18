@@ -152,7 +152,7 @@ namespace Game.Newt.v2.Arcanorum
             material = materials.Spike_Iron;     // the property get returns a slightly random color
 
             // 0, 1 or 2 rings.  Higher chance of 0 than 2
-            int numRings = Convert.ToInt32(WeaponDNA.GetKeyValue("numRings", from, to, Math.Floor(rand.NextPow(2, 2.3, false))));
+            int numRings = Convert.ToInt32(WeaponDNA.GetKeyValue("numRings", from, to, Math.Floor(rand.NextPow(2, 2.3))));
 
             double[] zs = new double[0];
 

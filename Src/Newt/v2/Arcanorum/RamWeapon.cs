@@ -45,7 +45,7 @@ namespace Game.Newt.v2.Arcanorum
 
         private bool _isFullySetUp = false;
 
-        private readonly Bot _bot;
+        private readonly ArcBot _bot;
 
         private readonly Viewport3D _viewport;
 
@@ -96,7 +96,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public RamWeapon(RamWeaponDNA dna, Bot bot, Viewport3D viewport)
+        public RamWeapon(RamWeaponDNA dna, ArcBot bot, Viewport3D viewport)
         {
             _bot = bot;
             _viewport = viewport;

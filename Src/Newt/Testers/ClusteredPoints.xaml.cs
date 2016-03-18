@@ -678,7 +678,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(2, 1, false);
+                    _points[cntr].Value = rand.NextPow(2, 1);
                 }
 
                 RedrawPoints();
@@ -702,7 +702,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(4, 1, false);
+                    _points[cntr].Value = rand.NextPow(4, 1);
                 }
 
                 RedrawPoints();
@@ -726,7 +726,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(8, 1, false);
+                    _points[cntr].Value = rand.NextPow(8, 1);
                 }
 
                 RedrawPoints();
@@ -750,7 +750,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(16, 1, false);
+                    _points[cntr].Value = rand.NextPow(16, 1);
                 }
 
                 RedrawPoints();
@@ -774,7 +774,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(32, 1, false);
+                    _points[cntr].Value = rand.NextPow(32, 1);
                 }
 
                 RedrawPoints();
@@ -798,7 +798,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(64, 1, false);
+                    _points[cntr].Value = rand.NextPow(64, 1);
                 }
 
                 RedrawPoints();
@@ -822,7 +822,7 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < _points.Length; cntr++)
                 {
-                    _points[cntr].Value = rand.NextPow(128, 1, false);
+                    _points[cntr].Value = rand.NextPow(128, 1);
                 }
 
                 RedrawPoints();

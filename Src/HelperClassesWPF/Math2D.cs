@@ -4834,7 +4834,8 @@ namespace Game.HelperClassesWPF
                     continue;
                 }
 
-                if (!Math1D.IsNearZero(Vector3D.DotProduct(retVal.Normal, line)))
+                //if (!Math1D.IsNearZero(Vector3D.DotProduct(retVal.NormalUnit, line.ToUnit())))
+                if (Math.Abs(Vector3D.DotProduct(retVal.NormalUnit, line.ToUnit())) > (Math3D.NEARZERO * 1000))        // this was being a bit too strict.  Loosening it a little
                 {
                     // This point isn't coplanar with the triangle
                     return null;

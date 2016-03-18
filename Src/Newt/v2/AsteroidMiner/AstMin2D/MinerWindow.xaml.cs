@@ -226,7 +226,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _material_Projectile = _materialManager.AddMaterial(material);
 
                 // Collisions
-                _materialManager.RegisterCollisionEvent(_material_Ship, _material_Mineral, Collision_ShipMineral);
+                _materialManager.RegisterCollisionEvent(_material_Ship, _material_Mineral, Collision_BotMineral);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Asteroid, Collision_ShipAsteroid);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Projectile, Collision_ShipProjectile);
 
@@ -263,7 +263,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 #region UpdateManager
 
                 _updateManager = new UpdateManager(
-                    new Type[] { typeof(ShipPlayer), typeof(SpaceStation2D), typeof(Projectile) },
+                    new Type[] { typeof(ShipPlayer), typeof(SpaceStation2D), typeof(Projectile), typeof(Asteroid) },
                     new Type[] { typeof(ShipPlayer) },
                     _map);
 
@@ -304,8 +304,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 #endregion
 
-                CreateStars();      //TODO: Move this to BackImageManager
-                //CreateStarsGrid();
+                CreateStars3D();      //TODO: Move this to BackImageManager
+                //CreateStars3DGrid();
                 //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
                 CreateShip(DefaultShipType.Basic);
                 //CreateShip_3DFlyer();
@@ -356,37 +356,40 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 Point3D position = _player.Ship.PositionWorld;
 
-                #region Space Stations
-
-                SpaceStation2D currentlyOverStation = null;
-
-                foreach (SpaceStation2D station in _stations)
+                if (_stations != null)
                 {
-                    // See if the ship is over the station
-                    Point3D stationPosition = station.PositionWorld;
-                    stationPosition.Z = 0;
+                    #region Space Stations
 
-                    if ((stationPosition - position).LengthSquared < station.Radius * station.Radius)
+                    SpaceStation2D currentlyOverStation = null;
+
+                    foreach (SpaceStation2D station in _stations)
                     {
-                        currentlyOverStation = station;
+                        // See if the ship is over the station
+                        Point3D stationPosition = station.PositionWorld;
+                        stationPosition.Z = 0;
+
+                        if ((stationPosition - position).LengthSquared < station.Radius * station.Radius)
+                        {
+                            currentlyOverStation = station;
+                        }
                     }
+
+                    // Store the station that the ship is over
+                    if (currentlyOverStation == null)
+                    {
+                        statusMessage.Content = "";
+                    }
+                    else
+                    {
+                        statusMessage.Content = "Press space to enter station";
+
+                        //TODO:  Play a sound if this is the first time they entered the station's range
+                    }
+
+                    _currentlyOverStation = currentlyOverStation;
+
+                    #endregion
                 }
-
-                // Store the station that the ship is over
-                if (currentlyOverStation == null)
-                {
-                    statusMessage.Content = "";
-                }
-                else
-                {
-                    statusMessage.Content = "Press space to enter station";
-
-                    //TODO:  Play a sound if this is the first time they entered the station's range
-                }
-
-                _currentlyOverStation = currentlyOverStation;
-
-                #endregion
             }
             catch (Exception ex)
             {
@@ -410,7 +413,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             try
             {
-                _progressBars.Ship = e.NewShip;
+                _progressBars.Bot = e.NewShip;
 
                 if (e.PreviousShip != null)
                 {
@@ -428,21 +431,21 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private void Collision_ShipMineral(object sender, MaterialCollisionArgs e)
+        private void Collision_BotMineral(object sender, MaterialCollisionArgs e)
         {
             try
             {
-                Body shipBody = e.GetBody(_material_Ship);
+                Body botBody = e.GetBody(_material_Ship);
                 Body mineralBody = e.GetBody(_material_Mineral);
 
-                Ship ship = _map.GetItem<Ship>(shipBody);
-                if (ship == null)
+                Bot bot = _map.GetItem<Bot>(botBody);
+                if (bot == null)
                 {
                     return;
                 }
 
                 // For now, only the player ship can take minerals
-                if (!(ship is ShipPlayer))
+                if (!(bot is ShipPlayer))
                 {
                     return;
                 }
@@ -453,7 +456,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     return;
                 }
 
-                ((ShipPlayer)ship).CollidedMineral(mineral);
+                ((ShipPlayer)bot).CollidedMineral(mineral);
             }
             catch (Exception ex)
             {
@@ -488,6 +491,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 Body asteroidBody = e.GetBody(_material_Asteroid);
                 Body projectileBody = e.GetBody(_material_Projectile);
+
+                if (asteroidBody == null || projectileBody == null)
+                {
+                    return;
+                }
 
                 //NOTE: this.Map_ItemRemoved will dispose the projectile once the map removes it, so get these stats now
                 double projectileMass = projectileBody.Mass;
@@ -768,7 +776,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _world.UnPause();
         }
 
-        private void CreateStars()
+        private void CreateStars3D()
         {
             // Putting the stars in 3D gives a really cool parallax effect.  Not realistic for the small distances the ship travels, but still
             // really cool.  But you need so many stars, and its a real hit on graphics performance (especially the laptop)
@@ -820,7 +828,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _viewport.Children.Add(visual);
             _stars = visual;
         }
-        private void CreateStarsGrid()
+        private void CreateStars3DGrid()
         {
             // Material
             MaterialGroup materials = new MaterialGroup();
@@ -971,7 +979,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         private void CreateAsteroids_Build(double radius, Point3D position)
         {
-            Asteroid asteroid = new Asteroid(radius, GetAsteroidMassByRadius, position, _world, _map, _material_Asteroid, GetMineralsFromDestroyedAsteroid, _material_Mineral, ItemOptionsAstMin2D.MINASTEROIDRADIUS);
+            AsteroidExtra extra = new AsteroidExtra()
+            {
+                GetMineralsByDestroyedMass = GetMineralsFromDestroyedAsteroid,
+                MineralMaterialID = _material_Mineral,
+                MinChildRadius = ItemOptionsAstMin2D.MINASTEROIDRADIUS,
+            };
+
+            Asteroid asteroid = new Asteroid(radius, GetAsteroidMassByRadius, position, _world, _map, _material_Asteroid, extra);
 
             asteroid.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(1d);
             asteroid.PhysicsBody.Velocity = Math3D.GetRandomVector_Circular(6d);
@@ -1069,7 +1084,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private async void CreateShip_3DFlyer()
+        private void CreateShip_3DFlyer()
         {
             List<ShipPartDNA> parts = new List<ShipPartDNA>();
 
@@ -1087,15 +1102,23 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             dna.ShipName = "3D Flyer";
             dna.ShipLineage = Guid.NewGuid().ToString();
 
-            await CreateShip(dna);
+            CreateShip(dna);
         }
-        private async void CreateShip(DefaultShipType type)
+        private void CreateShip(DefaultShipType type)
         {
-            await CreateShip(DefaultShips.GetDNA(type));
+            CreateShip(DefaultShips.GetDNA(type));
         }
-        private async Task<ShipPlayer> CreateShip(ShipDNA dna, bool shouldRotate = true)
+        private ShipPlayer CreateShip(ShipDNA dna, bool shouldRotate = true)
         {
-            ShipPlayer ship = await ShipPlayer.GetNewShipAsync(_editorOptions, _itemOptions, dna, _world, _material_Ship, _material_Projectile, null, null, null, _map);
+            ShipExtraArgs args = new ShipExtraArgs()
+            {
+                Options = _editorOptions,
+                ItemOptions = _itemOptions,
+                Material_Projectile = _material_Projectile,
+                RunNeural = false,
+            };
+
+            ShipPlayer ship = ShipPlayer.GetNewShip(dna, _world, _material_Ship, _map, args);
 
             //ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Bot_ApplyForceAndTorque);
 
@@ -1167,7 +1190,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 }
 
                 // Pick a material - give a strong preference to the more valuable ones
-                double percentIntoList = rand.NextPow(.1, isPlusMinus: false);
+                double percentIntoList = rand.NextPow(.1);
 
                 int index = UtilityCore.GetIndexIntoList(percentIntoList, candidates.Length);
 

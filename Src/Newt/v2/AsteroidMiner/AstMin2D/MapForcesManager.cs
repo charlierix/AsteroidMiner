@@ -122,15 +122,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             //NOTE: Not including projectiles, because guns could be mounted above and below the plane, and if projectiles are smashed onto
             //the plane, they sometimes collide with each other or the ship
 
-            if (e.Item is Asteroid || e.Item is Mineral || e.Item is Ship)
+            if (e.Item is Asteroid || e.Item is Mineral || e.Item is Ship || e.Item is Bot)
             {
-                bool limitRotation = e.Item is Ship;
+                bool limitRotation = e.Item is Ship || e.Item is Bot;
 
                 // Doing this in case the new item is the child of an exploding asteroid.  The parent asteroid can shatter in 3D, then ease
                 // back onto the plane
-                double animateDuration = 8;
+                double animateDuration = 60;
+                double animatePreDelay = 2;
 
-                _keep2D.Add(e.Item, limitRotation, animateDuration);
+                _keep2D.Add(e.Item, limitRotation, animateDuration, animatePreDelay);
             }
 
             #endregion

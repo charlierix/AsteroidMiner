@@ -3513,7 +3513,7 @@ namespace Game.Newt.Testers
                     ToArray();
 
                 // Calculate the beziers
-                Point[] bezierPoints = Math3D.GetBezierSegment(100, end1.ToPoint3D(), control.Select(o => o.ToPoint3D()).ToArray(), end2.ToPoint3D()).Select(o => o.ToPoint2D()).ToArray();
+                Point[] bezierPoints = BezierUtil.GetPoints(100, end1.ToPoint3D(), control.Select(o => o.ToPoint3D()).ToArray(), end2.ToPoint3D()).Select(o => o.ToPoint2D()).ToArray();
 
                 #region Draw
 
@@ -3573,7 +3573,7 @@ namespace Game.Newt.Testers
                     ToArray();
 
                 // Calculate the beziers
-                Point3D[] bezierPoints = Math3D.GetBezierSegment(100, end1, control, end2);
+                Point3D[] bezierPoints = BezierUtil.GetPoints(100, end1, control, end2);
 
                 #region Draw
 
@@ -3911,13 +3911,13 @@ namespace Game.Newt.Testers
 
                 #region Get polygon points
 
-                BezierSegmentDef[] segments = TestAxeSimple2_Segments(argLevels[0]);
+                BezierSegment3D[] segments = TestAxeSimple2_Segments(argLevels[0]);
 
                 List<Point3D> pointsDupes = new List<Point3D>();
 
-                foreach (BezierSegmentDef bezier in segments)
+                foreach (BezierSegment3D bezier in segments)
                 {
-                    pointsDupes.AddRange(Math3D.GetBezierSegment(5, bezier));
+                    pointsDupes.AddRange(BezierUtil.GetPoints(5, bezier));
                 }
 
                 List<Point3D> points = new List<Point3D>();
@@ -4070,13 +4070,13 @@ namespace Game.Newt.Testers
 
                 #region Get polygon points
 
-                BezierSegmentDef[] segments = TestAxeSimple2_Segments(argLevels[0]);
+                BezierSegment3D[] segments = TestAxeSimple2_Segments(argLevels[0]);
 
                 List<Point3D> pointsDupes = new List<Point3D>();
 
-                foreach (BezierSegmentDef bezier in segments)
+                foreach (BezierSegment3D bezier in segments)
                 {
-                    pointsDupes.AddRange(Math3D.GetBezierSegment(5, bezier));
+                    pointsDupes.AddRange(BezierUtil.GetPoints(5, bezier));
                 }
 
                 List<Point3D> points = new List<Point3D>();
@@ -4118,16 +4118,16 @@ namespace Game.Newt.Testers
         private void Test2Segments2D(Point end1, Point end2, Point end3)
         {
             // Control points for 2
-            var controlPoints = BezierSegmentDef.GetControlPoints_Middle(end1, end2, end3, trkSingleLine2Segments2DPercent.Value, trkSingleLine2Segments2DPercent.Value);
+            var controlPoints = BezierUtil.GetControlPoints_Middle(end1, end2, end3, trkSingleLine2Segments2DPercent.Value, trkSingleLine2Segments2DPercent.Value);
 
             Point3D[] allEndPoints = new[] { end1, end2, end3 }.Select(o => o.ToPoint3D()).ToArray();
 
-            var segment12 = new BezierSegmentDef(0, 1, new[] { end1.ToPoint3D(), controlPoints.Item1.ToPoint3D() }, allEndPoints);
-            var segment23 = new BezierSegmentDef(1, 2, new[] { controlPoints.Item2.ToPoint3D(), end3.ToPoint3D() }, allEndPoints);
+            var segment12 = new BezierSegment3D(0, 1, new[] { end1.ToPoint3D(), controlPoints.Item1.ToPoint3D() }, allEndPoints);
+            var segment23 = new BezierSegment3D(1, 2, new[] { controlPoints.Item2.ToPoint3D(), end3.ToPoint3D() }, allEndPoints);
 
             // Calculate the beziers
-            Point3D[] bezierPoints12 = Math3D.GetBezierSegment(100, segment12);
-            Point3D[] bezierPoints23 = Math3D.GetBezierSegment(100, segment23);
+            Point3D[] bezierPoints12 = BezierUtil.GetPoints(100, segment12);
+            Point3D[] bezierPoints23 = BezierUtil.GetPoints(100, segment23);
 
             #region Draw
 
@@ -4175,9 +4175,9 @@ namespace Game.Newt.Testers
         }
         private void TestMultiSegment3D(Point3D[] ends)
         {
-            BezierSegmentDef[] segments = BezierSegmentDef.GetBezierSegments(ends, trkSingleLineMultiSegments3DPercent.Value, chkIsClosed3D.IsChecked.Value ? true : (bool?)null);
+            BezierSegment3D[] segments = BezierUtil.GetBezierSegments(ends, trkSingleLineMultiSegments3DPercent.Value, chkIsClosed3D.IsChecked.Value);
 
-            Point3D[] bezierPoints = Math3D.GetBezierPath(200, segments);
+            Point3D[] bezierPoints = BezierUtil.GetPath(200, segments);
 
             PrepFor3D();
 
@@ -4199,7 +4199,7 @@ namespace Game.Newt.Testers
                     AddDot(point, _mainLineC, .05);
                 }
 
-                foreach (BezierSegmentDef segment in segments)
+                foreach (BezierSegment3D segment in segments)
                 {
                     // Control Lines
                     for (int cntr = 0; cntr < segment.Combined.Length - 1; cntr++)
@@ -4223,7 +4223,7 @@ namespace Game.Newt.Testers
 
         private void TestAxeSimple1(AxeSimple1 arg)
         {
-            BezierSegmentDef[][] segmentSets = new BezierSegmentDef[5][];
+            BezierSegment3D[][] segmentSets = new BezierSegment3D[5][];
 
             PrepFor3D();
 
@@ -4282,7 +4282,7 @@ namespace Game.Newt.Testers
                         new Point3D(arg.rightX * scaleX, arg.rightY * scaleY, zR),        // bottom right
                     };
 
-                BezierSegmentDef[] segments = TestAxeSimple1_Segments(endPoints, arg);
+                BezierSegment3D[] segments = TestAxeSimple1_Segments(endPoints, arg);
                 segmentSets[cntr] = segments;
 
                 DrawBezierLines(segments, chkAxeLine.IsChecked.Value, chkAxeControl.IsChecked.Value, chkAxeEnd.IsChecked.Value);
@@ -4317,7 +4317,7 @@ namespace Game.Newt.Testers
 
                         DrawBezierPlate(squareCount, segmentSets[index][0], segmentSets[index][1], middleColor, false);        // top - bottom
 
-                        BezierSegmentDef extraSeg = new BezierSegmentDef(segmentSets[index][2].EndIndex0, segmentSets[index][2].EndIndex1, null, segmentSets[index][2].AllEndPoints);
+                        BezierSegment3D extraSeg = new BezierSegment3D(segmentSets[index][2].EndIndex0, segmentSets[index][2].EndIndex1, null, segmentSets[index][2].AllEndPoints);
                         DrawBezierPlate(squareCount, extraSeg, segmentSets[index][2], middleColor, false);     // edge
                     }
                 }
@@ -4329,7 +4329,7 @@ namespace Game.Newt.Testers
 
             #endregion
         }
-        private static BezierSegmentDef[] TestAxeSimple1_Segments(Point3D[] endPoints, AxeSimple1 arg)
+        private static BezierSegment3D[] TestAxeSimple1_Segments(Point3D[] endPoints, AxeSimple1 arg)
         {
             const int TOPLEFT = 0;
             const int BOTTOMLEFT = 1;
@@ -4337,26 +4337,26 @@ namespace Game.Newt.Testers
             const int BOTTOMRIGHT = 3;
 
             // Edge
-            Point3D controlTR = BezierSegmentDef.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], endPoints[TOPLEFT], true, arg.edgeAngle, arg.edgePercent);
-            Point3D controlBR = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], endPoints[BOTTOMLEFT], true, arg.edgeAngle, arg.edgePercent);
-            BezierSegmentDef edge = new BezierSegmentDef(TOPRIGHT, BOTTOMRIGHT, new[] { controlTR, controlBR }, endPoints);
+            Point3D controlTR = BezierUtil.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], endPoints[TOPLEFT], true, arg.edgeAngle, arg.edgePercent);
+            Point3D controlBR = BezierUtil.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], endPoints[BOTTOMLEFT], true, arg.edgeAngle, arg.edgePercent);
+            BezierSegment3D edge = new BezierSegment3D(TOPRIGHT, BOTTOMRIGHT, new[] { controlTR, controlBR }, endPoints);
 
             // Bottom
-            Point3D controlBL = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMLEFT], endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
-            controlBR = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[BOTTOMLEFT], endPoints[TOPRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
-            BezierSegmentDef bottom = new BezierSegmentDef(BOTTOMLEFT, BOTTOMRIGHT, new[] { controlBL, controlBR }, endPoints);
+            Point3D controlBL = BezierUtil.GetControlPoint_End(endPoints[BOTTOMLEFT], endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
+            controlBR = BezierUtil.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[BOTTOMLEFT], endPoints[TOPRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
+            BezierSegment3D bottom = new BezierSegment3D(BOTTOMLEFT, BOTTOMRIGHT, new[] { controlBL, controlBR }, endPoints);
 
             // Top
-            Point3D controlTL = BezierSegmentDef.GetControlPoint_End(endPoints[TOPLEFT], endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
-            controlTR = BezierSegmentDef.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[TOPLEFT], endPoints[BOTTOMRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
-            BezierSegmentDef top = new BezierSegmentDef(TOPLEFT, TOPRIGHT, new[] { controlTL, controlTR }, endPoints);
+            Point3D controlTL = BezierUtil.GetControlPoint_End(endPoints[TOPLEFT], endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
+            controlTR = BezierUtil.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[TOPLEFT], endPoints[BOTTOMRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
+            BezierSegment3D top = new BezierSegment3D(TOPLEFT, TOPRIGHT, new[] { controlTL, controlTR }, endPoints);
 
             return new[] { bottom, top, edge };
         }
 
         private void TestAxeSimple2(Curves_AxeSimple2 arg)
         {
-            BezierSegmentDef[][] segmentSets = new BezierSegmentDef[5][];
+            BezierSegment3D[][] segmentSets = new BezierSegment3D[5][];
 
             Curves_AxeSimple2[] argLevels = new Curves_AxeSimple2[5];
 
@@ -4462,7 +4462,7 @@ namespace Game.Newt.Testers
 
                 Curves_AxeSimple2 argCurrent = argLevels[cntr];
 
-                BezierSegmentDef[] segments = TestAxeSimple2_Segments(argCurrent);
+                BezierSegment3D[] segments = TestAxeSimple2_Segments(argCurrent);
                 segmentSets[cntr] = segments;
 
                 DrawBezierLines(segments, chkAxeLine.IsChecked.Value, chkAxeControl.IsChecked.Value, chkAxeEnd.IsChecked.Value);
@@ -4508,7 +4508,7 @@ namespace Game.Newt.Testers
                     int index = cntr == 0 ? 0 : 4;
 
                     // Turn the end cap into a polygon, then triangulate it
-                    Point3D[] endCapPoly = Math3D.GetBezierPath(squareCount, segmentSets[index].Select(o => new[] { o }).ToArray());       // Call the jagged array overload so that the individual bezier end points don't get smoothed out
+                    Point3D[] endCapPoly = BezierUtil.GetPath(squareCount, segmentSets[index].Select(o => new[] { o }).ToArray());       // Call the jagged array overload so that the individual bezier end points don't get smoothed out
 
                     TriangleIndexed[] endCapTriangles = Math2D.GetTrianglesFromConcavePoly3D(endCapPoly);
                     if (cntr == 0)
@@ -4524,41 +4524,41 @@ namespace Game.Newt.Testers
 
             #endregion
         }
-        private static BezierSegmentDef[] TestAxeSimple2_Segments(Curves_AxeSimple2 arg)
+        private static BezierSegment3D[] TestAxeSimple2_Segments(Curves_AxeSimple2 arg)
         {
             Point3D[] points = arg.GetAllPoints();
 
             // Top
-            BezierSegmentDef top = new BezierSegmentDef(arg.IndexTL, arg.IndexTR, null, points);
+            BezierSegment3D top = new BezierSegment3D(arg.IndexTL, arg.IndexTR, null, points);
 
             // Edge
-            Point3D controlTR = BezierSegmentDef.GetControlPoint_End(arg.EndTR, arg.EndBR, arg.EndBL_1, true, arg.EdgeAngleT, arg.EdgePercentT);
-            Point3D controlBR = BezierSegmentDef.GetControlPoint_End(arg.EndBR, arg.EndTR, arg.EndTL, true, arg.EdgeAngleB, arg.EdgePercentB);
-            BezierSegmentDef edge = new BezierSegmentDef(arg.IndexTR, arg.IndexBR, new[] { controlTR, controlBR }, points);
+            Point3D controlTR = BezierUtil.GetControlPoint_End(arg.EndTR, arg.EndBR, arg.EndBL_1, true, arg.EdgeAngleT, arg.EdgePercentT);
+            Point3D controlBR = BezierUtil.GetControlPoint_End(arg.EndBR, arg.EndTR, arg.EndTL, true, arg.EdgeAngleB, arg.EdgePercentB);
+            BezierSegment3D edge = new BezierSegment3D(arg.IndexTR, arg.IndexBR, new[] { controlTR, controlBR }, points);
 
             // Bottom (right portion)
-            BezierSegmentDef bottomRight = null;
+            BezierSegment3D bottomRight = null;
             if (arg.EndBL_2 == null)
             {
-                Point3D controlR = BezierSegmentDef.GetControlPoint_End(arg.EndBR, arg.EndBL_1, arg.EndTR, false, arg.B1AngleR, arg.B1PercentR);
-                Point3D controlL = BezierSegmentDef.GetControlPoint_End(arg.EndBL_1, arg.EndBR, arg.EndTR, false, arg.B1AngleL, arg.B1PercentL);
-                bottomRight = new BezierSegmentDef(arg.IndexBR, arg.IndexBL_1, new[] { controlR, controlL }, points);
+                Point3D controlR = BezierUtil.GetControlPoint_End(arg.EndBR, arg.EndBL_1, arg.EndTR, false, arg.B1AngleR, arg.B1PercentR);
+                Point3D controlL = BezierUtil.GetControlPoint_End(arg.EndBL_1, arg.EndBR, arg.EndTR, false, arg.B1AngleL, arg.B1PercentL);
+                bottomRight = new BezierSegment3D(arg.IndexBR, arg.IndexBL_1, new[] { controlR, controlL }, points);
             }
             else
             {
-                bottomRight = new BezierSegmentDef(arg.IndexBR, arg.IndexBL_1, null, points);
+                bottomRight = new BezierSegment3D(arg.IndexBR, arg.IndexBL_1, null, points);
             }
 
             // Bottom (left portion)
-            BezierSegmentDef bottomLeft = null;
+            BezierSegment3D bottomLeft = null;
             if (arg.EndBL_2 != null)
             {
-                Point3D controlR = BezierSegmentDef.GetControlPoint_End(arg.EndBL_1, arg.EndBL_2.Value, arg.EndTR, false, arg.B2AngleR, arg.B2PercentR);
-                Point3D controlL = BezierSegmentDef.GetControlPoint_End(arg.EndBL_2.Value, arg.EndBL_1, arg.EndTR, false, arg.B2AngleL, arg.B2PercentL);
-                bottomLeft = new BezierSegmentDef(arg.IndexBL_1, arg.IndexBL_2, new[] { controlR, controlL }, points);
+                Point3D controlR = BezierUtil.GetControlPoint_End(arg.EndBL_1, arg.EndBL_2.Value, arg.EndTR, false, arg.B2AngleR, arg.B2PercentR);
+                Point3D controlL = BezierUtil.GetControlPoint_End(arg.EndBL_2.Value, arg.EndBL_1, arg.EndTR, false, arg.B2AngleL, arg.B2PercentL);
+                bottomLeft = new BezierSegment3D(arg.IndexBL_1, arg.IndexBL_2, new[] { controlR, controlL }, points);
             }
 
-            return UtilityCore.Iterate<BezierSegmentDef>(top, edge, bottomRight, bottomLeft).ToArray();
+            return UtilityCore.Iterate<BezierSegment3D>(top, edge, bottomRight, bottomLeft).ToArray();
         }
 
         private void PrepFor2D()
@@ -4576,21 +4576,21 @@ namespace Game.Newt.Testers
             _viewport.Visibility = Visibility.Visible;
         }
 
-        private void DrawBezierLines(BezierSegmentDef[] beziers, bool showLines, bool showControls, bool showEnds)
+        private void DrawBezierLines(BezierSegment3D[] beziers, bool showLines, bool showControls, bool showEnds)
         {
             // Main Line
             if (showLines)
             {
-                foreach (BezierSegmentDef bezier in beziers)
+                foreach (BezierSegment3D bezier in beziers)
                 {
-                    AddLines(Math3D.GetBezierSegment(100, bezier), _mainLineC, 2);
+                    AddLines(BezierUtil.GetPoints(100, bezier), _mainLineC, 2);
                 }
             }
 
             // Control Lines
             if (showControls)
             {
-                foreach (BezierSegmentDef bezier in beziers)
+                foreach (BezierSegment3D bezier in beziers)
                 {
                     if (bezier.ControlPoints == null)
                     {
@@ -4616,17 +4616,17 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void DrawBezierPlates(int count, BezierSegmentDef[] seg1, BezierSegmentDef[] seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
+        private void DrawBezierPlates(int count, BezierSegment3D[] seg1, BezierSegment3D[] seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
         {
             for (int cntr = 0; cntr < seg1.Length; cntr++)
             {
                 DrawBezierPlate(count, seg1[cntr], seg2[cntr], color, isShiny, ensureNormalsPointTheSame);
             }
         }
-        private void DrawBezierPlate(int count, BezierSegmentDef seg1, BezierSegmentDef seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
+        private void DrawBezierPlate(int count, BezierSegment3D seg1, BezierSegment3D seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
         {
-            Point3D[] rim1 = Math3D.GetBezierSegment(count, seg1);
-            Point3D[] rim2 = Math3D.GetBezierSegment(count, seg2);
+            Point3D[] rim1 = BezierUtil.GetPoints(count, seg1);
+            Point3D[] rim2 = BezierUtil.GetPoints(count, seg2);
 
             Point3D[] allPoints = UtilityCore.Iterate(rim1, rim2).ToArray();
 

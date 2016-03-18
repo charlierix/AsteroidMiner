@@ -581,8 +581,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // Need to do this now so that the old ship is off the map before adding a new one (the new one sometimes goes flying from the collision)
             _player.Ship = null;
 
+            ShipExtraArgs args = new ShipExtraArgs()
+            {
+                Options = _editorOptions,
+                ItemOptions = _itemOptions,
+                Material_Projectile = _material_Projectile,
+                RunNeural = false,
+            };
+
             // Create the new ship
-            ShipPlayer ship = await ShipPlayer.GetNewShipAsync(_editorOptions, _itemOptions, entry.Inventory.Ship, _world, _material_Ship, _material_Projectile, null, null, null, _map);
+            ShipPlayer ship = ShipPlayer.GetNewShip(entry.Inventory.Ship, _world, _material_Ship, _map, args);
 
             if (ship.Energy != null)
             {

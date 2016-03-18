@@ -142,6 +142,10 @@ namespace Game.HelperClassesWPF
 
             return Tuple.Create(mean, Math.Sqrt(variance));
         }
+        public static Tuple<double, double> Get_Average_StandardDeviation(IEnumerable<int> values)
+        {
+            return Get_Average_StandardDeviation(values.Select(o => Convert.ToDouble(o)));
+        }
         public static Tuple<DateTime, TimeSpan> Get_Average_StandardDeviation(IEnumerable<DateTime> dates)
         {
             // I don't know if this is the best way (timezones and all that craziness)
@@ -444,6 +448,31 @@ namespace Game.HelperClassesWPF
 
             //TODO: Take in a param whether to throw an exception or return the best guess
             throw new ApplicationException("Couldn't find a solution");
+        }
+
+        /// <summary>
+        /// This is a sigmoid that is stretched so that when:
+        /// x=0, y=0
+        /// x=maxY, y=~.8*maxY
+        /// </summary>
+        /// <param name="x">Expected range is 0 to infinity (negative x will return a negative y)</param>
+        /// <param name="maxY">The return will approach this, but never hit it (asymptote)</param>
+        /// <param name="slope">
+        /// This is roughly the slope of the curve
+        /// NOTE: Slope is probably the wrong term, because it is scaled to maxY (so if maxY is 10, then the actual slope would be about 10, even though you pass in slope=1)
+        /// </param>
+        public static double PositiveSCurve(double x, double maxY, double slope = 1)
+        {
+            //const double LN_19 = 2.94443897916644;        // y=.9*maxY at x=maxY
+            const double LN_9 = 2.19722457733621;       // y=.8*maxY at x=maxY
+
+            // Find a constant for the maxY passed in so that when x=maxY, the below function will equal .8*maxY (when slope is 1)
+            //double factor = Math.Log(9) / (maxY * Math.E);
+            double factor = LN_9 / (maxY * Math.E);
+
+            //return -1 + (2 / (1 + e ^ (-slope * e * x)));
+            //return -maxY + ((2 * maxY) / (1 + Math.E ^ (-slope * Math.E * x)));
+            return -maxY + ((2 * maxY) / (1 + Math.Pow(Math.E, (-(factor * slope) * Math.E * x))));
         }
 
         #endregion

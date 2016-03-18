@@ -1699,7 +1699,7 @@ namespace Game.HelperClassesWPF
                 bool foundLarger = false;
 
                 SortedList<int, ITriangle> planes = new SortedList<int, ITriangle>();
-                SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers = new SortedList<Tuple<int, int>, BezierSegmentDef>();
+                SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers = new SortedList<Tuple<int, int>, BezierSegment3D>();
 
                 for (int cntr = 0; cntr < triangles.Length; cntr++)
                 {
@@ -1843,7 +1843,7 @@ namespace Game.HelperClassesWPF
             #endregion
             #region Private Methods - smooth
 
-            private static ITriangle[] Divide(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            private static ITriangle[] Divide(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers)
             {
                 // Define beziers for the three edges
                 var curves = Triangle.Edges.
@@ -1884,7 +1884,7 @@ namespace Game.HelperClassesWPF
                 return retVal;
             }
 
-            private static TriangleIndexed[] Divide_4(ITriangleIndexed triangle, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_4(ITriangleIndexed triangle, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -1897,13 +1897,13 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.Index1);      // 1
                 map.Add(triangle.Index2);      // 2
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_01).Item2));       // 3
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_01).Item2));       // 3
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_12).Item2));       // 4
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_12).Item2));       // 4
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_20).Item2));       // 5
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_20).Item2));       // 5
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -1917,7 +1917,7 @@ namespace Game.HelperClassesWPF
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] Divide_SkinnyBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_SkinnyBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -1928,10 +1928,10 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.GetCommonIndex(edgeLengths[1].Item1, edgeLengths[2].Item1));        // Top (1)
                 map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[2].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[1].Item1).Item2));        // Mid Left (3)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[1].Item1).Item2));        // Mid Left (3)
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Right (4)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Right (4)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -1944,7 +1944,7 @@ namespace Game.HelperClassesWPF
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] Divide_WideBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_WideBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -1955,7 +1955,7 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[1].Item1));        // Top (1)
                 map.Add(triangle.GetCommonIndex(edgeLengths[2].Item1, edgeLengths[1].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Bottom (3)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Bottom (3)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -1968,7 +1968,7 @@ namespace Game.HelperClassesWPF
                 return retVal.ToArray();
             }
 
-            private static void DivideNeighbor(ITriangleIndexed triangle, List<ITriangle> returnList, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            private static void DivideNeighbor(ITriangleIndexed triangle, List<ITriangle> returnList, SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers)
             {
                 // Find beziers for the edges of this triangle (if a bezier was created, then that edge was sliced in half)
                 var bisectedEdges = Triangle.Edges.
@@ -2008,7 +2008,7 @@ namespace Game.HelperClassesWPF
                 returnList.AddRange(replacement);
             }
 
-            private static TriangleIndexed[] DivideNeighbor_1(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef> bisectedEdge)
+            private static TriangleIndexed[] DivideNeighbor_1(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D> bisectedEdge)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -2019,7 +2019,7 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.GetOppositeIndex(bisectedEdge.Item1));        // Top (1)
                 map.Add(triangle.GetIndex(bisectedEdge.Item1, false));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdge.Item3));        // Mid Bottom (3)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdge.Item3));        // Mid Bottom (3)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -2031,7 +2031,7 @@ namespace Game.HelperClassesWPF
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] DivideNeighbor_2(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            private static TriangleIndexed[] DivideNeighbor_2(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D>[] bisectedEdges)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -2042,10 +2042,10 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.GetCommonIndex(bisectedEdges[0].Item1, bisectedEdges[1].Item1));        // Top (1)
                 map.Add(triangle.GetUncommonIndex(bisectedEdges[1].Item1, bisectedEdges[0].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[0].Item3));        // Mid Left (3)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges[0].Item3));        // Mid Left (3)
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[1].Item3));        // Mid Right (4)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges[1].Item3));        // Mid Right (4)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -2058,7 +2058,7 @@ namespace Game.HelperClassesWPF
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] DivideNeighbor_3(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            private static TriangleIndexed[] DivideNeighbor_3(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D>[] bisectedEdges)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -2069,13 +2069,13 @@ namespace Game.HelperClassesWPF
                 map.Add(triangle.Index1);      // 1
                 map.Add(triangle.Index2);      // 2
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_01).Item3));       // 3
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_01).Item3));       // 3
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_12).Item3));       // 4
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_12).Item3));       // 4
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_20).Item3));       // 5
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_20).Item3));       // 5
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -2102,14 +2102,14 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edges, double controlPercent = .25d)
+            private static BezierSegment3D GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegment3D> edges, double controlPercent = .25d)
             {
                 int fromIndex = triangle.GetIndex(edge, true);
                 int toIndex = triangle.GetIndex(edge, false);
 
                 var key = Tuple.Create(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex));
 
-                BezierSegmentDef retVal;
+                BezierSegment3D retVal;
                 if (edges.TryGetValue(key, out retVal))
                 {
                     return retVal;
@@ -2126,7 +2126,7 @@ namespace Game.HelperClassesWPF
             /// snapped to the coresponding planes.  That way, any beziers that meet at a point will have a smooth
             /// transition
             /// </summary>
-            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, double controlPercent = .25d)
+            private static BezierSegment3D GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, double controlPercent = .25d)
             {
                 // Points
                 int fromIndex = triangle.GetIndex(edge, true);
@@ -2146,7 +2146,7 @@ namespace Game.HelperClassesWPF
                 Point3D fromControl = Math3D.GetClosestPoint_Plane_Point(fromPlane, fromPoint + (dir * controlPercent));
                 Point3D toControl = Math3D.GetClosestPoint_Plane_Point(toPlane, toPoint + (-dir * controlPercent));
 
-                return new BezierSegmentDef(fromIndex, toIndex, new[] { fromControl, toControl }, triangle.AllPoints);
+                return new BezierSegment3D(fromIndex, toIndex, new[] { fromControl, toControl }, triangle.AllPoints);
             }
 
             private static ITriangle GetTangentPlane(int index, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes)
@@ -2967,177 +2967,6 @@ namespace Game.HelperClassesWPF
             //}
 
             #endregion
-
-            #endregion
-        }
-
-        #endregion
-        #region Class: Bezier
-
-        private static class Bezier
-        {
-            public static Point3D[] GetBezierPath(int count, BezierSegmentDef[] segments)
-            {
-                // Get the total length of the curve, and how much each segment contributes to that
-                double[] lengths = segments.Select(o => (o.EndPoint1 - o.EndPoint0).Length).ToArray();
-                double totalLength = lengths.Sum();
-
-                double[] cumulativeLengths = new double[segments.Length + 1];
-                for (int cntr = 1; cntr < segments.Length + 1; cntr++)
-                {
-                    cumulativeLengths[cntr] = cumulativeLengths[cntr - 1] + lengths[cntr - 1];
-                }
-
-                double countD = count - 1;
-
-                Point3D[] retVal = new Point3D[count];
-
-                retVal[0] = segments[0].EndPoint0;
-                retVal[count - 1] = segments[segments.Length - 1].EndPoint1;        //NOTE: If the segment is a closed curve, this is the same point as retVal[0].  May want a boolean that tells whether the last point should be replicated
-
-                int index = 0;
-
-                for (int cntr = 1; cntr < count - 1; cntr++)
-                {
-                    // Get the location along the entire path
-                    double totalPercent = cntr / countD;
-                    double portionTotalLength = totalLength * totalPercent;
-
-                    // Advance to the appropriate segment
-                    while (cumulativeLengths[index + 1] < portionTotalLength)
-                    {
-                        index++;
-                    }
-
-                    // Get the percent of the current segment
-                    double localLength = portionTotalLength - cumulativeLengths[index];
-                    double localPercent = localLength / lengths[index];
-
-                    // Calculate the bezier point
-                    retVal[cntr] = GetBezier_SinglePoint(segments[index].Combined, localPercent);
-                }
-
-                return retVal;
-            }
-
-            public static Point3D[] GetBezierSegment(int count, Point3D[] controlPoints)
-            {
-                #region asserts
-#if DEBUG
-                if (controlPoints.Length < 2)
-                {
-                    throw new ArgumentException("There must be at least two points passed in: " + controlPoints.Length.ToString());
-                }
-#endif
-                #endregion
-
-                double countD = count - 1;
-
-                Point3D[] retVal = new Point3D[count];
-
-                retVal[0] = controlPoints[0];
-                retVal[count - 1] = controlPoints[controlPoints.Length - 1];
-
-                for (int cntr = 1; cntr < count - 1; cntr++)
-                {
-                    retVal[cntr] = GetBezier_SinglePoint(controlPoints, cntr / countD);
-                }
-
-                return retVal;
-            }
-
-            /// <summary>
-            /// Evaluate a point on a bezier-curve. percent goes from 0 to 1
-            /// </summary>
-            /// <returns>
-            /// Got this here:
-            /// http://www.cubic.org/docs/bezier.htm
-            /// </returns>
-            public static Point3D GetBezier_SinglePoint(Point3D[] controlPoints, double percent)
-            {
-                #region asserts
-#if DEBUG
-                if (controlPoints.Length < 2)
-                {
-                    throw new ArgumentException("There must be at least two points passed in: " + controlPoints.Length.ToString());
-                }
-#endif
-                #endregion
-
-                Point3D[] prev = controlPoints;
-                Point3D[] current = null;
-
-                for (int outer = controlPoints.Length - 1; outer > 0; outer--)
-                {
-                    current = new Point3D[outer];
-
-                    for (int inner = 0; inner < outer; inner++)
-                    {
-                        current[inner] = LERP(prev[inner], prev[inner + 1], percent);
-                    }
-
-                    prev = current;
-                }
-
-                return current[0];      // by the time execution gets here, the array only has one element
-            }
-
-            #region OLD 2D
-
-            //            public static Point[] GetBezierSegment(int count, Point[] controlPoints)
-            //            {
-            //                #region asserts
-            //#if DEBUG
-            //                if (controlPoints.Length < 2)
-            //                {
-            //                    throw new ArgumentException("There must be at least two points passed in: " + controlPoints.Length.ToString());
-            //                }
-            //#endif
-            //                #endregion
-
-            //                double countD = count - 1;
-
-            //                Point[] retVal = new Point[count];
-
-            //                retVal[0] = controlPoints[0];
-            //                retVal[count - 1] = controlPoints[controlPoints.Length - 1];
-
-            //                for (int cntr = 1; cntr < count - 1; cntr++)
-            //                {
-            //                    retVal[cntr] = GetBezier_SinglePoint(controlPoints, cntr / countD);
-            //                }
-
-            //                return retVal;
-            //            }
-            //            private static Point GetBezier_SinglePoint(Point[] controlPoints, double t)
-            //            {
-            //                #region asserts
-            //#if DEBUG
-            //                if (controlPoints.Length < 2)
-            //                {
-            //                    throw new ArgumentException("There must be at least two points passed in: " + controlPoints.Length.ToString());
-            //                }
-            //#endif
-            //                #endregion
-
-            //                Point[] prev = controlPoints;
-            //                Point[] current = null;     // current will always be one smaller than prev (because it's a point along a line from two segments in prev)
-
-            //                for (int outer = controlPoints.Length - 1; outer > 0; outer--)
-            //                {
-            //                    current = new Point[outer];
-
-            //                    for (int inner = 0; inner < outer; inner++)
-            //                    {
-            //                        current[inner] = LERP(prev[inner], prev[inner + 1], t);
-            //                    }
-
-            //                    // Prep for the next iteration
-            //                    prev = current;
-            //                }
-
-            //                return current[0];      // by the time execution gets here, the array only has one element
-            //            }
 
             #endregion
         }
@@ -3994,6 +3823,852 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
+        #region Class: HullVoronoiIntersect
+
+        private static class HullVoronoiIntersect
+        {
+            #region Class: TriangleIntersection 1,2,3
+
+            private class TriInt_I
+            {
+                public TriInt_I(ITriangleIndexed triangle, int triangleIndex)
+                {
+                    this.Triangle = triangle;
+                    this.TriangleIndex = triangleIndex;
+                }
+
+                public readonly ITriangleIndexed Triangle;
+                public readonly int TriangleIndex;
+
+                public readonly List<TriInt_II> ControlPoints = new List<TriInt_II>();
+            }
+
+            private class TriInt_II
+            {
+                public TriInt_II(int controlPointIndex)
+                {
+                    this.ControlPointIndex = controlPointIndex;
+                }
+
+                public readonly int ControlPointIndex;
+                public readonly List<TriInt_III> Faces = new List<TriInt_III>();
+            }
+
+            private class TriInt_III
+            {
+                public TriInt_III(Face3D face, int faceIndex, Tuple<Point3D, Point3D> segment, int[] triangleIndices)
+                {
+                    this.Face = face;
+                    this.FaceIndex = faceIndex;
+                    this.Segment = segment;
+                    this.TriangleIndices = triangleIndices;
+                }
+
+                // The face that the triangle intersected
+                public readonly Face3D Face;
+                public readonly int FaceIndex;
+
+                // The points of intersection
+                public readonly Tuple<Point3D, Point3D> Segment;
+
+                // The indicies of the triangle that are part of the parent control point
+                public readonly int[] TriangleIndices;
+            }
+
+            #endregion
+            #region Class: PolyFragIntermediate
+
+            private class PolyFragIntermediate
+            {
+                public PolyFragIntermediate(int controlPointIndex, int originalTriangleIndex, Tuple<TriangleEdge, int>[] faceIndices, int triangleIndex0, int triangleIndex1, int triangleIndex2)
+                {
+                    this.ControlPointIndex = controlPointIndex;
+                    this.OriginalTriangleIndex = originalTriangleIndex;
+
+                    this.FaceIndices = faceIndices;
+
+                    this.TriangleIndex0 = triangleIndex0;
+                    this.TriangleIndex1 = triangleIndex1;
+                    this.TriangleIndex2 = triangleIndex2;
+                }
+
+                public readonly int ControlPointIndex;
+                public readonly int OriginalTriangleIndex;
+
+                public readonly Tuple<TriangleEdge, int>[] FaceIndices;
+
+                public readonly int TriangleIndex0;
+                public readonly int TriangleIndex1;
+                public readonly int TriangleIndex2;
+            }
+
+            #endregion
+
+            #region Class: TestFaceResult
+
+            public class PolyFaceResult
+            {
+                public PolyFaceResult(Face3D face, int faceIndex, ITriangleIndexed[] polygon)
+                {
+                    this.Face = face;
+                    this.FaceIndex = faceIndex;
+                    this.Polygon = polygon;
+                }
+
+                public readonly Face3D Face;
+                public readonly int FaceIndex;
+
+                public readonly ITriangleIndexed[] Polygon;
+            }
+
+            #endregion
+
+            public static Tuple<int, ITriangleIndexed[]>[] GetIntersection_Hull_Voronoi_full(ITriangleIndexed[] convexHull, VoronoiResult3D voronoi)
+            {
+                // If there is any portion that is concave, the intersection of the hull with a voronoi's face will make the lower logic
+                // go the wrong direction when including face verticies (looks really wrong)
+                convexHull = Math3D.GetConvexHull(TriangleIndexed.GetUsedPoints(convexHull, true));
+
+                Point3D[] hullPoints = TriangleIndexed.GetUsedPoints(convexHull);
+                Point3D hullCenter = Math3D.GetCenter(hullPoints);
+
+                var hullAABB = Math3D.GetAABB(hullPoints);
+                double hullAABBLen = (hullAABB.Item2 - hullAABB.Item1).Length;
+                double rayExtend = hullAABBLen * 10;
+
+                // Slice the hull if it intersects a voronoi wall
+                VoronoiHullIntersect_PatchFragment[] trisByCtrl = GetIntersection_Hull_Voronoi_surface(convexHull, voronoi);
+
+                var retVal = new List<Tuple<int, ITriangleIndexed[]>>();
+
+                List<Face3D> insideFaces = new List<Face3D>();
+
+                #region completely inside
+
+                // Return control point cells that are completely inside the hull
+                var skippedControlPoints = Enumerable.Range(0, voronoi.ControlPoints.Length).
+                    Where(o => !trisByCtrl.Any(p => p.ControlPointIndex == o));
+
+                foreach (int index in skippedControlPoints)
+                {
+                    if (IsSubHullInsideMainHull(voronoi, index, convexHull))
+                    {
+                        ITriangleIndexed[] subHull = voronoi.GetVoronoiCellHull(index);
+                        insideFaces.AddRange(voronoi.FacesByControlPoint[index].Select(o => voronoi.Faces[o]));
+
+                        retVal.Add(Tuple.Create(index, subHull));
+                    }
+                }
+
+                #endregion
+                #region intersecting
+
+                // Go through each patch, and include the face polygons to get depth
+                retVal.AddRange(trisByCtrl.
+                    Select(o =>
+                    {
+                        ITriangleIndexed[] triangles = o.Polygon.
+                            Select(p => p.Triangle).
+                            ToArray();
+
+                        ITriangleIndexed[] subHull = GetSubHull(o, triangles, voronoi, hullCenter, rayExtend, insideFaces);
+
+                        return Tuple.Create(o.ControlPointIndex, subHull);
+                    }).
+                    Where(o => o.Item2 != null));
+
+                #endregion
+                #region validate
+
+                double hullSqrEnlarged = (hullAABBLen * hullAABBLen) * 1.25;        // ran into cases where the sub aabb is .00000000000001 larger
+
+                // Ran into a case where a very large shard was created.  This is a rough validation to make sure nothing too crazy is returned
+                retVal = retVal.
+                    Where(o =>
+                    {
+                        var subAABB = Math3D.GetAABB(o.Item2);
+                        double subAABBLenSqr = (hullAABB.Item2 - hullAABB.Item1).LengthSquared;
+
+                        return subAABBLenSqr < hullSqrEnlarged;
+                    }).
+                    ToList();
+
+                #endregion
+
+                return retVal.ToArray();
+            }
+
+            public static VoronoiHullIntersect_PatchFragment[] GetIntersection_Hull_Voronoi_surface(ITriangleIndexed[] triangles, VoronoiResult3D voronoi)
+            {
+                if (triangles == null || triangles.Length == 0)
+                {
+                    return new VoronoiHullIntersect_PatchFragment[0];
+                }
+
+                Point3D[] allPoints = triangles[0].AllPoints;
+
+                // Figure out which control point owns each triangle point
+                int[] controlPointsByTrianglePoint = GetNearestControlPoints(allPoints, voronoi);
+
+                // Divide the triangles by control point
+                return GetTrianglesByControlPoint(triangles, voronoi, controlPointsByTrianglePoint);
+            }
+
+            #region Private Methods - fragments
+
+            private static VoronoiHullIntersect_PatchFragment[] GetTrianglesByControlPoint(ITriangleIndexed[] triangles, VoronoiResult3D voronoi, int[] controlPointsByTrianglePoint)
+            {
+                List<PolyFragIntermediate> buildingFinals = new List<PolyFragIntermediate>();
+
+                List<Point3D> newPoints = new List<Point3D>();
+
+                List<Tuple<long, int>> triangleFaceMisses = new List<Tuple<long, int>>();
+                List<TriInt_I> intermediate = new List<TriInt_I>();
+
+                // Figure out how long rays should extend
+                var aabb = Math3D.GetAABB(voronoi.EdgePoints);
+                double rayLength = (aabb.Item2 - aabb.Item1).Length * 10;
+
+                // Get the aabb of each face
+                var faceAABBs = voronoi.Faces.
+                    Select(o => Math3D.GetAABB(o.Edges, rayLength)).
+                    ToArray();
+
+                for (int triangleIndex = 0; triangleIndex < triangles.Length; triangleIndex++)
+                {
+                    ITriangleIndexed triangle = triangles[triangleIndex];
+
+                    if (controlPointsByTrianglePoint[triangle.Index0] == controlPointsByTrianglePoint[triangle.Index1] && controlPointsByTrianglePoint[triangle.Index0] == controlPointsByTrianglePoint[triangle.Index2])
+                    {
+                        #region Interior Triangle
+
+                        // The entire triangle is inside the control point's cell
+                        int index0 = GetPointIndex(triangle.Point0, newPoints);
+                        int index1 = GetPointIndex(triangle.Point1, newPoints);
+                        int index2 = GetPointIndex(triangle.Point2, newPoints);
+
+                        var faceIndices = new Tuple<TriangleEdge, int>[0];
+
+                        buildingFinals.Add(new PolyFragIntermediate(controlPointsByTrianglePoint[triangle.Index0], triangleIndex, faceIndices, index0, index1, index2));
+
+                        #endregion
+                        continue;
+                    }
+
+                    var triangleAABB = Math3D.GetAABB(triangle);
+
+                    for (int faceIndex = 0; faceIndex < voronoi.Faces.Length; faceIndex++)
+                    {
+                        if (!Math3D.IsIntersecting_AABB_AABB(triangleAABB.Item1, triangleAABB.Item2, faceAABBs[faceIndex].Item1, faceAABBs[faceIndex].Item2))
+                        {
+                            continue;
+                        }
+
+                        GetTrianglesByControlPoint_FaceTriangle(triangle, triangleIndex, faceIndex, voronoi, controlPointsByTrianglePoint, intermediate, triangleFaceMisses, rayLength);
+                    }
+                }
+
+                // Convert each intersected triangle into smaller triangles
+                buildingFinals.AddRange(ConvertToSmaller(newPoints, intermediate));
+
+                Point3D[] allPoints = newPoints.ToArray();
+
+                // Map to the output type
+                return buildingFinals.
+                    GroupBy(o => o.ControlPointIndex).
+                    Select(o => new VoronoiHullIntersect_PatchFragment(o.Select(p => new VoronoiHullIntersect_TriangleFragment(
+                        new TriangleIndexed(p.TriangleIndex0, p.TriangleIndex1, p.TriangleIndex2, allPoints),
+                        p.FaceIndices,
+                        p.OriginalTriangleIndex
+                        )).ToArray(), o.Key)).
+                    ToArray();
+            }
+
+            private static void GetTrianglesByControlPoint_FaceTriangle(ITriangleIndexed triangle, int triangleIndex, int faceIndex, VoronoiResult3D voronoi, int[] controlPointsByTrianglePoint, List<TriInt_I> intersections, List<Tuple<long, int>> triangleFaceMisses, double rayLength)
+            {
+                Tuple<long, int> key = Tuple.Create(triangle.Token, faceIndex);
+
+                // See if this triangle and face have been intersected
+                if (triangleFaceMisses.Contains(key) || HasIntersection(triangle, faceIndex, intersections))
+                {
+                    return;
+                }
+
+                // Intersect the face and triangle
+                Tuple<Point3D, Point3D> segment = Math3D.GetIntersection_Face_Triangle(voronoi.Faces[faceIndex], triangle, rayLength);
+
+                if (segment == null)
+                {
+                    triangleFaceMisses.Add(key);
+                    return;
+                }
+
+                // Store this intersection segment for every control point that has this face
+                foreach (int controlIndex in voronoi.GetControlPoints(faceIndex))
+                {
+                    // Figure out which corners of the triangle are in this control point's cell
+                    int[] triangleIndices = triangle.IndexArray.
+                        Where(o => controlPointsByTrianglePoint[o] == controlIndex).
+                        ToArray();
+
+                    AddIntersection(triangle, triangleIndex, triangleIndices, controlIndex, faceIndex, voronoi.Faces[faceIndex], segment, intersections);
+                }
+            }
+
+            private static IEnumerable<PolyFragIntermediate> ConvertToSmaller(List<Point3D> newPoints, List<TriInt_I> intersections)
+            {
+                List<PolyFragIntermediate> retVal = new List<PolyFragIntermediate>();
+
+                foreach (TriInt_I triangle in intersections)
+                {
+                    foreach (TriInt_II controlPoint in triangle.ControlPoints)
+                    {
+                        IEnumerable<ITriangle> smalls;
+
+                        if (controlPoint.Faces.Count == 1)
+                        {
+                            smalls = ConvertToSmaller_Single(triangle, controlPoint, controlPoint.Faces[0]);
+                        }
+                        else
+                        {
+                            smalls = ConvertToSmaller_Multi(triangle, controlPoint, controlPoint.Faces);
+                        }
+
+                        foreach (ITriangle small in smalls)
+                        {
+                            ITriangle smallValidNormal = MatchNormal(small, triangle.Triangle);
+
+                            // Convert small into a final triangle indexed
+                            int index0 = GetPointIndex(smallValidNormal.Point0, newPoints);
+                            int index1 = GetPointIndex(smallValidNormal.Point1, newPoints);
+                            int index2 = GetPointIndex(smallValidNormal.Point2, newPoints);
+
+                            Tuple<TriangleEdge, int>[] faceIndices = LinkSegmentsWithFaces(index0, index1, index2, newPoints, controlPoint.Faces);
+
+                            retVal.Add(new PolyFragIntermediate(controlPoint.ControlPointIndex, triangle.TriangleIndex, faceIndices, index0, index1, index2));
+                        }
+                    }
+                }
+
+                return retVal;
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Single(TriInt_I triangle, TriInt_II controlPoint, TriInt_III face)
+            {
+                Point3D[] points3D = UtilityCore.Iterate(face.TriangleIndices.Select(o => triangle.Triangle.AllPoints[o]), new[] { face.Segment.Item1, face.Segment.Item2 }).ToArray();
+
+                return ConvertToSmaller_Finish(triangle, points3D);
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Multi(TriInt_I triangle, TriInt_II controlPoint, List<TriInt_III> faces)
+            {
+                IEnumerable<Point3D> trianglePoints = faces.
+                    SelectMany(o => o.TriangleIndices).
+                    Distinct().
+                    Select(o => triangle.Triangle.AllPoints[o]);
+
+                var chains1 = UtilityCore.GetChains(faces.Select(o => o.Segment), (o, p) => Math3D.IsNearValue(o, p));
+                var chains2 = chains1;
+                if (chains2.Length == 0)
+                {
+                    return new ITriangle[0];
+                }
+                else if (chains2.Length > 1 && chains2.Any(o => o.Item2))
+                {
+                    return new ITriangle[0];
+                }
+                else if (chains2.Length > 1)
+                {
+                    // This sometimes happens.  Just combine the chains
+                    chains2 = new[] { Tuple.Create(chains2.SelectMany(o => o.Item1).ToArray(), false) };
+                }
+
+                Point3D[] points3D = UtilityCore.Iterate(trianglePoints, chains2[0].Item1).ToArray();
+
+                return ConvertToSmaller_Finish(triangle, points3D);
+            }
+            private static IEnumerable<ITriangle> ConvertToSmaller_Finish(TriInt_I triangle, Point3D[] points)
+            {
+                if (points.Length < 3)
+                {
+                    //throw new ApplicationException("handle less than 2");
+                    return new ITriangle[0];
+                }
+                else if (points.Length == 3)
+                {
+                    return new[] { new Triangle(points[0], points[1], points[2]) };
+                }
+
+                // The points could come in any order, so convert into a polygon to figure out the order
+                //NOTE: At first, I tried Math2D.GetDelaunayTriangulation(), which works in most cases.  But when two points are really close together, it weirds out and returns nothing
+                var hull2D = Math2D.GetConvexHull(points);
+
+                // Now triangulate it
+                return Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+            }
+
+            private static Tuple<TriangleEdge, int>[] LinkSegmentsWithFaces(int index0, int index1, int index2, List<Point3D> newPoints, List<TriInt_III> faces)
+            {
+                var retVal = new List<Tuple<TriangleEdge, int>>();
+
+                // Store the triangle's points as something queryable
+                var points = new[]
+                    {
+                        new { Index = 0, Point = newPoints[index0]},
+                        new { Index = 1, Point = newPoints[index1]},
+                        new { Index = 2, Point = newPoints[index2]},
+                    };
+
+                foreach (var face in faces)
+                {
+                    // Find two points of the triangle that match this face intersect
+                    var matches = new[] { face.Segment.Item1, face.Segment.Item2 }.
+                        Select(o => points.FirstOrDefault(p => Math3D.IsNearValue(p.Point, o))).
+                        Where(o => o != null).
+                        OrderBy(o => o.Index).
+                        ToArray();
+
+                    if (matches.Length < 2)
+                    {
+                        continue;
+                    }
+
+                    TriangleEdge edge;
+
+                    if (matches[0].Index == 0 && matches[1].Index == 1)
+                    {
+                        edge = TriangleEdge.Edge_01;
+                    }
+                    else if (matches[0].Index == 0 && matches[1].Index == 2)
+                    {
+                        edge = TriangleEdge.Edge_20;
+                    }
+                    else if (matches[0].Index == 1 && matches[1].Index == 2)
+                    {
+                        edge = TriangleEdge.Edge_12;
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Unexpected pair: " + matches[0].Index.ToString() + ", " + matches[1].Index.ToString());
+                    }
+
+                    retVal.Add(Tuple.Create(edge, face.FaceIndex));
+                }
+
+                return retVal.ToArray();
+            }
+
+            private static void AddFinal(int controlPoint, ITriangleIndexed triangle, SortedList<int, List<ITriangleIndexed>> triangleByControlPoint)
+            {
+                List<ITriangleIndexed> list;
+                if (!triangleByControlPoint.TryGetValue(controlPoint, out list))
+                {
+                    list = new List<ITriangleIndexed>();
+                    triangleByControlPoint.Add(controlPoint, list);
+                }
+
+                list.Add(triangle);
+            }
+
+            private static bool HasIntersection(ITriangleIndexed triangle, int faceIndex, List<TriInt_I> intersections)
+            {
+                TriInt_I i = intersections.FirstOrDefault(o => o.Triangle.Token == triangle.Token);
+                if (i == null)
+                {
+                    return false;
+                }
+
+                foreach (TriInt_II ii in i.ControlPoints)
+                {
+                    TriInt_III iii = ii.Faces.FirstOrDefault(o => o.FaceIndex == faceIndex);
+                    if (iii != null)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+            private static void AddIntersection(ITriangleIndexed triangle, int triangleIndex, int[] triangleIndices, int controlPointIndex, int faceIndex, Face3D face, Tuple<Point3D, Point3D> segment, List<TriInt_I> intersections)
+            {
+                TriInt_I i = intersections.FirstOrDefault(o => o.Triangle.Token == triangle.Token);
+                if (i == null)
+                {
+                    i = new TriInt_I(triangle, triangleIndex);
+                    intersections.Add(i);
+                }
+
+                TriInt_II ii = i.ControlPoints.FirstOrDefault(o => o.ControlPointIndex == controlPointIndex);
+                if (ii == null)
+                {
+                    ii = new TriInt_II(controlPointIndex);
+                    i.ControlPoints.Add(ii);
+                }
+
+                TriInt_III iii = ii.Faces.FirstOrDefault(o => o.FaceIndex == faceIndex);
+                if (iii == null)
+                {
+                    iii = new TriInt_III(face, faceIndex, segment, triangleIndices);
+                    ii.Faces.Add(iii);
+                }
+            }
+
+            private static void RemoveNulls(List<TriInt_I> intersections)
+            {
+                // ugly, but it works :)
+
+                int i = 0;
+                while (i < intersections.Count)
+                {
+                    #region i
+
+                    int ii = 0;
+                    while (ii < intersections[i].ControlPoints.Count)
+                    {
+                        #region ii
+
+                        int iii = 0;
+                        while (iii < intersections[i].ControlPoints[ii].Faces.Count)
+                        {
+                            #region iii
+
+                            if (intersections[i].ControlPoints[ii].Faces[iii].Segment == null)
+                            {
+                                intersections[i].ControlPoints[ii].Faces.RemoveAt(iii);
+                            }
+                            else
+                            {
+                                iii++;
+                            }
+
+                            #endregion
+                        }
+
+                        if (intersections[i].ControlPoints[ii].Faces.Count == 0)
+                        {
+                            intersections[i].ControlPoints.RemoveAt(ii);
+                        }
+                        else
+                        {
+                            ii++;
+                        }
+
+                        #endregion
+                    }
+
+                    if (intersections[i].ControlPoints.Count == 0)
+                    {
+                        intersections.RemoveAt(i);
+                    }
+                    else
+                    {
+                        i++;
+                    }
+
+                    #endregion
+                }
+            }
+
+            private static int GetPointIndex(Point3D point, List<Point3D> points)
+            {
+                for (int cntr = 0; cntr < points.Count; cntr++)
+                {
+                    if (Math3D.IsNearValue(points[cntr], point))
+                    {
+                        return cntr;
+                    }
+                }
+
+                points.Add(point);
+                return points.Count - 1;
+            }
+
+            private static ITriangle MatchNormal(ITriangle toMatch, ITriangle matchAgainst)
+            {
+                if (Vector3D.DotProduct(toMatch.Normal, matchAgainst.Normal) < 0)
+                {
+                    return new Triangle(toMatch.Point0, toMatch.Point2, toMatch.Point1);
+                }
+                else
+                {
+                    return toMatch;
+                }
+            }
+
+            /// <summary>
+            /// This returns which control point each triangle point is closest to
+            /// </summary>
+            /// <returns>
+            /// Index into return = Triangle point index
+            /// Value of return = Voronoi control point index
+            /// </returns>
+            private static int[] GetNearestControlPoints(Point3D[] allPoints, VoronoiResult3D voronoi)
+            {
+                // Cache the index with the point
+                var controlPoints = voronoi.ControlPoints.
+                    Select((o, i) => new { Point = o, Index = i }).
+                    ToArray();
+
+                // Find the closest control point for each triangle point
+                return allPoints.
+                    Select(o =>
+                        controlPoints.
+                            OrderBy(p => (o - p.Point).LengthSquared).
+                            First().
+                            Index).
+                    ToArray();
+            }
+
+            #endregion
+            #region Private Methods - face polys
+
+            private static TriangleIndexed[] GetSubHull(VoronoiHullIntersect_PatchFragment patch, ITriangleIndexed[] hullPatch, VoronoiResult3D voronoi, Point3D hullCenter, double rayExtend, List<Face3D> insideFaces)
+            {
+                List<PolyFaceResult> retVal = new List<PolyFaceResult>();
+
+                int[] faces = voronoi.FacesByControlPoint[patch.ControlPointIndex];
+
+                List<int> potentialFullFaces = new List<int>();
+
+                foreach (int faceIndex in faces)
+                {
+                    var intersects = patch.Polygon.
+                        Select(o => new
+                        {
+                            Triangle = o,
+                            FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray()
+                        }).
+                        Where(o => o.FaceHits.Length > 0).
+                        ToArray();
+
+                    Point3D[] points = intersects.
+                        SelectMany(o => o.FaceHits.SelectMany(p => new[] { o.Triangle.Triangle.GetPoint(p.Item1, true), o.Triangle.Triangle.GetPoint(p.Item1, false) })).
+                        Distinct((p1, p2) => Math3D.IsNearValue(p1, p2)).
+                        ToArray();
+
+                    if (points.Length == 0)
+                    {
+                        // Add the entire face
+                        //NOTE: Open faces should be ignored, because the only ones we care about are the ones that intersect.  Imagine the hull intersecing
+                        //the base of a Y.  The V portion of the Y should be ignored
+                        if (voronoi.Faces[faceIndex].IsClosed)
+                        {
+                            //TODO: Need an additional filter to see if this face touches the hull.  Store this face for later inclusion once the hull is more fully worked
+                            //TODO: For v4, don't include this.  Just let the convex hull method fill in holes
+                            //retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, voronoi.Faces[faceIndex].GetPolygonTriangles(), null));
+                            potentialFullFaces.Add(faceIndex);
+                        }
+                        continue;
+                    }
+
+                    points = AddFaceVerticesToPolygon(points, voronoi.Faces[faceIndex], rayExtend);
+                    if (points.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    // Triangulate these points
+                    var hull2D = Math2D.GetConvexHull(points);
+                    if (hull2D == null)
+                    {
+                        // The points are colinear
+                        continue;
+                    }
+
+                    TriangleIndexed[] triangles = Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+
+                    retVal.Add(new PolyFaceResult(voronoi.Faces[faceIndex], faceIndex, triangles));
+                }
+
+                // Add skipped whole faces
+                //TODO: Fix this.  I think my design is flawed (simplifying to a cutoff plane)
+                //retVal.AddRange(AddFullFacesToHull_BROKEN(hullPatch, hullCenter, voronoi, potentialFullFaces));
+                retVal.AddRange(AddFullFacesToHull(potentialFullFaces, voronoi, insideFaces));
+
+                // Convert to a convex hull.  This will clean up any small holes that were missed above
+                List<Point3D> finalPoints = new List<Point3D>();
+                finalPoints.AddRange(TriangleIndexed.GetUsedPoints(retVal.Select(o => o.Polygon)));
+                finalPoints.AddRangeUnique(TriangleIndexed.GetUsedPoints(hullPatch), (p1, p2) => Math3D.IsNearValue(p1, p2));
+
+                return Math3D.GetConvexHull(finalPoints.ToArray());
+            }
+
+            /// <summary>
+            /// This takes points that touch a face, and adds some of the face's vertices
+            /// </summary>
+            /// <remarks>
+            /// The points passed in form an arc.  The direction of the curve of the arc tells which face vertices to include
+            /// (think of a snow cone, or an umbrella)
+            /// </remarks>
+            private static Point3D[] AddFaceVerticesToPolygon(Point3D[] points, Face3D face, double rayExtend)
+            {
+                // Detect which of the points are on the face's edges
+                var faceEdgeHits = face.Edges.
+                    Select(o => new
+                    {
+                        Edge = o,
+                        Points = points.Where(p => Math1D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                    }).
+                    Where(o => o.Points.Length > 0).
+                    ToArray();
+
+                // If the edge hits are on one edge, then it is a polygon on the face, and the face's verticies should't be added (they definately
+                // outside the polygon)
+                if (faceEdgeHits.Length == 1) return points;
+
+                // Choose one of the points that aren't in faceEdgeHits.  This will define a direction not to go.  Then go through all the
+                // face's points, and keep the ones that are the opposite direction of that line
+
+                Point3D[] edgePoints = faceEdgeHits.
+                    SelectMany(o => o.Points).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (edgePoints.Length > 2)
+                {
+                    return points.
+                        Concat(edgePoints).
+                        Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                        ToArray();
+                }
+
+                if (edgePoints == null) return points;
+                else if (edgePoints.Length != 2) return points;
+
+                // Find the point that is farthest from the intersects
+                Vector3D line = edgePoints[1] - edgePoints[0];
+
+                var otherPoint = points.
+                    Where(o => !edgePoints.Any(p => p.IsNearValue(o))).
+                    Select(o =>
+                    {
+                        Point3D intersect = Math3D.GetClosestPoint_Line_Point(edgePoints[0], line, o);
+                        Vector3D heightLine = o - intersect;
+
+                        return new
+                        {
+                            Intersect = intersect,
+                            HeightLine = heightLine,
+                            HeightLineLen = heightLine.Length,
+                        };
+                    }).
+                    OrderByDescending(o => o.HeightLineLen).
+                    FirstOrDefault();
+
+                // Detect thin triangle
+                if (otherPoint == null) return points;
+                else if (otherPoint.HeightLine.IsNearZero()) return points;
+                else if (otherPoint.HeightLineLen / line.Length < .015) return points;
+
+                // Draw lines between the face verticies and that intersect points, and keep the ones with a negative dot product (the verticies that are away from that line)
+                Point3D[] faceMatches = face.Edges.
+                    Select(o => new[] { o.Point0, o.GetPoint1Ext(rayExtend) }).
+                    SelectMany(o => o).
+                    Where(o => Vector3D.DotProduct(o - otherPoint.Intersect, otherPoint.HeightLine) < 0).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (faceMatches.Length == 0) return points;
+
+                return points.
+                    Concat(faceMatches).
+                    ToArray();
+            }
+
+            /// <summary>
+            /// This returns full faces that are below the plane of the face intersects
+            /// </summary>
+            /// <remarks>
+            /// This is very similar in spirit with AddFaceVerticesToPolygon().  That works in 2D, this is 3D
+            /// </remarks>
+            private static IEnumerable<PolyFaceResult> AddFullFacesToHull_BROKEN(ITriangleIndexed[] hullPatch, Point3D hullCenter, VoronoiResult3D voronoi, List<int> potentialFullFaces)
+            {
+                if (potentialFullFaces.Count == 0)
+                {
+                    return new PolyFaceResult[0];
+                }
+
+                Point3D[] patchPoints = TriangleIndexed.GetUsedPoints(hullPatch);
+
+                //TODO: This is probably too simplistic, but should get most faces
+                ITriangle plane = Math2D.GetPlane_Average(patchPoints);
+                Vector3D direction = plane.Point0 - hullCenter;
+                if (Vector3D.DotProduct(direction, plane.Normal) < 0)
+                {
+                    plane = new Triangle(plane.Point0, plane.Point2, plane.Point1);
+                }
+
+                List<PolyFaceResult> retVal = new List<PolyFaceResult>();
+
+                foreach (int faceIndex in potentialFullFaces)
+                {
+                    if (!voronoi.Faces[faceIndex].IsClosed)
+                    {
+                        continue;
+                    }
+
+                    bool isUnder = true;
+
+                    var facePolygon = voronoi.Faces[faceIndex].GetPolygon();
+                    foreach (int pointIndex in facePolygon.Item1)
+                    {
+                        if (!Math3D.IsAbovePlane(plane, facePolygon.Item2[pointIndex]))
+                        {
+                            isUnder = false;
+                            break;
+                        }
+                    }
+
+                    if (isUnder)
+                    {
+                        retVal.Add(new PolyFaceResult(voronoi.Faces[faceIndex], faceIndex, voronoi.Faces[faceIndex].GetPolygonTriangles()));
+                    }
+                }
+
+                return retVal;
+            }
+
+            /// <summary>
+            /// This is very simplistic.  Since all control points that are fully inside the hull are known (and by extension, all of their faces are known), then
+            /// add faces that match those.
+            /// NOTE: This method still won't catch all the faces
+            /// </summary>
+            /// <param name="potentialFullFaces">Candidates to be added</param>
+            /// <param name="insideFaces">Faces that are definately inside the outer hull</param>
+            private static IEnumerable<PolyFaceResult> AddFullFacesToHull(List<int> potentialFullFaces, VoronoiResult3D voronoi, List<Face3D> insideFaces)
+            {
+                foreach (int potentialIndex in potentialFullFaces)
+                {
+                    long token = voronoi.Faces[potentialIndex].Token;
+                    if (insideFaces.Any(o => o.Token == token))
+                    {
+                        yield return new PolyFaceResult(voronoi.Faces[potentialIndex], potentialIndex, voronoi.Faces[potentialIndex].GetPolygonTriangles());
+                    }
+                }
+            }
+
+            private static bool IsSubHullInsideMainHull(VoronoiResult3D voronoi, int index, ITriangleIndexed[] convexHull)
+            {
+                Point3D[] subPoints = voronoi.FacesByControlPoint[index].
+                    Where(o => voronoi.Faces[o].IsClosed).
+                    SelectMany(o =>
+                    {
+                        var points = voronoi.Faces[o].GetPolygon();
+                        return points.Item1.Select(p => points.Item2[p]);
+                    }).
+                    ToArray();
+
+                // .All is returning true when the list is empty
+                if (subPoints.Length == 0)
+                {
+                    return false;
+                }
+
+                return subPoints.All(o => Math3D.IsInside_ConvexHull(convexHull, o));
+            }
+
+            #endregion
+        }
+
+        #endregion
 
         #region Declaration Section
 
@@ -4079,11 +4754,21 @@ namespace Game.HelperClassesWPF
 
             Random rand = StaticRandom.GetRandomForThread();
 
-            retVal.X = GetRandomValue_Hole(rand, outerRect_Min.X, innerRect_Min.X, innerRect_Max.X, outerRect_Max.X);
-            retVal.Y = GetRandomValue_Hole(rand, outerRect_Min.Y, innerRect_Min.Y, innerRect_Max.Y, outerRect_Max.Y);
-            retVal.Z = GetRandomValue_Hole(rand, outerRect_Min.Z, innerRect_Min.Z, innerRect_Max.Z, outerRect_Max.Z);
+            for (int cntr = 0; cntr < 1000; cntr++)
+            {
+                retVal.X = rand.NextDouble(outerRect_Min.X, outerRect_Max.X);
+                retVal.Y = rand.NextDouble(outerRect_Min.Y, outerRect_Max.Y);
+                retVal.Z = rand.NextDouble(outerRect_Min.Z, outerRect_Max.Z);
 
-            return retVal;
+                if (!(retVal.X >= innerRect_Min.X && retVal.X <= innerRect_Max.X &&
+                    retVal.Y >= innerRect_Min.Y && retVal.Y <= innerRect_Max.Y &&
+                    retVal.Z >= innerRect_Min.Z && retVal.Z <= innerRect_Max.Z))
+                {
+                    return retVal;
+                }
+            }
+
+            throw new ApplicationException("Infinite loop detected (hole is likely larger than the box)");
         }
         /// <summary>
         /// Get a random vector between maxValue*-1 and maxValue
@@ -4554,95 +5239,6 @@ namespace Game.HelperClassesWPF
             Vector3D line02 = p1 - p0;
 
             return p0 + (line01 * bary.X) + (line02 * bary.Y);
-        }
-
-        public static Point3D[] GetBezierSegment(int count, Point3D from, Point3D control, Point3D to)
-        {
-            return Bezier.GetBezierSegment(count, new[] { from, control, to });
-        }
-        public static Point3D[] GetBezierSegment(int count, Point3D from, Point3D fromControl, Point3D toControl, Point3D to)
-        {
-            return Bezier.GetBezierSegment(count, new[] { from, fromControl, toControl, to });
-        }
-        public static Point3D[] GetBezierSegment(int count, Point3D from, Point3D[] controls, Point3D to)
-        {
-            return Bezier.GetBezierSegment(count, UtilityCore.Iterate<Point3D>(from, controls, to).ToArray());
-        }
-        public static Point3D[] GetBezierSegment(int count, Point3D[] controlPoints)
-        {
-            return Bezier.GetBezierSegment(count, controlPoints);
-        }
-        public static Point3D[] GetBezierSegment(int count, BezierSegmentDef segment)
-        {
-            return Bezier.GetBezierSegment(count, UtilityCore.Iterate<Point3D>(segment.EndPoint0, segment.ControlPoints, segment.EndPoint1).ToArray());
-        }
-
-        public static Point3D GetBezierPoint(double percent, BezierSegmentDef segment)
-        {
-            return Bezier.GetBezier_SinglePoint(UtilityCore.Iterate<Point3D>(segment.EndPoint0, segment.ControlPoints, segment.EndPoint1).ToArray(), percent);
-        }
-
-        /// <summary>
-        /// This returns points across several segment definitions.  count is the total number of sample points to return
-        /// </summary>
-        /// <remarks>
-        /// This assumes that the segments are linked together into a single path
-        /// 
-        /// If the first and last point of segments are the same, then this will only return that shared point once (but the point count
-        /// will still be how many were requested
-        /// </remarks>
-        public static Point3D[] GetBezierPath(int count, BezierSegmentDef[] segments)
-        {
-            return Bezier.GetBezierPath(count, segments);
-        }
-        /// <summary>
-        /// This returns points across sets of segment definition.  Each set is run through the other path overload.  So the endpoints
-        /// of each set are guaranteed to be included in the return points (deduped)
-        /// </summary>
-        /// <param name="countPerPath">This is how many points per set (the total number of points will be countPerPath * segmentSets.Length)</param>
-        public static Point3D[] GetBezierPath(int countPerPath, BezierSegmentDef[][] segmentSets)
-        {
-            //TODO: Make an overload that takes in total count instead of per path
-
-            // Get the points for each set of beziers
-            List<Point3D[]> perPathPoints = new List<Point3D[]>();
-
-            foreach (BezierSegmentDef[] segments in segmentSets)
-            {
-                if (segments.Length == 1)
-                {
-                    perPathPoints.Add(Math3D.GetBezierSegment(countPerPath, segments[0]));
-                }
-                else
-                {
-                    perPathPoints.Add(Math3D.GetBezierPath(countPerPath, segments));
-                }
-            }
-
-            // Dedupe them
-            List<Point3D> retVal = new List<Point3D>();
-
-            retVal.AddRange(perPathPoints[0]);
-
-            for (int cntr = 1; cntr < perPathPoints.Count; cntr++)
-            {
-                if (Math3D.IsNearValue(retVal[retVal.Count - 1], perPathPoints[cntr][0]))
-                {
-                    // First point dupes with the last
-                    retVal.AddRange(perPathPoints[cntr].Skip(1));
-                }
-                else
-                {
-                    retVal.AddRange(perPathPoints[cntr]);
-                }
-            }
-
-            if (Math3D.IsNearValue(retVal[0], retVal[retVal.Count - 1]))
-            {
-                retVal.RemoveAt(retVal.Count - 1);
-            }
-
-            return retVal.ToArray();
         }
 
         /// <summary>
@@ -5304,6 +5900,34 @@ namespace Game.HelperClassesWPF
             return retVal.
                 Select(o => new Point3D(o[0], o[1], o[2])).
                 ToArray();
+        }
+
+        /// <summary>
+        /// Dot product of unit vectors is cosine.  This makes it look roughly linear
+        /// NOTE: You must pass in unit vectors, or the results will be wild
+        /// </summary>
+        public static double GetLinearDotProduct(Vector3D unit1, Vector3D unit2)
+        {
+            //TODO: This was just visually determined on a graphing calculator.  It could be refined
+            const double POW = .57;
+
+            double dot = Vector3D.DotProduct(unit1, unit2);
+
+            if (dot >= 0)
+            {
+                // This will be roughly y=-x (in the range 0 to 1)
+                return 1 - Math.Pow(1 - dot, POW);
+            }
+            else
+            {
+                // There doesn't seem to be any power that can directly convert the negative side to a near linear.  The abs of the negative
+                // looks like the first 90 degrees of a sine.  So take the arcsine to get the theta that made that sine.  With that theta, take the
+                // cos.  Now it is the same shape as the positive side
+                double cos = Math.Cos(Math.Asin(-dot));
+
+                // Do similar to the positive side, then invert
+                return -Math.Pow(1 - cos, POW);
+            }
         }
 
         #endregion
@@ -6543,6 +7167,51 @@ namespace Game.HelperClassesWPF
             return HullTriangleIntersect.GetIntersection_Hull_Triangle(convexHull, triangle);
         }
 
+        /// <summary>
+        /// This returns hits ordered by distance from the rayStart
+        /// </summary>
+        /// <returns>
+        /// Item1=Point of intersection between the ray and a triangle
+        /// Item2=The triangle
+        /// Item3=Distance from rayStart
+        /// </returns>
+        public static Tuple<Point3D, ITriangle, double>[] GetIntersection_Hull_Ray(ITriangle[] triangles, Point3D rayStart, Vector3D rayDir)
+        {
+            // Make a delagate to intersect the ray with a triangle
+            var getHit = new Func<ITriangle, Point3D, Vector3D, Tuple<Point3D, ITriangle, double>>((t, p, v) =>
+            {
+                Point3D? hit = GetIntersection_Triangle_Ray(t, p, v);
+
+                if (hit == null)
+                {
+                    return (Tuple<Point3D, ITriangle, double>)null;
+                }
+
+                double distance = (hit.Value - p).Length;
+
+                return Tuple.Create(hit.Value, t, distance);
+            });
+
+            // Test all triangles
+            if (triangles.Length > 100)
+            {
+                return triangles.
+                    AsParallel().
+                    Select(o => getHit(o, rayStart, rayDir)).
+                    Where(o => o != null).
+                    OrderBy(o => o.Item3).
+                    ToArray();
+            }
+            else
+            {
+                return triangles.
+                    Select(o => getHit(o, rayStart, rayDir)).
+                    Where(o => o != null).
+                    OrderBy(o => o.Item3).
+                    ToArray();
+            }
+        }
+
         //public static Point3D[][] GetIntersection_Mesh_Plane_OLD(ITriangleIndexed[] mesh, ITriangle plane)
         //{
         //    return HullTriangleIntersect.GetIntersection_Mesh_Plane_OLD(mesh, plane);
@@ -6550,6 +7219,28 @@ namespace Game.HelperClassesWPF
         public static ContourPolygon[] GetIntersection_Mesh_Plane(ITriangleIndexed[] mesh, ITriangle plane)
         {
             return HullTriangleIntersect.GetIntersection_Mesh_Plane(mesh, plane);
+        }
+
+        /// <summary>
+        /// This intersects a convex hull with a voronoi.  Returns convex hulls
+        /// NOTE: This works in most cases, but may return hulls that are shaved off more than they should be
+        /// </summary>
+        /// <returns>
+        /// Item1=Control point index
+        /// Item2=Convex hull
+        /// </returns>
+        public static Tuple<int, ITriangleIndexed[]>[] GetIntersection_Hull_Voronoi_full(ITriangleIndexed[] convexHull, VoronoiResult3D voronoi)
+        {
+            return HullVoronoiIntersect.GetIntersection_Hull_Voronoi_full(convexHull, voronoi);
+        }
+        /// <summary>
+        /// This intersects a convex hull with a voronoi.  Only returns the patches of the hull.  Doesn't return any depth along
+        /// the voronoi's faces
+        /// </summary>
+        /// <returns></returns>
+        public static VoronoiHullIntersect_PatchFragment[] GetIntersection_Triangles_Voronoi_surface(ITriangleIndexed[] triangles, VoronoiResult3D voronoi)
+        {
+            return HullVoronoiIntersect.GetIntersection_Hull_Voronoi_surface(triangles, voronoi);
         }
 
         /// <summary>
@@ -8449,275 +9140,6 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: BezierSegmentDef
-
-    public class BezierSegmentDef       // wpf already has a BezierSegment
-    {
-        #region Constructor
-
-        public BezierSegmentDef(int endIndex0, int endIndex1, Point3D[] controlPoints, Point3D[] allEndPoints)
-        {
-            this.EndIndex0 = endIndex0;
-            this.EndIndex1 = endIndex1;
-            this.ControlPoints = controlPoints;
-            this.AllEndPoints = allEndPoints;
-
-            this.Combined = UtilityCore.Iterate<Point3D>(this.EndPoint0, this.ControlPoints, this.EndPoint1).ToArray();
-        }
-
-        #endregion
-
-        public readonly Point3D[] AllEndPoints;
-
-        public readonly int EndIndex0;
-        public readonly int EndIndex1;
-
-        public Point3D EndPoint0
-        {
-            get
-            {
-                return this.AllEndPoints[this.EndIndex0];
-            }
-        }
-        public Point3D EndPoint1
-        {
-            get
-            {
-                return this.AllEndPoints[this.EndIndex1];
-            }
-        }
-
-        public readonly Point3D[] ControlPoints;
-
-        /// <summary>
-        /// This is { EndPoint0, ControlPoints, EndPoint1 }
-        /// </summary>
-        public readonly Point3D[] Combined;
-
-        #region Public Methods
-
-        public BezierSegmentDef ToReverse()
-        {
-            Point3D[] controlPoints = null;
-            if (this.ControlPoints != null)
-            {
-                controlPoints = this.ControlPoints.Reverse().ToArray();
-            }
-
-            return new BezierSegmentDef(this.EndIndex1, this.EndIndex0, controlPoints, this.AllEndPoints);      // no need to reverse AllEndPoints, just the indexes
-        }
-
-        public static Tuple<Point, Point> GetControlPoints_Middle(Point end1, Point end2, Point end3, double percentAlong12 = .25, double percentAlong23 = .25)
-        {
-            // Just use the 3D overload
-            var retVal = GetControlPoints_Middle(end1.ToPoint3D(), end2.ToPoint3D(), end3.ToPoint3D(), percentAlong12, percentAlong23);
-
-            // Convert the response back to 2D
-            return Tuple.Create(retVal.Item1.ToPoint2D(), retVal.Item2.ToPoint2D());
-        }
-        /// <summary>
-        /// This is a helper method to generate control points
-        /// </summary>
-        /// <remarks>
-        /// A bezier curve will always go through the end points.  It will use the control points to pull it off the direct
-        /// line segment.
-        /// 
-        /// When two bezier segments are linked, the curve will be smooth if the two control points for the shared
-        /// end point are in a line.
-        /// 
-        /// This method takes the three end points, and returns the two control points for the middle end point (end2)
-        /// 
-        /// The returned control points will be colinear with end2
-        /// </remarks>
-        /// <param name="percentAlong12">This is the percent of the 1-2 segment's length</param>
-        /// <param name="percentAlong23">This is the percent of the 2-3 segment's length</param>
-        /// <returns>
-        /// Item1=control point for end2 for the 1-2 bezier segment (this is the last point in this.ControlPoints)
-        /// Item2=control point for end2 for the 2-3 bezier segment (this is the first point in this.ControlPoints)
-        /// </returns>
-        public static Tuple<Point3D, Point3D> GetControlPoints_Middle(Point3D end1, Point3D end2, Point3D end3, double percentAlong12 = .25, double percentAlong23 = .25)
-        {
-            Vector3D dir21 = end1 - end2;
-            Vector3D dir23 = end3 - end2;
-
-            Vector3D? controlLine = GetControlPoints_Middle_ControlLine(dir21, dir23);
-            if (controlLine == null)
-            {
-                // The directions are either on top of each other, or pointing directly away from each other, or
-                // some of the end points are the same.
-                //
-                // Just return control points that are the same as the middle point.  This could be improved in the
-                // future if certain cases look bad
-                return Tuple.Create(end2, end2);
-            }
-
-            Vector3D controlLineUnit;
-            if (Vector3D.DotProduct(dir21, controlLine.Value) > 0)
-            {
-                // Control line is toward end 1
-                controlLineUnit = controlLine.Value.ToUnit();
-            }
-            else
-            {
-                // Control line is toward end 3
-                controlLineUnit = (-controlLine.Value).ToUnit();
-            }
-
-            Point3D control21 = end2 + (controlLineUnit * (dir21.Length * percentAlong12));
-            Point3D control23 = end2 - (controlLineUnit * (dir23.Length * percentAlong23));
-
-            return Tuple.Create(control21, control23);
-        }
-
-        /// <summary>
-        /// This creates a control point for end1.  It is along a line that is some angle from dir12.  The distance along
-        /// that rotated direction is (end2-end1)*percentAlong12
-        /// </summary>
-        /// <param name="otherPoint">This is a third point that is coplanar to end1 and end2.  It is just used to figure out the rotation axis (axis will be orthogonal to the plane defined by the three points)</param>
-        /// <param name="isAwayFromOther">Whether the control line should rotate away from otherPoint or toward it</param>
-        /// <param name="angle">Angle in degrees</param>
-        /// <param name="percentAlong12">This is the percent of the 1-2 segment's length</param>
-        public static Point3D GetControlPoint_End(Point3D end1, Point3D end2, Point3D otherPoint, bool isAwayFromOther = true, double angle = 30, double percentAlong12 = .25)
-        {
-            // Figure out the axis
-            Vector3D axis;
-            if (isAwayFromOther)
-            {
-                axis = Vector3D.CrossProduct(otherPoint - end1, end2 - end1);
-            }
-            else
-            {
-                axis = Vector3D.CrossProduct(end2 - end1, otherPoint - end1);
-            }
-
-            // Call the other overload
-            return GetControlPoint_End(end1, end2, axis, angle, percentAlong12);
-        }
-        public static Point3D GetControlPoint_End(Point3D end1, Point3D end2, Vector3D axis, double angle = 20, double along12 = .25)
-        {
-            Vector3D dir12 = end2 - end1;
-
-            Vector3D controlLine = dir12.GetRotatedVector(axis, angle).ToUnit();
-            controlLine = controlLine * (dir12.Length * along12);
-
-            return end1 + controlLine;
-        }
-
-        /// <summary>
-        /// This is a helper method that creates a bezier definition that runs through a set of points
-        /// </summary>
-        /// <param name="ends">These are the end points that the beziers run through</param>
-        /// <param name="along">This is how far out the control points should be pulled from the end points (it is a percent of that line segment's length)</param>
-        /// <param name="isClosed">
-        /// True: The assumption is that ends[0] and ends[len-1] aren't the same point.  This will add an extra segment to create a closed curve.
-        /// False: This method compares ends[0] and ends[len-1].  If they are the same point, it makes a closed curve.  If they are different, it makes an open curve.
-        /// </param>
-        public static BezierSegmentDef[] GetBezierSegments(Point3D[] ends, double along = .25, bool? isClosed = null)
-        {
-            if (isClosed ?? false)
-            {
-                return GetBezierSegments_Closed(ends, along);
-            }
-
-            if (ends.Length > 2 && Math3D.IsNearValue(ends[0], ends[ends.Length - 1]))
-            {
-                Point3D[] endsClosed = new Point3D[ends.Length - 1];
-                Array.Copy(ends, endsClosed, ends.Length - 1);
-                return GetBezierSegments_Closed(endsClosed, along);       // remove the last point, which is redundant
-            }
-            else
-            {
-                return GetBezierSegments_Open(ends, along);
-            }
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private static Vector3D? GetControlPoints_Middle_ControlLine(Vector3D dir21, Vector3D dir23)
-        {
-            // Get the angle between the two directions
-            double angle = Vector3D.AngleBetween(dir21, dir23);
-            if (Double.IsNaN(angle))
-            {
-                return null;
-            }
-
-            Vector3D axis = Vector3D.CrossProduct(dir21, dir23);
-            if (axis.IsNearZero())
-            {
-                return null;
-            }
-
-            // Get the vector directly between the two directions
-            Vector3D between = dir21.GetRotatedVector(axis, angle / 2d);
-
-            // Now get the vector that is orthogonal to that between vector.  This is the line that
-            // the control points will be along
-            return Vector3D.CrossProduct(between, axis);        // length doesn't really matter for this.  It could also point in the exact opposite direction, and that wouldn't matter
-        }
-
-        private static BezierSegmentDef[] GetBezierSegments_Closed(Point3D[] ends, double along = .25)
-        {
-            //NOTE: The difference between closed and open is closed has one more segment that loops back to zero (and a control point for point zero)
-
-            // Precalculate the control points
-            Tuple<Point3D, Point3D>[] controls = new Tuple<Point3D, Point3D>[ends.Length - 1];
-
-            for (int cntr = 1; cntr < ends.Length; cntr++)
-            {
-                int lastIndex = cntr == ends.Length - 1 ? 0 : cntr + 1;
-
-                controls[cntr - 1] = BezierSegmentDef.GetControlPoints_Middle(ends[cntr - 1], ends[cntr], ends[lastIndex], along, along);
-            }
-
-            var extraControl = BezierSegmentDef.GetControlPoints_Middle(ends[ends.Length - 1], ends[0], ends[1], along, along);      // loop back
-
-            // Build the return segments
-            BezierSegmentDef[] retVal = new BezierSegmentDef[ends.Length];
-
-            for (int cntr = 0; cntr < ends.Length; cntr++)
-            {
-                Point3D? ctrl0 = cntr == 0 ? extraControl.Item2 : controls[cntr - 1].Item2;
-                Point3D? ctrl1 = cntr == ends.Length - 1 ? extraControl.Item1 : controls[cntr].Item1;
-
-                int lastIndex = cntr == ends.Length - 1 ? 0 : cntr + 1;
-
-                retVal[cntr] = new BezierSegmentDef(cntr, lastIndex, UtilityCore.Iterate<Point3D>(ctrl0, ctrl1).ToArray(), ends);
-            }
-
-            return retVal;
-        }
-        private static BezierSegmentDef[] GetBezierSegments_Open(Point3D[] ends, double along = .25)
-        {
-            // Precalculate the control points
-            Tuple<Point3D, Point3D>[] controls = new Tuple<Point3D, Point3D>[ends.Length - 2];
-
-            for (int cntr = 1; cntr < ends.Length - 1; cntr++)
-            {
-                controls[cntr - 1] = BezierSegmentDef.GetControlPoints_Middle(ends[cntr - 1], ends[cntr], ends[cntr + 1], along, along);
-            }
-
-            // Build the return segments
-            BezierSegmentDef[] retVal = new BezierSegmentDef[ends.Length - 1];
-
-            for (int cntr = 0; cntr < ends.Length - 1; cntr++)
-            {
-                Point3D? ctrl0 = cntr == 0 ? (Point3D?)null : controls[cntr - 1].Item2;
-                Point3D? ctrl1 = cntr == ends.Length - 2 ? (Point3D?)null : controls[cntr].Item1;
-
-                retVal[cntr] = new BezierSegmentDef(cntr, cntr + 1, UtilityCore.Iterate<Point3D>(ctrl0, ctrl1).ToArray(), ends);
-            }
-
-            return retVal;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
     #region Class: VoronoiResult3D
 
     public class VoronoiResult3D
@@ -8783,6 +9205,17 @@ namespace Game.HelperClassesWPF
 
             return retVal.ToArray();
         }
+
+        public TriangleIndexed[] GetVoronoiCellHull(int index, double rayLength = 1000)
+        {
+            // Ask each face for a tesselation
+            var facePolys = this.FacesByControlPoint[index].
+                SelectMany(o => this.Faces[o].GetPolygonTriangles(rayLength)).
+                ToArray();
+
+            // Can't trust that the indices to points are the same across faces, so dedupe points and return a consistent set
+            return TriangleIndexed.ConvertToIndexed(facePolys);
+        }
     }
 
     #endregion
@@ -8790,6 +9223,12 @@ namespace Game.HelperClassesWPF
 
     public class Face3D
     {
+        #region Declaration Section
+
+        private readonly object _lock = new object();
+
+        #endregion
+
         #region Constructor
 
         public Face3D(int[] edges, Edge3D[] allEdges)
@@ -8817,6 +9256,23 @@ namespace Game.HelperClassesWPF
         /// False:  This face contains rays
         /// </summary>
         public readonly bool IsClosed;
+
+        private long? _token = null;
+        public long Token
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    if (_token == null)
+                    {
+                        _token = TokenGenerator.NextToken();
+                    }
+
+                    return _token.Value;
+                }
+            }
+        }
 
         #region Public Methods
 
@@ -9417,6 +9873,37 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
+    }
+
+    #endregion
+
+    #region Class: Fragment Results
+
+    public class VoronoiHullIntersect_PatchFragment
+    {
+        public VoronoiHullIntersect_PatchFragment(VoronoiHullIntersect_TriangleFragment[] polygon, int controlPointIndex)
+        {
+            this.Polygon = polygon;
+            this.ControlPointIndex = controlPointIndex;
+        }
+
+        public readonly VoronoiHullIntersect_TriangleFragment[] Polygon;
+
+        public readonly int ControlPointIndex;
+    }
+
+    public class VoronoiHullIntersect_TriangleFragment
+    {
+        public VoronoiHullIntersect_TriangleFragment(ITriangleIndexed triangle, Tuple<TriangleEdge, int>[] faceIndices, int originalTriangleIndex)
+        {
+            this.Triangle = triangle;
+            this.FaceIndices = faceIndices;
+            this.OriginalTriangleIndex = originalTriangleIndex;
+        }
+
+        public readonly ITriangleIndexed Triangle;
+        public readonly Tuple<TriangleEdge, int>[] FaceIndices;
+        public readonly int OriginalTriangleIndex;
     }
 
     #endregion

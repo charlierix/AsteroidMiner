@@ -70,7 +70,7 @@ namespace Game.Newt.v2.GameItems
                     //ModelVisual3D lightModel = new ModelVisual3D();
                     //lightModel.Content = lightGroup;
 
-                    //_viewport.Children.Add(lightModel);
+                    //this.Viewport.Children.Add(lightModel);
 
                     _background = background;
 
@@ -101,7 +101,7 @@ namespace Game.Newt.v2.GameItems
                     _camera.UpDirection = upDirection;
                     //_camera.FieldOfView = ;       //  just leave this fixed for now
 
-                    return UtilityWPF.RenderControl(_control, widthHeight, widthHeight, true, _background, false);
+                    return UtilityWPF.RenderControl(_control, widthHeight, widthHeight, false, _background, false);
                 }
 
                 #endregion

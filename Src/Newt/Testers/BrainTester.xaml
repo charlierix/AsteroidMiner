@@ -239,11 +239,22 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <Button Name="btnFuzzyLinkTest2" Content="Fuzzy Link Test 2" Click="btnFuzzyLinkTest2_Click"/>
+                                        <StackPanel>
+                                            <Button Name="btnFuzzyLinkTest2" Content="Fuzzy Link Test 2" Click="btnFuzzyLinkTest2_Click"/>
+                                            <Button Name="btnFuzzyLinkTest2New" Content="Fuzzy Link Test 2" ToolTip="Uses ItemLinker.cs" Click="btnFuzzyLinkTest2New_Click"/>
+                                        </StackPanel>
                                         <TextBox Name="txtFuzzyLinkTest2FromCount" Text="15" ToolTip="From Count" MinWidth="25" Margin="2,0,0,0"/>
                                         <TextBox Name="txtFuzzyLinkTest2ToCount" Text="15" ToolTip="To Count" MinWidth="25" Margin="2,0,0,0"/>
-                                        <TextBox Name="txtFuzzyLinkTest2MaxIntermediate" Text="3" ToolTip="Max intermediate results" MinWidth="25" Margin="2,0,0,0"/>
-                                        <TextBox Name="txtFuzzyLinkTest2MaxFinal" Text="3" ToolTip="Max final results" MinWidth="25" Margin="2,0,0,0"/>
+                                        <TextBox Name="txtFuzzyLinkTest2MaxIntermediate" Text="3" ToolTip="Max intermediate links" MinWidth="25" Margin="2,0,0,0"/>
+                                        <TextBox Name="txtFuzzyLinkTest2MaxFinal" Text="3" ToolTip="Max final links" MinWidth="25" Margin="2,0,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <Button Content="Fuzzy Link Test 3" Click="btnFuzzyLinkTest3_Click"/>
+                                        <TextBox Name="txtFuzzyLinkTest3Points" Text="40" ToolTip="Points" MinWidth="25" Margin="2,0,0,0"/>
+                                        <TextBox Name="txtFuzzyLinkTest3Links" Text="5" ToolTip="Initial Links" MinWidth="25" Margin="2,0,0,0"/>
+                                        <TextBox Name="txtFuzzyLinkTest3MaxIntermediate" Text="3" ToolTip="Max intermediate links" MinWidth="25" Margin="2,0,0,0"/>
+                                        <TextBox Name="txtFuzzyLinkTest3MaxFinal" Text="8" ToolTip="Max final links" MinWidth="25" Margin="2,0,0,0"/>
                                     </StackPanel>
 
                                     <UniformGrid Columns="2" Margin="0,4,0,0">

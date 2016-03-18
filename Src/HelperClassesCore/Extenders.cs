@@ -251,6 +251,14 @@ namespace Game.HelperClassesCore
 
         #region IList
 
+        public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                list.Add(item);
+            }
+        }
+
         /// <summary>
         /// This only adds the items that aren't already in list
         /// This overload can be used when T has a comparable that makes sense
@@ -432,7 +440,7 @@ namespace Game.HelperClassesCore
         /// True=output is -maxValue to maxValue
         /// False=output is 0 to maxValue
         /// </param>
-        public static double NextPow(this Random rand, double power, double maxValue = 1d, bool isPlusMinus = true)
+        public static double NextPow(this Random rand, double power, double maxValue = 1d, bool isPlusMinus = false)
         {
             // Run the random method through power.  This will give a greater chance of returning zero than
             // one (or the opposite if power is less than one)

@@ -156,6 +156,29 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
+        #region Class: InstructionsSOM
+
+        private class InstructionsSOM
+        {
+            public int ImageSize { get; set; }
+
+            public int VectorSize { get; set; }
+
+            /// <summary>
+            /// For best all around results, use the all around sobel
+            /// </summary>
+            public ConvolutionBase2D Kernel { get; set; }
+
+            /// <summary>
+            /// Normalizing will make images more similar to each other (if one image is washed out compared to another, the normalized
+            /// versions should be more similar)
+            /// </summary>
+            public bool ShouldNormalize { get; set; }
+
+            public SOMRules SOMRules { get; set; }
+        }
+
+        #endregion
         #region Class: InstructionsNN
 
         private class InstructionsNN
@@ -621,7 +644,40 @@ namespace Game.Newt.Testers.Encog
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void GenerateSOM_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Parse the gui
+                InstructionsSOM instructions = GetInstructionsSOM();
+                if (instructions == null)
+                {
+                    return;
+                }
 
+                SOMInput<FeatureRecognizer_Image>[] inputs = GetSOMInputs(instructions);
+
+                SOMResult som;
+                if (chkSOMMaxSpreadPercent.IsChecked.Value)
+                {
+                    som = SelfOrganizingMaps.TrainSOM(inputs, instructions.SOMRules, trkSOMMaxSpread.Value / 100d, false);
+                }
+                else
+                {
+                    som = SelfOrganizingMaps.TrainSOM(inputs, instructions.SOMRules, false);
+                }
+
+                foreach (SOMNode node in som.Nodes)
+                {
+                    ConvChain_ConvChain chain = CreateSOMChain(instructions, node.Weights);
+                    AddChain(chain);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void ChainAddPrimitive_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1145,6 +1201,34 @@ namespace Game.Newt.Testers.Encog
 
             return retVal;
         }
+        private InstructionsSOM GetInstructionsSOM()
+        {
+            // Image Size
+            int imageSize;
+            if (!int.TryParse(txtImageSizeSOM.Text, out imageSize))
+            {
+                MessageBox.Show("Couldn't parse image size as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return null;
+            }
+
+            // Vector Size
+            int vectorSize;
+            if (!int.TryParse(txtVectorSizeSOM.Text, out vectorSize))
+            {
+                MessageBox.Show("Couldn't parse vector size as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                return null;
+            }
+
+            // Return
+            return new InstructionsSOM()
+            {
+                ImageSize = imageSize,
+                VectorSize = vectorSize,
+                Kernel = Convolutions.GetEdgeSet_Sobel(),
+                ShouldNormalize = true,
+                SOMRules = GetSOMRules_Rand(),
+            };
+        }
         private InstructionsNN GetInstructionsNN()
         {
             InstructionsNN retVal = new InstructionsNN();
@@ -1344,7 +1428,7 @@ namespace Game.Newt.Testers.Encog
             {
                 UniqueID = Guid.NewGuid().ToString(),
                 ImageSize = sourceChain.ImageSize,
-                Convolutions = UtilityCore.ArrayAdd(sourceChain.Convolutions, primitive),
+                Steps = UtilityCore.ArrayAdd(sourceChain.Steps, new ConvChain_Step() { Convolution = primitive }),
             };
         }
         private static ConvChain_ConvChain AddExtractToChain(InstructionsExtract instr, ConvChain_ConvChain sourceChain = null)
@@ -1365,12 +1449,9 @@ namespace Game.Newt.Testers.Encog
             #endregion
             #region apply source convolutions
 
-            if (sourceChain.Convolutions != null)
+            if (sourceChain.Steps != null)
             {
-                foreach (ConvolutionBase2D link in sourceChain.Convolutions)
-                {
-                    imageConv = Convolutions.Convolute(imageConv, link);
-                }
+                imageConv = sourceChain.ApplyChain(imageConv, 255);
             }
 
             #endregion
@@ -1444,7 +1525,36 @@ namespace Game.Newt.Testers.Encog
             {
                 UniqueID = Guid.NewGuid().ToString(),
                 ImageSize = sourceChain.ImageSize,
-                Convolutions = UtilityCore.ArrayAdd(sourceChain.Convolutions, extractConv),
+                Steps = UtilityCore.ArrayAdd(sourceChain.Steps, new ConvChain_Step() { Convolution = extractConv }),
+            };
+        }
+        private static ConvChain_ConvChain CreateSOMChain(InstructionsSOM instr, double[] nodeWeights)
+        {
+            List<ConvChain_Step> steps = new List<ConvChain_Step>();
+
+            // Create a chain that mirrors the steps used in GetSOMVector()
+            if (instr.ShouldNormalize)
+            {
+                steps.Add(new ConvChain_Step() { Normalize = true });
+            }
+
+            if (instr.Kernel != null)
+            {
+                steps.Add(new ConvChain_Step() { Convolution = instr.Kernel });
+            }
+
+            steps.Add(new ConvChain_Step() { MaxPoolTo = new VectorInt(instr.VectorSize, instr.VectorSize) });
+            steps.Add(new ConvChain_Step() { Abs = true });
+
+            // The final convolution will be the node weights passed in
+            nodeWeights = Convolutions.ToUnit(nodeWeights);
+            steps.Add(new ConvChain_Step() { Convolution = new Convolution2D(nodeWeights, instr.VectorSize, instr.VectorSize, false) });
+
+            return new ConvChain_ConvChain()
+            {
+                UniqueID = Guid.NewGuid().ToString(),
+                ImageSize = instr.ImageSize,
+                Steps = steps.ToArray(),
             };
         }
 
@@ -1530,9 +1640,10 @@ namespace Game.Newt.Testers.Encog
         {
             StackPanel stack = new StackPanel();
 
-            foreach (ConvolutionBase2D conv in chain.Convolutions)
+            foreach (ConvChain_Step step in chain.Steps)
             {
-                Border thumbnail = Convolutions.GetThumbnail(conv, THUMBSIZE_CONV, null);
+                Border thumbnail = GetConvStepVisual(step, THUMBSIZE_CONV, null);
+
                 thumbnail.HorizontalAlignment = HorizontalAlignment.Center;
                 thumbnail.Margin = new Thickness(2);
 
@@ -2406,7 +2517,7 @@ namespace Game.Newt.Testers.Encog
 
         private static Convolution2D ApplyConvolutionChain2(FeatureRecognizer_Image image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
-            Convolution2D retVal = chain.ApplyChain(image, getImageConv);
+            Convolution2D retVal = chain.ApplyChain(image, getImageConv, 255);
 
             // MaxPool
             if (retVal.Width != finalSize || retVal.Height != finalSize)
@@ -2781,20 +2892,21 @@ namespace Game.Newt.Testers.Encog
 
             if (chain != null)
             {
-                foreach (ConvolutionBase2D link in chain.Convolutions)
+                foreach (ConvChain_Step step in chain.Steps)
                 {
-                    convolution = Convolutions.Convolute(convolution, link);
+                    convolution = step.ApplyStep(convolution, 255);
 
-                    ShowResult_Chain_Left(grid, link, edgeColor, convContextMenu);
+                    ShowResult_Chain_Left(grid, step, edgeColor, convContextMenu);
                     ShowResult_Chain_Right(grid, convolution, edgeColor, invertPos, convContextMenu);
                 }
             }
 
             return Tuple.Create(grid, convolution);
         }
-        private static void ShowResult_Chain_Left(Grid grid, ConvolutionBase2D kernel, ConvolutionResultNegPosColoring edgeColor, ContextMenu convContextMenu)
+        private static void ShowResult_Chain_Left(Grid grid, ConvChain_Step step, ConvolutionResultNegPosColoring edgeColor, ContextMenu convContextMenu)
         {
-            Border border = Convolutions.GetThumbnail(kernel, THUMBSIZE_RESULT, convContextMenu);
+            Border border = GetConvStepVisual(step, THUMBSIZE_RESULT, convContextMenu);
+            //Border border = Convolutions.GetThumbnail(kernel, THUMBSIZE_RESULT, convContextMenu);
 
             border.HorizontalAlignment = HorizontalAlignment.Right;
             border.VerticalAlignment = VerticalAlignment.Center;
@@ -2811,9 +2923,22 @@ namespace Game.Newt.Testers.Encog
         }
         private static void ShowResult_Chain_Right(Grid grid, Convolution2D convolution, ConvolutionResultNegPosColoring edgeColor, bool invertPos, ContextMenu convContextMenu)
         {
+            BitmapSource bitmap;
+            int convSizeMax = Math.Max(convolution.Width, convolution.Height);
+            if (convSizeMax < 20)
+            {
+                double imageSize = UtilityCore.GetScaledValue_Capped(35, 150, 1, 20, convSizeMax);
+                var sizes = Convolutions.GetThumbSizeAndPixelMultiplier(convolution, imageSize.ToInt_Round());
+                bitmap = Convolutions.GetBitmap_Aliased(convolution, sizeMult: sizes.Item2, negPosColoring: edgeColor, forcePos_WhiteBlack: invertPos);
+            }
+            else
+            {
+                bitmap = Convolutions.GetBitmap(convolution, negPosColoring: edgeColor, forcePos_WhiteBlack: invertPos);
+            }
+
             Image imageCtrl = new Image()
             {
-                Source = Convolutions.GetBitmap(convolution, edgeColor, forcePos_WhiteBlack: invertPos),
+                Source = bitmap,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 ToolTip = Convolutions.GetToolTip(convolution, ConvolutionToolTipType.Size_MinMax),
@@ -2833,6 +2958,80 @@ namespace Game.Newt.Testers.Encog
             grid.Children.Add(imageCtrl);
         }
 
+        private SOMInput<FeatureRecognizer_Image>[] GetSOMInputs(InstructionsSOM instructions)
+        {
+            return _images.
+                AsParallel().
+                Select(o => new SOMInput<FeatureRecognizer_Image>()
+                {
+                    Source = o,
+                    Weights = GetSOMVector(o, instructions),
+                }).
+                ToArray();
+        }
+
+        private static Border GetConvStepVisual(ConvChain_Step step, int convThumbSize, ContextMenu convContextMenu)
+        {
+            if (step.Convolution != null)
+            {
+                return Convolutions.GetThumbnail(step.Convolution, convThumbSize, convContextMenu);
+            }
+
+            TextBlock text = null;
+
+            if (step.Abs != null)
+            {
+                text = new TextBlock() { Text = "Abs value" };
+            }
+            else if (step.MaxPoolTo != null)
+            {
+                text = new TextBlock() { Text = string.Format("MaxPool: {0}x{1}", step.MaxPoolTo.Value.X, step.MaxPoolTo.Value.Y) };
+            }
+            else if (step.Normalize != null)
+            {
+                text = new TextBlock() { Text = "Normalize" };
+            }
+            else
+            {
+                text = new TextBlock() { Text = "Unknown", Foreground = Brushes.Red };
+            }
+
+            //TODO: more styling of the textblock
+
+            return new Border()
+            {
+                BorderBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("40CCCCB1")),
+                BorderThickness = new Thickness(1),
+                Child = text,
+            };
+        }
+
+        private static double[] GetSOMVector(FeatureRecognizer_Image image, InstructionsSOM instr)
+        {
+            BitmapSource bitmap = new BitmapImage(new Uri(image.Filename));
+            bitmap = UtilityWPF.ResizeImage(bitmap, instr.ImageSize, true);
+
+            Convolution2D conv = UtilityWPF.ConvertToConvolution(bitmap, 1d);
+            if (conv.Width != conv.Height)
+            {
+                conv = Convolutions.ExtendBorders(conv, instr.ImageSize, instr.ImageSize);        //NOTE: width or height is already the desired size, this will just enlarge the other to make it square
+            }
+
+            if (instr.ShouldNormalize)
+            {
+                conv = Convolutions.Normalize(conv);
+            }
+
+            if (instr.Kernel != null)
+            {
+                conv = Convolutions.Convolute(conv, instr.Kernel);
+            }
+            conv = Convolutions.MaxPool(conv, instr.VectorSize, instr.VectorSize);
+            conv = Convolutions.Abs(conv);
+
+            return conv.Values;
+        }
+
         private static Convolution2D GetConvolution(string filename, int size)
         {
             BitmapSource bitmap = new BitmapImage(new Uri(filename));
@@ -2849,13 +3048,8 @@ namespace Game.Newt.Testers.Encog
 
         private static Convolution2D ApplyConvolutionChain(Convolution2D image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly)
         {
-            Convolution2D retVal = image;
-
             // Apply chain
-            foreach (ConvolutionBase2D link in chain.Convolutions)
-            {
-                retVal = Convolutions.Convolute(retVal, link);
-            }
+            Convolution2D retVal = chain.ApplyChain(image, 255);
 
             // MaxPool
             if (retVal.Width != finalSize || retVal.Height != finalSize)
@@ -2907,6 +3101,17 @@ namespace Game.Newt.Testers.Encog
             retVal.Children.Add(thumbnail);
 
             return retVal;
+        }
+
+        private static SOMRules GetSOMRules_Rand()
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            return new SOMRules(
+                rand.Next(15, 50),
+                rand.Next(2000, 5000),
+                rand.NextDouble(.2, .4),
+                rand.NextDouble(.05, .15));
         }
 
         #endregion
@@ -3283,7 +3488,7 @@ namespace Game.Newt.Testers.Encog
 
         private static Convolution2D ApplyConvolutionChain_Cache(FeatureRecognizer_Image image, ConvChain_ConvChain chain, int finalSize, bool isPositiveOnly, Func<FeatureRecognizer_Image, int, Convolution2D> getImageConv)
         {
-            Convolution2D retVal = chain.ApplyChain(image, getImageConv);
+            Convolution2D retVal = chain.ApplyChain(image, getImageConv, 255);
 
             // MaxPool
             if (retVal.Width != finalSize || retVal.Height != finalSize)
@@ -3363,7 +3568,9 @@ namespace Game.Newt.Testers.Encog
 
         public int ImageSize { get; set; }
 
-        public ConvolutionBase2D[] Convolutions { get; set; }
+        //TODO: Need to be able to inject maxpools between convolutions.  Replace with this:
+        public ConvChain_Step[] Steps { get; set; }
+        //public ConvolutionBase2D[] Convolutions { get; set; }
 
         public UIElement Control { get; set; }
 
@@ -3373,11 +3580,20 @@ namespace Game.Newt.Testers.Encog
         {
             VectorInt retVal = new VectorInt(this.ImageSize, this.ImageSize);
 
-            if (this.Convolutions != null)
+            if (this.Steps != null)
             {
-                foreach (var conv in this.Convolutions)
+                foreach (ConvChain_Step step in this.Steps)
                 {
-                    retVal -= conv.GetReduction();
+                    if (step.Convolution != null)
+                    {
+                        // Reduce it
+                        retVal -= step.Convolution.GetReduction();
+                    }
+                    else if (step.MaxPoolTo != null)
+                    {
+                        // Replace with this new size
+                        retVal = step.MaxPoolTo.Value;
+                    }
                 }
             }
 
@@ -3392,7 +3608,7 @@ namespace Game.Newt.Testers.Encog
         /// <remarks>
         /// TODO: If this chain will see lots of images, come up with a way for old ones to roll off (may want to make/find a generic memory cache that has similar features as the garbage collector)
         /// </remarks>
-        public Convolution2D ApplyChain(FeatureRecognizer_Image image, Func<FeatureRecognizer_Image, int, Convolution2D> getImage)
+        public Convolution2D ApplyChain(FeatureRecognizer_Image image, Func<FeatureRecognizer_Image, int, Convolution2D> getImage, double normalizeScale)
         {
             lock (_lock)
             {
@@ -3409,7 +3625,7 @@ namespace Game.Newt.Testers.Encog
 
                 // It's not in the cache, build it
                 Convolution2D imageConv = getImage(image, this.ImageSize);
-                Convolution2D retVal = ApplyChain(imageConv);
+                Convolution2D retVal = ApplyChain(imageConv, normalizeScale);
 
                 // Store it
                 if (bySize == null)
@@ -3428,24 +3644,90 @@ namespace Game.Newt.Testers.Encog
         /// <summary>
         /// This overload doesn't cache the result
         /// </summary>
-        public Convolution2D ApplyChain(Convolution2D image)
+        public Convolution2D ApplyChain(Convolution2D image, double normalizeScale)
         {
             if (image.Width != this.ImageSize || image.Height != this.ImageSize)
             {
                 throw new ArgumentException(string.Format("The image passed in is the wrong size.  Image: {0}x{1}, Expected: {2}", image.Width, image.Height, this.ImageSize));
             }
+            else if (this.Steps == null || this.Steps.Length == 0)
+            {
+                return image;
+            }
+            else if (this.Steps.Any(o => o.ItemCount != 1))
+            {
+                throw new ArgumentException("Each step should have exactly one action");
+            }
 
             Convolution2D retVal = image;
 
-            foreach (ConvolutionBase2D link in this.Convolutions)
+            foreach (ConvChain_Step step in this.Steps)
             {
-                retVal = Game.HelperClassesWPF.Convolutions.Convolute(retVal, link);
+                retVal = step.ApplyStep(retVal, normalizeScale);
             }
 
             return retVal;
         }
 
         #endregion
+    }
+
+    #endregion
+    #region Class: ConvChain_Step
+
+    public class ConvChain_Step
+    {
+        // Only one of these will be non null
+        public bool? Abs { get; set; }
+        public bool? Normalize { get; set; }
+        public VectorInt? MaxPoolTo { get; set; }
+        /// <summary>
+        /// NOTE: Any convolution added to this should be ToUnit, because it's used as a kernel
+        /// </summary>
+        public ConvolutionBase2D Convolution { get; set; }
+
+        /// <summary>
+        /// This is just for validation.  The return should always be 1
+        /// </summary>
+        public int ItemCount
+        {
+            get
+            {
+                int retVal = 0;
+
+                if (this.Abs != null) retVal++;
+                if (this.Normalize != null) retVal++;
+                if (this.MaxPoolTo != null) retVal++;
+                if (this.Convolution != null) retVal++;
+
+                return retVal;
+            }
+        }
+
+        public Convolution2D ApplyStep(Convolution2D conv, double normalizeScale)
+        {
+            //NOTE: Only one of these is supposed to be populated
+            if (this.Convolution != null)
+            {
+                return Game.HelperClassesWPF.Convolutions.Convolute(conv, this.Convolution);
+            }
+            else if (this.Abs != null)
+            {
+                return Game.HelperClassesWPF.Convolutions.Abs(conv);
+            }
+            else if (this.MaxPoolTo != null)
+            {
+                return Game.HelperClassesWPF.Convolutions.MaxPool(conv, this.MaxPoolTo.Value.X, this.MaxPoolTo.Value.Y);
+            }
+            else if (this.Normalize != null)
+            {
+                return Game.HelperClassesWPF.Convolutions.Normalize(conv, normalizeScale);
+            }
+            else
+            {
+                throw new ArgumentException("Unknown step action");
+            }
+        }
     }
 
     #endregion

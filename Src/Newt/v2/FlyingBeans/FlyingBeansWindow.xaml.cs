@@ -1307,7 +1307,25 @@ namespace Game.Newt.v2.FlyingBeans
         }
         private async Task<Bean> AddBeanAsync(ShipDNA dna)
         {
-            Bean retVal = await Bean.GetNewBeanAsync(_editorOptions, _itemOptions, _options, dna, _world, _material_Bean, _material_Projectile, _radiation, _options.GravityField, true, true);
+            ShipCoreArgs core = new ShipCoreArgs()
+            {
+                //Map = _map,       // this wasn't passed in when it was a ship
+                Material_Ship = _material_Bean,
+                World = _world,
+            };
+
+            ShipExtraArgs args = new ShipExtraArgs()
+            {
+                Options = _editorOptions,
+                ItemOptions = _itemOptions,
+                Material_Projectile = _material_Projectile,
+                Radiation = _radiation,
+                Gravity = _options.GravityField,
+            };
+
+            //Bean retVal = await Bean.GetNewBeanAsync(dna, _world, _material_Bean, args, _options);
+            var seed = BotConstructor.ConstructBot(dna, core, args);
+            Bean retVal = new Bean(seed, _options);
 
             //retVal.PhysicsBody.AngularDamping = new Vector3D(1, 1, 1);
             retVal.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Bean_ApplyForceAndTorque);

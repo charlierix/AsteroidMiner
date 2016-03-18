@@ -174,7 +174,7 @@ namespace Game.Newt.v2.Arcanorum
         /// </summary>
         //private readonly Canvas _canvas;      // this isn't needed
 
-        private readonly Bot _player;
+        private readonly ArcBot _player;
 
         private Point? _position = null;
 
@@ -188,7 +188,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public CustomMouseCursor(FrameworkElement parent, Bot player)
+        public CustomMouseCursor(FrameworkElement parent, ArcBot player)
         {
             _parent = parent;
             _player = player;

@@ -209,32 +209,39 @@ namespace Game.Newt.v2.GameItems.Controls
         //TODO: Make a static method off of Ship, and don't rely on world: public static Visual3D CreateVisual(ShipDNA dna, bool isDesign)
         private async Task RenderShipAsync(NewtonDynamics.World world)
         {
-            using (Ship ship = await Ship.GetNewShipAsync(new ShipEditor.EditorOptions(), new ItemOptions(), this.ShipDNA, world, 0, 0, null, null, null, null, false, false))
+            ShipExtraArgs args = new ShipExtraArgs()
             {
-                if (ship.PhysicsBody.Visuals != null)		// this will never be null
+                RunNeural = false,
+                RepairPartPositions = false,
+            };
+
+            //using (Ship ship = await Ship.GetNewShipAsync(this.ShipDNA, world, 0, null, args))
+            using (Bot bot = new Bot(BotConstructor.ConstructBot(this.ShipDNA, new ShipCoreArgs() { World = world }, args)))
+            {
+                if (bot.PhysicsBody.Visuals != null)		// this will never be null
                 {
                     // The model coords may not be centered, so move the ship so that it's centered on the origin
                     Point3D minPoint, maxPoint;
-                    ship.PhysicsBody.GetAABB(out minPoint, out maxPoint);
+                    bot.PhysicsBody.GetAABB(out minPoint, out maxPoint);
                     Vector3D offset = (minPoint + ((maxPoint - minPoint) / 2d)).ToVector();
 
-                    ship.PhysicsBody.Position = (-offset).ToPoint();
+                    bot.PhysicsBody.Position = (-offset).ToPoint();
 
                     // Add the visuals
-                    foreach (Visual3D visual in ship.PhysicsBody.Visuals)
+                    foreach (Visual3D visual in bot.PhysicsBody.Visuals)
                     {
                         _viewport.Children.Add(visual);
                     }
 
                     // Pull the camera back to a good distance
-                    _camera.Position = (_camera.Position.ToVector().ToUnit() * (ship.Radius * 2.1d)).ToPoint();
+                    _camera.Position = (_camera.Position.ToVector().ToUnit() * (bot.Radius * 2.1d)).ToPoint();
                 }
             }
         }
 
         private void RenderMineral()
         {
-            ModelVisual3D visual = new ModelVisual3D();        
+            ModelVisual3D visual = new ModelVisual3D();
             visual.Content = Mineral.GetNewVisual(this.MineralType);
             visual.Transform = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation()));
 

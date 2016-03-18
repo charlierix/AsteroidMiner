@@ -19,19 +19,24 @@ using System.Xaml;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.Testers
 {
-    public partial class BrainTester2 : Window
+    public partial class BrainLinks : Window
     {
         #region Enum: AddItemLocation
 
         private enum AddItemLocation
         {
             Anywhere,
+
             Left,
             Center,
             Right,
+
+            Inner,
+            Outer,
         }
 
         #endregion
@@ -89,6 +94,15 @@ namespace Game.Newt.Testers
                 this.Visual = visual;
                 this.Size = size;
                 this.Positions = positions;
+
+                if (positions.Length == 1)
+                {
+                    this.Position = positions[0];
+                }
+                else
+                {
+                    this.Position = null;
+                }
             }
 
             #endregion
@@ -101,20 +115,21 @@ namespace Game.Newt.Testers
             public readonly double Size;
 
             public readonly Point3D[] Positions;
+            public readonly Point3D? Position;
         }
 
         #endregion
 
-        #region Class: Set
+        #region Class: Set2D
 
-        private class Set
+        private class Set2D
         {
             #region Constructor
 
-            public Set(int index, Item2D[] all)
+            public Set2D(int index, Item2D[] all)
                 : this(new[] { index }, all) { }
 
-            public Set(IEnumerable<int> indices, Item2D[] all)
+            public Set2D(IEnumerable<int> indices, Item2D[] all)
             {
                 this.Indices = indices.ToArray();
                 this.Items = this.Indices.Select(o => all[o]).ToArray();
@@ -141,19 +156,19 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: LinkBrain
+        #region Class: LinkBrain2D
 
-        private class LinkBrain
+        private class LinkBrain2D
         {
             #region Constructor
 
-            public LinkBrain(int item1, int item2, Item2D[] all)
-                : this(new Set(item1, all), new Set(item2, all)) { }
+            public LinkBrain2D(int item1, int item2, Item2D[] all)
+                : this(new Set2D(item1, all), new Set2D(item2, all)) { }
 
-            public LinkBrain(IEnumerable<int> set1, IEnumerable<int> set2, Item2D[] all)
-                : this(new Set(set1, all), new Set(set2, all)) { }
+            public LinkBrain2D(IEnumerable<int> set1, IEnumerable<int> set2, Item2D[] all)
+                : this(new Set2D(set1, all), new Set2D(set2, all)) { }
 
-            public LinkBrain(Set brains1, Set brains2)
+            public LinkBrain2D(Set2D brains1, Set2D brains2)
             {
                 this.Brains1 = brains1;
                 this.Brains2 = brains2;
@@ -161,8 +176,8 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            public readonly Set Brains1;
-            public readonly Set Brains2;
+            public readonly Set2D Brains1;
+            public readonly Set2D Brains2;
 
             //TODO: May want to store AllBrains[]
         }
@@ -175,12 +190,12 @@ namespace Game.Newt.Testers
             #region Constructor
 
             public LinkIO(int brain, int io, Item2D[] allBrains, Item2D[] allIO)
-                : this(new Set(brain, allBrains), io, allIO) { }
+                : this(new Set2D(brain, allBrains), io, allIO) { }
 
             public LinkIO(IEnumerable<int> brains, int io, Item2D[] allBrains, Item2D[] allIO)
-                : this(new Set(brains, allBrains), io, allIO) { }
+                : this(new Set2D(brains, allBrains), io, allIO) { }
 
-            public LinkIO(Set brains, int io, Item2D[] allIO)
+            public LinkIO(Set2D brains, int io, Item2D[] allIO)
             {
                 this.Brains = brains;
 
@@ -190,7 +205,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            public readonly Set Brains;
+            public readonly Set2D Brains;
 
             public readonly int IOIndex;
             public readonly Item2D IO;
@@ -285,7 +300,7 @@ namespace Game.Newt.Testers
                 public double BrainSize;
                 public double Burden;
 
-                public void Recalc(Set[] brainSets, Item2D[] io)
+                public void Recalc(Set2D[] brainSets, Item2D[] io)
                 {
                     this.BrainSize = brainSets[this.Index].Items.Sum(o => o.Size);
                     this.Burden = CalculateBurden(UtilityCore.Iterate(this.LinksOrig, this.LinksMoved).Sum(o => io[o].Size), this.BrainSize);        // size of the links / size of the brain
@@ -315,7 +330,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            public static void GetLinks(out LinkBrain[] brainLinks, out LinkIO[] ioLinks, Item2D[] brains, Item2D[] io)
+            public static void GetLinks(out LinkBrain2D[] brainLinks, out LinkIO[] ioLinks, Item2D[] brains, Item2D[] io)
             {
                 if (brains == null || brains.Length == 0)
                 {
@@ -343,7 +358,7 @@ namespace Game.Newt.Testers
             /// <summary>
             /// Link brains to each other (delaunay graph, then prune thin triangles)
             /// </summary>
-            internal static void BrainLinks(out SortedList<Tuple<int, int>, double> all, out LinkBrain[] pruned, Item2D[] brains)
+            internal static void BrainLinks(out SortedList<Tuple<int, int>, double> all, out LinkBrain2D[] pruned, Item2D[] brains)
             {
                 if (brains.Length < 2)
                 {
@@ -352,7 +367,7 @@ namespace Game.Newt.Testers
                 else if (brains.Length == 2)
                 {
                     all = GetLengths(new[] { Tuple.Create(0, 1) }, brains);
-                    pruned = all.Keys.Select(o => new LinkBrain(o.Item1, o.Item2, brains)).ToArray();
+                    pruned = all.Keys.Select(o => new LinkBrain2D(o.Item1, o.Item2, brains)).ToArray();
                     return;
                 }
 
@@ -364,7 +379,7 @@ namespace Game.Newt.Testers
                 pruned = PruneBrainLinks(triangles, all, brains);
             }
 
-            private static LinkBrain[] PruneBrainLinks(TriangleIndexed[] triangles, SortedList<Tuple<int, int>, double> all, Item2D[] brains)
+            private static LinkBrain2D[] PruneBrainLinks(TriangleIndexed[] triangles, SortedList<Tuple<int, int>, double> all, Item2D[] brains)
             {
                 List<Tuple<int[], int[]>> retVal = all.Keys.
                     Select(o => Tuple.Create(new[] { o.Item1 }, new[] { o.Item2 })).
@@ -388,7 +403,7 @@ namespace Game.Newt.Testers
                     }
                 }
 
-                return retVal.Select(o => new LinkBrain(o.Item1, o.Item2, brains)).ToArray();
+                return retVal.Select(o => new LinkBrain2D(o.Item1, o.Item2, brains)).ToArray();
             }
             /// <summary>
             /// If this triangle is long and thin, then this will decide whether to remove a link, or merge the two close brains
@@ -590,7 +605,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Look for brains that are really close together, treat those as single brains
-                Set[] brainSets = IOLinks_PreMergeBrains(brains, allBrainLinks);
+                Set2D[] brainSets = IOLinks_PreMergeBrains(brains, allBrainLinks);
 
                 // Link IO to each brain set
                 VoronoiResult2D voronoi = Math2D.GetVoronoi(brainSets.Select(o => o.Center).ToArray(), true);
@@ -605,11 +620,11 @@ namespace Game.Newt.Testers
             /// <summary>
             /// This finds brains that are really close together, and turns them into sets (the rest of the brains become 1 item sets)
             /// </summary>
-            internal static Set[] IOLinks_PreMergeBrains(Item2D[] brains, SortedList<Tuple<int, int>, double> links)
+            internal static Set2D[] IOLinks_PreMergeBrains(Item2D[] brains, SortedList<Tuple<int, int>, double> links)
             {
                 if (!IOPREMERGE_SHOULD)
                 {
-                    return Enumerable.Range(0, brains.Length).Select(o => new Set(o, brains)).ToArray();
+                    return Enumerable.Range(0, brains.Length).Select(o => new Set2D(o, brains)).ToArray();
                 }
 
                 // Get the AABB of the brains, and use the diagonal as the size
@@ -627,7 +642,7 @@ namespace Game.Newt.Testers
 
                 if (closePairs.Length == 0)
                 {
-                    return Enumerable.Range(0, brains.Length).Select(o => new Set(o, brains)).ToArray();
+                    return Enumerable.Range(0, brains.Length).Select(o => new Set2D(o, brains)).ToArray();
                 }
 
                 // Combine any close pairs that share a point (turn pairs into triples)
@@ -668,31 +683,31 @@ namespace Game.Newt.Testers
 
                 return retVal;
             }
-            private static Set[] IOLinks_PreMergeBrains_Centers(List<List<int>> sets, Item2D[] brains, SortedList<Tuple<int, int>, double> links)
+            private static Set2D[] IOLinks_PreMergeBrains_Centers(List<List<int>> sets, Item2D[] brains, SortedList<Tuple<int, int>, double> links)
             {
-                List<Set> retVal = new List<Set>();
+                List<Set2D> retVal = new List<Set2D>();
 
                 // Multi brain sets
-                retVal.AddRange(sets.Select(o => new Set(o.Distinct(), brains)));
+                retVal.AddRange(sets.Select(o => new Set2D(o.Distinct(), brains)));
 
                 // Single brain sets
                 foreach (Tuple<int, int> key in links.Keys)
                 {
                     if (!retVal.Any(o => o.Indices.Contains(key.Item1)))
                     {
-                        retVal.Add(new Set(key.Item1, brains));
+                        retVal.Add(new Set2D(key.Item1, brains));
                     }
 
                     if (!retVal.Any(o => o.Indices.Contains(key.Item2)))
                     {
-                        retVal.Add(new Set(key.Item2, brains));
+                        retVal.Add(new Set2D(key.Item2, brains));
                     }
                 }
 
                 return retVal.ToArray();
             }
 
-            private static Tuple<int, int>[] IOLinks_Initial(Set[] brains, Item2D[] io, VoronoiResult2D voronoi)
+            private static Tuple<int, int>[] IOLinks_Initial(Set2D[] brains, Item2D[] io, VoronoiResult2D voronoi)
             {
                 List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
                 List<int> remainingIO = Enumerable.Range(0, io.Length).ToList();        // store the remaining so that they can be removed as found (avoid unnecessary IsInside checks)
@@ -719,7 +734,7 @@ namespace Game.Newt.Testers
                 return retVal.ToArray();
             }
 
-            private static Tuple<int, int>[] IOLinks_PostAdjust(Tuple<int, int>[] initial, Set[] brainSets, Item2D[] io)
+            private static Tuple<int, int>[] IOLinks_PostAdjust(Tuple<int, int>[] initial, Set2D[] brainSets, Item2D[] io)
             {
                 // Get the links and distances between brain sets
                 Tuple<int, double>[][] brainLinks = IOLinks_PostAdjust_BrainBrainLinks(brainSets);
@@ -775,7 +790,7 @@ namespace Game.Newt.Testers
 
                 //return initial;
             }
-            private static Tuple<int, double>[][] IOLinks_PostAdjust_BrainBrainLinks(Set[] brainSets)
+            private static Tuple<int, double>[][] IOLinks_PostAdjust_BrainBrainLinks(Set2D[] brainSets)
             {
                 // Get the AABB of the brain sets, and use the diagonal as the size
                 var aabb = Math2D.GetAABB(brainSets.Select(o => o.Center));
@@ -808,7 +823,7 @@ namespace Game.Newt.Testers
 
                 return retVal;
             }
-            private static bool IOLinks_PostAdjust_MoveNext(BrainBurden[] ioLinks, Tuple<int, double>[][] brainLinks, Set[] brainSets, Item2D[] io)
+            private static bool IOLinks_PostAdjust_MoveNext(BrainBurden[] ioLinks, Tuple<int, double>[][] brainLinks, Set2D[] brainSets, Item2D[] io)
             {
                 List<Tuple<BrainBurden, int, double, double>> candidates = new List<Tuple<BrainBurden, int, double, double>>();
 
@@ -839,7 +854,7 @@ namespace Game.Newt.Testers
 
                 return false;
             }
-            private static bool IOLinks_PostAdjust_MoveNext_Brain(BrainBurden from, BrainBurden to, double linkBurden, Set[] brainSets, Item2D[] io)
+            private static bool IOLinks_PostAdjust_MoveNext_Brain(BrainBurden from, BrainBurden to, double linkBurden, Set2D[] brainSets, Item2D[] io)
             {
                 // Cache the sizes of the current io links
                 double fromIOSize = UtilityCore.Iterate(from.LinksOrig, from.LinksMoved).Sum(o => io[o].Size);
@@ -908,7 +923,7 @@ namespace Game.Newt.Testers
             {
                 #region Constructor
 
-                public BrainBurden(int index, Set[] brainSets, Item2D[] io)
+                public BrainBurden(int index, Set2D[] brainSets, Item2D[] io)
                 {
                     this.Index = index;
                     this.Brain = brainSets[index];
@@ -920,7 +935,7 @@ namespace Game.Newt.Testers
                 #endregion
 
                 public readonly int Index;
-                public readonly Set Brain;
+                public readonly Set2D Brain;
                 public readonly double Size;
 
                 private readonly Item2D[] _io;
@@ -944,7 +959,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            public static void GetLinks(out LinkBrain[] brainLinks, out LinkIO[] ioLinks, Item2D[] brains, Item2D[] io, IOLinkupPriority ioLinkupPriority = IOLinkupPriority.ShortestDistFirst, double brainLinkResistanceMult = 10)
+            public static void GetLinks(out LinkBrain2D[] brainLinks, out LinkIO[] ioLinks, Item2D[] brains, Item2D[] io, IOLinkupPriority ioLinkupPriority = IOLinkupPriority.ShortestDistFirst, double brainLinkResistanceMult = 10)
             {
                 if (brains == null || brains.Length == 0)
                 {
@@ -972,7 +987,7 @@ namespace Game.Newt.Testers
             private static LinkIO[] IOLinks(Item2D[] brains, Item2D[] io, SortedList<Tuple<int, int>, double> allBrainLinks, IOLinkupPriority ioLinkupPriority, double brainLinkResistanceMult)
             {
                 // Look for brains that are really close together, treat those as single brains
-                Set[] brainSets = Worker2D_Voronoi.IOLinks_PreMergeBrains(brains, allBrainLinks);
+                Set2D[] brainSets = Worker2D_Voronoi.IOLinks_PreMergeBrains(brains, allBrainLinks);
 
                 #region Brain-IO Distances
 
@@ -1085,7 +1100,7 @@ namespace Game.Newt.Testers
                 finalLinks[cheapestIndex].AddIOLink(ioIndex);
             }
 
-            private static Tuple<int, double>[][] BrainBrainDistances(Set[] brainSets, double brainLinkResistanceMult)
+            private static Tuple<int, double>[][] BrainBrainDistances(Set2D[] brainSets, double brainLinkResistanceMult)
             {
                 // Get the AABB of the brain sets, and use the diagonal as the size
                 var aabb = Math2D.GetAABB(brainSets.Select(o => o.Center));
@@ -1151,9 +1166,12 @@ namespace Game.Newt.Testers
         private List<Item2D> _misc2D = new List<Item2D>();
 
         private Brush _voronoiGrayBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("50A0A0A0"));
-        private Brush _brainLinkBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("60854D6B"));
-        private Brush _brainGroupBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("C29DA4"));
-        private Brush _ioLinkBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("FFFFFF"));
+        private Color _brainLinkColor = UtilityWPF.ColorFromHex("60854D6B");
+        private Brush _brainLinkBrush = null;       // this has to be initialized in the constructor
+        private Color _brainGroupColor = UtilityWPF.ColorFromHex("C29DA4");
+        private Brush _brainGroupBrush = null;
+        private Color _ioLinkColor = UtilityWPF.ColorFromHex("FFFFFF");
+        private Brush _ioLinkBrush = null;
 
         //------------------------------------------------- 3D
 
@@ -1162,10 +1180,21 @@ namespace Game.Newt.Testers
         /// </summary>
         private TrackBallRoam _trackballFull = null;
 
+        private List<Item3D> _inputs3D = new List<Item3D>();
+        private List<Item3D> _outputs3D = new List<Item3D>();
+        private List<Item3D> _brains3D = new List<Item3D>();
+
+        /// <summary>
+        /// Links between brains and IO
+        /// </summary>
+        private List<Item3D> _linksIO3D = new List<Item3D>();
+        /// <summary>
+        /// Brain-Brain links
+        /// </summary>
+        private List<Item3D> _linksBrain3D = new List<Item3D>();
+
         private List<Item3D> _dots3D = new List<Item3D>();
         private Guid? _dots3DID = null;
-
-        private List<Item3D> _linksBrain3D = new List<Item3D>();
 
         private List<Item3D> _misc3D = new List<Item3D>();
         private List<Item3D> _clickRays3D = new List<Item3D>();
@@ -1187,7 +1216,7 @@ namespace Game.Newt.Testers
 
         #region Constructor
 
-        public BrainTester2()
+        public BrainLinks()
         {
             InitializeComponent();
 
@@ -1198,33 +1227,76 @@ namespace Game.Newt.Testers
             _trackballFull.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
             //_trackballFull.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
 
-            // AddItemLocation
+            #region AddItemLocation
+
+            ComboBox[] combos = new[]
+            {
+                cbo2DAddInput, cbo2DAddOutput, cbo2DAddBrain,
+                cbo3DAddInput, cbo3DAddOutput, cbo3DAddBrain,
+            };
+
             foreach (string option in Enum.GetNames(typeof(AddItemLocation)))
             {
-                cbo2DAddInput.Items.Add(option);
-                cbo2DAddOutput.Items.Add(option);
-                cbo2DAddBrain.Items.Add(option);
+                foreach (ComboBox combo in combos)
+                {
+                    combo.Items.Add(option);
+                }
             }
 
-            cbo2DAddInput.SelectedIndex = 0;
-            cbo2DAddOutput.SelectedIndex = 0;
-            cbo2DAddBrain.SelectedIndex = 0;
+            foreach (ComboBox combo in combos)
+            {
+                combo.SelectedIndex = 0;
+            }
 
-            // ClearWhich
+            #endregion
+            #region ClearWhich
+
+            combos = new[]
+            {
+                cbo2DClear,
+                cbo3DClear,
+            };
+
             foreach (string option in Enum.GetNames(typeof(ClearWhich)))
             {
-                cbo2DClear.Items.Add(option);
+                foreach (ComboBox combo in combos)
+                {
+                    combo.Items.Add(option);
+                }
             }
 
-            cbo2DClear.SelectedIndex = 0;
+            foreach (ComboBox combo in combos)
+            {
+                combo.SelectedIndex = 0;
+            }
 
-            // IOLinkupPriority
+            #endregion
+            #region IOLinkupPriority
+
+            combos = new[]
+            {
+                cbo2DIOLinkupPriority,
+                //cbo3DIOLinkupPriority,
+            };
+
             foreach (string option in Enum.GetNames(typeof(Worker2D_Distance.IOLinkupPriority)))
             {
-                cbo2DIOLinkupPriority.Items.Add(option);
+                foreach (ComboBox combo in combos)
+                {
+                    combo.Items.Add(option);
+                }
             }
 
-            cbo2DIOLinkupPriority.SelectedIndex = 0;
+            foreach (ComboBox combo in combos)
+            {
+                combo.SelectedIndex = 0;
+            }
+
+            #endregion
+
+            _brainLinkBrush = new SolidColorBrush(_brainLinkColor);
+            _brainGroupBrush = new SolidColorBrush(_brainGroupColor);
+            _ioLinkBrush = new SolidColorBrush(_ioLinkColor);
         }
 
         #endregion
@@ -1386,6 +1458,7 @@ namespace Game.Newt.Testers
             }
         }
 
+        //------- 2D Links
         private void btn2DAddInput_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1393,9 +1466,9 @@ namespace Game.Newt.Testers
                 PrepFor2D();
                 ClearTempVisuals();
 
-                double size = GetItemSize();
-                Point position = GetRandomPosition(GetItemLocation(cbo2DAddInput));
-                UIElement visual = AddDot(position, Brushes.LawnGreen, Brushes.DarkGreen, GetDotRadius(size));
+                double size = GetItemSize(chk2DRandomSize.IsChecked.Value);
+                Point position = GetRandomPosition2D(GetItemLocation(cbo2DAddInput));
+                UIElement visual = AddDot(position, Brushes.LawnGreen, Brushes.DarkGreen, GetDotRadius2D(size));
 
                 _inputs2D.Add(new Item2D(visual, size, position));
             }
@@ -1411,9 +1484,9 @@ namespace Game.Newt.Testers
                 PrepFor2D();
                 ClearTempVisuals();
 
-                double size = GetItemSize();
-                Point position = GetRandomPosition(GetItemLocation(cbo2DAddOutput));
-                UIElement visual = AddDot(position, Brushes.DodgerBlue, Brushes.Indigo, GetDotRadius(size));
+                double size = GetItemSize(chk2DRandomSize.IsChecked.Value);
+                Point position = GetRandomPosition2D(GetItemLocation(cbo2DAddOutput));
+                UIElement visual = AddDot(position, Brushes.DodgerBlue, Brushes.Indigo, GetDotRadius2D(size));
 
                 _outputs2D.Add(new Item2D(visual, size, position));
             }
@@ -1429,9 +1502,9 @@ namespace Game.Newt.Testers
                 PrepFor2D();
                 ClearTempVisuals();
 
-                double size = GetItemSize();
-                Point position = GetRandomPosition(GetItemLocation(cbo2DAddBrain));
-                UIElement visual = AddDot(position, Brushes.HotPink, Brushes.Crimson, GetDotRadius(size));
+                double size = GetItemSize(chk2DRandomSize.IsChecked.Value);
+                Point position = GetRandomPosition2D(GetItemLocation(cbo2DAddBrain));
+                UIElement visual = AddDot(position, Brushes.HotPink, Brushes.Crimson, GetDotRadius2D(size));
 
                 _brains2D.Add(new Item2D(visual, size, position));
             }
@@ -1544,7 +1617,7 @@ namespace Game.Newt.Testers
 
                     UIElement visual = AddLine(from, to, _brainLinkBrush, 2, true);
 
-                    _linksIO2D.Add(new Item2D(visual, 0, from, to));
+                    _linksBrain2D.Add(new Item2D(visual, 0, from, to));
                 }
 
                 // Brain-IO links
@@ -1579,7 +1652,7 @@ namespace Game.Newt.Testers
 
                 var io = UtilityCore.Iterate(_inputs2D, _outputs2D).ToArray();
 
-                LinkBrain[] brainLinks = null;
+                LinkBrain2D[] brainLinks = null;
                 LinkIO[] ioLinks = null;
 
                 Worker2D_Voronoi.GetLinks(out brainLinks, out ioLinks, _brains2D.ToArray(), io);
@@ -1608,19 +1681,19 @@ namespace Game.Newt.Testers
                         // Group From
                         if (link.Brains1.Items.Length > 1)
                         {
-                            _linksIO2D.Add(DrawBrainGroup(link.Brains1.Positions, link.Brains2.Center));
+                            _linksBrain2D.Add(DrawBrainGroup(link.Brains1.Positions, link.Brains2.Center));
                         }
 
                         // Group To
                         if (link.Brains2.Items.Length > 1)
                         {
-                            _linksIO2D.Add(DrawBrainGroup(link.Brains2.Positions, link.Brains2.Center));
+                            _linksBrain2D.Add(DrawBrainGroup(link.Brains2.Positions, link.Brains2.Center));
                         }
 
                         // Link
                         UIElement visual = AddLine(link.Brains1.Center, link.Brains2.Center, _brainLinkBrush);
 
-                        _linksIO2D.Add(new Item2D(visual, 0, link.Brains1.Center, link.Brains2.Center));
+                        _linksBrain2D.Add(new Item2D(visual, 0, link.Brains1.Center, link.Brains2.Center));
                     }
                 }
 
@@ -1663,7 +1736,7 @@ namespace Game.Newt.Testers
 
                 var io = UtilityCore.Iterate(_inputs2D, _outputs2D).ToArray();
 
-                LinkBrain[] brainLinks = null;
+                LinkBrain2D[] brainLinks = null;
                 LinkIO[] ioLinks = null;
 
                 Worker2D_Distance.GetLinks(out brainLinks, out ioLinks, _brains2D.ToArray(), io, GetIOLinkupPriority(cbo2DIOLinkupPriority), trk2DLinkResistMult.Value);
@@ -1682,19 +1755,19 @@ namespace Game.Newt.Testers
                         // Group From
                         if (link.Brains1.Items.Length > 1)
                         {
-                            _linksIO2D.Add(DrawBrainGroup(link.Brains1.Positions, link.Brains2.Center));
+                            _linksBrain2D.Add(DrawBrainGroup(link.Brains1.Positions, link.Brains2.Center));
                         }
 
                         // Group To
                         if (link.Brains2.Items.Length > 1)
                         {
-                            _linksIO2D.Add(DrawBrainGroup(link.Brains2.Positions, link.Brains2.Center));
+                            _linksBrain2D.Add(DrawBrainGroup(link.Brains2.Positions, link.Brains2.Center));
                         }
 
                         // Link
                         UIElement visual = AddLine(link.Brains1.Center, link.Brains2.Center, _brainLinkBrush);
 
-                        _linksIO2D.Add(new Item2D(visual, 0, link.Brains1.Center, link.Brains2.Center));
+                        _linksBrain2D.Add(new Item2D(visual, 0, link.Brains1.Center, link.Brains2.Center));
                     }
                 }
 
@@ -1729,11 +1802,317 @@ namespace Game.Newt.Testers
             }
         }
 
+        //------- 3D Links
+        private void btn3DAddInput_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                double size = GetItemSize(chk3DRandomSize.IsChecked.Value);
+                Point3D position = GetRandomPosition3D(GetItemLocation(cbo3DAddInput));
+
+                Visual3D visual = AddDot(_viewportFull, position, UtilityWPF.AlphaBlend(Colors.DarkGreen, Colors.LawnGreen, .2), GetDotRadius3D(size), true);
+                _inputs3D.Add(new Item3D(visual, size, position));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btn3DAddOutput_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                double size = GetItemSize(chk3DRandomSize.IsChecked.Value);
+                Point3D position = GetRandomPosition3D(GetItemLocation(cbo3DAddOutput));
+
+                Visual3D visual = AddDot(_viewportFull, position, UtilityWPF.AlphaBlend(Colors.Indigo, Colors.DodgerBlue, .2), GetDotRadius3D(size), true);
+                _outputs3D.Add(new Item3D(visual, size, position));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btn3DAddBrain_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                double size = GetItemSize(chk3DRandomSize.IsChecked.Value);
+                Point3D position = GetRandomPosition3D(GetItemLocation(cbo3DAddBrain));
+
+                Visual3D visual = AddDot(_viewportFull, position, UtilityWPF.AlphaBlend(Colors.Crimson, Colors.HotPink, .2), GetDotRadius3D(size), true);
+                _brains3D.Add(new Item3D(visual, size, position));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btn3DClear_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                List<Item3D>[] lists = null;
+
+                switch (GetClearWhich(cbo3DClear))
+                {
+                    case ClearWhich.All:
+                        lists = new[] { _inputs3D, _brains3D, _outputs3D };
+                        break;
+
+                    case ClearWhich.Brains:
+                        lists = new[] { _brains3D };
+                        break;
+
+                    case ClearWhich.Inputs:
+                        lists = new[] { _inputs3D };
+                        break;
+
+                    case ClearWhich.Outputs:
+                        lists = new[] { _outputs3D };
+                        break;
+
+                    default:
+                        throw new ApplicationException("Unknown ClearWhich: " + GetClearWhich(cbo3DClear).ToString());
+                }
+
+                foreach (var list in lists)
+                {
+                    _viewportFull.Children.RemoveAll(list.Select(o => o.Visual));
+                    list.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btn3DCreateLinksSimple_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                if (_brains3D.Count == 0)
+                {
+                    return;
+                }
+
+                Point3D[] brainPositions = _brains3D.SelectMany(o => o.Positions).ToArray();
+                Point3D[] ioPositions = UtilityCore.Iterate(_inputs3D, _outputs3D).SelectMany(o => o.Positions).ToArray();
+                Item3D[] io = UtilityCore.Iterate(_inputs3D, _outputs3D).ToArray();
+
+                #region Brain Links
+
+                Tuple<int, int>[] brainLinks = null;
+
+                if (brainPositions.Length < 4)
+                {
+                    brainLinks = UtilityCore.GetPairs(Enumerable.Range(0, brainPositions.Length).ToArray()).ToArray();
+                }
+                else
+                {
+                    Tetrahedron[] delaunay = Math3D.GetDelaunay(brainPositions);
+                    brainLinks = Tetrahedron.GetUniqueLines(delaunay);
+                }
+
+                #endregion
+
+                #region IO Links
+
+                Tuple<int, int>[] ioLinks = null;       //  1=brainIndex, 2=ioIndex
+
+                if (brainPositions.Length > 0 && ioPositions.Length > 0)
+                {
+                    ioLinks = new Tuple<int, int>[ioPositions.Length];
+
+                    for (int cntr = 0; cntr < ioPositions.Length; cntr++)
+                    {
+                        int closestBrain = brainPositions.
+                            Select((o, i) => new { Index = i, Position = o, DistSqr = (o - ioPositions[cntr]).LengthSquared }).
+                            OrderBy(o => o.DistSqr).
+                            First().
+                            Index;
+
+                        ioLinks[cntr] = Tuple.Create(closestBrain, cntr);
+                    }
+                }
+
+                #endregion
+
+                #region Draw
+
+                if (brainLinks != null)
+                {
+                    _linksBrain3D.Add(new Item3D(AddLines(_viewportFull, brainLinks, brainPositions, _brainLinkColor)));
+                }
+
+                if (ioLinks != null)
+                {
+                    _linksIO3D.AddRange(DrawBrainIOLinks3D(_viewportFull, ioLinks, _brains3D.ToArray(), io, _ioLinkColor, chk3DRainbowLinks.IsChecked.Value));
+                }
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void btn3DLinksBrainBrain_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                if (_brains3D.Count == 0)
+                {
+                    return;
+                }
+
+                LinkItem[] brains = _brains3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                    ToArray();
+
+                ItemLinker_CombineArgs combineArgs = new ItemLinker_CombineArgs()
+                {
+                    //Ratio_Skinny = .3,
+                    //Ratio_Wide = .88,
+                    //MergeChance = 0,
+                };
+
+                SortedList<Tuple<int, int>, double> all;
+                LinkSetPair[] final;
+                ItemLinker.Link_Self(out all, out final, brains, combineArgs);
+
+                #region Draw
+
+                if (final != null)
+                {
+                    foreach (var link in final)
+                    {
+                        // Group From
+                        if (link.Set1.Items.Length > 1)
+                        {
+                            _linksBrain3D.Add(DrawBrainGroup(_viewportFull, link.Set1.Positions, link.Set2.Center, _brainGroupColor));
+                        }
+
+                        // Group To
+                        if (link.Set2.Items.Length > 1)
+                        {
+                            _linksBrain3D.Add(DrawBrainGroup(_viewportFull, link.Set2.Positions, link.Set2.Center, _brainGroupColor));
+                        }
+
+                        // Link
+                        Visual3D visual = AddLine(_viewportFull, link.Set1.Center, link.Set2.Center, _brainLinkColor);
+
+                        _linksBrain3D.Add(new Item3D(visual, 0, new[] { link.Set1.Center, link.Set2.Center }));
+                    }
+                }
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btn3DLinksBrainIO_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                LinkItem[] brains = _brains3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                    ToArray();
+
+                LinkItem[] io = _inputs3D.
+                    Concat(_outputs3D).
+                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                    ToArray();
+
+                ItemLinker_OverflowArgs overflowArgs = new ItemLinker_OverflowArgs()
+                {
+                    LinkResistanceMult = trk3DLinkResistMult.Value,
+                };
+
+                ItemLinker_ExtraArgs extraArgs = null;
+                if (!trk3DExtraLinkPercent.Value.IsNearZero())
+                {
+                    extraArgs = new ItemLinker_ExtraArgs()
+                    {
+                        Percent = trk3DExtraLinkPercent.Value / 100d,
+                        BySize = chk3DExtraLinkBySize.IsChecked.Value,
+                        EvenlyDistribute = chk3DExtraLinkEvenDistribute.IsChecked.Value,
+                    };
+                }
+
+                Tuple<int, int>[] links = ItemLinker.Link_1_2(brains, io, overflowArgs, extraArgs);
+
+                // Draw
+                _linksIO3D.AddRange(DrawBrainIOLinks3D(_viewportFull, links, _brains3D.ToArray(), _inputs3D.Concat(_outputs3D).ToArray(), _ioLinkColor, chk3DRainbowLinks.IsChecked.Value));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btn3DLinksBrainInput_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                PrepFor3D();
+                ClearTempVisuals();
+
+                LinkItem[] items1 = _inputs3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                    ToArray();
+
+                LinkItem[] items2 = _brains3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                    ToArray();
+
+                ItemLinker_OverflowArgs overflowArgs = new ItemLinker_OverflowArgs()
+                {
+                    LinkResistanceMult = trk3DLinkResistMult.Value,
+                };
+
+                Tuple<int, int>[] links = ItemLinker.Link_1_2(items1, items2, overflowArgs);
+
+                // Draw
+                _linksIO3D.AddRange(DrawBrainIOLinks3D(_viewportFull, links, _inputs3D.ToArray(), _brains3D.ToArray(), _ioLinkColor, chk3DRainbowLinks.IsChecked.Value));
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        //------- 3D Voronoi
         private void btn3DRandomSquare_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
                 ClearClickRayData();
 
@@ -1760,7 +2139,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
                 ClearClickRayData();
 
@@ -1787,7 +2166,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
                 ClearClickRayData();
 
@@ -1814,7 +2193,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
                 ClearClickRayData();
 
@@ -1841,7 +2220,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
                 ClearClickRayData();
 
@@ -1868,7 +2247,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
 
                 Point3D[] points = _dots3D.SelectMany(o => o.Positions).ToArray();
@@ -1929,11 +2308,11 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DClear_Click(object sender, RoutedEventArgs e)
+        private void btn3DClearDelVor_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearAllVisuals();
 
                 _dots3DID = null;
@@ -1968,7 +2347,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
 
                 Point3D[] points = _dots3D.SelectMany(o => o.Positions).ToArray();
@@ -1986,7 +2365,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
 
                 Point3D[] points = _dots3D.SelectMany(o => o.Positions).ToArray();
@@ -2047,7 +2426,7 @@ namespace Game.Newt.Testers
 
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
 
                 _voronoiResult = Math3D.GetVoronoi(_dots3D.SelectMany(o => o.Positions).ToArray(), true);
@@ -2119,7 +2498,7 @@ namespace Game.Newt.Testers
 
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearTempVisuals();
 
                 _voronoiResult = Math3D.GetVoronoi(_dots3D.SelectMany(o => o.Positions).ToArray(), true);
@@ -2185,6 +2564,7 @@ namespace Game.Newt.Testers
             }
         }
 
+        //------- Misc
         private void btnPlaneTiles2D_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -2246,7 +2626,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearAllVisuals();
 
                 TriangleIndexed plane = new TriangleIndexed(0, 1, 2, new[] { Math3D.GetRandomVector_Spherical(HALFSIZE3D).ToPoint(), Math3D.GetRandomVector_Spherical(HALFSIZE3D).ToPoint(), Math3D.GetRandomVector_Spherical(HALFSIZE3D).ToPoint() });
@@ -2270,7 +2650,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearAllVisuals();
 
                 // Create dots
@@ -2301,7 +2681,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                PrepFor3D_Full();
+                PrepFor3D();
                 ClearAllVisuals();
 
                 FontFamily[] sysFonts = Fonts.SystemFontFamilies.ToArray();
@@ -4928,16 +5308,7 @@ freedom to the galaxy….";
 
             canvas.Visibility = Visibility.Visible;
         }
-        private void PrepFor3D_Two(bool clearExisting = false)
-        {
-            canvas.Visibility = Visibility.Collapsed;
-
-            pnlViewportFull.Visibility = Visibility.Collapsed;
-
-            pnlViewport.Visibility = Visibility.Visible;
-            pnlViewportNeural.Visibility = Visibility.Visible;
-        }
-        private void PrepFor3D_Full(bool clearExisting = false)
+        private void PrepFor3D(bool clearExisting = false)
         {
             canvas.Visibility = Visibility.Collapsed;
 
@@ -4971,6 +5342,9 @@ freedom to the galaxy….";
             canvas.Children.RemoveAll(_voronoiLines2D.Select(o => o.Visual));
             _voronoiLines2D.Clear();
 
+            canvas.Children.RemoveAll(_linksBrain2D.Select(o => o.Visual));
+            _linksBrain2D.Clear();
+
             canvas.Children.RemoveAll(_linksIO2D.Select(o => o.Visual));
             _linksIO2D.Clear();
 
@@ -4980,6 +5354,9 @@ freedom to the galaxy….";
             // 3D
             _viewportFull.Children.RemoveAll(_linksBrain3D.Select(o => o.Visual));
             _linksBrain3D.Clear();
+
+            _viewportFull.Children.RemoveAll(_linksIO3D.Select(o => o.Visual));
+            _linksIO3D.Clear();
 
             _viewportFull.Children.RemoveAll(_misc3D.Select(o => o.Visual));
             _misc3D.Clear();
@@ -5071,6 +5448,43 @@ freedom to the galaxy….";
 
             return new Item2D(group, 0, center);
         }
+        private static Item3D DrawBrainGroup(Viewport3D viewport, Point3D[] points, Point3D center, Color color)
+        {
+            var lines = points.
+                Select(o => Tuple.Create(o, center));
+
+            Visual3D visual = AddLines(viewport, lines, color, .09);
+
+            return new Item3D(visual, 0, center);
+        }
+        private static Item3D[] DrawBrainIOLinks3D(Viewport3D viewport, Tuple<int, int>[] links, Item3D[] items1, Item3D[] items2, Color defaultColor, bool isRainbow)
+        {
+            const double THICKNESS = .025;
+
+            if (!isRainbow)
+            {
+                var lines = links.Select(o => Tuple.Create(items1[o.Item1].Position.Value, items2[o.Item2].Position.Value));
+
+                return new[]
+                {
+                    new Item3D(AddLines(viewport, lines, defaultColor, THICKNESS)),
+                };
+            }
+
+            List<Item3D> retVal = new List<Item3D>();
+
+            foreach (var byItem1 in links.ToLookup(o => o.Item1))
+            {
+                //Color color = UtilityWPF.GetRandomColor(150, 220);
+                Color color = new ColorHSV(StaticRandom.NextDouble(360), 60, 100).ToRGB();
+
+                var lines = byItem1.Select(o => Tuple.Create(items1[byItem1.Key].Position.Value, items2[o.Item2].Position.Value));
+
+                retVal.Add(new Item3D(AddLines(viewport, lines, color, THICKNESS)));
+            }
+
+            return retVal.ToArray();
+        }
 
         private UIElement AddDot(Point position, Brush fill, Brush stroke, double size = 20)
         {
@@ -5136,7 +5550,7 @@ freedom to the galaxy….";
             // Material
             MaterialGroup materials = new MaterialGroup();
             materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(Colors.White, color, .3d)), 30d));
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -5157,7 +5571,7 @@ freedom to the galaxy….";
             // Material
             MaterialGroup materials = new MaterialGroup();
             materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(Colors.White, color, .3d)), 30d));
 
             Model3DGroup geometries = new Model3DGroup();
 
@@ -5317,9 +5731,9 @@ freedom to the galaxy….";
             return (Worker2D_Distance.IOLinkupPriority)Enum.Parse(typeof(Worker2D_Distance.IOLinkupPriority), combo.SelectedItem.ToString());
         }
 
-        private double GetItemSize()
+        private static double GetItemSize(bool isRandom)
         {
-            if (chk2DRandomSize.IsChecked.Value)
+            if (isRandom)
             {
                 return StaticRandom.NextDouble(1, 25);
             }
@@ -5328,53 +5742,1166 @@ freedom to the galaxy….";
                 return 10d;
             }
         }
-        private static double GetDotRadius(double size)
+        private static double GetDotRadius2D(double size)
         {
             return UtilityCore.GetScaledValue(5, 50, 1, 25, size);
         }
-
-        private Point GetRandomPosition(AddItemLocation location)
+        private static double GetDotRadius3D(double size)
         {
-            double width = canvas.ActualWidth;
-            double height = canvas.ActualHeight;
+            return UtilityCore.GetScaledValue(.08, .4, 1, 25, size);
+        }
 
-            double top = 0;
-            double left = 0;
+        private Point GetRandomPosition2D(AddItemLocation location)
+        {
+            Rect3D bounds = new Rect3D(0, 0, 0, canvas.ActualWidth, canvas.ActualHeight, 0);
+
+            return GetRandomPosition(location, bounds).ToPoint2D();
+        }
+        private Point3D GetRandomPosition3D(AddItemLocation location)
+        {
+            Rect3D bounds;
+
+            switch (location)
+            {
+                case AddItemLocation.Inner:
+                case AddItemLocation.Outer:
+                    bounds = new Rect3D(-HALFSIZE3D, -HALFSIZE3D, -HALFSIZE3D, HALFSIZE3D * 2, HALFSIZE3D * 2, HALFSIZE3D * 2);
+                    break;
+
+                default:
+                    double x = HALFSIZE3D * 1.5;
+                    bounds = new Rect3D(-x, -HALFSIZE3D, -HALFSIZE3D, x * 2, HALFSIZE3D * 2, HALFSIZE3D * 2);
+                    break;
+            }
+
+            return GetRandomPosition(location, bounds);
+        }
+
+        private static Point3D GetRandomPosition(AddItemLocation location, Rect3D bounds)
+        {
+            double bx = bounds.X;
+            double by = bounds.Y;
+            double bz = bounds.Z;
+
+            double width = bounds.SizeX;
+            double height = bounds.SizeY;
+            double depth = bounds.SizeZ;
+
+            double w3 = width / 3;      // thirdWidth
+            double h3 = height / 3;        // thirdHeight
+            double d3 = depth / 3;      // thirdDepth
+
+            double m;       // margin
+            double mZ;
+            if (depth.IsNearZero())
+            {
+                m = Math.Min(w3, height) * .05;
+                mZ = 0;
+            }
+            else
+            {
+                m = Math1D.Min(w3, height, d3) * .05;      // margin
+                mZ = m;
+            }
+            double m2 = m * 2;
+            double mZ2 = mZ * 2;
+
+            Rect3D leftRect = new Rect3D(
+                bx + m, by + m, bz + mZ,
+                w3 - m2, height - m2, depth - mZ2);
+
+            Rect3D centerRect = new Rect3D(
+                bx + w3 + m, by + m, bz + mZ,
+                w3 - m2, height - m2, depth - mZ2);
+
+            Rect3D rightRect = new Rect3D(
+                bx + (w3 * 2) + m, by + m, bz + mZ,
+                w3 - m2, height - m2, depth - mZ2);
+
+            Rect3D innerRect1 = new Rect3D(
+                bx + w3 + m, by + h3 + m, bz + d3 + mZ,
+                w3 - m2, h3 - m2, d3 - mZ2);        // items go into this one
+
+            Rect3D innerRect2 = new Rect3D(
+                bx + w3 - m, by + h3 - m, bz + d3 - mZ,
+                w3 + m2, h3 + m2, d3 + mZ2);        // this is the hole for outer
+
+            Rect3D outerRect = new Rect3D(
+                bx + m, by + m, bz + mZ,
+                width - m2, height - m2, depth - mZ2);
+
+            Rect3D rect;
 
             switch (location)
             {
                 case AddItemLocation.Anywhere:
-                    // The variables are already set up for this
+                    rect = outerRect;
                     break;
 
                 case AddItemLocation.Left:
-                    width = width / 3d;
+                    rect = leftRect;
                     break;
 
                 case AddItemLocation.Center:
-                    width = width / 3d;
-                    left = width;
+                    rect = centerRect;
                     break;
 
                 case AddItemLocation.Right:
-                    width = width / 3d;
-                    left = width * 2;
+                    rect = rightRect;
                     break;
+
+                case AddItemLocation.Inner:
+                    rect = innerRect1;
+                    break;
+
+                case AddItemLocation.Outer:
+                    return Math3D.GetRandomVector(
+                        new Vector3D(outerRect.X, outerRect.Y, outerRect.Z),
+                        new Vector3D(outerRect.X + outerRect.SizeX, outerRect.Y + outerRect.SizeY, outerRect.Z + outerRect.SizeZ),
+                        new Vector3D(innerRect2.X, innerRect2.Y, innerRect2.Z),
+                        new Vector3D(innerRect2.X + innerRect2.SizeX, innerRect2.Y + innerRect2.SizeY, innerRect2.Z + innerRect2.SizeZ)
+                        ).ToPoint();
 
                 default:
                     throw new ApplicationException("Unknown AddItemLocation: " + location.ToString());
             }
 
-            double margin = height * .05;
-
-            left += margin;
-            width -= margin * 2d;
-
-            top += margin;
-            height -= margin * 2d;
-
-            return Math3D.GetRandomVector(new Vector3D(left, top, 0), new Vector3D(left + width, top + height, 0)).ToPoint2D();
+            return Math3D.GetRandomVector(new Vector3D(rect.X, rect.Y, rect.Z), new Vector3D(rect.X + rect.SizeX, rect.Y + rect.SizeY, rect.Z + rect.SizeZ)).ToPoint();
         }
+
+        #endregion
+
+        #region OLD
+
+        #region Class: Set3D
+
+        //private class Set3D
+        //{
+        //    #region Constructor
+
+        //    public Set3D(int index, Item3D[] all)
+        //        : this(new[] { index }, all) { }
+
+        //    public Set3D(IEnumerable<int> indices, Item3D[] all)
+        //    {
+        //        if (all.Any(o => o.Position == null))
+        //        {
+        //            throw new ArgumentException("Only items with a single position are allowed");
+        //        }
+
+        //        this.Indices = indices.ToArray();
+        //        this.Items = this.Indices.Select(o => all[o]).ToArray();
+
+        //        this.Positions = this.Items.Select(o => o.Position.Value).ToArray();
+
+        //        if (this.Items.Length == 1)
+        //        {
+        //            this.Center = this.Items[0].Position.Value;
+        //        }
+        //        else
+        //        {
+        //            this.Center = Math3D.GetCenter(this.Positions);
+        //        }
+        //    }
+
+        //    #endregion
+
+        //    public readonly int[] Indices;
+        //    public readonly Item3D[] Items;
+
+        //    public readonly Point3D Center;
+        //    public readonly Point3D[] Positions;
+        //}
+
+        #endregion
+        #region Class: LinkSet3D
+
+        //private class LinkSet3D
+        //{
+        //    #region Constructor
+
+        //    public LinkSet3D(int item1, int item2, Item3D[] all)
+        //        : this(new Set3D(item1, all), new Set3D(item2, all)) { }
+
+        //    public LinkSet3D(IEnumerable<int> set1, IEnumerable<int> set2, Item3D[] all)
+        //        : this(new Set3D(set1, all), new Set3D(set2, all)) { }
+
+        //    public LinkSet3D(Set3D set1, Set3D set2)
+        //    {
+        //        this.Set1 = set1;
+        //        this.Set2 = set2;
+        //    }
+
+        //    #endregion
+
+        //    public readonly Set3D Set1;
+        //    public readonly Set3D Set2;
+
+        //    //TODO: May want to store AllItems[]
+        //}
+
+        #endregion
+
+        #region Class: CombineItemsArgs
+
+        //private class CombineItemsArgs
+        //{
+        //    public double Ratio_Skinny = .3;
+        //    public double Ratio_Wide = .92;
+
+        //    public double MergeChance = .5;
+        //}
+
+        #endregion
+        #region Class: ItemOverflowArgs
+
+        //private class ItemOverflowArgs
+        //{
+        //    /// <summary>
+        //    /// This is multiplied by the distance between the items being linked.  The larger the value, the more the distance
+        //    /// acts as a resistance.  If you use zero, the links will be distributed by burden, ignoring distance.
+        //    /// </summary>
+        //    public double LinkResistanceMult = 1;
+        //}
+
+        #endregion
+        #region Class: ExtraLinkArgs
+
+        //private class ExtraLinkArgs
+        //{
+        //    /// <summary>
+        //    /// If .5, then an extra 50% links will be added
+        //    /// </summary>
+        //    public double Percent = .5;
+
+        //    /// <summary>
+        //    /// True: The number of extra links is calculated by size and count
+        //    /// False: Item size is ignored.  The number of extra links is calculated by count only
+        //    /// </summary>
+        //    public bool BySize = true;
+
+        //    /// <summary>
+        //    /// This only has an effect when percent is over 1 ( > 100%)
+        //    /// 
+        //    /// True: The list of item2s is mapped fully for each amount over 100%
+        //    ///     so if Percent=3.5, then the item2 list will be mapped 3 full times, then randomly map half
+        //    ///     
+        //    /// False: The number of additions is calculated, then a random item is selected that many times
+        //    ///     so there's a good chance that some items will get mapped more than average, some may not get any extra links
+        //    /// </summary>
+        //    public bool EvenlyDistribute = true;
+
+        //}
+
+        #endregion
+
+        #region Class: Worker3D
+
+        //private static class Worker3D
+        //{
+        //    #region Class: DistributeDistances
+
+        //    private class DistributeDistances
+        //    {
+        //        public DistributeDistances(Tuple<int, double>[][] resistancesItem1, Distances2to1[] distances2to1)
+        //        {
+        //            this.ResistancesItem1 = resistancesItem1;
+        //            this.Distances2to1 = distances2to1;
+        //        }
+
+        //        /// <summary>
+        //        /// This holds links between all Item1s and the resistance (distance * mult)
+        //        /// </summary>
+        //        /// <remarks>
+        //        /// Index into array is index of item1
+        //        /// Tuple.Item1: Index of other item1
+        //        /// Tuple.Item2: Resistance felt between the two
+        //        /// </remarks>
+        //        public readonly Tuple<int, double>[][] ResistancesItem1;
+
+        //        //NOTE: These are ordered by distance
+        //        public readonly Distances2to1[] Distances2to1;
+        //    }
+
+        //    #endregion
+        //    #region Class: Distances2to1
+
+        //    /// <summary>
+        //    /// This holds an item2, and distances to all item1s
+        //    /// </summary>
+        //    private class Distances2to1
+        //    {
+        //        public Distances2to1(int index2, Tuple<int, double>[] distancesTo1)
+        //        {
+        //            this.Index2 = index2;
+        //            this.DistancesTo1 = distancesTo1;
+        //        }
+
+        //        public readonly int Index2;
+
+        //        //TODO: No need to store the entire array.  Just the closest one
+        //        /// <summary>
+        //        /// Item1: index into items1
+        //        /// Item2: distance to item1
+        //        /// NOTE: These are sorted lowest to highest distance
+        //        /// </summary>
+        //        public readonly Tuple<int, double>[] DistancesTo1;
+        //    }
+
+        //    #endregion
+        //    #region Class: BrainBurden
+
+        //    private class BrainBurden
+        //    {
+        //        #region Constructor
+
+        //        public BrainBurden(int index, Item3D[] brains, Item3D[] io)
+        //        {
+        //            this.Index = index;
+        //            this.Brain = brains[index];
+        //            this.Size = this.Brain.Size;
+
+        //            _io = io;
+        //        }
+
+        //        #endregion
+
+        //        public readonly int Index;
+        //        public readonly Item3D Brain;
+        //        public readonly double Size;
+
+        //        private readonly Item3D[] _io;
+
+        //        private readonly List<int> _ioLinks = new List<int>();
+        //        public IEnumerable<int> IOLinks { get { return _ioLinks; } }
+
+        //        public double IOSize { get; private set; }
+
+        //        public void AddIOLink(int index)
+        //        {
+        //            _ioLinks.Add(index);
+        //            this.IOSize += _io[index].Size;
+        //        }
+
+        //        public static double CalculateBurden(double sumLinkSize, double brainSize)
+        //        {
+        //            return sumLinkSize / brainSize;
+        //        }
+        //    }
+
+        //    #endregion
+
+        //    /// <summary>
+        //    /// Link brains to each other (delaunay graph, then prune thin triangles)
+        //    /// </summary>
+        //    /// <param name="all">
+        //    /// Item1=Link between two items (sub item1 and 2 are the indices)
+        //    /// Item2=Distance between those two items
+        //    /// </param>
+        //    /// <param name="final">
+        //    /// This holds a set of links after the thin triangles are pruned.  There's a chance of items being merged
+        //    /// </param>
+        //    public static void Link_Self(out SortedList<Tuple<int, int>, double> all, out LinkSet3D[] final, Item3D[] items, CombineItemsArgs combineArgs = null)
+        //    {
+        //        if (items.Any(o => o.Position == null))
+        //        {
+        //            throw new ArgumentException("All brains passed in must have a single position");
+        //        }
+
+        //        TriangleIndexed[] triangles;
+        //        GetItemDelaunay(out all, out triangles, items);
+
+        //        if (items.Length < 2)
+        //        {
+        //            //throw new ArgumentException("This method requires at least two brains: " + items.Length.ToString());
+        //            final = new LinkSet3D[0];
+        //            return;
+        //        }
+
+        //        // Prune links that don't make sense
+        //        if (combineArgs != null && triangles.Length > 0)
+        //        {
+        //            final = PruneLinks(triangles, all, items, combineArgs);
+        //        }
+        //        else
+        //        {
+        //            final = all.Keys.
+        //                Select(o => new LinkSet3D(o.Item1, o.Item2, items)).
+        //                ToArray();
+        //        }
+        //    }
+
+        //    /// <summary>
+        //    /// Every item in 2 will have at least one link to a 1.  There could be some item1s that don't have a link
+        //    /// </summary>
+        //    /// <param name="overflowArgs">
+        //    /// Item2s get matched to the nearest Item1.
+        //    /// If this args is null then, it stays that way.
+        //    /// If this is populated, then links will move from burdened item1s to less burdened
+        //    /// </param>
+        //    /// <returns>
+        //    /// Item1=index into item1 list
+        //    /// Item2=index into item2 list
+        //    /// </returns>
+        //    public static Tuple<int, int>[] Link_1_2(Item3D[] items1, Item3D[] items2, ItemOverflowArgs overflowArgs = null, ExtraLinkArgs extraArgs = null)
+        //    {
+        //        if (items1 == null || items2 == null || items1.Length == 0 || items2.Length == 0)
+        //        {
+        //            return new Tuple<int, int>[0];
+        //        }
+        //        else if (items1.Concat(items2).Any(o => o.Position == null))
+        //        {
+        //            throw new ArgumentException("All items passed in must have a single position");
+        //        }
+
+        //        Tuple<int, int>[] retVal = null;
+
+        //        if (overflowArgs == null)
+        //        {
+        //            // Just link to the closest
+        //            retVal = Link12_Closest(items1, items2);
+        //        }
+
+        //        if (overflowArgs == null && extraArgs == null)
+        //        {
+        //            // Nothing special to do, exit early
+        //            return retVal;
+        //        }
+
+        //        DistributeDistances distances = GetDistances(items1, items2, overflowArgs);
+
+        //        if (overflowArgs != null)
+        //        {
+        //            // Consider item1s burden when linking them
+        //            retVal = Link12_Distribute(items1, items2, distances);
+        //        }
+
+        //        if (extraArgs != null)
+        //        {
+        //            // Add more links
+        //            retVal = Link12_Extra(retVal, items1, items2, distances, extraArgs);
+        //        }
+
+        //        return retVal;
+        //    }
+
+        //    #region Private Methods - self
+
+        //    private static LinkSet3D[] PruneLinks(TriangleIndexed[] triangles, SortedList<Tuple<int, int>, double> all, Item3D[] brains, CombineItemsArgs args)
+        //    {
+        //        List<Tuple<int[], int[]>> retVal = all.Keys.
+        //            Select(o => Tuple.Create(new[] { o.Item1 }, new[] { o.Item2 })).
+        //            ToList();
+
+        //        foreach (TriangleIndexed triangle in triangles)
+        //        {
+        //            Tuple<bool, TriangleEdge> changeEdge = PruneLinks_LongThin(triangle, all, args);
+        //            if (changeEdge == null)
+        //            {
+        //                continue;
+        //            }
+
+        //            if (changeEdge.Item1)
+        //            {
+        //                PruneLinks_Merge(triangle, changeEdge.Item2, retVal);
+        //            }
+        //            else
+        //            {
+        //                PruneLinks_Remove(triangle, changeEdge.Item2, retVal);
+        //            }
+        //        }
+
+        //        return retVal.Select(o => new LinkSet3D(o.Item1, o.Item2, brains)).ToArray();
+        //    }
+
+        //    /// <summary>
+        //    /// If this triangle is long and thin, then this will decide whether to remove a link, or merge the two close brains
+        //    /// </summary>
+        //    /// <returns>
+        //    /// Null : This is not a long thin triangle.  Move along
+        //    /// Item1=True : Merge the two brains connected by Item2
+        //    /// Item1=False : Remove the Item2 link
+        //    /// </returns>
+        //    private static Tuple<bool, TriangleEdge> PruneLinks_LongThin(ITriangleIndexed triangle, SortedList<Tuple<int, int>, double> all, CombineItemsArgs args)
+        //    {
+        //        var lengths = new[] { TriangleEdge.Edge_01, TriangleEdge.Edge_12, TriangleEdge.Edge_20 }.
+        //            Select(o => new { Edge = o, Length = GetLength(triangle, o, all) }).
+        //            OrderBy(o => o.Length).
+        //            ToArray();
+
+        //        //NOTE: The order of these if statements is important.  I ran into a case where it's both wide and
+        //        //skinny (nearly colinear).  In that case, the long segment should be removed
+        //        if (lengths[2].Length / (lengths[0].Length + lengths[1].Length) > args.Ratio_Wide)
+        //        {
+        //            // Wide base (small angles, one huge angle)
+        //            return Tuple.Create(false, lengths[2].Edge);
+        //        }
+        //        else if (lengths[0].Length / lengths[1].Length < args.Ratio_Skinny && lengths[0].Length / lengths[2].Length < args.Ratio_Skinny)
+        //        {
+        //            #region Isosceles - skinny base
+
+        //            if (StaticRandom.NextDouble() < args.MergeChance)
+        //            {
+        //                // Treat the two close brains like one, and split the links evenly with the far brain
+        //                return Tuple.Create(true, lengths[0].Edge);
+        //            }
+        //            else
+        //            {
+        //                // Choose one of the long links to remove
+        //                if (StaticRandom.NextBool())
+        //                {
+        //                    return Tuple.Create(false, lengths[1].Edge);
+        //                }
+        //                else
+        //                {
+        //                    return Tuple.Create(false, lengths[2].Edge);
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+
+        //        return null;
+        //    }
+
+        //    private static void PruneLinks_Merge(TriangleIndexed triangle, TriangleEdge edge, List<Tuple<int[], int[]>> links)
+        //    {
+        //        // Figure out which indexes to look for
+        //        int[] pair = new[] { triangle.GetIndex(edge, true), triangle.GetIndex(edge, false) };
+        //        int other = triangle.IndexArray.First(o => !pair.Contains(o));
+
+        //        // Extract the affected links out of the list
+        //        List<Tuple<int[], int[]>> affected = new List<Tuple<int[], int[]>>();
+
+        //        int index = 0;
+        //        while (index < links.Count)
+        //        {
+        //            var current = links[index];
+
+        //            if (current.Item1.Contains(other) && current.Item2.Any(o => pair.Contains(o)))
+        //            {
+        //                affected.Add(current);
+        //                links.RemoveAt(index);
+        //            }
+        //            else if (current.Item2.Contains(other) && current.Item1.Any(o => pair.Contains(o)))
+        //            {
+        //                affected.Add(Tuple.Create(current.Item2, current.Item1));       // reversing them so that Item1 is always other
+        //                links.RemoveAt(index);
+        //            }
+        //            else
+        //            {
+        //                index++;
+        //            }
+        //        }
+
+        //        // Combine the affected links (there shouldn't be more than two)
+        //        var merged = Tuple.Create(
+        //            affected.SelectMany(o => o.Item1).Distinct().ToArray(),
+        //            affected.SelectMany(o => o.Item2).Distinct().ToArray());
+
+        //        links.Add(merged);
+        //    }
+
+        //    private static void PruneLinks_Remove(TriangleIndexed triangle, TriangleEdge edge, List<Tuple<int[], int[]>> links)
+        //    {
+        //        int index1 = triangle.GetIndex(edge, true);
+        //        int index2 = triangle.GetIndex(edge, false);
+
+        //        Tuple<int[], int[]> existing = null;
+        //        bool? is1in1 = null;
+
+        //        // Find and remove the link that contains this edge
+        //        for (int cntr = 0; cntr < links.Count; cntr++)
+        //        {
+        //            if (links[cntr].Item1.Contains(index1) && links[cntr].Item2.Contains(index2))
+        //            {
+        //                is1in1 = true;
+        //            }
+        //            else if (links[cntr].Item1.Contains(index2) && links[cntr].Item2.Contains(index1))
+        //            {
+        //                is1in1 = false;
+        //            }
+        //            else
+        //            {
+        //                continue;
+        //            }
+
+        //            existing = links[cntr];
+        //            links.RemoveAt(cntr);
+        //            break;
+        //        }
+
+        //        if (existing == null)
+        //        {
+        //            //throw new ArgumentException("Didn't find the link");
+
+        //            // A neighbor triangle probably removed it
+        //            return;
+        //        }
+
+        //        // Add back if there were more than 2 involved
+        //        if (existing.Item1.Length == 1 && existing.Item2.Length == 1)
+        //        {
+        //            // This link only holds one item on each side.  It's already removed from the list, so there is nothing left to do
+        //            return;
+        //        }
+
+        //        int[] newItem1 = PruneLinks_Remove_Reduce(existing.Item1, index1, index2, is1in1.Value);
+        //        int[] newItem2 = PruneLinks_Remove_Reduce(existing.Item2, index2, index1, is1in1.Value);
+
+        //        links.Add(Tuple.Create(newItem1, newItem2));
+        //    }
+        //    private static int[] PruneLinks_Remove_Reduce(int[] existing, int index1, int index2, bool use1)
+        //    {
+        //        if (existing.Length == 1)
+        //        {
+        //            return existing;
+        //        }
+
+        //        int removeIndex = use1 ? index1 : index2;
+
+        //        // Keep all but the one to remove
+        //        return existing.Where(o => o != removeIndex).ToArray();
+        //    }
+
+        //    private static double GetLength(ITriangleIndexed triangle, TriangleEdge edge, SortedList<Tuple<int, int>, double> lengths)
+        //    {
+        //        return GetLength(triangle.GetIndex(edge, true), triangle.GetIndex(edge, false), lengths);
+        //    }
+        //    private static double GetLength(Tuple<int, int> pair, SortedList<Tuple<int, int>, double> lengths)
+        //    {
+        //        if (pair.Item1 < pair.Item2)
+        //        {
+        //            return lengths[pair];
+        //        }
+        //        else
+        //        {
+        //            return lengths[Tuple.Create(pair.Item2, pair.Item1)];
+        //        }
+        //    }
+        //    private static double GetLength(int index1, int index2, SortedList<Tuple<int, int>, double> lengths)
+        //    {
+        //        if (index1 < index2)
+        //        {
+        //            return lengths[Tuple.Create(index1, index2)];
+        //        }
+        //        else
+        //        {
+        //            return lengths[Tuple.Create(index2, index1)];
+        //        }
+        //    }
+
+        //    #endregion
+        //    #region Private Methods - 1->2
+
+        //    /// <summary>
+        //    /// This links closest items together
+        //    /// </summary>
+        //    private static Tuple<int, int>[] Link12_Closest(Item3D[] items1, Item3D[] items2)
+        //    {
+        //        var retVal = new Tuple<int, int>[items2.Length];
+
+        //        for (int cntr = 0; cntr < items2.Length; cntr++)
+        //        {
+        //            int closest = items1.
+        //                Select((o, i) => new { Index = i, Position = o.Position.Value, DistSqr = (o.Position.Value - items2[cntr].Position.Value).LengthSquared }).
+        //                OrderBy(o => o.DistSqr).
+        //                First().
+        //                Index;
+
+        //            retVal[cntr] = Tuple.Create(closest, cntr);
+        //        }
+
+        //        return retVal;
+        //    }
+
+        //    private static Tuple<int, int>[] Link12_Distribute(Item3D[] items1, Item3D[] items2, DistributeDistances distances)
+        //    {
+        //        IEnumerable<int> addOrder = Enumerable.Range(0, distances.Distances2to1.Length);
+
+        //        return AddLinks(items1, items2, distances, addOrder);
+        //    }
+
+        //    private static Tuple<int, int>[] Link12_Extra(Tuple<int, int>[] initial, Item3D[] items1, Item3D[] items2, DistributeDistances distances, ExtraLinkArgs extraArgs)
+        //    {
+        //        Random rand = StaticRandom.GetRandomForThread();
+
+        //        int wholePercent = extraArgs.Percent.ToInt_Floor();
+
+        //        List<int> addOrder = new List<int>();
+
+        //        if (extraArgs.BySize)
+        //        {
+        //            double totalSize = items2.Sum(o => o.Size);
+        //            double maxSize = extraArgs.Percent * totalSize;
+        //            double usedSize = 0;
+
+        //            if (extraArgs.EvenlyDistribute)
+        //            {
+        //                #region by size, evenly distribute
+
+        //                // Add some complete passes if over 100% percent
+        //                for (int cntr = 0; cntr < wholePercent; cntr++)
+        //                {
+        //                    addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length));
+        //                }
+
+        //                usedSize = wholePercent * totalSize;
+
+        //                #endregion
+        //            }
+
+        //            #region by size, distribute the rest
+
+        //            //NOTE: Building this list by size so that larger items have a higher chance of being chosen
+        //            var bySize = items2.
+        //                Select((o, i) => Tuple.Create(i, o.Size / totalSize)).
+        //                OrderByDescending(o => o.Item2).
+        //                ToArray();
+
+        //            // Keep selecting items unti the extra size is consumed (or if no more can be added)
+        //            while (true)
+        //            {
+        //                bool foundOne = false;
+
+        //                for (int cntr = 0; cntr < 1000; cntr++)     // this is an infinite loop detector
+        //                {
+        //                    int attemptIndex = UtilityCore.GetIndexIntoList(rand.NextDouble(), bySize);     // get the index into the list that the rand percent represents
+        //                    attemptIndex = bySize[attemptIndex].Item1;      // get the index into items2
+
+        //                    if (items2[attemptIndex].Size + usedSize <= maxSize)
+        //                    {
+        //                        foundOne = true;
+        //                        usedSize += items2[attemptIndex].Size;
+        //                        addOrder.Add(attemptIndex);
+        //                        break;
+        //                    }
+        //                }
+
+        //                if (!foundOne)
+        //                {
+        //                    // No more will fit
+        //                    break;
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+        //        else
+        //        {
+        //            if (extraArgs.EvenlyDistribute)
+        //            {
+        //                #region ignore size, evenly distribute
+
+        //                // Add some complete passes if over 100% percent
+        //                for (int cntr = 0; cntr < wholePercent; cntr++)
+        //                {
+        //                    addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length));
+        //                }
+
+        //                // Add some items based on the portion of percent that is less than 100%
+        //                int remainder = (items2.Length * (extraArgs.Percent - wholePercent)).
+        //                    ToInt_Round();
+
+        //                addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length, remainder));
+
+        //                #endregion
+        //            }
+        //            else
+        //            {
+        //                #region ignore size, randomly distribute
+
+        //                int totalCount = (items2.Length * extraArgs.Percent).
+        //                    ToInt_Round();
+
+        //                //NOTE: UtilityCore.RandomRange stops when the list is exhausted, and makes sure not to have dupes.  That's not what is wanted
+        //                //here.  Just randomly pick X times
+        //                addOrder.AddRange(Enumerable.Range(0, totalCount).Select(o => rand.Next(items2.Length)));
+
+        //                #endregion
+        //            }
+        //        }
+
+        //        return AddLinks(items1, items2, distances, addOrder, initial);
+        //    }
+
+        //    /// <summary>
+        //    /// This adds 2s to 1s one at a time (specified by distances2to1_AddOrder)
+        //    /// </summary>
+        //    private static Tuple<int, int>[] AddLinks(Item3D[] items1, Item3D[] items2, DistributeDistances distances, IEnumerable<int> distances2to1_AddOrder, Tuple<int, int>[] initial = null)
+        //    {
+        //        // Store the inital link burdens
+        //        BrainBurden[] links = Enumerable.Range(0, items1.Length).
+        //            Select(o => new BrainBurden(o, items1, items2)).
+        //            ToArray();
+
+        //        if (initial != null)
+        //        {
+        //            #region Store initial
+
+        //            foreach (var set in initial.ToLookup(o => o.Item1))
+        //            {
+        //                foreach (int item2Index in set.Select(o => o.Item2))
+        //                {
+        //                    links[set.Key].AddIOLink(item2Index);
+        //                }
+        //            }
+
+        //            #endregion
+        //        }
+
+        //        foreach (var distanceIO in distances2to1_AddOrder.Select(o => distances.Distances2to1[o]))
+        //        {
+        //            int ioIndex = distanceIO.Index2;
+        //            int closestBrainIndex = distanceIO.DistancesTo1[0].Item1;
+
+        //            //TODO: This needs to account for the link to already exist.  In that case, it needs to find the next most desirable item to link to
+        //            AddIOLink(links, ioIndex, items2[ioIndex].Size, closestBrainIndex, distances.ResistancesItem1[closestBrainIndex]);
+        //        }
+
+        //        // Build the return
+        //        List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
+        //        foreach (BrainBurden burden in links)
+        //        {
+        //            retVal.AddRange(burden.IOLinks.Select(o => Tuple.Create(burden.Index, o)));
+        //        }
+
+        //        return retVal.ToArray();
+        //    }
+
+        //    private static DistributeDistances GetDistances(Item3D[] items1, Item3D[] items2, ItemOverflowArgs overflowArgs)
+        //    {
+        //        // Distances between all item1s (not just delaunay, but all pairs)
+        //        Tuple<int, double>[][] resistancesItem1 = ItemItemResistance(items1, overflowArgs == null ? 1 : overflowArgs.LinkResistanceMult);
+
+        //        // Figure out the distances between 2s and 1s
+        //        var distances2to1 = Enumerable.Range(0, items2.Length).
+        //            Select(o => new Distances2to1
+        //            (
+        //                o,
+        //                Enumerable.Range(0, items1.Length).
+        //                    Select(p => Tuple.Create(p, (items1[p].Position.Value - items2[o].Position.Value).Length)).        //Item1=items1 index, Item2=distance to item1
+        //                    OrderBy(p => p.Item2).      // first item1 needs to be the shortest distance
+        //                    ToArray()
+        //            )).
+        //            OrderBy(o => o.DistancesTo1.First().Item2).
+        //            ToArray();
+
+        //        return new DistributeDistances(resistancesItem1, distances2to1);
+        //    }
+
+        //    private static Tuple<int, double>[][] ItemItemResistance(Item3D[] items, double linkResistanceMult)
+        //    {
+        //        // Get the AABB, and use the diagonal as the size
+        //        var aabb = Math3D.GetAABB(items.Select(o => o.Position.Value));
+        //        double maxDistance = (aabb.Item2 - aabb.Item1).Length;
+
+        //        // Get links between the items and distances of each link
+        //        var links2 = UtilityCore.GetPairs(items.Length).
+        //            Select(o =>
+        //            {
+        //                double distance = (items[o.Item1].Position.Value - items[o.Item2].Position.Value).Length;
+        //                double resistance = (distance / maxDistance) * linkResistanceMult;
+
+        //                return Tuple.Create(o.Item2, o.Item1, resistance);
+        //            }).
+        //            ToArray();
+
+        //        Tuple<int, double>[][] retVal = new Tuple<int, double>[items.Length][];
+
+        //        for (int cntr = 0; cntr < items.Length; cntr++)
+        //        {
+        //            // Store all links for this item
+        //            retVal[cntr] = links2.
+        //                Where(o => o.Item1 == cntr || o.Item2 == cntr).       // find links between this item and another
+        //                Select(o => Tuple.Create(o.Item1 == cntr ? o.Item2 : o.Item1, o.Item3)).     // store the link to the other item and the resistance
+        //                OrderBy(o => o.Item2).
+        //                ToArray();
+        //        }
+
+        //        return retVal;
+        //    }
+
+        //    /// <summary>
+        //    /// This adds ioIndex to one of finalLinks
+        //    /// </summary>
+        //    /// <param name="closestBrainIndex">Index of the brain that is closest to the IO.  There is no extra burden for linking to this one</param>
+        //    /// <param name="brainBrainBurdens">
+        //    /// Item1=Index of other brain
+        //    /// Item2=Link resistance (burden) between closestBrainIndex and this brain
+        //    /// </param>
+        //    private static void AddIOLink(BrainBurden[] finalLinks, int ioIndex, double ioSize, int closestBrainIndex, Tuple<int, double>[] brainBrainBurdens)
+        //    {
+        //        // Figure out the cost of adding the link to the various brains
+        //        List<Tuple<int, double>> burdens = new List<Tuple<int, double>>();
+
+        //        for (int cntr = 0; cntr < finalLinks.Length; cntr++)
+        //        {
+        //            if (finalLinks[cntr].IOLinks.Contains(ioIndex))
+        //            {
+        //                // This only happens when extra links are requested
+        //                continue;
+        //            }
+
+        //            int brainIndex = finalLinks[cntr].Index;        // this is likely always the same as cntr, but since that object has brainIndex as a property, I feel safer using it
+
+        //            // Adding to the closest brain has no exta cost.  Adding to any other brain has a cost based on the
+        //            // distance between the closest brain and that other brain
+        //            double linkCost = 0d;
+        //            if (brainIndex != closestBrainIndex)
+        //            {
+        //                var matchingBrain = brainBrainBurdens.FirstOrDefault(o => o.Item1 == brainIndex);
+        //                if (matchingBrain == null)
+        //                {
+        //                    //NOTE: All brain-brain distances should be passed in, so this should never happen
+        //                    continue;
+        //                }
+
+        //                linkCost = matchingBrain.Item2;
+        //            }
+
+        //            // LinkCost + IOStorageCost
+        //            burdens.Add(Tuple.Create(cntr, linkCost + BrainBurden.CalculateBurden(finalLinks[cntr].IOSize + ioSize, finalLinks[cntr].Size)));
+        //        }
+
+        //        if (burdens.Count == 0)
+        //        {
+        //            // This io has already been added to all brains
+        //            return;
+        //        }
+
+        //        int cheapestIndex = burdens.
+        //            OrderBy(o => o.Item2).First().Item1;
+
+        //        finalLinks[cheapestIndex].AddIOLink(ioIndex);
+        //    }
+
+        //    #endregion
+        //    #region Private Methods
+
+        //    private static void GetItemDelaunay(out SortedList<Tuple<int, int>, double> segments, out TriangleIndexed[] triangles, Item3D[] items)
+        //    {
+        //        Tuple<int, int>[] links = null;
+
+        //        if (items.Length < 2)
+        //        {
+        //            links = new Tuple<int, int>[0];
+        //            triangles = new TriangleIndexed[0];
+        //        }
+        //        else if (items.Length == 2)
+        //        {
+        //            links = new[] { Tuple.Create(0, 1) };
+        //            triangles = new TriangleIndexed[0];
+        //        }
+        //        else if (items.Length == 3)
+        //        {
+        //            links = new[] 
+        //            {
+        //                Tuple.Create(0, 1),
+        //                Tuple.Create(0, 2),
+        //                Tuple.Create(1, 2),
+        //            };
+
+        //            triangles = new[] { new TriangleIndexed(0, 1, 2, items.Select(o => o.Position.Value).ToArray()) };
+        //        }
+        //        else
+        //        {
+        //            Tetrahedron[] tetras = Math3D.GetDelaunay(items.Select(o => o.Position.Value).ToArray());
+        //            links = Tetrahedron.GetUniqueLines(tetras);
+        //            triangles = Tetrahedron.GetUniqueTriangles(tetras);
+        //        }
+
+        //        segments = GetLengths(links, items);
+        //    }
+
+        //    //NOTE: This makes sure that key.item1 is less than key.item2
+        //    private static SortedList<Tuple<int, int>, double> GetLengths(Tuple<int, int>[] keys, Item3D[] items)
+        //    {
+        //        SortedList<Tuple<int, int>, double> retVal = new SortedList<Tuple<int, int>, double>();
+
+        //        foreach (Tuple<int, int> key in keys.Select(o => o.Item1 < o.Item2 ? o : Tuple.Create(o.Item2, o.Item1)))
+        //        {
+        //            double distance = (items[key.Item1].Position.Value - items[key.Item2].Position.Value).Length;
+
+        //            retVal.Add(key, distance);
+        //        }
+
+        //        return retVal;
+        //    }
+
+        //    #endregion
+
+        //    #region OLD
+        //    //TODO: Break this method in half.  The first half figures out which order to iterate over 2s.  The second half distributes them
+        //    //TODO: Call the second half from a separate method that passes in random indices
+        //    //private static Tuple<int, int>[] Link12_Distribute_ORIG(Tuple<int, int>[] initial, Item3D[] items1, Item3D[] items2, DistributeDistances distances, ItemOverflowArgs overflowArgs)
+        //    //{
+        //    //    #region Item 1->2 Distances
+
+        //    //    // Figure out the distances between 2s and 1s
+        //    //    var distancesIO = Enumerable.Range(0, items2.Length).
+        //    //        Select(o => new
+        //    //        {
+        //    //            Index2 = o,
+        //    //            DistancesTo1 = Enumerable.Range(0, items1.Length).
+        //    //                Select(p => Tuple.Create(p, (items1[p].Position.Value - items2[o].Position.Value).Length)).        //Item1=items1 index, Item2=distance to item1
+        //    //                OrderBy(p => p.Item2).      // first item1 needs to be the shortest distance
+        //    //                ToArray()
+        //    //        }).
+        //    //        OrderBy(o => o.DistancesTo1.First().Item2).
+        //    //        ToArray();
+
+        //    //    #endregion
+
+        //    //    // Link IO to brains
+        //    //    BrainBurden[] links = Enumerable.Range(0, items1.Length).
+        //    //        Select(o => new BrainBurden(o, items1, items2)).
+        //    //        ToArray();
+
+        //    //    foreach (var distanceIO in distancesIO)
+        //    //    {
+        //    //        int ioIndex = distanceIO.Index2;
+        //    //        int closestBrainIndex = distanceIO.DistancesTo1[0].Item1;
+
+        //    //        AddIOLink(links, ioIndex, items2[ioIndex].Size, closestBrainIndex, distances.ResistancesItem1[closestBrainIndex]);
+        //    //    }
+
+        //    //    // Build the return
+        //    //    List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
+        //    //    foreach (BrainBurden burden in links)
+        //    //    {
+        //    //        retVal.AddRange(burden.IOLinks.Select(o => Tuple.Create(burden.Index, o)));
+        //    //    }
+
+        //    //    //return initial;
+        //    //    return retVal.ToArray();
+        //    //}
+        //    #endregion
+        //}
+
+        #endregion
+
+        //private void btn3DLinksBrainBrain_Click_ORIG(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        PrepFor3D();
+        //        ClearTempVisuals();
+
+        //        if (_brains3D.Count == 0)
+        //        {
+        //            return;
+        //        }
+
+        //        CombineItemsArgs combineArgs = new CombineItemsArgs()
+        //        {
+        //            //Ratio_Skinny = .3,
+        //            //Ratio_Wide = .88,
+        //            //MergeChance = 0,
+        //        };
+
+        //        SortedList<Tuple<int, int>, double> all;
+        //        LinkSet3D[] final;
+        //        Worker3D.Link_Self(out all, out final, _brains3D.ToArray(), combineArgs);
+
+        //        #region Draw
+
+        //        if (final != null)
+        //        {
+        //            foreach (var link in final)
+        //            {
+        //                // Group From
+        //                if (link.Set1.Items.Length > 1)
+        //                {
+        //                    _linksBrain3D.Add(DrawBrainGroup(_viewportFull, link.Set1.Positions, link.Set2.Center, _brainGroupColor));
+        //                }
+
+        //                // Group To
+        //                if (link.Set2.Items.Length > 1)
+        //                {
+        //                    _linksBrain3D.Add(DrawBrainGroup(_viewportFull, link.Set2.Positions, link.Set2.Center, _brainGroupColor));
+        //                }
+
+        //                // Link
+        //                Visual3D visual = AddLine(_viewportFull, link.Set1.Center, link.Set2.Center, _brainLinkColor);
+
+        //                _linksBrain3D.Add(new Item3D(visual, 0, new[] { link.Set1.Center, link.Set2.Center }));
+        //            }
+
+
+
+
+
+
+        //            //_linksBrain3D.Add(new Item3D(AddLines(_viewportFull, brainLinks, brainPositions, _brainLinkColor)));
+        //        }
+
+        //        #endregion
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        //private void btn3DLinksBrainIO_Click_ORIG(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        PrepFor3D();
+        //        ClearTempVisuals();
+
+        //        Item3D[] io = _inputs3D.
+        //            Concat(_outputs3D).
+        //            ToArray();
+
+        //        ItemOverflowArgs overflowArgs = new ItemOverflowArgs()
+        //        {
+        //            LinkResistanceMult = trk3DLinkResistMult.Value,
+        //        };
+
+        //        ExtraLinkArgs extraArgs = null;
+        //        if (!trk3DExtraLinkPercent.Value.IsNearZero())
+        //        {
+        //            extraArgs = new ExtraLinkArgs()
+        //            {
+        //                Percent = trk3DExtraLinkPercent.Value / 100d,
+        //                BySize = chk3DExtraLinkBySize.IsChecked.Value,
+        //                EvenlyDistribute = chk3DExtraLinkEvenDistribute.IsChecked.Value,
+        //            };
+        //        }
+
+        //        Tuple<int, int>[] links = Worker3D.Link_1_2(_brains3D.ToArray(), io, overflowArgs, extraArgs);
+
+        //        // Draw
+        //        _linksIO3D.AddRange(DrawBrainIOLinks3D(_viewportFull, links, _brains3D.ToArray(), io, _ioLinkColor, chk3DRainbowLinks.IsChecked.Value));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        //private void btn3DLinksBrainInput_Click_ORIG(object sender, RoutedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        PrepFor3D();
+        //        ClearTempVisuals();
+
+        //        ItemOverflowArgs overflowArgs = new ItemOverflowArgs()
+        //        {
+        //            LinkResistanceMult = trk3DLinkResistMult.Value,
+        //        };
+
+        //        Tuple<int, int>[] links = Worker3D.Link_1_2(_inputs3D.ToArray(), _brains3D.ToArray(), overflowArgs);
+
+        //        // Draw
+        //        _linksIO3D.AddRange(DrawBrainIOLinks3D(_viewportFull, links, _inputs3D.ToArray(), _brains3D.ToArray(), _ioLinkColor, chk3DRainbowLinks.IsChecked.Value));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
 
         #endregion
     }

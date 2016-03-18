@@ -658,7 +658,7 @@ namespace Game.Newt.Testers.SOM
             BitmapSource bitmap = UtilityWPF.ResizeImage(new BitmapImage(new Uri(image.Filename)), 1, 1);
 
             byte[][] colors = ((BitmapCustomCachedBytes)UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Black))
-                .GetColorBytes();
+                .GetColors_Byte();
 
             if (colors.Length != 1)
             {
@@ -702,7 +702,7 @@ namespace Game.Newt.Testers.SOM
             BitmapSource bitmap = UtilityWPF.ResizeImage(new BitmapImage(new Uri(image.Filename)), 1, 3);
 
             byte[][] colors = ((BitmapCustomCachedBytes)UtilityWPF.ConvertToColorArray(bitmap, false, Colors.Black))
-                .GetColorBytes();
+                .GetColors_Byte();
 
             if (colors.Length != 3)
             {

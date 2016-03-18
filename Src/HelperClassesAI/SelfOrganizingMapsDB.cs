@@ -225,6 +225,11 @@ namespace Game.HelperClassesAI
             double scaledNumber = absNumber * scale;
             int desiredBase = Math.Pow(scaledNumber, 1d / numDigits).ToInt_Ceiling();
 
+            if(desiredBase < 2)
+            {
+                desiredBase = 2;
+            }
+
             return new SOMConvertToVectorProps(numDigits, desiredBase, scale);
         }
 
@@ -524,7 +529,7 @@ namespace Game.HelperClassesAI
             }
 
             // Create a bezier through the points, then pull points off of that curve.  Unless I read this wrong, this is what bicubic interpolation of images does (I'm just doing 1D instead of 2D)
-            return Math3D.GetBezierPath(width, BezierSegmentDef.GetBezierSegments(normalized.Select(o => new Point3D(o, 0, 0)).ToArray(), isClosed: false)).
+            return BezierUtil.GetPath(width, BezierUtil.GetBezierSegments(normalized.Select(o => new Point3D(o, 0, 0)).ToArray(), isClosed: false)).
                 Select(o => o.X).
                 ToArray();
         }

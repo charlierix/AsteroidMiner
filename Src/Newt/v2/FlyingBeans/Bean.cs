@@ -16,7 +16,7 @@ namespace Game.Newt.v2.FlyingBeans
 {
     //TODO: Put some of this logic directly in the ship class
 
-    public class Bean : Ship
+    public class Bean : Bot
     {
         #region Events
 
@@ -35,16 +35,9 @@ namespace Game.Newt.v2.FlyingBeans
 
         #endregion
 
-        #region Constructor/Factory
+        #region Constructor
 
-        public static async Task<Bean> GetNewBeanAsync(EditorOptions options, ItemOptions itemOptions, FlyingBeanOptions beanOptions, ShipDNA dna, World world, int material_Ship, int material_Projectile, RadiationField radiation, IGravityField gravity, bool runNeural, bool repairPartPositions)
-        {
-            var construction = await GetNewShipConstructionAsync(options, itemOptions, dna, world, material_Ship, material_Projectile, radiation, gravity, null, null, runNeural, repairPartPositions);
-
-            return new Bean(construction, beanOptions);
-        }
-
-        protected Bean(ShipConstruction construction, FlyingBeanOptions beanOptions)
+        public Bean(BotConstruction_Result construction, FlyingBeanOptions beanOptions)
             : base(construction)
         {
             _beanOptions = beanOptions;

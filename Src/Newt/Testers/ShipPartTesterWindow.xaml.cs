@@ -1468,7 +1468,7 @@ namespace Game.Newt.Testers
 
             #region Declaration Section
 
-            private Ship _ship = null;
+            private Bot _bot = null;
             private Thruster[] _thrusters = null;
 
             private Viewport3D _viewport = null;
@@ -1494,10 +1494,10 @@ namespace Game.Newt.Testers
 
             #region Constructor
 
-            public ThrustController(Ship ship, Viewport3D viewport, ItemOptions itemOptions)
+            public ThrustController(Bot bot, Viewport3D viewport, ItemOptions itemOptions)
             {
-                _ship = ship;
-                _thrusters = ship.Thrusters;
+                _bot = bot;
+                _thrusters = bot.Thrusters;
                 _viewport = viewport;
                 _itemOptions = itemOptions;
 
@@ -1565,7 +1565,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
 
                 double elapsedTime = 1d;
                 DateTime curTick = DateTime.UtcNow;
@@ -1603,7 +1603,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
 
                 double elapsedTime = 1d;
                 DateTime curTick = DateTime.UtcNow;
@@ -1726,7 +1726,7 @@ namespace Game.Newt.Testers
                 #endregion
 
                 //EnsureThrustSetsCalculated();
-                Point3D centerMass = _ship.PhysicsBody.CenterOfMass;
+                Point3D centerMass = _bot.PhysicsBody.CenterOfMass;
                 var contributions = GetThrusterContributions(_shipCenterMass);
 
                 //bool canAddToZero = CanAddToZero(_contributions.Select(o => o.Torque));		// this method is flawed
@@ -1746,7 +1746,7 @@ namespace Game.Newt.Testers
 
                 ModelVisual3D model = new ModelVisual3D();
                 model.Content = geometry;
-                model.Transform = new TranslateTransform3D(_ship.PhysicsBody.PositionToWorld(centerMass).ToVector());
+                model.Transform = new TranslateTransform3D(_bot.PhysicsBody.PositionToWorld(centerMass).ToVector());
 
                 _debugVisuals.Add(model);
                 _viewport.Children.Add(model);
@@ -1773,8 +1773,8 @@ namespace Game.Newt.Testers
 
                 foreach (var thruster in contributions)
                 {
-                    lines.AddLine(_ship.PhysicsBody.PositionToWorld(centerMass), _ship.PhysicsBody.PositionToWorld(centerMass) + _ship.PhysicsBody.DirectionToWorld(thruster.Torque * scalePercent));
-                    opposites.AddLine(_ship.PhysicsBody.PositionToWorld(centerMass), _ship.PhysicsBody.PositionToWorld(centerMass) - _ship.PhysicsBody.DirectionToWorld(thruster.Torque * scalePercent));
+                    lines.AddLine(_bot.PhysicsBody.PositionToWorld(centerMass), _bot.PhysicsBody.PositionToWorld(centerMass) + _bot.PhysicsBody.DirectionToWorld(thruster.Torque * scalePercent));
+                    opposites.AddLine(_bot.PhysicsBody.PositionToWorld(centerMass), _bot.PhysicsBody.PositionToWorld(centerMass) - _bot.PhysicsBody.DirectionToWorld(thruster.Torque * scalePercent));
                 }
 
                 _debugVisuals.Add(lines);
@@ -1864,8 +1864,8 @@ namespace Game.Newt.Testers
             /// </summary>
             private List<Tuple<Thruster, int, double>> FireThrustLinear2(BodyApplyForceAndTorqueArgs e, double elapsedTime, Vector3D direction)
             {
-                Point3D center = _ship.PhysicsBody.CenterOfMass;
-                MassMatrix massMatrix = _ship.PhysicsBody.MassMatrix;
+                Point3D center = _bot.PhysicsBody.CenterOfMass;
+                MassMatrix massMatrix = _bot.PhysicsBody.MassMatrix;
 
                 ThrustContribution[] contributions = GetThrusterContributions(center);
 
@@ -2003,8 +2003,8 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                _shipCenterMass = _ship.PhysicsBody.CenterOfMass;
-                _shipMassMatrix = _ship.PhysicsBody.MassMatrix;
+                _shipCenterMass = _bot.PhysicsBody.CenterOfMass;
+                _shipMassMatrix = _bot.PhysicsBody.MassMatrix;
 
                 _contributions = GetThrusterContributions(_shipCenterMass);
 
@@ -4321,7 +4321,7 @@ namespace Game.Newt.Testers
 
         private MaterialManager _materialManager = null;
         private int _material_Asteroid = -1;
-        private int _material_Ship = -1;
+        private int _material_Bot = -1;
         private int _material_Sand = -1;
 
         private ScreenSpaceLines3D _boundryLines = null;
@@ -4336,7 +4336,7 @@ namespace Game.Newt.Testers
 
         private List<Visual3D> _currentVisuals = new List<Visual3D>();
         private Body _currentBody = null;
-        private Ship _ship = null;
+        private Bot _bot = null;
         private ShipDNA _shipDNA = null;		// eventually, ship should expose a method to create a dna.  But for now, just store it here
         private ThrustController _thrustController = null;
 
@@ -5201,14 +5201,33 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Ship, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
             }
             catch (Exception ex)
             {
@@ -5228,19 +5247,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5248,7 +5286,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5273,19 +5311,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5293,7 +5350,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5318,19 +5375,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5338,7 +5414,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5363,19 +5439,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5383,7 +5478,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5409,19 +5504,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5429,7 +5543,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5457,19 +5571,38 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5477,7 +5610,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5513,21 +5646,40 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
                 //double mass = _ship.PhysicsBody.Mass;
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5537,7 +5689,7 @@ namespace Game.Newt.Testers
 
                 //mass = _ship.PhysicsBody.Mass;
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5570,21 +5722,40 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
                 //double mass = _ship.PhysicsBody.Mass;
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5594,7 +5765,7 @@ namespace Game.Newt.Testers
 
                 //mass = _ship.PhysicsBody.Mass;
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5617,21 +5788,40 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
                 //double mass = _ship.PhysicsBody.Mass;
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5641,7 +5831,7 @@ namespace Game.Newt.Testers
 
                 //mass = _ship.PhysicsBody.Mass;
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5665,21 +5855,40 @@ namespace Game.Newt.Testers
 
                 ShipDNA shipDNA = ShipDNA.Create(parts);
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, false);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = false,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
                 //double mass = _ship.PhysicsBody.Mass;
 
-                _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
-                _ship.RecalculateMass();
+                _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5689,7 +5898,7 @@ namespace Game.Newt.Testers
 
                 //mass = _ship.PhysicsBody.Mass;
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -5712,8 +5921,19 @@ namespace Game.Newt.Testers
 
                 for (int cntr = 0; cntr < 100; cntr++)
                 {
+                    ShipExtraArgs extra = new ShipExtraArgs()
+                    {
+                        Options = _editorOptions,
+                        ItemOptions = _itemOptions,
+                        Material_Projectile = _material_Bot,
+                        Radiation = _radiation,
+                        Gravity = _gravity,
+                        RunNeural = true,
+                        RepairPartPositions = false,
+                    };
+
                     //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, true, true)) { }
-                    using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, true, false)) { }          // BAAAAAAAAAD
+                    //using (Ship shipTest = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra)) { }          // BAAAAAAAAAD
                     //using (Ship shipTest = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _radiation, _gravity, null, false, true)) { }        // GOOD
                 }
 
@@ -5823,22 +6043,41 @@ namespace Game.Newt.Testers
 
                 EnsureWorldStarted();
 
-                Ship ship = await Ship.GetNewShipAsync(_editorOptions, _itemOptions, shipDNA, _world, _material_Ship, _material_Ship, _radiation, _gravity, null, _map, false, chkLoadRepairPositions.IsChecked.Value);
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Bot,
+                    Radiation = _radiation,
+                    Gravity = _gravity,
+                    RunNeural = false,
+                    RepairPartPositions = chkLoadRepairPositions.IsChecked.Value,
+                };
+
+                //Ship ship = await Ship.GetNewShipAsync(shipDNA, _world, _material_Bot, _map, extra);
+                Bot bot = new Bot(BotConstructor.ConstructBot(shipDNA, core, extra));
 
                 ClearCurrent();
 
                 _shipDNA = shipDNA;
-                _ship = ship;
+                _bot = bot;
 
-                _ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
+                _bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Ship_ApplyForceAndTorque);
 
-                _thrustController = new ThrustController(_ship, _viewport, _itemOptions);
+                _thrustController = new ThrustController(_bot, _viewport, _itemOptions);
 
-                if (_ship.Fuel != null)
+                if (_bot.Fuel != null)
                 {
-                    _ship.Fuel.QuantityCurrent = _ship.Fuel.QuantityMax;
+                    _bot.Fuel.QuantityCurrent = _bot.Fuel.QuantityMax;
                 }
-                _ship.RecalculateMass();
+                _bot.RecalculateMass();
                 _thrustController.MassChanged(chkShipSimple.IsChecked.Value);
 
                 if (chkShipDebugVisuals.IsChecked.Value)
@@ -5846,7 +6085,7 @@ namespace Game.Newt.Testers
                     _thrustController.DrawDebugVisuals_Pre();
                 }
 
-                _map.AddItem(_ship);
+                _map.AddItem(_bot);
 
                 grdViewPort.Focus();
             }
@@ -6494,7 +6733,7 @@ namespace Game.Newt.Testers
                 EnsureWorldStarted();
                 ClearCurrent();
 
-                Body body = GetNewBody(CollisionShapeType.Box, Colors.Orange, new Vector3D(1, 1, 1), 1, new Point3D(0, 0, 0), Quaternion.Identity, _material_Ship);
+                Body body = GetNewBody(CollisionShapeType.Box, Colors.Orange, new Vector3D(1, 1, 1), 1, new Point3D(0, 0, 0), Quaternion.Identity, _material_Bot);
                 body.LinearDamping = .01f;
                 body.AngularDamping = new Vector3D(.01f, .01f, .01f);
 
@@ -6654,11 +6893,11 @@ namespace Game.Newt.Testers
                 _currentBody = null;
             }
 
-            if (_ship != null)
+            if (_bot != null)
             {
-                _map.RemoveItem(_ship, true);
-                _ship.Dispose();
-                _ship = null;
+                _map.RemoveItem(_bot, true);
+                _bot.Dispose();
+                _bot = null;
             }
 
             _shipDNA = null;
@@ -6718,7 +6957,7 @@ namespace Game.Newt.Testers
             material.Elasticity = .75d;
             material.StaticFriction = .5d;
             material.KineticFriction = .2d;
-            _material_Ship = _materialManager.AddMaterial(material);
+            _material_Bot = _materialManager.AddMaterial(material);
 
             // Sand
             material = new Game.Newt.v2.NewtonDynamics.Material();
@@ -6727,8 +6966,8 @@ namespace Game.Newt.Testers
             material.KineticFriction = .33d;
             _material_Sand = _materialManager.AddMaterial(material);
 
-            _materialManager.RegisterCollisionEvent(_material_Ship, _material_Asteroid, Collision_Ship);
-            _materialManager.RegisterCollisionEvent(_material_Ship, _material_Sand, Collision_Sand);
+            _materialManager.RegisterCollisionEvent(_material_Bot, _material_Asteroid, Collision_Ship);
+            _materialManager.RegisterCollisionEvent(_material_Bot, _material_Sand, Collision_Sand);
 
             #endregion
 
@@ -6762,7 +7001,7 @@ namespace Game.Newt.Testers
             // Physics
             CollisionHull hull = part.CreateCollisionHull(_world);
             Body body = new Body(hull, Matrix3D.Identity, part.TotalMass, new Visual3D[] { model });
-            body.MaterialGroupID = _material_Ship;
+            body.MaterialGroupID = _material_Bot;
             body.LinearDamping = .01f;
             body.AngularDamping = new Vector3D(.01f, .01f, .01f);
 

@@ -39,7 +39,7 @@ namespace Game.Newt.v2.Arcanorum
 
             public BotState State = BotState.None;
 
-            public BotNPC Bot = null;
+            public ArcBotNPC Bot = null;
 
             public double Lifespan = 45d;       // seconds
 
@@ -49,7 +49,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 lock (_parentLock)
                 {
-                    this.Bot = (BotNPC)item;
+                    this.Bot = (ArcBotNPC)item;
                     this.Rules = GetRules(this.Bot);
 
                     this.State = BotState.Added;
@@ -71,7 +71,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #region Private Methods
 
-            private FitnessTracker GetRules(Bot bot = null)
+            private FitnessTracker GetRules(ArcBot bot = null)
             {
                 //TODO: Base this on a tempate that was passed into the constructor
 
@@ -270,7 +270,7 @@ namespace Game.Newt.v2.Arcanorum
             parts.Add(new ShipPartDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
 
             // Brains
-            int numBrains = 1 + Convert.ToInt32(rand.NextPow(5, 1d, false) * 4);
+            int numBrains = 1 + Convert.ToInt32(rand.NextPow(5, 1d) * 4);
 
             for (int cntr = 0; cntr < numBrains; cntr++)
             {

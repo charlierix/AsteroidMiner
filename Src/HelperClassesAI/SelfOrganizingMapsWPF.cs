@@ -304,8 +304,8 @@ namespace Game.HelperClassesAI
                 edgePoints = ResizeConvexPolygon(edgePoints, areas[cntr]);
 
                 // Convert into a smooth blob
-                BezierSegmentDef[] bezier = BezierSegmentDef.GetBezierSegments(edgePoints.Select(o => o.ToPoint3D()).ToArray(), .25, true);
-                edgePoints = Math3D.GetBezierPath(75, bezier).
+                BezierSegment3D[] bezier = BezierUtil.GetBezierSegments(edgePoints.Select(o => o.ToPoint3D()).ToArray(), .25, true);
+                edgePoints = BezierUtil.GetPath(75, bezier).
                     Select(o => o.ToPoint2D()).
                     ToArray();
 

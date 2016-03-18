@@ -1224,7 +1224,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Class: PartDNA
+    #region Class: ShipPartDNA
 
     /// <summary>
     /// This holds properties of a part
@@ -1720,7 +1720,7 @@ namespace Game.Newt.v2.GameItems
         Thruster,
         TractorBeam,
         GrappleGun,
-        ProjectileGun,		// fires projectiles (could be simple slugs, or missles, or drones).  It will need an ammo tank that only it can use
+        ProjectileGun,		// fires projectiles (could be simple slugs, or missiles, or drones).  It will need an ammo tank that only it can use
         BeamGun,		// probably keep this short range, more like a laser sword, or flame thrower
         Spike,		// good for ramming
         VibroSpike,		// very good for ramming, consumes small amounts of energy

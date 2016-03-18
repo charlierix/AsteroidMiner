@@ -257,7 +257,7 @@ namespace Game.Newt.v2.Arcanorum
             List<TubeRingBase> rings = new List<TubeRingBase>();
             rings.Add(new TubeRingRegularPolygon(0, false, capRadius * .75, capRadius * .75, true));
             rings.Add(new TubeRingRegularPolygon(capRadius * .2, false, capRadius, capRadius, false));
-            rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("capWidth", from, to, capRadius * (1d + rand.NextPow(7d, 2.2d, false))), false, capRadius, capRadius, false));
+            rings.Add(new TubeRingRegularPolygon(WeaponDNA.GetKeyValue("capWidth", from, to, capRadius * (1d + rand.NextPow(7d, 2.2d))), false, capRadius, capRadius, false));
             rings.Add(new TubeRingRegularPolygon(capRadius * .8, false, capRadius * .75, capRadius * .75, true));
 
             double capHeight = TubeRingBase.GetTotalHeight(rings);

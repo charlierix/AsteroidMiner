@@ -694,6 +694,18 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
+    #region Class: SOMInput
+
+    /// <summary>
+    /// If all you want is a link to the original source, you can use this
+    /// </summary>
+    public class SOMInput<T> : ISOMInput
+    {
+        public T Source { get; set; }
+        public double[] Weights { get; set; }
+    }
+
+    #endregion
     #region Class: SOMNode
 
     public class SOMNode

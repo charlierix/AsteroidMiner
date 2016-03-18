@@ -15,8 +15,15 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    //TODO: Use color options class
-    //TODO: The brain stays static over its entire life.  Have a separate worker that prunes and strengthens nodes/links based on useage
+    //TODO: Rename this to BrainFixed
+
+    //TODO: This brain stays static over its entire life.  Make another brain that has a shell of neurons that are exposed publicly and stay static (just like
+    //all of this brain's neurons).  Then have a private interior that will change based on life experiences
+
+    //TODO: Make a class called BrainGroup, which will be a high level wrapper.
+    //Its scale decides how much/many actual brains to create (in its volume).
+    //It will decide which actual brains to create based on the parts nearby -- so if there's a camera nearby, it would instantiate a specialized vison brain,
+    //and wire that to the camera.  If there's a thruster nearby, it may instantiate a controller, etc
 
     #region Class: BrainToolItem
 
@@ -182,6 +189,71 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         #endregion
+        #region Internal Methods
+
+        internal static Model3D[] CreateInsideVisuals(double radius, List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, ScaleTransform3D scaleTransform)
+        {
+            List<Point3D[]> insidePoints = new List<Point3D[]>();
+            for (int cntr = 0; cntr < 3; cntr++)
+            {
+                GetLineBranch(insidePoints, Math3D.GetRandomVector_Spherical(radius).ToPoint(), radius, radius * .8d, .33d, 4);
+            }
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            List<Model3D> retVal = new List<Model3D>();
+
+            foreach (Point3D[] lineSegment in insidePoints)
+            {
+                GeometryModel3D geometry = new GeometryModel3D();
+                MaterialGroup material = new MaterialGroup();
+
+                Color color = WorldColors.BrainInsideStrand;		// storing this, because it's random
+                DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(color));
+                materialBrushes.Add(new MaterialColorProps(diffuse, color));
+                material.Children.Add(diffuse);
+
+                SpecularMaterial specular = WorldColors.BrainInsideStrandSpecular;
+                materialBrushes.Add(new MaterialColorProps(specular));
+                material.Children.Add(specular);
+
+                //if (!isFinal)
+                //{
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                selectionEmissives.Add(selectionEmissive);
+                //}
+
+                geometry.Material = material;
+                geometry.BackMaterial = material;
+
+                Vector3D line = lineSegment[1] - lineSegment[0];
+                double lineLength = line.Length;
+                double halfLength = lineLength * .5d;
+                double widestWidth = lineLength * .033d;
+
+                List<TubeRingBase> rings = new List<TubeRingBase>();
+                rings.Add(new TubeRingPoint(0, false));
+                rings.Add(new TubeRingRegularPolygon(halfLength, false, widestWidth, widestWidth, false));
+                rings.Add(new TubeRingPoint(halfLength, false));
+
+                Quaternion zRot = new Quaternion(new Vector3D(0, 0, 1), 360d * rand.NextDouble()).ToUnit();
+                Quaternion rotation = Math3D.GetRotation(new Vector3D(0, 0, 1), line).ToUnit();
+
+                Transform3DGroup transformGroup = new Transform3DGroup();
+                transformGroup.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Quaternion.Multiply(rotation, zRot))));
+                transformGroup.Children.Add(new TranslateTransform3D(lineSegment[0].ToVector()));
+                transformGroup.Children.Add(scaleTransform);
+
+                geometry.Geometry = UtilityWPF.GetMultiRingedTube(3, rings, true, false, transformGroup);
+
+                retVal.Add(geometry);
+            }
+
+            return retVal.ToArray();
+        }
+
+        #endregion
 
         #region Private Methods
 
@@ -191,9 +263,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             ScaleTransform3D scaleTransform = new ScaleTransform3D(SCALE, SCALE, SCALE);
 
-            int domeSegments = isFinal ? 2 : 10;
-            int cylinderSegments = isFinal ? 6 : 35;
-
             Model3DGroup retVal = new Model3DGroup();
 
             GeometryModel3D geometry;
@@ -202,67 +271,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
             SpecularMaterial specular;
 
             Transform3DGroup transformGroup = new Transform3DGroup();
-            //transformGroup.Children.Add(new TranslateTransform3D(0, 0, ));
             transformGroup.Children.Add(scaleTransform);
 
             #region Insides
 
             if (!isFinal)
             {
-                List<Point3D[]> insidePoints = new List<Point3D[]>();
-                for (int cntr = 0; cntr < 3; cntr++)
-                {
-                    GetLineBranch(insidePoints, Math3D.GetRandomVector_Spherical(INSIDEPOINTRADIUS).ToPoint(), INSIDEPOINTRADIUS, INSIDEPOINTRADIUS * .8d, .33d, 4);
-                }
-
-                Random rand = StaticRandom.GetRandomForThread();
-
-                foreach (Point3D[] lineSegment in insidePoints)
-                {
-                    geometry = new GeometryModel3D();
-                    material = new MaterialGroup();
-
-                    Color color = WorldColors.BrainInsideStrand;		// storing this, because it's random
-                    diffuse = new DiffuseMaterial(new SolidColorBrush(color));
-                    this.MaterialBrushes.Add(new MaterialColorProps(diffuse, color));
-                    material.Children.Add(diffuse);
-
-                    specular = WorldColors.BrainInsideStrandSpecular;
-                    this.MaterialBrushes.Add(new MaterialColorProps(specular));
-                    material.Children.Add(specular);
-
-                    //if (!isFinal)
-                    //{
-                    EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-                    material.Children.Add(selectionEmissive);
-                    base.SelectionEmissives.Add(selectionEmissive);
-                    //}
-
-                    geometry.Material = material;
-                    geometry.BackMaterial = material;
-
-                    Vector3D line = lineSegment[1] - lineSegment[0];
-                    double lineLength = line.Length;
-                    double halfLength = lineLength * .5d;
-                    double widestWidth = lineLength * .033d;
-
-                    List<TubeRingBase> rings = new List<TubeRingBase>();
-                    rings.Add(new TubeRingPoint(0, false));
-                    rings.Add(new TubeRingRegularPolygon(halfLength, false, widestWidth, widestWidth, false));
-                    rings.Add(new TubeRingPoint(halfLength, false));
-
-                    Quaternion zRot = new Quaternion(new Vector3D(0, 0, 1), 360d * rand.NextDouble()).ToUnit();
-                    Quaternion rotation = Math3D.GetRotation(new Vector3D(0, 0, 1), line).ToUnit();
-
-                    transformGroup = new Transform3DGroup();
-                    transformGroup.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Quaternion.Multiply(rotation, zRot))));
-                    transformGroup.Children.Add(new TranslateTransform3D(lineSegment[0].ToVector()));
-                    transformGroup.Children.Add(scaleTransform);
-
-                    geometry.Geometry = UtilityWPF.GetMultiRingedTube(3, rings, true, false, transformGroup);
-
-                    retVal.Children.Add(geometry);
-                }
+                Model3D[] insideModels = CreateInsideVisuals(INSIDEPOINTRADIUS, this.MaterialBrushes, base.SelectionEmissives, scaleTransform);
+                retVal.Children.AddRange(insideModels);
             }
 
             #endregion
@@ -333,7 +349,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             geometry.BackMaterial = material;
 
             transformGroup = new Transform3DGroup();
-            //transformGroup.Children.Add(new TranslateTransform3D(0, 0, 1.65 / -2d));
             transformGroup.Children.Add(scaleTransform);
             transformGroup.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));		// this is just so it's not obvious that the brains are shared visuals
 

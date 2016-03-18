@@ -168,12 +168,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 blip = GetStationBlip((SpaceStation2D)e.Item);
                 blips.Add(Tuple.Create(blip, true));
             }
-            else if (e.Item is Ship)
+            else if (e.Item is Bot)
             {
-                blip = GetShipBlip((Ship)e.Item);
+                blip = GetShipBlip((Bot)e.Item);
                 blips.Add(Tuple.Create(blip, true));
 
-                blip = GetShipCompassBlip((Ship)e.Item);
+                blip = GetShipCompassBlip((Bot)e.Item);
                 blips.Add(Tuple.Create(blip, false));
             }
 
@@ -383,7 +383,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             return retVal;
         }
 
-        private static Visual3D GetShipBlip(Ship ship)
+        private static Visual3D GetShipBlip(Bot ship)
         {
             //TODO:  This makes an arrow that always points north, which is just annoying.  Instead, make the ship a dot, but put the arrow along the edge
             // of the minimap (just translate the arrow by a certain Y)
@@ -416,7 +416,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // Exit Function
             return retVal;
         }
-        private static Visual3D GetShipCompassBlip(Ship ship)
+        private static Visual3D GetShipCompassBlip(Bot ship)
         {
             ScreenSpaceLines3D retVal = new ScreenSpaceLines3D(true);
             retVal.Thickness = 2d;

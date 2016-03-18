@@ -19,6 +19,8 @@ using Game.HelperClassesWPF.Controls2D;
 using Game.HelperClassesWPF.Primitives3D;
 using System.Text.RegularExpressions;
 using Game.Newt.v2.AsteroidMiner.MapParts;
+using Game.Newt.v2.GameItems.MapParts;
+using System.Windows.Threading;
 
 namespace Game.Newt.Testers
 {
@@ -302,7 +304,7 @@ namespace Game.Newt.Testers
                 bool foundLarger = false;
 
                 SortedList<int, ITriangle> planes = new SortedList<int, ITriangle>();
-                SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers = new SortedList<Tuple<int, int>, BezierSegmentDef>();
+                SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers = new SortedList<Tuple<int, int>, BezierSegment3D>();
 
                 for (int cntr = 0; cntr < triangles.Length; cntr++)
                 {
@@ -366,7 +368,7 @@ namespace Game.Newt.Testers
 
             #region Private Methods
 
-            private static ITriangle[] Divide(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            private static ITriangle[] Divide(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers)
             {
                 // Define beziers for the three edges
                 var curves = Triangle.Edges.
@@ -407,7 +409,7 @@ namespace Game.Newt.Testers
                 return retVal;
             }
 
-            private static TriangleIndexed[] Divide_4(ITriangleIndexed triangle, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_4(ITriangleIndexed triangle, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -420,13 +422,13 @@ namespace Game.Newt.Testers
                 map.Add(triangle.Index1);      // 1
                 map.Add(triangle.Index2);      // 2
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_01).Item2));       // 3
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_01).Item2));       // 3
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_12).Item2));       // 4
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_12).Item2));       // 4
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_20).Item2));       // 5
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == TriangleEdge.Edge_20).Item2));       // 5
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -440,7 +442,7 @@ namespace Game.Newt.Testers
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] Divide_SkinnyBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_SkinnyBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -451,10 +453,10 @@ namespace Game.Newt.Testers
                 map.Add(triangle.GetCommonIndex(edgeLengths[1].Item1, edgeLengths[2].Item1));        // Top (1)
                 map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[2].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[1].Item1).Item2));        // Mid Left (3)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[1].Item1).Item2));        // Mid Left (3)
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Right (4)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Right (4)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -467,7 +469,7 @@ namespace Game.Newt.Testers
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] Divide_WideBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegmentDef>[] curves)
+            private static TriangleIndexed[] Divide_WideBase(ITriangleIndexed triangle, Tuple<TriangleEdge, double>[] edgeLengths, Tuple<TriangleEdge, BezierSegment3D>[] curves)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -478,7 +480,7 @@ namespace Game.Newt.Testers
                 map.Add(triangle.GetCommonIndex(edgeLengths[0].Item1, edgeLengths[1].Item1));        // Top (1)
                 map.Add(triangle.GetCommonIndex(edgeLengths[2].Item1, edgeLengths[1].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Bottom (3)
+                points.Add(BezierUtil.GetPoint(.5, curves.First(o => o.Item1 == edgeLengths[2].Item1).Item2));        // Mid Bottom (3)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -491,7 +493,7 @@ namespace Game.Newt.Testers
                 return retVal.ToArray();
             }
 
-            private static long[] DivideNeighbor(ITriangleIndexed triangle, List<ITriangle> returnList, SortedList<Tuple<int, int>, BezierSegmentDef> edgeBeziers)
+            private static long[] DivideNeighbor(ITriangleIndexed triangle, List<ITriangle> returnList, SortedList<Tuple<int, int>, BezierSegment3D> edgeBeziers)
             {
                 // Find beziers for the edges of this triangle (if a bezier was created, then that edge was sliced in half)
                 var bisectedEdges = Triangle.Edges.
@@ -534,7 +536,7 @@ namespace Game.Newt.Testers
                 return retVal;
             }
 
-            private static TriangleIndexed[] DivideNeighbor_1(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef> bisectedEdge)
+            private static TriangleIndexed[] DivideNeighbor_1(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D> bisectedEdge)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -545,7 +547,7 @@ namespace Game.Newt.Testers
                 map.Add(triangle.GetOppositeIndex(bisectedEdge.Item1));        // Top (1)
                 map.Add(triangle.GetIndex(bisectedEdge.Item1, false));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdge.Item3));        // Mid Bottom (3)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdge.Item3));        // Mid Bottom (3)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -557,7 +559,7 @@ namespace Game.Newt.Testers
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] DivideNeighbor_2(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            private static TriangleIndexed[] DivideNeighbor_2(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D>[] bisectedEdges)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -568,10 +570,10 @@ namespace Game.Newt.Testers
                 map.Add(triangle.GetCommonIndex(bisectedEdges[0].Item1, bisectedEdges[1].Item1));        // Top (1)
                 map.Add(triangle.GetUncommonIndex(bisectedEdges[1].Item1, bisectedEdges[0].Item1));        // Bottom Right (2)
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[0].Item3));        // Mid Left (3)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges[0].Item3));        // Mid Left (3)
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges[1].Item3));        // Mid Right (4)
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges[1].Item3));        // Mid Right (4)
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -584,7 +586,7 @@ namespace Game.Newt.Testers
 
                 return retVal.ToArray();
             }
-            private static TriangleIndexed[] DivideNeighbor_3(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegmentDef>[] bisectedEdges)
+            private static TriangleIndexed[] DivideNeighbor_3(ITriangleIndexed triangle, Tuple<TriangleEdge, Tuple<int, int>, BezierSegment3D>[] bisectedEdges)
             {
                 List<Point3D> points = new List<Point3D>();
                 List<int> map = new List<int>();
@@ -595,13 +597,13 @@ namespace Game.Newt.Testers
                 map.Add(triangle.Index1);      // 1
                 map.Add(triangle.Index2);      // 2
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_01).Item3));       // 3
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_01).Item3));       // 3
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_12).Item3));       // 4
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_12).Item3));       // 4
                 map.Add(points.Count - 1);
 
-                points.Add(Math3D.GetBezierPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_20).Item3));       // 5
+                points.Add(BezierUtil.GetPoint(.5, bisectedEdges.First(o => o.Item1 == TriangleEdge.Edge_20).Item3));       // 5
                 map.Add(points.Count - 1);
 
                 Point3D[] pointArr = points.ToArray();
@@ -628,14 +630,14 @@ namespace Game.Newt.Testers
                 }
             }
 
-            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegmentDef> edges, double controlPercent = .25d)
+            private static BezierSegment3D GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, SortedList<Tuple<int, int>, BezierSegment3D> edges, double controlPercent = .25d)
             {
                 int fromIndex = triangle.GetIndex(edge, true);
                 int toIndex = triangle.GetIndex(edge, false);
 
                 var key = Tuple.Create(Math.Min(fromIndex, toIndex), Math.Max(fromIndex, toIndex));
 
-                BezierSegmentDef retVal;
+                BezierSegment3D retVal;
                 if (edges.TryGetValue(key, out retVal))
                 {
                     return retVal;
@@ -652,7 +654,7 @@ namespace Game.Newt.Testers
             /// snapped to the coresponding planes.  That way, any beziers that meet at a point will have a smooth
             /// transition
             /// </summary>
-            private static BezierSegmentDef GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, double controlPercent = .25d)
+            private static BezierSegment3D GetCurvedEdge(ITriangleIndexed triangle, TriangleEdge edge, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes, double controlPercent = .25d)
             {
                 // Points
                 int fromIndex = triangle.GetIndex(edge, true);
@@ -672,7 +674,7 @@ namespace Game.Newt.Testers
                 Point3D fromControl = Math3D.GetClosestPoint_Plane_Point(fromPlane, fromPoint + (dir * controlPercent));
                 Point3D toControl = Math3D.GetClosestPoint_Plane_Point(toPlane, toPoint + (-dir * controlPercent));
 
-                return new BezierSegmentDef(fromIndex, toIndex, new[] { fromControl, toControl }, triangle.AllPoints);
+                return new BezierSegment3D(fromIndex, toIndex, new[] { fromControl, toControl }, triangle.AllPoints);
             }
 
             private static ITriangle GetTangentPlane(int index, ITriangleIndexed[] triangles, SortedList<int, ITriangle> planes)
@@ -882,6 +884,8 @@ namespace Game.Newt.Testers
 
             #endregion
 
+            #region OLD
+
             /// <summary>
             /// This divides the hull into a set of cells.  It includes the voronoi walls and interior cells, but not outside the hull
             /// </summary>
@@ -889,26 +893,53 @@ namespace Game.Newt.Testers
             /// Item1=Index of control point
             /// Item2=Cell for that control point
             /// </returns>
-            public static Tuple<int, ITriangleIndexed[]>[] SliceHull(ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            //public static Tuple<int, ITriangleIndexed[]>[] SliceHull(ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            //{
+            //    // Intersect the voronoi and hull
+            //    PatchFragment[] hullIntersects = GetFragments(hull, voronoi);
+
+            //    Point3D hullCenter = Math3D.GetCenter(hull.SelectMany(o => new[] { o.Point0, o.Point1, o.Point2 }));
+
+            //    // Convert each intersect patch into a sub hull
+            //    var intersectSubs = hullIntersects.
+            //        Select(o => Tuple.Create(o.ControlPointIndex, GetSubHull(o, hull, voronoi, hullCenter))).
+            //        ToArray();
+
+
+            //    //TODO: Detect any control points that are completely internal and return them as well
+
+
+
+            //    return intersectSubs;
+            //}
+
+            #endregion
+
+            /// <summary>
+            /// This will return the triangles sliced by voronoi regions
+            /// </summary>
+            /// <param name="triangles">A list of triangles.  Doesn't need to be a closed hull</param>
+            /// <returns>
+            /// Item1=Index of control point
+            /// Item2=Set of triangles inside that control point's region
+            /// </returns>
+            public static PatchFragment[] GetFragments(ITriangleIndexed[] triangles, VoronoiResult3D voronoi)
             {
-                // Intersect the voronoi and hull
-                PatchFragment[] hullIntersects = GetFragments(hull, voronoi);
+                if (triangles == null || triangles.Length == 0)
+                {
+                    return new PatchFragment[0];
+                }
 
-                Point3D hullCenter = Math3D.GetCenter(hull.SelectMany(o => new[] { o.Point0, o.Point1, o.Point2 }));
+                Point3D[] allPoints = triangles[0].AllPoints;
 
-                // Convert each intersect patch into a sub hull
-                var intersectSubs = hullIntersects.
-                    Select(o => Tuple.Create(o.ControlPointIndex, GetSubHull(o, hull, voronoi, hullCenter))).
-                    ToArray();
+                // Figure out which control point owns each triangle point
+                int[] controlPointsByTrianglePoint = GetNearestControlPoints(allPoints, voronoi);
 
-
-                //TODO: Detect any control points that are completely internal and return them as well
-
-
-
-                return intersectSubs;
+                // Divide the triangles by control point
+                return GetTrianglesByControlPoint(triangles, voronoi, controlPointsByTrianglePoint);
             }
 
+            #region face polys 1
 
             public static TestFaceResult[] GetTestFacePolys(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
             {
@@ -980,7 +1011,8 @@ namespace Game.Newt.Testers
                 return retVal.ToArray();
             }
 
-
+            #endregion
+            #region face polys 2
 
             public static FaceTriangulation[] GetTestFacePolys2(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
             {
@@ -1000,31 +1032,305 @@ namespace Game.Newt.Testers
                 return faceTriangles;
             }
 
+            #endregion
+            #region face polys 3
 
-
-            /// <summary>
-            /// This will return the triangles sliced by voronoi regions
-            /// </summary>
-            /// <param name="triangles">A list of triangles.  Doesn't need to be a closed hull</param>
-            /// <returns>
-            /// Item1=Index of control point
-            /// Item2=Set of triangles inside that control point's region
-            /// </returns>
-            public static PatchFragment[] GetFragments(ITriangleIndexed[] triangles, VoronoiResult3D voronoi)
+            //NOTE: This version3 is too fragile.  Keep the part that extends the face, but then do a convex hull to
+            //get the final triangles.  That will clean up any holes
+            public static TestFaceResult[] GetTestFacePolys3(PatchFragment patch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
             {
-                if (triangles == null || triangles.Length == 0)
+                List<TestFaceResult> retVal = new List<TestFaceResult>();
+
+                var hullAABB = Math3D.GetAABB(hull);
+                double rayExtend = (hullAABB.Item2 - hullAABB.Item1).Length * 10;
+
+                int[] faces = voronoi.FacesByControlPoint[patch.ControlPointIndex];
+
+                var workLater = new List<Tuple<int, Point3D[], Tuple<TriangleFragment, Tuple<TriangleEdge, int>[]>[]>>();
+
+                foreach (int faceIndex in faces)
                 {
-                    return new PatchFragment[0];
+                    var intersects = patch.Polygon.
+                        Select(o => new
+                        {
+                            Triangle = o,
+                            FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray()
+                        }).
+                        Where(o => o.FaceHits.Length > 0).
+                        ToArray();
+
+                    Point3D[] points = intersects.
+                        SelectMany(o => o.FaceHits.SelectMany(p => new[] { o.Triangle.Triangle.GetPoint(p.Item1, true), o.Triangle.Triangle.GetPoint(p.Item1, false) })).
+                        ToArray();
+
+                    if (points.Length == 0)
+                    {
+                        // Add the entire face
+                        //NOTE: Open faces should be ignored, because the only ones we care about are the ones that intersect.  Imagine the hull intersecing
+                        //the base of a Y.  The V portion of the Y should be ignored
+                        if (voronoi.Faces[faceIndex].IsClosed)
+                        {
+                            //TODO: Need an additional filter to see if this face touches the hull.  Store this face for later inclusion once the hull is more fully worked
+                            //TODO: For v4, don't include this.  Just let the convex hull method fill in holes
+                            retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, voronoi.Faces[faceIndex].GetPolygonTriangles(), null));
+                        }
+                        continue;
+                    }
+
+                    Point3D[] newPoints = AddFaceVerticies3(points, voronoi.Faces[faceIndex], rayExtend);
+
+                    if (newPoints.Length == points.Length)
+                    {
+                    }
+
+                    points = newPoints;
+
+
+                    if (points.Length < 3)
+                    {
+                        workLater.Add(Tuple.Create(faceIndex, points, intersects.Select(o => Tuple.Create(o.Triangle, o.FaceHits)).ToArray()));
+                        continue;
+                    }
+
+                    // Triangulate these points
+                    //TODO: Can't assume that the face intersects are convex
+                    var hull2D = Math2D.GetConvexHull(points);
+                    TriangleIndexed[] triangles = Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+
+                    retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, triangles, null));
                 }
 
-                Point3D[] allPoints = triangles[0].AllPoints;
 
-                // Figure out which control point owns each triangle point
-                int[] controlPointsByTrianglePoint = GetNearestControlPoints(allPoints, voronoi);
 
-                // Divide the triangles by control point
-                return GetTrianglesByControlPoint(triangles, voronoi, controlPointsByTrianglePoint);
+                //TODO: Dedupe points across sets of triangles
+
+
+
+                return retVal.ToArray();
             }
+            //NOTE: This method will never work 100% of the time.  It is only looking at the part of the intersection with the face
+            //Instead, it needs to look at the intersection of the faces that clip the hull, and see if those common face verticies should be part of the hull
+            private static Point3D[] AddFaceVerticies3(Point3D[] points, Face3D face, double rayExtend)
+            {
+                // Detect which of the points are on the face's edge, and extend along that edge
+                var faceEdgeHits = face.Edges.
+                    Select(o => new
+                    {
+                        Edge = o,
+                        Points = points.Where(p => Math1D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                    }).
+                    Where(o => o.Points.Length > 0).
+                    ToArray();
+
+                // Choose one of the points that aren't in faceEdgeHits.  This will define a direction not to go.  Then go through all the
+                // face's points, and keep the ones that are the opposite direction of that line
+
+                Point3D[] edgePoints = faceEdgeHits.
+                    SelectMany(o => o.Points).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (edgePoints.Length > 2)
+                {
+                    return points.
+                        Concat(edgePoints).
+                        Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                        ToArray();
+                }
+
+                if (edgePoints == null) return points;
+                else if (edgePoints.Length != 2) return points;
+
+                Point3D? otherPoint = points.FirstOrDefault(o => !edgePoints.Any(p => p.IsNearValue(o)));
+
+                if (otherPoint == null) return points;
+
+                Point3D otherPoint2 = Math3D.GetClosestPoint_Line_Point(edgePoints[0], edgePoints[1] - edgePoints[0], otherPoint.Value);
+
+                // Detect thin triangle
+                //TODO: Choose another point
+                double distanceOther = (otherPoint.Value - otherPoint2).Length;
+                //if (otherPoint.Value.IsNearValue(otherPoint2))
+                if (distanceOther.IsNearZero())
+                    return points;
+
+                double distanceLine = (edgePoints[1] - edgePoints[0]).Length;
+
+                if (distanceOther / distanceLine < .01)
+                    return points;
+
+                Vector3D otherLine = otherPoint.Value - otherPoint2;
+
+                Point3D[] faceMatches = face.Edges.
+                    Select(o => new[] { o.Point0, o.GetPoint1Ext(rayExtend) }).
+                    SelectMany(o => o).
+                    Where(o => Vector3D.DotProduct(o - otherPoint2, otherLine) < 0).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (faceMatches.Length == 0) return points;
+
+                return points.
+                    Concat(faceMatches).
+                    ToArray();
+            }
+
+            #endregion
+            #region face polys 4
+
+            public static TriangleIndexed[] GetTestFacePolys4(PatchFragment patch, ITriangleIndexed[] hullPatch, ITriangleIndexed[] hull, VoronoiResult3D voronoi)
+            {
+                List<TestFaceResult> retVal = new List<TestFaceResult>();
+
+                var hullAABB = Math3D.GetAABB(hull);
+                double rayExtend = (hullAABB.Item2 - hullAABB.Item1).Length * 10;
+
+                int[] faces = voronoi.FacesByControlPoint[patch.ControlPointIndex];
+
+                List<int> potentialFullFaces = new List<int>();
+
+                foreach (int faceIndex in faces)
+                {
+                    var intersects = patch.Polygon.
+                        Select(o => new
+                        {
+                            Triangle = o,
+                            FaceHits = o.FaceIndices.Where(p => p.Item2 == faceIndex).ToArray()
+                        }).
+                        Where(o => o.FaceHits.Length > 0).
+                        ToArray();
+
+                    Point3D[] points = intersects.
+                        SelectMany(o => o.FaceHits.SelectMany(p => new[] { o.Triangle.Triangle.GetPoint(p.Item1, true), o.Triangle.Triangle.GetPoint(p.Item1, false) })).
+                        Distinct((p1, p2) => Math3D.IsNearValue(p1, p2)).
+                        ToArray();
+
+                    if (points.Length == 0)
+                    {
+                        // Add the entire face
+                        //NOTE: Open faces should be ignored, because the only ones we care about are the ones that intersect.  Imagine the hull intersecing
+                        //the base of a Y.  The V portion of the Y should be ignored
+                        if (voronoi.Faces[faceIndex].IsClosed)
+                        {
+                            //TODO: Need an additional filter to see if this face touches the hull.  Store this face for later inclusion once the hull is more fully worked
+                            //TODO: For v4, don't include this.  Just let the convex hull method fill in holes
+                            //retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, voronoi.Faces[faceIndex].GetPolygonTriangles(), null));
+                            potentialFullFaces.Add(faceIndex);
+                        }
+                        continue;
+                    }
+
+                    Point3D[] newPoints = AddFaceVerticies4(points, voronoi.Faces[faceIndex], rayExtend);
+                    if (newPoints.Length == points.Length)
+                    {
+                    }
+                    points = newPoints;
+
+
+                    if (points.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    // Triangulate these points
+                    //TODO: Can't assume that the face intersects are convex
+                    var hull2D = Math2D.GetConvexHull(points);
+                    TriangleIndexed[] triangles = Math2D.GetTrianglesFromConvexPoly(hull2D.PerimiterLines.Select(o => points[o]).ToArray());
+
+                    retVal.Add(new TestFaceResult(voronoi.Faces[faceIndex], faceIndex, triangles, null));
+                }
+
+
+                //TODO: Add skipped whole faces
+
+
+                // Convert to a convex hull.  This will clean up any small holes that were missed above
+                List<Point3D> finalPoints = new List<Point3D>();
+                finalPoints.AddRange(TriangleIndexed.GetUsedPoints(retVal.Select(o => UtilityCore.Iterate(o.Poly1, o.Poly2))));
+                finalPoints.AddRangeUnique(TriangleIndexed.GetUsedPoints(hullPatch), (p1, p2) => Math3D.IsNearValue(p1, p2));
+
+                var returnHull = Math3D.GetConvexHull(finalPoints.ToArray());
+
+                Point3D[] hullDeduped = TriangleIndexed.GetUsedPoints(returnHull);
+
+                return returnHull;
+            }
+            private static Point3D[] AddFaceVerticies4(Point3D[] points, Face3D face, double rayExtend)
+            {
+                // Detect which of the points are on the face's edge, and extend along that edge
+                var faceEdgeHits = face.Edges.
+                    Select(o => new
+                    {
+                        Edge = o,
+                        Points = points.Where(p => Math1D.IsNearZero(Math3D.GetClosestDistance_Line_Point(o.Point0, o.DirectionExt, p))).ToArray()        // Even though the edge is finite, there should never be a case where a face hit is off the edge segment.  So save some processing and just assume it's a line
+                    }).
+                    Where(o => o.Points.Length > 0).
+                    ToArray();
+
+                // If the edge hits are on one edge, then it is a polygon on the face, and the face's verticies should't be added (they definately
+                // outside the polygon)
+                if (faceEdgeHits.Length == 1) return points;
+
+                // Choose one of the points that aren't in faceEdgeHits.  This will define a direction not to go.  Then go through all the
+                // face's points, and keep the ones that are the opposite direction of that line
+
+                Point3D[] edgePoints = faceEdgeHits.
+                    SelectMany(o => o.Points).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (edgePoints.Length > 2)
+                {
+                    return points.
+                        Concat(edgePoints).
+                        Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                        ToArray();
+                }
+
+                if (edgePoints == null) return points;
+                else if (edgePoints.Length != 2) return points;
+
+                // Find the point that is farthest from the intersects
+                Vector3D line = edgePoints[1] - edgePoints[0];
+
+                var otherPoint = points.
+                    Where(o => !edgePoints.Any(p => p.IsNearValue(o))).
+                    Select(o =>
+                    {
+                        Point3D intersect = Math3D.GetClosestPoint_Line_Point(edgePoints[0], line, o);
+                        Vector3D heightLine = o - intersect;
+
+                        return new
+                        {
+                            Intersect = intersect,
+                            HeightLine = heightLine,
+                            HeightLineLen = heightLine.Length,
+                        };
+                    }).
+                    OrderByDescending(o => o.HeightLineLen).
+                    FirstOrDefault();
+
+                // Detect thin triangle
+                if (otherPoint == null) return points;
+                else if (otherPoint.HeightLine.IsNearZero()) return points;
+                else if (otherPoint.HeightLineLen / line.Length < .015) return points;
+
+                // Draw lines between the face verticies and that intersect points, and keep the ones with a negative dot product (the verticies that are away from that line)
+                Point3D[] faceMatches = face.Edges.
+                    Select(o => new[] { o.Point0, o.GetPoint1Ext(rayExtend) }).
+                    SelectMany(o => o).
+                    Where(o => Vector3D.DotProduct(o - otherPoint.Intersect, otherPoint.HeightLine) < 0).
+                    Distinct((o1, o2) => Math3D.IsNearValue(o1, o2)).
+                    ToArray();
+
+                if (faceMatches.Length == 0) return points;
+
+                return points.
+                    Concat(faceMatches).
+                    ToArray();
+            }
+
+            #endregion
 
             #region Private Methods - sub hulls
 
@@ -3532,6 +3838,13 @@ namespace Game.Newt.Testers
         private AsteroidShatter _shatter = null;
         private ITriangleIndexed[][] _multiHull = null;
 
+        private readonly DispatcherTimer _timerExplodeShatterAsteroid;
+
+        private double _explodePercent = 0;
+        private bool _explodeIsUp = true;
+        private DateTime _explodeNextTransition = DateTime.MinValue;
+        private List<Tuple<TranslateTransform3D, Vector3D>> _explodingSubHulls = new List<Tuple<TranslateTransform3D, Vector3D>>();
+
         #endregion
 
         #region Constructor
@@ -3539,6 +3852,13 @@ namespace Game.Newt.Testers
         public PotatoWindow()
         {
             InitializeComponent();
+
+            _timerExplodeShatterAsteroid = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(25),
+                IsEnabled = false,
+            };
+            _timerExplodeShatterAsteroid.Tick += TimerExplodeShatterAsteroid_Tick;
 
             _isInitialized = true;
         }
@@ -3574,6 +3894,56 @@ namespace Game.Newt.Testers
         private void Window_Closed(object sender, EventArgs e)
         {
 
+        }
+
+        private void TimerExplodeShatterAsteroid_Tick(object sender, EventArgs e)
+        {
+            const double INCREMENT = .03;
+
+            try
+            {
+                if (_explodingSubHulls.Count == 0)
+                    return;
+                else if (DateTime.UtcNow < _explodeNextTransition)
+                    return;
+
+                //TODO: Increment/Decrement _explodePercent
+                if (_explodeIsUp)
+                    _explodePercent += INCREMENT;
+                else
+                    _explodePercent -= INCREMENT;
+
+                if (_explodePercent < 0)
+                {
+                    _explodePercent = 0;
+                    _explodeIsUp = true;
+                    _explodeNextTransition = DateTime.UtcNow + TimeSpan.FromSeconds(2);
+                }
+                else if (_explodePercent > 1)
+                {
+                    _explodePercent = 1;
+                    _explodeIsUp = false;
+                    _explodeNextTransition = DateTime.UtcNow + TimeSpan.FromSeconds(3);
+                }
+
+                // Run the linear percent through a sine to get percent along the direction vector
+                double finalPercent = Math.Cos(Math.PI * _explodePercent);
+                finalPercent *= -.5;
+                finalPercent += .5;
+
+                foreach (var subHull in _explodingSubHulls)
+                {
+                    Vector3D offset = subHull.Item2 * finalPercent;
+
+                    subHull.Item1.OffsetX = offset.X;
+                    subHull.Item1.OffsetY = offset.Y;
+                    subHull.Item1.OffsetZ = offset.Z;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
@@ -5297,12 +5667,19 @@ namespace Game.Newt.Testers
                     return;
                 }
 
+                int numPoints;
+                if (!int.TryParse(txtShatterVoronoiCount.Text, out numPoints))
+                {
+                    MessageBox.Show("Couldn't parse the number of points as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 var aabb = Math3D.GetAABB(_shatter.HullPoints);
 
                 double radius = Math.Sqrt(Math.Max(aabb.Item1.ToVector().LengthSquared, aabb.Item2.ToVector().LengthSquared));
                 radius *= .33;
 
-                Point3D[] controlPoints = Enumerable.Range(0, StaticRandom.Next(6, 15)).
+                Point3D[] controlPoints = Enumerable.Range(0, numPoints).
                     Select(o => Math3D.GetRandomVector(radius).ToPoint()).
                     ToArray();
 
@@ -5332,12 +5709,19 @@ namespace Game.Newt.Testers
                     return;
                 }
 
+                int numPoints;
+                if (!int.TryParse(txtShatterVoronoiCount.Text, out numPoints))
+                {
+                    MessageBox.Show("Couldn't parse the number of points as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 var aabb = Math3D.GetAABB(_shatter.HullPoints);
 
                 double radius = Math.Sqrt(Math.Max(aabb.Item1.ToVector().LengthSquared, aabb.Item2.ToVector().LengthSquared));
                 radius *= .75;
 
-                Point3D[] controlPoints = Enumerable.Range(0, StaticRandom.Next(6, 15)).
+                Point3D[] controlPoints = Enumerable.Range(0, numPoints).
                     Select(o => Math3D.GetRandomVector(radius).ToPoint()).
                     ToArray();
 
@@ -5356,14 +5740,6 @@ namespace Game.Newt.Testers
             {
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-        private void btnClearShatterHits_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-        private void btnShatterHitVoronoi_Click(object sender, RoutedEventArgs e)
-        {
-
         }
         private void btnShatterChains_Click(object sender, RoutedEventArgs e)
         {
@@ -6224,6 +6600,9 @@ namespace Game.Newt.Testers
 
         private void RemoveCurrentBody()
         {
+            _timerExplodeShatterAsteroid.Stop();
+            _explodingSubHulls.Clear();
+
             foreach (ModelVisual3D visual in _visuals)
             {
                 if (_viewport.Children.Contains(visual))
@@ -6465,11 +6844,11 @@ namespace Game.Newt.Testers
                 geometry.Geometry = mesh;
 
                 // Model Visual
-                ModelVisual3D model = new ModelVisual3D();
-                model.Content = geometry;
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = geometry;
 
-                _viewport.Children.Add(model);
-                _visuals.Add(model);
+                _viewport.Children.Add(visual);
+                _visuals.Add(visual);
 
                 #endregion
             }
@@ -6790,8 +7169,12 @@ namespace Game.Newt.Testers
 
             bool drawOrigFaces = true;
             bool drawTrianglesByCtrlPoint = false;
-            bool firstCtrlPointOnly = false;
+            bool drawHullsByCtrlPoint = false;
+            bool explodeHullsByCtrlPoint = false;
+            bool firstCtrlPointOnly3 = false;
+            bool firstCtrlPointOnly4 = false;
             bool thinLines = false;
+            bool drawVoronoi = true;
             if (_shatter.Voronoi == null || radShatterVoronoiLinesOnly.IsChecked.Value)
             {
 
@@ -6801,11 +7184,46 @@ namespace Game.Newt.Testers
                 drawOrigFaces = false;
                 drawTrianglesByCtrlPoint = true;
             }
-            else if (radShatterFirstCtrlPoint.IsChecked.Value)
+            else if (radShatterFirstCtrlPoint3.IsChecked.Value)
             {
                 drawOrigFaces = false;
                 drawTrianglesByCtrlPoint = true;
-                firstCtrlPointOnly = true;
+                firstCtrlPointOnly3 = true;
+                thinLines = true;
+            }
+            else if (radShatterFirstMinimal3.IsChecked.Value)
+            {
+                drawVoronoi = false;
+                drawOrigFaces = false;
+                drawTrianglesByCtrlPoint = true;
+                firstCtrlPointOnly3 = true;
+                thinLines = true;
+            }
+            else if (radShatterFirstCtrlPoint4.IsChecked.Value)
+            {
+                drawOrigFaces = false;
+                drawTrianglesByCtrlPoint = false;
+                firstCtrlPointOnly4 = true;
+                thinLines = true;
+            }
+            else if (radShatterFirstMinimal4.IsChecked.Value)
+            {
+                drawVoronoi = false;
+                drawOrigFaces = false;
+                drawTrianglesByCtrlPoint = false;
+                firstCtrlPointOnly4 = true;
+                thinLines = true;
+            }
+            else if (radShatterFull.IsChecked.Value)
+            {
+                drawOrigFaces = false;
+                drawHullsByCtrlPoint = true;
+            }
+            else if (radShatterFullExploded.IsChecked.Value)
+            {
+                drawOrigFaces = false;
+                drawVoronoi = false;
+                explodeHullsByCtrlPoint = true;
                 thinLines = true;
             }
             else
@@ -6817,7 +7235,7 @@ namespace Game.Newt.Testers
 
             #region Draw voronoi
 
-            if (_shatter.Voronoi != null)
+            if (_shatter.Voronoi != null && drawVoronoi)
             {
                 for (int cntr = 0; cntr < _shatter.Voronoi.ControlPoints.Length; cntr++)
                 {
@@ -6864,42 +7282,123 @@ namespace Game.Newt.Testers
                 {
                     AddHull_CustomColor(set.Item2, UtilityWPF.AlphaBlend(set.Item3, Colors.Transparent, .75), true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
 
-                    if (firstCtrlPointOnly)
+                    if (firstCtrlPointOnly3 || firstCtrlPointOnly4)
                     {
                         break;
                     }
                 }
             }
 
+            if (_shatter.Voronoi != null && (drawHullsByCtrlPoint || explodeHullsByCtrlPoint))
+            {
+                Tuple<int, ITriangleIndexed[]>[] fullShatter = Math3D.GetIntersection_Hull_Voronoi_full(_shatter.Hull, _shatter.Voronoi);
+
+                if (drawHullsByCtrlPoint)
+                {
+                    foreach (var subShatter in fullShatter)
+                    {
+                        var set = trisByCtrl.FirstOrDefault(o => o.Item1 == subShatter.Item1);
+                        if(set == null)
+                        {
+                            set = Tuple.Create(subShatter.Item1, (ITriangleIndexed[])subShatter.Item2, UtilityWPF.GetRandomColor(0, 255), (HullVoronoiIntersect.PatchFragment)null);
+                        }
+
+                        AddHull_CustomColor(subShatter.Item2, UtilityWPF.AlphaBlend(set.Item3, Colors.Transparent, .75), true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+                    }
+                }
+                else if (explodeHullsByCtrlPoint)
+                {
+                    // This needs to add a translate transform to each sub hull.  So out of laziness, I copied parts of AddHull_CustomColor here
+
+                    Model3DGroup group = new Model3DGroup();
+
+                    Point3D hullCenter = Math3D.GetCenter(TriangleIndexed.GetUsedPoints(_shatter.Hull));
+
+                    foreach (var subShatter in fullShatter)
+                    {
+                        var set = trisByCtrl.FirstOrDefault(o => o.Item1 == subShatter.Item1);
+                        if (set == null)
+                        {
+                            set = Tuple.Create(subShatter.Item1, (ITriangleIndexed[])subShatter.Item2, UtilityWPF.GetRandomColor(0, 255), (HullVoronoiIntersect.PatchFragment)null);
+                        }
+
+                        // Material
+                        MaterialGroup materials = new MaterialGroup();
+                        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(set.Item3, Colors.Transparent, .75))));
+                        materials.Children.Add(_colors.HullFaceSpecular);
+
+                        // Geometry Mesh
+                        MeshGeometry3D mesh = null;
+                        if (chkSoftFaces.IsChecked.Value)
+                        {
+                            mesh = UtilityWPF.GetMeshFromTriangles(TriangleIndexed.Clone_CondensePoints(subShatter.Item2));
+                        }
+                        else
+                        {
+                            mesh = UtilityWPF.GetMeshFromTriangles_IndependentFaces(subShatter.Item2);
+                        }
+
+                        // Geometry Model
+                        GeometryModel3D geometry = new GeometryModel3D();
+                        geometry.Material = materials;
+                        geometry.BackMaterial = materials;
+                        geometry.Geometry = mesh;
+
+                        Point3D subCenter = Math3D.GetCenter(TriangleIndexed.GetUsedPoints(subShatter.Item2));
+                        Vector3D direction = (subCenter - hullCenter) * 2.5;      // multiply the distance a bit
+
+                        TranslateTransform3D transform = new TranslateTransform3D();
+                        geometry.Transform = transform;
+
+                        group.Children.Add(geometry);
+                        _explodingSubHulls.Add(Tuple.Create(transform, direction));
+                    }
+
+                    // Model Visual
+                    ModelVisual3D model = new ModelVisual3D();
+                    model.Content = group;
+
+                    _viewport.Children.Add(model);
+                    _visuals.Add(model);
+
+                    _explodePercent = 0;
+                    _explodeIsUp = true;
+                    _explodeNextTransition = DateTime.UtcNow + TimeSpan.FromSeconds(1);
+                    _timerExplodeShatterAsteroid.Start();
+                }
+            }
+
             #endregion
 
+            #region First Control Point 3
 
-            // Test
-            if (firstCtrlPointOnly)
+            if (firstCtrlPointOnly3)
             {
                 //TODO: Draw some debug face polys (with less color)
-                var facePolys = HullVoronoiIntersect.GetTestFacePolys(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
+                //var facePolys = HullVoronoiIntersect.GetTestFacePolys(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
+                var facePolys = HullVoronoiIntersect.GetTestFacePolys3(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
 
                 ITriangleIndexed[] faceTriangles = facePolys.SelectMany(o => o.Poly1).ToArray();
 
                 //Color color = UtilityWPF.AlphaBlend(trisByCtrl[0].Item3, Colors.Transparent, .5);
-                Color color = UtilityWPF.ColorFromHex("D0FFFFFF");
+                Color color = UtilityWPF.ColorFromHex("E8FFFFFF");
 
                 AddHull_CustomColor(faceTriangles, color, true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
 
-
-
-
-
-
-                var facePolys2 = HullVoronoiIntersect.GetTestFacePolys2(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
-
+                //var facePolys2 = HullVoronoiIntersect.GetTestFacePolys2(trisByCtrl[0].Item4, _shatter.Hull, _shatter.Voronoi);
             }
 
+            #endregion
+            #region First Control Point 4
 
+            if (firstCtrlPointOnly4)
+            {
+                TriangleIndexed[] hull4 = HullVoronoiIntersect.GetTestFacePolys4(trisByCtrl[0].Item4, trisByCtrl[0].Item2, _shatter.Hull, _shatter.Voronoi);
 
+                AddHull_CustomColor(hull4, UtilityWPF.AlphaBlend(trisByCtrl[0].Item3, Colors.Transparent, .75), true, false, chkDrawNormals.IsChecked.Value, false, false, chkSoftFaces.IsChecked.Value);
+            }
 
-
+            #endregion
         }
 
         private void DrawMultipleHulls(ITriangleIndexed[][] hulls, bool drawFaces, bool drawLines, bool drawNormals, bool includeEveryOtherFace, bool nearlyTransparent, bool softFaces, bool newTrianglesAsDifferentColor = true)

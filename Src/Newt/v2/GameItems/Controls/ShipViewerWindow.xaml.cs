@@ -39,6 +39,7 @@ namespace Game.Newt.v2.GameItems.Controls
             public List<NeuralContainerVisual> Containers = new List<NeuralContainerVisual>();
 
             // This doesn't use a visual for each link, but they are separated by color
+            //TODO: May want an option to set the opacity based on the current weight of the feeder neuron (so that it's nearly invisible if the neuron isn't firing)
             public List<Visual3D> Links = new List<Visual3D>();
         }
 
@@ -74,7 +75,7 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #region Declaration Section
 
-        private readonly Ship _ship;        // this could be null (if they use the parts overload)
+        private readonly Bot _bot;        // this could be null (if they use the parts overload)
         private readonly PartBase[] _parts;
         private readonly NeuralUtility.ContainerOutput[] _neuronLinks;
 
@@ -101,19 +102,19 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #region Constructor
 
-        public ShipViewerWindow(Ship ship)
+        public ShipViewerWindow(Bot bot)
         {
             InitializeComponent();
 
-            _ship = ship;
-            _parts = ship.Parts.ToArray();
-            _neuronLinks = ship.NeuronLinks;
+            _bot = bot;
+            _parts = bot.Parts.ToArray();
+            _neuronLinks = bot.NeuronLinks;
 
             // The model coords may not be centered, so this is how much to move the parts so they appear centered
             Point3D minPoint, maxPoint;
-            ship.PhysicsBody.GetAABB(out minPoint, out maxPoint);
-            minPoint = _ship.PhysicsBody.PositionFromWorld(minPoint);
-            maxPoint = _ship.PhysicsBody.PositionFromWorld(maxPoint);
+            bot.PhysicsBody.GetAABB(out minPoint, out maxPoint);
+            minPoint = _bot.PhysicsBody.PositionFromWorld(minPoint);
+            maxPoint = _bot.PhysicsBody.PositionFromWorld(maxPoint);
 
             Constructor_Finish(Tuple.Create(minPoint, maxPoint));
         }
@@ -125,7 +126,7 @@ namespace Game.Newt.v2.GameItems.Controls
         {
             InitializeComponent();
 
-            _ship = null;
+            _bot = null;
             _parts = parts;
             _neuronLinks = neuronLinks;
 
@@ -149,7 +150,7 @@ namespace Game.Newt.v2.GameItems.Controls
             _camera.Changed += new EventHandler(Camera_Changed);
 
             _progressBars = new ShipProgressBarManager(pnlProgressBars);
-            _progressBars.Ship = _ship;
+            _progressBars.Bot = _bot;
 
             _isInitialized = true;
         }

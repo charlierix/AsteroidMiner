@@ -114,7 +114,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.GunBarrel, .125d);		// shift it white, because it's too dark
             }
-            else if (this.Part3D is BrainDesign)
+            else if (this.Part3D is BrainDesign || this.Part3D is BrainRGBRecognizerDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.Brain, .25d);
             }
@@ -130,9 +130,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             {
                 color = WorldColors.EnergyTank;
             }
-            else if (this.Part3D is EyeDesign)
+            else if (this.Part3D is EyeDesign || this.Part3D is CameraColorRGBDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.CameraLens, .33d);
+                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.CameraBase, .15d);
             }
             else if (this.Part3D is SensorCollisionDesign || this.Part3D is SensorFluidDesign || this.Part3D is SensorGravityDesign || this.Part3D is SensorInternalForceDesign || this.Part3D is SensorNetForceDesign || this.Part3D is SensorRadiationDesign || this.Part3D is SensorSpinDesign || this.Part3D is SensorTractorDesign || this.Part3D is SensorVelocityDesign)
             {

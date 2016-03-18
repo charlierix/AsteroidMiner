@@ -44,6 +44,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bot.cs" />
+    <Compile Include="BotConstructor.cs" />
     <Compile Include="CameraPool.cs" />
     <Compile Include="Container.cs" />
     <Compile Include="Controls\ProgressBarGame.xaml.cs">
@@ -63,12 +65,16 @@
     <Compile Include="Explosion.cs" />
     <Compile Include="Fields.cs" />
     <Compile Include="Flag.cs" />
+    <Compile Include="HullVoronoiExploder.cs" />
     <Compile Include="IMapObject.cs" />
+    <Compile Include="ItemLinker.cs" />
     <Compile Include="ItemOptions.cs" />
     <Compile Include="ItemSelectDragLogic.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapObjectChase_Orientation.cs" />
     <Compile Include="MapObjectChase_Point.cs" />
+    <Compile Include="MapParts\Asteroid.cs" />
+    <Compile Include="MapParts\DispatchTimer.cs" />
     <Compile Include="MapParts\MapDNA.cs" />
     <Compile Include="MapParts\Mineral.cs" />
     <Compile Include="MapParts\Projectile.cs" />
@@ -101,6 +107,7 @@
     <Compile Include="ShipParts\AmmoBox.cs" />
     <Compile Include="ShipParts\BeamGun.cs" />
     <Compile Include="ShipParts\Brain.cs" />
+    <Compile Include="ShipParts\BrainRGBRecognizer.cs" />
     <Compile Include="ShipParts\CameraColorRGB.cs" />
     <Compile Include="ShipParts\CargoBay.cs" />
     <Compile Include="ShipParts\ConverterEnergyToAmmo.cs" />

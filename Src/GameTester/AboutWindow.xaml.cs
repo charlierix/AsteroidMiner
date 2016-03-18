@@ -335,7 +335,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
                 return null;
             }
 
-            if(senderCast.NavigateUri != null)
+            if (senderCast.NavigateUri != null)
             {
                 // The link was explicitely set
                 return senderCast.NavigateUri.AbsoluteUri;

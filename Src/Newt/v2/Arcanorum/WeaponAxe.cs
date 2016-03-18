@@ -213,7 +213,7 @@ namespace Game.Newt.v2.Arcanorum
 
             // Define the curves
             AxeSymetricalProps arg = GetModel_Symetrical_Props(from, to);
-            BezierSegmentDef[][] segmentSets = GetModel_Symetrical_Curves(arg);
+            BezierSegment3D[][] segmentSets = GetModel_Symetrical_Curves(arg);
 
             //TODO: Use WeaponMaterialCache
             MaterialGroup materialMiddle = new MaterialGroup();
@@ -343,9 +343,9 @@ namespace Game.Newt.v2.Arcanorum
 
             return retVal;
         }
-        private static BezierSegmentDef[][] GetModel_Symetrical_Curves(AxeSymetricalProps arg)
+        private static BezierSegment3D[][] GetModel_Symetrical_Curves(AxeSymetricalProps arg)
         {
-            BezierSegmentDef[][] retVal = new BezierSegmentDef[5][];
+            BezierSegment3D[][] retVal = new BezierSegment3D[5][];
 
             //TODO: Come up with a transform based on arg's extremes and dna.Scale
             Transform3D transform = Transform3D.Identity;
@@ -398,13 +398,13 @@ namespace Game.Newt.v2.Arcanorum
                         new Point3D(arg.rightX * scaleX, arg.rightY * scaleY, zR),        // bottom right
                     }.Select(o => transform.Transform(o)).ToArray();
 
-                BezierSegmentDef[] segments = GetModel_Symetrical_Segments(endPoints, arg);
+                BezierSegment3D[] segments = GetModel_Symetrical_Segments(endPoints, arg);
                 retVal[cntr] = segments;
             }
 
             return retVal;
         }
-        private static BezierSegmentDef[] GetModel_Symetrical_Segments(Point3D[] endPoints, AxeSymetricalProps arg)
+        private static BezierSegment3D[] GetModel_Symetrical_Segments(Point3D[] endPoints, AxeSymetricalProps arg)
         {
             const int TOPLEFT = 0;
             const int BOTTOMLEFT = 1;
@@ -412,23 +412,23 @@ namespace Game.Newt.v2.Arcanorum
             const int BOTTOMRIGHT = 3;
 
             // Edge
-            Point3D controlTR = BezierSegmentDef.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], endPoints[TOPLEFT], true, arg.edgeAngle, arg.edgePercent);
-            Point3D controlBR = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], endPoints[BOTTOMLEFT], true, arg.edgeAngle, arg.edgePercent);
-            BezierSegmentDef edge = new BezierSegmentDef(TOPRIGHT, BOTTOMRIGHT, new[] { controlTR, controlBR }, endPoints);
+            Point3D controlTR = BezierUtil.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], endPoints[TOPLEFT], true, arg.edgeAngle, arg.edgePercent);
+            Point3D controlBR = BezierUtil.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], endPoints[BOTTOMLEFT], true, arg.edgeAngle, arg.edgePercent);
+            BezierSegment3D edge = new BezierSegment3D(TOPRIGHT, BOTTOMRIGHT, new[] { controlTR, controlBR }, endPoints);
 
             // Bottom
-            Point3D controlBL = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMLEFT], endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
-            controlBR = BezierSegmentDef.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[BOTTOMLEFT], endPoints[TOPRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
-            BezierSegmentDef bottom = new BezierSegmentDef(BOTTOMLEFT, BOTTOMRIGHT, new[] { controlBL, controlBR }, endPoints);
+            Point3D controlBL = BezierUtil.GetControlPoint_End(endPoints[BOTTOMLEFT], endPoints[BOTTOMRIGHT], endPoints[TOPRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
+            controlBR = BezierUtil.GetControlPoint_End(endPoints[BOTTOMRIGHT], endPoints[BOTTOMLEFT], endPoints[TOPRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
+            BezierSegment3D bottom = new BezierSegment3D(BOTTOMLEFT, BOTTOMRIGHT, new[] { controlBL, controlBR }, endPoints);
 
             // Top
-            Point3D controlTL = BezierSegmentDef.GetControlPoint_End(endPoints[TOPLEFT], endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
-            controlTR = BezierSegmentDef.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[TOPLEFT], endPoints[BOTTOMRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
-            BezierSegmentDef top = new BezierSegmentDef(TOPLEFT, TOPRIGHT, new[] { controlTL, controlTR }, endPoints);
+            Point3D controlTL = BezierUtil.GetControlPoint_End(endPoints[TOPLEFT], endPoints[TOPRIGHT], endPoints[BOTTOMRIGHT], arg.leftAway, arg.leftAngle, arg.leftPercent);
+            controlTR = BezierUtil.GetControlPoint_End(endPoints[TOPRIGHT], endPoints[TOPLEFT], endPoints[BOTTOMRIGHT], arg.rightAway, arg.rightAngle, arg.rightPercent);
+            BezierSegment3D top = new BezierSegment3D(TOPLEFT, TOPRIGHT, new[] { controlTL, controlTR }, endPoints);
 
             return new[] { bottom, top, edge };
         }
-        private static Model3D GetModel_Symetrical_Axe(BezierSegmentDef[][] segmentSets, MaterialGroup materialMiddle, MaterialGroup materialEdge, AxeSymetricalProps arg)
+        private static Model3D GetModel_Symetrical_Axe(BezierSegment3D[][] segmentSets, MaterialGroup materialMiddle, MaterialGroup materialEdge, AxeSymetricalProps arg)
         {
             Model3DGroup retVal = new Model3DGroup();
 
@@ -455,7 +455,7 @@ namespace Game.Newt.v2.Arcanorum
 
                     AddBezierPlate(squareCount, segmentSets[index][0], segmentSets[index][1], retVal, materialMiddle);        // top - bottom
 
-                    BezierSegmentDef extraSeg = new BezierSegmentDef(segmentSets[index][2].EndIndex0, segmentSets[index][2].EndIndex1, null, segmentSets[index][2].AllEndPoints);
+                    BezierSegment3D extraSeg = new BezierSegment3D(segmentSets[index][2].EndIndex0, segmentSets[index][2].EndIndex1, null, segmentSets[index][2].AllEndPoints);
                     AddBezierPlate(squareCount, extraSeg, segmentSets[index][2], retVal, materialMiddle);     // edge
                 }
             }
@@ -476,7 +476,7 @@ namespace Game.Newt.v2.Arcanorum
 
             // Define the curves
             AxeSecondProps arg = GetModel_Second_Props(from, to, hasBeard);
-            BezierSegmentDef[][] segmentSets = GetModel_Second_Curves(arg);
+            BezierSegment3D[][] segmentSets = GetModel_Second_Curves(arg);
 
             //TODO: Use WeaponMaterialCache
             MaterialGroup materialMiddle = new MaterialGroup();
@@ -608,9 +608,9 @@ namespace Game.Newt.v2.Arcanorum
 
             return retVal;
         }
-        private static BezierSegmentDef[][] GetModel_Second_Curves(AxeSecondProps arg)
+        private static BezierSegment3D[][] GetModel_Second_Curves(AxeSecondProps arg)
         {
-            BezierSegmentDef[][] retVal = new BezierSegmentDef[5][];
+            BezierSegment3D[][] retVal = new BezierSegment3D[5][];
 
             AxeSecondProps[] argLevels = new AxeSecondProps[5];
 
@@ -705,49 +705,49 @@ namespace Game.Newt.v2.Arcanorum
 
             for (int cntr = 0; cntr < 5; cntr++)
             {
-                BezierSegmentDef[] segments = GetModel_Second_Segments(argLevels[cntr]);
+                BezierSegment3D[] segments = GetModel_Second_Segments(argLevels[cntr]);
                 retVal[cntr] = segments;
             }
 
             return retVal;
         }
-        private static BezierSegmentDef[] GetModel_Second_Segments(AxeSecondProps arg)
+        private static BezierSegment3D[] GetModel_Second_Segments(AxeSecondProps arg)
         {
             Point3D[] points = arg.GetAllPoints();
 
             // Top
-            BezierSegmentDef top = new BezierSegmentDef(arg.IndexTL, arg.IndexTR, null, points);
+            BezierSegment3D top = new BezierSegment3D(arg.IndexTL, arg.IndexTR, null, points);
 
             // Edge
-            Point3D controlTR = BezierSegmentDef.GetControlPoint_End(arg.EndTR, arg.EndBR, arg.EndBL_1, true, arg.EdgeAngleT, arg.EdgePercentT);
-            Point3D controlBR = BezierSegmentDef.GetControlPoint_End(arg.EndBR, arg.EndTR, arg.EndTL, true, arg.EdgeAngleB, arg.EdgePercentB);
-            BezierSegmentDef edge = new BezierSegmentDef(arg.IndexTR, arg.IndexBR, new[] { controlTR, controlBR }, points);
+            Point3D controlTR = BezierUtil.GetControlPoint_End(arg.EndTR, arg.EndBR, arg.EndBL_1, true, arg.EdgeAngleT, arg.EdgePercentT);
+            Point3D controlBR = BezierUtil.GetControlPoint_End(arg.EndBR, arg.EndTR, arg.EndTL, true, arg.EdgeAngleB, arg.EdgePercentB);
+            BezierSegment3D edge = new BezierSegment3D(arg.IndexTR, arg.IndexBR, new[] { controlTR, controlBR }, points);
 
             // Bottom (right portion)
-            BezierSegmentDef bottomRight = null;
+            BezierSegment3D bottomRight = null;
             if (arg.EndBL_2 == null)
             {
-                Point3D controlR = BezierSegmentDef.GetControlPoint_End(arg.EndBR, arg.EndBL_1, arg.EndTR, false, arg.B1AngleR, arg.B1PercentR);
-                Point3D controlL = BezierSegmentDef.GetControlPoint_End(arg.EndBL_1, arg.EndBR, arg.EndTR, false, arg.B1AngleL, arg.B1PercentL);
-                bottomRight = new BezierSegmentDef(arg.IndexBR, arg.IndexBL_1, new[] { controlR, controlL }, points);
+                Point3D controlR = BezierUtil.GetControlPoint_End(arg.EndBR, arg.EndBL_1, arg.EndTR, false, arg.B1AngleR, arg.B1PercentR);
+                Point3D controlL = BezierUtil.GetControlPoint_End(arg.EndBL_1, arg.EndBR, arg.EndTR, false, arg.B1AngleL, arg.B1PercentL);
+                bottomRight = new BezierSegment3D(arg.IndexBR, arg.IndexBL_1, new[] { controlR, controlL }, points);
             }
             else
             {
-                bottomRight = new BezierSegmentDef(arg.IndexBR, arg.IndexBL_1, null, points);
+                bottomRight = new BezierSegment3D(arg.IndexBR, arg.IndexBL_1, null, points);
             }
 
             // Bottom (left portion)
-            BezierSegmentDef bottomLeft = null;
+            BezierSegment3D bottomLeft = null;
             if (arg.EndBL_2 != null)
             {
-                Point3D controlR = BezierSegmentDef.GetControlPoint_End(arg.EndBL_1, arg.EndBL_2.Value, arg.EndTR, false, arg.B2AngleR, arg.B2PercentR);
-                Point3D controlL = BezierSegmentDef.GetControlPoint_End(arg.EndBL_2.Value, arg.EndBL_1, arg.EndTR, false, arg.B2AngleL, arg.B2PercentL);
-                bottomLeft = new BezierSegmentDef(arg.IndexBL_1, arg.IndexBL_2, new[] { controlR, controlL }, points);
+                Point3D controlR = BezierUtil.GetControlPoint_End(arg.EndBL_1, arg.EndBL_2.Value, arg.EndTR, false, arg.B2AngleR, arg.B2PercentR);
+                Point3D controlL = BezierUtil.GetControlPoint_End(arg.EndBL_2.Value, arg.EndBL_1, arg.EndTR, false, arg.B2AngleL, arg.B2PercentL);
+                bottomLeft = new BezierSegment3D(arg.IndexBL_1, arg.IndexBL_2, new[] { controlR, controlL }, points);
             }
 
-            return UtilityCore.Iterate<BezierSegmentDef>(top, edge, bottomRight, bottomLeft).ToArray();
+            return UtilityCore.Iterate<BezierSegment3D>(top, edge, bottomRight, bottomLeft).ToArray();
         }
-        private static Model3D GetModel_Second_Axe(BezierSegmentDef[][] segmentSets, MaterialGroup materialMiddle, MaterialGroup materialEdge)
+        private static Model3D GetModel_Second_Axe(BezierSegment3D[][] segmentSets, MaterialGroup materialMiddle, MaterialGroup materialEdge)
         {
             Model3DGroup retVal = new Model3DGroup();
 
@@ -785,7 +785,7 @@ namespace Game.Newt.v2.Arcanorum
                 int index = cntr == 0 ? 0 : 4;
 
                 // Turn the end cap into a polygon, then triangulate it
-                Point3D[] endCapPoly = Math3D.GetBezierPath(squareCount, segmentSets[index].Select(o => new[] { o }).ToArray());       // Call the jagged array overload so that the individual bezier end points don't get smoothed out
+                Point3D[] endCapPoly = BezierUtil.GetPath(squareCount, segmentSets[index].Select(o => new[] { o }).ToArray());       // Call the jagged array overload so that the individual bezier end points don't get smoothed out
 
                 TriangleIndexed[] endCapTriangles = Math2D.GetTrianglesFromConcavePoly3D(endCapPoly);
                 if (cntr == 0)
@@ -861,19 +861,19 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         // WPF models
-        private static void AddBezierPlates(int count, BezierSegmentDef[] seg1, BezierSegmentDef[] seg2, Model3DGroup group, Material material)
+        private static void AddBezierPlates(int count, BezierSegment3D[] seg1, BezierSegment3D[] seg2, Model3DGroup group, Material material)
         {
             for (int cntr = 0; cntr < seg1.Length; cntr++)
             {
                 AddBezierPlate(count, seg1[cntr], seg2[cntr], group, material);
             }
         }
-        private static void AddBezierPlate(int count, BezierSegmentDef seg1, BezierSegmentDef seg2, Model3DGroup group, Material material)
+        private static void AddBezierPlate(int count, BezierSegment3D seg1, BezierSegment3D seg2, Model3DGroup group, Material material)
         {
             // Since the bezier curves will have the same number of points, create a bunch of squares linking them (it's up to the caller
             // to make sure the curves don't cross, or you would get a bow tie)
-            Point3D[] rim1 = Math3D.GetBezierSegment(count, seg1);
-            Point3D[] rim2 = Math3D.GetBezierSegment(count, seg2);
+            Point3D[] rim1 = BezierUtil.GetPoints(count, seg1);
+            Point3D[] rim2 = BezierUtil.GetPoints(count, seg2);
 
             Point3D[] allPoints = UtilityCore.Iterate(rim1, rim2).ToArray();
 

@@ -1,7 +1,7 @@
-﻿<Window x:Class="Game.Newt.Testers.BrainTester2"
+﻿<Window x:Class="Game.Newt.Testers.BrainLinks"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Brain Tester 2" WindowState="Normal" ResizeMode="CanResizeWithGrip" Width="980" Height="817" KeyDown="grdViewPort_KeyDown" KeyUp="grdViewPort_KeyUp">
+        Title="Brain Links" WindowState="Normal" ResizeMode="CanResizeWithGrip" Width="980" Height="817" KeyDown="grdViewPort_KeyDown" KeyUp="grdViewPort_KeyUp">
     <Window.Resources>
         <DataTemplate x:Key="expanderHeader">
             <TextBlock Text="{Binding}" FontSize="16" FontWeight="bold" Foreground="#D9D3C3"/>
@@ -57,6 +57,10 @@
             <Setter Property="Foreground" Value="#4C443C"/>
         </Style>
 
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#4C443C"/>
+        </Style>
+
         <Style TargetType="Button">
             <Setter Property="Margin" Value="1"/>
         </Style>
@@ -71,6 +75,9 @@
         </Style>
         <Style TargetType="Slider">
             <Setter Property="Margin" Value="1"/>
+            <Setter Property="TickPlacement" Value="Both"/>
+            <Setter Property="AutoToolTipPlacement" Value="TopLeft"/>
+            <Setter Property="AutoToolTipPrecision" Value="2"/>
         </Style>
     </Window.Resources>
 
@@ -91,8 +98,8 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
                     <StackPanel>
 
-                        <!-- 2D Tests -->
-                        <Expander IsExpanded="False" Header="2D Tests">
+                        <!-- 2D Links -->
+                        <Expander IsExpanded="False" Header="2D Links">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <UniformGrid Columns="2">
@@ -109,26 +116,72 @@
                                         <ComboBox Name="cbo2DClear"/>
                                     </UniformGrid>
 
-                                    <CheckBox IsChecked="False" Name="chk2DRandomSize" Content="Random Size" Style="{StaticResource checkbox}" Margin="1,3,1,1"/>
+                                    <CheckBox IsChecked="True" Name="chk2DRandomSize" Content="Random Size" Style="{StaticResource checkbox}" Margin="1,3,1,1"/>
 
                                     <Button Name="btn2DVoronoiBrains" Content="Voronoi Brains" Margin="1,12,1,1" Click="btn2DVoronoiBrains_Click"/>
                                     <Button Name="btn2DCreateLinksSimple" Content="Create Links (simple)" Click="btn2DCreateLinksSimple_Click"/>
-                                    <CheckBox Name="chk2DSkipThin" Content="Skip Thin"/>
-                                    <Slider Name="trk2DThinRatio" Minimum="0" Maximum="1" Value=".9" TickFrequency=".1" TickPlacement="Both"/>
+                                    <CheckBox Name="chk2DSkipThin" Content="Skip Thin" Style="{StaticResource checkbox}"/>
+                                    <Slider Name="trk2DThinRatio" Minimum="0" Maximum="1" Value=".9" TickFrequency=".1"/>
 
                                     <Button Name="btn2DCreateLinksVoronoi" Content="Create Links (voronoi)" Margin="1,12,1,1" Click="btn2DCreateLinksVoronoi_Click"/>
 
                                     <Button Name="btn2DCreateLinksDistance" Content="Create Links (distance)" Margin="1,12,1,1" Click="btn2DCreateLinksDistance_Click"/>
-                                    <!--<CheckBox IsChecked="True" Name="chk2DShortestFirst" Content="Shortest distance first"/>-->
                                     <ComboBox Name="cbo2DIOLinkupPriority"/>
-                                    <Slider Name="trk2DLinkResistMult" Minimum="0" Maximum="100" Value="10" TickFrequency="10" TickPlacement="Both"/>
-                                    <CheckBox IsChecked="True" Name="chk2DRainbowLinks" Content="Rainbow links"/>
+                                    <Slider Name="trk2DLinkResistMult" Minimum="0" Maximum="100" Value="10" TickFrequency="10"/>
+                                    <CheckBox IsChecked="False" Name="chk2DRainbowLinks" Content="Rainbow links" Style="{StaticResource checkbox}"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
 
-                        <!-- 3D Triangulation -->
-                        <Expander IsExpanded="True" Header="3D Triangulation">
+                        <!-- 3D Links -->
+                        <Expander IsExpanded="True" Header="3D Links">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Margin="8">
+                                    <UniformGrid Columns="2">
+                                        <Button Content="Add Input" Click="btn3DAddInput_Click"/>
+                                        <ComboBox Name="cbo3DAddInput"/>
+
+                                        <Button Content="Add Output" Click="btn3DAddOutput_Click"/>
+                                        <ComboBox Name="cbo3DAddOutput"/>
+
+                                        <Button Content="Add Brain" Click="btn3DAddBrain_Click"/>
+                                        <ComboBox Name="cbo3DAddBrain"/>
+
+                                        <Button Content="Clear" Click="btn3DClear_Click"/>
+                                        <ComboBox Name="cbo3DClear"/>
+                                    </UniformGrid>
+
+                                    <CheckBox IsChecked="True" Name="chk3DRandomSize" Content="Random Size" Style="{StaticResource checkbox}" Margin="1,3,1,1"/>
+
+                                    <TextBlock Text="Link Resistance" Margin="1,12,1,1"/>
+                                    <Slider Name="trk3DLinkResistMult" Minimum="0" Maximum="8" Value="1" TickFrequency="1"/>
+
+                                    <TextBlock Text="Extra Links %" Margin="1,12,1,1"/>
+                                    <Slider Name="trk3DExtraLinkPercent" Minimum="0" Maximum="400" Value="0" TickFrequency="100" AutoToolTipPrecision="0"/>
+                                    <CheckBox Name="chk3DExtraLinkBySize" Content="Extra links by size" Style="{StaticResource checkbox}"/>
+                                    <CheckBox Name="chk3DExtraLinkEvenDistribute" Content="Extra links even distribute" Style="{StaticResource checkbox}"/>
+
+                                    <Button Content="simple" Margin="1,12,1,1" Click="btn3DCreateLinksSimple_Click"/>
+
+                                    <Button Content="Brain-Brain" ToolTip="Linking brains together (this step ignores IO)" Click="btn3DLinksBrainBrain_Click"/>
+                                    <Button Content="Brain-IO (all io)" Click="btn3DLinksBrainIO_Click">
+                                        <Button.ToolTip>
+                                            <TextBlock>Each IO gets at least one brain (could have unlinked brains)<LineBreak/>This would be the standard way to link brains with IO</TextBlock>
+                                        </Button.ToolTip>
+                                    </Button>
+                                    <Button Content="Brain-Input (all brain)" Click="btn3DLinksBrainInput_Click">
+                                        <Button.ToolTip>
+                                            <TextBlock>Each brain gets exactly one input (could have unlinked inputs)<LineBreak/>This is how rgb cameras would link to rgb recognizers</TextBlock>
+                                        </Button.ToolTip>
+                                    </Button>
+
+                                    <CheckBox IsChecked="False" Name="chk3DRainbowLinks" Content="Rainbow links" Margin="1,12,1,1" Style="{StaticResource checkbox}"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- 3D Voronoi -->
+                        <Expander IsExpanded="False" Header="3D Del/Voronoi">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <Border Style="{StaticResource interiorPanel}">
@@ -143,9 +196,9 @@
                                             <Button Name="btn3DPerturb" Content="Perturb Points" Margin="1,12,1,1" Click="btn3DPerturb_Click"/>
                                             <Slider Name="trk3DPerturbDist" Minimum="0" Maximum="1" Value=".2"/>
                                             <!--<CheckBox Name="chk3DPerturbOnlyRayClicked" Content="Only ray clicked" ToolTip="Only the points that have shift+click rays"/>-->
-                                            <CheckBox IsChecked="True" Name="chk3DPerturbRerun" Content="Rerun last button"/>
+                                            <CheckBox IsChecked="True" Name="chk3DPerturbRerun" Content="Rerun last button" Style="{StaticResource checkbox}"/>
 
-                                            <Button Name="btn3DClear" Content="Clear" Margin="1,12,1,1" Click="btn3DClear_Click"/>
+                                            <Button Name="btn3DClearDelVor" Content="Clear" Margin="1,12,1,1" Click="btn3DClearDelVor_Click"/>
                                         </StackPanel>
                                     </Border>
 

@@ -33,7 +33,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public FitnessRule_TooFar(Bot bot, Point3D center, double maxSafeDistance, double maxUnsafeDistance)
+        public FitnessRule_TooFar(ArcBot bot, Point3D center, double maxSafeDistance, double maxUnsafeDistance)
         {
             this.Bot = bot;
 
@@ -68,7 +68,7 @@ namespace Game.Newt.v2.Arcanorum
             _score = (double)_score + (score * elapsedTime);
         }
 
-        public Bot Bot
+        public ArcBot Bot
         {
             get;
             private set;
@@ -118,7 +118,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public FitnessRule_TooStill(Bot bot, double stationarySpeed, double maxAllowedStationaryTime)
+        public FitnessRule_TooStill(ArcBot bot, double stationarySpeed, double maxAllowedStationaryTime)
         {
             this.Bot = bot;
 
@@ -158,7 +158,7 @@ namespace Game.Newt.v2.Arcanorum
             _score = (double)_score + (score * elapsedTime);
         }
 
-        public Bot Bot
+        public ArcBot Bot
         {
             get;
             private set;
@@ -201,7 +201,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public FitnessRule_TooTwitchy(Bot bot, double minDot)
+        public FitnessRule_TooTwitchy(ArcBot bot, double minDot)
         {
             this.Bot = bot;
 
@@ -239,7 +239,7 @@ namespace Game.Newt.v2.Arcanorum
             _score = (double)_score + (score * elapsedTime);
         }
 
-        public Bot Bot
+        public ArcBot Bot
         {
             get;
             private set;
@@ -274,7 +274,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public FitnessTracker(Bot bot, Tuple<IFitnessRule, double>[] rules)
+        public FitnessTracker(ArcBot bot, Tuple<IFitnessRule, double>[] rules)
         {
             if (bot != null)
             {
@@ -319,7 +319,7 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
-        public Bot Bot
+        public ArcBot Bot
         {
             get;
             private set;
@@ -348,7 +348,7 @@ namespace Game.Newt.v2.Arcanorum
         /// <summary>
         /// This is the bot that's being tracked
         /// </summary>
-        Bot Bot { get; }
+        ArcBot Bot { get; }
 
         /// <remarks>
         /// Score needs to be normalized to be useful.  It accumulates with time, so an older bot will have higher score, so rate of

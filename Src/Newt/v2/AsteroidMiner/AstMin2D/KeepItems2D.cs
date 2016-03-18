@@ -21,13 +21,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private class TrackedItem
         {
-            public TrackedItem(IMapObject mapObject, MapObject_ChasePoint_Forces translate, MapObject_ChaseOrientation_Torques rotate, double? graduleTo100PercentDuration, bool didOriginalLimitRotation)
+            public TrackedItem(IMapObject mapObject, MapObject_ChasePoint_Forces translate, MapObject_ChaseOrientation_Torques rotate, double? graduleTo100PercentDuration, double? delayBeforeGradule, bool didOriginalLimitRotation)
             {
                 this.MapObject = mapObject;
                 this.Translate = translate;
                 this.Rotate = rotate;
 
                 this.GraduleTo100PercentDuration = graduleTo100PercentDuration;
+                this.DelayBeforeGradule = delayBeforeGradule;
                 this.ElapsedTime = 0d;
 
                 this.DidOriginalLimitRotation = didOriginalLimitRotation;
@@ -38,6 +39,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             public readonly MapObject_ChaseOrientation_Torques Rotate;
 
             public double? GraduleTo100PercentDuration
+            {
+                get;
+                set;
+            }
+            public double? DelayBeforeGradule
             {
                 get;
                 set;
@@ -130,7 +136,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Public Methods
 
-        public void Add(IMapObject item, bool shouldLimitRotation, double? graduleTo100PercentDuration = null)
+        public void Add(IMapObject item, bool shouldLimitRotation, double? graduleTo100PercentDuration = null, double? delayBeforeGradule = null)
         {
             if (_items.Any(o => o.MapObject.Equals(item)))
             {
@@ -207,7 +213,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             #endregion
 
-            _items.Add(new TrackedItem(item, chaseForces, chaseTorques, graduleTo100PercentDuration, shouldLimitRotation));
+            _items.Add(new TrackedItem(item, chaseForces, chaseTorques, graduleTo100PercentDuration, delayBeforeGradule, shouldLimitRotation));
         }
         public void Remove(IMapObject item)
         {
@@ -242,7 +248,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                     item.ElapsedTime += elapsedTime;
 
-                    double percent = item.ElapsedTime / item.GraduleTo100PercentDuration.Value;
+                    double percent;
+                    if(item.DelayBeforeGradule != null && item.ElapsedTime < item.DelayBeforeGradule.Value)
+                    {
+                        percent = 0;
+                    }
+                    else
+                    {
+                        percent = (item.ElapsedTime - (item.DelayBeforeGradule ?? 0d)) / item.GraduleTo100PercentDuration.Value;
+                    }
+
                     if (percent > 1d)
                     {
                         percent = 1d;

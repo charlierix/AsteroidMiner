@@ -12,7 +12,7 @@ using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.v2.GameItems
 {
-    //TODO: Turn most  of this cs file into a new project Neural.dll
+    //TODO: Move most of this cs file into the AI.dll
     //It shouldn't know about physics bodies.  Just a neural library on its own
 
     //TODO: Read more about deep NN/convolution NN
@@ -23,11 +23,6 @@ namespace Game.Newt.v2.GameItems
     //TODO: Prove: Neurons/Links are stored in 2D or 3D.  What are the advantages of 3D over 2D?  More chances for groups to be near each other?  If
     //there's a clear advantage, what about 4D, 5D, etc?  Does there need to be a certain number/density of neurons before it makes sense to add a dimension?
 
-    //TODO: Think about multithreading.  If neurons don't move around, that's easier.  But if neurons can shift around, or be created/removed at whim, then
-    //instead of a class exposing its neurons directly through INeuronContainer, it could hold a volatile reference to a readonly INeuronContainer that could
-    //be swapped out at any time.  Links between neurons in different containers would need to be recalculated though, so the container might need a token
-    //property
-
     #region Enum: NeuronContainerType
 
     /// <summary>
@@ -35,9 +30,23 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public enum NeuronContainerType
     {
+        /// <summary>
+        /// May want to call this input
+        /// </summary>
         Sensor,
         Brain,
-        Manipulator
+        /// <summary>
+        /// May want to call this output
+        /// </summary>
+        Manipulator,
+        /// <summary>
+        /// Don't link neurons
+        /// </summary>
+        /// <remarks>
+        /// Added this when I implemented RGBCamera and Recognizer.  If a camera and recognizer are linked, then the camera should go to none, because
+        /// the recognizer becomes the camera's output
+        /// </remarks>
+        None,
     }
 
     #endregion
@@ -1538,8 +1547,9 @@ namespace Game.Newt.v2.GameItems
 
         public class ContainerInput
         {
-            public ContainerInput(INeuronContainer container, NeuronContainerType containerType, Point3D position, Quaternion orientation, double? internalRatio, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double>[] externalRatios, int brainChemicalCount, NeuralLinkDNA[] internalLinks, NeuralLinkExternalDNA[] externalLinks)
+            public ContainerInput(long token, INeuronContainer container, NeuronContainerType containerType, Point3D position, Quaternion orientation, double? internalRatio, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double>[] externalRatios, int brainChemicalCount, NeuralLinkDNA[] internalLinks, NeuralLinkExternalDNA[] externalLinks)
             {
+                this.Token = token;
                 this.Container = container;
                 this.ContainerType = containerType;
                 this.Position = position;
@@ -1550,6 +1560,11 @@ namespace Game.Newt.v2.GameItems
                 this.InternalLinks = internalLinks;
                 this.ExternalLinks = externalLinks;
             }
+
+            /// <summary>
+            /// This should come from the PartBase
+            /// </summary>
+            public readonly long Token;
 
             public readonly INeuronContainer Container;
             public readonly NeuronContainerType ContainerType;
@@ -1607,7 +1622,7 @@ namespace Game.Newt.v2.GameItems
 
         #region Class: LinkIndexed
 
-        private class LinkIndexed
+        public class LinkIndexed
         {
             public LinkIndexed(int from, int to, double weight, double[] brainChemicalModifiers)
             {
@@ -1718,8 +1733,41 @@ namespace Game.Newt.v2.GameItems
             else
             {
                 internalLinks = BuildInternalLinksRandom(containers, maxWeight);
-
                 externalLinks = BuildExternalLinksRandom(containers, maxWeight);
+            }
+
+            // Build the return
+            ContainerOutput[] retVal = new ContainerOutput[containers.Length];
+            for (int cntr = 0; cntr < containers.Length; cntr++)
+            {
+                retVal[cntr] = new ContainerOutput(containers[cntr].Container, internalLinks[cntr], externalLinks[cntr]);
+            }
+
+            // Exit Function
+            return retVal;
+        }
+        /// <summary>
+        /// This overload takes a map that tells which parts can link to which
+        /// </summary>
+        public static ContainerOutput[] LinkNeurons(BotConstruction_PartMap partMap, ContainerInput[] containers, double maxWeight)
+        {
+            //TODO: Take these as params (these are used when hooking up existing links)
+            const int MAXINTERMEDIATELINKS = 3;
+            const int MAXFINALLINKS = 3;
+
+            NeuralLink[][] internalLinks, externalLinks;
+            if (containers.Any(o => o.ExternalLinks != null || o.InternalLinks != null))
+            {
+                internalLinks = BuildInternalLinksExisting(containers, MAXINTERMEDIATELINKS, MAXFINALLINKS);
+                externalLinks = BuildExternalLinksExisting(containers, MAXINTERMEDIATELINKS, MAXFINALLINKS);        //NOTE: The partMap isn't needed for existing links.  It is just to help figure out new random links
+
+                internalLinks = CapWeights(internalLinks, maxWeight);
+                externalLinks = CapWeights(externalLinks, maxWeight);
+            }
+            else
+            {
+                internalLinks = BuildInternalLinksRandom(containers, maxWeight);
+                externalLinks = BuildExternalLinksRandom(partMap, containers, maxWeight);
             }
 
             // Build the return
@@ -1734,8 +1782,9 @@ namespace Game.Newt.v2.GameItems
         }
 
         /// <summary>
+        /// This is used when saving to DNA.
         /// Individual parts don't hold links, so when you call PartBase.GetNewDNA, the links will always be null.
-        /// This populates dna.InternalLinks and dna.ExternalLinks based on the links stored in outputs
+        /// This populates dna.InternalLinks and dna.ExternalLinks based on the links stored in outputs.
         /// </summary>
         /// <param name="dna">This is the dna to populate</param>
         /// <param name="dnaSource">This is the container that the dna came from</param>
@@ -1830,10 +1879,13 @@ namespace Game.Newt.v2.GameItems
 
                 // Create Random
                 LinkIndexed[] links = GetRandomLinks(readable.Count, writeable.Count, count, readonlyIndices, writeonlyIndices, readwritePairs, maxWeight).		// get links
-                    Select(o => new LinkIndexed(o.Item1, o.Item2, o.Item3, GetBrainChemicalModifiers(container, maxWeight))).ToArray();		// tack on the brain chemical receptors
+                    Select(o => new LinkIndexed(o.Item1, o.Item2, o.Item3, GetBrainChemicalModifiers(container, maxWeight))).       // tack on the brain chemical receptors
+                    ToArray();
 
                 // Exit Function
-                retVal[cntr] = links.Select(o => new NeuralLink(container.Container, container.Container, readable[o.From], writeable[o.To], o.Weight, o.BrainChemicalModifiers)).ToArray();
+                retVal[cntr] = links.
+                    Select(o => new NeuralLink(container.Container, container.Container, readable[o.From], writeable[o.To], o.Weight, o.BrainChemicalModifiers)).
+                    ToArray();
             }
 
             // Exit Function
@@ -1870,7 +1922,7 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 // All the real work is done in this method
-                LinkIndexed[] links = BuildInternalLinksExistingSprtContinue(allNeurons, count, container.InternalLinks, container.BrainChemicalCount, maxIntermediateLinks, maxFinalLinks);
+                LinkIndexed[] links = BuildInternalLinksExisting_Continue(allNeurons, count, container.InternalLinks, container.BrainChemicalCount, maxIntermediateLinks, maxFinalLinks);
 
                 // Exit Function
                 retVal[cntr] = links.Select(o => new NeuralLink(container.Container, container.Container, allNeurons[o.From], allNeurons[o.To], o.Weight, o.BrainChemicalModifiers)).ToArray();
@@ -1890,7 +1942,7 @@ namespace Game.Newt.v2.GameItems
         /// NOTE: Both neurons and links could have been mutated independent of each other.  This method doesn't care how
         /// they got the way they are, it just goes by position
         /// </remarks>
-        private static LinkIndexed[] BuildInternalLinksExistingSprtContinue(IEnumerable<INeuron> neurons, int count, NeuralLinkDNA[] existing, int maxBrainChemicals, int maxIntermediateLinks, int maxFinalLinks)
+        private static LinkIndexed[] BuildInternalLinksExisting_Continue(IEnumerable<INeuron> neurons, int count, NeuralLinkDNA[] existing, int maxBrainChemicals, int maxIntermediateLinks, int maxFinalLinks)
         {
             NeuralLinkDNA[] existingPruned = existing;
             if (existing.Length > count)
@@ -1980,17 +2032,14 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Private Methods - external links
 
-        #region Random
+        #region Random - map
 
-        /// <summary>
-        /// This builds links between neurons across containers
-        /// </summary>
-        private static NeuralLink[][] BuildExternalLinksRandom(ContainerInput[] containers, double maxWeight)
+        private static NeuralLink[][] BuildExternalLinksRandom(BotConstruction_PartMap partMap, ContainerInput[] containers, double maxWeight)
         {
             NeuralLink[][] retVal = new NeuralLink[containers.Length][];
 
             // Pull out the readable nodes from each container
-            List<INeuron>[] readable = BuildExternalLinksRandomSprtFindReadable(containers);
+            List<INeuron>[] readable = BuildExternalLinksRandom_FindReadable(containers);
 
             // Shoot through each container, and create links that feed it
             for (int cntr = 0; cntr < containers.Length; cntr++)
@@ -2021,7 +2070,7 @@ namespace Game.Newt.v2.GameItems
                 foreach (var ratio in container.ExternalRatios)
                 {
                     // Link to this container type
-                    links.AddRange(BuildExternalLinksRandomSprtContinue(containers, cntr, ratio, readable, writeable, maxWeight));
+                    links.AddRange(BuildExternalLinksRandom_Continue(partMap, containers, cntr, ratio, readable, writeable, maxWeight));
                 }
 
                 // Add links to the return jagged array
@@ -2038,26 +2087,184 @@ namespace Game.Newt.v2.GameItems
             // Exit Function
             return retVal;
         }
-        private static List<INeuron>[] BuildExternalLinksRandomSprtFindReadable(ContainerInput[] containers)
+
+        private static List<NeuralLink> BuildExternalLinksRandom_Continue(BotConstruction_PartMap partMap, ContainerInput[] containers, int currentIndex, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double> ratio, List<INeuron>[] readable, List<INeuron> writeable, double maxWeight)
         {
-            List<INeuron>[] retVal = new List<INeuron>[containers.Length];
+            List<NeuralLink> retVal = new List<NeuralLink>();
+
+            // Find eligible containers
+            var matchingInputs = BuildExternalLinksRandom_Continue_Eligible(partMap, ratio.Item1, currentIndex, containers, readable);
+            if (matchingInputs.Count == 0)
+            {
+                return retVal;
+            }
+
+            // Add up all the eligible neurons
+            int sourceNeuronCount = matchingInputs.Sum(o => o.Item2.Count);
+
+            double multiplier = matchingInputs.Average(o => o.Item3);
+            multiplier *= ratio.Item3;
+
+            // Figure out how many to create (this is the total count.  Each feeder container will get a percent of these based on its ratio of
+            // neurons compared to the other feeders)
+            int count = BuildExternalLinks_Count(ratio.Item2, sourceNeuronCount, writeable.Count, multiplier);
+            if (count == 0)
+            {
+                return retVal;
+            }
+
+            // I don't want to draw so evenly from all the containers.  Draw from all containers at once.  This will have more clumping, and some containers
+            // could be completely skipped.
+            //
+            // My reasoning for this is manipulators like thrusters don't really make sense to be fed evenly from every single sensor.  Also, thruster's count is by
+            // destination neuron, which is very small.  So fewer total links will be created by doing just one pass
+            List<Tuple<int, int>> inputLookup = new List<Tuple<int, int>>();
+            for (int outer = 0; outer < matchingInputs.Count; outer++)
+            {
+                for (int inner = 0; inner < matchingInputs[outer].Item2.Count; inner++)
+                {
+                    //Item1 = index into matchingInputs
+                    //Item2 = index into neuron
+                    inputLookup.Add(new Tuple<int, int>(outer, inner));
+                }
+            }
+
+            // For now, just build completely random links
+            //NOTE: This is ignoring the relative weights in the map passed in.  Those weights were used to calculate how many total links there should be
+            Tuple<int, int, double>[] links = GetRandomLinks(inputLookup.Count, writeable.Count, count, Enumerable.Range(0, inputLookup.Count).ToArray(), Enumerable.Range(0, writeable.Count).ToArray(), new SortedList<int, int>(), maxWeight);
+
+            foreach (var link in links)
+            {
+                // link.Item1 is the from neuron.  But all the inputs were put into a single list, so use the inputLookup to figure out which container/neuron
+                // is being referenced
+                var input = matchingInputs[inputLookup[link.Item1].Item1];
+                int neuronIndex = inputLookup[link.Item1].Item2;
+
+                double[] brainChemicals = GetBrainChemicalModifiers(input.Item1, maxWeight);		// the brain chemicals are always based on the from container (same in NeuralOperation.Tick)
+
+                retVal.Add(new NeuralLink(input.Item1.Container, containers[currentIndex].Container, input.Item2[neuronIndex], writeable[link.Item2], link.Item3, brainChemicals));
+            }
+
+            // Exit Function
+            return retVal;
+        }
+
+        /// <summary>
+        /// Gets the readable neurons from the containers of the type requested (and skips the current container)
+        /// </summary>
+        private static List<Tuple<ContainerInput, List<INeuron>, double>> BuildExternalLinksRandom_Continue_Eligible(BotConstruction_PartMap partMap, NeuronContainerType containerType, int currentIndex, ContainerInput[] containers, List<INeuron>[] readable)
+        {
+            var retVal = new List<Tuple<ContainerInput, List<INeuron>, double>>();
 
             for (int cntr = 0; cntr < containers.Length; cntr++)
             {
-                retVal[cntr] = new List<INeuron>();
-                retVal[cntr].AddRange(containers[cntr].Container.Neruons_Readonly);
-                retVal[cntr].AddRange(containers[cntr].Container.Neruons_ReadWrite);
+                if (cntr == currentIndex)
+                {
+                    continue;
+                }
+
+                if (containers[cntr].ContainerType != containerType)
+                {
+                    continue;
+                }
+
+                double? weight = null;
+                foreach (var mapped in partMap.Actual)
+                {
+                    if ((mapped.Item1.Token == containers[currentIndex].Token && mapped.Item2.Token == containers[cntr].Token) ||
+                        (mapped.Item2.Token == containers[currentIndex].Token && mapped.Item1.Token == containers[cntr].Token))
+                    {
+                        weight = mapped.Item3;
+                        break;
+                    }
+                }
+
+                if (weight == null)
+                {
+                    // The map doesn't hold a link between these two containers
+                    continue;
+                }
+
+                retVal.Add(Tuple.Create(containers[cntr], readable[cntr], weight.Value));
             }
 
             return retVal;
         }
 
-        private static List<NeuralLink> BuildExternalLinksRandomSprtContinue(ContainerInput[] containers, int currentIndex, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double> ratio, List<INeuron>[] readable, List<INeuron> writeable, double maxWeight)
+        #endregion
+        #region Random - old
+
+        /// <summary>
+        /// This builds links between neurons across containers
+        /// </summary>
+        private static NeuralLink[][] BuildExternalLinksRandom(ContainerInput[] containers, double maxWeight)
+        {
+            NeuralLink[][] retVal = new NeuralLink[containers.Length][];
+
+            // Pull out the readable nodes from each container
+            List<INeuron>[] readable = BuildExternalLinksRandom_FindReadable(containers);
+
+            // Shoot through each container, and create links that feed it
+            for (int cntr = 0; cntr < containers.Length; cntr++)
+            {
+                ContainerInput container = containers[cntr];
+
+                if (container.ExternalRatios == null || container.ExternalRatios.Length == 0)
+                {
+                    // This container shouldn't be fed by other containers (it's probably a sensor)
+                    retVal[cntr] = null;
+                    continue;
+                }
+
+                // Find writable nodes
+                List<INeuron> writeable = new List<INeuron>();
+                writeable.AddRange(container.Container.Neruons_ReadWrite);
+                writeable.AddRange(container.Container.Neruons_Writeonly);
+
+                if (writeable.Count == 0)
+                {
+                    // There are no nodes that can be written
+                    retVal[cntr] = null;
+                    continue;
+                }
+
+                List<NeuralLink> links = new List<NeuralLink>();
+
+                foreach (var ratio in container.ExternalRatios)
+                {
+                    // Link to this container type
+                    links.AddRange(BuildExternalLinksRandom_Continue(containers, cntr, ratio, readable, writeable, maxWeight));
+                }
+
+                // Add links to the return jagged array
+                if (links.Count == 0)
+                {
+                    retVal[cntr] = null;
+                }
+                else
+                {
+                    retVal[cntr] = links.ToArray();
+                }
+            }
+
+            // Exit Function
+            return retVal;
+        }
+        private static List<INeuron>[] BuildExternalLinksRandom_FindReadable(ContainerInput[] containers)
+        {
+            return containers.
+                Select(o => o.Container.Neruons_Readonly.
+                    Concat(o.Container.Neruons_ReadWrite).
+                    ToList()).
+                ToArray();
+        }
+
+        private static List<NeuralLink> BuildExternalLinksRandom_Continue(ContainerInput[] containers, int currentIndex, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double> ratio, List<INeuron>[] readable, List<INeuron> writeable, double maxWeight)
         {
             List<NeuralLink> retVal = new List<NeuralLink>();
 
             // Find eligible containers
-            var matchingInputs = BuildExternalLinksRandomSprtContinueSprtEligible(ratio.Item1, currentIndex, containers, readable);
+            var matchingInputs = BuildExternalLinksRandom_Continue_Eligible(ratio.Item1, currentIndex, containers, readable);
             if (matchingInputs.Count == 0)
             {
                 return retVal;
@@ -2068,7 +2275,7 @@ namespace Game.Newt.v2.GameItems
 
             // Figure out how many to create (this is the total count.  Each feeder container will get a percent of these based on its ratio of
             // neurons compared to the other feeders)
-            int count = BuildExternalLinksSprtCount(ratio.Item2, sourceNeuronCount, writeable.Count, ratio.Item3);
+            int count = BuildExternalLinks_Count(ratio.Item2, sourceNeuronCount, writeable.Count, ratio.Item3);
             if (count == 0)
             {
                 return retVal;
@@ -2112,7 +2319,7 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// Gets the readable neurons from the containers of the type requested (and skips the current container)
         /// </summary>
-        private static List<Tuple<ContainerInput, List<INeuron>>> BuildExternalLinksRandomSprtContinueSprtEligible(NeuronContainerType containerType, int currentIndex, ContainerInput[] containers, List<INeuron>[] readable)
+        private static List<Tuple<ContainerInput, List<INeuron>>> BuildExternalLinksRandom_Continue_Eligible(NeuronContainerType containerType, int currentIndex, ContainerInput[] containers, List<INeuron>[] readable)
         {
             List<Tuple<ContainerInput, List<INeuron>>> retVal = new List<Tuple<ContainerInput, List<INeuron>>>();
 
@@ -2134,95 +2341,6 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        #region OLD
-
-        //private static List<NeuralLink> BuildExternalLinksSprtContinue_OLD2(ContainerInput[] containers, int currentIndex, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double> ratio, List<INeuron>[] readable, List<INeuron> writeable, double maxWeight)
-        //{
-        //    // Find eligible containers
-        //    var matchingInputs = BuildExternalLinksSprtContinueSprtEligible(ratio.Item1, currentIndex, containers, readable);
-
-        //    // Add up all the eligible neurons
-        //    int sourceNeuronCount = matchingInputs.Sum(o => o.Item2.Count);
-
-        //    // Figure out how many to create (this is the total count.  Each feeder container will get a percent of these based on its ratio of
-        //    // neurons compared to the other feeders)
-        //    int totalCount = BuildExternalLinksSprtContinueSprtCount(ratio.Item2, sourceNeuronCount, writeable.Count, ratio.Item3);
-
-        //    List<NeuralLink> retVal = new List<NeuralLink>();
-
-        //    if (totalCount == 0)
-        //    {
-        //        return retVal;
-        //    }
-
-        //    for (int cntr = 0; cntr < matchingInputs.Count; cntr++)
-        //    {
-        //        int readableCount = matchingInputs[cntr].Item2.Count;		// this is used several places, and is tedious to look at
-
-        //        // Figure out how many links to create
-        //        double percent = Convert.ToDouble(readableCount) / Convert.ToDouble(sourceNeuronCount);
-        //        int subCount = Convert.ToInt32(Math.Round(totalCount * percent));
-
-        //        if (subCount == 0)
-        //        {
-        //            continue;
-        //        }
-
-
-        //        if (containers[currentIndex].ExternalLinks != null)
-        //        {
-        //            throw new ApplicationException("finish this");
-        //        }
-
-
-        //        // For now, just build completely random links
-        //        Tuple<int, int, double>[] links = GetRandomLinks(readableCount, writeable.Count, subCount, Enumerable.Range(0, readableCount).ToArray(), Enumerable.Range(0, writeable.Count).ToArray(), new SortedList<int, int>(), maxWeight);
-
-        //        //TODO: Build brain chemical modifiers
-        //        retVal.AddRange(links.Select(o => new NeuralLink(matchingInputs[cntr].Item1.Container, containers[currentIndex].Container, matchingInputs[cntr].Item2[o.Item1], writeable[o.Item2], o.Item3, null)));
-        //    }
-
-        //    // Exit Function
-        //    return retVal;
-        //}
-        //private static List<NeuralLink> BuildExternalLinksSprtContinue_OLD(ContainerInput[] containers, int currentIndex, Tuple<NeuronContainerType, ExternalLinkRatioCalcType, double> ratio, List<INeuron>[] readable, List<INeuron> writeable, double maxWeight)
-        //{
-        //    // Find eligible containers
-        //    var matchingInputs = BuildExternalLinksSprtContinueSprtEligible(ratio.Item1, currentIndex, containers, readable);
-
-        //    List<NeuralLink> retVal = new List<NeuralLink>();
-
-        //    for (int cntr = 0; cntr < matchingInputs.Count; cntr++)
-        //    {
-        //        int readableCount = matchingInputs[cntr].Item2.Count;		// this is used several places, and is tedious to look at
-
-        //        // Figure out how many links to create
-        //        int count = BuildExternalLinksSprtContinueSprtCount(ratio.Item2, readableCount, writeable.Count, ratio.Item3);
-        //        if (count == 0)
-        //        {
-        //            continue;
-        //        }
-
-
-        //        if (containers[currentIndex].ExternalLinks != null)
-        //        {
-        //            throw new ApplicationException("finish this");
-        //        }
-
-
-        //        // For now, just build completely random links
-        //        Tuple<int, int, double>[] links = GetRandomLinks(readableCount, writeable.Count, count, Enumerable.Range(0, readableCount).ToArray(), Enumerable.Range(0, writeable.Count).ToArray(), new SortedList<int, int>(), maxWeight);
-
-        //        //TODO: Build brain chemical modifiers
-        //        retVal.AddRange(links.Select(o => new NeuralLink(matchingInputs[cntr].Item1.Container, containers[currentIndex].Container, matchingInputs[cntr].Item2[o.Item1], writeable[o.Item2], o.Item3, null)));
-        //    }
-
-        //    // Exit Function
-        //    return retVal;
-        //}
-
-        #endregion
-
         #endregion
         #region Existing
 
@@ -2231,7 +2349,7 @@ namespace Game.Newt.v2.GameItems
             NeuralLink[][] retVal = new NeuralLink[containers.Length][];
 
             // Figure out which containers (parts) are closest to the containers[].ExternalLinks[].FromContainerPosition
-            var partBreakdown = BuildExternalLinksExistingSprtContainerPoints(containers, maxIntermediateLinks);
+            var partBreakdown = BuildExternalLinksExisting_ContainerPoints(containers, maxIntermediateLinks);
 
             // This gets added to as needed (avoids recalculating best matching neurons by position)
             Dictionary<ContainerInput, ContainerPoints> nearestNeurons = new Dictionary<ContainerInput, ContainerPoints>();
@@ -2260,11 +2378,11 @@ namespace Game.Newt.v2.GameItems
                     HighestPercentResult[] partLinks = GetHighestPercent(partBreakdown[exist.FromContainerPosition], toPart, maxIntermediateLinks, true);
 
                     // Get links between neurons in between the matching parts
-                    containerLinks.AddRange(BuildExternalLinksExistingSprtAcrossParts(exist, partLinks, containers, nearestNeurons, maxIntermediateLinks, maxFinalLinks));
+                    containerLinks.AddRange(BuildExternalLinksExisting_AcrossParts(exist, partLinks, containers, nearestNeurons, maxIntermediateLinks, maxFinalLinks));
                 }
 
                 // Prune
-                containerLinks = BuildExternalLinksExistingSprtPrune(containerLinks, containers, container);
+                containerLinks = BuildExternalLinksExisting_Prune(containerLinks, containers, container);
 
                 retVal[cntr] = containerLinks.ToArray();
             }
@@ -2273,7 +2391,7 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        private static NeuralLink[] BuildExternalLinksExistingSprtAcrossParts(NeuralLinkExternalDNA dnaLink, HighestPercentResult[] partLinks, ContainerInput[] containers, Dictionary<ContainerInput, ContainerPoints> nearestNeurons, int maxIntermediateLinks, int maxFinalLinks)
+        private static NeuralLink[] BuildExternalLinksExisting_AcrossParts(NeuralLinkExternalDNA dnaLink, HighestPercentResult[] partLinks, ContainerInput[] containers, Dictionary<ContainerInput, ContainerPoints> nearestNeurons, int maxIntermediateLinks, int maxFinalLinks)
         {
             List<NeuralLink> retVal = new List<NeuralLink>();
 
@@ -2335,7 +2453,7 @@ namespace Game.Newt.v2.GameItems
         /// The containers may not be in the same place that the links think they are.  So this method goes through all the container positions
         /// that all the links point to, and figures out which containers are closest to those positions
         /// </summary>
-        private static Dictionary<Point3D, ClosestExistingResult[]> BuildExternalLinksExistingSprtContainerPoints(ContainerInput[] containers, int maxIntermediateLinks)
+        private static Dictionary<Point3D, ClosestExistingResult[]> BuildExternalLinksExisting_ContainerPoints(ContainerInput[] containers, int maxIntermediateLinks)
         {
             Dictionary<Point3D, ClosestExistingResult[]> retVal = new Dictionary<Point3D, ClosestExistingResult[]>();		// can't use SortedList, because point isn't sortable (probably doesn't have IComparable)
 
@@ -2357,7 +2475,7 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        private static List<NeuralLink> BuildExternalLinksExistingSprtPrune(List<NeuralLink> links, ContainerInput[] containers, ContainerInput toContainer)
+        private static List<NeuralLink> BuildExternalLinksExisting_Prune(List<NeuralLink> links, ContainerInput[] containers, ContainerInput toContainer)
         {
             List<NeuralLink> retVal = new List<NeuralLink>();
 
@@ -2377,7 +2495,7 @@ namespace Game.Newt.v2.GameItems
                 NeuralLink[] groupLinks = group.ToArray();
 
                 // Figure out how many links are supported
-                int maxCount = BuildExternalLinksSprtCount(ratio.Item2, fromContainer.Container.Neruons_All.Count(), toContainer.Container.Neruons_All.Count(), ratio.Item3);
+                int maxCount = BuildExternalLinks_Count(ratio.Item2, fromContainer.Container.Neruons_All.Count(), toContainer.Container.Neruons_All.Count(), ratio.Item3);
                 if (groupLinks.Length <= maxCount)
                 {
                     // No need to prune, keep all of these
@@ -2395,105 +2513,45 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        #region OLD
-
-        ////TODO: Rework these two methods into a single method that is more efficient
-        //private static NeuralLink[] BuildExternalLinksExistingSprtAcrossParts_OLD(NeuralLinkExternalDNA dnaLink, HighestPercentResult[] partLinks, ContainerInput[] containers, int maxIntermediateLinks, int maxFinalLinks)
-        //{
-        //    List<NeuralLink> retVal = new List<NeuralLink>();
-
-        //    foreach (HighestPercentResult partLink in partLinks)
-        //    {
-        //        // Find links between these two parts
-        //        ContainerInput fromContainer = containers[partLink.From.Index];
-        //        ContainerInput toContainer = containers[partLink.To.Index];
-
-        //        INeuron[] fromNeurons = fromContainer.Container.Neruons_All.ToArray();
-        //        INeuron[] toNeurons = toContainer.Container.Neruons_All.ToArray();
-
-        //        LinkIndexed[] links = BuildExternalLinksExistingSprtContinue_OLD(fromNeurons, toNeurons, int.MaxValue, dnaLink, fromContainer.BrainChemicalCount, maxIntermediateLinks);
-
-        //        retVal.AddRange(links.Select(o => new NeuralLink(fromContainer.Container, toContainer.Container, fromNeurons[o.From], toNeurons[o.To], partLink.Percent * o.Weight, o.BrainChemicalModifiers)));
-        //    }
-
-        //    if (retVal.Count > maxFinalLinks)
-        //    {
-        //        // Prune and normalize percents
-        //        var pruned = Prune(retVal.Select(o => o.Weight).ToArray(), maxFinalLinks);		// choose the top X weights, and tell what the new weight should be
-        //        retVal = pruned.Select(o => new NeuralLink(retVal[o.Item1].FromContainer, retVal[o.Item1].ToContainer, retVal[o.Item1].From, retVal[o.Item1].To, o.Item2, retVal[o.Item1].BrainChemicalModifiers)).ToList();		// copy the referenced retVal items, but with the altered weights
-        //    }
-
-        //    // Exit Function
-        //    return retVal.ToArray();
-        //}
-        ///// <remarks>
-        ///// This is a copy of BuildInternalLinksExistingSprtContinue, but works with two lists of neurons instead of just one
-        ///// </remarks>
-        //private static LinkIndexed[] BuildExternalLinksExistingSprtContinue_OLD(IEnumerable<INeuron> fromNeurons, IEnumerable<INeuron> toNeurons, int count, NeuralLinkExternalDNA dnaLink, int maxBrainChemicals, int maxIntermediateLinks)
-        //{
-        //    //TODO: Optimize this section by doing these lookups up front for all dna links
-        //    ClosestExistingResult[] from = GetClosestExisting(dnaLink.From, fromNeurons.Select(o => o.Position).ToArray(), maxIntermediateLinks);
-        //    ClosestExistingResult[] to = GetClosestExisting(dnaLink.To, toNeurons.Select(o => o.Position).ToArray(), maxIntermediateLinks);
-
-
-
-        //    List<LinkIndexed> retVal = new List<LinkIndexed>();
-
-        //    // Build links
-        //    HighestPercentResult[] links = GetHighestPercent(from, to, maxIntermediateLinks, false);
-
-        //    foreach (HighestPercentResult link in links)
-        //    {
-        //        double[] brainChemicals = null;
-        //        if (dnaLink.BrainChemicalModifiers != null)
-        //        {
-        //            brainChemicals = dnaLink.BrainChemicalModifiers.
-        //                Take(maxBrainChemicals).		// if there are more, just drop them
-        //                Select(o => o).
-        //                //Select(o => o * link.Percent).		// I decided not to multiply by percent.  The weight is already reduced, no point in double reducing
-        //                ToArray();
-        //        }
-
-        //        retVal.Add(new LinkIndexed(link.From.Index, link.To.Index, dnaLink.Weight * link.Percent, brainChemicals));
-        //    }
-
-
-        //    // Exit Function
-        //    return retVal.ToArray();
-        //}
-
-        #endregion
-
         #endregion
 
         /// <summary>
         /// Figures out how many links to create based on the number of neurons
         /// </summary>
-        private static int BuildExternalLinksSprtCount(ExternalLinkRatioCalcType calculationType, int sourceNeuronCount, int destinationNeuronCount, double ratio)
+        private static int BuildExternalLinks_Count(ExternalLinkRatioCalcType calculationType, int sourceNeuronCount, int destinationNeuronCount, double ratio)
         {
+            double retVal;
+
             switch (calculationType)
             {
                 case ExternalLinkRatioCalcType.Smallest:
                     int smallerNeuronCount = Math.Min(sourceNeuronCount, destinationNeuronCount);
-                    return Convert.ToInt32(Math.Round(ratio * smallerNeuronCount));
+                    retVal = smallerNeuronCount;
+                    break;
 
                 case ExternalLinkRatioCalcType.Largest:
                     int largerNeuronCount = Math.Max(sourceNeuronCount, destinationNeuronCount);
-                    return Convert.ToInt32(Math.Round(ratio * largerNeuronCount));
+                    retVal = largerNeuronCount;
+                    break;
 
                 case ExternalLinkRatioCalcType.Average:
-                    int averageNeuronCount = Convert.ToInt32(Math.Round((sourceNeuronCount + destinationNeuronCount) / 2d));
-                    return Convert.ToInt32(Math.Round(ratio * averageNeuronCount));
+                    double averageNeuronCount = Math.Round((sourceNeuronCount + destinationNeuronCount) / 2d);
+                    retVal = averageNeuronCount;
+                    break;
 
                 case ExternalLinkRatioCalcType.Source:
-                    return Convert.ToInt32(Math.Round(ratio * sourceNeuronCount));
+                    retVal = sourceNeuronCount;
+                    break;
 
                 case ExternalLinkRatioCalcType.Destination:
-                    return Convert.ToInt32(Math.Round(ratio * destinationNeuronCount));
+                    retVal = destinationNeuronCount;
+                    break;
 
                 default:
                     throw new ApplicationException("Unknown ExternalLinkRatioCalcType: " + calculationType.ToString());
             }
+
+            return (retVal * ratio).ToInt_Round();
         }
 
         #endregion
@@ -2575,9 +2633,11 @@ namespace Game.Newt.v2.GameItems
             }
 
             // Assign random weights
-            return possibleLinks.Select(o => new Tuple<int, int, double>(o.Item1, o.Item2, Math1D.GetNearZeroValue(maxWeight))).ToArray();
+            return possibleLinks.
+                Select(o => Tuple.Create(o.Item1, o.Item2, Math1D.GetNearZeroValue(maxWeight))).
+                ToArray();
         }
-        private static Tuple<int, int, double>[] GetRandomLinksSprtWeight(IEnumerable<Tuple<int, int>> links, double maxWeight)
+        private static Tuple<int, int, double>[] GetRandomLinks_Weight(IEnumerable<Tuple<int, int>> links, double maxWeight)
         {
             List<Tuple<int, int, double>> retVal = new List<Tuple<int, int, double>>();
 
@@ -2915,13 +2975,13 @@ namespace Game.Newt.v2.GameItems
                     continue;
                 }
 
-                retVal[outer] = links[outer].Select(o => new NeuralLink(o.FromContainer, o.ToContainer, o.From, o.To, CapWeightsSprtWeight(o.Weight, maxWeight),
-                    o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.Select(p => CapWeightsSprtWeight(p, maxWeight)).ToArray())).ToArray();
+                retVal[outer] = links[outer].Select(o => new NeuralLink(o.FromContainer, o.ToContainer, o.From, o.To, CapWeights_Weight(o.Weight, maxWeight),
+                    o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.Select(p => CapWeights_Weight(p, maxWeight)).ToArray())).ToArray();
             }
 
             return retVal;
         }
-        private static double CapWeightsSprtWeight(double weight, double max)
+        private static double CapWeights_Weight(double weight, double max)
         {
             if (Math.Abs(weight) > max)
             {

@@ -125,7 +125,7 @@ namespace Game.HelperClassesCore
             return _localRandom.Value.Random.NextDrift(midPoint, drift, useRandomDrift);
         }
 
-        public static double NextPow(double power, double maxValue = 1d, bool isPlusMinus = true)
+        public static double NextPow(double power, double maxValue = 1d, bool isPlusMinus = false)
         {
             return _localRandom.Value.Random.NextPow(power, maxValue, isPlusMinus);
         }

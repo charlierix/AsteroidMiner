@@ -388,7 +388,7 @@ namespace Game.HelperClassesCore
 
                 Random rand = StaticRandom.GetRandomForThread();
 
-                // Rather than going through the overhead of building an array of all values up front, just remember what I've returned
+                // Rather than going through the overhead of building an array of all values up front, just remember what's been returned
                 List<int> used = new List<int>();
                 int maxValue = start + rangeCount;
 
@@ -417,7 +417,7 @@ namespace Game.HelperClassesCore
             {
                 #region Maintain Array
 
-                // Reuse my other overload, just stop prematurely
+                // Reuse the other overload, just stop prematurely
 
                 int cntr = 0;
                 foreach (int retVal in RandomRange(start, rangeCount))
@@ -654,6 +654,29 @@ namespace Game.HelperClassesCore
                 }
             }
         }
+        public static IEnumerable<Tuple<int, int>> GetPairs(int count)
+        {
+            for (int outer = 0; outer < count - 1; outer++)
+            {
+                for (int inner = outer + 1; inner < count; inner++)
+                {
+                    yield return Tuple.Create(outer, inner);
+                }
+            }
+        }
+
+        /// <summary>
+        /// This is like calling RandomRange() on GetPairs().  But is optimized to not build all intermediate pairs
+        /// </summary>
+        /// <param name="itemCount">This would be the count passed into GetPairs</param>
+        /// <param name="returnCount">This is how many random samples to take</param>
+        public static IEnumerable<Tuple<int, int>> GetRandomPairs(int itemCount, int returnCount)
+        {
+            int linkCount = ((itemCount * itemCount) - itemCount) / 2;
+
+            return RandomRange(0, linkCount, returnCount).
+                Select(o => GetPair(o, itemCount));
+        }
 
         /// <summary>
         /// WARNING: Only use this overload if the type is comparable with .Equals - (like int)
@@ -736,6 +759,12 @@ namespace Game.HelperClassesCore
             return retVal.ToArray();
         }
 
+        /// <summary>
+        /// If there are 10 items, and the percent is .43, then the 4th item will be returned (index=3)
+        /// </summary>
+        /// <param name="percent">A percent (from 0 to 1)</param>
+        /// <param name="count">The number of items in the list</param>
+        /// <returns>The index into the list</returns>
         public static int GetIndexIntoList(double percent, int count)
         {
             if (count <= 0)
@@ -748,6 +777,32 @@ namespace Game.HelperClassesCore
             if (retVal >= count) retVal = count - 1;
 
             return retVal;
+        }
+        /// <summary>
+        /// This walks fractionsOfWhole, and returns the index that percent lands on
+        /// NOTE: fractionsOfWhole should be sorted descending
+        /// WARNING: fractionsOfWhole.Sum(o => o.Item2) must be one.  If it's less, this method will sometimes return -1.  If it's more, the items over one will never be chosen
+        /// </summary>
+        /// <param name="percent">The percent to seek</param>
+        /// <param name="fractionsOfWhole">
+        /// Item1=Index into original list (this isn't used by this method, but will be a link to the item represented by this item)
+        /// Item2=Percent of whole that this item represents (the sum of the percents should add up to 1)
+        /// </param>
+        public static int GetIndexIntoList(double percent, Tuple<int, double>[] fractionsOfWhole)
+        {
+            double used = 0;
+
+            for (int cntr = 0; cntr < fractionsOfWhole.Length; cntr++)
+            {
+                if (percent >= used && percent <= used + fractionsOfWhole[cntr].Item2)
+                {
+                    return cntr;
+                }
+
+                used += fractionsOfWhole[cntr].Item2;
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -1320,6 +1375,64 @@ namespace Game.HelperClassesCore
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// This calculates which pair the index points to
+        /// </summary>
+        /// <remarks>
+        /// See GetPairs() to see how these are generated
+        /// 
+        /// Here is what the pairs look like for 7.  So if you pass in an index of 15, this returns [3,4].
+        /// 
+        ///index    left    right
+        ///0	0	1
+        ///1	0	2
+        ///2	0	3
+        ///3	0	4
+        ///4	0	5
+        ///5	0	6
+        ///6	1	2
+        ///7	1	3
+        ///8	1	4
+        ///9	1	5
+        ///10	1	6
+        ///11	2	3
+        ///12	2	4
+        ///13	2	5
+        ///14	2	6
+        ///15	3	4
+        ///16	3	5
+        ///17	3	6
+        ///18	4	5
+        ///19	4	6
+        ///20	5	6
+        /// 
+        /// The linkCount is (c^2-c)/2, but I couldn't think of a way to do the reverse with some kind of sqrt or division (the divisor
+        /// shrinks per set).  So I went with a loop to find the current set
+        /// </remarks>
+        private static Tuple<int, int> GetPair(int index, int itemCount)
+        {
+            // Init to point to the first set
+            int left = 0;
+            int maxIndex = itemCount - 2;
+            int setSize = maxIndex + 1;
+
+            // Loop to find the set that the index falls into
+            while (setSize > 0)
+            {
+                if (index <= maxIndex)
+                {
+                    int right = left + (setSize - (maxIndex - index));
+                    return Tuple.Create(left, right);
+                }
+
+                setSize -= 1;
+                maxIndex += setSize;
+                left++;
+            }
+
+            throw new ArgumentException(string.Format("Index is too large\r\nIndex={0}\r\nItemCount={1}\r\nLinkCount={2}", index, itemCount, ((itemCount * itemCount) - itemCount) / 2));
         }
 
         #endregion

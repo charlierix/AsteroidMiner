@@ -299,6 +299,14 @@ namespace Game.HelperClassesWPF
 
         #region Public Methods
 
+        public static Point3D[] GetUniquePoints(IEnumerable<ITriangle> triangles)
+        {
+            return triangles.
+                SelectMany(o => o.PointArray).
+                Distinct((p1, p2) => Math3D.IsNearValue(p1, p2)).
+                ToArray();
+        }
+
         /// <summary>
         /// This helps a lot when looking at lists of triangles in the quick watch
         /// </summary>
@@ -1258,6 +1266,50 @@ namespace Game.HelperClassesWPF
             return retVal.Distinct().ToArray();		//distinct works, because the tuple always has the smaller index as item1
         }
 
+        /// <summary>
+        /// This returns only the points that are used across the triangles
+        /// </summary>
+        /// <param name="forcePointCompare">If the points should be directly compared (ignore indices), then pass true</param>
+        public static Point3D[] GetUsedPoints(IEnumerable<ITriangleIndexed> triangles, bool forcePointCompare = false)
+        {
+            if(forcePointCompare)
+            {
+                return Triangle.GetUniquePoints(triangles);
+            }
+
+            ITriangleIndexed first = triangles.FirstOrDefault();
+            if (first == null)
+            {
+                return new Point3D[0];
+            }
+
+            Point3D[] allPoints = first.AllPoints;
+
+            // Since these are indexed triangles, dedupe on the indices.  This will be much faster than directly comparing points
+            return triangles.
+                SelectMany(o => o.IndexArray).
+                Distinct().
+                //OrderBy(o => o).
+                Select(o => allPoints[o]).
+                ToArray();
+        }
+        /// <summary>
+        /// This overload takes in a bunch of sets of triangles.  Each set is independent of the others (unique AllPoints per set)
+        /// </summary>
+        public static Point3D[] GetUsedPoints(IEnumerable<IEnumerable<ITriangleIndexed>> triangleSets, bool forcePointCompare = false)
+        {
+            List<Point3D> retVal = new List<Point3D>();
+
+            var pointCompare = new Func<Point3D, Point3D, bool>((p1, p2) => Math3D.IsNearValue(p1, p2));
+
+            foreach (var set in triangleSets)
+            {
+                retVal.AddRangeUnique(TriangleIndexed.GetUsedPoints(set, forcePointCompare), pointCompare);
+            }
+
+            return retVal.ToArray();
+        }
+
         public static TriangleIndexed[] ConvertToIndexed(ITriangle[] triangles)
         {
             // Find the unique points
@@ -1365,7 +1417,11 @@ namespace Game.HelperClassesWPF
             }
 
             // Get all the used indices
-            int[] allUsedIndices = triangles.SelectMany(o => o.IndexArray).Distinct().OrderBy(o => o).ToArray();
+            int[] allUsedIndices = triangles.
+                SelectMany(o => o.IndexArray).
+                Distinct().
+                OrderBy(o => o).
+                ToArray();
 
             // Get the points
             Point3D[] allPoints = triangles[0].AllPoints;

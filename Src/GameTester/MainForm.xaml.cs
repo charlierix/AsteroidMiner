@@ -176,6 +176,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.PotatoWindow().Show();
         }
+        private void MadShatter_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.MadShatter().Show();
+        }
         private void EvenDistribute2D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.EvenDistributionCircle().Show();
@@ -215,6 +219,10 @@ namespace Game.GameTester
         private void Painter3D_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.FluidFields.FluidPainter3D().Show();
+        }
+        private void NonlinearRandom_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NonlinearRandom().Show();
         }
 
         #endregion
@@ -305,9 +313,9 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.BrainTester().Show();
         }
-        private void BrainTester2_MouseUp(object sender, MouseButtonEventArgs e)
+        private void BrainLinks_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.BrainTester2().Show();
+            new Game.Newt.Testers.BrainLinks().Show();
         }
         private void FlyingBeans_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -363,6 +371,10 @@ namespace Game.GameTester
         private void AstMiner2D_2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.AsteroidMiner.AstMin2D.MinerWindow().Show();
+        }
+        private void MissileCommand0D_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.MissileCommand.MissileCommand0D().Show();
         }
 
         #endregion

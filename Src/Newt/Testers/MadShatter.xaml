@@ -1,0 +1,348 @@
+﻿<Window x:Class="Game.Newt.Testers.MadShatter"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Mad Shatter" ResizeMode="CanResizeWithGrip" Width="950" Height="750" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="15" FontWeight="500" Foreground="#E05B6A6C" FontFamily="Microsoft YaHei"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+            <Setter Property="Margin" Value="2,3"/>
+        </Style>
+
+        <Style x:Key="controlsPanelInExpander" TargetType="Border">
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <Style x:Key="controlsPanelStack" TargetType="StackPanel">
+            <Setter Property="Margin" Value="6,4"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,1"/>
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid Background="#F1F0EB">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Row="0" Background="#EDEBE5" BorderBrush="#80D8D3CD" BorderThickness="1" CornerRadius="5" Padding="3,3,2,3" Margin="12,12,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="3">
+                    <StackPanel>
+
+                        <!-- Shoot Asteroid - One - Synthetic -->
+                        <Expander IsExpanded="False" Header="Shoot Asteroid 1">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="New Asteroid" Click="ShootNewAsteroid_Click"/>
+
+                                    <StackPanel Margin="0,10,0,2">
+                                        <TextBlock Text="plates" HorizontalAlignment="Center"/>
+                                        <RadioButton IsChecked="True" Name="radOneShot_SinglePlate" Content="Single"/>
+                                        <RadioButton Name="radOneShot_TwoPlates" Content="Two"/>
+                                        <RadioButton Name="radOneShot_ThreePlates" Content="Three"/>
+                                        <CheckBox Name="chkOneShotPlateEvenDistribute" Content="Even Distribute"/>
+                                        <Slider Name="trkOneShotPercentDist1" Minimum=".01" Maximum="1.5" Value=".5" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2"/>
+                                        <Slider Name="trkOneShotPercentDist2" Minimum=".01" Maximum="1.5" Value=".5" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2"/>
+                                        <Slider Name="trkOneShotPercentDist3" Minimum=".01" Maximum="1.5" Value=".5" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2"/>
+                                    </StackPanel>
+
+                                    <StackPanel Margin="0,10,0,2">
+                                        <TextBlock Text="center line" HorizontalAlignment="Center"/>
+                                        <RadioButton IsChecked="True" Name="radOneShot_LineNone" Content="None"/>
+                                        <RadioButton Name="radOneShot_LineAbove" Content="Above"/>
+                                        <RadioButton Name="radOneShot_LineMiddle" Content="Middle"/>
+                                        <RadioButton Name="radOneShot_LineBelow" Content="Below"/>
+                                        <RadioButton Name="radOneShot_LineSeveral" Content="Several"/>
+                                    </StackPanel>
+
+                                    <Button Content="One Shot" Margin="0,10,0,2" Click="ShootOneShot_Click"/>
+
+                                    <!-- TODO: Implement this after you know what different arrangments do -->
+                                    <CheckBox Visibility="Collapsed" Name="chkAttemptRealism" Content="Attempt Realism"/>
+                                    <Slider Visibility="Collapsed" Name="trkPower" Minimum="0" Maximum="100" Value="25"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Shoot Asteroid - Two - Synthetic -->
+                        <Expander IsExpanded="False" Header="Shoot Asteroid 2">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="New Asteroid" Click="ShootNewAsteroid_Click"/>
+
+                                    <Button Content="Two Shots" Margin="0,10,0,2" Click="ShootTwoShots_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Several Shots -->
+                        <Expander IsExpanded="True" Header="Shoot Asteroid 1+">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="New Asteroid" Click="ShootNewAsteroid_Click"/>
+
+                                    <Button Content="Clear Shots" Margin="0,8,0,0" Click="ClearShots_Click"/>
+
+                                    <UniformGrid Rows="1" Margin="0,8,0,0">
+                                        <Button Content="pew" FontSize="11" Click="ShootSmallShot_Click"/>
+                                        <Button Content="Pew" FontSize="12" Click="ShootMedShot_Click"/>
+                                        <Button Content="PEW" FontSize="13" Click="ShootLargeShot_Click"/>
+                                    </UniformGrid>
+
+                                    <Label Content="Mouse click power" ToolTip="How much power in a shot produced from a left mouse click" Margin="0,8,0,0"/>
+                                    <Slider Name="trkMouseShotPower" Minimum=".01" Maximum="1" Value=".4" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Label Grid.Column="0" Grid.Row="0" Content="Min count" HorizontalAlignment="Left"/>
+                                        <TextBox Grid.Column="0" Grid.Row="1" Name="txtMinShards" Text="2"/>
+
+                                        <Label Grid.Column="2" Grid.Row="0" Content="Max count" HorizontalAlignment="Left"/>
+                                        <TextBox Grid.Column="2" Grid.Row="1" Name="txtMaxShards" Text="33"/>
+                                    </Grid>
+
+                                    <Button Content="Recalc existing shots" Margin="0,8,0,0" Click="RecalcShots_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Drop Asteroid -->
+                        <Expander Visibility="Collapsed" IsExpanded="False" Header="Drop Asteroid">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="It's a button"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Projectile Forces -->
+                        <Expander IsExpanded="False" Header="Projectile Forces">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}" Slider.ValueChanged="trkProjForce_ValueChanged">
+                                    <StackPanel.Resources>
+                                        <Style TargetType="Slider">
+                                            <Setter Property="AutoToolTipPlacement" Value="BottomRight"/>
+                                            <Setter Property="AutoToolTipPrecision" Value="2"/>
+                                        </Style>
+                                    </StackPanel.Resources>
+
+                                    <Label Content="Overall Mult"/>
+                                    <Slider Name="trkProjForceOverall" Minimum="0" Maximum="10" Value="4"/>
+
+                                    <Label Content="Along Mult"/>
+                                    <Slider Name="trkProjForceAlong" Minimum="0" Maximum="1" Value="1"/>
+
+                                    <Label Content="Orth Mult"/>
+                                    <Slider Name="trkProjForceOrth" Minimum="0" Maximum="1" Value="1"/>
+
+                                    <CheckBox IsChecked="True" Name="chkProjForceUseDistDot" Content="Use distance * dot" Checked="ProjForceRedraw_Click" Unchecked="ProjForceRedraw_Click"/>
+                                    <Grid Visibility="{Binding ElementName=chkProjForceUseDistDot, Path=IsChecked, Converter={StaticResource BoolToVis}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Power" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Name="txtProjForceDistDotPow" Text=".4" VerticalAlignment="Center" Margin="0,4,0,0" TextChanged="txtProjForceDistDotPow_TextChanged"/>
+                                    </Grid>
+
+                                    <Button Content="Random Points" Margin="0,12,0,0" Click="ProjForceRandPoints_Click"/>
+
+                                    <Button Content="Redraw" Margin="0,8,0,0" Click="ProjForceRedraw_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- ProjForces Graph -->
+                        <Expander IsExpanded="False" Header="ProjForces Graph">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}" Slider.ValueChanged="trkProjForce_ValueChanged">
+                                    <RadioButton IsChecked="True" Name="radProjForceGraphSimple" Content="Simple"/>
+                                    <RadioButton Name="radProjForceGraphTight" Margin="0,2,0,0" Content="Tight"/>
+                                    <RadioButton Name="radProjForceGraph2Tight" Margin="0,2,0,0" Content="2 Tight"/>
+
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="4"/>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="Count" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Grid.Row="0" Name="txtProjForceGraphCount" Text="100" VerticalAlignment="Center"/>
+
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="Base Constant" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Grid.Row="2" Name="txtProjForceGraphBaseConst" Text="2.718" VerticalAlignment="Center"/>
+                                    </Grid>
+
+                                    <Button Content="Graph" Margin="0,8,0,0" Click="ProjForceGraph_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Concave->Convex -->
+                        <Expander Visibility="Collapsed" IsExpanded="False" Header="Concave->Convex">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="It's a button"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Misc -->
+                        <Expander IsExpanded="False" Header="Misc">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Style="{StaticResource controlsPanelStack}">
+                                    <Button Content="Voronoi 1" Click="Voronoi1_Click"/>
+                                    <Button Content="Linear dot product" Click="LinearDotProduct_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="2">
+                    <!-- Global options -->
+                    <CheckBox Name="chkSmoothShards" Content="Smoothed shards"/>
+                    <CheckBox Name="chkPhysics" Content="Apply Physics"/>
+
+                    <StackPanel Visibility="{Binding ElementName=chkPhysics, Path=IsChecked, Converter={StaticResource BoolToVis}}" Grid.IsSharedSizeScope="True">
+                        <StackPanel.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+
+                            <Style TargetType="TextBox">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+
+                            <Style TargetType="Slider">
+                                <Setter Property="AutoToolTipPlacement" Value="BottomRight"/>
+                                <Setter Property="AutoToolTipPrecision" Value="2"/>
+                            </Style>
+                        </StackPanel.Resources>
+
+                        <CheckBox IsChecked="True" Name="chkUseDistDot" Content="Use distance * dot"/>
+                        <Grid Visibility="{Binding ElementName=chkUseDistDot, Path=IsChecked, Converter={StaticResource BoolToVis}}" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="prompt"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Power"/>
+                            <TextBox Grid.Column="2" Name="txtDistDotPow" Text=".4"/>
+                        </Grid>
+
+                        <CheckBox IsChecked="True" Name="chkUseInteriorVelocityCenterPercent" Content="Explosion interior %"/>
+                        <Grid Visibility="{Binding ElementName=chkUseInteriorVelocityCenterPercent, Path=IsChecked, Converter={StaticResource BoolToVis}}" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="prompt"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="%"/>
+                            <Slider Grid.Column="2" Name="trkInteriorVelocityCenterPercent" Minimum="0" Maximum="1" Value=".15"/>
+                        </Grid>
+
+                        <CheckBox IsChecked="True" Name="chkUseRandomVelocityPercent" Content="Random velocity %"/>
+                        <Grid Visibility="{Binding ElementName=chkUseRandomVelocityPercent, Path=IsChecked, Converter={StaticResource BoolToVis}}" Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="prompt"/>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="%"/>
+                            <Slider Grid.Column="2" Name="trkRandomVelocityPercent" Minimum="0" Maximum="1" Value=".25"/>
+                        </Grid>
+
+                        <Label Content="Velocity"/>
+                        <Slider Name="trkShotMultiplier" Minimum="0" Maximum="1000" Value="100" AutoToolTipPrecision="0"/>
+                    </StackPanel>
+
+                    <!-- Redraw -->
+                    <Button Content="Redraw" Click="Redraw_Click"/>
+
+                    <!-- Display -->
+                    <Expander IsExpanded="True" Header="Display">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}">
+
+                                <CheckBox Name="chkDrawLines" Content="Draw Lines"/>
+                                <CheckBox Name="chkDrawNormals" Content="Draw Normals"/>
+                                <CheckBox Name="chkDrawFaces" Content="Draw Faces" IsChecked="True"/>
+                                <CheckBox Name="chkSoftFaces" Content="Soft Faces" IsEnabled="{Binding ElementName=chkDrawFaces, Path=IsChecked}"/>
+                                <CheckBox Name="chkNearlyTransparent" Content="Nearly Transparent" IsEnabled="{Binding ElementName=chkDrawFaces, Path=IsChecked}"/>
+
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="1" Name="grdViewPort" Background="#6C7272" BorderThickness="1" BorderBrush="#A69981" CornerRadius="3" Margin="9,12,12,12" MouseDown="grdViewPort_MouseDown">
+            <Border.Effect>
+                <DropShadowEffect Color="#CCB8B4" BlurRadius="18" Opacity=".35" Direction="0" ShadowDepth="0" />
+            </Border.Effect>
+
+            <Grid>
+                <!-- This is for 2D stuff -->
+                <Canvas Name="_canvas" />
+
+                <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                    <!-- Camera -->
+                    <Viewport3D.Camera>
+                        <PerspectiveCamera x:Name="_camera" Position="0,0,30" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                    </Viewport3D.Camera>
+                    <!-- Lights -->
+                    <ModelVisual3D>
+                        <ModelVisual3D.Content>
+                            <Model3DGroup>
+                                <AmbientLight Color="DimGray" />
+                                <DirectionalLight Color="#E6E6E6" Direction="-1,-1,-1" />
+                                <DirectionalLight Color="#303030" Direction="1,1,1" />
+                            </Model3DGroup>
+                        </ModelVisual3D.Content>
+                    </ModelVisual3D>
+                </Viewport3D>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

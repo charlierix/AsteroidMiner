@@ -53,7 +53,7 @@ namespace Game.Newt.v2.Arcanorum
     /// Toughness boost
     /// Magic resistance boost
     /// </remarks>
-    public class Bot : IMapObject, IPartUpdatable, IGivesDamage, ITakesDamage, IDisposable
+    public class ArcBot : IMapObject, IPartUpdatable, IGivesDamage, ITakesDamage, IDisposable
     {
         #region Enum: ItemToFrom
 
@@ -169,7 +169,7 @@ namespace Game.Newt.v2.Arcanorum
         /// <summary>
         /// NOTE: This doesn't add itself to the map or viewport, those are passed in so that it can add/remove equipment
         /// </summary>
-        public Bot(BotDNA dna, int level, Point3D position, World world, Map map, KeepItems2D keepItems2D, MaterialIDs materialIDs, Viewport3D viewport, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, DragHitShape dragPlane, Point3D homingPoint, double homingRadius, bool runNeural, bool repairPartPositions)
+        public ArcBot(BotDNA dna, int level, Point3D position, World world, Map map, KeepItems2D keepItems2D, MaterialIDs materialIDs, Viewport3D viewport, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, DragHitShape dragPlane, Point3D homingPoint, double homingRadius, bool runNeural, bool repairPartPositions)
         {
             _world = world;
             _map = map;
@@ -1245,7 +1245,7 @@ namespace Game.Newt.v2.Arcanorum
 
                 int numLayers;
                 double radius, mass, innerShellAlphaMult, outerShellAlphaMult, hitPoints;
-                Bot.GetSettingsForLevel(out numLayers, out radius, out mass, out innerShellAlphaMult, out outerShellAlphaMult, out hitPoints, _level);
+                ArcBot.GetSettingsForLevel(out numLayers, out radius, out mass, out innerShellAlphaMult, out outerShellAlphaMult, out hitPoints, _level);
 
                 RebuildGraphic(numLayers, radius, innerShellAlphaMult, outerShellAlphaMult);
             }

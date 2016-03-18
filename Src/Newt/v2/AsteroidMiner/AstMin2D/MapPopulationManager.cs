@@ -324,7 +324,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void AddAsteroid(ChangeInstruction instr)
         {
             //NOTE: The dna only holds radius, no triangles
-            Asteroid asteroid = new Asteroid(instr.Asteroid.Radius, _getAsteroidMassByRadius, instr.Add_Position, _world, _map, _material_Asteroid, _getMineralsByDestroyedMass, _material_Mineral, _minChildAsteroidRadius);
+            AsteroidExtra extra = new AsteroidExtra()
+            {
+                GetMineralsByDestroyedMass = _getMineralsByDestroyedMass,
+                MineralMaterialID = _material_Mineral,
+                MinChildRadius = _minChildAsteroidRadius,
+            };
+
+            Asteroid asteroid = new Asteroid(instr.Asteroid.Radius, _getAsteroidMassByRadius, instr.Add_Position, _world, _map, _material_Asteroid, extra);
 
             asteroid.PhysicsBody.AngularVelocity = instr.Add_AngVel;
             asteroid.PhysicsBody.Velocity = instr.Add_Velocity;

@@ -93,8 +93,8 @@
     <Compile Include="BrainTester.xaml.cs">
       <DependentUpon>BrainTester.xaml</DependentUpon>
     </Compile>
-    <Compile Include="BrainTester2.xaml.cs">
-      <DependentUpon>BrainTester2.xaml</DependentUpon>
+    <Compile Include="BrainLinks.xaml.cs">
+      <DependentUpon>BrainLinks.xaml</DependentUpon>
     </Compile>
     <Compile Include="CameraTester.xaml.cs">
       <DependentUpon>CameraTester.xaml</DependentUpon>
@@ -171,6 +171,12 @@
     </Compile>
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MadShatter.xaml.cs">
+      <DependentUpon>MadShatter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NonlinearRandom.xaml.cs">
+      <DependentUpon>NonlinearRandom.xaml</DependentUpon>
     </Compile>
     <Compile Include="SOM\DBRowsDetail.xaml.cs">
       <DependentUpon>DBRowsDetail.xaml</DependentUpon>
@@ -312,7 +318,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="BrainTester2.xaml">
+    <Page Include="BrainLinks.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -419,6 +425,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Encog\OCRTestDataVisualizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MadShatter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NonlinearRandom.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -116,6 +116,7 @@
                     <ListBoxItem Content="TubeMesh" MouseUp="TubeMeshTester_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Sound" MouseUp="SoundTester_MouseUp"/>
                     <ListBoxItem Content="Potatoes" MouseUp="Potatoes_MouseUp"/>
+                    <ListBoxItem Content="Mad Shatter" MouseUp="MadShatter_MouseUp"/>
                     <!--<ListBoxItem Content="Evenly distribute points 2D" MouseUp="EvenDistribute2D_MouseUp"/>-->
                     <ListBoxItem Content="Evenly distribute points 3D" MouseUp="EvenDistribute3D_MouseUp"/>
                     <ListBoxItem Content="Clustered Points" MouseUp="ClusteredPoints_MouseUp"/>
@@ -130,6 +131,7 @@
                 <ListBox>
                     <ListBoxItem Content="Fluid Painter 2D" MouseUp="Painter_MouseUp"/>
                     <ListBoxItem Content="Fluid Painter 3D" MouseUp="Painter3D_MouseUp"/>
+                    <ListBoxItem Content="Nonlinear Random" MouseUp="NonlinearRandom_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>
@@ -148,7 +150,7 @@
                     <ListBoxItem Content="Convolution Chains" MouseUp="ConvolutionChains_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps" MouseUp="SelfOrganizingMaps_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps DB" MouseUp="SelfOrganizingMapsDB_MouseUp"/>
-                    <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
+                    <ListBoxItem Visibility="Visible" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->
@@ -176,7 +178,7 @@
                     <ListBoxItem Content="Overlapping Parts" MouseUp="OverlappingPartsTester_MouseUp"/>
                     <ListBoxItem Content="Ship Editor" Style="{StaticResource boldItem}" MouseUp="ShipEditor_MouseUp"/>
                     <ListBoxItem Content="Brain Tester" MouseUp="BrainTester_MouseUp"/>
-                    <ListBoxItem Content="Brain Tester 2" MouseUp="BrainTester2_MouseUp"/>
+                    <ListBoxItem Content="Brain Links" MouseUp="BrainLinks_MouseUp"/>
                     <ListBoxItem Content="Flying Beans" Style="{StaticResource boldItem}" MouseUp="FlyingBeans_MouseUp"/>
                     <ListBoxItem Content="Ship Camera Tester" MouseUp="ShipCameraTester_MouseUp"/>
                     <ListBoxItem Content="Wind Tunnel" MouseUp="WindTunnel_MouseUp"/>
@@ -184,6 +186,7 @@
                     <ListBoxItem Content="Gene Pool" Style="{StaticResource boldItem}" MouseUp="GenePool_MouseUp"/>
                     <ListBoxItem Content="Asteroid Field" MouseUp="AsteroidField_MouseUp"/>
                     <ListBoxItem Content="Asteroid Miner 2D" Style="{StaticResource boldItem}" MouseUp="AstMiner2D_2_MouseUp"/>
+                    <ListBoxItem Content="Missile Command 0D" MouseUp="MissileCommand0D_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

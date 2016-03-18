@@ -211,8 +211,8 @@
                             </Border>
                         </Expander>
 
-                        <!-- Mad Shatter -->
-                        <Expander IsExpanded="True" Header="Mad Shatter">
+                        <!-- Asteroid Voronoi -->
+                        <Expander IsExpanded="True" Header="Asteroid Voronoi">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <Button Name="btnNewAsteroid" Content="New Asteroid" Click="btnNewAsteroid_Click"/>
@@ -233,18 +233,29 @@
 
                                     <Button Name="btnShatterRandVoronoi" Content="Random Voronoi" Margin="2,8,2,2" Click="btnShatterRandVoronoi_Click"/>
                                     <Button Name="btnShatterRandVoronoiFar" Content="Random Voronoi (far)" Click="btnShatterRandVoronoiFar_Click"/>
-
-                                    <Button Name="btnClearShatterHits" Content="Clear hits" Margin="2,8,2,2" Click="btnClearShatterHits_Click"/>
-                                    <Button Name="btnShatterHitVoronoi" Content="Voronoi based on hits" Click="btnShatterHitVoronoi_Click"/>
+                                    <Grid Margin="2,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1*"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Count" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Name="txtShatterVoronoiCount" Text="10" VerticalAlignment="Center"/>
+                                    </Grid>
 
                                     <Button Name="btnShatterRedraw" Content="Redraw" Margin="2,12,2,2" Click="btnShatterRedraw_Click"/>
                                     <RadioButton Name="radShatterVoronoiLinesOnly" Content="Voronoi lines only"/>
                                     <RadioButton Name="radShatterTriangleByCtrlPoint" Content="Triangles by ctrl point"/>
-                                    <RadioButton IsChecked="True" Name="radShatterFirstCtrlPoint" Content="First ctrl point"/>
-                                    
-                                    <Button Name="btnShatterChains" Content="Test Chains 1" Margin="2,18,2,2" Click="btnShatterChains_Click"/>
-                                    <Button Name="btnShatterChains2" Content="Test Chains 2" Click="btnShatterChains2_Click"/>
-                                    
+                                    <RadioButton Visibility="Collapsed" Name="radShatterFirstCtrlPoint3" Content="First ctrl point (almost)"/>
+                                    <RadioButton Visibility="Collapsed" Name="radShatterFirstMinimal3" Content="First minimal (almost)"/>
+                                    <RadioButton Name="radShatterFirstCtrlPoint4" Content="First ctrl point"/>
+                                    <RadioButton Name="radShatterFirstMinimal4" Content="First minimal"/>
+                                    <RadioButton IsChecked="True" Name="radShatterFull" Content="Full"/>
+                                    <RadioButton Name="radShatterFullExploded" Content="Full Exploded"/>
+
+                                    <Button Visibility="Collapsed" Name="btnShatterChains" Content="Test Chains 1" Margin="2,18,2,2" Click="btnShatterChains_Click"/>
+                                    <Button Visibility="Collapsed" Name="btnShatterChains2" Content="Test Chains 2" Click="btnShatterChains2_Click"/>
+
                                 </StackPanel>
                             </Border>
                         </Expander>

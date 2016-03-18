@@ -184,6 +184,10 @@
       <Project>{65b4cecd-3124-4c42-8b02-a4b09f3c8de7}</Project>
       <Name>GenePool</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Newt\v2\MissileCommand\MissileCommand.csproj">
+      <Project>{23d67714-0e29-442e-88b5-577e6b56a04b}</Project>
+      <Name>MissileCommand</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Orig\HelperClassesGDI\HelperClassesGDI.csproj">
       <Project>{491C4322-B760-4898-AE62-F52029C6C78D}</Project>
       <Name>HelperClassesGDI</Name>

@@ -537,6 +537,11 @@ namespace Game.Newt.v2.GameItems
                 }
             }
 
+            if(force != null)
+            {
+                force = force.Value * this.Percent;
+            }
+
             // Apply the force
             if (force != null && !force.Value.IsNearZero())
             {
@@ -560,7 +565,7 @@ namespace Game.Newt.v2.GameItems
                     }
                 }
 
-                force = force.Value * this.Percent;
+                //force = force.Value * this.Percent;
 
                 if (_shouldCauseTorque)
                 {

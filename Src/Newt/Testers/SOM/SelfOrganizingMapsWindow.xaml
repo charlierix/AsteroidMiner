@@ -197,7 +197,7 @@
                                             </CheckBox.ToolTip>
                                         </CheckBox>
                                         <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkConvMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
-                                        
+
                                         <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="10" Name="chkRandomNodeColors" Content="Random node colors"/>
                                     </Grid>
 

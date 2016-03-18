@@ -1,42 +1,46 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-
 using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Primitives3D;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
-
-
-
-using System.Diagnostics;
-using Game.HelperClassesWPF.Primitives3D;
 
 namespace Game.Newt.v2.GameItems
 {
+    //TODO: Break this class up, make a ship builder class
+    //      Rework the part creation method so the core method does passes through the parts.  Each of these passes will call a delegate for unknown parts:
+    //          Create Containers
+    //          Create Standard
+    //          Links
     //TODO: Make sure the part visuals and hulls and mass breakdowns are aligned (not one along X and one along Z)
     //TODO: Support parts getting damaged/destroyed/repaired (probably keep the parts around maybe 75% mass, with a charred visual)
     //TODO: Improve the logic that checks for parts being too far away
     //TODO: Check for thrusters/weapons burning parts.  For rigid, a scan can be done up front.  Once joints are used, inter body checks need to be done when the joint moves
-    //		- Thrusters that are blocked need to have an offset/reduction to where the force is applied
+    //		- Thrusters that are blocked need to have an offset/reduction to where the force is applied (because the thrust is reflecting off that object)
 
+    /// <summary>
+    /// NOTE: This was replaced by Bot -- keeping it around for a while, just in case
+    /// </summary>
     public class Ship : IDisposable, IMapObject, IPartUpdatable
     {
         #region Class: VisualEffects
 
-        protected class VisualEffects
+        public class VisualEffects
         {
             #region Declaration Section
 
             private readonly ItemOptions _itemOptions;
 
-            private readonly List<Thruster> _thrusters;
+            private readonly IEnumerable<Thruster> _thrusters;
 
             //private readonly DiffuseMaterial _materialThrust;
 
@@ -49,7 +53,7 @@ namespace Game.Newt.v2.GameItems
 
             #region Constructor
 
-            public VisualEffects(ItemOptions itemOptions, List<Thruster> thrusters)
+            public VisualEffects(ItemOptions itemOptions, IEnumerable<Thruster> thrusters)
             {
                 _itemOptions = itemOptions;
                 _thrusters = thrusters;
@@ -186,6 +190,7 @@ namespace Game.Newt.v2.GameItems
             public List<TractorBeam> TractorBeam = new List<TractorBeam>();
 
             public List<Brain> Brain = new List<Brain>();
+            public List<BrainRGBRecognizer> BrainRGBRecognizer = new List<BrainRGBRecognizer>();
 
             public List<SensorGravity> SensorGravity = new List<SensorGravity>();
             public List<SensorSpin> SensorSpin = new List<SensorSpin>();
@@ -344,6 +349,8 @@ namespace Game.Newt.v2.GameItems
 
             public double Radius { get; set; }
 
+            public bool IsPhysicsStatic { get; set; }
+
             // -------------- Everything below are intermediate properties that are shared between tasks, but won't be needed by the constructor
             public CollisionHull[] Hulls = null;
 
@@ -400,34 +407,36 @@ namespace Game.Newt.v2.GameItems
 
         #region Constructor/Factory
 
-        public static async Task<Ship> GetNewShipAsync(EditorOptions options, ItemOptions itemOptions, ShipDNA dna, World world, int material_Ship, int material_Projectile, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, bool runNeural, bool repairPartPositions)
+        public static async Task<Ship> GetNewShipAsync(ShipDNA dna, World world, int material_Ship, Map map, ShipExtraArgs extra = null)
         {
-            var construction = await GetNewShipConstructionAsync(options, itemOptions, dna, world, material_Ship, material_Projectile, radiation, gravity, cameraPool, map, runNeural, repairPartPositions);
+            var construction = await GetNewShipConstructionAsync(dna, world, material_Ship, map, extra);
             return new Ship(construction);
         }
 
-        protected static async Task<ShipConstruction> GetNewShipConstructionAsync(EditorOptions options, ItemOptions itemOptions, ShipDNA dna, World world, int material_Ship, int material_Projectile, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, bool runNeural, bool repairPartPositions)
+        protected static async Task<ShipConstruction> GetNewShipConstructionAsync(ShipDNA dna, World world, int material_Ship, Map map, ShipExtraArgs extra = null)
         {
-            TaskScheduler currentContext = TaskScheduler.FromCurrentSynchronizationContext();
+            extra = extra ?? new ShipExtraArgs();
+
+            //TaskScheduler currentContext = TaskScheduler.FromCurrentSynchronizationContext();
 
             ShipConstruction con = new ShipConstruction();
 
-            con.Options = options;
-            con.ItemOptions = itemOptions;
-            con.Radiation = radiation;
-            con.Gravity = gravity;
-            con.CameraPool = cameraPool;
+            con.Options = extra.Options ?? new EditorOptions();
+            con.ItemOptions = extra.ItemOptions ?? new ItemOptions();
+            con.Radiation = extra.Radiation;
+            con.Gravity = extra.Gravity;
+            con.CameraPool = extra.CameraPool;
 
             // Parts
             con.Parts = new PartContainerBuilding();
 
-            var dna_hulls = await BuildParts(con.Parts, dna, runNeural, repairPartPositions, world, options, itemOptions, radiation, gravity, cameraPool, map, material_Projectile);
+            var dna_hulls = await BuildParts(con.Parts, dna, extra.RunNeural, extra.RepairPartPositions, world, con.Options, con.ItemOptions, con.Radiation, con.Gravity, con.CameraPool, map, extra.Material_Projectile);
 
             con.DNA = dna_hulls.Item1;
             con.Hulls = dna_hulls.Item2;
 
             // Mass breakdown
-            GetInertiaTensorAndCenterOfMass_Points(out con.MassMatrix, out con.CenterMass, con.Parts.AllParts.ToArray(), con.DNA.PartsByLayer.Values.SelectMany(o => o).ToArray(), itemOptions.MomentOfInertiaMultiplier);
+            GetInertiaTensorAndCenterOfMass_Points(out con.MassMatrix, out con.CenterMass, con.Parts.AllParts.ToArray(), con.DNA.PartsByLayer.Values.SelectMany(o => o).ToArray(), con.ItemOptions.MomentOfInertiaMultiplier);
 
             #region WPF - main
 
@@ -450,7 +459,7 @@ namespace Game.Newt.v2.GameItems
 
             // These visuals will only show up in the main viewport (they won't be shared with the camera pool, so won't be visible to
             // other ships)
-            con.VisualEffects = new VisualEffects(itemOptions, con.Parts.Thrust);
+            con.VisualEffects = new VisualEffects(con.ItemOptions, con.Parts.Thrust);
 
             #endregion
 
@@ -463,8 +472,18 @@ namespace Game.Newt.v2.GameItems
             con.PhysicsBody.MaterialGroupID = material_Ship;
             con.PhysicsBody.LinearDamping = .01d;
             con.PhysicsBody.AngularDamping = new Vector3D(.01d, .01d, .01d);
-            con.PhysicsBody.CenterOfMass = con.CenterMass;
-            con.PhysicsBody.MassMatrix = con.MassMatrix;
+
+            con.IsPhysicsStatic = extra.IsPhysicsStatic;
+            if (con.IsPhysicsStatic)
+            {
+                con.PhysicsBody.CenterOfMass = new Point3D(0, 0, 0);        // Part_RequestWorldLocation is wrong if this isn't zero as well
+                con.PhysicsBody.Mass = 0;
+            }
+            else
+            {
+                con.PhysicsBody.CenterOfMass = con.CenterMass;
+                con.PhysicsBody.MassMatrix = con.MassMatrix;
+            }
 
             hull.Dispose();
             foreach (CollisionHull partHull in con.Hulls)
@@ -498,12 +517,16 @@ namespace Game.Newt.v2.GameItems
             this.Model = construction.Model;
             _visualEffects = construction.VisualEffects;
 
+            _isPhysicsStatic = construction.IsPhysicsStatic;
             this.PhysicsBody = construction.PhysicsBody;
 
             this.Radius = construction.Radius;
 
             // Hook up events
-            this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
+            if (!_isPhysicsStatic)
+            {
+                this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
+            }
 
             foreach (var part in _parts.AllParts)
             {
@@ -978,6 +1001,26 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        private readonly bool _isPhysicsStatic;
+        /// <summary>
+        /// If this is true, then the ship's mass will be set to zero, and the newton engine will treat it like it's static
+        /// </summary>
+        /// <remarks>
+        /// Velocity won't matter, it will be stationary.  It can be positioned manually
+        /// Other bodies will still bounce off of it (unless the matierial's IsCollidable==false)
+        /// Two bodies that are zero mass will just ignore each other
+        /// I'm not sure how joints are treated
+        /// 
+        /// It's ok to set the various ShouldRecalcMass_ properties when this is true.  Even if they are true, the mass won't be recalculated
+        /// </remarks>
+        public bool IsPhysicsStatic
+        {
+            get
+            {
+                return _isPhysicsStatic;
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -996,8 +1039,16 @@ namespace Game.Newt.v2.GameItems
                 Point3D centerMass;
                 GetInertiaTensorAndCenterOfMass_Points(out massMatrix, out centerMass, _parts.AllParts.ToArray(), _dna.PartsByLayer.Values.SelectMany(o => o).ToArray(), _itemOptions.MomentOfInertiaMultiplier);
 
-                this.PhysicsBody.CenterOfMass = centerMass;
-                this.PhysicsBody.MassMatrix = massMatrix;
+                if (_isPhysicsStatic)
+                {
+                    this.PhysicsBody.CenterOfMass = new Point3D(0, 0, 0);       // Part_RequestWorldLocation is wrong if this isn't zero as well
+                    this.PhysicsBody.Mass = 0;
+                }
+                else
+                {
+                    this.PhysicsBody.CenterOfMass = centerMass;
+                    this.PhysicsBody.MassMatrix = massMatrix;
+                }
 
                 if (_parts.AmmoGroup != null)
                 {
@@ -1186,12 +1237,15 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Private Methods
+        #region Private Methods - ship builder
 
         private async static Task<Tuple<ShipDNA, CollisionHull[]>> BuildParts(PartContainerBuilding container, ShipDNA shipDNA, bool runNeural, bool repairPartPositions, World world, EditorOptions options, ItemOptions itemOptions, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map, int material_Projectile)
         {
             // Throw out parts that are too small
-            ShipPartDNA[] usableParts = shipDNA.PartsByLayer.Values.SelectMany(o => o).Where(o => o.Scale.Length > .01d).ToArray();
+            ShipPartDNA[] usableParts = shipDNA.PartsByLayer.Values.
+                SelectMany(o => o).
+                Where(o => o.Scale.Length > .01d).
+                ToArray();
 
             // Create the parts based on dna
             var combined = BuildParts_Create(container, usableParts, options, itemOptions, radiation, gravity, cameraPool, map, world, material_Projectile);
@@ -1325,6 +1379,11 @@ namespace Game.Newt.v2.GameItems
                             dna, container.Brain, retVal);
                         break;
 
+                    case BrainRGBRecognizer.PARTTYPE:
+                        BuildParts_Add(new BrainRGBRecognizer(options, itemOptions, dna, container.EnergyGroup),
+                            dna, container.BrainRGBRecognizer, retVal);
+                        break;
+
                     case SensorGravity.PARTTYPE:
                         BuildParts_Add(new SensorGravity(options, itemOptions, dna, container.EnergyGroup, gravity),
                             dna, container.SensorGravity, retVal);
@@ -1371,15 +1430,19 @@ namespace Game.Newt.v2.GameItems
                         break;
 
                     default:
+                        //TODO: Before throwing an exception, call a delegate to request an instance of this part (GameItems dll can only know about parts
+                        //at this level.  Higher dlls could have custom stuff)
                         throw new ApplicationException("Unknown dna.PartType: " + dna.PartType);
                 }
             }
 
             #endregion
 
+            //TODO: This section should also call Action<PartBase[]> PartLinkage_NonNeural
             #region Post Linkage
 
             // Distribute ammo boxes to guns based on the gun's caliber
+            //TODO: Store links in dna
             if (container.ProjectileGun.Count > 0 && container.Ammo.Count > 0)
             {
                 ProjectileGun.AssignAmmoBoxes(container.ProjectileGun, container.Ammo);
@@ -1395,6 +1458,18 @@ namespace Game.Newt.v2.GameItems
                     container.ConvertMatterGroup = new ConverterMatterGroup(converters, container.CargoBayGroup);
                 }
             }
+
+
+
+            // Tie recognizers to cameras
+            //TODO: This doesn't belong here.  It should be a special pass in the neural linker
+            //It's also ignoring dna
+            if (container.BrainRGBRecognizer.Count > 0 && container.CameraColorRGB.Count > 0)
+            {
+                BrainRGBRecognizer.AssignCameras(container.BrainRGBRecognizer.ToArray(), container.CameraColorRGB.ToArray());
+            }
+
+
 
             #endregion
 
@@ -1491,7 +1566,7 @@ namespace Game.Newt.v2.GameItems
 
                         // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
                         // neuron containers can hook to it
-                        inputs.Add(new NeuralUtility.ContainerInput(container, NeuronContainerType.Sensor, container.Position, container.Orientation, null, null, 0, null, null));
+                        inputs.Add(new NeuralUtility.ContainerInput(part.Item1.Token, container, NeuronContainerType.Sensor, container.Position, container.Orientation, null, null, 0, null, null));
 
                         #endregion
                         break;
@@ -1506,6 +1581,7 @@ namespace Game.Newt.v2.GameItems
                         }
 
                         inputs.Add(new NeuralUtility.ContainerInput(
+                            part.Item1.Token,
                             container, NeuronContainerType.Brain,
                             container.Position, container.Orientation,
                             itemOptions.BrainLinksPerNeuron_Internal,
@@ -1525,6 +1601,7 @@ namespace Game.Newt.v2.GameItems
                         #region Manipulator
 
                         inputs.Add(new NeuralUtility.ContainerInput(
+                            part.Item1.Token,
                             container, NeuronContainerType.Manipulator,
                             container.Position, container.Orientation,
                             null,
@@ -1537,6 +1614,9 @@ namespace Game.Newt.v2.GameItems
                             null, externalLinks));
 
                         #endregion
+                        break;
+
+                    case NeuronContainerType.None:
                         break;
 
                     default:
@@ -1556,6 +1636,9 @@ namespace Game.Newt.v2.GameItems
             // Exit Function
             return retVal;
         }
+
+        #endregion
+        #region Private Methods
 
         //TODO: Account for the invisible structural filler between the parts (probably just do a convex hull and give the filler a uniform density)
         private static void GetInertiaTensorAndCenterOfMass_Points(out MassMatrix matrix, out Point3D center, PartBase[] parts, ShipPartDNA[] dna, double inertiaMultiplier)
@@ -1745,6 +1828,41 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
+    #region Class: ShipCoreArgs
+
+    public class ShipCoreArgs
+    {
+        public World World { get; set; }
+        public int Material_Ship { get; set; }
+        public Map Map { get; set; }
+    }
+
+    #endregion
+    #region Class: ShipExtraArgs
+
+    public class ShipExtraArgs
+    {
+        public EditorOptions Options = null;
+        public ItemOptions ItemOptions = null;
+
+        public RadiationField Radiation = null;
+        public IGravityField Gravity = null;
+        public CameraPool CameraPool = null;
+
+        public int Material_Projectile = 0;
+
+        public bool RunNeural = true;
+        public bool RepairPartPositions = true;
+
+        //TODO: Implement this.  The ship needs to set mass to zero, and listen to mass change events, forcing it back to zero (also ignore calls to RecalcMass)
+        public bool IsPhysicsStatic = false;
+
+
+        public ItemLinker_OverflowArgs PartLink_Overflow = null;
+        public ItemLinker_ExtraArgs PartLink_Extra = null;
+    }
+
+    #endregion
     #region Class: ShipDNA
 
     //TODO: Make this derive from MapPartDNA

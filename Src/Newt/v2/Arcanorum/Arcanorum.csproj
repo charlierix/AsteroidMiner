@@ -53,8 +53,8 @@
     <Compile Include="BackdropQuick.xaml.cs">
       <DependentUpon>BackdropQuick.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Bot.cs" />
-    <Compile Include="BotNPC.cs" />
+    <Compile Include="ArcBot.cs" />
+    <Compile Include="ArcBotNPC.cs" />
     <Compile Include="CharacterPanel.xaml.cs">
       <DependentUpon>CharacterPanel.xaml</DependentUpon>
     </Compile>

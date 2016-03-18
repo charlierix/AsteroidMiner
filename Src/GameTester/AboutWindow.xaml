@@ -114,7 +114,7 @@
 
             <!-- References -->
             <TabItem Header="References">
-                <ScrollViewer Name="pnlReferences" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
                     <StackPanel>
                         <TextBlock Text="Physics Engine" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="This handles collision detection and realistic response" Style="{StaticResource ackDescription}"/>
@@ -172,6 +172,17 @@
                 </ScrollViewer>
             </TabItem>
 
+            <!-- Fonts -->
+            <TabItem Header="Fonts">
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
+                    <StackPanel>
+                        <TextBlock Text="Share Tech Mono" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://www.google.com/fonts/specimen/Share+Tech+Mono"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&amp;id=OFL"/></Hyperlink></TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            
             <!-- Misc -->
             <TabItem Header="Cool Sites">
                 <ScrollViewer Name="pnlMisc" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">

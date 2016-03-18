@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.Arcanorum
 {
-    public class BotNPC : Bot
+    public class ArcBotNPC : ArcBot
     {
         #region Declaration Section
 
@@ -23,7 +23,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public BotNPC(BotDNA dna, int level, Point3D position, World world, Map map, KeepItems2D keepItems2D, MaterialIDs materialIDs, Viewport3D viewport, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, DragHitShape dragPlane, Point3D homingPoint, double homingRadius, bool runNeural, bool repairPartPositions)
+        public ArcBotNPC(BotDNA dna, int level, Point3D position, World world, Map map, KeepItems2D keepItems2D, MaterialIDs materialIDs, Viewport3D viewport, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, DragHitShape dragPlane, Point3D homingPoint, double homingRadius, bool runNeural, bool repairPartPositions)
             : base(dna, level, position, world, map, keepItems2D, materialIDs, viewport, editorOptions, itemOptions, gravity, dragPlane, homingPoint, homingRadius, runNeural, repairPartPositions) { }
 
         #endregion

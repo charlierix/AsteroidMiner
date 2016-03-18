@@ -1598,6 +1598,11 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         public static Color AverageColors(IEnumerable<Color> colors)
         {
+            byte[] retVal = AverageColors(colors.Select(o => new[] { o.A, o.R, o.G, o.B }));
+            return Color.FromArgb(retVal[0], retVal[1], retVal[2], retVal[3]);
+        }
+        public static byte[] AverageColors(IEnumerable<byte[]> colors)
+        {
             const double INV255 = 1d / 255d;
             const double NEARZERO = .001d;
 
@@ -1611,9 +1616,9 @@ namespace Game.HelperClassesWPF
             //  Convert to doubles from 0 to 1 (throw out fully transparent colors)
             foreach (var color in colors)
             {
-                double a = color.A * INV255;
+                double a = color[0] * INV255;
 
-                doubles.Add(Tuple.Create(a, color.R * INV255, color.G * INV255, color.B * INV255));
+                doubles.Add(Tuple.Create(a, color[1] * INV255, color[2] * INV255, color[3] * INV255));
 
                 if (a > NEARZERO && a < minAlpha)
                 {
@@ -1626,7 +1631,7 @@ namespace Game.HelperClassesWPF
 
             if (isAllTransparent)
             {
-                return Colors.Transparent;
+                return new byte[] { 0, 0, 0, 0 };       // Colors.Transparent;
             }
 
             #region Weighted sum
@@ -1657,8 +1662,9 @@ namespace Game.HelperClassesWPF
             #endregion
 
             //  Exit Function
-            return GetColorCapped((sumA / doubles.Count) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
+            return GetColorCapped_Bytes((sumA / doubles.Count) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
         }
+
         /// <summary>
         /// This takes the weighted average of all the colors (using alpha as the weight multiplier)
         /// </summary>
@@ -1674,6 +1680,11 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         public static Color AverageColors(IEnumerable<Tuple<Color, double>> colors)
         {
+            byte[] retVal = AverageColors(colors.Select(o => Tuple.Create(new[] { o.Item1.A, o.Item1.R, o.Item1.G, o.Item1.B }, o.Item2)));
+            return Color.FromArgb(retVal[0], retVal[1], retVal[2], retVal[3]);
+        }
+        public static byte[] AverageColors(IEnumerable<Tuple<byte[], double>> colors)
+        {
             const double INV255 = 1d / 255d;
             const double NEARZERO = .001d;
 
@@ -1688,10 +1699,10 @@ namespace Game.HelperClassesWPF
             //  Convert to doubles from 0 to 1 (throw out fully transparent colors)
             foreach (var color in colors)
             {
-                double a = (color.Item1.A * INV255);
+                double a = (color.Item1[0] * INV255);
                 double a1 = a * color.Item2;
 
-                doubles.Add(Tuple.Create(a, color.Item1.R * INV255, color.Item1.G * INV255, color.Item1.B * INV255, color.Item2));
+                doubles.Add(Tuple.Create(a, color.Item1[1] * INV255, color.Item1[2] * INV255, color.Item1[3] * INV255, color.Item2));
 
                 if (a1 > NEARZERO && a1 < minAlpha)
                 {
@@ -1704,7 +1715,7 @@ namespace Game.HelperClassesWPF
 
             if (isAllTransparent)
             {
-                return Colors.Transparent;
+                return new byte[] { 0, 0, 0, 0 };       // Colors.Transparent;
             }
 
             #region Weighted sum
@@ -1736,7 +1747,7 @@ namespace Game.HelperClassesWPF
             #endregion
 
             //  Exit Function
-            return GetColorCapped((sumA / sumAlphaWeight) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
+            return GetColorCapped_Bytes((sumA / sumAlphaWeight) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
         }
 
         /// <summary>
@@ -2451,7 +2462,7 @@ namespace Game.HelperClassesWPF
         }
 
         /// <param name="convertToColors">
-        /// True:  The entire byte array will be converted into Color structs up front
+        /// True:  The entire byte array will be converted into Color structs up front (or byte[][])
         ///     Use this if you want color structs (expensive, but useful)
         ///     This takes an up front cache hit, but repeated requests for colors are cheap
         ///     Only useful if you plan to do many gets from this class
@@ -2462,7 +2473,11 @@ namespace Game.HelperClassesWPF
         ///     Another use for this is if you want another thread to take the hit
         /// </param>
         /// <param name="outOfBoundsColor">If requests for pixels outside of width/height are made, this is the color that should be returned (probably either use transparent or black)</param>
-        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool convertToColors, Color outOfBoundsColor)
+        /// <param name="convertToColors_IsColor">
+        /// True: cached as colors
+        /// False: cached as bytes      -- there may be a case where this is more efficient than using BitmapCustomCachedBytes???
+        /// </param>
+        public static IBitmapCustom ConvertToColorArray(BitmapSource bitmap, bool convertToColors, Color outOfBoundsColor, bool convertToColors_IsColor = true)
         {
             if (bitmap.Format != PixelFormats.Pbgra32 && bitmap.Format != PixelFormats.Bgr32)
             {
@@ -2481,7 +2496,7 @@ namespace Game.HelperClassesWPF
             // Exit Function
             if (convertToColors)
             {
-                return new BitmapCustomCachedColors(info);
+                return new BitmapCustomCachedColors(info, convertToColors_IsColor);
             }
             else
             {
@@ -6134,8 +6149,47 @@ namespace Game.HelperClassesWPF
                 b = 255;
             }
 
-            // Exit Function
             return Color.FromArgb(Convert.ToByte(a), Convert.ToByte(r), Convert.ToByte(g), Convert.ToByte(b));
+        }
+        private static byte[] GetColorCapped_Bytes(double a, double r, double g, double b)
+        {
+            if (a < 0)
+            {
+                a = 0;
+            }
+            else if (a > 255)
+            {
+                a = 255;
+            }
+
+            if (r < 0)
+            {
+                r = 0;
+            }
+            else if (r > 255)
+            {
+                r = 255;
+            }
+
+            if (g < 0)
+            {
+                g = 0;
+            }
+            else if (g > 255)
+            {
+                g = 255;
+            }
+
+            if (b < 0)
+            {
+                b = 0;
+            }
+            else if (b > 255)
+            {
+                b = 255;
+            }
+
+            return new[] { Convert.ToByte(a), Convert.ToByte(r), Convert.ToByte(g), Convert.ToByte(b) };
         }
         private static Color GetColorCapped(int a, int r, int g, int b)
         {
@@ -6175,8 +6229,47 @@ namespace Game.HelperClassesWPF
                 b = 255;
             }
 
-            // Exit Function
             return Color.FromArgb(Convert.ToByte(a), Convert.ToByte(r), Convert.ToByte(g), Convert.ToByte(b));
+        }
+        private static byte[] GetColorCapped_Bytes(int a, int r, int g, int b)
+        {
+            if (a < 0)
+            {
+                a = 0;
+            }
+            else if (a > 255)
+            {
+                a = 255;
+            }
+
+            if (r < 0)
+            {
+                r = 0;
+            }
+            else if (r > 255)
+            {
+                r = 255;
+            }
+
+            if (g < 0)
+            {
+                g = 0;
+            }
+            else if (g > 255)
+            {
+                g = 255;
+            }
+
+            if (b < 0)
+            {
+                b = 0;
+            }
+            else if (b > 255)
+            {
+                b = 255;
+            }
+
+            return new[] { Convert.ToByte(a), Convert.ToByte(r), Convert.ToByte(g), Convert.ToByte(b) };
         }
 
         private static double GetHueCapped(double hue)
@@ -7194,6 +7287,8 @@ namespace Game.HelperClassesWPF
         /// NOTE: If the request is outside the bounds of the bitmap, a default color is returned, no exception is thrown
         /// </summary>
         Color GetColor(int x, int y);
+        byte[] GetColor_Byte(int x, int y);
+
         /// <summary>
         /// This returns a rectangle of colors
         /// NOTE: If the request is outside the bounds of the bitmap, a default color is returned, no exception is thrown
@@ -7204,10 +7299,17 @@ namespace Game.HelperClassesWPF
         ///    color[x + (y * width)]
         /// </remarks>
         Color[] GetColors(int x, int y, int width, int height);
+        byte[][] GetColors_Byte(int x, int y, int width, int height);
+
         /// <summary>
         /// This returns the colors of the whole image
         /// </summary>
         Color[] GetColors();
+        /// <summary>
+        /// This returns the entire image as byte arrays (each array is length 4: A,R,G,B).
+        /// This is faster than converting to the color struct
+        /// </summary>
+        byte[][] GetColors_Byte();
 
         int Width { get; }
         int Height { get; }
@@ -7226,70 +7328,40 @@ namespace Game.HelperClassesWPF
         private readonly int _width;
         private readonly int _height;
 
+        // only one of these two get cached
+        private readonly byte[][] _bytes;
         private readonly Color[] _colors;
 
+        // both of these get cached
         private readonly Color _outOfBoundsColor;
+        private readonly byte[] _outOfBoundsBytes;
 
         #endregion
 
         #region Constructor
 
-        public BitmapCustomCachedColors(BitmapStreamInfo info)
+        /// <param name="cacheColors">
+        /// Set this based on which types of methods will be used
+        /// True: Cache colors
+        /// False: Cache bytes
+        /// </param>
+        public BitmapCustomCachedColors(BitmapStreamInfo info, bool cacheColors)
         {
             _width = info.Width;
             _height = info.Height;
             _outOfBoundsColor = info.OutOfBoundsColor;
+            _outOfBoundsBytes = info.OutOfBoundsBytes;
 
-            _colors = new BitmapCustomCachedBytes(info).GetColors();
-
-            #region OLD
-            //// Convert to colors
-            ////NOTE: The entire loop is copied to make this as fast as possible
-            //if (format == PixelFormats.Pbgra32)		// can't do a switch on format
-            //{
-            //    #region Pbgra32
-
-            //    for (int rowCntr = 0; rowCntr < height; rowCntr++)
-            //    {
-            //        int rowOffset = rowCntr * stride;
-
-            //        int yOffset = rowCntr * width;
-
-            //        for (int columnCntr = 0; columnCntr < width; columnCntr++)
-            //        {
-            //            int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-            //            _colors[columnCntr + yOffset] = Color.FromArgb(bytes[offset + 3], bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
-            //        }
-            //    }
-
-            //    #endregion
-            //}
-            //else if (format == PixelFormats.Bgr32)
-            //{
-            //    #region Bgr32
-
-            //    for (int rowCntr = 0; rowCntr < height; rowCntr++)
-            //    {
-            //        int rowOffset = rowCntr * stride;
-
-            //        int yOffset = rowCntr * width;
-
-            //        for (int columnCntr = 0; columnCntr < width; columnCntr++)
-            //        {
-            //            int offset = rowOffset + (columnCntr * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-            //            _colors[columnCntr + yOffset] = Color.FromArgb(255, bytes[offset + 2], bytes[offset + 1], bytes[offset + 0]);
-            //        }
-            //    }
-
-            //    #endregion
-            //}
-            //else
-            //{
-            //    throw new ApplicationException("TODO: Handle more pixel formats: " + format.ToString());
-            //}
-            #endregion
+            if (cacheColors)
+            {
+                _colors = new BitmapCustomCachedBytes(info).GetColors();
+                _bytes = null;
+            }
+            else
+            {
+                _bytes = new BitmapCustomCachedBytes(info).GetColors_Byte();
+                _colors = null;
+            }
         }
 
         #endregion
@@ -7304,7 +7376,34 @@ namespace Game.HelperClassesWPF
             }
             else
             {
-                return _colors[x + (y * _width)];
+                if (_colors != null)
+                {
+                    return _colors[x + (y * _width)];
+                }
+                else
+                {
+                    byte[] retVal = _bytes[x + (y * _width)];
+                    return Color.FromArgb(retVal[0], retVal[1], retVal[2], retVal[3]);
+                }
+            }
+        }
+        public byte[] GetColor_Byte(int x, int y)
+        {
+            if (x < 0 || x >= _width || y < 0 || y >= _height)
+            {
+                return _outOfBoundsBytes;
+            }
+            else
+            {
+                if (_bytes != null)
+                {
+                    return _bytes[x + (y * _width)];
+                }
+                else
+                {
+                    Color retVal = _colors[x + (y * _width)];
+                    return new[] { retVal.A, retVal.R, retVal.G, retVal.B };
+                }
             }
         }
 
@@ -7313,7 +7412,14 @@ namespace Game.HelperClassesWPF
             if (x == 0 && y == 0 && width == _width && height == _height)
             {
                 //  Just return the array (much faster than building a new one, but it assumes that they don't try to manipulate the colors)
-                return _colors;
+                if (_colors != null)
+                {
+                    return _colors;
+                }
+                else
+                {
+                    return GetColors();     // let this method do the loop
+                }
             }
 
             Color[] retVal = new Color[width * height];
@@ -7326,28 +7432,67 @@ namespace Game.HelperClassesWPF
             {
                 #region Some out of bounds
 
-                int x2, y2;
-
-                for (int y1 = 0; y1 < height; y1++)
+                // copy the logic to avoid an if at every color
+                if (_colors != null)
                 {
-                    y2 = y + y1;
+                    #region direct
 
-                    yOffsetLeft = y1 * width;		// offset into the return array
-                    yOffsetRight = y2 * _width;		// offset into _colors array
+                    int x2, y2;
 
-                    for (int x1 = 0; x1 < width; x1++)
+                    for (int y1 = 0; y1 < height; y1++)
                     {
-                        x2 = x + x1;
+                        y2 = y + y1;
 
-                        if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = y2 * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
                         {
-                            retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
-                        }
-                        else
-                        {
-                            retVal[x1 + yOffsetLeft] = _colors[x2 + yOffsetRight];
+                            x2 = x + x1;
+
+                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+                            {
+                                retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
+                            }
+                            else
+                            {
+                                retVal[x1 + yOffsetLeft] = _colors[x2 + yOffsetRight];
+                            }
                         }
                     }
+
+                    #endregion
+                }
+                else
+                {
+                    #region bytes -> color
+
+                    int x2, y2;
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        y2 = y + y1;
+
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = y2 * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            x2 = x + x1;
+
+                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+                            {
+                                retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
+                            }
+                            else
+                            {
+                                byte[] bytes = _bytes[x2 + yOffsetRight];
+                                retVal[x1 + yOffsetLeft] = Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+                            }
+                        }
+                    }
+
+                    #endregion
                 }
 
                 #endregion
@@ -7356,15 +7501,178 @@ namespace Game.HelperClassesWPF
             {
                 #region All in bounds
 
-                for (int y1 = 0; y1 < height; y1++)
+                // copy the logic to avoid an if at every color
+                if (_colors != null)
                 {
-                    yOffsetLeft = y1 * width;		// offset into the return array
-                    yOffsetRight = (y + y1) * _width;		// offset into _colors array
+                    #region direct
 
-                    for (int x1 = 0; x1 < width; x1++)
+                    for (int y1 = 0; y1 < height; y1++)
                     {
-                        retVal[x1 + yOffsetLeft] = _colors[x + x1 + yOffsetRight];
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = (y + y1) * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            retVal[x1 + yOffsetLeft] = _colors[x + x1 + yOffsetRight];
+                        }
                     }
+
+                    #endregion
+                }
+                else
+                {
+                    #region bytes -> color
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = (y + y1) * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            byte[] bytes = _bytes[x + x1 + yOffsetRight];
+                            retVal[x1 + yOffsetLeft] = Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+
+            // Exit Function
+            return retVal;
+        }
+        public byte[][] GetColors_Byte(int x, int y, int width, int height)
+        {
+            if (x == 0 && y == 0 && width == _width && height == _height)
+            {
+                //  Just return the array (much faster than building a new one, but it assumes that they don't try to manipulate the colors)
+                if (_bytes != null)
+                {
+                    return _bytes;
+                }
+                else
+                {
+                    return GetColors_Byte();     // let this method do the loop
+                }
+            }
+
+            byte[][] retVal = new byte[width * height][];
+
+            //NOTE: Copying code for speed reasons
+
+            int yOffsetLeft, yOffsetRight;
+
+            if (x < 0 || x + width >= _width || y < 0 || y + height >= _height)
+            {
+                #region Some out of bounds
+
+                // copy the logic to avoid an if at every color
+                if (_bytes != null)
+                {
+                    #region direct
+
+                    int x2, y2;
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        y2 = y + y1;
+
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = y2 * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            x2 = x + x1;
+
+                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+                            {
+                                retVal[x1 + yOffsetLeft] = _outOfBoundsBytes;
+                            }
+                            else
+                            {
+                                retVal[x1 + yOffsetLeft] = _bytes[x2 + yOffsetRight];
+                            }
+                        }
+                    }
+
+                    #endregion
+                }
+                else
+                {
+                    #region color -> bytes
+
+                    int x2, y2;
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        y2 = y + y1;
+
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = y2 * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            x2 = x + x1;
+
+                            if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
+                            {
+                                retVal[x1 + yOffsetLeft] = _outOfBoundsBytes;
+                            }
+                            else
+                            {
+                                Color color = _colors[x2 + yOffsetRight];
+                                retVal[x1 + yOffsetLeft] = new[] { color.A, color.R, color.G, color.B };
+                            }
+                        }
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+            else
+            {
+                #region All in bounds
+
+                // copy the logic to avoid an if at every color
+                if (_bytes != null)
+                {
+                    #region direct
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = (y + y1) * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            retVal[x1 + yOffsetLeft] = _bytes[x + x1 + yOffsetRight];
+                        }
+                    }
+
+                    #endregion
+                }
+                else
+                {
+                    #region color -> bytes
+
+                    for (int y1 = 0; y1 < height; y1++)
+                    {
+                        yOffsetLeft = y1 * width;		// offset into the return array
+                        yOffsetRight = (y + y1) * _width;		// offset into _colors array
+
+                        for (int x1 = 0; x1 < width; x1++)
+                        {
+                            Color color = _colors[x + x1 + yOffsetRight];
+                            retVal[x1 + yOffsetLeft] = new[] { color.A, color.R, color.G, color.B };
+                        }
+                    }
+
+                    #endregion
                 }
 
                 #endregion
@@ -7377,7 +7685,30 @@ namespace Game.HelperClassesWPF
         public Color[] GetColors()
         {
             //  Just return the array (much faster than building a new one, but it assumes that they don't try to manipulate the colors)
-            return _colors;
+            if (_colors != null)
+            {
+                return _colors;
+            }
+            else
+            {
+                return _bytes.
+                    Select(o => Color.FromArgb(o[0], o[1], o[2], o[3])).
+                    ToArray();
+            }
+        }
+        public byte[][] GetColors_Byte()
+        {
+            //  Just return the array (much faster than building a new one, but it assumes that they don't try to manipulate the colors)
+            if (_bytes != null)
+            {
+                return _bytes;
+            }
+            else
+            {
+                return _colors.
+                    Select(o => new[] { o.A, o.R, o.G, o.B }).
+                    ToArray();
+            }
         }
 
         public int Width { get { return _width; } }
@@ -7416,14 +7747,18 @@ namespace Game.HelperClassesWPF
 
         #region IBitmapCustom Members
 
+        public int Width { get { return _info.Width; } }
+        public int Height { get { return _info.Height; } }
+
         public Color GetColor(int x, int y)
         {
             byte[] bytes = _info.GetColorBytes(x, y);
             return Color.FromArgb(bytes[0], bytes[1], bytes[2], bytes[3]);
         }
-
-        public int Width { get { return _info.Width; } }
-        public int Height { get { return _info.Height; } }
+        public byte[] GetColor_Byte(int x, int y)
+        {
+            return _info.GetColorBytes(x, y);
+        }
 
         public Color[] GetColors(int x, int y, int width, int height)
         {
@@ -7436,181 +7771,41 @@ namespace Game.HelperClassesWPF
                 for (int x1 = 0; x1 < width; x1++)
                 {
                     byte[] color = _info.GetColorBytes(x1, y1);
-
                     retVal[x1 + yOffset] = Color.FromArgb(color[0], color[1], color[2], color[3]);
                 }
             }
 
             return retVal;
         }
-        public Color[] GetColors()
+        public byte[][] GetColors_Byte(int x, int y, int width, int height)
         {
-            return GetColors(0, 0, _info.Width, _info.Height);
-        }
+            byte[][] retVal = new byte[width * height][];
 
-        #region OLD
-        //public Color[] GetColors(int x, int y, int width, int height)
-        //{
-        //    Color[] retVal = new Color[width * height];
-
-        //    //NOTE: Copying code for speed reasons
-
-        //    int yOffsetLeft, yOffsetRight, offset;
-
-        //    if (x < 0 || x + width >= _width || y < 0 || y + height >= _height)
-        //    {
-        //        #region Some out of bounds
-
-        //        if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
-        //        {
-        //            #region Pbgra32
-
-        //            int x2, y2;
-
-        //            for (int y1 = 0; y1 < height; y1++)
-        //            {
-        //                y2 = y + y1;
-
-        //                yOffsetLeft = y1 * width;		// offset into the return array
-        //                yOffsetRight = y2 * _stride;		// offset into _bytes array
-
-        //                for (int x1 = 0; x1 < width; x1++)
-        //                {
-        //                    x2 = x + x1;
-
-        //                    if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
-        //                    {
-        //                        retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
-        //                    }
-        //                    else
-        //                    {
-        //                        offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-        //                        retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-        //                    }
-        //                }
-        //            }
-
-        //            #endregion
-        //        }
-        //        else if (_format == PixelFormats.Bgr32)
-        //        {
-        //            #region Bgr32
-
-        //            int x2, y2;
-
-        //            for (int y1 = 0; y1 < height; y1++)
-        //            {
-        //                y2 = y + y1;
-
-        //                yOffsetLeft = y1 * width;		// offset into the return array
-        //                yOffsetRight = y2 * _stride;		// offset into _bytes array
-
-        //                for (int x1 = 0; x1 < width; x1++)
-        //                {
-        //                    x2 = x + x1;
-
-        //                    if (x2 < 0 || x2 >= _width || y2 < 0 || y2 >= _height)
-        //                    {
-        //                        retVal[x1 + yOffsetLeft] = _outOfBoundsColor;
-        //                    }
-        //                    else
-        //                    {
-        //                        offset = yOffsetRight + (x2 * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-        //                        retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-        //                    }
-        //                }
-        //            }
-
-        //            #endregion
-        //        }
-        //        else
-        //        {
-        //            throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
-        //        }
-
-        //        #endregion
-        //    }
-        //    else
-        //    {
-        //        #region All in bounds
-
-        //        if (_format == PixelFormats.Pbgra32)		// can't do a switch on format
-        //        {
-        //            #region Pbgra32
-
-        //            for (int y1 = 0; y1 < height; y1++)
-        //            {
-        //                yOffsetLeft = y1 * width;		// offset into the return array
-        //                yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
-
-        //                for (int x1 = 0; x1 < width; x1++)
-        //                {
-        //                    offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-        //                    retVal[x1 + yOffsetLeft] = Color.FromArgb(_bytes[offset + 3], _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-        //                }
-        //            }
-
-        //            #endregion
-        //        }
-        //        else if (_format == PixelFormats.Bgr32)
-        //        {
-        //            #region Bgr32
-
-        //            for (int y1 = 0; y1 < height; y1++)
-        //            {
-        //                yOffsetLeft = y1 * width;		// offset into the return array
-        //                yOffsetRight = (y + y1) * _stride;		// offset into _bytes array
-
-        //                for (int x1 = 0; x1 < width; x1++)
-        //                {
-        //                    offset = yOffsetRight + ((x + x1) * 4);		// this is assuming that bitmap.Format.BitsPerPixel is 32, which would be four bytes per pixel
-
-        //                    retVal[x1 + yOffsetLeft] = Color.FromArgb(255, _bytes[offset + 2], _bytes[offset + 1], _bytes[offset + 0]);
-        //                }
-        //            }
-
-        //            #endregion
-        //        }
-        //        else
-        //        {
-        //            throw new ApplicationException("TODO: Handle more pixel formats: " + _format.ToString());
-        //        }
-
-        //        #endregion
-        //    }
-
-        //    // Exit Function
-        //    return retVal;
-        //}
-        #endregion
-
-        #endregion
-
-        #region Public Methods
-
-        /// <summary>
-        /// This returns the entire image as byte arrays (each array is length 4: A,R,G,B).
-        /// This is faster than converting to the color struct
-        /// </summary>
-        public byte[][] GetColorBytes()
-        {
-            byte[][] retVal = new byte[_info.Width * _info.Height][];
-
-            for (int y = 0; y < _info.Height; y++)
+            for (int y1 = 0; y1 < height; y1++)
             {
-                int yOffset = y * _info.Width;		// offset into the return array
+                int yOffset = y1 * width;		// offset into the return array
 
-                for (int x = 0; x < _info.Width; x++)
+                for (int x1 = 0; x1 < width; x1++)
                 {
-                    retVal[x + yOffset] = _info.GetColorBytes(x, y);
+                    retVal[x1 + yOffset] = _info.GetColorBytes(x1, y1);
                 }
             }
 
             return retVal;
         }
+
+        public Color[] GetColors()
+        {
+            return GetColors(0, 0, _info.Width, _info.Height);
+        }
+        public byte[][] GetColors_Byte()
+        {
+            return GetColors_Byte(0, 0, _info.Width, _info.Height);
+        }
+
+        #endregion
+
+        #region Public Methods
 
         /// <summary>
         /// This converts into a gray scale convolution

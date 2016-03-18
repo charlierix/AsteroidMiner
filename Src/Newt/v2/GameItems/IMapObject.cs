@@ -19,6 +19,9 @@ namespace Game.Newt.v2.GameItems
         Body PhysicsBody { get; }
 
         Visual3D[] Visuals3D { get; }       //TODO: Get rid of this
+        /// <summary>
+        /// NOTE: This is used by the camera pool
+        /// </summary>
         Model3D Model { get; }
 
         Point3D PositionWorld { get; }

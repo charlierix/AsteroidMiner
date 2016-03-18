@@ -277,14 +277,14 @@ namespace Game.Newt.v2.Arcanorum
             _energy.AddQuantity(_itemOptions.NestEnergy_Add * elapsedTime, false);
 
             // Get the currently live bots
-            BotNPC[] bots;
+            ArcBotNPC[] bots;
             if (_botTokens.Count == 0)
             {
-                bots = new BotNPC[0];
+                bots = new ArcBotNPC[0];
             }
             else
             {
-                bots = _map.GetItems<BotNPC>(false).Where(o => _botTokens.Contains(o.Token)).ToArray();
+                bots = _map.GetItems<ArcBotNPC>(false).Where(o => _botTokens.Contains(o.Token)).ToArray();
             }
 
             // Get rid of tokens that point to dead bots
@@ -347,20 +347,20 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Private Methods
 
-        private BotNPC[] Update_DamageBots(BotNPC[] bots)
+        private ArcBotNPC[] Update_DamageBots(ArcBotNPC[] bots)
         {
             if (bots.Length == 0)
             {
                 return bots;
             }
 
-            List<BotNPC> retVal = new List<BotNPC>();
+            List<ArcBotNPC> retVal = new List<ArcBotNPC>();
 
             Point3D nestPosition = this.PositionWorld;
 
             double maxDistanceSq = Math.Pow(this.Radius * 14, 2);
 
-            foreach (BotNPC bot in bots)
+            foreach (ArcBotNPC bot in bots)
             {
                 //TODO: Add more rules
                 if ((bot.PositionWorld - nestPosition).LengthSquared > maxDistanceSq)
@@ -377,7 +377,7 @@ namespace Game.Newt.v2.Arcanorum
             return retVal.ToArray();
         }
 
-        private void Update_AddBot(BotNPC[] currentBots)
+        private void Update_AddBot(ArcBotNPC[] currentBots)
         {
             const double HOMINGRADIUS = 8d;
             //const int LEVEL = 1;
@@ -412,7 +412,7 @@ namespace Game.Newt.v2.Arcanorum
             }
 
             int level = StaticRandom.Next(1, 20);
-            BotNPC bot = new BotNPC(dna.Item1, level, position.Value, _world, _map, _keepItems2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, this.PositionWorld, HOMINGRADIUS, true, true);
+            ArcBotNPC bot = new ArcBotNPC(dna.Item1, level, position.Value, _world, _map, _keepItems2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, this.PositionWorld, HOMINGRADIUS, true, true);
 
             _map.AddItem(bot);
             _botTokens.Add(bot.Token);

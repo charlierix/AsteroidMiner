@@ -112,7 +112,6 @@
       <DependentUpon>SpaceDockPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="AstMin2D\SpaceStation2D.cs" />
-    <Compile Include="MapParts\Asteroid.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="MapParts\SpaceStation.cs" />
     <Compile Include="AstField\AsteroidFieldWindow.xaml.cs">

@@ -462,7 +462,7 @@ namespace Game.Newt.v2.Arcanorum
 
             // Place them evenly in a ring
             // I don't want a neuron in the center, so placing a static point there to force the neurons away from the center
-            Vector3D[] positions = Brain.GetNeuronPositions_Ring2D(dna.Neurons, neuronCount, radius);
+            Vector3D[] positions = Brain.GetNeuronPositions_Ring2D(dna.Neurons, neuronCount, radius);       //why 2D?
 
             // Exit Function
             return positions.Select(o => new Neuron_SensorPosition(o.ToPoint(), true, ignoreSetValue)).ToArray();

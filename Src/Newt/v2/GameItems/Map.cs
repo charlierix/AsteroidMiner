@@ -280,6 +280,18 @@ namespace Game.Newt.v2.GameItems
             }
             else
             {
+                // Copy the lights from the viewport
+                foreach (var visual in viewport.Children)
+                {
+                    byte[] modelBytes = GetLightModelSerialized(visual);
+
+                    if (modelBytes != null)
+                    {
+                        CameraPoolVisual lightVisual = new CameraPoolVisual(TokenGenerator.NextToken(), modelBytes, null);
+                        _cameraPool.Add(lightVisual);
+                    }
+                }
+
                 _cameraPoolVisuals = new List<CameraPoolVisual>();
             }
 
@@ -313,20 +325,23 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (this.ItemRemoved != null)
                     {
+                        // Let the listener dispose it
                         this.ItemRemoved(this, new MapItemArgs(mapObject));
+                    }
+                    else
+                    {
+                        // No listener, dispose it
+                        if (mapObject is IDisposable)
+                        {
+                            ((IDisposable)mapObject).Dispose();     // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
+                        }
+                        else if (mapObject.PhysicsBody != null)
+                        {
+                            mapObject.PhysicsBody.Dispose();
+                        }
                     }
 
                     //RemoveFromViewport(mapObject);		// the map will only be disposed at the end, so the state of the viewport isn't very important
-
-                    if (mapObject is IDisposable)
-                    {
-                        // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
-                        ((IDisposable)mapObject).Dispose();
-                    }
-                    else if (mapObject.PhysicsBody != null)
-                    {
-                        mapObject.PhysicsBody.Dispose();
-                    }
                 }
             }
         }
@@ -499,6 +514,25 @@ namespace Game.Newt.v2.GameItems
                 this.ItemAdded(this, new MapItemArgs(item));
             }
         }
+        /// <summary>
+        /// Removes the item, and raises the ItemRemoved event
+        /// NOTE: It's up to the main game window to handle disposing items (the easiest is to listen to ItemRemoved)
+        /// </summary>
+        /// <remarks>
+        /// Here is a sample removed listener:
+        /// 
+        /// private void Map_ItemRemoved(object sender, MapItemArgs e)
+        /// {
+        ///     if (e.Item is IDisposable)
+        ///     {
+        ///         ((IDisposable)e.Item).Dispose();
+        ///     }
+        ///     else if (e.Item.PhysicsBody != null)
+        ///     {
+        ///         e.Item.PhysicsBody.Dispose();
+        ///     }
+        /// }
+        /// </remarks>
         /// <param name="isFinalType">
         /// True: The item passed in is the same type that was added
         /// False: The item passed in was stored as another type (like as an interface)
@@ -916,17 +950,7 @@ namespace Game.Newt.v2.GameItems
 
             if (_cameraPool != null && item.Model != null)
             {
-                //  Serialize model
-                byte[] modelBytes = null;
-
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    XamlServices.Save(stream, item.Model);
-                    stream.Position = 0;
-
-                    modelBytes = stream.ToArray();
-                }
-
+                byte[] modelBytes = SerializeModel(item.Model);
                 CameraPoolVisual poolVisual = new CameraPoolVisual(item.PhysicsBody.Token, modelBytes, item);
 
                 //  Add it
@@ -965,6 +989,107 @@ namespace Game.Newt.v2.GameItems
             }
 
             #endregion
+        }
+
+        /// <summary>
+        /// This clones any models out of the visual that are lights, then serializes that clone.
+        /// (returns a serialization of just the lights)
+        /// </summary>
+        private static byte[] GetLightModelSerialized(Visual3D visual)
+        {
+            ModelVisual3D visualCast = visual as ModelVisual3D;
+            if (visualCast == null)
+            {
+                return null;
+            }
+
+            // Clone the lights (or group of lights)
+            Model3D lightModel = GetLightModelSerialized_Model(visualCast.Content);
+            if (lightModel == null)
+            {
+                return null;
+            }
+
+            // Add the visual's transform to the model's transform
+            if (visualCast.Transform != null && !visualCast.Transform.Value.IsIdentity)
+            {
+                if (lightModel.Transform == null || lightModel.Transform.Value.IsIdentity)
+                {
+                    lightModel.Transform = visualCast.Transform.Clone();
+                }
+                else
+                {
+                    Transform3DGroup transformGroup = new Transform3DGroup();
+                    transformGroup.Children.Add(lightModel.Transform.Clone());
+                    transformGroup.Children.Add(visualCast.Transform.Clone());
+                    lightModel.Transform = transformGroup;
+                }
+            }
+
+            return SerializeModel(lightModel);
+        }
+        /// <summary>
+        /// This creates a clone of only lights (or null)
+        /// </summary>
+        private static Model3D GetLightModelSerialized_Model(Model3D model)
+        {
+            if (model is Model3DGroup)
+            {
+                Model3DGroup retVal = new Model3DGroup();
+
+                bool foundLight = false;
+
+                foreach (Model3D child in ((Model3DGroup)model).Children)
+                {
+                    // Recurse with the child
+                    Model3D childLight = GetLightModelSerialized_Model(child);
+
+                    if (childLight != null)
+                    {
+                        retVal.Children.Add(childLight);
+                        foundLight = true;
+                    }
+                }
+
+                if (foundLight)
+                {
+                    if (model.Transform != null)
+                    {
+                        retVal.Transform = model.Transform.Clone();
+                    }
+
+                    return retVal;
+                }
+                else
+                {
+                    // None of the group's children were lights
+                    return null;
+                }
+            }
+
+            if (model is Light)     // AmbientLight, DirectionalLight, SpotLight
+            {
+                return model.Clone();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private static byte[] SerializeModel(Model3D model)
+        {
+            byte[] retVal = null;
+
+            using (MemoryStream stream = new MemoryStream())
+            {
+                XamlServices.Save(stream, model);
+                stream.Position = 0;
+
+                retVal = stream.ToArray();
+            }
+
+            return retVal;
         }
 
         private void BuildSnapshot()

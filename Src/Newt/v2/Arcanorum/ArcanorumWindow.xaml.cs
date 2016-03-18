@@ -264,7 +264,7 @@ namespace Game.Newt.v2.Arcanorum
         private MaterialManager _materialManager = null;
         private MaterialIDs _materialIDs = null;
 
-        private Bot _player = null;
+        private ArcBot _player = null;
 
         private DragHitShape _dragPlane = null;
 
@@ -289,7 +289,7 @@ namespace Game.Newt.v2.Arcanorum
         private List<Visual2DIntermediate> _visuals2D = new List<Visual2DIntermediate>();
 
         // If the user clicks on a bot, this will show its parts
-        private BotNPC _selectedBot = null;
+        private ArcBotNPC _selectedBot = null;
         private ShipViewerWindow _selectedBotViewer = null;
 
         private Brush _strikeBrushPlayer = new SolidColorBrush(UtilityWPF.ColorFromHex("FF4F55"));
@@ -505,7 +505,7 @@ namespace Game.Newt.v2.Arcanorum
 
                 #region Player
 
-                _player = new Bot(null, StaticRandom.Next(1, 30), new Point3D(0, 0, 0), _world, _map, _keep2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, new Point3D(0, 0, 0), 5, false, false);
+                _player = new ArcBot(null, StaticRandom.Next(1, 30), new Point3D(0, 0, 0), _world, _map, _keep2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, new Point3D(0, 0, 0), 5, false, false);
                 _player.Ram.SetWPFStuff(grdViewPort, pnlVisuals2D);
 
                 _map.AddItem(_player);
@@ -598,8 +598,8 @@ namespace Game.Newt.v2.Arcanorum
                 #region Update Manager
 
                 _updateManager = new UpdateManager(
-                    new Type[] { typeof(Bot), typeof(BotNPC), typeof(NPCNest) },
-                    new Type[] { typeof(Bot), typeof(BotNPC) },
+                    new Type[] { typeof(ArcBot), typeof(ArcBotNPC), typeof(NPCNest) },
+                    new Type[] { typeof(ArcBot), typeof(ArcBotNPC) },
                     _map);
 
                 #endregion
@@ -991,7 +991,7 @@ namespace Game.Newt.v2.Arcanorum
         {
             try
             {
-                Bot bot = _map.GetItem<Bot>(e.GetBody(_materialIDs.Bot));
+                ArcBot bot = _map.GetItem<ArcBot>(e.GetBody(_materialIDs.Bot));
                 if (bot == null)
                 {
                     return;
@@ -1016,15 +1016,15 @@ namespace Game.Newt.v2.Arcanorum
                     {
                         if (_isShiftPressed)
                         {
-                            bot.AttachWeapon(weaponFreeFloating, Bot.ItemToFrom.Map, Bot.ItemToFrom.Inventory);
+                            bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Inventory);
                         }
                         else if (_isCtrlPressed)
                         {
-                            bot.AttachWeapon(weaponFreeFloating, Bot.ItemToFrom.Map, Bot.ItemToFrom.Map);
+                            bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Map);
                         }
                         else if (_isAltPressed)
                         {
-                            bot.AddToInventory(weaponFreeFloating, Bot.ItemToFrom.Map);
+                            bot.AddToInventory(weaponFreeFloating, ArcBot.ItemToFrom.Map);
                         }
                         else
                         {
@@ -1035,7 +1035,7 @@ namespace Game.Newt.v2.Arcanorum
                     else
                     {
                         // For now, always attach
-                        bot.AttachWeapon(weaponFreeFloating, Bot.ItemToFrom.Map, Bot.ItemToFrom.Inventory);
+                        bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Inventory);
 
                         //TODO: Expand this method, or make a different one, and let the bot decide
                         //bot.CollidedWithTreasure(
@@ -1076,7 +1076,7 @@ namespace Game.Newt.v2.Arcanorum
                             }
                             else
                             {
-                                bot.AttachWeapon(null, Bot.ItemToFrom.Nowhere, Bot.ItemToFrom.Map);     // if they are holding a weapon, release it to the map
+                                bot.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Map);     // if they are holding a weapon, release it to the map
 
                                 //TODO: Randomly spill some of its inventory
                                 //bot.Inventory.Weapons
@@ -1215,7 +1215,7 @@ namespace Game.Newt.v2.Arcanorum
                     return;
                 }
 
-                Bot bot = _map.GetItem<Bot>(e.GetBody(_materialIDs.Bot));
+                ArcBot bot = _map.GetItem<ArcBot>(e.GetBody(_materialIDs.Bot));
                 if (bot == null)
                 {
                     return;
@@ -1293,11 +1293,11 @@ namespace Game.Newt.v2.Arcanorum
                     case Key.OemTilde:
                         if (_isShiftPressed)
                         {
-                            _player.AttachWeapon(null, Bot.ItemToFrom.Nowhere, Bot.ItemToFrom.Map);
+                            _player.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Map);
                         }
                         else
                         {
-                            _player.AttachWeapon(null, Bot.ItemToFrom.Nowhere, Bot.ItemToFrom.Inventory);
+                            _player.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Inventory);
                         }
                         break;
 
@@ -1512,7 +1512,7 @@ namespace Game.Newt.v2.Arcanorum
                 List<MyHitTestResult> hits = UtilityWPF.CastRay(out clickRay, clickPoint, grdViewPort, _camera, _viewport, true);
 
                 // See if they clicked on something
-                var clickedItem = GetHit(hits, new Type[] { typeof(BotNPC) });
+                var clickedItem = GetHit(hits, new Type[] { typeof(ArcBotNPC) });
 
                 if (_selectedBot != null && clickedItem != null && _selectedBot.Equals(clickedItem.Item1))
                 {
@@ -1531,7 +1531,7 @@ namespace Game.Newt.v2.Arcanorum
                     //TODO: Place a 2D graphic behind the selected bot
                     if (clickedItem != null)
                     {
-                        _selectedBot = (BotNPC)clickedItem.Item1;
+                        _selectedBot = (ArcBotNPC)clickedItem.Item1;
 
                         PartBase[] parts = _selectedBot.Parts;
                         if (parts != null)
@@ -1602,7 +1602,7 @@ namespace Game.Newt.v2.Arcanorum
 
         private Weapon FindWeapon_Attached(Body body)
         {
-            return _map.GetItems<Bot>(true).
+            return _map.GetItems<ArcBot>(true).
                 Where(o => o.Weapon != null && o.Weapon.PhysicsBody.Equals(body)).
                 Select(o => o.Weapon).
                 FirstOrDefault();
@@ -1666,7 +1666,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 // Give a higher chance of far away objects to be removed
                 int candidateCount = items.Count - safetyCount;
-                int index = Convert.ToInt32(rand.NextPow(3, candidateCount - 1, false));
+                int index = Convert.ToInt32(rand.NextPow(3, candidateCount - 1));
 
                 // Remove it
                 if (_map.RemoveItem(items[index].Item))
@@ -1729,7 +1729,7 @@ namespace Game.Newt.v2.Arcanorum
                     }
                 };
 
-                BotNPC npc = new BotNPC(dna, StaticRandom.Next(1, 25), center + Math3D.GetRandomVector_Circular(radius), _world, _map, _keep2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, new Point3D(0, 0, 0), 5, true, true);
+                ArcBotNPC npc = new ArcBotNPC(dna, StaticRandom.Next(1, 25), center + Math3D.GetRandomVector_Circular(radius), _world, _map, _keep2D, _materialIDs, _viewport, _editorOptions, _itemOptions, _gravity, _dragPlane, new Point3D(0, 0, 0), 5, true, true);
 
                 _map.AddItem(npc);
             }
@@ -2155,7 +2155,7 @@ namespace Game.Newt.v2.Arcanorum
             if (_isShiftPressed)
             {
                 // Eject from inventory to the map
-                _player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Map);
+                _player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], ArcBot.ItemToFrom.Map);
 
                 //TODO: Test these others
                 //_player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Inventory);
@@ -2164,7 +2164,7 @@ namespace Game.Newt.v2.Arcanorum
             else
             {
                 // Equip from inventory
-                _player.AttachWeapon(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Inventory, Bot.ItemToFrom.Inventory);
+                _player.AttachWeapon(_player.Inventory.Weapons[number - 1], ArcBot.ItemToFrom.Inventory, ArcBot.ItemToFrom.Inventory);
 
                 //TODO: Test these others
                 //_player.AttachWeapon(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Inventory, Bot.ItemToFrom.Map);
@@ -2187,7 +2187,7 @@ namespace Game.Newt.v2.Arcanorum
                     Weapon weapon = _player.Inventory.Weapons.Where(o => o.DNA.UniqueID == shopPanelCast.AttachedWeaponID.Value).FirstOrDefault();
                     if (weapon != null)
                     {
-                        _player.AttachWeapon(weapon, Bot.ItemToFrom.Inventory, Bot.ItemToFrom.Inventory);
+                        _player.AttachWeapon(weapon, ArcBot.ItemToFrom.Inventory, ArcBot.ItemToFrom.Inventory);
                     }
                 }
 

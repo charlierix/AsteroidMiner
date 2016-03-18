@@ -71,6 +71,32 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        private volatile object _partMap_FuzzyLink_MaxLinkPercent = 1.2;
+        public double PartMap_FuzzyLink_MaxLinkPercent
+        {
+            get
+            {
+                return (double)_partMap_FuzzyLink_MaxLinkPercent;
+            }
+            set
+            {
+                _partMap_FuzzyLink_MaxLinkPercent = value;
+            }
+        }
+
+        private volatile object _partMap_FuzzyLink_MaxIntermediateCount = 3;
+        public int PartMap_FuzzyLink_MaxIntermediateCount
+        {
+            get
+            {
+                return (int)_partMap_FuzzyLink_MaxIntermediateCount;
+            }
+            set
+            {
+                _partMap_FuzzyLink_MaxIntermediateCount = value;
+            }
+        }
+
         #endregion
 
         // Containers

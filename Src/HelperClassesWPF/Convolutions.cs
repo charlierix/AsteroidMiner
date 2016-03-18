@@ -554,6 +554,26 @@ namespace Game.HelperClassesWPF
             return new Convolution2D(values, conv.Width, conv.Height, false, conv.Gain, conv.Iterations, conv.ExpandBorder, description);
         }
 
+        public static Convolution2D Normalize(Convolution2D conv, double scale = 1d)
+        {
+            double[] values = MathND.Normalize(conv.Values);
+
+            if(!scale.IsNearValue(1d))
+            {
+                values = values.
+                    Select(o => o * scale).
+                    ToArray();
+            }
+
+            string description = "";
+            if (!string.IsNullOrEmpty(conv.Description))
+            {
+                description = string.Format("Normalize({0})", description);
+            }
+
+            return new Convolution2D(values, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder, description);
+        }
+
         #endregion
 
         #region Generators
@@ -770,6 +790,7 @@ namespace Game.HelperClassesWPF
             return new Convolution2D(values, size, size, false, description: description);
         }
 
+        //TODO: Make a kernel that takes atan(sobelvert/sobelhorz).  This will be the angle.  Not sure how to store that though (need one channel for intensity, one channel for angle)
         public static Convolution2D GetEdge_Sobel(bool vertical = true, double gain = 1d)
         {
             //Got this here:
@@ -1350,7 +1371,7 @@ namespace Game.HelperClassesWPF
 
             // Min Size
             int minSize = Math.Min(imageSize.X, imageSize.Y);
-            if(minSize == 0)
+            if (minSize == 0)
             {
                 throw new ArgumentException("Image size is zero");
             }
@@ -1560,8 +1581,8 @@ namespace Game.HelperClassesWPF
                     {
                         position = center + new Vector(Math1D.GetNearZeroValue(center.X * MAXCENTERPERCENT), Math1D.GetNearZeroValue(center.Y * MAXCENTERPERCENT));
 
-                        radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
-                        radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER, isPlusMinus: false));
+                        radiusX = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER));
+                        radiusY = UtilityCore.GetScaledValue(minRadius, maxRadius, 0, 1, rand.NextPow(POWER));
 
                         if (radiusX > radiusY)
                         {
@@ -2153,6 +2174,9 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
+        /// <summary>
+        /// This returns the from to index
+        /// </summary>
         private static Tuple<int, int>[] GetStops(int[] ranges)
         {
             Tuple<int, int>[] retVal = new Tuple<int, int>[ranges.Length];
@@ -2162,6 +2186,18 @@ namespace Game.HelperClassesWPF
             for (int cntr = 0; cntr < ranges.Length; cntr++)
             {
                 retVal[cntr] = Tuple.Create(offset, offset + ranges[cntr] - 1);
+
+                // If to is less than from, then nothing would get mapped, and the output would be zero.  Instead, just pull from
+                // a single pixel
+                //
+                //TODO: This is pretty crude.  If there are large gaps, this won't distribute evenly
+                //ex: enlarging from 2 to 9, you would get 0,1,1,1,1,1,1,1,1
+                //But maxpool shouldn't be used for big enlarges, so I don't want to take the expense of figuring out how to distribute more evenly
+                if(retVal[cntr].Item2 < retVal[cntr].Item1)
+                {
+                    retVal[cntr] = Tuple.Create(retVal[cntr].Item1, retVal[cntr].Item1);
+                }
+
                 offset += ranges[cntr];
             }
 

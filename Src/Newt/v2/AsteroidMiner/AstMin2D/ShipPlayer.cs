@@ -15,7 +15,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
-    public class ShipPlayer : Ship
+    public class ShipPlayer : Bot
     {
         #region Class: ThrustContribution
 
@@ -88,7 +88,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Constructor/Factory
 
-        public static async Task<ShipPlayer> GetNewShipAsync(EditorOptions options, ItemOptions itemOptions, ShipDNA dna, World world, int material_Ship, int material_Projectile, RadiationField radiation, IGravityField gravity, CameraPool cameraPool, Map map)
+        public static ShipPlayer GetNewShip(ShipDNA dna, World world, int material_Ship, Map map, ShipExtraArgs extra)
         {
             ShipDNA rotatedDNA = RotateDNA_FromExternal(dna);
 
@@ -132,15 +132,24 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             #endregion
 
-            var construction = await GetNewShipConstructionAsync(options, itemOptions, rotatedDNA, world, material_Ship, material_Projectile, radiation, gravity, cameraPool, map, true, true);
+            ShipCoreArgs core = new ShipCoreArgs()
+            {
+                Map = map,
+                Material_Ship = material_Ship,
+                World = world,
+            };
 
-            return new ShipPlayer(construction, map);
+            //var construction = await GetNewShipConstructionAsync(options, itemOptions, rotatedDNA, world, material_Ship, material_Projectile, radiation, gravity, cameraPool, map, true, true);
+            //var construction = await GetNewShipConstructionAsync(rotatedDNA, world, material_Ship, map, extra);
+            var construction = BotConstructor.ConstructBot(rotatedDNA, core, extra);
+
+            return new ShipPlayer(construction);
         }
 
-        protected ShipPlayer(ShipConstruction construction, Map map)
+        protected ShipPlayer(BotConstruction_Result construction)
             : base(construction)
         {
-            _map = map;
+            _map = construction.ArgsCore.Map;
 
             _cargoBays = base.Parts.Where(o => o is CargoBay).Select(o => (CargoBay)o).ToArray();
             _guns = base.Parts.Where(o => o is ProjectileGun).Select(o => (ProjectileGun)o).ToArray();

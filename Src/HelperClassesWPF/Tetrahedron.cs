@@ -1119,6 +1119,14 @@ namespace Game.HelperClassesWPF
             return retVal.Distinct().ToArray();		//distinct works, because the tuple always has the smaller index as item1
         }
 
+        public static TriangleIndexed[] GetUniqueTriangles(Tetrahedron[] tetras)
+        {
+            return tetras.
+                SelectMany(o => o.FaceArray).
+                Distinct(o => o.Token).
+                ToArray();
+        }
+
         public bool IsMatch(int[] indeciesSorted)
         {
             int[] mySorted = this.IndexArraySorted;

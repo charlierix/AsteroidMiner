@@ -1,0 +1,158 @@
+﻿<Window x:Class="Game.Newt.Testers.NonlinearRandom"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Nonlinear Random" ResizeMode="CanResizeWithGrip" Width="800" Height="600">
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="16" Foreground="#666360"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+
+        <Style x:Key="controlsPanelInExpander" TargetType="Border">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="MinWidth" Value="120"/>
+        </Style>
+
+        <Style x:Key="controlsPanelStack" TargetType="StackPanel">
+            <Setter Property="Margin" Value="2,1"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#EDEAE6">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Row="0" Background="#F2F0ED" BorderBrush="#20666A73" BorderThickness="1" CornerRadius="5" Padding="1" Margin="6,6,0,6">
+
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="1">
+                <StackPanel>
+
+                    <!-- Power -->
+                    <Expander IsExpanded="False" Header="Power">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}">
+                                <Label Content="&lt;1"/>
+                                <Slider Name="trkPowLTOne" Minimum=".01" Maximum="1" Value="1" ValueChanged="trkPowLTOne_ValueChanged"/>
+                                <Label Content=">1"/>
+                                <!-- NOTE: This is run through a method turn turn linear input into nonlinear output -->
+                                <Slider Name="trkPowGTOne" Minimum="0" Maximum="1.5" Value="0" ValueChanged="trkPowGTOne_ValueChanged"/>
+
+                                <TextBox Name="txtPow" Text="1" Margin="0,8,0,0" TextChanged="txtPow_TextChanged"/>
+
+                                <Button Content="Draw" Margin="0,8,0,0" Click="Pow_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Bell fail -->
+                    <Expander Visibility="Collapsed" IsExpanded="False" Header="Bell fail">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}" Slider.ValueChanged="BellFail_ValueChanged">
+                                <StackPanel.Resources>
+                                    <Style TargetType="Slider">
+                                        <Setter Property="AutoToolTipPlacement" Value="BottomRight"/>
+                                        <Setter Property="AutoToolTipPrecision" Value="2"/>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <Label Content="Peak" ToolTip="the X where the function will be highest"/>
+                                <Slider Name="trkBellFailPeak" Minimum=".01" Maximum=".99" Value=".5"/>
+
+                                <Label Content="Left Zero"/>
+                                <Slider Name="trkBellFailLeftZero" Minimum="0" Maximum="1" Value=".25"/>
+
+                                <Label Content="Pinch"/>
+                                <Slider Name="trkBellFailPinch" Minimum=".01" Maximum=".99" Value=".25"/>
+
+                                <Label Content="Right Zero"/>
+                                <Slider Name="trkBellFailRightZero" Minimum="0" Maximum="1" Value=".25"/>
+
+                                <Button Content="Draw" Margin="0,8,0,0" Click="BellFail_Click"/>
+
+                                <Button Visibility="Collapsed" Content="debug" Margin="0,8,0,0" Click="BellFailDebug_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Bell 2 -->
+                    <Expander Visibility="Collapsed" IsExpanded="False" Header="Bell 2">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}">
+                                <TextBox Name="txtBell2" AcceptsReturn="True" TextChanged="txtBell2_TextChanged"/>
+
+                                <Label Content="Pinch" Margin="0,8,0,0"/>
+                                <Slider Name="trkBell2" Minimum="0" Maximum=".5" Value=".05" AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2" ValueChanged="trkBell2_ValueChanged"/>
+
+                                <Button Content="Draw" Margin="0,8,0,0" Click="Bell2_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Bell Arms -->
+                    <Expander IsExpanded="False" Header="Bell Arms">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}" Slider.ValueChanged="trkBellArms_ValueChanged">
+                                <StackPanel.Resources>
+                                    <Style TargetType="Slider">
+                                        <Setter Property="AutoToolTipPlacement" Value="BottomRight"/>
+                                        <Setter Property="AutoToolTipPrecision" Value="2"/>
+                                    </Style>
+                                </StackPanel.Resources>
+
+                                <Label Content="Left Length"/>
+                                <Slider Name="trkBellArmsLeftLen" Minimum="0" Maximum="1.5" Value=".5"/>
+                                <Label Content="Left Angle"/>
+                                <Slider Name="trkBellArmsLeftAngle" Minimum="-60" Maximum="10" Value="-20"/>
+
+                                <Label Content="Right Length" Margin="0,8,0,0"/>
+                                <Slider Name="trkBellArmsRightLen" Minimum="0" Maximum="1.5" Value=".5"/>
+                                <Label Content="Right Angle"/>
+                                <Slider Name="trkBellArmsRightAngle" Minimum="-60" Maximum="10" Value="-20"/>
+
+                                <TextBox Name="lblBellValues" IsReadOnly="True" Margin="0,8,0,0" Background="{x:Null}" BorderBrush="{x:Null}"/>
+                                <TextBox Name="lblBellCtrlPoints" IsReadOnly="True" Margin="0,4,0,0" Background="{x:Null}" BorderBrush="{x:Null}"/>
+
+                                <Button Content="Draw" Margin="0,8,0,0" Click="BellArms_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Bell text -->
+                    <Expander IsExpanded="False" Header="Bell text">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Style="{StaticResource controlsPanelStack}">
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Label Grid.Column="0" Content="presets"/>
+                                    <Button Grid.Column="1" Content="+" ToolTip="Save points" Margin="0,4" Padding="4,-1,4,0" Click="SaveBell3Map_Click"/>
+                                </Grid>
+                                <ComboBox Name="cboBell3" SelectionChanged="cboBell3_SelectionChanged"/>
+
+                                <TextBox Name="txtBell3" AcceptsReturn="True" Margin="0,8,0,0" TextChanged="txtBell3_TextChanged"/>
+
+                                <Button Content="Draw" Margin="0,8,0,0" Click="Bell3_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+
+        </Border>
+
+        <Border Grid.Column="1" Name="grdViewPort" Background="#FFFFFF" BorderThickness="1" BorderBrush="#A02F3540" CornerRadius="3" Margin="6">
+            <Canvas Name="_canvas" />
+        </Border>
+    </Grid>
+</Window>

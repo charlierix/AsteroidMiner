@@ -18,7 +18,6 @@ using Game.Newt.v2.GameItems.Controls;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.Newt.v2.GameItems;
 using Game.Newt.v2.NewtonDynamics;
 using Game.Newt.v2.GenePool.MapParts;
 
@@ -148,6 +147,7 @@ namespace Game.Newt.v2.GenePool
                 material.Elasticity = .5d;
                 _material_Egg = _materialManager.AddMaterial(material);
 
+                // Projectile
                 material = new Game.Newt.v2.NewtonDynamics.Material();
                 _material_Projectile = _materialManager.AddMaterial(material);
 
@@ -209,7 +209,7 @@ namespace Game.Newt.v2.GenePool
 
                 _selectionLogic = new ItemSelectDragLogic(_map, _camera, _viewport, grdViewPort);
 
-                _selectionLogic.SelectableTypes.Add(typeof(Ship));
+                _selectionLogic.SelectableTypes.Add(typeof(Bot));
                 _selectionLogic.SelectableTypes.Add(typeof(Mineral));
                 _selectionLogic.SelectableTypes.Add(typeof(Egg));
 
@@ -228,10 +228,6 @@ namespace Game.Newt.v2.GenePool
             {
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-
         }
         private void Window_Closed(object sender, EventArgs e)
         {
@@ -468,7 +464,7 @@ namespace Game.Newt.v2.GenePool
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private async void btnAddBot_Click(object sender, RoutedEventArgs e)
+        private void btnAddBot_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -515,7 +511,24 @@ namespace Game.Newt.v2.GenePool
 
                 #endregion
 
-                Swimbot bot = await Swimbot.GetNewSwimbotAsync(_editorOptions, _itemOptions, dna, _world, _material_Bot, _material_Projectile, _radiation, null, _cameraPool, _map);
+                ShipCoreArgs core = new GameItems.ShipCoreArgs()
+                {
+                    Map = _map,
+                    Material_Ship = _material_Bot,
+                    World = _world,
+                };
+
+                ShipExtraArgs extra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Projectile,
+                    Radiation = _radiation,
+                    CameraPool = _cameraPool,
+                };
+
+                //Swimbot bot = await Swimbot.GetNewSwimbotAsync(dna, _world, _material_Bot, _map, extra);
+                Swimbot bot = new Swimbot(BotConstructor.ConstructBot(dna, core, extra));
                 bot.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Bot_ApplyForceAndTorque);
 
                 bot.PhysicsBody.Rotation = Math3D.GetRandomRotation();

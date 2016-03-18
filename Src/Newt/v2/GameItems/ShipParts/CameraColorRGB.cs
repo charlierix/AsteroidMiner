@@ -291,7 +291,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             geometry.Material = material;
-            geometry.BackMaterial = material;
+            //NOTE: The position handed to the camera pool is the center of this camera.  So need to leave the back material null, or it would
+            //be like taking pictures with the lens cap on
+            //geometry.BackMaterial = material;
 
             List<TubeRingBase> rings = new List<TubeRingBase>();
             rings.Add(new TubeRingRegularPolygon(0, false, 1, 1, false));
@@ -504,11 +506,25 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
+        private volatile NeuronContainerType _neuronContainerType = NeuronContainerType.Sensor;
         public NeuronContainerType NeuronContainerType
         {
             get
             {
-                return NeuronContainerType.Sensor;
+                return _neuronContainerType;
+            }
+            set
+            {
+                switch (value)
+                {
+                    case NeuronContainerType.Sensor:
+                    case NeuronContainerType.None:
+                        _neuronContainerType = value;
+                        break;
+
+                    default:
+                        throw new ArgumentOutOfRangeException("Can only set this camera as a sensor or none: " + value.ToString());
+                }
             }
         }
 
@@ -589,27 +605,29 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             const double INVERSE255 = 1d / 255d;
 
+            this.Bitmap = Tuple.Create(TokenGenerator.NextToken(), bitmap);
+
             //TODO: This is called from the camera pool's thread, which is pretty taxed, so may want this logic in a task
 
             // R
             for (int cntr = 0; cntr < _neuronsR.Length; cntr++)
             {
-                Color color = GetColor(_overlayR[cntr], bitmap);
-                _neuronsR[cntr].Value = color.R * INVERSE255;
+                byte[] color = GetColor(_overlayR[cntr], bitmap);
+                _neuronsR[cntr].Value = color[1] * INVERSE255;
             }
 
             // G
             for (int cntr = 0; cntr < _neuronsG.Length; cntr++)
             {
-                Color color = GetColor(_overlayG[cntr], bitmap);
-                _neuronsG[cntr].Value = color.G * INVERSE255;
+                byte[] color = GetColor(_overlayG[cntr], bitmap);
+                _neuronsG[cntr].Value = color[2] * INVERSE255;
             }
 
             // B
             for (int cntr = 0; cntr < _neuronsB.Length; cntr++)
             {
-                Color color = GetColor(_overlayB[cntr], bitmap);
-                _neuronsB[cntr].Value = color.B * INVERSE255;
+                byte[] color = GetColor(_overlayB[cntr], bitmap);
+                _neuronsB[cntr].Value = color[3] * INVERSE255;
             }
         }
 
@@ -641,6 +659,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return _scaleActual;
             }
         }
+
+        /// <summary>
+        /// Item1=Token
+        /// Item2=Bitmap
+        /// </summary>
+        /// <remarks>
+        /// This is exposed so that other parts could use the raw image instead of the neurons
+        /// </remarks>
+        public volatile Tuple<long, IBitmapCustom> Bitmap = null;
 
         #endregion
 
@@ -1183,13 +1210,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return Vector.Add(a1, Vector.Multiply(b, t));
         }
 
-        internal static Color GetColor(OverlayResult[] pixels, IBitmapCustom bitmap)
+        internal static byte[] GetColor(OverlayResult[] pixels, IBitmapCustom bitmap)
         {
-            Tuple<Color, double>[] colors = new Tuple<Color, double>[pixels.Length];
+            Tuple<byte[], double>[] colors = new Tuple<byte[], double>[pixels.Length];
 
             for (int cntr = 0; cntr < pixels.Length; cntr++)
             {
-                colors[cntr] = Tuple.Create(bitmap.GetColor(pixels[cntr].X, pixels[cntr].Y), pixels[cntr].Percent);
+                colors[cntr] = Tuple.Create(bitmap.GetColor_Byte(pixels[cntr].X, pixels[cntr].Y), pixels[cntr].Percent);
             }
 
             return UtilityWPF.AverageColors(colors);
