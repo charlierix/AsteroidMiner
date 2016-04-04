@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace Game.HelperClassesCore
 {
     /// <summary>
-    /// This is similar in concept to winform's BackgroundWorker, but with tasks
-    /// Instead this uses tasks, and 
+    /// This is similar in concept to winform's BackgroundWorker, but with tasks.  And you don't have to wait for the current
+    /// task to stop before starting a new one.  Just start, and trust that the current will be cancelled
     /// </summary>
     /// <remarks>
     /// If start is called multiple times, currently running tasks will be canceled, and finish will only be called for the latest start

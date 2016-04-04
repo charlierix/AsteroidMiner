@@ -465,7 +465,9 @@ namespace Game.Newt.v2.Arcanorum
             Vector3D[] positions = Brain.GetNeuronPositions_Ring2D(dna.Neurons, neuronCount, radius);       //why 2D?
 
             // Exit Function
-            return positions.Select(o => new Neuron_SensorPosition(o.ToPoint(), true, ignoreSetValue)).ToArray();
+            return positions.
+                Select(o => new Neuron_SensorPosition(o.ToPoint(), true, ignoreSetValue)).
+                ToArray();
         }
 
         #endregion

@@ -61,6 +61,9 @@ namespace Game.Newt.v2.GameItems
             IPartUpdatable[] updatableParts_MainThread = updatable.Where(o => o.IntervalSkips_MainThread != null).ToArray();
             IPartUpdatable[] updatableParts_AnyThread = updatable.Where(o => o.IntervalSkips_AnyThread != null).ToArray();
 
+            // For now, just have one global watcher.  In the future, may want localized, or specialized
+            parts.LifeEventWatcher = new LifeEventWatcher(parts.Containers);
+
             // Post instantiate link
             LinkParts_NonNeural(parts, core, extra, events.LinkParts_NonNeural);
 
@@ -521,7 +524,7 @@ namespace Game.Newt.v2.GameItems
 
             NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons(partMap, neuralContainers, extra.ItemOptions.NeuralLinkMaxWeight);
 
-            if(retVal.Length == 0)
+            if (retVal.Length == 0)
             {
                 return null;
             }
@@ -1044,6 +1047,17 @@ namespace Game.Newt.v2.GameItems
 
             #endregion
 
+            //TODO: This should be interface based
+            #region LifeEventWatcher
+
+            foreach(BrainRGBRecognizer recognizer in building.GetStandardParts<BrainRGBRecognizer>(BrainRGBRecognizer.PARTTYPE))
+            {
+                LifeEventToVector toVector = new LifeEventToVector(building.LifeEventWatcher, new[] { LifeEventType.AddedCargo, LifeEventType.LostPlasma });
+                recognizer.AssignOutputs(toVector);
+            }
+
+            #endregion
+
 
 
             //TODO: These two need to be done in a different step, they need to store results into dna
@@ -1171,8 +1185,6 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        #endregion
-
         private static void FixArgs(ref ShipExtraArgs extra, ref BotConstructor_Events events)
         {
             events = events ?? new BotConstructor_Events();
@@ -1184,6 +1196,7 @@ namespace Game.Newt.v2.GameItems
             extra.PartLink_Extra = extra.PartLink_Extra ?? new ItemLinker_ExtraArgs();
         }
 
+        #endregion
     }
 
     #region Class: BotConstructor_Events
@@ -1268,6 +1281,8 @@ namespace Game.Newt.v2.GameItems
     public class BotConstruction_Parts
     {
         public BotConstruction_Containers Containers = null;
+
+        public LifeEventWatcher LifeEventWatcher = null;
 
         public SortedList<string, List<PartBase>> StandardParts = null;
         public IEnumerable<PartBase> GetStandardParts(string partType)

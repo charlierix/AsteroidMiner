@@ -528,7 +528,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //a separate thread, and doesn't deal with energy draw, so this.IsOn is a loose compromise.  That tick could fire several times for each
             //one of this.Update, or the other way around.  But in the long run, they should be fairly synced.
 
-            if (_energyTanks != null && _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this anyway.  So
@@ -728,6 +728,26 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return retVal2D.Select(o => o.ToVector3D(z)).ToArray();
+        }
+
+        public static Vector3D[] GetNeuronPositions_Line2D(Point3D[] dnaPositions, int count, double radius, double y = 0, double z = 0)
+        {
+            // It doesn't matter what the old positions were, this evenly distributes across a line
+            if (count < 1)
+            {
+                return new Vector3D[0];
+            }
+            else if (count == 1)
+            {
+                return new[] { new Vector3D(0, y, z) };
+            }
+
+            double step = (radius * 2) / (count - 1);
+            double start = -radius;
+
+            return Enumerable.Range(0, count).
+                Select(o => new Vector3D(start + (step * o), y, z)).
+                ToArray();
         }
 
         #endregion

@@ -13,18 +13,20 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class Inventory
     {
+        #region Constructor
+
         public Inventory(ShipDNA ship, double scale)
         {
-            //TODO: Rebuild the dna with scaled parts/positions
-            //ShipDNA scaledShip = 
+            ShipDNA scaledShip = scale.IsNearValue(1) ? ship : ShipDNA.Resize(ship, scale);
 
-            this.Ship = ship;
+            this.Ship = scaledShip;
             this.Part = null;
             this.Mineral = null;
 
             this.Count = 1;
 
-            this.Volume = 1;
+            //TODO: calculate these properly
+            this.Volume = scale;
             this.Mass = 1;
 
             this.Token = TokenGenerator.NextToken();
@@ -58,6 +60,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             this.Token = TokenGenerator.NextToken();
         }
+
+        #endregion
 
         public readonly double Volume;
 

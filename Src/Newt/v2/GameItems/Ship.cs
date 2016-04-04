@@ -1929,6 +1929,8 @@ namespace Game.Newt.v2.GameItems
         //    set;
         //}
 
+        #region Public Methods
+
         /// <summary>
         /// This is just a convenience if you don't care about the ship's name and layers (it always creates 1 layer)
         /// </summary>
@@ -1973,6 +1975,31 @@ namespace Game.Newt.v2.GameItems
 
             return retVal;
         }
+
+        /// <summary>
+        /// This will return a new dna where all parts are scaled, as well as their locations
+        /// </summary>
+        public static ShipDNA Resize(ShipDNA ship, double scale)
+        {
+            ShipDNA retVal = UtilityCore.Clone(ship);
+
+            ScaleTransform3D transform = new ScaleTransform3D(scale, scale, scale);
+
+            foreach(ShipPartDNA part in retVal.PartsByLayer.SelectMany(o => o.Value))
+            {
+                //NOTE: Not bothering to scale the neural positions.  They are sort of in their own model space anyway
+
+                part.Position = transform.Transform(part.Position);
+                part.Scale = transform.Transform(part.Scale);
+            }
+
+            return retVal;
+        }
+
+        #endregion
+
+        #region Private Methods
+        #endregion
     }
 
     #endregion

@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Encog.Neural.Networks;
+using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.ShipEditor;
@@ -262,16 +265,48 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     public class BrainRGBRecognizer : PartBase, INeuronContainer, IPartUpdatable
     {
+        #region Class: TrainerInput
+
+        /// <summary>
+        /// Args to the training method
+        /// </summary>
+        public class TrainerInput
+        {
+            public Tuple<LifeEventVectorArgs, double[]>[] ImportantEvents { get; set; }
+            public int Width { get; set; }
+            public int Height { get; set; }
+        }
+
+        #endregion
+        #region Class: TrainedRecognizer
+
+        /// <summary>
+        /// Output of the training method
+        /// </summary>
+        private class TrainedRecognizer
+        {
+            public BasicNetwork Network { get; set; }
+
+            //TODO: May want to store the convolution chain that was used (this will allow networks to have their own convolutions)
+        }
+
+        #endregion
         #region Class: RecognitionResults
 
+        /// <summary>
+        /// This is the result of sensor data being classified with trained networks
+        /// </summary>
         private class RecognitionResults
         {
-            public RecognitionResults(long token)
+            public RecognitionResults(long token, double[] output)
             {
                 this.Token = token;
+                this.Output = output;
             }
 
             public readonly long Token;
+
+            public double[] Output;
 
             //TODO: more here
         }
@@ -282,22 +317,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const string PARTTYPE = "BrainRGBRecognizer";
 
+        private readonly object _lock = new object();
+
         private readonly ItemOptions _itemOptions;
 
         private readonly IContainer _energyTanks;
 
         //TODO: This needs to be part of the dna
-        private volatile CameraColorRGB _camera;
+        private volatile CameraColorRGB _camera = null;
+
+        private volatile LifeEventToVector _lifeEvents = null;
+
+        private volatile SOMList _somList = null;
+
+        private readonly double _volume;		// this is used to calculate energy draw
 
         /// <summary>
         /// These are just the output neurons.
         /// Inputs come from bitmaps out of the camera, internal neural nets are more complex.
         /// </summary>
-        private readonly Neuron_ZeroPos[] _neurons;
+        /// <remarks>
+        /// The count and positions aren't known until the life event watcher as passed in
+        /// </remarks>
+        private Neuron_SensorPosition[] _outputNeurons = null;
 
-        private readonly double _volume;		// this is used to calculate energy draw
+        private Task<TrainedRecognizer> _trainingTask = null;
+        private bool _areLifeEventsDirty = false;
+
+        private volatile TrainedRecognizer[] _recognizers = null;
 
         private volatile RecognitionResults _results = null;
+
+        private readonly ShortTermMemory<double[]> _shortTermMemory;
+
+        private List<Tuple<LifeEventVectorArgs, double[]>> _importantEvents = new List<Tuple<LifeEventVectorArgs, double[]>>();
 
         #endregion
 
@@ -312,8 +365,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Design = new BrainRGBRecognizerDesign(options);
             this.Design.SetDNA(dna);
 
-            // Build the neurons
-            _neurons = CreateNeurons(dna, itemOptions);
+            _shortTermMemory = new ShortTermMemory<double[]>(itemOptions.ShortTermMemory_MillisecondsBetween, itemOptions.ShortTermMemory_Size);
 
             GetMass(out _mass, out _volume, out _radius, out _scaleActual, dna, itemOptions);
         }
@@ -326,7 +378,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return _neurons;
+                if (_outputNeurons == null)
+                {
+                    throw new InvalidOperationException("Must assign the life event watcher before the neurons are defined");
+                }
+
+                return _outputNeurons;
             }
         }
         public IEnumerable<INeuron> Neruons_ReadWrite
@@ -348,7 +405,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return _neurons;
+                if (_outputNeurons == null)
+                {
+                    throw new InvalidOperationException("Must assign the life event watcher before the neurons are defined");
+                }
+
+                return _outputNeurons;
             }
         }
 
@@ -387,42 +449,29 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
-            if (_energyTanks != null && _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            bool shouldBeZero;
+
+            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 _isOn = false;
+                shouldBeZero = true;
             }
             else
             {
                 _isOn = true;
+                shouldBeZero = !Tick();
             }
 
-
-
-
-            CameraColorRGB camera = _camera;
-            if (camera == null)
+            if (shouldBeZero)
             {
-                return;
+                lock (_lock)
+                {
+                    for (int cntr = 0; cntr < _outputNeurons.Length; cntr++)
+                    {
+                        _outputNeurons[cntr].Value = 0;
+                    }
+                }
             }
-
-            //TODO: This portion may need to run in a different thread
-            Tuple<long, IBitmapCustom> bitmap = camera.Bitmap;
-            if (bitmap == null)
-            {
-                return;
-            }
-
-            RecognitionResults results = _results;
-
-            if (results != null && results.Token == bitmap.Item1)
-            {
-                return;
-            }
-
-            //TODO: Run the bitmap through convolution/neural chains
-
-            //TODO: Map the chain outputs onto the final output neurons
-
         }
 
         public int? IntervalSkips_MainThread
@@ -469,6 +518,95 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
+        // These are exposed for viewers/debuggers
+        public SOMResult SOM
+        {
+            get
+            {
+                SOMList list = _somList;
+                if (list == null)
+                {
+                    return null;
+                }
+
+                return list.CurrentResult;
+            }
+        }
+        private volatile double[] _latestImage = null;
+        public double[] LatestImage
+        {
+            get
+            {
+                //NOTE: This technically isn't the latest possible image, just the last stored image
+                //return _shortTermMemory.GetSnapshot(DateTime.UtcNow);
+
+                return _latestImage;
+            }
+        }
+        public TrainerInput TrainingData
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    var camera = _camera;
+                    if (camera == null)
+                    {
+                        return null;
+                    }
+
+                    return new TrainerInput()
+                    {
+                        ImportantEvents = _importantEvents.ToArray(),
+                        Width = camera.PixelWidthHeight,
+                        Height = camera.PixelWidthHeight,
+                    };
+                }
+            }
+        }
+        public Tuple<int, int> CameraWidthHeight
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    var camera = _camera;
+                    if (camera == null)
+                    {
+                        return null;
+                    }
+
+                    return Tuple.Create(camera.PixelWidthHeight, camera.PixelWidthHeight);
+                }
+            }
+        }
+        public Tuple<LifeEventType, double>[] CurrentOutput
+        {
+            get
+            {
+                RecognitionResults results = _results;
+                if (results == null)
+                {
+                    return null;
+                }
+
+                LifeEventToVector lifeEvents = _lifeEvents;
+                if (lifeEvents == null)
+                {
+                    return null;
+                }
+
+                if (results.Output.Length != lifeEvents.Types.Length)
+                {
+                    return null;
+                }
+
+                return Enumerable.Range(0, results.Output.Length).
+                    Select(o => Tuple.Create(lifeEvents.Types[o], results.Output[o])).
+                    ToArray();
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -478,7 +616,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             ShipPartDNA retVal = this.Design.GetDNA();
 
             //NOTE: The design class doesn't hold neurons, since it's only used by the editor, so fill out the rest of the dna here
-            retVal.Neurons = _neurons.Select(o => o.Position).ToArray();
+            retVal.Neurons = _outputNeurons.Select(o => o.Position).ToArray();
 
             //TODO: Store some of this class's internal state
             //Store two different versions:
@@ -488,23 +626,49 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        public void Train(object trainingData)
+        //TODO: This should store results in dna
+        public void AssignOutputs(LifeEventToVector lifeEvents)
         {
-            // A part needs to record snapshots of sensor data during life events (eating, taking damage, etc), then periodically give
-            // that data to this train methods (grouped by event type)
-            //
-            // That way this class can recognize scenes that occur before/during those events (this brain's job is just to recognize.  Other
-            // brains will look at this recognizer's output and act on it)
+            if (_lifeEvents != null)
+            {
+                throw new InvalidOperationException("LifeEvents can only be assigned once");
+            }
 
-            //TODO: Come up with convolution/neural chains that try to recognize this data
+            _lifeEvents = lifeEvents;
+            lifeEvents.EventOccurred += LifeEvents_EventOccurred;
+
+            // Build the neurons
+            _outputNeurons = CreateNeurons(this.DNA, _itemOptions, lifeEvents);
+        }
+
+        public void SetCamera(CameraColorRGB camera)
+        {
+            lock (_lock)
+            {
+                if (camera == null)
+                {
+                    _camera = null;
+                    _somList = null;
+                }
+                else
+                {
+                    _camera = camera;
+                    _somList = new SOMList(new[] { camera.PixelWidthHeight, camera.PixelWidthHeight }, Convolutions.GetEdgeSet_Sobel());        // the edge detect really helps.  without it, there tended to just be one big somnode after a while
+                }
+
+                _shortTermMemory.Clear();
+                _importantEvents.Clear();
+                _recognizers = null;
+                _results = null;
+            }
         }
 
         //TODO: This should store results in dna
         public static void AssignCameras(BrainRGBRecognizer[] recognizers, CameraColorRGB[] cameras)
         {
-            if(cameras != null)
+            if (cameras != null)
             {
-                foreach(CameraColorRGB camera in cameras)
+                foreach (CameraColorRGB camera in cameras)
                 {
                     camera.NeuronContainerType = NeuronContainerType.Sensor;
                 }
@@ -517,10 +681,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             foreach (BrainRGBRecognizer recognizer in recognizers)
             {
-                recognizer._camera = null;
+                recognizer.SetCamera(null);
             }
 
-            if(cameras == null || cameras.Length == 0)
+            if (cameras == null || cameras.Length == 0)
             {
                 return;
             }
@@ -539,8 +703,65 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Assign cameras
             foreach (var link in links)
             {
-                recognizers[link.Item2]._camera = cameras[link.Item1];
+                recognizers[link.Item2].SetCamera(cameras[link.Item1]);
                 cameras[link.Item1].NeuronContainerType = NeuronContainerType.None;     // this recognizer will now be this camera's output
+            }
+        }
+
+        #region OLD
+
+        //public void Train(object trainingData)
+        //{
+        //    // A part needs to record snapshots of sensor data during life events (eating, taking damage, etc), then periodically give
+        //    // that data to this train methods (grouped by event type)
+        //    //
+        //    // That way this class can recognize scenes that occur before/during those events (this brain's job is just to recognize.  Other
+        //    // brains will look at this recognizer's output and act on it)
+
+        //    //TODO: Come up with convolution/neural chains that try to recognize this data
+        //}
+
+        #endregion
+
+        #endregion
+
+        #region Event Listeners
+
+        //TODO: Make this method threadsafe
+        private void LifeEvents_EventOccurred(object sender, LifeEventVectorArgs e)
+        {
+            // Get a copy of the input that occurred before the event happened
+            double[] input = _shortTermMemory.GetSnapshot(e.Time);
+            if (input == null)
+            {
+                return;
+            }
+
+            lock (_lock)
+            {
+                // Store this pairing
+                _importantEvents.Add(Tuple.Create(e, input));
+                _areLifeEventsDirty = true;
+
+                if (_trainingTask != null)
+                {
+                    // Training is currently running.  Let it finish
+                    return;
+                }
+
+                // Kick off a training
+                var camera = _camera;
+                TrainerInput trainerInput = new TrainerInput()
+                {
+                    ImportantEvents = _importantEvents.ToArray(),
+                    Width = camera.PixelWidthHeight,
+                    Height = camera.PixelWidthHeight,
+                };
+
+                _areLifeEventsDirty = false;
+                _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput));
+                _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
+                _trainingTask.Start();
             }
         }
 
@@ -568,18 +789,208 @@ namespace Game.Newt.v2.GameItems.ShipParts
             actualScale = new Vector3D(rad * 2d, rad * 2d, height);     // I think this is just used to get a bounding box
         }
 
-        //TODO: Finish this
-        //  Could make a line of output neurons
-        //  Or could put that line into an arc (wouldn't add any meaning, just look better)
-        //  Or create 3 spokes that point 120 degrees apart (3 arcs that follow the curve of the sphere)
-        //  Or evenly distribute along the surface of the sphere
-        //
-        //The line is simplist, because explicit meanings are mapped to each neuron
-        //The spokes would have a meaning for each spoke, and sub meaning for each neuron in that spoke --- wouldn't need to limit to 3
-        //The surface would probably map meanings to polar coordinates, and nearby neurons light up --- I don't like this
-        private static Neuron_ZeroPos[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions)
+        private static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, LifeEventToVector lifeEvents)
         {
-            return new[] { new Neuron_ZeroPos(new Point3D()) };
+            //TODO: Instead of just having a single output neuron for each life event type, report the type at location?
+            //For example: the camera's input is a square, so have a grid of blocks.  The output grid doesn't need to be very high
+            //resolution, maybe 3x3 up to 5x5.  Each block would be a line of neurons perpendicular to the square
+
+            double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
+
+            Vector3D[] positions = Brain.GetNeuronPositions_Line2D(null, lifeEvents.Types.Length, radius);
+
+            return positions.
+                Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).
+                ToArray();
+        }
+
+        /// <summary>
+        /// This gets called on a regular basis.  It gets the camera's current image, stores that image in various memory lists, and
+        /// classifies the image
+        /// </summary>
+        /// <returns>
+        /// True: This method has populated the output neurons
+        /// False: The output neurons need to be set to zero by the caller
+        /// </returns>
+        private bool Tick()
+        {
+            CameraColorRGB camera = _camera;
+            if (camera == null)
+            {
+                return false;
+            }
+
+            //TODO: This portion may need to run in a different thread
+            Tuple<long, IBitmapCustom> bitmap = camera.Bitmap;
+            if (bitmap == null)
+            {
+                return false;
+            }
+
+            RecognitionResults results = _results;
+
+            if (results != null && results.Token == bitmap.Item1)
+            {
+                // The bitmap is old, and has already be classified
+                return false;
+            }
+
+            // The camera output is ARGB colors from 0 to 255.  Convert to gray values from 0 to 1
+            double[] nnInput = bitmap.Item2.GetColors_Byte().
+                Select(o => UtilityWPF.ConvertToGray(o[1], o[2], o[3]) / 255d).     // o[0] is alpha
+                ToArray();
+
+            _latestImage = nnInput;
+            _shortTermMemory.StoreSnapshot(nnInput);
+
+            var somList = _somList;
+            if (somList != null)
+            {
+                somList.Add(nnInput);
+            }
+
+            LifeEventToVector lifeEvents = _lifeEvents;
+            if (lifeEvents == null)
+            {
+                // Lifeevents defines how many output neurons there are.  So if it's not set, then there's nothing
+                // to train to
+                return false;
+            }
+
+            // Recognize the image, and set the output neurons
+            results = RecognizeImage(nnInput, bitmap.Item1, bitmap.Item2.Width, bitmap.Item2.Height, _recognizers, lifeEvents);
+
+            lock (_lock)
+            {
+                _results = results;
+
+                for (int cntr = 0; cntr < results.Output.Length; cntr++)
+                {
+                    _outputNeurons[cntr].Value = results.Output[cntr];
+                }
+            }
+
+            return true;
+        }
+
+        private static TrainedRecognizer Train(TrainerInput input)
+        {
+            double[][] inputs = input.ImportantEvents.
+                Select(o => NormalizeInput(o.Item2, input.Width, input.Height, true)).
+                ToArray();
+
+            double[][] outputs = input.ImportantEvents.
+                Select(o => o.Item1.Vector).
+                ToArray();
+
+            //NOTE: If there is an exception, the network couldn't be trained
+            BasicNetwork network = null;
+            try
+            {
+                network = UtilityEncog.GetTrainedNetwork(inputs, outputs, UtilityEncog.ERROR, 15, 45).NetworkOrNull;
+            }
+            catch (Exception) { }
+
+            if (network == null)
+            {
+                return null;
+            }
+
+            return new TrainedRecognizer()
+            {
+                Network = network,
+            };
+        }
+        private void FinishedTraining(TrainedRecognizer result)
+        {
+            lock (_lock)
+            {
+                _trainingTask = null;
+
+                if (result != null)
+                {
+                    //TODO: Keep a few around.  If max count is met, throw out the oldest/worst
+                    _recognizers = new[] { result };
+                }
+
+                if (_areLifeEventsDirty || result == null)      // null means it was unsuccessful.  Try again
+                {
+                    // There is new data, train against it
+                    var camera = _camera;
+                    TrainerInput trainerInput = new TrainerInput()
+                    {
+                        ImportantEvents = _importantEvents.ToArray(),
+                        Width = camera.PixelWidthHeight,
+                        Height = camera.PixelWidthHeight,
+                    };
+
+                    _areLifeEventsDirty = false;
+                    _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput));
+                    _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
+                    _trainingTask.Start();
+                }
+            }
+        }
+
+        private static RecognitionResults RecognizeImage(double[] input, long inputToken, int width, int height, TrainedRecognizer[] recognizers, LifeEventToVector lifeEvents)
+        {
+            if (recognizers == null)
+            {
+                return new RecognitionResults(inputToken, new double[lifeEvents.Types.Length]);
+            }
+
+            double[] standardNormalized = null;
+
+            foreach (var recognizer in recognizers)
+            {
+                double[] normalized = null;
+                //if(recognizer.ConvolutionChain != null)
+                //{
+                //    normalized = NormalizeInput(input, recognizer.ConvolutionChain);
+                //}
+                //else
+                {
+                    standardNormalized = standardNormalized ?? NormalizeInput(input, width, height, true);
+                    normalized = standardNormalized;
+                }
+
+                double[] output = recognizer.Network.Compute(normalized);
+
+
+
+
+                //TODO: Analyze outputs of all the recognizers to come up with a final result.  Can't just take the average -- if they all
+                //agree, that's great.  But disagreement should have a zero output (or at least a very weak output)
+                return new RecognitionResults(inputToken, output);
+
+            }
+
+
+
+            throw new ApplicationException("finish this");
+
+        }
+
+        /// <summary>
+        /// The values are from 0 to 255, and need to be 0 to 1
+        /// </summary>
+        private static double[] NormalizeInput(double[] input, int width, int height, bool shouldEdgeDetect = false)
+        {
+            // This part is now done earlier on
+            //double[] retVal = input.
+            //    Select(o => o / 255d).
+            //    ToArray();
+
+            double[] retVal = input;
+
+            //TODO: Finish this - take in the convolution chain to apply
+            if (shouldEdgeDetect)
+            {
+                Convolution2D convoluted = Convolutions.Convolute(new Convolution2D(input, width, height, false), Convolutions.GetEdgeSet_Sobel());
+                retVal = convoluted.Values;
+            }
+
+            return retVal;
         }
 
         #endregion

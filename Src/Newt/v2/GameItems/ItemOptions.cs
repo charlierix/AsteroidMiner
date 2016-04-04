@@ -958,6 +958,32 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        private volatile int _shortTermMemory_Size = 25;
+        public int ShortTermMemory_Size 
+        {
+            get
+            {
+                return _shortTermMemory_Size;
+            }
+            set
+            {
+                _shortTermMemory_Size = value;
+            }
+        }
+
+        private volatile object _shortTermMemory_MillisecondsBetween = 600d;
+        public double ShortTermMemory_MillisecondsBetween
+        {
+            get
+            {
+                return (double)_shortTermMemory_MillisecondsBetween;
+            }
+            set
+            {
+                _shortTermMemory_MillisecondsBetween = value;
+            }
+        }
+
         #endregion
 
         #region Thruster (Fuel -> Force)

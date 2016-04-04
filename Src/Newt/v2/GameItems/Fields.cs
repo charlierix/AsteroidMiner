@@ -386,11 +386,11 @@ namespace Game.Newt.v2.GameItems
         {
             List<GravityCell> retVal = new List<GravityCell>();
 
-            GetLeavesSprtRecurse(retVal, _fieldRoot);
+            GetLeaves_Recurse(retVal, _fieldRoot);
 
             return retVal;
         }
-        private static void GetLeavesSprtRecurse(List<GravityCell> returnList, FieldOctree<GravityCell> node)
+        private static void GetLeaves_Recurse(List<GravityCell> returnList, FieldOctree<GravityCell> node)
         {
             if (node == null)
             {
@@ -404,14 +404,14 @@ namespace Game.Newt.v2.GameItems
             else
             {
                 // Recurse
-                GetLeavesSprtRecurse(returnList, node.X0_Y0_Z0);
-                GetLeavesSprtRecurse(returnList, node.X0_Y0_Z1);
-                GetLeavesSprtRecurse(returnList, node.X0_Y1_Z0);
-                GetLeavesSprtRecurse(returnList, node.X0_Y1_Z1);
-                GetLeavesSprtRecurse(returnList, node.X1_Y0_Z0);
-                GetLeavesSprtRecurse(returnList, node.X1_Y0_Z1);
-                GetLeavesSprtRecurse(returnList, node.X1_Y1_Z0);
-                GetLeavesSprtRecurse(returnList, node.X1_Y1_Z1);
+                GetLeaves_Recurse(returnList, node.X0_Y0_Z0);
+                GetLeaves_Recurse(returnList, node.X0_Y0_Z1);
+                GetLeaves_Recurse(returnList, node.X0_Y1_Z0);
+                GetLeaves_Recurse(returnList, node.X0_Y1_Z1);
+                GetLeaves_Recurse(returnList, node.X1_Y0_Z0);
+                GetLeaves_Recurse(returnList, node.X1_Y0_Z1);
+                GetLeaves_Recurse(returnList, node.X1_Y1_Z0);
+                GetLeaves_Recurse(returnList, node.X1_Y1_Z1);
             }
         }
 
@@ -457,14 +457,14 @@ namespace Game.Newt.v2.GameItems
         {
             // Dig through the tree, and construct my tree with partially populated leaves (mass but no force)
             List<GravityCell> allLeavesList = new List<GravityCell>();
-            FieldOctree<GravityCell> retVal = BuildFieldSprtNode(allLeavesList, null, mapSnapshot);
+            FieldOctree<GravityCell> retVal = BuildField_Node(allLeavesList, null, mapSnapshot);
 
             GravityCell[] allLeaves = allLeavesList.ToArray();
             Vector3D[] forces = new Vector3D[allLeaves.Length];
 
             // Calculate the force of gravity for each cell
             //TODO: Individual far away cells shouldn't need to be processed individually, use their parent instead
-            BuildFieldSprtForces(allLeaves, forces, gravConstant);
+            BuildField_Forces(allLeaves, forces, gravConstant);
 
             // Sort on token to make things easier for the swapper
             SortedList<long, int> indicesByToken = new SortedList<long, int>();
@@ -474,13 +474,13 @@ namespace Game.Newt.v2.GameItems
             }
 
             // Inject the forces into the leaves
-            BuildFieldSprtSwapLeaves(retVal, indicesByToken, forces);
+            BuildField_SwapLeaves(retVal, indicesByToken, forces);
 
             // Exit Function
             return retVal;
         }
 
-        private static FieldOctree<GravityCell> BuildFieldSprtNode(List<GravityCell> allLeaves, MapOctree[] ancestors, MapOctree node)
+        private static FieldOctree<GravityCell> BuildField_Node(List<GravityCell> allLeaves, MapOctree[] ancestors, MapOctree node)
         {
             #region Add up mass
 
@@ -500,7 +500,7 @@ namespace Game.Newt.v2.GameItems
                 #region Leaf
 
                 // Exit Function
-                GravityCell cell = new GravityCell(BuildFieldSprtNodeSprtAncestorMass(ancestors, node.MinRange, node.MaxRange) + massOfNode, node.CenterPoint);
+                GravityCell cell = new GravityCell(BuildField_NodeSprtAncestorMass(ancestors, node.MinRange, node.MaxRange) + massOfNode, node.CenterPoint);
                 allLeaves.Add(cell);
                 return new FieldOctree<GravityCell>(node.MinRange, node.MaxRange, node.CenterPoint, cell);
 
@@ -537,88 +537,88 @@ namespace Game.Newt.v2.GameItems
             {
                 Point3D childMin = new Point3D(node.MinRange.X, node.MinRange.Y, node.MinRange.Z);
                 Point3D childMax = new Point3D(node.CenterPoint.X, node.CenterPoint.Y, node.CenterPoint.Z);
-                retVal.X0_Y0_Z0 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X0_Y0_Z0 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X0_Y0_Z0 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X0_Y0_Z0);
+                retVal.X0_Y0_Z0 = BuildField_Node(allLeaves, ancestorsNew, node.X0_Y0_Z0);
             }
 
             if (node.X0_Y0_Z1 == null)
             {
                 Point3D childMin = new Point3D(node.MinRange.X, node.MinRange.Y, node.CenterPoint.Z);
                 Point3D childMax = new Point3D(node.CenterPoint.X, node.CenterPoint.Y, node.MaxRange.Z);
-                retVal.X0_Y0_Z1 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X0_Y0_Z1 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X0_Y0_Z1 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X0_Y0_Z1);
+                retVal.X0_Y0_Z1 = BuildField_Node(allLeaves, ancestorsNew, node.X0_Y0_Z1);
             }
 
             if (node.X0_Y1_Z0 == null)
             {
                 Point3D childMin = new Point3D(node.MinRange.X, node.CenterPoint.Y, node.MinRange.Z);
                 Point3D childMax = new Point3D(node.CenterPoint.X, node.MaxRange.Y, node.CenterPoint.Z);
-                retVal.X0_Y1_Z0 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X0_Y1_Z0 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X0_Y1_Z0 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X0_Y1_Z0);
+                retVal.X0_Y1_Z0 = BuildField_Node(allLeaves, ancestorsNew, node.X0_Y1_Z0);
             }
 
             if (node.X0_Y1_Z1 == null)
             {
                 Point3D childMin = new Point3D(node.MinRange.X, node.CenterPoint.Y, node.CenterPoint.Z);
                 Point3D childMax = new Point3D(node.CenterPoint.X, node.MaxRange.Y, node.MaxRange.Z);
-                retVal.X0_Y1_Z1 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X0_Y1_Z1 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X0_Y1_Z1 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X0_Y1_Z1);
+                retVal.X0_Y1_Z1 = BuildField_Node(allLeaves, ancestorsNew, node.X0_Y1_Z1);
             }
 
             if (node.X1_Y0_Z0 == null)
             {
                 Point3D childMin = new Point3D(node.CenterPoint.X, node.MinRange.Y, node.MinRange.Z);
                 Point3D childMax = new Point3D(node.MaxRange.X, node.CenterPoint.Y, node.CenterPoint.Z);
-                retVal.X1_Y0_Z0 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X1_Y0_Z0 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X1_Y0_Z0 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X1_Y0_Z0);
+                retVal.X1_Y0_Z0 = BuildField_Node(allLeaves, ancestorsNew, node.X1_Y0_Z0);
             }
 
             if (node.X1_Y0_Z1 == null)
             {
                 Point3D childMin = new Point3D(node.CenterPoint.X, node.MinRange.Y, node.CenterPoint.Z);
                 Point3D childMax = new Point3D(node.MaxRange.X, node.CenterPoint.Y, node.MaxRange.Z);
-                retVal.X1_Y0_Z1 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X1_Y0_Z1 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X1_Y0_Z1 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X1_Y0_Z1);
+                retVal.X1_Y0_Z1 = BuildField_Node(allLeaves, ancestorsNew, node.X1_Y0_Z1);
             }
 
             if (node.X1_Y1_Z0 == null)
             {
                 Point3D childMin = new Point3D(node.CenterPoint.X, node.CenterPoint.Y, node.MinRange.Z);
                 Point3D childMax = new Point3D(node.MaxRange.X, node.MaxRange.Y, node.CenterPoint.Z);
-                retVal.X1_Y1_Z0 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X1_Y1_Z0 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X1_Y1_Z0 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X1_Y1_Z0);
+                retVal.X1_Y1_Z0 = BuildField_Node(allLeaves, ancestorsNew, node.X1_Y1_Z0);
             }
 
             if (node.X1_Y1_Z1 == null)
             {
                 Point3D childMin = new Point3D(node.CenterPoint.X, node.CenterPoint.Y, node.CenterPoint.Z);
                 Point3D childMax = new Point3D(node.MaxRange.X, node.MaxRange.Y, node.MaxRange.Z);
-                retVal.X1_Y1_Z1 = BuildFieldSprtNode(allLeaves, BuildFieldSprtNodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
+                retVal.X1_Y1_Z1 = BuildField_Node(allLeaves, BuildField_NodeSprtAncestorMass(ancestors, childMin, childMax) + massOfNode, childMin, childMax);
             }
             else
             {
-                retVal.X1_Y1_Z1 = BuildFieldSprtNode(allLeaves, ancestorsNew, node.X1_Y1_Z1);
+                retVal.X1_Y1_Z1 = BuildField_Node(allLeaves, ancestorsNew, node.X1_Y1_Z1);
             }
 
             #endregion
@@ -626,7 +626,7 @@ namespace Game.Newt.v2.GameItems
             // Exit Function
             return retVal;
         }
-        private static double BuildFieldSprtNodeSprtAncestorMass(MapOctree[] ancestors, Point3D minRange, Point3D maxRange)
+        private static double BuildField_NodeSprtAncestorMass(MapOctree[] ancestors, Point3D minRange, Point3D maxRange)
         {
             if (ancestors == null)
             {
@@ -829,7 +829,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        private static FieldOctree<GravityCell> BuildFieldSprtNode(List<GravityCell> allLeaves, double mass, Point3D min, Point3D max)
+        private static FieldOctree<GravityCell> BuildField_Node(List<GravityCell> allLeaves, double mass, Point3D min, Point3D max)
         {
             Point3D center = new Point3D((min.X + max.X) * .5d, (min.Y + max.Y) * .5d, (min.Z + max.Z) * .5d);
 
@@ -838,7 +838,7 @@ namespace Game.Newt.v2.GameItems
             return new FieldOctree<GravityCell>(min, max, center, cell);
         }
 
-        private static void BuildFieldSprtForces(GravityCell[] leaves, Vector3D[] forces, double gravConstant)
+        private static void BuildField_Forces(GravityCell[] leaves, Vector3D[] forces, double gravConstant)
         {
             for (int outer = 0; outer <= leaves.Length - 1; outer++)
             {
@@ -860,7 +860,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private static void BuildFieldSprtSwapLeaves(FieldOctree<GravityCell> node, SortedList<long, int> indicesByToken, Vector3D[] forces)
+        private static void BuildField_SwapLeaves(FieldOctree<GravityCell> node, SortedList<long, int> indicesByToken, Vector3D[] forces)
         {
             if (node.IsLeaf)
             {
@@ -873,14 +873,14 @@ namespace Game.Newt.v2.GameItems
             else
             {
                 // Every child is non null, so just recurse with each one
-                BuildFieldSprtSwapLeaves(node.X0_Y0_Z0, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X0_Y0_Z1, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X0_Y1_Z0, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X0_Y1_Z1, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X1_Y0_Z0, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X1_Y0_Z1, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X1_Y1_Z0, indicesByToken, forces);
-                BuildFieldSprtSwapLeaves(node.X1_Y1_Z1, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X0_Y0_Z0, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X0_Y0_Z1, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X0_Y1_Z0, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X0_Y1_Z1, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X1_Y0_Z0, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X1_Y0_Z1, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X1_Y1_Z0, indicesByToken, forces);
+                BuildField_SwapLeaves(node.X1_Y1_Z1, indicesByToken, forces);
             }
         }
 

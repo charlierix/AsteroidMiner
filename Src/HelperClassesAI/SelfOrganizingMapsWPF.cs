@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
@@ -17,7 +18,7 @@ namespace Game.HelperClassesAI
 {
     public static class SelfOrganizingMapsWPF
     {
-        #region Class: BlobResult
+        #region Class: BlobEvents
 
         public class BlobEvents
         {
@@ -35,7 +36,46 @@ namespace Game.HelperClassesAI
         }
 
         #endregion
+        #region Class: DrawTileArgs
 
+        public class DrawTileArgs
+        {
+            public DrawTileArgs(ISOMInput tile, int tileWidth, int tileHeight, byte[] bitmapPixelBytes, int imageX, int imageY, int stride, int pixelWidth)
+            {
+                this.Tile = tile;
+                this.TileWidth = tileWidth;
+                this.TileHeight = tileHeight;
+                this.BitmapPixelBytes = bitmapPixelBytes;
+                this.ImageX = imageX;
+                this.ImageY = imageY;
+                this.Stride = stride;
+                this.PixelWidth = pixelWidth;
+            }
+
+            public readonly ISOMInput Tile;
+
+            public readonly int TileWidth;
+            public readonly int TileHeight;
+
+            /// <summary>
+            /// Each pixel is 4 bytes: BGRA
+            /// </summary>
+            public readonly byte[] BitmapPixelBytes;
+
+            public readonly int ImageX;
+            public readonly int ImageY;
+
+            //See UtilityWPF.GetBitmap for example usage
+            public readonly int Stride;
+            public readonly int PixelWidth;
+        }
+
+        #endregion
+
+        /// <summary>
+        /// This creates solid colored blobs with areas proportional to the number of items contained.  When the user
+        /// mouses over a blob, the caller can show examples of the items as tooltips
+        /// </summary>
         public static void ShowResults2D_Blobs(Border border, SOMResult result, Func<SOMNode, Color> getNodeColor, BlobEvents events = null)
         {
             #region validate
@@ -61,7 +101,34 @@ namespace Game.HelperClassesAI
             //ISOMInput[][] inputsByNode = UtilityCore.ConvertJaggedArray<ISOMInput>(result.InputsByNode);
 
             Vector size = new Vector(border.ActualWidth - border.Padding.Left - border.Padding.Right, border.ActualHeight - border.Padding.Top - border.Padding.Bottom);
-            Canvas canvas = DrawVoronoiBlobs(voronoi, colors, result.Nodes, result.InputsByNode, size.X.ToInt_Floor(), size.Y.ToInt_Floor(), events);
+            Canvas canvas = DrawVoronoi_Blobs(voronoi, colors, result.Nodes, result.InputsByNode, size.X.ToInt_Floor(), size.Y.ToInt_Floor(), events);
+
+            border.Child = canvas;
+        }
+
+        /// <summary>
+        /// This divides the border up into a voronoi, then each node is tiled with examples
+        /// </summary>
+        public static void ShowResults2D_Tiled(Border border, SOMResult result, int tileWidth, int tileHeight, Action<DrawTileArgs> drawTile, BlobEvents events = null)
+        {
+
+            //TODO: Take a func that will render the input onto a writable bitmap, or something dynamic but efficient?
+            // or take these in?
+            //int tileWidth, int tileHeight
+
+
+
+            Point[] points = result.Nodes.
+                Select(o => new Point(o.Position[0], o.Position[1])).
+                ToArray();
+
+            Vector size = new Vector(border.ActualWidth - border.Padding.Left - border.Padding.Right, border.ActualHeight - border.Padding.Top - border.Padding.Bottom);
+
+            VoronoiResult2D voronoi = Math2D.GetVoronoi(points, true);
+            voronoi = Math2D.CapVoronoiCircle(voronoi);
+            //voronoi = Math2D.CapVoronoiRectangle(voronoi, aspectRatio: 1d);       //TODO: Implement this
+
+            Canvas canvas = DrawVoronoi_Tiled(voronoi, result.Nodes, result.InputsByNode, size.X.ToInt_Floor(), size.Y.ToInt_Floor(), tileWidth, tileHeight, drawTile, events);
 
             border.Child = canvas;
         }
@@ -229,7 +296,7 @@ namespace Game.HelperClassesAI
         {
             try
             {
-                if(e.ChangedButton != MouseButton.Left)
+                if (e.ChangedButton != MouseButton.Left)
                 {
                     return;
                 }
@@ -258,7 +325,7 @@ namespace Game.HelperClassesAI
 
         #region Private Methods
 
-        private static Canvas DrawVoronoiBlobs(VoronoiResult2D voronoi, Color[] colors, SOMNode[] nodes, ISOMInput[][] inputsByNode, int imageWidth, int imageHeight, BlobEvents events)
+        private static Canvas DrawVoronoi_Blobs(VoronoiResult2D voronoi, Color[] colors, SOMNode[] nodes, ISOMInput[][] inputsByNode, int imageWidth, int imageHeight, BlobEvents events)
         {
             const double MARGINPERCENT = 1.05;
 
@@ -333,7 +400,72 @@ namespace Game.HelperClassesAI
                         polygon.MouseLeave += Polygon2D_MouseLeave;
                     }
 
-                    if(events.Click != null)
+                    if (events.Click != null)
+                    {
+                        polygon.MouseUp += Polygon_MouseUp;
+                    }
+                }
+
+                retVal.Children.Add(polygon);
+
+                #endregion
+            }
+
+            return retVal;
+        }
+
+        private static Canvas DrawVoronoi_Tiled(VoronoiResult2D voronoi, SOMNode[] nodes, ISOMInput[][] images, int imageWidth, int imageHeight, int tileWidth, int tileHeight, Action<DrawTileArgs> drawTile, BlobEvents events)
+        {
+            #region transform
+
+            var aabb = Math2D.GetAABB(voronoi.EdgePoints);
+
+            TransformGroup transform = new TransformGroup();
+            transform.Children.Add(new TranslateTransform(-aabb.Item1.X, -aabb.Item1.Y));
+            transform.Children.Add(new ScaleTransform(imageWidth / (aabb.Item2.X - aabb.Item1.X), imageHeight / (aabb.Item2.Y - aabb.Item1.Y)));
+
+            #endregion
+
+            Canvas retVal = new Canvas();
+
+            for (int cntr = 0; cntr < voronoi.ControlPoints.Length; cntr++)
+            {
+                #region polygon
+
+                Polygon polygon = new Polygon();
+
+                if (voronoi.EdgesByControlPoint[cntr].Length < 3)
+                {
+                    throw new ApplicationException("Expected at least three edge points");
+                }
+
+                Edge2D[] edges = voronoi.EdgesByControlPoint[cntr].Select(o => voronoi.Edges[o]).ToArray();
+                Point[] edgePoints = Edge2D.GetPolygon(edges, 1d);
+
+                edgePoints = edgePoints.
+                    Select(o => transform.Transform(o)).
+                    ToArray();
+
+                foreach (Point point in edgePoints)
+                {
+                    polygon.Points.Add(point);
+                }
+
+                polygon.Fill = GetTiledSamples(edgePoints, images[cntr], nodes[cntr], tileWidth, tileHeight, drawTile);
+                polygon.Stroke = new SolidColorBrush(UtilityWPF.GetRandomColor(64, 192));
+                polygon.StrokeThickness = 2;
+
+                polygon.Tag = Tuple.Create(nodes[cntr], images[cntr]);
+
+                if (events != null)
+                {
+                    if (events.MouseMove != null && events.MouseLeave != null)
+                    {
+                        polygon.MouseMove += Polygon2D_MouseMove;
+                        polygon.MouseLeave += Polygon2D_MouseLeave;
+                    }
+
+                    if (events.Click != null)
                     {
                         polygon.MouseUp += Polygon_MouseUp;
                     }
@@ -466,6 +598,167 @@ namespace Game.HelperClassesAI
                 Average();
 
             return Tuple.Create(r, g, b);
+        }
+
+        private static Brush GetTiledSamples_ONE(Point[] edgePoints, ISOMInput[] samples)
+        {
+            var aabb = Math2D.GetAABB(edgePoints);
+
+            var colors = Enumerable.Range(0, 256).
+                Select(o => UtilityWPF.GetRandomColor(64, 192)).
+                ToArray();
+
+            //BitmapSource bitmap = UtilityWPF.GetBitmap_Aliased(colors, 16, 16, 300, 300);
+            BitmapSource bitmap = UtilityWPF.GetBitmap_Aliased(colors, 16, 16, (aabb.Item2.X - aabb.Item1.X).ToInt_Round(), (aabb.Item2.Y - aabb.Item1.Y).ToInt_Round());
+
+            return new ImageBrush(bitmap)
+            {
+                Stretch = Stretch.None,
+            };
+        }
+        private static Brush GetTiledSamples(Point[] edgePoints, ISOMInput[] samples, SOMNode node, int tileWidth, int tileHeight, Action<DrawTileArgs> drawTile)
+        {
+            var dimensions = GetTileImagePositions(samples.Length);
+
+            // The image tiles will be drawn spiraling out from the center.  Order the list so that tiles closest to the node are first (so that
+            // they are drawn closer to the center of the spiral)
+            ISOMInput[] orderedSamples = samples.
+                OrderBy(o => MathND.GetDistanceSquared(o.Weights, node.Weights)).
+                ToArray();
+
+            //int tilehalf_left = tileWidth / 2;
+            //int tilehalf_top = tileHeight / 2;
+            //int tilehalf_right = tileWidth - tilehalf_left;
+            //int tilehalf_bot = tileHeight - tilehalf_top;
+
+            int imageWidth = (dimensions.Item2.X - dimensions.Item1.X + 1) * tileWidth;
+            int imageHeight = (dimensions.Item2.Y - dimensions.Item1.Y + 1) * tileHeight;
+
+            //int offsetX = (Math.Abs(dimensions.Item1.X) * tileWidth) + tilehalf_left;
+            //int offsetY = (Math.Abs(dimensions.Item1.Y) * tileHeight) + tilehalf_top;
+
+
+            //TODO: Get the AABB of edgePoints.  If the bitmap will be bigger than the aabb, then draw just enough to totally fill the polygon
+
+
+
+            //NOTE: Copied from UtilityWPF.GetBitmap
+
+            WriteableBitmap bitmap = new WriteableBitmap(imageWidth, imageHeight, UtilityWPF.DPI, UtilityWPF.DPI, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+
+            int pixelWidth = bitmap.Format.BitsPerPixel / 8;
+            int stride = bitmap.PixelWidth * pixelWidth;      // this is the length of one row of pixels
+
+            byte[] pixels = new byte[bitmap.PixelHeight * stride];
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                for (int cntr = 0; cntr < orderedSamples.Length; cntr++)
+                {
+                    int x = (dimensions.Item3[cntr].X - dimensions.Item1.X) * tileWidth;
+                    int y = (dimensions.Item3[cntr].Y - dimensions.Item1.Y) * tileWidth;
+
+                    DrawTileArgs args = new DrawTileArgs(orderedSamples[cntr], tileWidth, tileHeight, pixels, x, y, stride, pixelWidth);
+                    drawTile(args);
+                }
+
+
+
+
+                #region DISCARD
+
+                //int index = 0;
+                //for (int y = 0; y < colorsHeight; y++)
+                //{
+                //    for (int x = 0; x < colorsWidth; x++)
+                //    {
+                //        int gray = (grayColors[index] * grayValueScale).ToInt_Round();
+                //        if (gray < 0) gray = 0;
+                //        if (gray > 255) gray = 255;
+                //        byte grayByte = Convert.ToByte(gray);
+                //        Color color = Color.FromRgb(grayByte, grayByte, grayByte);
+                //        ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
+                //        index++;
+                //    }
+                //}
+
+                #endregion
+            }
+
+            bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), pixels, stride, 0);
+
+
+
+            return new ImageBrush(bitmap)
+            {
+                Stretch = Stretch.None,
+            };
+        }
+
+        /// <summary>
+        /// This returns the coordinates of tiles.  The tiles spiral outward: right,up,left,down,right,up...
+        /// </summary>
+        /// <returns>
+        /// Item1=aabb min
+        /// Item2=aabb max
+        /// Item3=positions
+        /// </returns>
+        private static Tuple<VectorInt, VectorInt, VectorInt[]> GetTileImagePositions(int count)
+        {
+            int x = 0;
+            int y = 0;
+
+            int minX = 0;
+            int minY = 0;
+            int maxX = 0;
+            int maxY = 0;
+
+            int dirX = 1;
+            int dirY = 0;
+
+            VectorInt[] positions = new VectorInt[count];
+
+            for (int cntr = 0; cntr < count; cntr++)
+            {
+                positions[cntr] = new VectorInt(x, y);
+
+                if (cntr >= count - 1)
+                {
+                    // The logic below preps for the next step, but if this is the last one, leave mins and maxes alone
+                    break;
+                }
+
+                x += dirX;
+                y += dirY;
+
+                if (x > maxX)
+                {
+                    maxX = x;
+                    dirX = 0;
+                    dirY = -1;
+                }
+                else if (x < minX)
+                {
+                    minX = x;
+                    dirX = 0;
+                    dirY = 1;
+                }
+                else if (y > maxY)
+                {
+                    maxY = y;
+                    dirY = 0;
+                    dirX = 1;
+                }
+                else if (y < minY)
+                {
+                    minY = y;
+                    dirY = 0;
+                    dirX = -1;
+                }
+            }
+
+            return Tuple.Create(new VectorInt(minX, minY), new VectorInt(maxX, maxY), positions);
         }
 
         #endregion

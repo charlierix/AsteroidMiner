@@ -30,10 +30,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="encog-core-cs">
+      <HintPath>..\..\..\lib\Encog\3.3.0\encog-core-cs.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
@@ -48,6 +52,9 @@
     <Compile Include="BotConstructor.cs" />
     <Compile Include="CameraPool.cs" />
     <Compile Include="Container.cs" />
+    <Compile Include="Controls\BrainRGBRecognizerViewer.xaml.cs">
+      <DependentUpon>BrainRGBRecognizerViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ProgressBarGame.xaml.cs">
       <DependentUpon>ProgressBarGame.xaml</DependentUpon>
     </Compile>
@@ -70,6 +77,7 @@
     <Compile Include="ItemLinker.cs" />
     <Compile Include="ItemOptions.cs" />
     <Compile Include="ItemSelectDragLogic.cs" />
+    <Compile Include="LifeEventWatcher.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="MapObjectChase_Orientation.cs" />
     <Compile Include="MapObjectChase_Point.cs" />
@@ -139,10 +147,16 @@
     <Compile Include="ShipParts\ShieldTractor.cs" />
     <Compile Include="ShipParts\Thruster.cs" />
     <Compile Include="ShipParts\TractorBeam.cs" />
+    <Compile Include="ShortTermMemory.cs" />
+    <Compile Include="SOMList.cs" />
     <Compile Include="UpdateManager.cs" />
     <Compile Include="WorldColors.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\HelperClassesAI\HelperClassesAI.csproj">
+      <Project>{bd763bb3-b9ab-4252-8265-ccb718b4519a}</Project>
+      <Name>HelperClassesAI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228f5901-5156-43df-b377-627d80b4fdbc}</Project>
       <Name>HelperClassesCore</Name>
@@ -157,6 +171,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Controls\BrainRGBRecognizerViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\ProgressBarGame.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

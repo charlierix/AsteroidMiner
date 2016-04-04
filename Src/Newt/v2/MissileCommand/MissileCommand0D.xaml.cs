@@ -30,6 +30,8 @@ namespace Game.Newt.v2.MissileCommand
         private const double BOUNDRYSIZE = 50;
         private const double BOUNDRYSIZEHALF = BOUNDRYSIZE / 2d;
 
+        private const string FOLDER = "MissileCommand0D";
+
         private Point3D _boundryMin;
         private Point3D _boundryMax;
 
@@ -53,6 +55,8 @@ namespace Game.Newt.v2.MissileCommand
 
         private DefenseBot _bot = null;
         private ShipViewerWindow _viewer = null;
+        private BrainRGBRecognizerViewer _brainViewer = null;
+        private ShipProgressBarManager _progressBars = null;
 
         #endregion
 
@@ -72,6 +76,8 @@ namespace Game.Newt.v2.MissileCommand
             try
             {
                 _itemOptions = new ItemOptions();
+                _itemOptions.MatterToEnergyConversionRate *= .12;
+                _itemOptions.MatterToEnergyAmountToDraw *= 1.25;        //NOTE: In bot, the matter converter group doesn't check if empty often enough.  So if you draw much more, then there will be noticable pulses of not refilling (I assume that's the cause anyway)
 
                 #region Init World
 
@@ -193,6 +199,11 @@ namespace Game.Newt.v2.MissileCommand
             try
             {
                 _updateManager.Update_MainThread(e.ElapsedTime);
+
+                if (_progressBars != null)
+                {
+                    _progressBars.Update();
+                }
             }
             catch (Exception ex)
             {
@@ -204,13 +215,11 @@ namespace Game.Newt.v2.MissileCommand
         {
             try
             {
-                ClearBot_Click(this, e);
-
                 #region DNA
 
                 List<ShipPartDNA> parts = new List<ShipPartDNA>();
 
-                parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.44329742616787, -2.22044604925031E-16, -0.750606111984116), Scale = new Vector3D(1, 1, 1) });
+                parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.44329742616787, -2.22044604925031E-16, -0.750606111984116), Scale = new Vector3D(.65, .65, .65) });
 
                 parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.44329742616787, -2.22044604925031E-16, -0.839035218662306), Scale = new Vector3D(1, 1, 1) });
 
@@ -221,6 +230,13 @@ namespace Game.Newt.v2.MissileCommand
                 parts.Add(new ShipPartDNA() { PartType = Brain.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.17108888679796, 2.22044604925031E-16, -0.787190712968899), Scale = new Vector3D(1, 1, 1) });
 
                 parts.Add(new ShipPartDNA() { PartType = BrainRGBRecognizer.PARTTYPE, Orientation = new Quaternion(3.91881768803066E-16, -0.264772715428398, 1.07599743798686E-16, 0.964310846752577), Position = new Point3D(0.977003177386146, 0, -0.204027736848604), Scale = new Vector3D(1, 1, 1) });
+
+                parts.Add(new ShipPartDNA() { PartType = CargoBay.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.812435730367477, 0, -1.83945537515666), Scale = new Vector3D(1, 1, 1) });
+
+                //parts.Add(new ShipPartDNA() { PartType = ConverterMatterToAmmo.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.724059461163413, 0, -1.57962039018549), Scale = new Vector3D(1, 1, 1) });
+                parts.Add(new ShipPartDNA() { PartType = ConverterMatterToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.127736487867665, 0, -1.58633876430099), Scale = new Vector3D(1, 1, 1) });
+
+                parts.Add(new ShipPartDNA() { PartType = PlasmaTank.PARTTYPE, Orientation = new Quaternion(0, -0.706641960456376, 0, 0.707571296564784), Position = new Point3D(-0.406755692018177, 0, -2.20579025132833), Scale = new Vector3D(1, 1, 1) });
 
                 ShipDNA dna = ShipDNA.Create(parts);
                 dna.ShipLineage = Guid.NewGuid().ToString();
@@ -251,6 +267,8 @@ namespace Game.Newt.v2.MissileCommand
                 DefenseBot bot = new DefenseBot(seed);
                 bot.PhysicsBody.Position = new Point3D(0, 0, -12);
 
+                bot.ShouldLearnFromLifeEvents = false;
+
                 if (bot.Energy != null)
                 {
                     bot.Energy.QuantityCurrent = bot.Energy.QuantityMax;
@@ -259,9 +277,30 @@ namespace Game.Newt.v2.MissileCommand
                 {
                     bot.Ammo.QuantityCurrent = bot.Ammo.QuantityMax;
                 }
+                if (bot.Plasma != null)
+                {
+                    bot.Plasma.QuantityCurrent = bot.Plasma.QuantityMax;
+                }
 
-                _map.AddItem(bot);
-                _bot = bot;
+                bot.ShouldLearnFromLifeEvents = true;
+
+                SetBot(bot);
+
+                #region save to file
+
+                //dna = bot.GetNewDNA();
+
+                ////C:\Users\<username>\AppData\Roaming\Asteroid Miner\MissileCommand0D\
+                //string foldername = UtilityCore.GetOptionsFolder();
+                //foldername = System.IO.Path.Combine(foldername, FOLDER);
+                //System.IO.Directory.CreateDirectory(foldername);
+
+                //string filename = DateTime.Now.ToString("yyyyMMdd HHmmddssfff") + " - bot";
+                //filename = System.IO.Path.Combine(foldername, filename);
+
+                //UtilityCore.SerializeToFile(filename, dna);
+
+                #endregion
             }
             catch (Exception ex)
             {
@@ -272,19 +311,7 @@ namespace Game.Newt.v2.MissileCommand
         {
             try
             {
-                if (_viewer != null)
-                {
-                    _viewer.Close();
-                    _viewer = null;
-                }
-
-                if (_bot != null)
-                {
-                    _map.RemoveItem(_bot);
-
-                    _bot.Dispose();
-                    _bot = null;
-                }
+                RemoveBot();
             }
             catch (Exception ex)
             {
@@ -334,8 +361,13 @@ namespace Game.Newt.v2.MissileCommand
             {
                 RemoveItem_Click(this, new RoutedEventArgs());
 
+                Point3D position = new Point3D(0, 0, 0);
 
+                Asteroid asteroid = new Asteroid(5, (r, t) => r * 600, position, _world, _map, _material_Item);
 
+                asteroid.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(2d);
+
+                _map.AddItem(asteroid);
             }
             catch (Exception ex)
             {
@@ -356,6 +388,47 @@ namespace Game.Newt.v2.MissileCommand
                 //mineral.PhysicsBody.Velocity = Math3D.GetRandomVector_Spherical(4d);
 
                 _map.AddItem(mineral);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void ApplyItem_Click(object sender, RoutedEventArgs e)
+        {
+            const double PERCENT = .2;
+
+            try
+            {
+                if (_bot != null)
+                {
+                    // Asteroids cause damage (currently using plasma tank as a hitpoint meter)
+                    foreach (Asteroid asteroid in _map.GetItems<Asteroid>(false))
+                    {
+                        if (_bot.Plasma != null)
+                        {
+                            _bot.Plasma.RemoveQuantity(_bot.Plasma.QuantityMax * PERCENT, false);
+                        }
+                    }
+
+                    // Minerals get added to the cargobay.  The bot has converters that turn minerals into energy and ammo
+                    foreach (Mineral mineral in _map.GetItems<Mineral>(false))
+                    {
+                        if (_bot.CargoBays != null)
+                        {
+                            var volume = _bot.CargoBays.CargoVolume;
+                            double addVol = Math.Min(volume.Item2 * PERCENT, volume.Item2 - volume.Item1);
+
+                            if (addVol > 0 && !addVol.IsNearZero())
+                            {
+                                Cargo cargo = new Cargo_Mineral(mineral.MineralType, mineral.Density, addVol);
+                                _bot.CargoBays.Add(cargo);
+                            }
+                        }
+                    }
+                }
+
+                RemoveItem_Click(this, new RoutedEventArgs());
             }
             catch (Exception ex)
             {
@@ -426,7 +499,6 @@ namespace Game.Newt.v2.MissileCommand
                     CameraPool = _cameraPool,
                     IsPhysicsStatic = true,
                 };
-
 
                 //DefenseBot bot = DefenseBot.GetNewDefenseBotAsync(dna, _world, _material_Bot, _map, extra).Result;        // can't directly call result.  it deadlocks this main thread
                 //DefenseBot bot = await DefenseBot.GetNewDefenseBotAsync(dna, _world, _material_Bot, _map, extra);
@@ -551,6 +623,59 @@ namespace Game.Newt.v2.MissileCommand
             //        return new byte[] { o[0], gray, gray, gray };
             //    }).
             //    ToArray();
+        }
+
+        private void RemoveBot()
+        {
+            // Viewer
+            if (_viewer != null)
+            {
+                _viewer.Close();
+                _viewer = null;
+            }
+
+            // Brain Viewer
+            panelCustom.Content = null;
+            _brainViewer = null;
+
+            //Progress Bars
+            _progressBars = null;
+            pnlProgressBars.Visibility = Visibility.Collapsed;
+
+            // Bot
+            if (_bot != null)
+            {
+                _map.RemoveItem(_bot);
+
+                _bot.Dispose();
+                _bot = null;
+            }
+        }
+        private void SetBot(DefenseBot bot)
+        {
+            // Remove
+            RemoveBot();
+
+            // Set bot
+            _map.AddItem(bot);
+            _bot = bot;
+
+            // Brain Viewer
+            BrainRGBRecognizer brainRecog = _bot.Parts.FirstOrDefault(o => o is BrainRGBRecognizer) as BrainRGBRecognizer;
+            if (brainRecog != null)
+            {
+                _brainViewer = new BrainRGBRecognizerViewer()
+                {
+                    Recognizer = brainRecog,
+                };
+                panelCustom.Content = _brainViewer;
+            }
+
+            // Progress bars
+            _progressBars = new ShipProgressBarManager(pnlProgressBars);
+            _progressBars.Bot = _bot;
+            _progressBars.Foreground = this.Foreground;
+            pnlProgressBars.Visibility = Visibility.Visible;
         }
 
         #endregion

@@ -949,10 +949,10 @@ namespace Game.HelperClassesWPF
 
             // Wrap (otherwise, everything greater than 1 will map to the permiter of the sphere where z = 0)
             bool localInvert;
-            x = ProjectToTrackballSprtWrap(out localInvert, x);
+            x = ProjectToTrackball_Wrap(out localInvert, x);
             shouldInvertZ |= localInvert;
 
-            y = ProjectToTrackballSprtWrap(out localInvert, y);
+            y = ProjectToTrackball_Wrap(out localInvert, y);
             shouldInvertZ |= localInvert;
 
             // Project onto a sphere
@@ -979,7 +979,7 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// This wraps the value so it stays between -1 and 1
         /// </summary>
-        private static double ProjectToTrackballSprtWrap(out bool shouldInvertZ, double value)
+        private static double ProjectToTrackball_Wrap(out bool shouldInvertZ, double value)
         {
             // Everything starts over at 4 (4 becomes zero)
             double retVal = value % 4d;
@@ -1059,7 +1059,7 @@ namespace Game.HelperClassesWPF
                     {
                         GeometryModel3D geometry = (GeometryModel3D)resultCast.ModelHit;
 
-                        if (!OrbitGetObjectDistanceSprtIsTransparent(geometry))
+                        if (!OrbitGetObjectDistance_IsTransparent(geometry))
                         {
                             retVal = resultCast.DistanceToRayOrigin;
                             return HitTestResultBehavior.Stop;
@@ -1075,7 +1075,7 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
-        private static bool OrbitGetObjectDistanceSprtIsTransparent(GeometryModel3D geometry)
+        private static bool OrbitGetObjectDistance_IsTransparent(GeometryModel3D geometry)
         {
             foreach (Material material in new Material[] { geometry.BackMaterial, geometry.Material })
             {
@@ -1084,7 +1084,7 @@ namespace Game.HelperClassesWPF
                     continue;
                 }
 
-                if (!OrbitGetObjectDistanceSprtIsTransparentSprtMaterial(material))
+                if (!OrbitGetObjectDistance_IsTransparent_Material(material))
                 {
                     return false;
                 }
@@ -1092,7 +1092,7 @@ namespace Game.HelperClassesWPF
 
             return true;
         }
-        private static bool OrbitGetObjectDistanceSprtIsTransparentSprtMaterial(Material material)
+        private static bool OrbitGetObjectDistance_IsTransparent_Material(Material material)
         {
             if (material is MaterialGroup)
             {
@@ -1101,7 +1101,7 @@ namespace Game.HelperClassesWPF
                 // Recurse
                 foreach (Material childMaterial in ((MaterialGroup)material).Children)
                 {
-                    if (!OrbitGetObjectDistanceSprtIsTransparentSprtMaterial(childMaterial))
+                    if (!OrbitGetObjectDistance_IsTransparent_Material(childMaterial))
                     {
                         return false;
                     }
@@ -1989,7 +1989,7 @@ namespace Game.HelperClassesWPF
                 return "";
             }
 
-            List<string> consolidated = DescribeKeysSprtConsilidate(keys);
+            List<string> consolidated = DescribeKeys_Consilidate(keys);
             if (consolidated.Count == 1)
             {
                 return consolidated[0];
@@ -2014,7 +2014,7 @@ namespace Game.HelperClassesWPF
             // Exit Function
             return retVal.ToString();
         }
-        private List<string> DescribeKeysSprtConsilidate(Key[] keys)
+        private List<string> DescribeKeys_Consilidate(Key[] keys)
         {
             List<string> retVal = new List<string>();
 

@@ -2366,6 +2366,52 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
+        /// <summary>
+        /// This overload takes a double array that represents a grayscale
+        /// </summary>
+        /// <param name="grayValueScale">
+        /// If the values in the double array are 0 to 1, then leave this as 255.  If they are already 0 to 255, set to 1
+        /// </param>
+        public static BitmapSource GetBitmap(double[] grayColors, int width, int height, double grayValueScale = 255)
+        {
+            //if (colors.Length != width * height)
+            //{
+            //    throw new ArgumentException(string.Format("The array isn't the same as width*height.  ArrayLength={0}, Width={1}, Height={2}", colors.Length, width, height));
+            //}
+
+            WriteableBitmap retVal = new WriteableBitmap(width, height, DPI, DPI, PixelFormats.Pbgra32, null);      // may want Bgra32 if performance is an issue
+
+            int pixelWidth = retVal.Format.BitsPerPixel / 8;
+            int stride = retVal.PixelWidth * pixelWidth;      // this is the length of one row of pixels
+
+            byte[] pixels = new byte[retVal.PixelHeight * stride];
+
+            for (int rowCntr = 0; rowCntr < height; rowCntr++)
+            {
+                int rowOffset = rowCntr * stride;
+                int yOffset = rowCntr * width;
+
+                for (int columnCntr = 0; columnCntr < width; columnCntr++)
+                {
+                    int offset = rowOffset + (columnCntr * pixelWidth);
+
+                    int gray = (grayColors[columnCntr + yOffset] * grayValueScale).ToInt_Round();
+                    if (gray < 0) gray = 0;
+                    if (gray > 255) gray = 255;
+
+                    byte grayByte = Convert.ToByte(gray);
+
+                    pixels[offset + 3] = 255;
+                    pixels[offset + 2] = grayByte;
+                    pixels[offset + 1] = grayByte;
+                    pixels[offset + 0] = grayByte;
+                }
+            }
+
+            retVal.WritePixels(new Int32Rect(0, 0, retVal.PixelWidth, retVal.PixelHeight), pixels, stride, 0);
+
+            return retVal;
+        }
 
         /// <summary>
         /// This draws a small number of colors onto a larger image
@@ -2429,6 +2475,46 @@ namespace Game.HelperClassesWPF
                     for (int x = 0; x < colorsWidth; x++)
                     {
                         Color color = Color.FromArgb(colors[index][0], colors[index][1], colors[index][2], colors[index][3]);
+
+                        ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
+
+                        index++;
+                    }
+                }
+            }
+
+            retVal.Render(dv);
+
+            return retVal;
+        }
+        public static BitmapSource GetBitmap_Aliased(double[] grayColors, int colorsWidth, int colorsHeight, int imageWidth, int imageHeight, double grayValueScale = 255)
+        {
+            if (grayColors.Length != colorsWidth * colorsHeight)
+            {
+                throw new ArgumentException(string.Format("The array isn't the same as colorsWidth*colorsHeight.  ArrayLength={0}, Width={1}, Height={2}", grayColors.Length, colorsWidth, colorsHeight));
+            }
+
+            double scaleX = Convert.ToDouble(imageWidth) / Convert.ToDouble(colorsWidth);
+            double scaleY = Convert.ToDouble(imageHeight) / Convert.ToDouble(colorsHeight);
+
+            RenderTargetBitmap retVal = new RenderTargetBitmap(imageWidth, imageHeight, DPI, DPI, PixelFormats.Pbgra32);
+
+            DrawingVisual dv = new DrawingVisual();
+            using (DrawingContext ctx = dv.RenderOpen())
+            {
+                int index = 0;
+
+                for (int y = 0; y < colorsHeight; y++)
+                {
+                    for (int x = 0; x < colorsWidth; x++)
+                    {
+                        int gray = (grayColors[index] * grayValueScale).ToInt_Round();
+                        if (gray < 0) gray = 0;
+                        if (gray > 255) gray = 255;
+
+                        byte grayByte = Convert.ToByte(gray);
+
+                        Color color = Color.FromRgb(grayByte, grayByte, grayByte);
 
                         ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
 

@@ -1,0 +1,405 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
+using Game.HelperClassesAI;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+
+namespace Game.Newt.v2.GameItems
+{
+    /// <summary>
+    /// This acts like a list of input vectors.  It also acts like a group by, a loose dictionary
+    /// </summary>
+    /// <remarks>
+    /// The intended use is to add sensor data to this list on a regular basis
+    /// This class will take care of running those through a self organizing map in order to group similar items together
+    /// When a category gets saturated with lots of nearly identical values, this class will throw out dupes
+    /// So it's purpose is to keep a catalog of unique inputs
+    /// 
+    /// It can then be used to query for images that are similar to another image
+    /// Or to get examples of images that different from some other images
+    /// </remarks>
+    public class SOMList
+    {
+        #region Class: ToVectorInstructions
+
+        private class ToVectorInstructions
+        {
+            public ToVectorInstructions(int[] fromSizes, int toSize, ConvolutionBase2D convolution = null, bool shouldNormalize = false)
+            {
+                this.FromSizes = fromSizes;
+                this.ToSize = toSize;
+                this.Convolution = convolution;
+                this.ShouldNormalize = shouldNormalize;
+            }
+
+            public readonly int[] FromSizes;
+            public readonly int ToSize;
+
+            public readonly ConvolutionBase2D Convolution;      //TODO: handle any dimensions
+            /// <summary>
+            /// Normalizing will make images more similar to each other (if one image is washed out compared to another, the normalized
+            /// versions should be more similar)
+            /// </summary>
+            /// <remarks>
+            /// If the data comes from arbitrary places, normalizing would be really important.  But this data should come from the same
+            /// sensor.  So it probably only makes sense to normalize if the lighting conditions change a lot
+            /// </remarks>
+            public readonly bool ShouldNormalize;
+        }
+
+        #endregion
+        #region Class: SOMItem
+
+        public class SOMItem : ISOMInput
+        {
+            public SOMItem(double[] original, double[] vector)
+            {
+                this.Original = original;
+                this.Weights = vector;
+            }
+
+            public readonly double[] Original;
+            public double[] Weights { get; private set; }
+        }
+
+        #endregion
+
+        #region Declaration Section
+
+        private const int BATCHMIN = 30;
+        private const int BATCHMAX = BATCHMIN * 3;
+
+        private readonly object _lock = new object();
+
+        private readonly ToVectorInstructions _instructions;
+
+        private readonly double _dupeDistSquared;
+
+        private readonly List<SOMItem> _newItems = new List<SOMItem>();
+        private int _nextBatchSize = StaticRandom.Next(BATCHMIN, BATCHMAX);
+        private bool _isProcessingBatch = false;
+
+        private volatile SOMResult _result = null;
+
+        #endregion
+
+        #region Constructor
+
+        /// <param name="itemDimensions">
+        /// The width, height, depth, etc of each item
+        /// </param>
+        /// <param name="convolution">
+        /// This gives a chance to run an edge detect, or some other convolution
+        /// </param>
+        /// <param name="shouldNormalize">
+        /// Forces all inputs to go between 0 and 1.
+        /// NOTE: Only do this if the inputs come from varied sources
+        /// </param>
+        /// <param name="dupeDistance">
+        /// If two items are closer together than this, they will be treated like they are the same.
+        /// NOTE: If all the inputs are 0 to 1 (or even -1 to 1), then the default value should be fine.  But if the
+        /// inputs have larger values (like 0 to 255), you would want a larger min value
+        /// </param>
+        public SOMList(int[] itemDimensions, ConvolutionBase2D convolution = null, bool shouldNormalize = false, double dupeDistance = .001)
+        {
+            _instructions = new ToVectorInstructions(itemDimensions, GetResize(itemDimensions), convolution, shouldNormalize);
+            _dupeDistSquared = dupeDistance * dupeDistance;
+        }
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>
+        /// This is exposed so debuggers can view contents
+        /// </summary>
+        public SOMResult CurrentResult
+        {
+            get
+            {
+                return _result;
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public void Add(double[] item)
+        {
+            //TODO: Probably want something that ignores images if this is too soon from a previous call
+
+            SOMItem somItem = GetSOMItem(item, _instructions);
+
+            SOMResult result = _result;
+            if (result != null)
+            {
+                // Run this through the SOM
+                var closest = SelfOrganizingMaps.GetClosest(result.Nodes, somItem);
+
+                // If it's too similar to another, then just ignore it
+                if (IsTooClose(somItem, result.InputsByNode[closest.Item2], _dupeDistSquared))
+                {
+                    return;
+                }
+            }
+
+            #region process batch
+
+            // Store this in a need-to-work list
+            // When that list gets to a certain size, build a new SOM
+            SOMItem[] newItemBatch = null;
+            lock (_lock)
+            {
+                _newItems.Add(somItem);
+
+                if (!_isProcessingBatch && _newItems.Count > _nextBatchSize)
+                {
+                    _nextBatchSize = StaticRandom.Next(BATCHMIN, BATCHMAX);
+                    newItemBatch = _newItems.ToArray();
+                    _newItems.Clear();
+                    _isProcessingBatch = true;
+                }
+            }
+
+            if (newItemBatch != null)
+            {
+                Task.Run(() => { _result = ProcessNewItemBatch(newItemBatch, _dupeDistSquared, _result); }).
+                    ContinueWith(t => { lock (_lock)  _isProcessingBatch = false; });
+            }
+
+            #endregion
+        }
+
+        public double[][] GetSimilarItems(double[] item, int count)
+        {
+            return new double[0][];
+        }
+        public double[][] GetDissimilarItems(IEnumerable<double> items, int count)
+        {
+            return new double[0][];
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static SOMResult ProcessNewItemBatch(SOMItem[] newItemBatch, double dupeDistSquared, SOMResult existing)
+        {
+            const int TOTALMAX = BATCHMAX * 10;
+
+            //TODO: Items only make it here when they aren't too similar to the som nodes, but items within this list may
+            //be dupes
+            newItemBatch = DedupeItems(newItemBatch, dupeDistSquared);
+
+            if (newItemBatch.Length > BATCHMAX)
+            {
+                // There are too many, just take a sample
+                newItemBatch = UtilityCore.RandomRange(0, newItemBatch.Length, BATCHMAX).
+                    Select(o => newItemBatch[o]).
+                    ToArray();
+            }
+
+            SOMItem[] existingItems = null;
+            if (existing != null)
+            {
+                existingItems = existing.InputsByNode.
+                    SelectMany(o => o).
+                    Select(o => ((SOMInput<SOMItem>)o).Source).
+                    ToArray();
+            }
+
+            SOMItem[] allItems = UtilityCore.ArrayAdd(existingItems, newItemBatch);
+
+
+
+            //TODO: This is too simplistic.  See if existingItems + newItemBatch > total.  If so, try to draw down the existing nodes evenly.  Try
+            //to preserve previous images better.  Maybe even throw in a timestamp to get a good spread of times
+            //
+            //or get a SOM of the new, independent of the old.  Then merge the two pulling representatives to keep the most diversity.  Finally,
+            //take a SOM of the combined
+            if (allItems.Length > TOTALMAX)
+            {
+                allItems = UtilityCore.RandomRange(0, allItems.Length, TOTALMAX).
+                    Select(o => allItems[o]).
+                    ToArray();
+            }
+
+
+
+
+
+
+            SOMInput<SOMItem>[] inputs = allItems.
+                Select(o => new SOMInput<SOMItem>() { Source = o, Weights = o.Weights, }).
+                ToArray();
+
+            //TODO: May want rules to persist from run to run
+            SOMRules rules = GetSOMRules_Rand();
+
+            return SelfOrganizingMaps.TrainSOM(inputs, rules, true);
+        }
+
+        private static SOMItem[] DedupeItems(SOMItem[] items, double dupeDistSquared)
+        {
+            if (items.Length < 2)
+            {
+                return items;
+            }
+
+            List<SOMItem> retVal = new List<SOMItem>();
+
+            retVal.Add(items[0]);
+
+            for (int cntr = 1; cntr < items.Length - 1; cntr++)
+            {
+                IEnumerable<SOMItem> others = Enumerable.Range(cntr + 1, items.Length - cntr - 1).
+                    Select(o => items[o]);
+
+                if (!IsTooClose(items[cntr], others, dupeDistSquared))
+                {
+                    retVal.Add(items[cntr]);
+                }
+            }
+
+            return retVal.ToArray();
+        }
+
+        private static SOMRules GetSOMRules_Rand()
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            return new SOMRules(
+                rand.Next(15, 50),
+                rand.Next(2000, 5000),
+                rand.NextDouble(.2, .4),
+                rand.NextDouble(.05, .15));
+        }
+
+        private static SOMItem GetSOMItem(double[] item, ToVectorInstructions instr)
+        {
+            switch (instr.FromSizes.Length)
+            {
+                case 1:
+                    return GetSOMItem_1D(item, instr);
+
+                case 2:
+                    return GetSOMItem_2D(item, instr);
+
+                default:
+                    throw new ApplicationException("TODO: handle arbitrary number of dimensions");
+            }
+        }
+        private static SOMItem GetSOMItem_1D(double[] item, ToVectorInstructions instr)
+        {
+            if (instr.FromSizes[0] == instr.ToSize)
+            {
+                return new SOMItem(item, item);
+            }
+
+            // Create a bezier through the points, then pull points off of that curve.  Unless I read this wrong, this is what bicubic interpolation of images does (I'm just doing 1D instead of 2D)
+            Point3D[] points = item.
+                Select(o => new Point3D(o, 0, 0)).
+                ToArray();
+
+            BezierSegment3D[] bezier = BezierUtil.GetBezierSegments(points);
+
+            double[] resized = BezierUtil.GetPath(instr.ToSize, bezier).
+                Select(o => o.X).
+                ToArray();
+
+            return new SOMItem(item, resized);
+        }
+        private static SOMItem GetSOMItem_2D(double[] item, ToVectorInstructions instr)
+        {
+            Convolution2D conv = new Convolution2D(item, instr.FromSizes[0], instr.FromSizes[1], false);
+
+            if (conv.Width != conv.Height)
+            {
+                int max = Math.Max(conv.Width, conv.Height);
+                conv = Convolutions.ExtendBorders(conv, max, max);      // make it square
+            }
+
+            if (instr.ShouldNormalize)
+            {
+                conv = Convolutions.Normalize(conv);
+            }
+
+            if (instr.Convolution != null)
+            {
+                conv = Convolutions.Convolute(conv, instr.Convolution);
+            }
+
+            conv = Convolutions.MaxPool(conv, instr.ToSize, instr.ToSize);
+            conv = Convolutions.Abs(conv);
+
+            return new SOMItem(item, conv.Values);
+        }
+
+        private static int GetResize(int[] itemDimensions)
+        {
+            // Ideal sizes:
+            //  2D=7x7
+
+            int retVal = -1;
+
+            switch (itemDimensions.Length)
+            {
+                case 1:
+                    #region 1D
+
+                    //TODO: This is just a rough guess at an ideal range.  When there are real scenarios, adjust as necessary
+
+                    // I don't think the s curve makes sense here.  It's too fuzzy, and has the potential to enlarge when that's not wanted
+                    //double scaled = Math1D.PositiveSCurve(itemDimensions[0], 50);
+                    //retVal = UtilityCore.GetScaledValue(5, 50, 0, 50, scaled).ToInt_Round();
+
+                    if (itemDimensions[0] < 5) retVal = 5;
+                    else if (itemDimensions[0] <= 50) retVal = itemDimensions[0];
+                    else retVal = 50;
+
+                    #endregion
+                    break;
+
+                case 2:
+                    #region 2D
+
+                    double avg = Math1D.Avg(itemDimensions[0], itemDimensions[1]);
+
+                    if (avg < 3) retVal = 3;
+                    else if (avg <= 7) retVal = avg.ToInt_Round();
+                    else retVal = 7;
+
+                    #endregion
+                    break;
+
+                default:
+                    // The convolutions class will need to be expanded first
+                    throw new ApplicationException("TODO: Handle more than 2 dimensions");
+            }
+
+            return retVal;
+        }
+
+        private static bool IsTooClose(ISOMInput item, IEnumerable<ISOMInput> others, double dupeDistSquared)
+        {
+            foreach (ISOMInput other in others)
+            {
+                double distSqr = MathND.GetDistanceSquared(item.Weights, other.Weights);
+
+                if (distSqr < dupeDistSquared)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        #endregion
+    }
+}

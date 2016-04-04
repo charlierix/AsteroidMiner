@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.v2.MissileCommand.MissileCommand0D"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Missile Command 0D" FontFamily="/Game.Newt.v2.MissileCommand;component/Resources/#Share Tech Mono" Background="Black" Width="1000" Height="750" Loaded="Window_Loaded" Closed="Window_Closed">
+        Title="Missile Command 0D" FontFamily="/Game.Newt.v2.MissileCommand;component/Resources/#Share Tech Mono" Background="Black" Foreground="#FFDC00" Width="1000" Height="750" Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <DataTemplate x:Key="expanderHeader">
             <TextBlock Text="{Binding}" FontSize="24" FontWeight="600" Foreground="#FFDC00"/>
@@ -83,13 +83,14 @@
                             <Button Content="Show Asteroid" Margin="0,9,0,1" Click="ShowAsteroid_Click"/>
                             <!-- TODO: May want to come up with custom map parts for {add ammo, add health, add energy} -->
                             <Button Content="Show Emerald" Click="ShowEmerald_Click"/>
+                            <Button Content="Apply Item" ToolTip="Either helps or harms the bot" Click="ApplyItem_Click"/>
                             <Button Content="Remove Item" Click="RemoveItem_Click"/>
                         </StackPanel>
                     </Border>
                 </Expander>
 
                 <!-- Ship-Bot -->
-                <Expander IsExpanded="True" Header="Ship-Bot">
+                <Expander IsExpanded="False" Header="Ship-Bot">
                     <Border Style="{StaticResource panelBorder}">
                         <StackPanel>
                             <Button Content="1" Click="ShipBot1_Click"/>
@@ -106,6 +107,10 @@
                 </Expander>
 
             </StackPanel>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column="2" Name="panelCustom" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+
         </ScrollViewer>
 
         <Grid Grid.Column="4">
@@ -149,6 +154,16 @@
                     </Viewport3D>
                 </Grid>
             </Border>
+
+            <!-- Progress Meters -->
+            <Border Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8">
+                <StackPanel Name="pnlProgressBars">
+
+                    <!-- This will be populated programatically -->
+
+                </StackPanel>
+            </Border>
+
         </Grid>
 
     </Grid>

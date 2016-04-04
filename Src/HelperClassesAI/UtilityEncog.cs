@@ -16,6 +16,7 @@ using Game.HelperClassesCore;
 
 namespace Game.HelperClassesAI
 {
+    //TODO: May want to run outputs through softmax (it's currently commented out in this.CreateNetwork())
     public static class UtilityEncog
     {
         #region Class: TrainingData
@@ -98,7 +99,7 @@ namespace Game.HelperClassesAI
 
         #region Declaration Section
 
-        public const double ERROR = 0.001;
+        public const double ERROR = 0.001;      // this is .1%, which may be a bit excessive
 
         #endregion
 
@@ -390,6 +391,13 @@ namespace Game.HelperClassesAI
 
             // Output Layer
             retVal.AddLayer(new BasicLayer(GetActivationFunction(training.OutputHasNegative, useFast), true, training.OutputSize));
+
+            //TODO: May want to do this
+            //if (isFinalLayerSoftmax)       
+            //{
+            //    // Softmax is useful for turning raw output into a percent (the sum of all neurons in this layer add to one)
+            //    retVal.AddLayer(new BasicLayer(new ActivationSoftMax(), false, training.OutputSize));
+            //}
 
             // Finish
             retVal.Structure.FinalizeStructure();

@@ -42,8 +42,8 @@ namespace Game.Newt.Testers.Encog
 
             private readonly EncogOCR _parent;
 
+            //TODO: Use Game.HelperClassesCore.BackgroundTaskWorker
             private List<Tuple<long, CancellationTokenSource, Task<Tuple<long, TrainedNework_Simple>>>> _currentTasks = new List<Tuple<long, CancellationTokenSource, Task<Tuple<long, TrainedNework_Simple>>>>();
-
             /// <summary>
             /// This holds a token for the most recent network build task.  If a task finishes that isn't for this token,
             /// then the result is just thrown away

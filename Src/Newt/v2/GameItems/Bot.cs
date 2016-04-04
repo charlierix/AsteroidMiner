@@ -38,8 +38,8 @@ namespace Game.Newt.v2.GameItems
         private CameraPool _cameraPool = null;
 
         private readonly BotConstruction_Parts _parts;
-        private readonly IPartUpdatable[] _updatableParts_MainThread = null;
-        private readonly IPartUpdatable[] _updatableParts_AnyThread = null;
+        private readonly IPartUpdatable[] _updatableParts_MainThread;
+        private readonly IPartUpdatable[] _updatableParts_AnyThread;
         private long _partUpdateCount_MainThread = -1;      // starting at -1 so that the first increment will bring it to 0 (skips use mod, so zero mod anything is zero, so everything will fire on the first tick)
         private long _partUpdateCount_AnyThread = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
 
@@ -69,6 +69,8 @@ namespace Game.Newt.v2.GameItems
         /// </remarks>
         private readonly Task<NeuralBucket> _neuralPoolAddTask;
         private readonly NeuralBucket _linkBucket;
+
+        private readonly LifeEventWatcher _lifeEvents;
 
         #endregion
 
@@ -141,6 +143,8 @@ namespace Game.Newt.v2.GameItems
                 _neuralPoolAddTask = bucketTask.Item1;
                 _linkBucket = bucketTask.Item2;
             }
+
+            _lifeEvents = construction.PartConstruction.LifeEventWatcher;
 
             this.ShouldRecalcMass_Large = false;
             this.ShouldRecalcMass_Small = false;
@@ -323,7 +327,11 @@ namespace Game.Newt.v2.GameItems
                 {
                     this.ShouldRecalcMass_Large = true;
                 }
-                _nextMatterTransferTime = age + (elapsedTime * StaticRandom.Next(80, 120));      // no need to spin the processor unnecessarily each tick
+
+                //NOTE: Throwing a min in there, because if I have breakpoints set elsewhere, and resume after awhile, elapsed time will be
+                //huge, and the calculated next transer time will be obscene.  In those cases, the odds are good that the bot will be fairly young
+                //so a simple 110% of age should be enough of a safeguard
+                _nextMatterTransferTime = Math.Min(age * 1.1, age + (elapsedTime * StaticRandom.Next(80, 120)));      // no need to spin the processor unnecessarily each tick
             }
 
             #endregion
@@ -339,6 +347,11 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 _updatableParts_AnyThread[index].Update_AnyThread(elapsedTime + (elapsedTime * skips));       // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+            }
+
+            if (_lifeEvents != null)
+            {
+                _lifeEvents.Update_AnyThread(elapsedTime);
             }
 
             // Detect small change
@@ -527,6 +540,29 @@ namespace Game.Newt.v2.GameItems
             private set
             {
                 _age = value;
+            }
+        }
+
+        private volatile bool _shouldLearnFromLifeEvents = true;
+        /// <summary>
+        /// Suppress learning from life events if you are programatically setting container quantities
+        /// </summary>
+        /// <remarks>
+        /// The bot will watch container quantities.  If there are large changes, it remembers sensor values, and associates what
+        /// it saw with those changes (running over a mineral would cause cargo to go up, associating minerals with food)
+        /// 
+        /// But if the bot is being artificially adjusted, it shouldn't try to learn during that time
+        /// </remarks>
+        public bool ShouldLearnFromLifeEvents
+        {
+            get
+            {
+                return _shouldLearnFromLifeEvents;
+            }
+            set
+            {
+                _shouldLearnFromLifeEvents = value;
+                _lifeEvents.ShouldRaiseEvents = value;
             }
         }
 

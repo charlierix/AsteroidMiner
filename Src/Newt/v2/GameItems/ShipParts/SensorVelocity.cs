@@ -276,7 +276,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensorAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensorAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
                 {
                     // The energy tank didn't have enough
                     //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this
