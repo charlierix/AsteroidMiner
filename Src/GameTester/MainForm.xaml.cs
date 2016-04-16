@@ -180,13 +180,13 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.MadShatter().Show();
         }
-        private void EvenDistribute2D_MouseUp(object sender, MouseButtonEventArgs e)
-        {
-            new Game.Newt.Testers.EvenDistributionCircle().Show();
-        }
-        private void EvenDistribute3D_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EvenDistributeSphere_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.EvenDistributionSphere().Show();
+        }
+        private void EvenDistributeCube_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.EvenDistributionCube().Show();
         }
         private void ClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
         {

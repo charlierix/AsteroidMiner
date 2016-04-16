@@ -51,6 +51,7 @@
     <Compile Include="Bot.cs" />
     <Compile Include="BotConstructor.cs" />
     <Compile Include="CameraPool.cs" />
+    <Compile Include="Collections\NonLifeEventSnapshots.cs" />
     <Compile Include="Container.cs" />
     <Compile Include="Controls\BrainRGBRecognizerViewer.xaml.cs">
       <DependentUpon>BrainRGBRecognizerViewer.xaml</DependentUpon>
@@ -147,8 +148,8 @@
     <Compile Include="ShipParts\ShieldTractor.cs" />
     <Compile Include="ShipParts\Thruster.cs" />
     <Compile Include="ShipParts\TractorBeam.cs" />
-    <Compile Include="ShortTermMemory.cs" />
-    <Compile Include="SOMList.cs" />
+    <Compile Include="Collections\ShortTermMemory.cs" />
+    <Compile Include="Collections\SOMList.cs" />
     <Compile Include="UpdateManager.cs" />
     <Compile Include="WorldColors.cs" />
   </ItemGroup>
@@ -208,6 +209,7 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

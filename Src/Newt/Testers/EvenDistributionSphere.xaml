@@ -41,7 +41,7 @@
                             <TextBox Grid.Column="2" Grid.Row="1" Name="txtNumDots" Text="10"/>
 
                             <!-- TODO: In order to implement this, this window should use the methods in Math3D.  If that happens, some functionality gets hidden (like Calculate Forces button, checkboxes for choosing which forces to apply) - or expose some of that functionality publically -->
-                            <!-- Or copy code from Math3D (but I don't like the idea of multiple copies of code) -->
+                            <!-- Or copy code from Math3D -->
                             <CheckBox Visibility="Collapsed" Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2" Content="Random weights"/>
                         </Grid>
 
@@ -121,9 +121,8 @@
             </Grid>
         </Border>
 
-
         <!-- Viewport -->
-        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" Background="#D0D0D0" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3" Margin="9,12,12,12">
+        <Border Grid.Column="1" Name="grdViewPort" Background="#D0D0D0" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3" Margin="9,12,12,12">
             <Viewport3D Name="_viewport" IsHitTestVisible="False">
                 <!-- Camera -->
                 <Viewport3D.Camera>
@@ -141,6 +140,5 @@
                 </ModelVisual3D>
             </Viewport3D>
         </Border>
-
     </Grid>
 </Window>

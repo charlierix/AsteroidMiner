@@ -11,6 +11,7 @@ using Encog.Neural.Networks;
 using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.Collections;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
 
@@ -272,9 +273,29 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// </summary>
         public class TrainerInput
         {
+            public double[][] UnimportantEvents { get; set; }
             public Tuple<LifeEventVectorArgs, double[]>[] ImportantEvents { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }
+            public bool IsColor { get; set; }
+
+            private readonly object _lock = new object();
+            private long? _token = null;
+            public long Token
+            {
+                get
+                {
+                    lock (_lock)
+                    {
+                        if (_token == null)
+                        {
+                            _token = TokenGenerator.NextToken();
+                        }
+
+                        return _token.Value;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -286,6 +307,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private class TrainedRecognizer
         {
             public BasicNetwork Network { get; set; }
+
+            /// <summary>
+            /// This is what the network was trained on
+            /// </summary>
+            public TrainerInput InputRaw { get; set; }
+            /// <summary>
+            /// This is what the neural net was actually trained on -- noramalized, convolutions, etc
+            /// </summary>
+            public TrainerInput InputNormalized { get; set; }
 
             //TODO: May want to store the convolution chain that was used (this will allow networks to have their own convolutions)
         }
@@ -349,8 +379,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private volatile RecognitionResults _results = null;
 
         private readonly ShortTermMemory<double[]> _shortTermMemory;
+        private readonly NonLifeEventSnapshots<double[]> _nonLifeEventSnapshots;
 
         private List<Tuple<LifeEventVectorArgs, double[]>> _importantEvents = new List<Tuple<LifeEventVectorArgs, double[]>>();
+
+        private readonly ConvolutionBase2D _convolution = Convolutions.GetEdgeSet_Sobel();
+        /// <summary>
+        /// True=The array is triple sized.  Each pixel has an R,G,B.  Convolutions will need to be applied independently to each color
+        /// False=It is a grayscale.  One value per pixel
+        /// </summary>
+        private readonly bool _isColor = true;
 
         #endregion
 
@@ -366,6 +404,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Design.SetDNA(dna);
 
             _shortTermMemory = new ShortTermMemory<double[]>(itemOptions.ShortTermMemory_MillisecondsBetween, itemOptions.ShortTermMemory_Size);
+            //TODO: Get params from itemOptions
+            _nonLifeEventSnapshots = new NonLifeEventSnapshots<double[]>();
+            //_nonLifeEventSnapshots = new NonLifeEventSnapshots<double[]>(.25, .6, 2);     // faster times for debugging
 
             GetMass(out _mass, out _volume, out _radius, out _scaleActual, dna, itemOptions);
         }
@@ -543,25 +584,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return _latestImage;
             }
         }
-        public TrainerInput TrainingData
+        private volatile Tuple<TrainerInput, TrainerInput> _currentTrainingData = null;
+        /// <summary>
+        /// Item1=Raw input
+        /// Item2=Input actually sent to neural net (with convolutions applied)
+        /// </summary>
+        public Tuple<TrainerInput, TrainerInput> TrainingData
         {
             get
             {
-                lock (_lock)
-                {
-                    var camera = _camera;
-                    if (camera == null)
-                    {
-                        return null;
-                    }
-
-                    return new TrainerInput()
-                    {
-                        ImportantEvents = _importantEvents.ToArray(),
-                        Width = camera.PixelWidthHeight,
-                        Height = camera.PixelWidthHeight,
-                    };
-                }
+                return _currentTrainingData;
             }
         }
         public Tuple<int, int> CameraWidthHeight
@@ -604,6 +636,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return Enumerable.Range(0, results.Output.Length).
                     Select(o => Tuple.Create(lifeEvents.Types[o], results.Output[o])).
                     ToArray();
+            }
+        }
+        public bool IsColor
+        {
+            get
+            {
+                return _isColor;
             }
         }
 
@@ -657,6 +696,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 _shortTermMemory.Clear();
+                _nonLifeEventSnapshots.Clear();
                 _importantEvents.Clear();
                 _recognizers = null;
                 _results = null;
@@ -727,20 +767,36 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Event Listeners
 
-        //TODO: Make this method threadsafe
         private void LifeEvents_EventOccurred(object sender, LifeEventVectorArgs e)
         {
-            // Get a copy of the input that occurred before the event happened
-            double[] input = _shortTermMemory.GetSnapshot(e.Time);
-            if (input == null)
+            // Tell this list to suppress adds for a while
+            _nonLifeEventSnapshots.EventOcurred();
+
+            var camera = _camera;
+            if (camera == null)
             {
                 return;
             }
 
+            // Get a copy of the input that occurred before the event happened
+            double[][] inputs = _shortTermMemory.GetSnapshots(e.Time, 3);
+            if (inputs == null || inputs.Length == 0)
+            {
+                return;
+            }
+
+            // Get some rotations of it
+            inputs = inputs.
+                SelectMany(o => GetRotations(o, camera.PixelWidthHeight, camera.PixelWidthHeight, _isColor)).
+                ToArray();
+
             lock (_lock)
             {
-                // Store this pairing
-                _importantEvents.Add(Tuple.Create(e, input));
+                // Store these pairings
+                foreach (double[] input in inputs)
+                {
+                    _importantEvents.Add(Tuple.Create(e, input));
+                }
                 _areLifeEventsDirty = true;
 
                 if (_trainingTask != null)
@@ -750,16 +806,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 // Kick off a training
-                var camera = _camera;
-                TrainerInput trainerInput = new TrainerInput()
+                TrainerInput trainerInput = GetTrainingInput();
+                if (trainerInput == null)
                 {
-                    ImportantEvents = _importantEvents.ToArray(),
-                    Width = camera.PixelWidthHeight,
-                    Height = camera.PixelWidthHeight,
-                };
+                    return;
+                }
 
                 _areLifeEventsDirty = false;
-                _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput));
+                _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor));
                 _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
                 _trainingTask.Start();
             }
@@ -835,18 +889,33 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return false;
             }
 
-            // The camera output is ARGB colors from 0 to 255.  Convert to gray values from 0 to 1
-            double[] nnInput = bitmap.Item2.GetColors_Byte().
+            // The camera output is ARGB colors from 0 to 255.  Convert to values from 0 to 1
+            // Grayscale, 1 value per pixel
+            double[] nnInputBW = bitmap.Item2.GetColors_Byte().
                 Select(o => UtilityWPF.ConvertToGray(o[1], o[2], o[3]) / 255d).     // o[0] is alpha
                 ToArray();
 
+            double[] nnInput;
+            if (_isColor)
+            {
+                // Color, 3 values per pixel
+                nnInput = bitmap.Item2.GetColors_Byte().
+                    SelectMany(o => new[] { o[1] / 255d, o[2] / 255d, o[3] / 255d }).     // o[0] is alpha
+                    ToArray();
+            }
+            else
+            {
+                nnInput = nnInputBW;
+            }
+
             _latestImage = nnInput;
             _shortTermMemory.StoreSnapshot(nnInput);
+            _nonLifeEventSnapshots.Add(nnInput);
 
             var somList = _somList;
             if (somList != null)
             {
-                somList.Add(nnInput);
+                somList.Add(nnInputBW);
             }
 
             LifeEventToVector lifeEvents = _lifeEvents;
@@ -858,7 +927,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Recognize the image, and set the output neurons
-            results = RecognizeImage(nnInput, bitmap.Item1, bitmap.Item2.Width, bitmap.Item2.Height, _recognizers, lifeEvents);
+            results = RecognizeImage(nnInput, bitmap.Item1, bitmap.Item2.Width, bitmap.Item2.Height, _recognizers, lifeEvents, _convolution, _isColor);
 
             lock (_lock)
             {
@@ -873,21 +942,38 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return true;
         }
 
-        private static TrainedRecognizer Train(TrainerInput input)
+        private static TrainedRecognizer Train(TrainerInput input, ConvolutionBase2D convolution, bool isColor)
         {
-            double[][] inputs = input.ImportantEvents.
-                Select(o => NormalizeInput(o.Item2, input.Width, input.Height, true)).
-                ToArray();
+            if (input == null || input.ImportantEvents == null || input.ImportantEvents.Length == 0)
+            {
+                return null;
+            }
 
-            double[][] outputs = input.ImportantEvents.
-                Select(o => o.Item1.Vector).
-                ToArray();
+            TrainerInput normalized = GetTrainingInput(input, convolution, isColor);
+
+            List<double[]> inputs = new List<double[]>();
+            List<double[]> outputs = new List<double[]>();
+
+            // Important Events
+            inputs.AddRange(normalized.ImportantEvents.Select(o => o.Item2));
+            outputs.AddRange(normalized.ImportantEvents.Select(o => o.Item1.Vector));
+
+            // Unimportant Events (sensor input that should output zeros)
+            if (normalized.UnimportantEvents != null && normalized.UnimportantEvents.Length > 0)
+            {
+                int outputVectorLength = outputs[0].Length;
+
+                inputs.AddRange(normalized.UnimportantEvents);
+                outputs.AddRange(Enumerable.Range(0, normalized.UnimportantEvents.Length).
+                    Select(o => new double[outputVectorLength]));
+            }
 
             //NOTE: If there is an exception, the network couldn't be trained
             BasicNetwork network = null;
             try
             {
-                network = UtilityEncog.GetTrainedNetwork(inputs, outputs, UtilityEncog.ERROR, 15, 45).NetworkOrNull;
+                //network = UtilityEncog.GetTrainedNetwork(inputs.ToArray(), outputs.ToArray(), UtilityEncog.ERROR, 15, 45).NetworkOrNull;
+                network = UtilityEncog.GetTrainedNetwork(inputs.ToArray(), outputs.ToArray(), UtilityEncog.ERROR, 5, 15).NetworkOrNull;
             }
             catch (Exception) { }
 
@@ -899,6 +985,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return new TrainedRecognizer()
             {
                 Network = network,
+                InputRaw = input,
+                InputNormalized = normalized,
             };
         }
         private void FinishedTraining(TrainedRecognizer result)
@@ -911,70 +999,117 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     //TODO: Keep a few around.  If max count is met, throw out the oldest/worst
                     _recognizers = new[] { result };
+                    _currentTrainingData = Tuple.Create(result.InputRaw, result.InputNormalized);
                 }
 
                 if (_areLifeEventsDirty || result == null)      // null means it was unsuccessful.  Try again
                 {
                     // There is new data, train against it
-                    var camera = _camera;
-                    TrainerInput trainerInput = new TrainerInput()
-                    {
-                        ImportantEvents = _importantEvents.ToArray(),
-                        Width = camera.PixelWidthHeight,
-                        Height = camera.PixelWidthHeight,
-                    };
+                    TrainerInput trainerInput = GetTrainingInput();
 
-                    _areLifeEventsDirty = false;
-                    _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput));
-                    _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
-                    _trainingTask.Start();
+                    if (trainerInput != null)
+                    {
+                        _areLifeEventsDirty = false;
+                        _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor));
+                        _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
+                        _trainingTask.Start();
+                    }
                 }
             }
         }
 
-        private static RecognitionResults RecognizeImage(double[] input, long inputToken, int width, int height, TrainedRecognizer[] recognizers, LifeEventToVector lifeEvents)
+        /// <summary>
+        /// This returns raw input (still need to call NormalizeInput)
+        /// </summary>
+        private TrainerInput GetTrainingInput()
+        {
+            var camera = _camera;
+            if (camera == null)
+            {
+                return null;
+            }
+
+            double numCategories = _importantEvents.
+                Distinct(o => o.Item1.Type).
+                Count();
+
+            int unimportantCount = Math.Min(20, (_importantEvents.Count / numCategories).ToInt_Round());
+
+            TrainerInput trainerInput = new TrainerInput()
+            {
+                ImportantEvents = _importantEvents.ToArray(),
+                UnimportantEvents = _nonLifeEventSnapshots.GetSamples(unimportantCount),
+                Width = camera.PixelWidthHeight,
+                Height = camera.PixelWidthHeight,
+                IsColor = _isColor,
+            };
+
+            return trainerInput;
+        }
+        /// <summary>
+        /// This runs the input through NormalizeInput, and returns an object with those results
+        /// </summary>
+        private static TrainerInput GetTrainingInput(TrainerInput raw, ConvolutionBase2D convolution, bool isColor)
+        {
+            var importantEvents = raw.ImportantEvents.
+                Select(o =>
+                {
+                    double[] normalized = NormalizeInput(o.Item2, raw.Width, raw.Height, convolution, isColor);
+                    return Tuple.Create(o.Item1, normalized);
+                }).
+                ToArray();
+
+            var unimportantEvents = raw.UnimportantEvents.
+                Select(o => NormalizeInput(o, raw.Width, raw.Height, convolution, isColor)).
+                ToArray();
+
+            var awayPoints = GetAwayPoints(importantEvents.Select(o => o.Item2).ToArray());
+
+            VectorInt reduction;
+            if (convolution == null)
+            {
+                reduction = new VectorInt(0, 0);
+            }
+            else
+            {
+                reduction = convolution.GetReduction();
+            }
+
+            return new TrainerInput()
+            {
+                Width = raw.Width - reduction.X,
+                Height = raw.Height - reduction.Y,
+                ImportantEvents = importantEvents,
+                UnimportantEvents = unimportantEvents.Concat(awayPoints).ToArray(),
+                IsColor = isColor,
+            };
+        }
+
+        private static RecognitionResults RecognizeImage(double[] input, long inputToken, int width, int height, TrainedRecognizer[] recognizers, LifeEventToVector lifeEvents, ConvolutionBase2D convolution, bool isColor)
         {
             if (recognizers == null)
             {
                 return new RecognitionResults(inputToken, new double[lifeEvents.Types.Length]);
             }
 
-            double[] standardNormalized = null;
+            double[] normalized = NormalizeInput(input, width, height, convolution, isColor);
 
             foreach (var recognizer in recognizers)
             {
-                double[] normalized = null;
-                //if(recognizer.ConvolutionChain != null)
-                //{
-                //    normalized = NormalizeInput(input, recognizer.ConvolutionChain);
-                //}
-                //else
-                {
-                    standardNormalized = standardNormalized ?? NormalizeInput(input, width, height, true);
-                    normalized = standardNormalized;
-                }
-
                 double[] output = recognizer.Network.Compute(normalized);
-
-
-
 
                 //TODO: Analyze outputs of all the recognizers to come up with a final result.  Can't just take the average -- if they all
                 //agree, that's great.  But disagreement should have a zero output (or at least a very weak output)
                 return new RecognitionResults(inputToken, output);
-
             }
 
-
-
             throw new ApplicationException("finish this");
-
         }
 
         /// <summary>
         /// The values are from 0 to 255, and need to be 0 to 1
         /// </summary>
-        private static double[] NormalizeInput(double[] input, int width, int height, bool shouldEdgeDetect = false)
+        private static double[] NormalizeInput(double[] input, int width, int height, ConvolutionBase2D convolution, bool isColor)
         {
             // This part is now done earlier on
             //double[] retVal = input.
@@ -983,17 +1118,159 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             double[] retVal = input;
 
-            //TODO: Finish this - take in the convolution chain to apply
-            if (shouldEdgeDetect)
+            if (convolution != null)
             {
-                Convolution2D convoluted = Convolutions.Convolute(new Convolution2D(input, width, height, false), Convolutions.GetEdgeSet_Sobel());
-                retVal = convoluted.Values;
+                if (isColor)
+                {
+                    // Each pixel in input is R,G,B (so 3 values per pixel).  Each of the 3 colors needs to be run through the
+                    // convolution independently.  Then put them back into triples to feed the neural net
+                    //
+                    // Note that it's ok that they are jumbled up when going to the neural net.  Weights are assigned randomly
+                    // before starting training, so it could be all Rs, then all Gs, then Bs, and it wouldn't make any difference.
+                    //
+                    // But it is important for the convolutions to work with pure 2D images, because the convolutions are
+                    // essentially sliding a rectangle across another rectangle, and taking dot products (so rgb triples would
+                    // cause the convolution result to be nonsense)
+
+                    // Split into 3 arrays
+                    var split = SplitColor_conv(input, width, height);
+
+                    // Convolute independently
+                    Convolution2D r = Convolutions.Convolute(split.Item1, convolution);
+                    Convolution2D g = Convolutions.Convolute(split.Item2, convolution);
+                    Convolution2D b = Convolutions.Convolute(split.Item3, convolution);
+
+                    // Put back into one large array (but smaller than the original)
+                    retVal = MergeColor(r, g, b);
+                }
+                else
+                {
+                    Convolution2D convoluted = Convolutions.Convolute(new Convolution2D(input, width, height, false), convolution);
+                    retVal = convoluted.Values;
+                }
+            }
+
+            return retVal;
+        }
+
+        private static double[][] GetRotations(double[] input, int width, int height, bool isColor)
+        {
+            if (isColor)
+            {
+                return GetRotations_Color(input, width, height);
+            }
+            else
+            {
+                return GetRotations_BW(input, width, height);
+            }
+        }
+        private static double[][] GetRotations_Color(double[] input, int width, int height)
+        {
+            var conv0 = SplitColor_conv(input, width, height);
+
+            var conv90 = Tuple.Create(
+                Convolutions.Rotate_90(conv0.Item1, true),
+                Convolutions.Rotate_90(conv0.Item2, true),
+                Convolutions.Rotate_90(conv0.Item3, true));
+
+            var conv180 = Tuple.Create(
+                Convolutions.Rotate_90(conv90.Item1, true),
+                Convolutions.Rotate_90(conv90.Item2, true),
+                Convolutions.Rotate_90(conv90.Item3, true));
+
+            var conv270 = Tuple.Create(
+                Convolutions.Rotate_90(conv0.Item1, false),
+                Convolutions.Rotate_90(conv0.Item2, false),
+                Convolutions.Rotate_90(conv0.Item3, false));
+
+            return new[]
+            {
+                input,
+                MergeColor(conv90.Item1, conv90.Item2, conv90.Item3),
+                MergeColor(conv180.Item1, conv180.Item2, conv180.Item3),
+                MergeColor(conv270.Item1, conv270.Item2, conv270.Item3),
+            };
+        }
+        private static double[][] GetRotations_BW(double[] input, int width, int height)
+        {
+            Convolution2D conv = new Convolution2D(input, width, height, false);
+            Convolution2D conv90 = Convolutions.Rotate_90(conv, true);
+
+            return new[]
+            {
+                input,
+                conv90.Values,
+                Convolutions.Rotate_90(conv90, true).Values,
+                Convolutions.Rotate_90(conv, false).Values,
+            };
+        }
+
+        // These split a color array into its 3 parts
+        private static Tuple<Convolution2D, Convolution2D, Convolution2D> SplitColor_conv(double[] triples, int width, int height)
+        {
+            var arrays = SplitColor(triples, width, height);
+
+            return Tuple.Create(
+                new Convolution2D(arrays.Item1, width, height, false),
+                new Convolution2D(arrays.Item2, width, height, false),
+                new Convolution2D(arrays.Item3, width, height, false));
+        }
+        private static Tuple<double[], double[], double[]> SplitColor(double[] triples, int width, int height)
+        {
+            int size = width * height;
+            double[] r = new double[size];
+            double[] g = new double[size];
+            double[] b = new double[size];
+
+            for (int cntr = 0; cntr < size; cntr++)
+            {
+                int baseIndex = cntr * 3;
+                r[cntr] = triples[baseIndex + 0];
+                g[cntr] = triples[baseIndex + 1];
+                b[cntr] = triples[baseIndex + 2];
+            }
+
+            return Tuple.Create(r, g, b);
+        }
+        // These merge the 3 back into one big array
+        private static double[] MergeColor(Convolution2D r, Convolution2D g, Convolution2D b)
+        {
+            return MergeColor(r.Values, g.Values, b.Values);
+        }
+        private static double[] MergeColor(double[] r, double[] g, double[] b)
+        {
+            double[] retVal = new double[r.Length * 3];
+
+            for (int cntr = 0; cntr < r.Length; cntr++)
+            {
+                int baseIndex = cntr * 3;
+                retVal[baseIndex + 0] = r[cntr];
+                retVal[baseIndex + 1] = g[cntr];
+                retVal[baseIndex + 2] = b[cntr];
             }
 
             return retVal;
         }
 
         #endregion
+
+        private static double[][] GetAwayPoints(double[][] points)
+        {
+            if(points.Length == 0)
+            {
+                return new double[0][];
+            }
+
+            int returnCount = points.Length;
+            int dimensions = points[0].Length;
+
+            //TODO: Examine mins/maxes of the points to see if negative is allowed
+            Tuple<double[], double[]> aabb = Tuple.Create(
+                Enumerable.Range(0, dimensions).Select(o => 0d).ToArray(),
+                Enumerable.Range(0, dimensions).Select(o => 1d).ToArray());
+
+            return MathND.GetRandomVectors_Cube_EventDist(returnCount, aabb, existingStaticPoints: points);
+        }
     }
 
     #endregion

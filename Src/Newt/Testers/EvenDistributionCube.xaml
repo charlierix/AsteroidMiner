@@ -1,0 +1,125 @@
+﻿<Window x:Class="Game.Newt.Testers.EvenDistributionCube"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Even Distribution Cube" ResizeMode="CanResizeWithGrip" Background="#404040" Width="773" Height="609" Loaded="Window_Loaded">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="boolToVis"/>
+
+        <Style x:Key="label" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="9"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="#B0B0B0" BorderBrush="#1F1F1E" BorderThickness="1" CornerRadius="3" Padding="6,6,1,6">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="auto"/>
+                </Grid.RowDefinitions>
+
+                <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                    <StackPanel Grid.IsSharedSizeScope="True">
+
+                        <!-- Add Dots -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="labelSize"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Size X" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtSizeX" Text="10" TextChanged="Double_TextChanged"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Size Y" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="1" Name="txtSizeY" Text="10" TextChanged="Double_TextChanged"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Size Z" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="2" Name="txtSizeZ" Text="10" TextChanged="Double_TextChanged"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="3" Text="#" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="3" Name="txtNumDots" Text="10" TextChanged="Int_TextChanged"/>
+
+                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Name="chkRandomWeights" Content="Random" ToolTip="Random Weights"/>
+                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Weight" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="5" Name="txtWeight" Text="1" TextChanged="Double_TextChanged"/>
+                        </Grid>
+
+                        <Button Content="Add Dots" Margin="0,6,0,0" Click="AddDots_Click"/>
+                        <Button Content="Add Static Dots" Margin="0,2,0,0" Click="AddStaticDots_Click"/>
+
+                        <!-- Move -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" SharedSizeGroup="labelSize"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Column="0" Grid.Row="0" Text="%" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtMovePercent" Text="10" TextChanged="Double_TextChanged"/>
+                        </Grid>
+
+                        <Button Content="Next Step" Margin="0,6,0,0" Click="NextStep_Click"/>
+                        <CheckBox Name="chkContinuous" Content="Continuous" Margin="0,6,0,0" Checked="chkContinuous_Checked" Unchecked="chkContinuous_Checked"/>
+
+                        <Button Content="Rand Movable" ToolTip="Give movable points random positions" Margin="0,12,0,0" Click="RandomizeMovable_Click"/>
+                        <Button Content="Batch Move" ToolTip="Calls MathND.GetRandomVectors_Cube_EventDist()" Margin="0,2,0,0" Click="BatchMove_Click"/>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Results -->
+                <StackPanel Grid.Row="1">
+                    <UniformGrid Columns="2">
+                        <TextBlock Text="# Dots" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Name="lblTotalDots" Text="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+                        <!-- TODO: Show some stats about the min lengths -->
+
+                    </UniformGrid>
+
+                    <Button Content="Clear Dots" Margin="0,12,0,0" Click="ClearDots_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Viewport -->
+        <Border Grid.Column="2" Name="grdViewPort" Background="#D0D0D0" BorderThickness="2" BorderBrush="#1F1F1E" CornerRadius="3">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,-25,25" LookDirection="0,1,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+    </Grid>
+</Window>

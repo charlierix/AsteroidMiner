@@ -8,7 +8,7 @@ using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 
-namespace Game.Newt.v2.GameItems
+namespace Game.Newt.v2.GameItems.Collections
 {
     /// <summary>
     /// This acts like a list of input vectors.  It also acts like a group by, a loose dictionary
@@ -49,6 +49,7 @@ namespace Game.Newt.v2.GameItems
             /// sensor.  So it probably only makes sense to normalize if the lighting conditions change a lot
             /// </remarks>
             public readonly bool ShouldNormalize;
+            public readonly bool IsColor;
         }
 
         #endregion
@@ -94,6 +95,7 @@ namespace Game.Newt.v2.GameItems
         /// </param>
         /// <param name="convolution">
         /// This gives a chance to run an edge detect, or some other convolution
+        /// TODO: Support convolutions that can handle arbitrary dimensions
         /// </param>
         /// <param name="shouldNormalize">
         /// Forces all inputs to go between 0 and 1.

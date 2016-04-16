@@ -138,7 +138,7 @@ namespace Game.HelperClassesWPF
         /// There's a bit too much custom logic to put directly into Math3D, but I want it to appear from the outside that Math3D is doing
         /// all the work (so that consumers have just one util class to go to)
         /// </remarks>
-        private class EvenDistribution
+        private static class EvenDistribution
         {
             #region Class: Dot
 
@@ -1020,7 +1020,7 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            #endregion;
+            #endregion
         }
 
         #endregion

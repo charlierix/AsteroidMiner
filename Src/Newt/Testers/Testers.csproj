@@ -172,6 +172,9 @@
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
     </Compile>
+    <Compile Include="EvenDistributionCube.xaml.cs">
+      <DependentUpon>EvenDistributionCube.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MadShatter.xaml.cs">
       <DependentUpon>MadShatter.xaml</DependentUpon>
     </Compile>
@@ -186,9 +189,6 @@
     </Compile>
     <Compile Include="SOM\SelfOrganizingMapsWindow.xaml.cs">
       <DependentUpon>SelfOrganizingMapsWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="EvenDistributionCircle.xaml.cs">
-      <DependentUpon>EvenDistributionCircle.xaml</DependentUpon>
     </Compile>
     <Compile Include="EvenDistributionSphere.xaml.cs">
       <DependentUpon>EvenDistributionSphere.xaml</DependentUpon>
@@ -428,6 +428,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="EvenDistributionCube.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MadShatter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -445,10 +449,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="SOM\SelfOrganizingMapsWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="EvenDistributionCircle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

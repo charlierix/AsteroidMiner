@@ -9,7 +9,7 @@ using Game.HelperClassesCore;
 namespace Game.HelperClassesWPF
 {
     /// <summary>
-    /// This uses double arrays as vectors, and can be any number of dimensions
+    /// This uses double arrays as vectors that can be any number of dimensions
     /// NOTE: Any method that takes multiple vectors in the params needs all vectors to be the same dimension
     /// </summary>
     public static class MathND
@@ -164,6 +164,302 @@ namespace Game.HelperClassesWPF
                     }
 
                     return retVal;
+                }
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region Class: EvenDistribution
+
+        /// <summary>
+        /// This was copied from Math3D
+        /// </summary>
+        private static class EvenDistribution
+        {
+            #region Class: Dot
+
+            private class Dot
+            {
+                public Dot(bool isStatic, double[] position, double repulseMultiplier)
+                {
+                    this.IsStatic = isStatic;
+                    this.Position = position;
+                    this.RepulseMultiplier = repulseMultiplier;
+                }
+
+                public readonly bool IsStatic;
+                public double[] Position;
+                public readonly double RepulseMultiplier;
+            }
+
+            #endregion
+            #region Class: ShortPair
+
+            private class ShortPair
+            {
+                public ShortPair(int index1, int index2, double length, double lengthRatio, double avgMult, double[] link)
+                {
+                    this.Index1 = index1;
+                    this.Index2 = index2;
+                    this.Length = length;
+                    this.LengthRatio = lengthRatio;
+                    this.AvgMult = avgMult;
+                    this.Link = link;
+                }
+
+                public readonly int Index1;
+                public readonly int Index2;
+                public readonly double Length;
+                public readonly double LengthRatio;
+                public readonly double AvgMult;
+                public readonly double[] Link;
+            }
+
+            #endregion
+
+            public static double[][] GetCube(int returnCount, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[][] existingStaticPoints, double[] staticRepulseMultipliers)
+            {
+                // Start with randomly placed dots
+                Dot[] dots = GetDots(returnCount, existingStaticPoints, aabb, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                return GetCube_Finish(dots, returnCount, aabb, stopRadiusPercent, stopIterationCount);
+            }
+            public static double[][] GetCube(double[][] movable, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[][] existingStaticPoints, double[] staticRepulseMultipliers)
+            {
+                Dot[] dots = GetDots(movable, existingStaticPoints, aabb, movableRepulseMultipliers, staticRepulseMultipliers);
+
+                return GetCube_Finish(dots, movable.Length, aabb, stopRadiusPercent, stopIterationCount);
+            }
+
+            #region Private Methods
+
+            private static double[][] GetCube_Finish(Dot[] dots, int returnCount, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double MOVEPERCENT = .1;
+
+                CapToCube(dots, aabb);
+
+                double radius = MathND.GetLength(MathND.Subtract(aabb.Item2, aabb.Item1)) / 2;
+                double stopAmount = radius * stopRadiusPercent;
+
+                for (int cntr = 0; cntr < stopIterationCount; cntr++)
+                {
+                    double amountMoved = MoveStep(dots, MOVEPERCENT, aabb);
+                    if (amountMoved < stopAmount)
+                    {
+                        break;
+                    }
+                }
+
+                //NOTE: The movable dots are always the front of the list, so the returned array will be the same positions as the initial movable array
+                return dots.
+                    Where(o => !o.IsStatic).
+                    Select(o => o.Position).
+                    ToArray();
+            }
+
+            private static Dot[] GetDots(int movableCount, double[][] staticPoints, Tuple<double[], double[]> aabb, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                // Seed the movable ones with random spherical locations (that's the best that can be done right now)
+                double[][] movable = new double[movableCount][];
+                for (int cntr = 0; cntr < movableCount; cntr++)
+                {
+                    movable[cntr] = MathND.GetRandomVector_Cube(aabb);
+                }
+
+                // Call the other overload
+                return GetDots(movable, staticPoints, aabb, movableRepulseMultipliers, staticRepulseMultipliers);
+            }
+            private static Dot[] GetDots(double[][] movable, double[][] staticPoints, Tuple<double[], double[]> aabb, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
+            {
+                int movableCount = movable.Length;
+
+                if (movableRepulseMultipliers != null && movableRepulseMultipliers.Length != movableCount)
+                {
+                    throw new ArgumentOutOfRangeException("movableRepulseMultipliers", "When movableRepulseMultipliers is nonnull, it must be the same length as the number of movable points");
+                }
+
+                // Figure out how big to make the return array
+                int length = movableCount;
+                if (staticPoints != null)
+                {
+                    length += staticPoints.Length;
+
+                    if (staticRepulseMultipliers != null && staticRepulseMultipliers.Length != staticPoints.Length)
+                    {
+                        throw new ArgumentOutOfRangeException("staticRepulseMultipliers", "When staticRepulseMultipliers is nonnull, it must be the same length as the number of static points");
+                    }
+                }
+
+                Dot[] retVal = new Dot[length];
+
+                // Copy the moveable ones
+                for (int cntr = 0; cntr < movableCount; cntr++)
+                {
+                    retVal[cntr] = new Dot(false, movable[cntr], movableRepulseMultipliers == null ? 1d : movableRepulseMultipliers[cntr]);
+                }
+
+                // Add the static points to the end
+                if (staticPoints != null)
+                {
+                    for (int cntr = 0; cntr < staticPoints.Length; cntr++)
+                    {
+                        retVal[movableCount + cntr] = new Dot(true, staticPoints[cntr], staticRepulseMultipliers == null ? 1d : staticRepulseMultipliers[cntr]);
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static double MoveStep(IList<Dot> dots, double percent, Tuple<double[], double[]> aabb)
+            {
+                // Find shortest pair lengths
+                ShortPair[] shortPairs = MoveStep_GetShortest(dots);
+                if (shortPairs.Length == 0)
+                {
+                    return 0;
+                }
+
+                // Move the shortest pair away from each other (based on how far they are away from the avg)
+                double avg = shortPairs.Average(o => o.LengthRatio);
+
+                double distToMoveMax = avg - shortPairs[0].LengthRatio;
+                if (distToMoveMax.IsNearZero())
+                {
+                    // Found equilbrium
+                    return 0;
+                }
+
+                double retVal = 0;
+
+                bool isFirst = true;
+                foreach (ShortPair pair in shortPairs)
+                {
+                    // Only want to move them if they are less than average
+                    if (pair.LengthRatio >= avg)
+                    {
+                        break;      // they are sorted, so the rest of the list will also be greater
+                    }
+
+                    // Figure out how far they should move
+                    double actualPercent, distToMoveRatio;
+                    if (isFirst)
+                    {
+                        actualPercent = percent;
+                        distToMoveRatio = distToMoveMax;
+                    }
+                    else
+                    {
+                        distToMoveRatio = avg - pair.LengthRatio;
+                        actualPercent = (distToMoveRatio / distToMoveMax) * percent;        // don't use the full percent.  Reduce it based on the ratio of this distance with the max distance
+                    }
+
+                    isFirst = false;
+
+                    double moveDist = distToMoveRatio * actualPercent * pair.AvgMult;
+                    retVal = Math.Max(retVal, moveDist);
+
+                    // Unit vector
+                    double[] displaceUnit;
+                    if (pair.Length.IsNearZero())
+                    {
+                        displaceUnit = MathND.GetRandomVector_Cube(aabb.Item1.Length, -1, 1);
+                        displaceUnit = MathND.ToUnit(displaceUnit, false);
+                    }
+                    else
+                    {
+                        displaceUnit = MathND.ToUnit(pair.Link, false);
+                    }
+
+                    // Can't move evenly.  Divide it up based on the ratio of multipliers
+                    double sumMult = dots[pair.Index1].RepulseMultiplier + dots[pair.Index2].RepulseMultiplier;
+                    double percent2 = dots[pair.Index1].RepulseMultiplier / sumMult;      // flipping 1 and 2, because if 1 is bigger, 2 needs to move more
+                    double percent1 = 1 - percent2;
+
+                    // Move dots
+                    Dot dot = dots[pair.Index1];
+                    if (!dot.IsStatic)
+                    {
+                        double[] displace = MathND.Multiply(displaceUnit, moveDist * percent1);
+                        dot.Position = MathND.Subtract(dot.Position, displace);
+                        CapToCube(dot, aabb);
+                    }
+
+                    dot = dots[pair.Index2];
+                    if (!dot.IsStatic)
+                    {
+                        double[] displace = MathND.Multiply(displaceUnit, moveDist * percent2);
+                        dot.Position = MathND.Add(dot.Position, displace);
+                        CapToCube(dot, aabb);
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static ShortPair[] MoveStep_GetShortest(IList<Dot> dots)
+            {
+                List<ShortPair> retVal = new List<ShortPair>();
+
+                for (int outer = 0; outer < dots.Count - 1; outer++)
+                {
+                    ShortPair currentShortest = null;
+
+                    for (int inner = outer + 1; inner < dots.Count; inner++)
+                    {
+                        if (dots[outer].IsStatic && dots[inner].IsStatic)
+                        {
+                            continue;
+                        }
+
+                        double[] link = MathND.Subtract(dots[inner].Position, dots[outer].Position);
+                        double length = MathND.GetLength(link);
+                        double avgMult = (dots[inner].RepulseMultiplier + dots[outer].RepulseMultiplier) / 2d;
+                        double ratio = length / avgMult;
+
+                        if (currentShortest == null || ratio < currentShortest.LengthRatio)
+                        {
+                            currentShortest = new ShortPair(outer, inner, length, ratio, avgMult, link);
+                        }
+                    }
+
+                    if (currentShortest != null)
+                    {
+                        retVal.Add(currentShortest);
+                    }
+                }
+
+                return retVal.
+                    OrderBy(o => o.LengthRatio).
+                    ToArray();
+            }
+
+            private static void CapToCube(IEnumerable<Dot> dots, Tuple<double[], double[]> aabb)
+            {
+                foreach (Dot dot in dots)
+                {
+                    CapToCube(dot, aabb);
+                }
+            }
+            private static void CapToCube(Dot dot, Tuple<double[], double[]> aabb)
+            {
+                if (dot.IsStatic)
+                {
+                    return;
+                }
+
+                for (int cntr = 0; cntr < aabb.Item1.Length; cntr++)
+                {
+                    if (dot.Position[cntr] < aabb.Item1[cntr])
+                    {
+                        dot.Position[cntr] = aabb.Item1[cntr];
+                    }
+                    else if (dot.Position[cntr] > aabb.Item2[cntr])
+                    {
+                        dot.Position[cntr] = aabb.Item2[cntr];
+                    }
                 }
             }
 
@@ -364,6 +660,46 @@ namespace Game.HelperClassesWPF
             }
 
             return retVal;
+        }
+
+        #endregion
+
+        #region Random
+
+        public static double[] GetRandomVector_Cube(Tuple<double[], double[]> aabb)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double[] retVal = new double[aabb.Item1.Length];
+
+            for (int cntr = 0; cntr < retVal.Length; cntr++)
+            {
+                retVal[cntr] = rand.NextDouble(aabb.Item1[cntr], aabb.Item2[cntr]);
+            }
+
+            return retVal;
+        }
+        public static double[] GetRandomVector_Cube(int dimensions, double min, double max)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            double[] retVal = new double[dimensions];
+
+            for (int cntr = 0; cntr < retVal.Length; cntr++)
+            {
+                retVal[cntr] = rand.NextDouble(min, max);
+            }
+
+            return retVal;
+        }
+
+        public static double[][] GetRandomVectors_Cube_EventDist(int returnCount, Tuple<double[], double[]> aabb, double[] movableRepulseMultipliers = null, double[][] existingStaticPoints = null, double[] staticRepulseMultipliers = null, double stopRadiusPercent = .004, int stopIterationCount = 1000)
+        {
+            return EvenDistribution.GetCube(returnCount, aabb, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, existingStaticPoints, staticRepulseMultipliers);
+        }
+        public static double[][] GetRandomVectors_Cube_EventDist(double[][] movable, Tuple<double[], double[]> aabb, double[] movableRepulseMultipliers = null, double[][] existingStaticPoints = null, double[] staticRepulseMultipliers = null, double stopRadiusPercent = .004, int stopIterationCount = 1000)
+        {
+            return EvenDistribution.GetCube(movable, aabb, stopRadiusPercent, stopIterationCount, movableRepulseMultipliers, existingStaticPoints, staticRepulseMultipliers);
         }
 
         #endregion

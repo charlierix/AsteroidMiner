@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Game.Newt.v2.GameItems
+namespace Game.Newt.v2.GameItems.Collections
 {
     /// <summary>
     /// This holds a rolling buffer of data
@@ -39,9 +39,9 @@ namespace Game.Newt.v2.GameItems
 
         #region Constructor
 
-        public ShortTermMemory(double millisecondsBetween = 600, int bufferSize = 25)
+        public ShortTermMemory(double millisecondsBetween = 150, int bufferSize = 100)
         {
-            _interval = TimeSpan.FromMilliseconds(600);
+            _interval = TimeSpan.FromMilliseconds(millisecondsBetween);
             _buffer = new Tuple<DateTime, T>[bufferSize];
         }
 
@@ -72,6 +72,7 @@ namespace Game.Newt.v2.GameItems
                 }
             }
         }
+
         /// <summary>
         /// This finds the closest snapshot that occurred before the request time
         /// NOTE: Be sure to use DateTime.UtcNow
@@ -80,37 +81,117 @@ namespace Game.Newt.v2.GameItems
         {
             lock (_lock)
             {
-                //TODO: Optimize this
+                for (int cntr = _nextIndex - 1; cntr >= 0; cntr--)
+                {
+                    if (_buffer[cntr].Item1 <= time)
+                    {
+                        return _buffer[cntr].Item2;
+                    }
+                }
+
+                for (int cntr = _buffer.Length - 1; cntr >= _nextIndex; cntr--)
+                {
+                    if (_buffer[cntr] != null && _buffer[cntr].Item1 <= time)
+                    {
+                        return _buffer[cntr].Item2;
+                    }
+                }
+
+                return null;
+            }
+        }
+        /// <summary>
+        /// This finds the closest X snapshots that occurred before the request time
+        /// NOTE: Be sure to use DateTime.UtcNow
+        /// </summary>
+        public T[] GetSnapshots(DateTime time, int count)
+        {
+            lock (_lock)
+            {
+                #region get best match
 
                 Tuple<DateTime, T> bestMatch = null;
+                int bestIndex = -1;
 
-                for (int cntr = 0; cntr < _buffer.Length; cntr++)
+                for (int cntr = _nextIndex - 1; cntr >= 0; cntr--)
                 {
-                    if (_buffer[cntr] == null || _buffer[cntr].Item1 > time)
-                    {
-                        continue;
-                    }
-
-                    if (bestMatch == null)
+                    if (_buffer[cntr].Item1 <= time)
                     {
                         bestMatch = _buffer[cntr];
-                        continue;
-                    }
-
-                    if (_buffer[cntr].Item1 > bestMatch.Item1)
-                    {
-                        bestMatch = _buffer[cntr];
+                        bestIndex = cntr;
+                        break;
                     }
                 }
 
                 if (bestMatch == null)
                 {
-                    return null;
+                    for (int cntr = _buffer.Length - 1; cntr >= _nextIndex; cntr--)
+                    {
+                        if (_buffer[cntr] != null && _buffer[cntr].Item1 <= time)
+                        {
+                            bestMatch = _buffer[cntr];
+                            bestIndex = cntr;
+                            break;
+                        }
+                    }
                 }
-                else
+
+                #endregion
+
+                if (bestMatch == null)
                 {
-                    return bestMatch.Item2;
+                    return new T[0];
                 }
+
+                #region walk back
+
+                // Since the array is a rolling buffer, the next closest will be immediately before the found item
+
+                List<T> retVal = new List<T>();
+                retVal.Add(bestMatch.Item2);
+
+                if (retVal.Count < count)
+                {
+                    for (int cntr = bestIndex - 1; cntr >= 0; cntr--)
+                    {
+                        if (_buffer[cntr] == null || _buffer[cntr].Item1 > time)
+                        {
+                            // There should never be nulls or dates greater before the matched item, but doing the check just in case
+                            break;
+                        }
+
+                        retVal.Add(_buffer[cntr].Item2);
+
+                        if (retVal.Count >= count)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (retVal.Count < count)
+                {
+                    for (int cntr = _buffer.Length - 1; cntr > bestIndex; cntr--)
+                    {
+                        if (_buffer[cntr] == null || _buffer[cntr].Item1 > time)
+                        {
+                            // Nulls could happen (buffer just hasn't been written to yet.  But there should never be dates greater
+                            break;
+                        }
+
+                        retVal.Add(_buffer[cntr].Item2);
+
+                        if (retVal.Count >= count)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+
+                #endregion
+
+                return retVal.ToArray();
             }
         }
 

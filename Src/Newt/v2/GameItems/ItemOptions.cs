@@ -958,7 +958,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private volatile int _shortTermMemory_Size = 25;
+        private volatile int _shortTermMemory_Size = 100;
         public int ShortTermMemory_Size 
         {
             get
@@ -971,7 +971,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private volatile object _shortTermMemory_MillisecondsBetween = 600d;
+        private volatile object _shortTermMemory_MillisecondsBetween = 150d;
         public double ShortTermMemory_MillisecondsBetween
         {
             get

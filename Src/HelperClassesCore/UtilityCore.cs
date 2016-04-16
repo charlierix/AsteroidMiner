@@ -434,6 +434,71 @@ namespace Game.HelperClassesCore
                 #endregion
             }
         }
+        /// <summary>
+        /// This overload lets the user pass in their own random function -- ex: rand.NextPow(2)
+        /// </summary>
+        /// <param name="rand">
+        /// int1 = min value
+        /// int2 = max value (up to, but not including max value)
+        /// return = a random index
+        /// </param>
+        public static IEnumerable<int> RandomRange(int start, int rangeCount, int iterateCount, Func<int, int, int> rand)
+        {
+            if (iterateCount > rangeCount)
+            {
+                //throw new ArgumentOutOfRangeException(string.Format("iterateCount can't be greater than rangeCount.  iterateCount={0}, rangeCount={1}", iterateCount.ToString(), rangeCount.ToString()));
+                iterateCount = rangeCount;
+            }
+
+            if (iterateCount < rangeCount * .15)
+            {
+                #region While Loop
+
+                // Rather than going through the overhead of building an array of all values up front, just remember what's been returned
+                List<int> used = new List<int>();
+                int maxValue = start + rangeCount;
+
+                for (int cntr = 0; cntr < iterateCount; cntr++)
+                {
+                    // Find a value that hasn't been returned yet
+                    int retVal = 0;
+                    while (true)
+                    {
+                        retVal = rand(start, maxValue);
+
+                        if (!used.Contains(retVal))
+                        {
+                            used.Add(retVal);
+                            break;
+                        }
+                    }
+
+                    // Return this
+                    yield return retVal;
+                }
+
+                #endregion
+            }
+            else if (iterateCount > 0)
+            {
+                #region Destroy list
+
+                // Since the random passed in is custom, there is a good chance that the list the indices will be used for is sorted.
+                // So create a list of candidate indices, and whittle that down
+
+                List<int> available = new List<int>(Enumerable.Range(start, rangeCount));
+
+                for(int cntr = 0; cntr < iterateCount; cntr++)
+                {
+                    int index = rand(0, available.Count);
+
+                    yield return available[index];
+                    available.RemoveAt(index);
+                }
+
+                #endregion
+            }
+        }
 
         /// <summary>
         /// This enumerates the array in a random order

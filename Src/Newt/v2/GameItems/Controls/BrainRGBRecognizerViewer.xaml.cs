@@ -17,6 +17,7 @@ using System.Windows.Threading;
 using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.Collections;
 using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.v2.GameItems.Controls
@@ -28,6 +29,7 @@ namespace Game.Newt.v2.GameItems.Controls
         private readonly DispatcherTimer _timer;
 
         private SOMResult _currentSom = null;
+        private Tuple<BrainRGBRecognizer.TrainerInput, BrainRGBRecognizer.TrainerInput> _currentTrainingData = null;
 
         #endregion
 
@@ -105,6 +107,8 @@ namespace Game.Newt.v2.GameItems.Controls
                     return;
                 }
 
+                bool isColor = _recognizer.IsColor;
+
                 #endregion
 
                 #region latest image
@@ -116,7 +120,14 @@ namespace Game.Newt.v2.GameItems.Controls
                 }
                 else
                 {
-                    canvasPixels.Source = UtilityWPF.GetBitmap(image, cameraWidthHeight.Item1, cameraWidthHeight.Item2);
+                    if (isColor)
+                    {
+                        canvasPixels.Source = UtilityWPF.GetBitmap_RGB(image, cameraWidthHeight.Item1, cameraWidthHeight.Item2);
+                    }
+                    else
+                    {
+                        canvasPixels.Source = UtilityWPF.GetBitmap(image, cameraWidthHeight.Item1, cameraWidthHeight.Item2);
+                    }
                 }
 
                 #endregion
@@ -157,7 +168,7 @@ namespace Game.Newt.v2.GameItems.Controls
 
                 if (shouldRenderSOM)
                 {
-                    //SelfOrganizingMapsWPF.ShowResults2D_Tiled(panelSOM, som, 16, 16, cameraWidthHeight.Item1, cameraWidthHeight.Item2);
+                    //NOTE: SOM is always black and white - at least for now
                     SelfOrganizingMapsWPF.ShowResults2D_Tiled(panelSOM, som, cameraWidthHeight.Item1, cameraWidthHeight.Item2, DrawSOMTile);
                     _currentSom = som;
                     panelSOM.Visibility = Visibility.Visible;
@@ -167,17 +178,22 @@ namespace Game.Newt.v2.GameItems.Controls
 
                 #region training data
 
-                BrainRGBRecognizer.TrainerInput trainingData = _recognizer.TrainingData;
+                var trainingData = _recognizer.TrainingData;
 
-                if (trainingData == null || trainingData.ImportantEvents == null || trainingData.ImportantEvents.Length == 0)
+                if (trainingData == null || trainingData.Item1 == null || trainingData.Item1.ImportantEvents == null || trainingData.Item1.ImportantEvents.Length == 0)
                 {
+                    _currentTrainingData = null;
                     panelTrainingData.Child = null;
                     panelTrainingData.Visibility = Visibility.Collapsed;
                 }
                 else
                 {
-                    DrawTrainingData(panelTrainingData, trainingData);
-                    panelTrainingData.Visibility = Visibility.Visible;
+                    if (!IsSame(_currentTrainingData, trainingData))
+                    {
+                        _currentTrainingData = trainingData;
+                        DrawTrainingData(panelTrainingData, trainingData);
+                        panelTrainingData.Visibility = Visibility.Visible;
+                    }
                 }
 
                 #endregion
@@ -400,70 +416,234 @@ namespace Game.Newt.v2.GameItems.Controls
             return grid;
         }
 
-        private static void DrawTrainingData(Border border, BrainRGBRecognizer.TrainerInput trainingData)
+        private static void DrawTrainingData(Border border, Tuple<BrainRGBRecognizer.TrainerInput, BrainRGBRecognizer.TrainerInput> trainingData)
+        {
+            Grid grid = new Grid();
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(6) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            DrawTrainingData_Heading(grid, "raw inputs");
+            DrawTrainingData_Set(grid, trainingData.Item1);
+
+            DrawTrainingData_Heading(grid, "normalized inputs");
+            DrawTrainingData_Set(grid, trainingData.Item2);
+
+            border.Child = grid;
+        }
+        private static void DrawTrainingData_Heading(Grid grid, string text)
+        {
+            if (grid.RowDefinitions.Count > 0)
+            {
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(6) });
+            }
+            grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+
+            TextBlock textblock = new TextBlock()
+            {
+                Text = text,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                FontSize = 10,
+            };
+
+            Grid.SetColumn(textblock, 0);
+            Grid.SetColumnSpan(textblock, 3);
+            Grid.SetRow(textblock, grid.RowDefinitions.Count - 1);
+
+            grid.Children.Add(textblock);
+        }
+        private static void DrawTrainingData_Set(Grid grid, BrainRGBRecognizer.TrainerInput trainingData)
         {
             var byType = trainingData.ImportantEvents.
                 ToLookup(o => o.Item1.Type).
                 OrderBy(o => o.Key.ToString()).
                 ToArray();
 
-            Grid grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(6) });
-            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
-
             foreach (var typeSet in byType)
             {
-                if (grid.RowDefinitions.Count > 0)
-                {
-                    grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(6) });
-                }
-                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+                IEnumerable<double[]> examples = typeSet.
+                    OrderBy(o => o.Item1.Time).     // may want to order descending by strength
+                    Select(o => o.Item2);
 
-                #region heading
-
-                // Heading (just reusing the progress bar header to get a consistent look)
-                FrameworkElement header = GetNNOutputBar(typeSet.Key.ToString(), null);
-
-                //header.LayoutTransform = new RotateTransform(-90);        // this just takes up too much vertical space
-
-                Grid.SetColumn(header, 0);
-                Grid.SetRow(header, grid.RowDefinitions.Count - 1);
-                grid.Children.Add(header);
-
-                #endregion
-
-                #region examples
-
-                //TODO: May want to use a lighter weight way of drawing these
-
-                WrapPanel examplePanel = new WrapPanel()
-                {
-                    HorizontalAlignment = HorizontalAlignment.Left,
-                    VerticalAlignment = VerticalAlignment.Top,
-                };
-
-                foreach (var example in typeSet.OrderBy(o => o.Item1.Time))     // may want to order descending by strength
-                {
-                    BitmapSource source = UtilityWPF.GetBitmap(example.Item2, trainingData.Width, trainingData.Height);
-                    Image image = new Image()
-                    {
-                        Source = source,
-                        Width = source.PixelWidth * 2,      // if this isn't set, the image will take up all of the width, and be huge
-                        Height = source.PixelHeight * 2,
-                    };
-
-                    examplePanel.Children.Add(image);
-                }
-
-                Grid.SetColumn(examplePanel, 2);
-                Grid.SetRow(examplePanel, grid.RowDefinitions.Count - 1);
-                grid.Children.Add(examplePanel);
-
-                #endregion
+                DrawTrainingData_Classification(grid, typeSet.Key.ToString(), examples, trainingData.Width, trainingData.Height, trainingData.IsColor);
             }
 
-            border.Child = grid;
+            if (trainingData.UnimportantEvents.Length > 0)
+            {
+                DrawTrainingData_Classification(grid, "<nothing>", trainingData.UnimportantEvents, trainingData.Width, trainingData.Height, trainingData.IsColor);
+            }
+        }
+        private static void DrawTrainingData_Classification(Grid grid, string heading, IEnumerable<double[]> examples, int width, int height, bool isColor)
+        {
+            if (grid.RowDefinitions.Count > 0)
+            {
+                grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(6) });
+            }
+            grid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+
+            #region heading
+
+            // Heading (just reusing the progress bar header to get a consistent look)
+            FrameworkElement header = GetNNOutputBar(heading, null);
+
+            //header.LayoutTransform = new RotateTransform(-90);        // this just takes up too much vertical space
+
+            Grid.SetColumn(header, 0);
+            Grid.SetRow(header, grid.RowDefinitions.Count - 1);
+            grid.Children.Add(header);
+
+            #endregion
+
+            #region examples
+
+            //TODO: May want to use a lighter weight way of drawing these
+
+            WrapPanel examplePanel = new WrapPanel()
+            {
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+
+            foreach (var example in examples)
+            {
+                BitmapSource source;
+                if (isColor)
+                {
+                    source = UtilityWPF.GetBitmap_RGB(example, width, height);
+                }
+                else
+                {
+                    source = UtilityWPF.GetBitmap(example, width, height);
+                }
+
+                Image image = new Image()
+                {
+                    Source = source,
+                    Width = source.PixelWidth * 2,      // if this isn't set, the image will take up all of the width, and be huge
+                    Height = source.PixelHeight * 2,
+                };
+
+                examplePanel.Children.Add(image);
+            }
+
+            Grid.SetColumn(examplePanel, 2);
+            Grid.SetRow(examplePanel, grid.RowDefinitions.Count - 1);
+            grid.Children.Add(examplePanel);
+
+            #endregion
+        }
+
+        private static bool IsSame(Tuple<BrainRGBRecognizer.TrainerInput, BrainRGBRecognizer.TrainerInput> data1, Tuple<BrainRGBRecognizer.TrainerInput, BrainRGBRecognizer.TrainerInput> data2)
+        {
+            if (data1 == null && data2 == null)
+            {
+                return true;
+            }
+            else if (data1 == null || data2 == null)
+            {
+                return false;
+            }
+
+            return IsSame(data1.Item1, data2.Item1) &&      // compare raw inputs
+                IsSame(data1.Item2, data2.Item2);       // compare normalized inputs
+        }
+        private static bool IsSame(BrainRGBRecognizer.TrainerInput data1, BrainRGBRecognizer.TrainerInput data2)
+        {
+            if (data1 == null && data2 == null)
+            {
+                return true;
+            }
+            else if (data1 == null || data2 == null)
+            {
+                return false;
+            }
+
+            return data1.Token == data2.Token;      // I decided to just add a token
+
+            //if (data1.Width != data2.Width || data1.Height != data2.Height)
+            //{
+            //    return false;
+            //}
+            //else if (data1.ImportantEvents.Length != data2.ImportantEvents.Length)
+            //{
+            //    return false;
+            //}
+
+            //// Don't want to compare every pixel
+            //int step = 13;
+            //if (data1.Width % step == 0)
+            //{
+            //    step = 11;      // it's not a big deal if step is a multiple of width.  I would just prefer the samples to not all be in the same column
+            //}
+
+            //for (int cntr = 0; cntr < data1.ImportantEvents.Length; cntr++)
+            //{
+            //    if (!IsSame(data1.ImportantEvents[cntr].Item1, data2.ImportantEvents[cntr].Item1))
+            //    {
+            //        return false;
+            //    }
+            //    else if (!IsSame(data1.ImportantEvents[cntr].Item2, data2.ImportantEvents[cntr].Item2, step))
+            //    {
+            //        return false;
+            //    }
+            //}
+
+            //return true;
+        }
+        private static bool IsSame(LifeEventVectorArgs args1, LifeEventVectorArgs args2)
+        {
+            if (args1 == null && args2 == null)
+            {
+                return true;
+            }
+            else if (args1 == null || args2 == null)
+            {
+                return false;
+            }
+
+            if (args1.Type != args2.Type)
+            {
+                return false;
+            }
+            else if (args1.Time != args2.Time)
+            {
+                return false;
+            }
+            else if (args1.Strength != args2.Strength)
+            {
+                return false;
+            }
+            else if (!IsSame(args1.Vector, args2.Vector))       // the vectors are small, so just compare all elements
+            {
+                return false;
+            }
+
+            return true;
+        }
+        private static bool IsSame(double[] array1, double[] array2, int step = 1)
+        {
+            if (array1 == null && array2 == null)
+            {
+                return true;
+            }
+            else if (array1 == null || array2 == null)
+            {
+                return false;
+            }
+            else if (array1.Length != array2.Length)
+            {
+                return false;
+            }
+
+            for (int cntr = 0; cntr < array1.Length; cntr += step)
+            {
+                if (array1[cntr] != array2[cntr])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         #endregion
