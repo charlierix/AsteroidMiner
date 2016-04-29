@@ -373,7 +373,7 @@ namespace Game.Newt.v2.GameItems
                         break;
 
                     case BrainRGBRecognizer.PARTTYPE:
-                        AddPart(new BrainRGBRecognizer(options, itemOptions, dna, containers.EnergyGroup),
+                        AddPart(new BrainRGBRecognizer(options, itemOptions, (BrainRGBRecognizerDNA)dna, containers.EnergyGroup),
                             dna, standard, building.AllParts);
                         break;
 

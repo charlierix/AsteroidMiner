@@ -229,7 +229,7 @@ namespace Game.Newt.v2.MissileCommand
 
                 parts.Add(new ShipPartDNA() { PartType = Brain.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.17108888679796, 2.22044604925031E-16, -0.787190712968899), Scale = new Vector3D(1, 1, 1) });
 
-                parts.Add(new ShipPartDNA() { PartType = BrainRGBRecognizer.PARTTYPE, Orientation = new Quaternion(3.91881768803066E-16, -0.264772715428398, 1.07599743798686E-16, 0.964310846752577), Position = new Point3D(0.977003177386146, 0, -0.204027736848604), Scale = new Vector3D(1, 1, 1) });
+                parts.Add(new BrainRGBRecognizerDNA() { PartType = BrainRGBRecognizer.PARTTYPE, Orientation = new Quaternion(3.91881768803066E-16, -0.264772715428398, 1.07599743798686E-16, 0.964310846752577), Position = new Point3D(0.977003177386146, 0, -0.204027736848604), Scale = new Vector3D(1, 1, 1), Extra = GetBrainRGBRecognizerExtra() });
 
                 parts.Add(new ShipPartDNA() { PartType = CargoBay.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.812435730367477, 0, -1.83945537515666), Scale = new Vector3D(1, 1, 1) });
 
@@ -295,7 +295,7 @@ namespace Game.Newt.v2.MissileCommand
                 //foldername = System.IO.Path.Combine(foldername, FOLDER);
                 //System.IO.Directory.CreateDirectory(foldername);
 
-                //string filename = DateTime.Now.ToString("yyyyMMdd HHmmddssfff") + " - bot";
+                //string filename = DateTime.Now.ToString("yyyyMMdd HHmmssfff") + " - bot";
                 //filename = System.IO.Path.Combine(foldername, filename);
 
                 //UtilityCore.SerializeToFile(filename, dna);
@@ -456,6 +456,35 @@ namespace Game.Newt.v2.MissileCommand
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void SaveImages_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_bot == null)
+                {
+                    MessageBox.Show("Create a bot first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                BrainRGBRecognizer brainRecog = _bot.Parts.FirstOrDefault(o => o is BrainRGBRecognizer) as BrainRGBRecognizer;
+                if (brainRecog == null)
+                {
+                    MessageBox.Show("ERROR: Bot should have a recognizer", this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                //C:\Users\<username>\AppData\Roaming\Asteroid Miner\MissileCommand0D\
+                string foldername = UtilityCore.GetOptionsFolder();
+                foldername = System.IO.Path.Combine(foldername, FOLDER);
+                foldername = System.IO.Path.Combine(foldername, "recog dump " + DateTime.Now.ToString("yyyyMMdd HHmmss"));
+
+                brainRecog.SaveImages(foldername);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private async void ShipBot1_Click(object sender, RoutedEventArgs e)
         {
@@ -477,7 +506,7 @@ namespace Game.Newt.v2.MissileCommand
 
                 parts.Add(new ShipPartDNA() { PartType = Brain.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.17108888679796, 2.22044604925031E-16, -0.787190712968899), Scale = new Vector3D(1, 1, 1) });
 
-                parts.Add(new ShipPartDNA() { PartType = BrainRGBRecognizer.PARTTYPE, Orientation = new Quaternion(3.91881768803066E-16, -0.264772715428398, 1.07599743798686E-16, 0.964310846752577), Position = new Point3D(0.977003177386146, 0, -0.204027736848604), Scale = new Vector3D(1, 1, 1) });
+                parts.Add(new BrainRGBRecognizerDNA() { PartType = BrainRGBRecognizer.PARTTYPE, Orientation = new Quaternion(3.91881768803066E-16, -0.264772715428398, 1.07599743798686E-16, 0.964310846752577), Position = new Point3D(0.977003177386146, 0, -0.204027736848604), Scale = new Vector3D(1, 1, 1) });
 
                 ShipDNA dna = ShipDNA.Create(parts);
                 dna.ShipLineage = Guid.NewGuid().ToString();
@@ -609,22 +638,6 @@ namespace Game.Newt.v2.MissileCommand
 
         #region Private Methods
 
-        private static void TakePicture(FrameworkElement viewport, int size)
-        {
-            // This will convert whatever the viewport sees into an array of colors
-            //NOTE: Make sure the viewport's background is black, or the background will show through
-            //var bitmap = UtilityWPF.RenderControl(grdViewPort, size, size, true);
-
-            // Convert to gray
-            //var colors = bitmap.GetColorBytes().
-            //    Select(o =>
-            //    {
-            //        byte gray = Convert.ToByte(UtilityWPF.ConvertToGray(o[1], o[2], o[3]));
-            //        return new byte[] { o[0], gray, gray, gray };
-            //    }).
-            //    ToArray();
-        }
-
         private void RemoveBot()
         {
             // Viewer
@@ -676,6 +689,24 @@ namespace Game.Newt.v2.MissileCommand
             _progressBars.Bot = _bot;
             _progressBars.Foreground = this.Foreground;
             pnlProgressBars.Visibility = Visibility.Visible;
+        }
+
+        private BrainRGBRecognizerDNAExtra GetBrainRGBRecognizerExtra()
+        {
+            BrainRGBRecognizerDNAExtra retVal = BrainRGBRecognizerDNAExtra.GetDefaultDNA();
+
+            retVal.IsColor = chkColorVision.IsChecked.Value;
+            retVal.UseEdgeDetect = chkEdgeDetect.IsChecked.Value;
+
+            int finalResolution;
+            if (int.TryParse(txtFinalResolution.Text, out finalResolution))
+            {
+                retVal.FinalResolution = finalResolution;
+            }
+
+            retVal.ShouldSOMDiscardDupes = chkDiscardDupes.IsChecked.Value;
+
+            return retVal;
         }
 
         #endregion

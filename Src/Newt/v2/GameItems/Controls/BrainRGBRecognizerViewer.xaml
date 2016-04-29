@@ -33,23 +33,14 @@
             <UniformGrid Grid.Column="2" Name="panelOutputs" VerticalAlignment="Top"/>
         </Grid>
 
-        <!-- SOM -->
-        <Border Name="panelSOM" HorizontalAlignment="Stretch" Height="{Binding Path=ActualWidth, RelativeSource={RelativeSource Self}}" Style="{StaticResource mildBorder}"/>
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Training data -->
+                <Border Name="panelTrainingData" HorizontalAlignment="Stretch" Style="{StaticResource mildBorder}"/>
 
-        <!-- Training data -->
-        <Border Name="panelTrainingData" HorizontalAlignment="Stretch" Style="{StaticResource mildBorder}"/>
-        
-        
-        
-        
-        <!--<WrapPanel>
-            <Rectangle Width="16" Height="16" Fill="Red"/>
-            <Rectangle Width="16" Height="16" Fill="Blue"/>
-            <Rectangle Width="16" Height="16" Fill="Yellow"/>
-            <Rectangle Width="16" Height="16" Fill="Gray"/>
-        </WrapPanel>-->
-        
-        
-        
+                <!-- SOM -->
+                <Border Name="panelSOM" HorizontalAlignment="Stretch" Height="{Binding Path=ActualWidth, RelativeSource={RelativeSource Self}}" Style="{StaticResource mildBorder}"/>
+            </StackPanel>
+        </ScrollViewer>
     </StackPanel>
 </UserControl>

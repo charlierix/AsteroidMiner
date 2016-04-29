@@ -194,6 +194,20 @@ namespace Game.Newt.v2.GameItems.Collections
                 return retVal.ToArray();
             }
         }
+        /// <summary>
+        /// This returns all snapshots, oldest first
+        /// </summary>
+        public T[] GetSnapshots()
+        {
+            lock (_lock)
+            {
+                return Enumerable.Range(_nextIndex, _buffer.Length - _nextIndex).       // _nextIndex is where the next will get written, so is the oldest item
+                    Concat(Enumerable.Range(0, _nextIndex)).        // walk up to, but not including _nextIndex
+                    Where(o => _buffer[o] != null).
+                    Select(o => _buffer[o].Item2).
+                    ToArray();
+            }
+        }
 
         public void Clear()
         {

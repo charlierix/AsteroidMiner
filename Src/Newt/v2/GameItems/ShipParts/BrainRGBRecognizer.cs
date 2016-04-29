@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using Encog.Neural.Networks;
 using Game.HelperClassesAI;
@@ -140,6 +142,24 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public override Model3D GetFinalModel()
         {
             return CreateGeometry(true);
+        }
+
+        public override ShipPartDNA GetDNA()
+        {
+            BrainRGBRecognizerDNA retVal = new BrainRGBRecognizerDNA();
+
+            base.FillDNA(retVal);
+
+            return retVal;
+        }
+        public override void SetDNA(ShipPartDNA dna)
+        {
+            if (!(dna is BrainRGBRecognizerDNA))
+            {
+                throw new ArgumentException("The class passed in must be BrainRGBRecognizerDNA");
+            }
+
+            base.StoreDNA(dna);
         }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
@@ -383,22 +403,45 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private List<Tuple<LifeEventVectorArgs, double[]>> _importantEvents = new List<Tuple<LifeEventVectorArgs, double[]>>();
 
-        private readonly ConvolutionBase2D _convolution = Convolutions.GetEdgeSet_Sobel();
+        private readonly ConvolutionBase2D _convolution;
         /// <summary>
         /// True=The array is triple sized.  Each pixel has an R,G,B.  Convolutions will need to be applied independently to each color
         /// False=It is a grayscale.  One value per pixel
         /// </summary>
-        private readonly bool _isColor = true;
+        private readonly bool _isColor;
+
+        private readonly int _finalResolution;
+
+        private readonly bool _somDiscardDupes;
+        private readonly bool _somIsColor;
+
+        private readonly BrainRGBRecognizerDNAExtra _dnaExtra;
 
         #endregion
 
         #region Constructor
 
-        public BrainRGBRecognizer(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
+        public BrainRGBRecognizer(EditorOptions options, ItemOptions itemOptions, BrainRGBRecognizerDNA dna, IContainer energyTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
+
+            _dnaExtra = dna.Extra ?? BrainRGBRecognizerDNAExtra.GetDefaultDNA();
+
+            _isColor = _dnaExtra.IsColor;
+            _finalResolution = _dnaExtra.FinalResolution;
+            if (_dnaExtra.UseEdgeDetect)
+            {
+                _convolution = Convolutions.GetEdgeSet_Sobel();
+            }
+            else
+            {
+                _convolution = null;
+            }
+
+            _somDiscardDupes = _dnaExtra.ShouldSOMDiscardDupes;
+            _somIsColor = _isColor;
 
             this.Design = new BrainRGBRecognizerDesign(options);
             this.Design.SetDNA(dna);
@@ -652,15 +695,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override ShipPartDNA GetNewDNA()
         {
-            ShipPartDNA retVal = this.Design.GetDNA();
+            BrainRGBRecognizerDNA retVal = (BrainRGBRecognizerDNA)this.Design.GetDNA();
 
             //NOTE: The design class doesn't hold neurons, since it's only used by the editor, so fill out the rest of the dna here
             retVal.Neurons = _outputNeurons.Select(o => o.Position).ToArray();
 
-            //TODO: Store some of this class's internal state
-            //Store two different versions:
-            //  full copy to be used when loading the same bot
-            //  lossy compressed version to be passed to children --- actually, there's no need to store this second copy.  It could be generated at the time of instantiating a child
+            retVal.Extra = _dnaExtra;
 
             return retVal;
         }
@@ -692,7 +732,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 else
                 {
                     _camera = camera;
-                    _somList = new SOMList(new[] { camera.PixelWidthHeight, camera.PixelWidthHeight }, Convolutions.GetEdgeSet_Sobel());        // the edge detect really helps.  without it, there tended to just be one big somnode after a while
+                    _somList = new SOMList(new[] { camera.PixelWidthHeight, camera.PixelWidthHeight }, Convolutions.GetEdgeSet_Sobel(), discardDupes: _somDiscardDupes, isColor2D: _somIsColor);        // the edge detect really helps.  without it, there tended to just be one big somnode after a while
                 }
 
                 _shortTermMemory.Clear();
@@ -748,20 +788,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        #region OLD
+        /// <summary>
+        /// This saves all images as files.  This is meant for debugging
+        /// </summary>
+        public void SaveImages(string baseFolder)
+        {
+            Tuple<int, int> widthHeight = this.CameraWidthHeight;
+            if (widthHeight == null)
+            {
+                return;
+            }
 
-        //public void Train(object trainingData)
-        //{
-        //    // A part needs to record snapshots of sensor data during life events (eating, taking damage, etc), then periodically give
-        //    // that data to this train methods (grouped by event type)
-        //    //
-        //    // That way this class can recognize scenes that occur before/during those events (this brain's job is just to recognize.  Other
-        //    // brains will look at this recognizer's output and act on it)
+            var trainingData = this.TrainingData;
 
-        //    //TODO: Come up with convolution/neural chains that try to recognize this data
-        //}
+            if (trainingData != null)
+            {
+                // Training Raw
+                SaveImages(baseFolder, "TrainRaw", trainingData.Item1);
 
-        #endregion
+                // Training Normalized (include negatives)
+                SaveImages(baseFolder, "TrainNormalized", trainingData.Item2);
+            }
+
+            // ShortTerm
+            double[][] shortTerm = _shortTermMemory.GetSnapshots();
+            SaveImages(baseFolder, "ShortTerm", widthHeight.Item1, widthHeight.Item2, shortTerm, _isColor);
+
+            // Non life events
+            Tuple<string, double[]>[] nonLifeEvents = _nonLifeEventSnapshots.GetSamples();
+            SaveImages(baseFolder, "NonLifeEvents", widthHeight.Item1, widthHeight.Item2, nonLifeEvents, _isColor);
+
+            // SOM
+            SOMResult som = this.SOM;
+            SaveImages(baseFolder, "SOM", widthHeight.Item1, widthHeight.Item2, som, false);        //TODO: Change isColor when SOM can support color
+        }
 
         #endregion
 
@@ -813,7 +873,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 _areLifeEventsDirty = false;
-                _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor));
+                _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor, _finalResolution));
                 _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
                 _trainingTask.Start();
             }
@@ -822,41 +882,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
 
         #region Private Methods
-
-        private static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
-        {
-            // Technically, this is a trapazoid cone, but the collision hull and mass breakdown are cylinders, so just treat it like a cylinder
-
-            // If that changes, take the mass of the full cone minus the top cone.  Would need to calculate the height of the full cone based
-            // on the slope of wide radius to small radius:
-            //  slope=((wide/2 - narrow/2) / height)
-            //  fullheight = (-wide/2) / slope   ----   y=mx+b
-
-            double rad = Math1D.Avg(BrainRGBRecognizerDesign.RADIUSPERCENTOFSCALE_WIDE, BrainRGBRecognizerDesign.RADIUSPERCENTOFSCALE_NARROW) * Math1D.Avg(dna.Scale.X, dna.Scale.Y);
-            double height = BrainRGBRecognizerDesign.HEIGHT * dna.Scale.Z;
-
-            volume = Math.PI * rad * rad * height;
-
-            mass = volume * itemOptions.BrainDensity;
-
-            radius = Math1D.Avg(rad, height);       // this is just approximate, and is used by INeuronContainer
-            actualScale = new Vector3D(rad * 2d, rad * 2d, height);     // I think this is just used to get a bounding box
-        }
-
-        private static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, LifeEventToVector lifeEvents)
-        {
-            //TODO: Instead of just having a single output neuron for each life event type, report the type at location?
-            //For example: the camera's input is a square, so have a grid of blocks.  The output grid doesn't need to be very high
-            //resolution, maybe 3x3 up to 5x5.  Each block would be a line of neurons perpendicular to the square
-
-            double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
-
-            Vector3D[] positions = Brain.GetNeuronPositions_Line2D(null, lifeEvents.Types.Length, radius);
-
-            return positions.
-                Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).
-                ToArray();
-        }
 
         /// <summary>
         /// This gets called on a regular basis.  It gets the camera's current image, stores that image in various memory lists, and
@@ -890,10 +915,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // The camera output is ARGB colors from 0 to 255.  Convert to values from 0 to 1
-            // Grayscale, 1 value per pixel
-            double[] nnInputBW = bitmap.Item2.GetColors_Byte().
-                Select(o => UtilityWPF.ConvertToGray(o[1], o[2], o[3]) / 255d).     // o[0] is alpha
-                ToArray();
 
             double[] nnInput;
             if (_isColor)
@@ -905,7 +926,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
             else
             {
-                nnInput = nnInputBW;
+                // Grayscale, 1 value per pixel
+                nnInput = bitmap.Item2.GetColors_Byte().
+                    Select(o => UtilityWPF.ConvertToGray(o[1], o[2], o[3]) / 255d).     // o[0] is alpha
+                    ToArray();
             }
 
             _latestImage = nnInput;
@@ -915,7 +939,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var somList = _somList;
             if (somList != null)
             {
-                somList.Add(nnInputBW);
+                somList.Add(nnInput);
             }
 
             LifeEventToVector lifeEvents = _lifeEvents;
@@ -927,7 +951,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Recognize the image, and set the output neurons
-            results = RecognizeImage(nnInput, bitmap.Item1, bitmap.Item2.Width, bitmap.Item2.Height, _recognizers, lifeEvents, _convolution, _isColor);
+            results = RecognizeImage(nnInput, bitmap.Item1, bitmap.Item2.Width, bitmap.Item2.Height, _finalResolution, _recognizers, lifeEvents, _convolution, _isColor);
 
             lock (_lock)
             {
@@ -942,14 +966,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return true;
         }
 
-        private static TrainedRecognizer Train(TrainerInput input, ConvolutionBase2D convolution, bool isColor)
+        private static TrainedRecognizer Train(TrainerInput input, ConvolutionBase2D convolution, bool isColor, int finalResolution)
         {
             if (input == null || input.ImportantEvents == null || input.ImportantEvents.Length == 0)
             {
                 return null;
             }
 
-            TrainerInput normalized = GetTrainingInput(input, convolution, isColor);
+            TrainerInput normalized = GetTrainingInput(input, convolution, isColor, finalResolution);
 
             List<double[]> inputs = new List<double[]>();
             List<double[]> outputs = new List<double[]>();
@@ -1010,12 +1034,47 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     if (trainerInput != null)
                     {
                         _areLifeEventsDirty = false;
-                        _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor));
+                        _trainingTask = new Task<TrainedRecognizer>(() => Train(trainerInput, _convolution, _isColor, _finalResolution));
                         _trainingTask.ContinueWith(r => FinishedTraining(r.Result));
                         _trainingTask.Start();
                     }
                 }
             }
+        }
+
+        private static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
+        {
+            // Technically, this is a trapazoid cone, but the collision hull and mass breakdown are cylinders, so just treat it like a cylinder
+
+            // If that changes, take the mass of the full cone minus the top cone.  Would need to calculate the height of the full cone based
+            // on the slope of wide radius to small radius:
+            //  slope=((wide/2 - narrow/2) / height)
+            //  fullheight = (-wide/2) / slope   ----   y=mx+b
+
+            double rad = Math1D.Avg(BrainRGBRecognizerDesign.RADIUSPERCENTOFSCALE_WIDE, BrainRGBRecognizerDesign.RADIUSPERCENTOFSCALE_NARROW) * Math1D.Avg(dna.Scale.X, dna.Scale.Y);
+            double height = BrainRGBRecognizerDesign.HEIGHT * dna.Scale.Z;
+
+            volume = Math.PI * rad * rad * height;
+
+            mass = volume * itemOptions.BrainDensity;
+
+            radius = Math1D.Avg(rad, height);       // this is just approximate, and is used by INeuronContainer
+            actualScale = new Vector3D(rad * 2d, rad * 2d, height);     // I think this is just used to get a bounding box
+        }
+
+        private static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, LifeEventToVector lifeEvents)
+        {
+            //TODO: Instead of just having a single output neuron for each life event type, report the type at location?
+            //For example: the camera's input is a square, so have a grid of blocks.  The output grid doesn't need to be very high
+            //resolution, maybe 3x3 up to 5x5.  Each block would be a line of neurons perpendicular to the square
+
+            double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
+
+            Vector3D[] positions = Brain.GetNeuronPositions_Line2D(null, lifeEvents.Types.Length, radius);
+
+            return positions.
+                Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).
+                ToArray();
         }
 
         /// <summary>
@@ -1049,50 +1108,52 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// <summary>
         /// This runs the input through NormalizeInput, and returns an object with those results
         /// </summary>
-        private static TrainerInput GetTrainingInput(TrainerInput raw, ConvolutionBase2D convolution, bool isColor)
+        private static TrainerInput GetTrainingInput(TrainerInput raw, ConvolutionBase2D convolution, bool isColor, int finalResolution)
         {
             var importantEvents = raw.ImportantEvents.
                 Select(o =>
                 {
-                    double[] normalized = NormalizeInput(o.Item2, raw.Width, raw.Height, convolution, isColor);
+                    double[] normalized = NormalizeInput(o.Item2, raw.Width, raw.Height, finalResolution, convolution, isColor);
                     return Tuple.Create(o.Item1, normalized);
                 }).
                 ToArray();
 
             var unimportantEvents = raw.UnimportantEvents.
-                Select(o => NormalizeInput(o, raw.Width, raw.Height, convolution, isColor)).
+                Select(o => NormalizeInput(o, raw.Width, raw.Height, finalResolution, convolution, isColor)).
                 ToArray();
 
             var awayPoints = GetAwayPoints(importantEvents.Select(o => o.Item2).ToArray());
 
-            VectorInt reduction;
-            if (convolution == null)
-            {
-                reduction = new VectorInt(0, 0);
-            }
-            else
-            {
-                reduction = convolution.GetReduction();
-            }
+            //VectorInt reduction;
+            //if (convolution == null)
+            //{
+            //    reduction = new VectorInt(0, 0);
+            //}
+            //else
+            //{
+            //    reduction = convolution.GetReduction();
+            //}
 
             return new TrainerInput()
             {
-                Width = raw.Width - reduction.X,
-                Height = raw.Height - reduction.Y,
+                //Width = raw.Width - reduction.X,
+                //Height = raw.Height - reduction.Y,
+                Width = finalResolution,
+                Height = finalResolution,
                 ImportantEvents = importantEvents,
                 UnimportantEvents = unimportantEvents.Concat(awayPoints).ToArray(),
                 IsColor = isColor,
             };
         }
 
-        private static RecognitionResults RecognizeImage(double[] input, long inputToken, int width, int height, TrainedRecognizer[] recognizers, LifeEventToVector lifeEvents, ConvolutionBase2D convolution, bool isColor)
+        private static RecognitionResults RecognizeImage(double[] input, long inputToken, int width, int height, int finalResolution, TrainedRecognizer[] recognizers, LifeEventToVector lifeEvents, ConvolutionBase2D convolution, bool isColor)
         {
             if (recognizers == null)
             {
                 return new RecognitionResults(inputToken, new double[lifeEvents.Types.Length]);
             }
 
-            double[] normalized = NormalizeInput(input, width, height, convolution, isColor);
+            double[] normalized = NormalizeInput(input, width, height, finalResolution, convolution, isColor);
 
             foreach (var recognizer in recognizers)
             {
@@ -1109,7 +1170,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// <summary>
         /// The values are from 0 to 255, and need to be 0 to 1
         /// </summary>
-        private static double[] NormalizeInput(double[] input, int width, int height, ConvolutionBase2D convolution, bool isColor)
+        private static double[] NormalizeInput(double[] input, int width, int height, int finalResolution, ConvolutionBase2D convolution, bool isColor)
         {
             // This part is now done earlier on
             //double[] retVal = input.
@@ -1140,12 +1201,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     Convolution2D g = Convolutions.Convolute(split.Item2, convolution);
                     Convolution2D b = Convolutions.Convolute(split.Item3, convolution);
 
+                    r = Convolutions.MaxPool(r, finalResolution, finalResolution);
+                    g = Convolutions.MaxPool(g, finalResolution, finalResolution);
+                    b = Convolutions.MaxPool(b, finalResolution, finalResolution);
+
                     // Put back into one large array (but smaller than the original)
                     retVal = MergeColor(r, g, b);
                 }
                 else
                 {
                     Convolution2D convoluted = Convolutions.Convolute(new Convolution2D(input, width, height, false), convolution);
+                    convoluted = Convolutions.MaxPool(convoluted, finalResolution, finalResolution);
                     retVal = convoluted.Values;
                 }
             }
@@ -1252,16 +1318,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        #endregion
-
+        /// <summary>
+        /// This gets random points (images) that are evenly distributed within the possible set of all images.
+        /// These images stay away from the samples passed in
+        /// </summary>
+        /// <remarks>
+        /// This is an attempt to get the neural net to default to zero output in all regions except the positive
+        /// training data
+        /// </remarks>
         private static double[][] GetAwayPoints(double[][] points)
         {
-            if(points.Length == 0)
+            if (points.Length == 0)
             {
                 return new double[0][];
             }
 
-            int returnCount = points.Length;
+            //int returnCount = points.Length;
+            int returnCount = 100;
             int dimensions = points[0].Length;
 
             //TODO: Examine mins/maxes of the points to see if negative is allowed
@@ -1270,6 +1343,153 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 Enumerable.Range(0, dimensions).Select(o => 1d).ToArray());
 
             return MathND.GetRandomVectors_Cube_EventDist(returnCount, aabb, existingStaticPoints: points);
+        }
+
+        private static void SaveImages(string parentFolder, string childFolder, TrainerInput trainerInput)
+        {
+            if (trainerInput == null)
+            {
+                return;
+            }
+
+            foreach (var set in trainerInput.ImportantEvents.ToLookup(o => o.Item1))
+            {
+                SaveImages(parentFolder, childFolder, trainerInput.Width, trainerInput.Height, set.Select(o => o.Item2).ToArray(), trainerInput.IsColor, set.Key.ToString());
+            }
+
+            SaveImages(parentFolder, childFolder, trainerInput.Width, trainerInput.Height, trainerInput.UnimportantEvents, trainerInput.IsColor, "none");
+        }
+        private static void SaveImages(string parentFolder, string childFolder, int width, int height, Tuple<string, double[]>[] images, bool isColor)
+        {
+            if (images == null || images.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var set in images.ToLookup(o => o.Item1))
+            {
+                SaveImages(parentFolder, childFolder, width, height, set.Select(o => o.Item2).ToArray(), isColor, set.Key);
+            }
+        }
+        private static void SaveImages(string parentFolder, string childFolder, int width, int height, SOMResult som, bool isColor)
+        {
+            if (som == null || som.InputsByNode == null || som.InputsByNode.Length == 0)
+            {
+                return;
+            }
+
+            // Pull out the images
+            double[][] images = som.InputsByNode.
+                SelectMany(o => o).
+                Select(o =>
+                {
+                    var cast = o as SOMInput<SOMList.SOMItem>;
+                    if (cast == null) return null;
+
+                    return cast.Source.Original;
+                }).
+                Where(o => o != null).
+                ToArray();
+
+            SaveImages(parentFolder, childFolder, width, height, images, isColor);
+        }
+        private static void SaveImages(string parentFolder, string childFolder, int width, int height, double[][] images, bool isColor, string filename = null)
+        {
+            if (images == null || images.Length == 0)
+            {
+                return;
+            }
+
+            // Folder
+            string folder = Path.Combine(parentFolder, childFolder);
+            Directory.CreateDirectory(folder);
+
+            for (int cntr = 0; cntr < images.Length; cntr++)
+            {
+                // Bitmap
+                BitmapSource bitmap;
+                if (isColor)
+                {
+                    bitmap = UtilityWPF.GetBitmap_RGB(images[cntr], width, height);
+                }
+                else
+                {
+                    bitmap = UtilityWPF.GetBitmap(images[cntr], width, height);
+                }
+
+                // Filename
+                string finalFilename;
+                string number = (cntr + 1).ToString();
+                if (string.IsNullOrWhiteSpace(filename))
+                {
+                    finalFilename = number;
+                }
+                else
+                {
+                    finalFilename = filename;
+
+                    if (images.Length > 1)
+                    {
+                        finalFilename += " " + number;
+                    }
+                }
+
+                finalFilename = Path.Combine(folder, finalFilename + ".png");
+
+                // Save
+                UtilityWPF.SaveBitmapPNG(bitmap, finalFilename);
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Class: BrainRGBRecognizerDNA
+
+    public class BrainRGBRecognizerDNA : ShipPartDNA
+    {
+        public BrainRGBRecognizerDNAExtra Extra { get; set; }
+
+        public static void GetDefaultDNA(BrainRGBRecognizerDNA dna)
+        {
+            if (dna.Extra == null)
+            {
+                dna.Extra = BrainRGBRecognizerDNAExtra.GetDefaultDNA();
+            }
+        }
+    }
+
+    #endregion
+    #region Class: BrainRGBRecognizerDNAExtra
+
+    public class BrainRGBRecognizerDNAExtra
+    {
+        public bool IsColor { get; set; }
+
+        public int FinalResolution { get; set; }
+
+        public bool UseEdgeDetect { get; set; }
+
+        public bool ShouldSOMDiscardDupes { get; set; }
+
+        public bool UseSOM { get; set; }
+        public bool UseNonLifeEvents { get; set; }
+        public bool UseRandomNonPoints { get; set; }
+
+        public static BrainRGBRecognizerDNAExtra GetDefaultDNA()
+        {
+            return new BrainRGBRecognizerDNAExtra()
+            {
+                IsColor = true,
+                FinalResolution = 7,
+                UseEdgeDetect = true,
+                ShouldSOMDiscardDupes = false,
+                UseSOM = true,
+                UseNonLifeEvents = true,
+                UseRandomNonPoints = true,
+            };
         }
     }
 

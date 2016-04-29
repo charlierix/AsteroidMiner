@@ -892,6 +892,44 @@ namespace Game.HelperClassesWPF
             return retVal.ToArray();
         }
 
+        /// <summary>
+        /// This returns the "radius" of a cube
+        /// TODO: Find the radius of a convex polygon instead of a cube
+        /// </summary>
+        public static double GetRadius(IEnumerable<double[]> points)
+        {
+            return GetRadius(GetAABB(points));
+        }
+        /// <summary>
+        /// This returns the "radius" of a cube
+        /// </summary>
+        public static double GetRadius(Tuple<double[], double[]> aabb)
+        {
+            // Diameter of the circumscribed sphere
+            double circumscribedDiam = GetDistance(aabb.Item1, aabb.Item2);
+
+            // Diameter of inscribed sphere
+            double inscribedDiam = 0;
+            for (int cntr = 0; cntr < aabb.Item1.Length; cntr++)
+            {
+                inscribedDiam += aabb.Item2[cntr] - aabb.Item1[cntr];
+            }
+            inscribedDiam /= aabb.Item1.Length;
+
+            // Return the average of the two
+            //return (circumscribedDiam + inscribedDiam) / 4d;        // avg=sum/2, radius=diam/2, so divide by 4
+
+            // The problem with taking the average of the circumscribed and inscribed radius, is that circumscribed grows
+            // roughly sqrt(dimensions), but inscribed is constant.  So the more dimensions, the more innacurate inscribed
+            // will be
+            //
+            // But just using circumscribed will always be overboard
+            //return circumscribedDiam / 2;
+
+            // Weighted average.  Dividing by 2 to turn diameter into radius
+            return ((circumscribedDiam * .85) + (inscribedDiam * .15)) / 2d;        
+        }
+
         #endregion
     }
 }

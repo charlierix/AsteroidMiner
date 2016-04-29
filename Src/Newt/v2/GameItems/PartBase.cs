@@ -652,6 +652,9 @@ namespace Game.Newt.v2.GameItems
         }
 
         /// <summary>
+        /// NOTE: A final consumer should call PartBase.GetNewDNA() if you want a fully filled out dna.  PartDesignBase.GetDNA() is
+        /// for things like editors.  It won't have things like neural positions, or memory of activity --- only structural
+        /// 
         /// NOTE: If a derived class has custom props, then you must override this method and return your own derived dna.  Don't call
         /// base.GetDNA, but instead call base.FillDNA, which will fill out the properties that this class knows about
         /// </summary>

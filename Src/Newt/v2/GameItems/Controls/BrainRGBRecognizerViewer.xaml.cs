@@ -168,7 +168,6 @@ namespace Game.Newt.v2.GameItems.Controls
 
                 if (shouldRenderSOM)
                 {
-                    //NOTE: SOM is always black and white - at least for now
                     SelfOrganizingMapsWPF.ShowResults2D_Tiled(panelSOM, som, cameraWidthHeight.Item1, cameraWidthHeight.Item2, DrawSOMTile);
                     _currentSom = som;
                     panelSOM.Visibility = Visibility.Visible;
@@ -220,32 +219,64 @@ namespace Game.Newt.v2.GameItems.Controls
             {
                 throw new ApplicationException("The original image shouldn't be null");
             }
-            else if (cast.Source.Original.Length != e.TileWidth * e.TileHeight)
+
+            if (cast.Source.Original.Length == e.TileWidth * e.TileHeight)
+            {
+                DrawSOMTile_Gray(e, cast.Source.Original);
+            }
+            else if (cast.Source.Original.Length == e.TileWidth * e.TileHeight * 3)
+            {
+                DrawSOMTile_Color(e, cast.Source.Original);
+            }
+            else
             {
                 throw new ApplicationException("The original image isn't the expected size");
             }
+        }
+        private static void DrawSOMTile_Color(SelfOrganizingMapsWPF.DrawTileArgs e, double[] source)
+        {
+            //NOTE: Copied from UtilityWPF.GetBitmap_RGB
 
+            for (int y = 0; y < e.TileHeight; y++)
+            {
+                int offsetImageY = (e.ImageY + y) * e.Stride;
+                int offsetSourceY = y * e.TileWidth * 3;
+
+                for (int x = 0; x < e.TileWidth; x++)
+                {
+                    int indexImage = offsetImageY + ((e.ImageX + x) * e.PixelWidth);
+                    int indexSource = offsetSourceY + (x * 3);
+
+                    byte r = (source[indexSource + 0] * 255).ToByte_Round();
+                    byte g = (source[indexSource + 1] * 255).ToByte_Round();
+                    byte b = (source[indexSource + 2] * 255).ToByte_Round();
+
+                    e.BitmapPixelBytes[indexImage + 3] = 255;
+                    e.BitmapPixelBytes[indexImage + 2] = r;
+                    e.BitmapPixelBytes[indexImage + 1] = g;
+                    e.BitmapPixelBytes[indexImage + 0] = b;
+                }
+            }
+        }
+        private static void DrawSOMTile_Gray(SelfOrganizingMapsWPF.DrawTileArgs e, double[] source)
+        {
             //NOTE: Copied from UtilityWPF.GetBitmap
 
             for (int y = 0; y < e.TileHeight; y++)
             {
                 int offsetImageY = (e.ImageY + y) * e.Stride;
-                int offsetTileY = y * e.TileWidth;
+                int offsetSourceY = y * e.TileWidth;
 
                 for (int x = 0; x < e.TileWidth; x++)
                 {
                     int indexImage = offsetImageY + ((e.ImageX + x) * e.PixelWidth);
 
-                    int gray = (cast.Source.Original[offsetTileY + x] * 255).ToInt_Round();
-                    if (gray < 0) gray = 0;
-                    if (gray > 255) gray = 255;
-
-                    byte grayByte = Convert.ToByte(gray);
+                    byte gray = (source[offsetSourceY + x] * 255).ToByte_Round();
 
                     e.BitmapPixelBytes[indexImage + 3] = 255;
-                    e.BitmapPixelBytes[indexImage + 2] = grayByte;
-                    e.BitmapPixelBytes[indexImage + 1] = grayByte;
-                    e.BitmapPixelBytes[indexImage + 0] = grayByte;
+                    e.BitmapPixelBytes[indexImage + 2] = gray;
+                    e.BitmapPixelBytes[indexImage + 1] = gray;
+                    e.BitmapPixelBytes[indexImage + 0] = gray;
                 }
             }
         }

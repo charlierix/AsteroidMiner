@@ -70,6 +70,28 @@ namespace Game.HelperClassesCore
             return Convert.ToInt32(Math.Ceiling(value));
         }
 
+        public static byte ToByte_Round(this double value)
+        {
+            int retVal = Convert.ToInt32(Math.Round(value));
+            if (retVal < 0) retVal = 0;
+            if (retVal > 255) retVal = 255;
+            return Convert.ToByte(retVal);
+        }
+        public static byte ToByte_Floor(this double value)
+        {
+            int retVal = Convert.ToInt32(Math.Floor(value));
+            if (retVal < 0) retVal = 0;
+            if (retVal > 255) retVal = 255;
+            return Convert.ToByte(retVal);
+        }
+        public static byte ToByte_Ceiling(this double value)
+        {
+            int retVal = Convert.ToInt32(Math.Ceiling(value));
+            if (retVal < 0) retVal = 0;
+            if (retVal > 255) retVal = 255;
+            return Convert.ToByte(retVal);
+        }
+
         #endregion
 
         #region string

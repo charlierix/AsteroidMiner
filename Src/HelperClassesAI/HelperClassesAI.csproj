@@ -47,6 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extenders.cs" />
+    <Compile Include="HighDimensionVisualizer.xaml.cs">
+      <DependentUpon>HighDimensionVisualizer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelfOrganizingMaps.cs" />
     <Compile Include="SelfOrganizingMapsDB.cs" />
@@ -63,6 +66,12 @@
       <Project>{0f6b42d4-c2c8-499a-897d-76d4ce6d0db6}</Project>
       <Name>HelperClassesWPF</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="HighDimensionVisualizer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

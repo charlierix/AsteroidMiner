@@ -28,12 +28,13 @@ namespace Game.Newt.v2.GameItems.Collections
 
         private class ToVectorInstructions
         {
-            public ToVectorInstructions(int[] fromSizes, int toSize, ConvolutionBase2D convolution = null, bool shouldNormalize = false)
+            public ToVectorInstructions(int[] fromSizes, int toSize, ConvolutionBase2D convolution = null, bool shouldNormalize = false, bool isColor2D = false)
             {
                 this.FromSizes = fromSizes;
                 this.ToSize = toSize;
                 this.Convolution = convolution;
                 this.ShouldNormalize = shouldNormalize;
+                this.IsColor2D = isColor2D;
             }
 
             public readonly int[] FromSizes;
@@ -49,7 +50,7 @@ namespace Game.Newt.v2.GameItems.Collections
             /// sensor.  So it probably only makes sense to normalize if the lighting conditions change a lot
             /// </remarks>
             public readonly bool ShouldNormalize;
-            public readonly bool IsColor;
+            public readonly bool IsColor2D;
         }
 
         #endregion
@@ -78,6 +79,7 @@ namespace Game.Newt.v2.GameItems.Collections
 
         private readonly ToVectorInstructions _instructions;
 
+        private readonly bool _discardDupes;
         private readonly double _dupeDistSquared;
 
         private readonly List<SOMItem> _newItems = new List<SOMItem>();
@@ -106,9 +108,9 @@ namespace Game.Newt.v2.GameItems.Collections
         /// NOTE: If all the inputs are 0 to 1 (or even -1 to 1), then the default value should be fine.  But if the
         /// inputs have larger values (like 0 to 255), you would want a larger min value
         /// </param>
-        public SOMList(int[] itemDimensions, ConvolutionBase2D convolution = null, bool shouldNormalize = false, double dupeDistance = .001)
+        public SOMList(int[] itemDimensions, ConvolutionBase2D convolution = null, bool shouldNormalize = false, bool discardDupes = true, double dupeDistance = .001, bool isColor2D = false)
         {
-            _instructions = new ToVectorInstructions(itemDimensions, GetResize(itemDimensions), convolution, shouldNormalize);
+            _instructions = new ToVectorInstructions(itemDimensions, GetResize(itemDimensions), convolution, shouldNormalize, isColor2D);
             _dupeDistSquared = dupeDistance * dupeDistance;
         }
 
@@ -140,13 +142,16 @@ namespace Game.Newt.v2.GameItems.Collections
             SOMResult result = _result;
             if (result != null)
             {
-                // Run this through the SOM
-                var closest = SelfOrganizingMaps.GetClosest(result.Nodes, somItem);
-
-                // If it's too similar to another, then just ignore it
-                if (IsTooClose(somItem, result.InputsByNode[closest.Item2], _dupeDistSquared))
+                if (_discardDupes)
                 {
-                    return;
+                    // Run this through the SOM
+                    var closest = SelfOrganizingMaps.GetClosest(result.Nodes, somItem);
+
+                    // If it's too similar to another, then just ignore it
+                    if (IsTooClose(somItem, result.InputsByNode[closest.Item2], _dupeDistSquared))
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -170,7 +175,7 @@ namespace Game.Newt.v2.GameItems.Collections
 
             if (newItemBatch != null)
             {
-                Task.Run(() => { _result = ProcessNewItemBatch(newItemBatch, _dupeDistSquared, _result); }).
+                Task.Run(() => { _result = ProcessNewItemBatch(newItemBatch, _discardDupes, _dupeDistSquared, _result); }).
                     ContinueWith(t => { lock (_lock)  _isProcessingBatch = false; });
             }
 
@@ -190,13 +195,15 @@ namespace Game.Newt.v2.GameItems.Collections
 
         #region Private Methods
 
-        private static SOMResult ProcessNewItemBatch(SOMItem[] newItemBatch, double dupeDistSquared, SOMResult existing)
+        private static SOMResult ProcessNewItemBatch(SOMItem[] newItemBatch, bool discardDupes, double dupeDistSquared, SOMResult existing)
         {
             const int TOTALMAX = BATCHMAX * 10;
 
-            //TODO: Items only make it here when they aren't too similar to the som nodes, but items within this list may
-            //be dupes
-            newItemBatch = DedupeItems(newItemBatch, dupeDistSquared);
+            // Items only make it here when they aren't too similar to the som nodes, but items within this list may be dupes
+            if (discardDupes)
+            {
+                newItemBatch = DedupeItems(newItemBatch, dupeDistSquared);
+            }
 
             if (newItemBatch.Length > BATCHMAX)
             {
@@ -290,12 +297,14 @@ namespace Game.Newt.v2.GameItems.Collections
                     return GetSOMItem_1D(item, instr);
 
                 case 2:
-                    return GetSOMItem_2D(item, instr);
+                    if (instr.IsColor2D) return GetSOMItem_2D_Color(item, instr);
+                    else return GetSOMItem_2D_Gray(item, instr);
 
                 default:
                     throw new ApplicationException("TODO: handle arbitrary number of dimensions");
             }
         }
+
         private static SOMItem GetSOMItem_1D(double[] item, ToVectorInstructions instr)
         {
             if (instr.FromSizes[0] == instr.ToSize)
@@ -316,30 +325,91 @@ namespace Game.Newt.v2.GameItems.Collections
 
             return new SOMItem(item, resized);
         }
-        private static SOMItem GetSOMItem_2D(double[] item, ToVectorInstructions instr)
+
+        private static SOMItem GetSOMItem_2D_Color(double[] item, ToVectorInstructions instr)
+        {
+            int width = instr.FromSizes[0];
+            int height = instr.FromSizes[1];
+
+            #region build arrays
+
+            double[] r = new double[width * height];
+            double[] g = new double[width * height];
+            double[] b = new double[width * height];
+
+            //double scale = 1d / 255d;
+            double scale = 1d;
+
+            for (int y = 0; y < height; y++)
+            {
+                int yOffsetDest = y * width;		// offset into the return array
+                int yOffsetSource = y * width * 3;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int xOffsetSource = x * 3;
+
+                    r[yOffsetDest + x] = item[yOffsetSource + xOffsetSource + 0] * scale;
+                    g[yOffsetDest + x] = item[yOffsetSource + xOffsetSource + 1] * scale;
+                    b[yOffsetDest + x] = item[yOffsetSource + xOffsetSource + 2] * scale;
+                }
+            }
+
+            #endregion
+
+            Convolution2D convR = Convolute(new Convolution2D(r, width, height, false), instr);
+            Convolution2D convG = Convolute(new Convolution2D(g, width, height, false), instr);
+            Convolution2D convB = Convolute(new Convolution2D(b, width, height, false), instr);
+
+            #region merge arrays
+
+            double[] merged = new double[convR.Values.Length * 3];
+
+            for (int cntr = 0; cntr < convR.Values.Length; cntr++)
+            {
+                int index = cntr * 3;
+                merged[index + 0] = convR.Values[cntr];
+                merged[index + 1] = convG.Values[cntr];
+                merged[index + 2] = convB.Values[cntr];
+            }
+
+            #endregion
+
+            return new SOMItem(item, merged);
+        }
+        private static SOMItem GetSOMItem_2D_Gray(double[] item, ToVectorInstructions instr)
         {
             Convolution2D conv = new Convolution2D(item, instr.FromSizes[0], instr.FromSizes[1], false);
 
-            if (conv.Width != conv.Height)
+            conv = Convolute(conv, instr);
+
+            return new SOMItem(item, conv.Values);
+        }
+
+        private static Convolution2D Convolute(Convolution2D conv, ToVectorInstructions instr)
+        {
+            Convolution2D retVal = conv;
+
+            if (retVal.Width != retVal.Height)
             {
-                int max = Math.Max(conv.Width, conv.Height);
-                conv = Convolutions.ExtendBorders(conv, max, max);      // make it square
+                int max = Math.Max(retVal.Width, retVal.Height);
+                retVal = Convolutions.ExtendBorders(retVal, max, max);      // make it square
             }
 
             if (instr.ShouldNormalize)
             {
-                conv = Convolutions.Normalize(conv);
+                retVal = Convolutions.Normalize(retVal);
             }
 
             if (instr.Convolution != null)
             {
-                conv = Convolutions.Convolute(conv, instr.Convolution);
+                retVal = Convolutions.Convolute(retVal, instr.Convolution);
             }
 
-            conv = Convolutions.MaxPool(conv, instr.ToSize, instr.ToSize);
-            conv = Convolutions.Abs(conv);
+            retVal = Convolutions.MaxPool(retVal, instr.ToSize, instr.ToSize);
+            retVal = Convolutions.Abs(retVal);
 
-            return new SOMItem(item, conv.Values);
+            return retVal;
         }
 
         private static int GetResize(int[] itemDimensions)

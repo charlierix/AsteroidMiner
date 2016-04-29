@@ -136,20 +136,20 @@ namespace Game.HelperClassesAI
         /// <summary>
         /// This divides the node's weights into thirds, and maps to RGB
         /// </summary>
+        public static Color GetNodeColor(ISOMInput node)
+        {
+            var raw = GetNodeColor_RGB(node.Weights);
+            return GetNodeColor_Finish(raw);
+        }
         public static Color GetNodeColor(SOMNode node)
         {
-            var raw = GetNodeColor_RGB(node);
-
-            // Scale to bytes.  This assumes that the weights are normalized between -1 and 1
-            //TODO: Handle negatives
-            Color orig = Color.FromRgb(
-                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item1))),
-                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item2))),
-                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item3))));
-
-            // Bring up the saturation
-            ColorHSV hsv = UtilityWPF.RGBtoHSV(orig);
-            return UtilityWPF.HSVtoRGB(hsv.H, Math.Max(hsv.S, 40), hsv.V);
+            var raw = GetNodeColor_RGB(node.Weights);
+            return GetNodeColor_Finish(raw);
+        }
+        public static Color GetNodeColor(double[] weights)
+        {
+            var raw = GetNodeColor_RGB(weights);
+            return GetNodeColor_Finish(raw);
         }
 
         #region Tooltip Builder
@@ -552,26 +552,26 @@ namespace Game.HelperClassesAI
         /// <summary>
         /// This gets the raw values that will be used for RGB (could return negative)
         /// </summary>
-        private static Tuple<double, double, double> GetNodeColor_RGB(SOMNode node)
+        private static Tuple<double, double, double> GetNodeColor_RGB(double[] nodeWeights)
         {
-            if (node.Weights.Length == 0)
+            if (nodeWeights.Length == 0)
             {
                 return Tuple.Create(0d, 0d, 0d);
             }
-            else if (node.Weights.Length == 3)
+            else if (nodeWeights.Length == 3)
             {
-                return Tuple.Create(node.Weights[0], node.Weights[1], node.Weights[2]);
+                return Tuple.Create(nodeWeights[0], nodeWeights[1], nodeWeights[2]);
             }
-            else if (node.Weights.Length < 3)
+            else if (nodeWeights.Length < 3)
             {
-                double left = node.Weights[0];
-                double right = node.Weights[node.Weights.Length - 1];
+                double left = nodeWeights[0];
+                double right = nodeWeights[nodeWeights.Length - 1];
 
                 return Tuple.Create(left, Math1D.Avg(left, right), right);
             }
 
-            int div = node.Weights.Length / 3;
-            int rem = node.Weights.Length % 3;
+            int div = nodeWeights.Length / 3;
+            int rem = nodeWeights.Length % 3;
 
             // Start them all off with the same amount
             int[] widths = Enumerable.Range(0, 3).
@@ -584,20 +584,34 @@ namespace Game.HelperClassesAI
                 widths[index]++;
             }
 
-            double r = node.Weights.
+            double r = nodeWeights.
                 Take(widths[0]).
                 Average();
 
-            double g = node.Weights.
+            double g = nodeWeights.
                 Skip(widths[0]).
                 Take(widths[1]).
                 Average();
 
-            double b = node.Weights.
+            double b = nodeWeights.
                 Skip(widths[0] + widths[1]).
                 Average();
 
             return Tuple.Create(r, g, b);
+        }
+        private static Color GetNodeColor_Finish(Tuple<double, double, double> raw)
+        {
+            // Scale to bytes.  This assumes that the weights are normalized between -1 and 1
+            //TODO: Handle negatives
+            Color orig = Color.FromRgb(
+                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item1))),
+                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item2))),
+                Convert.ToByte(UtilityCore.GetScaledValue_Capped(0, 255, 0, 1, Math.Abs(raw.Item3))));
+
+            // Bring up the saturation
+            ColorHSV hsv = UtilityWPF.RGBtoHSV(orig);
+            return UtilityWPF.HSVtoRGB(hsv.H, Math.Max(hsv.S, 40), hsv.V);
+
         }
 
         private static Brush GetTiledSamples_ONE(Point[] edgePoints, ISOMInput[] samples)

@@ -46,6 +46,15 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
+        #region Enum: NodeWeightColor
+
+        private enum NodeWeightColor
+        {
+            Color,
+            BlackWhite,
+        }
+
+        #endregion
         #region Enum: NodeDisplayLayout
 
         private enum NodeDisplayLayout
@@ -221,7 +230,8 @@ namespace Game.Newt.Testers.SOM
         {
             InitializeComponent();
 
-            // cboSimpleInputColor
+            #region cboSimpleInputColor
+
             foreach (SimpleColorScheme scheme in Enum.GetValues(typeof(SimpleColorScheme)))
             {
                 cboSimpleInputColor.Items.Add(scheme);
@@ -230,7 +240,9 @@ namespace Game.Newt.Testers.SOM
             cboSimpleInputColor.SelectedIndex = 0;
             cboSimpleOutputColor.SelectedIndex = 0;
 
-            // cboThreePixelsTop
+            #endregion
+            #region cboThreePixelsTop
+
             foreach (SimpleColorComponent component in Enum.GetValues(typeof(SimpleColorComponent)))
             {
                 cboThreePixelsTop.Items.Add(component);
@@ -241,7 +253,9 @@ namespace Game.Newt.Testers.SOM
             cboThreePixelsMid.SelectedIndex = 1;
             cboThreePixelsBot.SelectedIndex = 2;
 
-            // cboSimpleNodeLayout
+            #endregion
+            #region cboSimpleNodeLayout
+
             // skipping Grid_UniformSize.  There's not much point implementing that, it's unnatural to force categories into a square
             cboSimpleNodeLayout.Items.Add(NodeDisplayLayout.Blobs);
             cboSimpleNodeLayout.Items.Add(NodeDisplayLayout.Disk_NonZero);
@@ -255,12 +269,34 @@ namespace Game.Newt.Testers.SOM
             }
             cboConvImageFilter.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<ImageFilterType>(), ImageFilterType.Edge);
 
-            // cboConvNormalization
+            #endregion
+            #region cboConvColor
+
+            foreach (NodeWeightColor color in Enum.GetValues(typeof(NodeWeightColor)))
+            {
+                cboConvColor.Items.Add(color);
+            }
+            cboConvColor.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<NodeWeightColor>(), NodeWeightColor.Color);
+
+            #endregion
+            #region cboConvNormalization
+
             foreach (NormalizationType norm in Enum.GetValues(typeof(NormalizationType)))
             {
                 cboConvNormalization.Items.Add(norm);
             }
             cboConvNormalization.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<NormalizationType>(), NormalizationType.Normalize);
+
+            #endregion
+            #region cboAttraction
+
+            foreach (SOMAttractionFunction norm in Enum.GetValues(typeof(SOMAttractionFunction)))
+            {
+                cboAttraction.Items.Add(norm);
+            }
+            cboAttraction.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<SOMAttractionFunction>(), SOMAttractionFunction.Guassian);
+
+            #endregion
         }
 
         #endregion
@@ -391,6 +427,37 @@ namespace Game.Newt.Testers.SOM
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void Polygon_Click(Polygon sender, SOMNode node, ISOMInput[] images, MouseEventArgs e)
+        {
+            try
+            {
+                Color nodeColor = UtilityWPF.ExtractColor(sender.Fill);
+
+                RadialGradientBrush brush = new RadialGradientBrush();
+                brush.GradientStops.Add(new GradientStop(UtilityWPF.AlphaBlend(Colors.White, nodeColor, .8), 0));
+                brush.GradientStops.Add(new GradientStop(UtilityWPF.AlphaBlend(Colors.White, nodeColor, .58), 1.9));
+
+                HighDimensionVisualizer visualizer = new HighDimensionVisualizer(GetPreviewImage, SelfOrganizingMapsWPF.GetNodeColor, chkVisualizerStaticDots.IsChecked.Value, chkVisualizer3D.IsChecked.Value);
+                visualizer.AddStaticItems(HighDimensionVisualizer.GetSOMNodeStaticPositions(node, _nodes, HighDimensionVisualizer.RADIUS));
+                visualizer.AddItems(images);
+
+                Window window = new Window()
+                {
+                    Width = 400,
+                    Height = 400,
+                    Title = this.Title + " " + images.Length.ToString(),
+                    Background = brush,
+                    Content = visualizer,
+                    Owner = this,       // keep it on top of this window
+                };
+
+                window.Show();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 
         private void AddFolder_Click(object sender, RoutedEventArgs e)
         {
@@ -498,55 +565,44 @@ namespace Game.Newt.Testers.SOM
                 }
 
                 int maxImages = trkMaxInputs.Value.ToInt_Round();
-                int imageSize = trkConvImageSize.Value.ToInt_Round();
-                double scaleValue = trkConvValue.Value;
-                double maxSpreadPercent = trkConvMaxSpread.Value / 100d;
 
-                Func<FeatureRecognizer_Image, double[]> getValueFromImage = null;
-
-                var filterType = (ImageFilterType)cboConvImageFilter.SelectedValue;
-                switch (filterType)
-                {
-                    case ImageFilterType.None:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ResizeGray(o, imageSize, scaleValue));
-                        break;
-
-                    case ImageFilterType.Edge:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool(o, Convolutions.GetEdgeSet_Sobel(), imageSize, scaleValue));
-                        break;
-
-                    case ImageFilterType.Edge_Horzontal:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool(o, Convolutions.GetEdge_Sobel(false), imageSize, scaleValue));
-                        break;
-
-                    case ImageFilterType.Edge_Vertical:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool(o, Convolutions.GetEdge_Sobel(true), imageSize, scaleValue));
-                        break;
-
-                    case ImageFilterType.Edge_DiagonalUp:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), false), imageSize, scaleValue));
-                        break;
-
-                    case ImageFilterType.Edge_DiagonalDown:
-                        getValueFromImage = new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), false), imageSize, scaleValue));
-                        break;
-
-                    default:
-                        throw new ApplicationException("Unknown ImageFilterType: " + filterType.ToString());
-                }
+                Func<FeatureRecognizer_Image, double[]> getValueFromImage = GetValuesFromImage_Delegate();
 
                 ImageInput[] inputs = GetImageInputs(_images, maxImages, (NormalizationType)cboConvNormalization.SelectedValue, getValueFromImage);
 
-                //var test = inputs.Select(o => Tuple.Create(o.Value[0], o.Value[1], o.Value[2])).ToArray();
-
                 if (chkConvMaxSpreadPercent.IsChecked.Value)
                 {
+                    double maxSpreadPercent = trkConvMaxSpread.Value / 100d;
+
                     DoConvolution2(inputs, maxSpreadPercent, 4);
                 }
                 else
                 {
                     DoConvolution(inputs);
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void KMeans_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_images.Count == 0)
+                {
+                    MessageBox.Show("Please add some images first", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int maxImages = trkMaxInputs.Value.ToInt_Round();
+
+                Func<FeatureRecognizer_Image, double[]> getValueFromImage = GetValuesFromImage_Delegate();
+
+                ImageInput[] inputs = GetImageInputs(_images, maxImages, (NormalizationType)cboConvNormalization.SelectedValue, getValueFromImage);
+
+                DoKMeans(inputs);
             }
             catch (Exception ex)
             {
@@ -790,7 +846,7 @@ namespace Game.Newt.Testers.SOM
 
             var getNodeColor = chkRandomNodeColors.IsChecked.Value ? _getNodeColor_Random : SelfOrganizingMapsWPF.GetNodeColor;
 
-            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
+            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, Polygon_Click);
 
             SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
 
@@ -817,7 +873,62 @@ namespace Game.Newt.Testers.SOM
             _wasEllipseTransferred = false;
         }
 
-        private static double[] GetValuesFromImage_ResizeGray(FeatureRecognizer_Image image, int size, double scaleValue)
+        private Func<FeatureRecognizer_Image, double[]> GetValuesFromImage_Delegate()
+        {
+            int imageSize = trkConvImageSize.Value.ToInt_Round();
+            double scaleValue = trkConvValue.Value;
+
+            bool isColor = (NodeWeightColor)cboConvColor.SelectedValue == NodeWeightColor.Color;
+
+            var filterType = (ImageFilterType)cboConvImageFilter.SelectedValue;
+            switch (filterType)
+            {
+                case ImageFilterType.None:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_Resize_Color(o, imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_Resize_Gray(o, imageSize, scaleValue));
+
+                case ImageFilterType.Edge:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Color(o, Convolutions.GetEdgeSet_Sobel(), imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Gray(o, Convolutions.GetEdgeSet_Sobel(), imageSize, scaleValue));
+
+                case ImageFilterType.Edge_Horzontal:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Color(o, Convolutions.GetEdge_Sobel(false), imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Gray(o, Convolutions.GetEdge_Sobel(false), imageSize, scaleValue));
+
+                case ImageFilterType.Edge_Vertical:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Color(o, Convolutions.GetEdge_Sobel(true), imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Gray(o, Convolutions.GetEdge_Sobel(true), imageSize, scaleValue));
+
+                case ImageFilterType.Edge_DiagonalUp:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Color(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), false), imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Gray(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(false), false), imageSize, scaleValue));
+
+                case ImageFilterType.Edge_DiagonalDown:
+                    if (isColor) return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Color(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), false), imageSize, scaleValue));
+                    else return new Func<FeatureRecognizer_Image, double[]>(o => GetValuesFromImage_ConvMaxpool_Gray(o, Convolutions.Rotate_45(Convolutions.GetEdge_Sobel(true), false), imageSize, scaleValue));
+
+                default:
+                    throw new ApplicationException("Unknown ImageFilterType: " + filterType.ToString());
+            }
+        }
+
+        private static double[] GetValuesFromImage_Resize_Color(FeatureRecognizer_Image image, int size, double scaleValue)
+        {
+            BitmapSource bitmap = new BitmapImage(new Uri(image.Filename));
+            bitmap = UtilityWPF.ResizeImage(bitmap, size, true);
+
+            var convs = UtilityWPF.ConvertToConvolution_RGB(bitmap, scaleValue);
+            if (convs.Item1.Width != convs.Item1.Height)
+            {
+                convs = Tuple.Create(
+                    Convolutions.ExtendBorders(convs.Item1, size, size),        //NOTE: width or height is already the desired size, this will just enlarge the other to make it square
+                    Convolutions.ExtendBorders(convs.Item2, size, size),
+                    Convolutions.ExtendBorders(convs.Item3, size, size));
+            }
+
+            return MergeConvs(convs.Item1, convs.Item2, convs.Item3);
+        }
+        private static double[] GetValuesFromImage_Resize_Gray(FeatureRecognizer_Image image, int size, double scaleValue)
         {
             BitmapSource bitmap = new BitmapImage(new Uri(image.Filename));
             bitmap = UtilityWPF.ResizeImage(bitmap, size, true);
@@ -830,7 +941,35 @@ namespace Game.Newt.Testers.SOM
 
             return retVal.Values;
         }
-        private static double[] GetValuesFromImage_ConvMaxpool(FeatureRecognizer_Image image, ConvolutionBase2D kernel, int size, double scaleValue)
+
+        private static double[] GetValuesFromImage_ConvMaxpool_Color(FeatureRecognizer_Image image, ConvolutionBase2D kernel, int size, double scaleValue)
+        {
+            const int INITIALSIZE = 80;
+
+            BitmapSource bitmap = new BitmapImage(new Uri(image.Filename));
+            bitmap = UtilityWPF.ResizeImage(bitmap, INITIALSIZE, true);
+
+            var convs = UtilityWPF.ConvertToConvolution_RGB(bitmap, scaleValue);
+
+            var final = new[] { convs.Item1, convs.Item2, convs.Item3 }.
+                Select(o =>
+                {
+                    Convolution2D retVal = o;
+
+                    if (retVal.Width != retVal.Height)
+                    {
+                        retVal = Convolutions.ExtendBorders(retVal, INITIALSIZE, INITIALSIZE);        //NOTE: width or height is already the desired size, this will just enlarge the other to make it square
+                    }
+
+                    retVal = Convolutions.Convolute(retVal, kernel);
+                    retVal = Convolutions.MaxPool(retVal, size, size);
+                    return Convolutions.Abs(retVal);
+                }).
+                ToArray();
+
+            return MergeConvs(final[0], final[1], final[2]);
+        }
+        private static double[] GetValuesFromImage_ConvMaxpool_Gray(FeatureRecognizer_Image image, ConvolutionBase2D kernel, int size, double scaleValue)
         {
             const int INITIALSIZE = 80;
 
@@ -848,6 +987,49 @@ namespace Game.Newt.Testers.SOM
             retVal = Convolutions.Abs(retVal);
 
             return retVal.Values;
+        }
+
+        private static double[] MergeConvs(Convolution2D red, Convolution2D green, Convolution2D blue)
+        {
+            if (red.Values.Length != green.Values.Length || red.Values.Length != blue.Values.Length)
+            {
+                throw new ArgumentException(string.Format("The convolutions need to be the same size: {0}, {1}, {2}", red.Values.Length, green.Values.Length, blue.Values.Length));
+            }
+
+            double[] retVal = new double[red.Values.Length * 3];
+
+            for (int cntr = 0; cntr < red.Values.Length; cntr++)
+            {
+                int index = cntr * 3;
+                retVal[index + 0] = red.Values[cntr];
+                retVal[index + 1] = green.Values[cntr];
+                retVal[index + 2] = blue.Values[cntr];
+            }
+
+            return retVal;
+        }
+
+        #endregion
+        #region Private Methods - kmeans
+
+        //TODO: Move this section to SelfOrganizingMaps.TrainKMeans()
+
+        private void DoKMeans(ImageInput[] inputs)
+        {
+            int numNodes = trkKMeansNumNodes.Value.ToInt_Round();
+
+            SOMResult result = SelfOrganizingMaps.TrainKMeans(inputs, numNodes, true);
+
+            var getNodeColor = chkRandomNodeColors.IsChecked.Value ? _getNodeColor_Random : SelfOrganizingMapsWPF.GetNodeColor;
+
+            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, Polygon_Click);
+
+            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+
+            // This is for the manual manipulate buttons
+            _nodes = result.Nodes;
+            _imagesByNode = result.InputsByNode;
+            _wasEllipseTransferred = false;
         }
 
         #endregion
@@ -1166,32 +1348,77 @@ namespace Game.Newt.Testers.SOM
         }
 
         /// <summary>
+        /// This is used by child HighDimensionVisualizer windows
+        /// </summary>
+        private Tuple<UIElement, VectorInt> GetPreviewImage(ISOMInput input)
+        {
+            bool showHash = chkVisualizerShowHash.IsChecked.Value;
+
+            ImageInput nodeImage = input as ImageInput;
+            if (nodeImage == null)
+            {
+                // This is probably a node, instead of an input image (the nodes are sent as static control points)
+                nodeImage = new ImageInput(null, input.Weights, input.Weights);
+                showHash = true;
+            }
+
+            return GetPreviewImage(nodeImage, showHash, 80, false, -1);
+        }
+
+        /// <summary>
         /// This creates an image, and any other descriptions
         /// </summary>
         private static Tuple<UIElement, VectorInt> GetPreviewImage(ImageInput image, bool showHash, int imageSize, bool showPerImageDistance, double imageDistPercent)
         {
+            const int ALIASMULT = 20;
+
             #region image
 
             BitmapSource bitmap;
             if (showHash)
             {
+                #region hash
+
                 int width, height;
 
+                bool isColor = false;
                 double widthHeight = Math.Sqrt(image.Weights_Orig.Length);
                 if (widthHeight.ToInt_Floor() == widthHeight.ToInt_Ceiling())
                 {
+                    // Black and white, 2D
                     width = height = widthHeight.ToInt_Floor();
                 }
                 else
                 {
-                    width = image.Weights_Orig.Length;
-                    height = 1;
+                    double widthHeight2 = Math.Sqrt(image.Weights_Orig.Length / 3);
+                    if (widthHeight2.ToInt_Floor() == widthHeight2.ToInt_Ceiling())
+                    {
+                        // Color, 2D
+                        isColor = true;
+                        width = height = widthHeight2.ToInt_Floor();
+                    }
+                    else
+                    {
+                        // Black and white, 1D
+                        width = image.Weights_Orig.Length;
+                        height = 1;
+                    }
                 }
 
-                double? maxValue = image.Weights_Orig.Max() > 1d ? (double?)null : 1d;
+                //double? maxValue = image.Weights_Orig.Max() > 1d ? (double?)null : 1d;
+                //Convolution2D conv = new Convolution2D(image.Weights_Orig, width, height, false);
+                //bitmap = Convolutions.GetBitmap_Aliased(conv, absMaxValue: maxValue, negPosColoring: ConvolutionResultNegPosColoring.BlackWhite, forcePos_WhiteBlack: false);
 
-                Convolution2D conv = new Convolution2D(image.Weights_Orig, width, height, false);
-                bitmap = Convolutions.GetBitmap_Aliased(conv, absMaxValue: maxValue, negPosColoring: ConvolutionResultNegPosColoring.BlackWhite, forcePos_WhiteBlack: false);
+                if (isColor)
+                {
+                    bitmap = UtilityWPF.GetBitmap_Aliased_RGB(image.Weights_Orig, width, height, width * ALIASMULT, height * ALIASMULT);
+                }
+                else
+                {
+                    bitmap = UtilityWPF.GetBitmap_Aliased(image.Weights_Orig, width, height, width * ALIASMULT, height * ALIASMULT);
+                }
+
+                #endregion
             }
             else
             {
@@ -1380,7 +1607,8 @@ namespace Game.Newt.Testers.SOM
                 trkNumNodes.Value.ToInt_Round(),
                 trkNumIterations.Value.ToInt_Round(),
                 trkInitialRadiusPercent.Value / 100d,
-                trkLearningRate.Value);
+                trkLearningRate.Value,
+                (SOMAttractionFunction)cboAttraction.SelectedValue);
         }
 
         private static ImageInput[] GetImageInputs(IList<FeatureRecognizer_Image> images, int maxInputs, NormalizationType normalizationType, Func<FeatureRecognizer_Image, double[]> getValueFromImage)

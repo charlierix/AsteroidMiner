@@ -116,6 +116,26 @@ namespace Game.HelperClassesAI
             return result;
         }
 
+        /// <summary>
+        /// K-Means is a simpler algorithm than SOM.  Probably not as good, but it may have its uses
+        /// </summary>
+        /// <remarks>
+        /// https://en.wikipedia.org/wiki/K-means_clustering
+        /// 
+        /// K-Means is a very different algorithm than SOM, but the inputs and outputs look the same, and the goal is very similar.  So
+        /// throwing it in this class
+        /// </remarks>
+        public static SOMResult TrainKMeans(ISOMInput[] inputs, int numNodes, bool isDisplay2D)
+        {
+            SOMResult retVal = TrainKMeans(numNodes, inputs);
+
+            // Inject positions into the nodes
+            InjectNodePositions2D(retVal.Nodes);        //TODO: Look at isDisplay2D
+            retVal = ArrangeNodes_LikesAttract(retVal);
+
+            return retVal;
+        }
+
         #region Misc Helpers
 
         public static SOMResult ArrangeNodes_LikesAttract(SOMResult result)
@@ -188,12 +208,11 @@ namespace Game.HelperClassesAI
 
         #endregion
 
-        #region Private Methods
+        #region Private Methods - som
 
         private static SOMResult TrainSOM(SOMNode[] nodes, ISOMInput[] inputs, SOMRules rules, bool returnEmptyNodes = false)
         {
-            //double mapRadius = GetMapRadius(inputs);
-            double mapRadius = GetMapRadius(nodes);
+            double mapRadius = MathND.GetRadius(MathND.GetAABB(nodes.Select(o => o.Weights)));
 
             SOMNode[] returnNodes = nodes.
                 Select(o => o.Clone()).
@@ -220,11 +239,9 @@ namespace Game.HelperClassesAI
                     // Adjust the matched node (full learning rate)
                     AdjustNodeWeights(closest, input.Weights, learningRate);
 
-                    double twiceSearchRadiusSquared = 2d * (searchRadius * searchRadius);
-
                     foreach (var node in neigbors)
                     {
-                        double influence = Math.Exp(-node.Item2 / twiceSearchRadiusSquared);        // this will reduce the learning rate as distance increases (guassian dropoff)
+                        double influence = GetInfluence(rules.AttractionFunction, node.Item2, searchRadius);
 
                         // Adjust a neighbor
                         AdjustNodeWeights(node.Item1, input.Weights, learningRate * influence);
@@ -282,6 +299,375 @@ namespace Game.HelperClassesAI
                 node.Weights[cntr] += (position[cntr] - node.Weights[cntr]) * percent;
             }
         }
+
+        private static double GetInfluence(SOMAttractionFunction attractionFunction, double distSquared, double searchRadius)
+        {
+            const double SIGMA = .28;       // this gives peak negative at x=.5 (roughly), and near 0 at x=1
+            const double SIGMASQUARED = SIGMA * SIGMA;
+
+            switch (attractionFunction)
+            {
+                case SOMAttractionFunction.Guassian_ORIG:
+                    // This is a guassian, but I wasn't scaling to search radius very well
+                    double twiceSearchRadiusSquared = 2d * (searchRadius * searchRadius);
+                    return Math.Exp(-distSquared / twiceSearchRadiusSquared);        // this will reduce the learning rate as distance increases (guassian dropoff)
+
+                case SOMAttractionFunction.Guassian:
+                    //https://en.wikipedia.org/wiki/Gaussian_function
+                    double percentSearchRadius1 = Math.Sqrt(distSquared) / searchRadius;
+                    percentSearchRadius1 *= 2;
+                    percentSearchRadius1 *= percentSearchRadius1;
+                    return Math.Exp(-percentSearchRadius1);
+
+                case SOMAttractionFunction.MexicanHat:
+                    //https://en.wikipedia.org/wiki/Mexican_hat_wavelet
+
+                    double percentSearchRadius2 = Math.Sqrt(distSquared) / searchRadius;
+                    percentSearchRadius2 *= percentSearchRadius2;       // it needs to be squared
+
+                    double left = (1 - (percentSearchRadius2 / SIGMASQUARED));
+                    double right = percentSearchRadius2 / (2 * SIGMASQUARED);
+                    right = Math.Exp(-right);
+                    return left * right;
+
+                default:
+                    throw new ApplicationException("Unknown SOMAttractionFunction: " + attractionFunction.ToString());
+            }
+        }
+
+        /// <summary>
+        /// This does a new SOM for one node (sort of like recursing on a node)
+        /// </summary>
+        /// <param name="index">The node to break apart</param>
+        private static Tuple<bool, SOMNode[]> SplitNode(int index, SOMResult result, int minNodeItemsForSplit, double maxSpreadPercent, double totalSpread, SOMRules rules)
+        {
+            ISOMInput[] inputs = result.InputsByNode[index];
+
+            // Don't split if there aren't enough inputs in the parent
+            if (inputs.Length < minNodeItemsForSplit)
+            {
+                return Tuple.Create(false, new[] { result.Nodes[index] });
+            }
+
+            // See how this node's distances from the average compare with the total
+            double nodeSpread = GetTotalSpread(inputs.Select(o => o.Weights));
+            double percentSpread = nodeSpread / totalSpread;
+
+            if (percentSpread < maxSpreadPercent)
+            {
+                return Tuple.Create(false, new[] { result.Nodes[index] });
+            }
+
+            // Get random node weights.  Don't let any of those weights be closer to other nodes than this node
+            double[][] weights = GetRandomWeights_InsideCell(rules.NumNodes, inputs, result.Nodes, index);
+
+            SOMNode[] nodes = Enumerable.Range(0, rules.NumNodes).
+                Select(o => new SOMNode() { Weights = weights[o] }).
+                ToArray();
+
+            // Split up this node
+            SOMResult subResult = TrainSOM(nodes, inputs, rules, false);
+
+            return Tuple.Create(true, subResult.Nodes);
+        }
+
+        /// <summary>
+        /// If two nodes are too close to each other, they get merged into one
+        /// </summary>
+        private static bool MergeTouchingNodes(ref SOMResult result, Tuple<int, int, double>[] distances, double minDist = .01)
+        {
+            // Find touching
+            var touching = distances.
+                Where(o => o.Item3 < minDist).
+                ToArray();
+
+            if (touching.Length == 0)
+            {
+                return false;
+            }
+
+            #region Merge key pairs
+
+            // There could be several pairs that need to be joined.  ex:
+            //      {0,2} {0,3} {2,5}       ->      {0,2,3,5}
+            //      {1,6}       ->      {1,6}
+
+            List<List<int>> sets = new List<List<int>>();
+
+            foreach (var pair in touching)
+            {
+                List<int> existing = sets.FirstOrDefault(o => o.Contains(pair.Item1) || o.Contains(pair.Item2));
+                if (existing == null)
+                {
+                    existing = new List<int>();
+                    existing.Add(pair.Item1);
+                    existing.Add(pair.Item2);
+                    sets.Add(existing);
+                }
+                else
+                {
+                    if (!existing.Contains(pair.Item1))
+                    {
+                        existing.Add(pair.Item1);
+                    }
+                    else if (!existing.Contains(pair.Item2))     // if it didn't contain 1, then it matched on 2, so no need to look for 2
+                    {
+                        existing.Add(pair.Item2);
+                    }
+                }
+            }
+
+            #endregion
+            #region Singular sets
+
+            // Identify stand alone nodes, and add their index to the sets list (makes the next section easier to implement)
+
+            for (int cntr = 0; cntr < result.Nodes.Length; cntr++)
+            {
+                if (!sets.Any(o => o.Contains(cntr)))
+                {
+                    List<int> singleSet = new List<int>();
+                    singleSet.Add(cntr);
+                    sets.Add(singleSet);
+                }
+            }
+
+            #endregion
+            #region Merge nodes
+
+            List<SOMNode> newNodes = new List<SOMNode>();
+            List<ISOMInput[]> newImagesByNode = new List<ISOMInput[]>();
+
+            foreach (List<int> set in sets)
+            {
+                // Just use the first node (no need to take the average of weights since they're nearly identical, and taking the average position
+                // doesn't add any value - later methods will move the node positions around anyway)
+                newNodes.Add(result.Nodes[set[0]]);
+
+                if (set.Count == 1)
+                {
+                    newImagesByNode.Add(result.InputsByNode[set[0]]);
+                }
+                else
+                {
+                    List<ISOMInput> mergedInputs = new List<ISOMInput>();
+                    foreach (int index in set)
+                    {
+                        mergedInputs.AddRange(result.InputsByNode[index]);
+                    }
+
+                    newImagesByNode.Add(mergedInputs.ToArray());
+                }
+            }
+
+            #endregion
+
+            result = new SOMResult(newNodes.ToArray(), newImagesByNode.ToArray(), result.IncludesEmptyNodes);
+            return true;
+        }
+
+        /// <summary>
+        /// Remove nodes that don't have any inputs
+        /// </summary>
+        private static SOMResult RemoveZeroNodes(SOMResult result)
+        {
+            List<SOMNode> subNodes = new List<SOMNode>();
+            List<ISOMInput[]> subImagesByNode = new List<ISOMInput[]>();
+
+            for (int cntr = 0; cntr < result.Nodes.Length; cntr++)
+            {
+                if (result.InputsByNode[cntr].Length == 0)
+                {
+                    continue;
+                }
+
+                subNodes.Add(result.Nodes[cntr]);
+                subImagesByNode.Add(result.InputsByNode[cntr]);
+            }
+
+            return new SOMResult(subNodes.ToArray(), subImagesByNode.ToArray(), false);
+        }
+
+        #endregion
+        #region Private Methods - kmeans
+
+        private static SOMResult TrainKMeans(int numNodes, ISOMInput[] inputs)
+        {
+            SOMNode[] returnNodes;
+            ISOMInput[][] inputsByNode;
+            GetInitialKMeansNodes(out returnNodes, out inputsByNode, numNodes, inputs);
+
+            while (true)
+            {
+                AdjustKMeansCenters(returnNodes, inputsByNode);
+
+                ISOMInput[][] nextInputsByNode = GetInputsByNode(returnNodes, inputs);
+
+                if (IsSame(inputsByNode, nextInputsByNode))
+                {
+                    break;
+                }
+
+                inputsByNode = nextInputsByNode;
+            }
+
+            //NOTE: The only time empty nodes should occur is if there are duplicate inputs
+            SOMResult retVal = new SOMResult(returnNodes, inputsByNode, true);
+            retVal = RemoveZeroNodes(retVal);
+            return retVal;
+        }
+
+        private static void GetInitialKMeansNodes(out SOMNode[] returnNodes, out ISOMInput[][] inputsByNode, int numNodes, ISOMInput[] inputs)
+        {
+            // Can't have more nodes than inputs
+            numNodes = Math.Min(numNodes, inputs.Length);
+
+            List<ISOMInput>[] lists = Enumerable.Range(0, numNodes).
+                Select(o => new List<ISOMInput>()).
+                ToArray();
+
+            // Randomly assign inputs to nodes
+            //NOTE: K-Means requires that all nodes contain inputs
+            int listIndex = 0;
+            foreach (int inputIndex in UtilityCore.RandomRange(0, inputs.Length))
+            {
+                lists[listIndex].Add(inputs[inputIndex]);
+
+                listIndex++;
+                if (listIndex >= numNodes)
+                {
+                    listIndex = 0;
+                }
+            }
+
+            // Build final arrays
+            returnNodes = Enumerable.Range(0, numNodes).
+                Select(o => new SOMNode()).
+                ToArray();
+
+            inputsByNode = lists.
+                Select(o => o.ToArray()).
+                ToArray();
+
+            // Set each node's center equal to the center of the inputs
+            AdjustKMeansCenters(returnNodes, inputsByNode);
+        }
+
+        private static void AdjustKMeansCenters(SOMNode[] nodes, ISOMInput[][] inputsByNode)
+        {
+            if (nodes.Length != inputsByNode.Length)
+            {
+                throw new ArgumentException("Arrays must be the same size");
+            }
+
+            for (int cntr = 0; cntr < nodes.Length; cntr++)
+            {
+                if (inputsByNode[cntr].Length == 0)
+                {
+                    // This happened when there were a bunch of identical images.  Otherwise, it should never happen
+                    //throw new ArgumentException("Must have inputs for every node");
+                    continue;
+                }
+
+                nodes[cntr].Weights = MathND.GetCenter(inputsByNode[cntr].Select(o => o.Weights));
+            }
+        }
+
+        private static bool IsSame(ISOMInput[][] inputsByNode1, ISOMInput[][] inputsByNode2)
+        {
+            if (inputsByNode1 == null && inputsByNode2 == null)
+            {
+                return true;
+            }
+            else if (inputsByNode1 == null || inputsByNode2 == null)
+            {
+                return false;
+            }
+
+            if (inputsByNode1.Length != inputsByNode2.Length)
+            {
+                return false;
+            }
+
+            for (int cntr = 0; cntr < inputsByNode1.Length; cntr++)
+            {
+                if (!IsSame(inputsByNode1[cntr], inputsByNode2[cntr]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        private static bool IsSame(ISOMInput[] inputs1, ISOMInput[] inputs2)
+        {
+            if (inputs1 == null && inputs2 == null)
+            {
+                return true;
+            }
+            else if (inputs1 == null || inputs2 == null)
+            {
+                return false;
+            }
+
+            if (inputs1.Length != inputs2.Length)
+            {
+                return false;
+            }
+
+            for (int cntr = 0; cntr < inputs1.Length; cntr++)
+            {
+                if (!IsSame(inputs1[cntr], inputs2[cntr]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        private static bool IsSame(ISOMInput input1, ISOMInput input2)
+        {
+            if (input1 == null && input2 == null)
+            {
+                return true;
+            }
+            else if (input1 == null || input2 == null)
+            {
+                return false;
+            }
+
+            return IsSame(input1.Weights, input2.Weights);
+        }
+        private static bool IsSame(double[] arr1, double[] arr2)
+        {
+            if (arr1 == null && arr2 == null)
+            {
+                return true;
+            }
+            else if (arr1 == null || arr2 == null)
+            {
+                return false;
+            }
+
+            if (arr1.Length != arr2.Length)
+            {
+                return false;
+            }
+
+            for (int cntr = 0; cntr < arr1.Length; cntr++)
+            {
+                //NOTE: Not using Math1D.IsNearValue, because this method wants exact equality
+                if (arr1[cntr] != arr2[cntr])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+        #region Private Methods
 
         /// <summary>
         /// This gets the bounding box of all the input values, then creates random vectors within that box
@@ -423,40 +809,16 @@ namespace Game.HelperClassesAI
             return retVal.ToArray();
         }
 
-        /// <summary>
-        /// This does a new SOM for one node (sort of like recursing on a node)
-        /// </summary>
-        /// <param name="index">The node to break apart</param>
-        private static Tuple<bool, SOMNode[]> SplitNode(int index, SOMResult result, int minNodeItemsForSplit, double maxSpreadPercent, double totalSpread, SOMRules rules)
+        private static void InjectNodePositions2D(SOMNode[] nodes)
         {
-            ISOMInput[] inputs = result.InputsByNode[index];
-
-            // Don't split if there aren't enough inputs in the parent
-            if (inputs.Length < minNodeItemsForSplit)
-            {
-                return Tuple.Create(false, new[] { result.Nodes[index] });
-            }
-
-            // See how this node's distances from the average compare with the total
-            double nodeSpread = GetTotalSpread(inputs.Select(o => o.Weights));
-            double percentSpread = nodeSpread / totalSpread;
-
-            if (percentSpread < maxSpreadPercent)
-            {
-                return Tuple.Create(false, new[] { result.Nodes[index] });
-            }
-
-            // Get random node weights.  Don't let any of those weights be closer to other nodes than this node
-            double[][] weights = GetRandomWeights_InsideCell(rules.NumNodes, inputs, result.Nodes, index);
-
-            SOMNode[] nodes = Enumerable.Range(0, rules.NumNodes).
-                Select(o => new SOMNode() { Weights = weights[o] }).
+            double[][] positions = Math3D.GetRandomVectors_Circular_EvenDist(nodes.Length, 1).
+                Select(o => new[] { o.X, o.Y }).
                 ToArray();
 
-            // Split up this node
-            SOMResult subResult = TrainSOM(nodes, inputs, rules, false);
-
-            return Tuple.Create(true, subResult.Nodes);
+            for (int cntr = 0; cntr < nodes.Length; cntr++)
+            {
+                nodes[cntr].Position = positions[cntr];
+            }
         }
 
         /// <summary>
@@ -482,101 +844,6 @@ namespace Game.HelperClassesAI
         }
 
         /// <summary>
-        /// If two nodes are too close to each other, they get merged into one
-        /// </summary>
-        private static bool MergeTouchingNodes(ref SOMResult result, Tuple<int, int, double>[] distances, double minDist = .01)
-        {
-            // Find touching
-            var touching = distances.
-                Where(o => o.Item3 < minDist).
-                ToArray();
-
-            if (touching.Length == 0)
-            {
-                return false;
-            }
-
-            #region Merge key pairs
-
-            // There could be several pairs that need to be joined.  ex:
-            //      {0,2} {0,3} {2,5}       ->      {0,2,3,5}
-            //      {1,6}       ->      {1,6}
-
-            List<List<int>> sets = new List<List<int>>();
-
-            foreach (var pair in touching)
-            {
-                List<int> existing = sets.FirstOrDefault(o => o.Contains(pair.Item1) || o.Contains(pair.Item2));
-                if (existing == null)
-                {
-                    existing = new List<int>();
-                    existing.Add(pair.Item1);
-                    existing.Add(pair.Item2);
-                    sets.Add(existing);
-                }
-                else
-                {
-                    if (!existing.Contains(pair.Item1))
-                    {
-                        existing.Add(pair.Item1);
-                    }
-                    else if (!existing.Contains(pair.Item2))     // if it didn't contain 1, then it matched on 2, so no need to look for 2
-                    {
-                        existing.Add(pair.Item2);
-                    }
-                }
-            }
-
-            #endregion
-            #region Singular sets
-
-            // Identify stand alone nodes, and add their index to the sets list (makes the next section easier to implement)
-
-            for (int cntr = 0; cntr < result.Nodes.Length; cntr++)
-            {
-                if (!sets.Any(o => o.Contains(cntr)))
-                {
-                    List<int> singleSet = new List<int>();
-                    singleSet.Add(cntr);
-                    sets.Add(singleSet);
-                }
-            }
-
-            #endregion
-            #region Merge nodes
-
-            List<SOMNode> newNodes = new List<SOMNode>();
-            List<ISOMInput[]> newImagesByNode = new List<ISOMInput[]>();
-
-            foreach (List<int> set in sets)
-            {
-                // Just use the first node (no need to take the average of weights since they're nearly identical, and taking the average position
-                // doesn't add any value - later methods will move the node positions around anyway)
-                newNodes.Add(result.Nodes[set[0]]);
-
-                if (set.Count == 1)
-                {
-                    newImagesByNode.Add(result.InputsByNode[set[0]]);
-                }
-                else
-                {
-                    List<ISOMInput> mergedInputs = new List<ISOMInput>();
-                    foreach (int index in set)
-                    {
-                        mergedInputs.AddRange(result.InputsByNode[index]);
-                    }
-
-                    newImagesByNode.Add(mergedInputs.ToArray());
-                }
-            }
-
-            #endregion
-
-            result = new SOMResult(newNodes.ToArray(), newImagesByNode.ToArray(), result.IncludesEmptyNodes);
-            return true;
-        }
-
-        /// <summary>
         /// This returns which inputs belong to which node (which node it's closest to)
         /// </summary>
         private static ISOMInput[][] GetInputsByNode(SOMNode[] nodes, ISOMInput[] inputs)
@@ -596,51 +863,6 @@ namespace Game.HelperClassesAI
                 ToArray();
         }
 
-        /// <summary>
-        /// Remove nodes that don't have any inputs
-        /// </summary>
-        private static SOMResult RemoveZeroNodes(SOMResult result)
-        {
-            List<SOMNode> subNodes = new List<SOMNode>();
-            List<ISOMInput[]> subImagesByNode = new List<ISOMInput[]>();
-
-            for (int cntr = 0; cntr < result.Nodes.Length; cntr++)
-            {
-                if (result.InputsByNode[cntr].Length == 0)
-                {
-                    continue;
-                }
-
-                subNodes.Add(result.Nodes[cntr]);
-                subImagesByNode.Add(result.InputsByNode[cntr]);
-            }
-
-            return new SOMResult(subNodes.ToArray(), subImagesByNode.ToArray(), false);
-        }
-
-        private static void InjectNodePositions2D(SOMNode[] nodes)
-        {
-            double[][] positions = Math3D.GetRandomVectors_Circular_EvenDist(nodes.Length, 1).
-                Select(o => new[] { o.X, o.Y }).
-                ToArray();
-
-            for (int cntr = 0; cntr < nodes.Length; cntr++)
-            {
-                nodes[cntr].Position = positions[cntr];
-            }
-        }
-
-        private static double GetMapRadius(SOMNode[] nodes)
-        {
-            var aabb = MathND.GetAABB(nodes.Select(o => o.Weights));
-
-            // Get half the diagonal
-            double diagRadius = MathND.GetDistance(aabb.Item1, aabb.Item2) / 2d;
-
-            // Divide by sqrt to get the radius instead of diagonal radius
-            return diagRadius / Math.Sqrt(aabb.Item1.Length);
-        }
-
         #endregion
     }
 
@@ -648,12 +870,13 @@ namespace Game.HelperClassesAI
 
     public class SOMRules
     {
-        public SOMRules(int numNodes, int numIterations, double initialRadiusPercent, double learningRate)
+        public SOMRules(int numNodes, int numIterations, double initialRadiusPercent, double learningRate, SOMAttractionFunction attractionFunction = SOMAttractionFunction.Guassian)
         {
             this.NumNodes = numNodes;
             this.NumIterations = numIterations;
             this.InitialRadiusPercent = initialRadiusPercent;
             this.LearningRate = learningRate;
+            this.AttractionFunction = attractionFunction;
         }
 
         /// <summary>
@@ -683,6 +906,17 @@ namespace Game.HelperClassesAI
         /// .1
         /// </summary>
         public readonly double LearningRate;
+        public readonly SOMAttractionFunction AttractionFunction;
+    }
+
+    #endregion
+    #region Enum: SOMAttractionFunction
+
+    public enum SOMAttractionFunction
+    {
+        Guassian_ORIG,
+        Guassian,
+        MexicanHat,
     }
 
     #endregion
@@ -708,7 +942,8 @@ namespace Game.HelperClassesAI
     #endregion
     #region Class: SOMNode
 
-    public class SOMNode
+    //NOTE: The use of a somnode isn't really an input, but a container of inputs.  But it has a Weights property, so could be passed to generic worker methods
+    public class SOMNode : ISOMInput
     {
         public readonly long Token = TokenGenerator.NextToken();
 

@@ -442,11 +442,6 @@ namespace Game.Newt.Testers.Encog
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            //TODO: Create a buble around what they clicked on.  Everything inside the bubble uses input instead of output
-            //the dots inside the bubble aren't affected by anything outside, but the dots outside do need to move out of the way
-        }
 
         private void Timer_Tick(object sender, EventArgs e)
         {

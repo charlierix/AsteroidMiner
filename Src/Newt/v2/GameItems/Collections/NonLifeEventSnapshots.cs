@@ -201,7 +201,7 @@ namespace Game.Newt.v2.GameItems.Collections
 
                     // Pull from long term then tentative
                     return UtilityCore.RandomRange(0, _longTermIndex + 1 + _tentativeBuffer.Count, count, randFunc).
-                        Select(o => 
+                        Select(o =>
                             {
                                 if (o <= _longTermIndex)
                                     return _longTermBuffer[o].Item;
@@ -212,6 +212,27 @@ namespace Game.Newt.v2.GameItems.Collections
 
                     #endregion
                 }
+            }
+        }
+        public Tuple<string, T>[] GetSamples()
+        {
+            lock (_lock)
+            {
+                var retVal = new List<Tuple<string, T>>();
+
+                if (_tentativeBuffer.Count > 0)
+                {
+                    retVal.AddRange(_tentativeBuffer.
+                        Select(o => Tuple.Create(string.Format("tentative {0}", (o.Percent ?? 1d).ToStringSignificantDigits(2)), o.Item)));
+                }
+
+                if (_longTermIndex >= 0)
+                {
+                    retVal.AddRange(Enumerable.Range(0, _longTermIndex + 1).
+                        Select(o => Tuple.Create("longterm", _longTermBuffer[o].Item)));
+                }
+
+                return retVal.ToArray();
             }
         }
 

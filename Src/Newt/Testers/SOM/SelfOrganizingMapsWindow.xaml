@@ -167,41 +167,67 @@
                                             <RowDefinition Height="auto"/>
                                             <RowDefinition Height="2"/>
                                             <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
                                         </Grid.RowDefinitions>
 
                                         <!-- Image Size -->
                                         <TextBlock Grid.Column="0" Grid.Row="0" Text="final width height" ToolTip="The width and height of the images (this squared will be the high dimension vector size)" Style="{StaticResource promptText}"/>
                                         <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkConvImageSize" Minimum="1" Maximum="15" Value="7" IsInteger="True" Style="{StaticResource slider}"/>
 
-                                        <!-- TODO: Convolution Type -->
+                                        <!-- Color -->
+                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="color" Style="{StaticResource promptText}"/>
+                                        <ComboBox Grid.Column="2" Grid.Row="2" Name="cboConvColor"/>
+
                                         <!-- None, Edge, HorzEdge, VertEdge -->
-                                        <TextBlock Grid.Column="0" Grid.Row="2" Text="image filter" Style="{StaticResource promptText}"/>
-                                        <ComboBox Grid.Column="2" Grid.Row="2" Name="cboConvImageFilter"/>
+                                        <TextBlock Grid.Column="0" Grid.Row="4" Text="image filter" Style="{StaticResource promptText}"/>
+                                        <ComboBox Grid.Column="2" Grid.Row="4" Name="cboConvImageFilter"/>
 
                                         <!-- Normalization Type -->
-                                        <TextBlock Grid.Column="0" Grid.Row="4" Text="normalization" Style="{StaticResource promptText}">
+                                        <TextBlock Grid.Column="0" Grid.Row="6" Text="normalization" Style="{StaticResource promptText}">
                                             <TextBlock.ToolTip>
                                                 <TextBlock>How to scale the input weights<LineBreak/>None: no scaling<LineBreak/>Normalize: each axis from -1 to 1<LineBreak/>Unit: vector length is 1</TextBlock>
                                             </TextBlock.ToolTip>
                                         </TextBlock>
-                                        <ComboBox Grid.Column="2" Grid.Row="4" Name="cboConvNormalization"/>
+                                        <ComboBox Grid.Column="2" Grid.Row="6" Name="cboConvNormalization"/>
 
                                         <!-- Axis Value (doesn't matter) -->
-                                        <TextBlock Visibility="Collapsed" Grid.Column="0" Grid.Row="6" Text="value" ToolTip="This is what to scale the value of the weights to" Style="{StaticResource promptText}"/>
-                                        <helpctrl:SliderShowValues Visibility="Collapsed" Grid.Column="2" Grid.Row="6" Name="trkConvValue" Minimum="1" Maximum="100" Value="1" Style="{StaticResource slider}"/>
+                                        <TextBlock Visibility="Collapsed" Grid.Column="0" Grid.Row="8" Text="value" ToolTip="This is what to scale the value of the weights to" Style="{StaticResource promptText}"/>
+                                        <helpctrl:SliderShowValues Visibility="Collapsed" Grid.Column="2" Grid.Row="8" Name="trkConvValue" Minimum="1" Maximum="100" Value="1" Style="{StaticResource slider}"/>
 
                                         <!-- Max spread % -->
-                                        <CheckBox Grid.Column="0" Grid.Row="8" Name="chkConvMaxSpreadPercent" Content="max spread %" Style="{StaticResource promptCheck}">
+                                        <CheckBox Grid.Column="0" Grid.Row="10" Name="chkConvMaxSpreadPercent" Content="max spread %" Style="{StaticResource promptCheck}">
                                             <CheckBox.ToolTip>
                                                 <TextBlock>Recurses on nodes if their range is too wide<LineBreak/>WARNING: This is still a bit flawed (choosing child node weights)</TextBlock>
                                             </CheckBox.ToolTip>
                                         </CheckBox>
-                                        <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkConvMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
+                                        <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="10" Name="trkConvMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
 
-                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="10" Name="chkRandomNodeColors" Content="Random node colors"/>
+                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="12" Name="chkRandomNodeColors" Content="Random node colors"/>
                                     </Grid>
 
                                     <Button Content="Group Convs" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="Convolution_Click"/>
+
+
+
+                                    <!-- K-Means -->
+                                    <!-- TODO: Make a radio button in the SOM Training section, and get rid of these custom controls -->
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto" SharedSizeGroup="convLeft"/>
+                                            <ColumnDefinition Width="4"/>
+                                            <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Column="0" Grid.Row="0" Text="# nodes" Style="{StaticResource promptText}"/>
+                                        <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkKMeansNumNodes" Minimum="1" Maximum="20" Value="5" IsInteger="True" Style="{StaticResource slider}"/>
+                                    </Grid>
+
+
+                                    <Button Content="K-Means" Style="{StaticResource goButton}" Click="KMeans_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
@@ -220,6 +246,8 @@
                                         <ColumnDefinition Width="1*"/>
                                     </Grid.ColumnDefinitions>
                                     <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
                                         <RowDefinition Height="auto"/>
                                         <RowDefinition Height="2"/>
                                         <RowDefinition Height="auto"/>
@@ -260,6 +288,14 @@
                                         </TextBlock.ToolTip>
                                     </TextBlock>
                                     <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkLearningRate" Minimum=".01" Maximum=".3" Value=".1" Style="{StaticResource slider}"/>
+
+                                    <!-- Attraction Function -->
+                                    <TextBlock Grid.Column="0" Grid.Row="10" Text="attraction" Style="{StaticResource promptText}">
+                                        <TextBlock.ToolTip>
+                                            <TextBlock>Attraction Function<LineBreak/>Guassian: Positive attration across all distances<LineBreak/>Mexican Hat: Positive attraction close up, negative farther away (this will keep nodes from clumping up)</TextBlock>
+                                        </TextBlock.ToolTip>
+                                    </TextBlock>
+                                    <ComboBox Grid.Column="2" Grid.Row="10" Name="cboAttraction"/>
                                 </Grid>
                             </Border>
                         </Expander>
@@ -274,6 +310,11 @@
 
                                     <CheckBox Name="chkPreviewSpread" Content="Spread" ToolTip="Show the spread of distances"/>
                                     <CheckBox Name="chkPreviewPerImageSpread" Content="Each image spread" ToolTip="How far the image is from the center (as a percent of that node's max distance)"/>
+
+                                    <Label Content="Visualizer" FontSize="14" FontWeight="600" Margin="0,8,0,0"/>
+                                    <CheckBox Name="chkVisualizer3D" Content="3D"/>
+                                    <CheckBox Name="chkVisualizerStaticDots" Content="Show control points"/>
+                                    <CheckBox Name="chkVisualizerShowHash" Content="Image Hash"/>
 
                                     <!--<RadioButton Content="2D"/>
                                     <RadioButton Content="3D"/>-->

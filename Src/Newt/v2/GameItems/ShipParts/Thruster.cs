@@ -250,7 +250,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 throw new ArgumentException("The class passed in must be ThrusterDNA");
             }
 
-            ThrusterDNA dnaCast = (ThrusterDNA)dna;
+            //ThrusterDNA dnaCast = (ThrusterDNA)dna;
 
             base.StoreDNA(dna);
 

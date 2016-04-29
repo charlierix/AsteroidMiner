@@ -2196,6 +2196,40 @@ namespace Game.HelperClassesWPF
             return false;
         }
 
+        public static Color ExtractColor(Brush brush)
+        {
+            if (brush is SolidColorBrush)
+            {
+                return ((SolidColorBrush)brush).Color;
+            }
+            else if (brush is GradientBrush)
+            {
+                GradientBrush brushCast = (GradientBrush)brush;
+
+                Color average = AverageColors(brushCast.GradientStops.Select(o => o.Color));
+
+                if (brushCast.Opacity.IsNearZero())
+                {
+                    return Color.FromArgb(0, average.R, average.G, average.B);
+                }
+                else if (brushCast.Opacity.IsNearValue(1))
+                {
+                    return average;
+                }
+                else
+                {
+                    double opacity = average.A / 255d;
+                    opacity *= brushCast.Opacity;
+
+                    return Color.FromArgb((opacity * 255d).ToByte_Round(), average.R, average.G, average.B);
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Unsupported brush type: " + brush.GetType().ToString());
+            }
+        }
+
         /// <summary>
         /// This returns the distance between the two hues
         /// </summary>
@@ -2395,16 +2429,12 @@ namespace Game.HelperClassesWPF
                 {
                     int offset = rowOffset + (columnCntr * pixelWidth);
 
-                    int gray = (grayColors[columnCntr + yOffset] * grayValueScale).ToInt_Round();
-                    if (gray < 0) gray = 0;
-                    if (gray > 255) gray = 255;
-
-                    byte grayByte = Convert.ToByte(gray);
+                    byte gray = (grayColors[columnCntr + yOffset] * grayValueScale).ToByte_Round();
 
                     pixels[offset + 3] = 255;
-                    pixels[offset + 2] = grayByte;
-                    pixels[offset + 1] = grayByte;
-                    pixels[offset + 0] = grayByte;
+                    pixels[offset + 2] = gray;
+                    pixels[offset + 1] = gray;
+                    pixels[offset + 0] = gray;
                 }
             }
 
@@ -2439,22 +2469,14 @@ namespace Game.HelperClassesWPF
                     int offset = rowOffset + (columnCntr * pixelWidth);
                     int xOffset = columnCntr * 3;
 
-                    int r = (rgbColors[yOffset + xOffset + 0] * colorValueScale).ToInt_Round();
-                    if (r < 0) r = 0;
-                    if (r > 255) r = 255;
-
-                    int g = (rgbColors[yOffset + xOffset + 1] * colorValueScale).ToInt_Round();
-                    if (g < 0) g = 0;
-                    if (g > 255) g = 255;
-
-                    int b = (rgbColors[yOffset + xOffset + 2] * colorValueScale).ToInt_Round();
-                    if (b < 0) b = 0;
-                    if (b > 255) b = 255;
+                    byte r = (rgbColors[yOffset + xOffset + 0] * colorValueScale).ToByte_Round();
+                    byte g = (rgbColors[yOffset + xOffset + 1] * colorValueScale).ToByte_Round();
+                    byte b = (rgbColors[yOffset + xOffset + 2] * colorValueScale).ToByte_Round();
 
                     pixels[offset + 3] = 255;
-                    pixels[offset + 2] = Convert.ToByte(r);
-                    pixels[offset + 1] = Convert.ToByte(g);
-                    pixels[offset + 0] = Convert.ToByte(b);
+                    pixels[offset + 2] = r;
+                    pixels[offset + 1] = g;
+                    pixels[offset + 0] = b;
                 }
             }
 
@@ -2689,7 +2711,13 @@ namespace Game.HelperClassesWPF
         public static Convolution2D ConvertToConvolution(BitmapSource bitmap, double scaleTo = 255d, string description = "")
         {
             // This got tedious to write, so I made a simpler method around it
-            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).ToConvolution(scaleTo, description);
+            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).
+                ToConvolution(scaleTo, description);
+        }
+        public static Tuple<Convolution2D, Convolution2D, Convolution2D> ConvertToConvolution_RGB(BitmapSource bitmap, double scaleTo = 255d, string description = "")
+        {
+            return ((BitmapCustomCachedBytes)ConvertToColorArray(bitmap, false, Colors.Transparent)).
+                ToConvolution_RGB(scaleTo, description);
         }
 
         /// <summary>
@@ -8014,6 +8042,38 @@ namespace Game.HelperClassesWPF
             }
 
             return new Convolution2D(values, _info.Width, _info.Height, false, description: description);
+        }
+        /// <summary>
+        /// This converts into three convolutions.  One of R, one of G, one of B
+        /// </summary>
+        public Tuple<Convolution2D, Convolution2D, Convolution2D> ToConvolution_RGB(double scaleTo, string description)
+        {
+            double[] r = new double[_info.Width * _info.Height];
+            double[] g = new double[_info.Width * _info.Height];
+            double[] b = new double[_info.Width * _info.Height];
+
+            double scale = scaleTo / 255d;
+
+            for (int y = 0; y < _info.Height; y++)
+            {
+                int yOffset = y * _info.Width;		// offset into the return array
+
+                for (int x = 0; x < _info.Width; x++)
+                {
+                    byte[] color = _info.GetColorBytes(x, y);
+
+                    double percent = color[0] / 255d;
+
+                    r[x + yOffset] = percent * color[1] * scale;
+                    g[x + yOffset] = percent * color[2] * scale;
+                    b[x + yOffset] = percent * color[3] * scale;
+                }
+            }
+
+            return Tuple.Create(
+                new Convolution2D(r, _info.Width, _info.Height, false, description: description),
+                new Convolution2D(g, _info.Width, _info.Height, false, description: description),
+                new Convolution2D(b, _info.Width, _info.Height, false, description: description));
         }
 
         #endregion
