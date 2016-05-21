@@ -12,6 +12,8 @@ namespace Game.Newt.v2.GameItems
     {
         long Token { get; }
 
+        bool IsDisposed { get; }
+
         /// <summary>
         /// This one could be null.  This would allow objects to be added to and managed by the map, but not be
         /// physics objects

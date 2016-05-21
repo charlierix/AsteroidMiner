@@ -500,6 +500,58 @@ namespace Game.Newt.v2.GameItems
             _desiredPoint = null;
         }
 
+        public static Vector3D? GetForce(ChasePoint_GetForceArgs args, IEnumerable<ChasePoint_Force> workers, double percent = 1d, double? maxForce = null, double? maxAcceleration = null)
+        {
+            Vector3D? retVal = null;
+
+            // Call each worker
+            foreach (var worker in workers)
+            {
+                Vector3D? localForce = worker.GetForce(args);
+
+                if (localForce != null)
+                {
+                    if (retVal == null)
+                    {
+                        retVal = localForce;
+                    }
+                    else
+                    {
+                        retVal = retVal.Value + localForce.Value;
+                    }
+                }
+            }
+
+            if (retVal != null)
+            {
+                retVal = retVal.Value * percent;
+            }
+
+            // Apply the force
+            if (retVal != null && !retVal.Value.IsNearZero())
+            {
+                // Limit if exceeds this.MaxForce
+                if (maxForce != null && retVal.Value.LengthSquared > maxForce.Value * maxForce.Value)
+                {
+                    retVal = retVal.Value.ToUnit(false) * maxForce.Value;
+                }
+
+                // Limit acceleration
+                if (maxAcceleration != null)
+                {
+                    //f=ma
+                    double accel = retVal.Value.Length / args.ItemMass;
+
+                    if (accel > maxAcceleration.Value)
+                    {
+                        retVal = retVal.Value.ToUnit(false) * (maxAcceleration.Value * args.ItemMass);
+                    }
+                }
+            }
+
+            return retVal;
+        }
+
         #endregion
 
         #region Event Listeners
@@ -517,56 +569,10 @@ namespace Game.Newt.v2.GameItems
 
             ChasePoint_GetForceArgs args = new ChasePoint_GetForceArgs(this.Item, _desiredPoint.Value - current);
 
-            Vector3D? force = null;
+            Vector3D? force = GetForce(args, this.Forces, this.Percent, this.MaxForce, this.MaxAcceleration);
 
-            // Call each worker
-            foreach (var worker in this.Forces)
-            {
-                Vector3D? localForce = worker.GetForce(args);
-
-                if (localForce != null)
-                {
-                    if (force == null)
-                    {
-                        force = localForce;
-                    }
-                    else
-                    {
-                        force = force.Value + localForce.Value;
-                    }
-                }
-            }
-
-            if(force != null)
-            {
-                force = force.Value * this.Percent;
-            }
-
-            // Apply the force
             if (force != null && !force.Value.IsNearZero())
             {
-                // Limit if exceeds this.MaxForce
-                if (this.MaxForce != null && force.Value.LengthSquared > this.MaxForce.Value * this.MaxForce.Value)
-                {
-                    force = force.Value.ToUnit(false) * this.MaxForce.Value;
-                }
-
-                // Limit acceleration
-                if (this.MaxAcceleration != null)
-                {
-                    double mass = Item.PhysicsBody.Mass;
-
-                    //f=ma
-                    double accel = force.Value.Length / mass;
-
-                    if (accel > this.MaxAcceleration.Value)
-                    {
-                        force = force.Value.ToUnit(false) * (this.MaxAcceleration.Value * mass);
-                    }
-                }
-
-                //force = force.Value * this.Percent;
-
                 if (_shouldCauseTorque)
                 {
                     e.Body.AddForceAtPoint(force.Value, current);

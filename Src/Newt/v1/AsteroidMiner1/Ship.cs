@@ -1221,8 +1221,8 @@ namespace Game.Newt.v1.AsteroidMiner1
                 swarmBot.NumClosestBotsToLookAt = numClosestBotsToLookAt;
                 swarmBot.VisionLimit = visionLimit;
 
-                swarmBot.Behavior = SwarmBot2.BehaviorType.Flocking_ChasePoint_AvoidKnownObsticles;
-                swarmBot.Obsticles.Add(_physicsBody);
+                swarmBot.Behavior = SwarmBot2.BehaviorType.Flocking_ChasePoint_AvoidKnownObstacles;
+                swarmBot.Obstacles.Add(_physicsBody);
 
                 swarmBot.CoreColor = _hullColor;
 

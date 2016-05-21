@@ -262,6 +262,8 @@ namespace Game.Newt.v2.Arcanorum
         {
             if (disposing)
             {
+                _isDisposed = true;
+
                 this.PhysicsBody.ApplyForceAndTorque -= new EventHandler<BodyApplyForceAndTorqueArgs>(Body_ApplyForceAndTorque);
 
                 if (_partsTask != null)
@@ -294,6 +296,15 @@ namespace Game.Newt.v2.Arcanorum
             get
             {
                 return this.PhysicsBody.Token;
+            }
+        }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDisposed || this.PhysicsBody.IsDisposed;
             }
         }
 

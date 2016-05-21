@@ -28,10 +28,12 @@ namespace Game.Newt.v2.GameItems
     //		- Thrusters that are blocked need to have an offset/reduction to where the force is applied (because the thrust is reflecting off that object)
 
     /// <summary>
-    /// NOTE: This was replaced by Bot -- keeping it around for a while, just in case
+    /// WARNING: This was replaced by Bot -- keeping it around for a while, just in case
     /// </summary>
     public class Ship : IDisposable, IMapObject, IPartUpdatable
     {
+        //DO NOT USE!!!!!  Replaced by Bot
+
         #region Class: VisualEffects
 
         public class VisualEffects
@@ -584,6 +586,8 @@ namespace Game.Newt.v2.GameItems
         {
             if (disposing)
             {
+                _isDisposed = true;
+
                 if (_parts != null)
                 {
                     if (_linkBucket != null)
@@ -629,6 +633,15 @@ namespace Game.Newt.v2.GameItems
             get
             {
                 return this.PhysicsBody.Token;
+            }
+        }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDisposed || this.PhysicsBody.IsDisposed;
             }
         }
 

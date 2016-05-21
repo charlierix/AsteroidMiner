@@ -121,7 +121,8 @@ namespace Game.HelperClassesWPF
         {
             AllPoints,
             ClosestToRayOrigin,
-            ClosestToRay
+            ClosestToRay,
+            AlongRayDirection,
         }
 
         #endregion
@@ -6421,11 +6422,11 @@ namespace Game.HelperClassesWPF
             switch (returnWhich)
             {
                 case RayCastReturn.ClosestToRay:
-                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref circlePoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_CircleLine(ref circlePoints, ref linePoints, pointOnLine);
                     break;
 
                 case RayCastReturn.ClosestToRayOrigin:
-                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref circlePoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_RayOrigin(ref circlePoints, ref linePoints, pointOnLine);
                     break;
 
                 default:
@@ -6508,9 +6509,9 @@ namespace Game.HelperClassesWPF
                 LineDirection = lineDirection
             };
 
-            CirclePlaneIntersectProps intersectArgs = GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(args, nearestLinePoint.Value, nearestLine, nearestDistance);
+            CirclePlaneIntersectProps intersectArgs = GetClosestPointsBetweenLineCylinder_PlaneIntersect(args, nearestLinePoint.Value, nearestLine, nearestDistance);
 
-            GetClosestPointsBetweenLineCylinderSprtFinish(out cylinderPoints, out linePoints, args, intersectArgs);
+            GetClosestPointsBetweenLineCylinder_Finish(out cylinderPoints, out linePoints, args, intersectArgs);
 
             switch (returnWhich)
             {
@@ -6519,11 +6520,11 @@ namespace Game.HelperClassesWPF
                     break;
 
                 case RayCastReturn.ClosestToRay:
-                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref cylinderPoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_CircleLine(ref cylinderPoints, ref linePoints, pointOnLine);
                     break;
 
                 case RayCastReturn.ClosestToRayOrigin:
-                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref cylinderPoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_RayOrigin(ref cylinderPoints, ref linePoints, pointOnLine);
                     break;
 
                 default:
@@ -6551,7 +6552,7 @@ namespace Game.HelperClassesWPF
 
             // The rest of this function is for a line intersect inside the sphere (there's always two intersect points)
 
-            // Make a plane that the circle sits in (this is used by code shared with the circel/line intersect)
+            // Make a plane that the circle sits in (this is used by code shared with the circle/line intersect)
             //NOTE: The plane is oriented along the shortest path line
             Vector3D circlePlaneLine1 = Math1D.IsNearZero(nearestDistance) ? new Vector3D(1, 0, 0) : nearestLine;
             Vector3D circlePlaneLine2 = lineDirection;
@@ -6586,11 +6587,15 @@ namespace Game.HelperClassesWPF
                     break;
 
                 case RayCastReturn.ClosestToRay:
-                    GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref spherePoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_CircleLine(ref spherePoints, ref linePoints, pointOnLine);
                     break;
 
                 case RayCastReturn.ClosestToRayOrigin:
-                    GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref spherePoints, ref linePoints, pointOnLine);
+                    GetClosestPointsBetweenLineCircle_Closest_RayOrigin(ref spherePoints, ref linePoints, pointOnLine);
+                    break;
+
+                case RayCastReturn.AlongRayDirection:
+                    GetClosestPointsBetweenLineCircle_Closest_RayDirection(ref spherePoints, ref linePoints, pointOnLine, lineDirection);
                     break;
 
                 default:
@@ -8569,25 +8574,25 @@ namespace Game.HelperClassesWPF
             double dot = Vector3D.DotProduct(args.CirclePlane.NormalUnit, args.LineDirection.ToUnit());
             if (Math1D.IsNearValue(Math.Abs(dot), 1d))
             {
-                return GetClosestPointsBetweenLineCircleSprtPerpendicular(out circlePoints, out linePoints, args);
+                return GetClosestPointsBetweenLineCircle_Perpendicular(out circlePoints, out linePoints, args);
             }
 
             // Project the line onto the circle's plane
-            CirclePlaneIntersectProps planeIntersect = GetClosestPointsBetweenLineCircleSprtPlaneIntersect(args);
+            CirclePlaneIntersectProps planeIntersect = GetClosestPointsBetweenLineCircle_PlaneIntersect(args);
 
             // There's less to do if the line is parallel
             if (Math1D.IsNearZero(dot))
             {
-                GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
+                GetClosestPointsBetweenLineCircle_Parallel(out circlePoints, out linePoints, args, planeIntersect);
             }
             else
             {
-                GetClosestPointsBetweenLineCircleSprtOther(out circlePoints, out linePoints, args, planeIntersect);
+                GetClosestPointsBetweenLineCircle_Other(out circlePoints, out linePoints, args, planeIntersect);
             }
 
             return true;
         }
-        private static bool GetClosestPointsBetweenLineCircleSprtPerpendicular(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
+        private static bool GetClosestPointsBetweenLineCircle_Perpendicular(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args)
         {
             Point3D planeIntersect = GetClosestPoint_Line_Point(args.PointOnLine, args.LineDirection, args.CircleCenter);
 
@@ -8602,7 +8607,7 @@ namespace Game.HelperClassesWPF
             GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints, out linePoints, args, planeIntersect);
             return true;
         }
-        private static void GetClosestPointsBetweenLineCircleSprtParallel(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
+        private static void GetClosestPointsBetweenLineCircle_Parallel(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
         {
             if (planeIntersect.IsInsideCircle)
             {
@@ -8614,13 +8619,13 @@ namespace Game.HelperClassesWPF
                 linePoints = new Point3D[] { GetClosestPoint_Line_Point(args.PointOnLine, args.LineDirection, circlePoints[0]) };
             }
         }
-        private static void GetClosestPointsBetweenLineCircleSprtOther(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
+        private static void GetClosestPointsBetweenLineCircle_Other(out Point3D[] circlePoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps planeIntersect)
         {
             // See where the line intersects the circle's plane
             Point3D? lineIntersect = GetIntersection_Plane_Line(args.CirclePlane, args.PointOnLine, args.LineDirection);
             if (lineIntersect == null)		// this should never happen, since an IsParallel check was already done (but one might be stricter than the other)
             {
-                GetClosestPointsBetweenLineCircleSprtParallel(out circlePoints, out linePoints, args, planeIntersect);
+                GetClosestPointsBetweenLineCircle_Parallel(out circlePoints, out linePoints, args, planeIntersect);
                 return;
             }
 
@@ -8642,7 +8647,7 @@ namespace Game.HelperClassesWPF
                 Point3D[] linePoints2;
                 GetClosestPointsBetweenLineCircleSprtInsidePerps(out circlePoints2, out linePoints2, args, planeIntersect);
 
-                GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints1, linePoints1, circlePoints2, linePoints2);
+                GetClosestPointsBetweenLineCircle_Other_Min(out circlePoints, out linePoints, circlePoints1, linePoints1, circlePoints2, linePoints2);
 
                 #endregion
             }
@@ -8664,12 +8669,12 @@ namespace Game.HelperClassesWPF
                 Point3D[] linePoints4;
                 GetClosestPointsBetweenLineCircleSprtCenterToPlaneIntersect(out circlePoints4, out linePoints4, args, planeIntersect.NearestToCenter);
 
-                GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out circlePoints, out linePoints, circlePoints3, linePoints3, circlePoints4, linePoints4);
+                GetClosestPointsBetweenLineCircle_Other_Min(out circlePoints, out linePoints, circlePoints3, linePoints3, circlePoints4, linePoints4);
 
                 #endregion
             }
         }
-        private static void GetClosestPointsBetweenLineCircleSprtOtherSprtMin(out Point3D[] circlePoints, out Point3D[] linePoints, Point3D[] circlePoints1, Point3D[] linePoints1, Point3D[] circlePoints2, Point3D[] linePoints2)
+        private static void GetClosestPointsBetweenLineCircle_Other_Min(out Point3D[] circlePoints, out Point3D[] linePoints, Point3D[] circlePoints1, Point3D[] linePoints1, Point3D[] circlePoints2, Point3D[] linePoints2)
         {
             List<Point3D> circlePointList = new List<Point3D>();
             List<Point3D> linePointList = new List<Point3D>();
@@ -8729,7 +8734,7 @@ namespace Game.HelperClassesWPF
             circlePoints = circlePointList.ToArray();
             linePoints = linePointList.ToArray();
         }
-        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCircleSprtPlaneIntersect(CircleLineArgs args)
+        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCircle_PlaneIntersect(CircleLineArgs args)
         {
             CirclePlaneIntersectProps retVal;
 
@@ -8799,9 +8804,9 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
-        /// This one returns the one that is closest to pointOnLine
+        /// This returns the one that is closest to pointOnLine
         /// </summary>
-        private static void GetClosestPointsBetweenLineCircleSprtClosest_RayOrigin(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
+        private static void GetClosestPointsBetweenLineCircle_Closest_RayOrigin(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
         {
             #region Find closest point
 
@@ -8832,9 +8837,9 @@ namespace Game.HelperClassesWPF
             linePoints = new Point3D[] { linePoints[minIndex] };
         }
         /// <summary>
-        /// This one returns the one that is closest between the two hits
+        /// This returns the one that is closest between the two hits
         /// </summary>
-        private static void GetClosestPointsBetweenLineCircleSprtClosest_CircleLine(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
+        private static void GetClosestPointsBetweenLineCircle_Closest_CircleLine(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin)
         {
             #region Find closest point
 
@@ -8871,11 +8876,32 @@ namespace Game.HelperClassesWPF
             circlePoints = new Point3D[] { circlePoints[minIndex] };
             linePoints = new Point3D[] { linePoints[minIndex] };
         }
+        /// <summary>
+        /// This returns the points that are along the direction of the ray
+        /// </summary>
+        private static void GetClosestPointsBetweenLineCircle_Closest_RayDirection(ref Point3D[] circlePoints, ref Point3D[] linePoints, Point3D rayOrigin, Vector3D rayDirection)
+        {
+            List<Point3D> circleReturn = new List<Point3D>();
+            List<Point3D> lineReturn = new List<Point3D>();
+
+            for (int cntr = 0; cntr < circlePoints.Length; cntr++)
+            {
+                Vector3D testDirection = circlePoints[cntr] - rayOrigin;
+                if (Vector3D.DotProduct(testDirection, rayDirection) > 0)
+                {
+                    circleReturn.Add(circlePoints[cntr]);
+                    lineReturn.Add(linePoints[cntr]);
+                }
+            }
+
+            circlePoints = circleReturn.ToArray();
+            linePoints = lineReturn.ToArray();
+        }
 
         #endregion
         #region Cylinder/Line Intersect Helpers
 
-        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCylinderSprtPlaneIntersect(CircleLineArgs args, Point3D nearestLinePoint, Vector3D nearestLine, double nearestLineDistance)
+        private static CirclePlaneIntersectProps GetClosestPointsBetweenLineCylinder_PlaneIntersect(CircleLineArgs args, Point3D nearestLinePoint, Vector3D nearestLine, double nearestLineDistance)
         {
             //NOTE: This is nearly identical to GetClosestPointsBetweenLineCircleSprtPlaneIntersect, but since some stuff was already done,
             // it's more just filling out the struct
@@ -8902,7 +8928,7 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
-        private static void GetClosestPointsBetweenLineCylinderSprtFinish(out Point3D[] cylinderPoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps intersectArgs)
+        private static void GetClosestPointsBetweenLineCylinder_Finish(out Point3D[] cylinderPoints, out Point3D[] linePoints, CircleLineArgs args, CirclePlaneIntersectProps intersectArgs)
         {
             // Get the circle intersects
             Point3D[] circlePoints2D, linePoints2D;

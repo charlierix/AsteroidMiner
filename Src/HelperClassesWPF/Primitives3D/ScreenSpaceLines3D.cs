@@ -68,7 +68,7 @@ namespace Game.HelperClassesWPF.Primitives3D
         }
 
         /// <summary>
-        /// NOTE:  Setting autoUpdate to true is VERY expensive.  It will make animations choppy.  Instead, set it to false,
+        /// NOTE:  Setting autoUpdate to true is expensive.  It will make animations choppy.  Instead, set it to false,
         /// and call CalculateGeometry whenever your camera moves.
         /// </summary>
         public ScreenSpaceLines3D(bool autoUpdate)

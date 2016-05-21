@@ -167,6 +167,8 @@ namespace Game.Newt.v2.NewtonDynamics
         {
             if (disposing)// && _handle != IntPtr.Zero)
             {
+                _isDisposed = true;
+
                 if (this.Disposing != null)
                 {
                     this.Disposing(this, new EventArgs());
@@ -261,6 +263,9 @@ namespace Game.Newt.v2.NewtonDynamics
             get;
             private set;
         }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed { get { return _isDisposed; } }      //auto implemented properties don't add a memory barrier, so need a volatile
 
         /// <summary>
         /// NOTE:  You can swap out hulls, but newton will dispose the old hull if nothing else is pointing to it.  Then ObjectStorage will be out of sync

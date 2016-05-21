@@ -366,6 +366,24 @@ namespace Game.HelperClassesCore
             }
         }
 
+        public static IEnumerable<T> RemoveWhere<T>(this IList<T> list, Func<T, bool> constraint)
+        {
+            int index = 0;
+
+            while (index < list.Count)
+            {
+                if (constraint(list[index]))
+                {
+                    yield return list[index];
+                    list.RemoveAt(index);
+                }
+                else
+                {
+                    index++;
+                }
+            }
+        }
+
         #endregion
 
         #region SortedList

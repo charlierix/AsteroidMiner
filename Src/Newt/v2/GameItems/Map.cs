@@ -634,6 +634,14 @@ namespace Game.Newt.v2.GameItems
             return nullT;
         }
 
+        public void Clear()
+        {
+            foreach (IMapObject item in GetAllItems().ToArray())
+            {
+                RemoveItem(item);
+            }
+        }
+
         /// <summary>
         /// This gives a dump of all the object the map knows about
         /// WARNING: If there are multiple threads, the items returned could be disposed
@@ -647,6 +655,11 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())        // this is also working against an array, so items could be added/removed from the node, and this foreach won't see those changes
                 {
+                    if(item.IsDisposed)
+                    {
+                        continue;
+                    }
+
                     yield return item;
                 }
             }
@@ -664,6 +677,11 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())     // GetItemsSnapshot returns an array.  So a thread could change the node, but the foreach will be working against the array that was returned
                 {
+                    if (item.IsDisposed)
+                    {
+                        continue;
+                    }
+
                     yield return (T)item;
                 }
             }
@@ -674,6 +692,11 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())     // GetItemsSnapshot returns an array.  So a thread could change the node, but the foreach will be working against the array that was returned
                 {
+                    if (item.IsDisposed)
+                    {
+                        continue;
+                    }
+
                     yield return item;
                 }
             }
@@ -907,6 +930,11 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())
                 {
+                    if(item.IsDisposed)
+                    {
+                        continue;
+                    }
+
                     if (item.PhysicsBody != null && item.PhysicsBody.Equals(physicsBody))
                     {
                         return item;
@@ -922,6 +950,11 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())
                 {
+                    if(item.IsDisposed)
+                    {
+                        continue;
+                    }
+
                     if (item.PhysicsBody != null && item.PhysicsBody.Token == token)
                     {
                         return item;
@@ -1715,7 +1748,7 @@ namespace Game.Newt.v2.GameItems
 
             if (this.Items != null)
             {
-                retVal.AddRange(this.Items);
+                retVal.AddRange(this.Items.Where(o => !o.IsDisposed));
             }
 
             if (this.HasChildren)
@@ -1950,6 +1983,21 @@ namespace Game.Newt.v2.GameItems
 
         public readonly Point3D AABBMin;
         public readonly Point3D AABBMax;
+
+        public bool IsDisposed
+        {
+            get
+            {
+                if (this.MapObject != null)
+                {
+                    return this.MapObject.IsDisposed;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
     }
 
     #endregion

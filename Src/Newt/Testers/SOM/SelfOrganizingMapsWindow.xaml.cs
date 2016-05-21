@@ -276,7 +276,7 @@ namespace Game.Newt.Testers.SOM
             {
                 cboConvColor.Items.Add(color);
             }
-            cboConvColor.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<NodeWeightColor>(), NodeWeightColor.Color);
+            cboConvColor.SelectedIndex = Array.IndexOf(UtilityCore.GetEnums<NodeWeightColor>(), NodeWeightColor.BlackWhite);
 
             #endregion
             #region cboConvNormalization
@@ -447,6 +447,7 @@ namespace Game.Newt.Testers.SOM
                     Height = 400,
                     Title = this.Title + " " + images.Length.ToString(),
                     Background = brush,
+                    ResizeMode = ResizeMode.CanResizeWithGrip,
                     Content = visualizer,
                     Owner = this,       // keep it on top of this window
                 };

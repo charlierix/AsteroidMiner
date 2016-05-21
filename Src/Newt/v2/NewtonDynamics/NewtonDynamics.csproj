@@ -97,6 +97,7 @@
     <Compile Include="World.cs" />
     <Compile Include="MathPrimitives.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WorldClock.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Import\dJointLibrary.dll">

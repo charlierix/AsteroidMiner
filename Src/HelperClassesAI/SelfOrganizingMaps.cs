@@ -907,6 +907,17 @@ namespace Game.HelperClassesAI
         /// </summary>
         public readonly double LearningRate;
         public readonly SOMAttractionFunction AttractionFunction;
+
+        public static SOMRules GetRandomRules()
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            return new SOMRules(
+                rand.Next(15, 50),
+                rand.Next(2000, 5000),
+                rand.NextDouble(.2, .4),
+                rand.NextDouble(.05, .15));
+        }
     }
 
     #endregion

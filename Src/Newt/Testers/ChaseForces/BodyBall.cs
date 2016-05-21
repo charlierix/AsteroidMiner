@@ -45,6 +45,14 @@ namespace Game.Newt.Testers.ChaseForces
             }
         }
 
+        public bool IsDisposed
+        {
+            get
+            {
+                return this.PhysicsBody.IsDisposed;
+            }
+        }
+
         public Body PhysicsBody
         {
             get;

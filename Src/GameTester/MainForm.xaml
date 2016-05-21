@@ -187,6 +187,7 @@
                     <ListBoxItem Content="Asteroid Field" MouseUp="AsteroidField_MouseUp"/>
                     <ListBoxItem Content="Asteroid Miner 2D" Style="{StaticResource boldItem}" MouseUp="AstMiner2D_2_MouseUp"/>
                     <ListBoxItem Content="Missile Command 0D" MouseUp="MissileCommand0D_MouseUp"/>
+                    <ListBoxItem Content="Swarm Bots" MouseUp="SwarmBots2_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

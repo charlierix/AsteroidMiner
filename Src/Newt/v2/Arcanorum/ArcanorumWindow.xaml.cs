@@ -64,6 +64,14 @@ namespace Game.Newt.v2.Arcanorum
                 }
             }
 
+            public bool IsDisposed
+            {
+                get
+                {
+                    return this.PhysicsBody.IsDisposed;
+                }
+            }
+
             public Body PhysicsBody
             {
                 get;

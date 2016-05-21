@@ -166,6 +166,8 @@ namespace Game.Newt.v2.GameItems
         {
             if (disposing)
             {
+                _isDisposed = true;
+
                 if (_parts != null)
                 {
                     if (_linkBucket != null)
@@ -211,6 +213,15 @@ namespace Game.Newt.v2.GameItems
             get
             {
                 return this.PhysicsBody.Token;
+            }
+        }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDisposed || this.PhysicsBody.IsDisposed;
             }
         }
 

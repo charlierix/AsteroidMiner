@@ -931,7 +931,7 @@ namespace Game.Newt.v2.GameItems.MapParts
                 double inferredRadius = GetEllipsoidRadius(parentVolume);       // this returned radius is an average (treats volume like it came from a sphere)
                 double destroyedMass = getMassByRadius(inferredRadius, null);
 
-                if(destroyedMass.IsNearZero() || destroyedMass < 0)
+                if (destroyedMass.IsNearZero() || destroyedMass < 0)
                 {
                     return null;
                 }
@@ -1606,6 +1606,14 @@ namespace Game.Newt.v2.GameItems.MapParts
             get
             {
                 return this.PhysicsBody.Token;
+            }
+        }
+
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDestroying || _hitTracker.IsDestroying || this.PhysicsBody.IsDisposed;
             }
         }
 

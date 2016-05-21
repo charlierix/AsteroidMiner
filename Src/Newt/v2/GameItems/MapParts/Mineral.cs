@@ -78,6 +78,14 @@ namespace Game.Newt.v2.GameItems.MapParts
             }
         }
 
+        public bool IsDisposed
+        {
+            get
+            {
+                return this.PhysicsBody.IsDisposed;
+            }
+        }
+
         public Body PhysicsBody
         {
             get;

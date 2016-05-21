@@ -588,11 +588,7 @@ namespace Game.Newt.v2.GenePool
             {
                 _selectionLogic.UnselectItem();
 
-                foreach (IMapObject item in _map.GetAllItems().ToArray())
-                {
-                    //TODO: Map will blow up if the item is already removed, make it fail silently (have it return a bool)
-                    _map.RemoveItem(item);
-                }
+                _map.Clear();
 
                 foreach (Swimbot bot in _bots)
                 {

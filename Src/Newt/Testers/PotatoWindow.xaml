@@ -212,7 +212,7 @@
                         </Expander>
 
                         <!-- Asteroid Voronoi -->
-                        <Expander IsExpanded="True" Header="Asteroid Voronoi">
+                        <Expander IsExpanded="False" Header="Asteroid Voronoi">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <Button Name="btnNewAsteroid" Content="New Asteroid" Click="btnNewAsteroid_Click"/>

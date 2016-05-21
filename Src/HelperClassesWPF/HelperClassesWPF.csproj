@@ -88,6 +88,7 @@
     <Compile Include="BindingHelper.cs" />
     <Compile Include="CameraHelper.cs" />
     <Compile Include="Clipper\Clipper.cs" />
+    <Compile Include="Controls2D\BackgoundTiles.cs" />
     <Compile Include="Controls2D\OutlinedTextBlock.cs" />
     <Compile Include="Controls2D\GlassButton_Circle.xaml.cs">
       <DependentUpon>GlassButton_Circle.xaml</DependentUpon>

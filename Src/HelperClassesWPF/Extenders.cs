@@ -182,6 +182,11 @@ namespace Game.HelperClassesWPF
             return new Size3D(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));
         }
 
+        public static double[] ToArray(this Vector3D vector)
+        {
+            return new[] { vector.X, vector.Y, vector.Z };
+        }
+
         public static string ToString(this Vector3D vector, bool extensionsVersion)
         {
             return vector.X.ToString() + ", " + vector.Y.ToString() + ", " + vector.Z.ToString();
@@ -319,6 +324,11 @@ namespace Game.HelperClassesWPF
         public static Vector ToVector2D(this Point3D point)
         {
             return new Vector(point.X, point.Y);
+        }
+
+        public static double[] ToArray(this Point3D point)
+        {
+            return new[] { point.X, point.Y, point.Z };
         }
 
         public static string ToString(this Point3D point, bool extensionsVersion)

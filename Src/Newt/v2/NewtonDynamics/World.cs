@@ -120,6 +120,8 @@ namespace Game.Newt.v2.NewtonDynamics
             // Defaulting to this (it's the best overall choice)
             SetSolverModel(SolverModel.AdaptativeMode);
 
+            this.WorldClock = new WorldClock();
+
             if (useTimer)
             {
                 _timer = new DispatcherTimer();
@@ -177,6 +179,11 @@ namespace Game.Newt.v2.NewtonDynamics
                 return _inWorldUpdate;
             }
         }
+
+        /// <summary>
+        /// This can be passed to classes, so that can calculate intervals (sort of like calling DateTime.UTCNow)
+        /// </summary>
+        public readonly WorldClock WorldClock;
 
         #endregion
 
@@ -365,8 +372,11 @@ namespace Game.Newt.v2.NewtonDynamics
             double elapsedTime = _clock.Update();
             elapsedTime *= _simulationSpeed;
 
+            this.WorldClock.AddSeconds(elapsedTime);
+
             OnUpdate(elapsedTime);
 
+            #region FAIL
 
             // I'm not sure that all this does much good
 
@@ -405,6 +415,8 @@ namespace Game.Newt.v2.NewtonDynamics
             //{
             //    OnUpdate(elapsedTime);
             //}
+
+            #endregion
         }
 
         private void body_ApplyForceAndTorque(object sender, BodyApplyForceAndTorqueArgs e)

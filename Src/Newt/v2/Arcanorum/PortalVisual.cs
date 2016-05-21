@@ -71,6 +71,14 @@ namespace Game.Newt.v2.Arcanorum
             private set;
         }
 
+        public bool IsDisposed
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         public Body PhysicsBody
         {
             get

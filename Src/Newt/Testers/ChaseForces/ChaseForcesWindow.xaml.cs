@@ -228,8 +228,6 @@ namespace Game.Newt.Testers.ChaseForces
         {
             try
             {
-
-
                 // Chased ball
                 _chasedBall.Update(e.ElapsedTime);
 
@@ -239,7 +237,7 @@ namespace Game.Newt.Testers.ChaseForces
 
                 _chasedDirectionModel.SetPoints(_chasedBall.Position, _chasedBall.Position + _chasedBall.Direction.ToUnit() * 10);
 
-                // Chase Objects
+                // Chasing Objects
                 if (_object_LinearVelocity != null)
                 {
                     _object_LinearVelocity.SetPosition(_chasedBall.Position);

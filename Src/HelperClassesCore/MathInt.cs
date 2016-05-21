@@ -8,7 +8,7 @@ namespace Game.HelperClassesCore
 {
     #region Struct: VectorInt
 
-    public struct VectorInt
+    public struct VectorInt : IComparable<VectorInt>, IComparable, IEquatable<VectorInt>
     {
         #region Constructor
 
@@ -16,6 +16,45 @@ namespace Game.HelperClassesCore
         {
             _x = x;
             _y = y;
+        }
+
+        #endregion
+
+        #region IComparable<VectorInt> Members
+
+        public int CompareTo(VectorInt other)
+        {
+            // X then Y
+            int retVal = _x.CompareTo(other.X);
+            if (retVal != 0)
+            {
+                return retVal;
+            }
+
+            return _y.CompareTo(other.Y);
+        }
+
+        #endregion
+        #region IComparable Members
+
+        public int CompareTo(object obj)
+        {
+            if (obj is VectorInt)
+            {
+                return CompareTo((VectorInt)obj);
+            }
+            else
+            {
+                return 1;
+            }
+        }
+
+        #endregion
+        #region IEquatable<VectorInt> Members
+
+        public bool Equals(VectorInt other)
+        {
+            return _x == other.X && _y == other.Y;
         }
 
         #endregion

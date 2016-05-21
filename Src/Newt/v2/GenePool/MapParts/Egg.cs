@@ -82,6 +82,14 @@ namespace Game.Newt.v2.GenePool.MapParts
             }
         }
 
+        public bool IsDisposed
+        {
+            get
+            {
+                return this.PhysicsBody.IsDisposed;
+            }
+        }
+
         public Body PhysicsBody
         {
             get;

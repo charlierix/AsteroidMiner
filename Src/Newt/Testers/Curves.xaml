@@ -65,12 +65,8 @@
                                 <Button Name="btnAxeSimple1" Content="Simple1" Click="btnAxeSimple1_Click"/>
                                 <Button Name="btnAxeSimple2" Content="Simple2" Click="btnAxeSimple2_Click"/>
 
-
-
                                 <Button Name="btnAvgPlane" Content="Avg Plane 1" Margin="0,20,0,2" Click="btnAvgPlane_Click"/>
                                 <Button Name="btnAvgPlane2" Content="Avg Plane 2" Margin="0,2,0,20" Click="btnAvgPlane2_Click"/>
-
-
 
                                 <CheckBox IsChecked="True" Name="chkAxeLine" Content="Show lines" Margin="0,8,0,0"/>
                                 <CheckBox Name="chkAxeControl" Content="Show control points"/>
@@ -79,7 +75,7 @@
                             </StackPanel>
                         </Border>
                     </Expander>
-
+                    
                 </StackPanel>
             </ScrollViewer>
         </Border>

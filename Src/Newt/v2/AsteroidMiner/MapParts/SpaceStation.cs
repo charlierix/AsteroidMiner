@@ -254,6 +254,14 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
             }
         }
 
+        public bool IsDisposed
+        {
+            get
+            {
+                return this.PhysicsBody.IsDisposed;
+            }
+        }
+
         public Body PhysicsBody
         {
             get;

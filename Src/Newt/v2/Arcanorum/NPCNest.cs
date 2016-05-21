@@ -142,6 +142,8 @@ namespace Game.Newt.v2.Arcanorum
         {
             if (disposing)
             {
+                _isDisposed = true;
+
                 _dreamer.Dispose();
 
                 //this.PhysicsBody.Dispose();       // the nest doesn't have a body
@@ -155,6 +157,15 @@ namespace Game.Newt.v2.Arcanorum
         {
             get;
             private set;
+        }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDisposed;// || this.PhysicsBody.IsDisposed;       // the nest doesn't have a body
+            }
         }
 
         public Body PhysicsBody

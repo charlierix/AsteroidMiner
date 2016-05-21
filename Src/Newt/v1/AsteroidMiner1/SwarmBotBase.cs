@@ -752,7 +752,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
                 //TODO:  Take in the magnitude to use
 
-                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obsticle avoidance)
+                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obstacle avoidance)
                 //directionToGo *= -.25d;
 
                 // If the difference between stop distance and distance to go is very small, then don't use full thrust.  It causes the bot to jitter back and forth
@@ -965,7 +965,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
                 //TODO:  Take in the magnitude to use
 
-                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obsticle avoidance)
+                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obstacle avoidance)
                 //directionToGo *= -.25d;
 
                 // If the difference between stop distance and distance to go is very small, then don't use full thrust.  It causes the bot to jitter back and forth
@@ -1207,7 +1207,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
                 //TODO:  Take in the magnitude to use
 
-                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obsticle avoidance)
+                //directionToGo *= -3d;   // I'll give this a higher than normal priority (I still want to keep the highest priority with obstacle avoidance)
                 //directionToGo *= -.25d;
 
                 // If the difference between stop distance and distance to go is very small, then don't use full thrust.  It causes the bot to jitter back and forth

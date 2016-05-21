@@ -225,6 +225,8 @@ namespace Game.Newt.v2.Arcanorum
         {
             if (disposing)
             {
+                _isDisposed = true;
+
                 if (!this.IsGraphicsOnly)
                 {
                     this.PhysicsBody.ApplyForceAndTorque -= new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
@@ -241,6 +243,15 @@ namespace Game.Newt.v2.Arcanorum
         {
             get;
             private set;
+        }
+
+        private volatile bool _isDisposed = false;
+        public bool IsDisposed
+        {
+            get
+            {
+                return _isDisposed || (!this.IsGraphicsOnly && this.PhysicsBody.IsDisposed);
+            }
         }
 
         public Body PhysicsBody
@@ -1047,7 +1058,7 @@ namespace Game.Newt.v2.Arcanorum
             WeaponPartDNA leftHead = null;
             if (!Math1D.IsNearZero(handle.AttachPointPercent) && StaticRandom.NextDouble() < .25)
             {
-                if(StaticRandom.NextBool())
+                if (StaticRandom.NextBool())
                 {
                     leftHead = WeaponSpikeBallDNA.GetRandomDNA(handle);
                 }

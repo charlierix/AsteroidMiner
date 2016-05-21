@@ -50,7 +50,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             /// This has the 3 flocking rules, and also chases the chase point
             /// </summary>
             Flocking_ChasePoint,
-            Flocking_ChasePoint_AvoidKnownObsticles
+            Flocking_ChasePoint_AvoidKnownObstacles
         }
 
         #endregion
@@ -119,15 +119,15 @@ namespace Game.Newt.v1.AsteroidMiner1
         }
 
         /// <summary>
-        /// This is the list of obsticles to avoid
+        /// This is the list of obstacles to avoid
         /// TODO:  Support an option to avoid all
         /// </summary>
-        private List<ConvexBody3D> _obsticles = new List<ConvexBody3D>();
-        public List<ConvexBody3D> Obsticles
+        private List<ConvexBody3D> _obstacles = new List<ConvexBody3D>();
+        public List<ConvexBody3D> Obstacles
         {
             get
             {
-                return _obsticles;
+                return _obstacles;
             }
         }
 
@@ -171,8 +171,8 @@ namespace Game.Newt.v1.AsteroidMiner1
                 case BehaviorType.Flocking_ChasePoint:
                     Brain_Flocking_ChasePoint();
                     break;
-                case BehaviorType.Flocking_ChasePoint_AvoidKnownObsticles:
-                    Brain_Flocking_ChasePoint_AvoidKnownObsticles();
+                case BehaviorType.Flocking_ChasePoint_AvoidKnownObstacles:
+                    Brain_Flocking_ChasePoint_AvoidKnownObstacles();
                     break;
 
                 default:
@@ -393,7 +393,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             // Set thruster settings
             AimThruster(directionToGo);
         }
-        private void Brain_Flocking_ChasePoint_AvoidKnownObsticles()
+        private void Brain_Flocking_ChasePoint_AvoidKnownObstacles()
         {
             //NOTE:  Since this is the one being used by asteroid miner (and not currently used in the swarmbot tester), the values are tweaked for that
 
@@ -440,7 +440,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 //chasePointDirection = GetDirection_InterceptTarget_VelocityAware(this.ChasePoint, this.ChasePointVelocity, maxAccel);
             }
 
-            Vector3D avoidBodiesDirection = GetDirection_AvoidBodies(_obsticles, 66d, false);
+            Vector3D avoidBodiesDirection = GetDirection_AvoidBodies(_obstacles, 66d, false);
 
 
 

@@ -37,7 +37,7 @@ namespace Game.Newt.Testers.ChaseForces
             CubeRoot_Up,
             CubeRoot_Down,
 
-            //TODO: Bell?
+            //TODO: Guassian?
         }
 
         #endregion
@@ -223,6 +223,43 @@ namespace Game.Newt.Testers.ChaseForces
                 }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
+        private void cboPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                // Cast the values.  If they don't cast, just silently exit
+                double fromPerc;
+                if (!double.TryParse(txtFromPercent.Text, out fromPerc))
+                {
+                    return;
+                }
+
+                double toPerc;
+                if (!double.TryParse(txtToPercent.Text, out toPerc))
+                {
+                    return;
+                }
+
+                // if graph is up, make sure to% >= from% (opposite for down)
+                var preset = GetPresetType();
+
+                bool shouldSwap = (preset.Item2 && toPerc < fromPerc) ||
+                                                (!preset.Item2 && toPerc > fromPerc);
+
+                if (shouldSwap)
+                {
+                    // It's supposed to go up, but is going down (or the other way around).  Swap the from to boxes
+                    string temp = txtFromPercent.Text;
+                    txtFromPercent.Text = txtToPercent.Text;
+                    txtToPercent.Text = temp;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnOk_Click(object sender, RoutedEventArgs e)
         {
             _wasOKPressed = true;
@@ -404,42 +441,5 @@ namespace Game.Newt.Testers.ChaseForces
         }
 
         #endregion
-
-        private void cboPreset_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                // Cast the values.  If they don't cast, just silently exit
-                double fromPerc;
-                if (!double.TryParse(txtFromPercent.Text, out fromPerc))
-                {
-                    return;
-                }
-
-                double toPerc;
-                if (!double.TryParse(txtToPercent.Text, out toPerc))
-                {
-                    return;
-                }
-
-                // if graph is up, make sure to% >= from% (opposite for down)
-                var preset = GetPresetType();
-
-                bool shouldSwap = (preset.Item2 && toPerc < fromPerc) ||
-                                                (!preset.Item2 && toPerc > fromPerc);
-
-                if (shouldSwap)
-                {
-                    // It's supposed to go up, but is going down (or the other way around).  Swap the from to boxes
-                    string temp = txtFromPercent.Text;
-                    txtFromPercent.Text = txtToPercent.Text;
-                    txtToPercent.Text = temp;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
     }
 }

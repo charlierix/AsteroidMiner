@@ -376,6 +376,10 @@ namespace Game.GameTester
         {
             new Game.Newt.v2.MissileCommand.MissileCommand0D().Show();
         }
+        private void SwarmBots2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.SwarmBots.SwarmBotTester().Show();
+        }
 
         #endregion
 

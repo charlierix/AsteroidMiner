@@ -8,7 +8,7 @@ namespace Game.HelperClassesCore
 {
     /// <summary>
     /// This hands out a unique token each time its called:  TokenGenerator.Instance.NextToken()
-    /// NOTE: This is IS threadsafe
+    /// NOTE: This IS threadsafe
     /// </summary>
     /// <remarks>
     /// Random trivia:
@@ -110,7 +110,7 @@ namespace Game.HelperClassesCore
         {
             //lock (_lockInstance)
             //{
-            return _nextToken;
+            return Interlocked.Read(ref _nextToken);
             //}
         }
 
