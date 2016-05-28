@@ -558,8 +558,11 @@ namespace Game.Newt.Testers.SwarmBots
                             throw new ArgumentException("Expected token to be populated for a new stroke");
                         }
 
-                        _strokeVisuals.Add(Tuple.Create(e.StrokeToken.Value, GetStrokeVisual(e.Points)));
-                        _viewport.Children.Add(_strokeVisuals[_strokeVisuals.Count - 1].Item2);
+                        foreach (Visual3D visual in GetStrokeVisual(e.Points))
+                        {
+                            _strokeVisuals.Add(Tuple.Create(e.StrokeToken.Value, visual));
+                            _viewport.Children.Add(visual);
+                        }
 
                         #endregion
                         break;
@@ -925,7 +928,7 @@ namespace Game.Newt.Testers.SwarmBots
 
             return retVal;
         }
-        private Visual3D GetStrokeVisual(Tuple<Point3D, Vector3D>[] points)
+        private Visual3D[] GetStrokeVisual_VELOCITIES(Tuple<Point3D, Vector3D>[] points)
         {
             ScreenSpaceLines3D retVal = new ScreenSpaceLines3D();
             retVal.Color = UtilityWPF.ColorFromHex("EEE");
@@ -946,7 +949,55 @@ namespace Game.Newt.Testers.SwarmBots
                 retVal.AddLine(points[cntr].Item1, secondPoint);
             }
 
-            return retVal;
+            return new Visual3D[] { retVal };
+        }
+        private Visual3D[] GetStrokeVisual(Tuple<Point3D, Vector3D>[] points)
+        {
+            Model3DGroup models = new Model3DGroup();
+
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("EEE"))));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FFF")), 4));
+
+            ScreenSpaceLines3D lines = new ScreenSpaceLines3D();
+            lines.Color = UtilityWPF.ColorFromHex("EEE");
+            lines.Thickness = 2;
+
+            for (int cntr = 0; cntr < points.Length - 1; cntr++)
+            {
+                #region velocity line
+
+                Point3D secondPoint = points[cntr].Item1;
+                if (points[cntr].Item2.IsNearZero())
+                {
+                    secondPoint += Math3D.GetRandomVector_Spherical(.02);
+                }
+                else
+                {
+                    secondPoint += points[cntr].Item2 * .75;
+                }
+
+                lines.AddLine(points[cntr].Item1, secondPoint);
+
+                #endregion
+                #region dot
+
+                GeometryModel3D geometry = new GeometryModel3D();
+                geometry.Material = materials;
+                geometry.BackMaterial = materials;
+                geometry.Geometry = UtilityWPF.GetSphere_Ico(.15, 1, true);
+
+                geometry.Transform = new TranslateTransform3D(points[cntr].Item1.ToVector());
+
+                models.Children.Add(geometry);
+
+                #endregion
+            }
+
+            ModelVisual3D dotVisual = new ModelVisual3D();
+            dotVisual.Content = models;
+
+            return new Visual3D[] { lines, dotVisual };
         }
 
         private void UpdateClusterVisuals()

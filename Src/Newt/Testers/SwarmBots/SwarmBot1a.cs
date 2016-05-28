@@ -18,12 +18,15 @@ namespace Game.Newt.Testers.SwarmBots
     /// This is meant to be a simplistic working swarmbot.  Lots of hardcoding
     /// </summary>
     /// <remarks>
-    /// This first version doesn't know about the mothership, or about desired target paths/objectives
+    /// This first version doesn't know about the mothership.  All settings are hardcoded/fixed - no attempt to adjust to error
     /// 
-    /// It doesn't have fuzzy definitions of map objects with corresponding force settings (it has one
-    /// for other swarmbots, and a second for asteroids)
+    /// It doesn't have fuzzy definitions of map objects with corresponding force settings.  It has:
+    ///     chasing swarmbots
+    ///     avoiding swarmbots
+    ///     avoiding asteroids
+    ///     a bunch of other hardcoded settings for objective stroke
     /// 
-    /// TOTO: There needs to be some global props about desired distance:
+    /// TODO: There needs to be some global props about desired distance:
     ///     bot-bot
     ///     bot-mothership
     ///     etc
@@ -63,151 +66,186 @@ namespace Game.Newt.Testers.SwarmBots
 
         private class CurrentChasingStroke
         {
-            #region Constructor
-
-            public CurrentChasingStroke(SwarmObjectiveStrokes.Stroke stroke, double repulseStrength)
+            public CurrentChasingStroke(long token)
             {
-                this.Stroke = stroke;
-
-                this.UpcomingPoints = CalculateRepulseForces(stroke, repulseStrength);
+                this.Token = token;
             }
 
-            #endregion
+            public readonly long Token;
 
-            public readonly SwarmObjectiveStrokes.Stroke Stroke;
+            public volatile int MinIndex = 0;
 
-            //public readonly StrokePointForce[] ActivePoints;      // no need for special rules with attract.  Just go full accel toward
-            //public readonly StrokePointForce[] UpcomingPoints;      // the points that have already been passed have no more influence
-
-            /// <summary>
-            /// These will repulse the bot.  The purpose of these is to keep the bot from traveling along the stroke backward to
-            /// get to the first point (push the bot to the side so it takes a more circular path)
-            /// </summary>
-            public readonly StrokePointForce[][] UpcomingPoints;
-
-            public volatile int CurrentIndex = 0;
-
-            #region Private Methods
-
-            private static StrokePointForce[][] CalculateRepulseForces(SwarmObjectiveStrokes.Stroke stroke, double repulseStrength)
+            private volatile object _minDistance = (double?)null;
+            public double? MinDistance
             {
-                StrokePointForce[][] retVal = new StrokePointForce[stroke.Points.Length][];
-
-                for (int cntr = 0; cntr < retVal.Length; cntr++)
+                get
                 {
-                    retVal[cntr] = CalculateRepulseForces_Index(stroke, cntr, repulseStrength);
+                    return (double?)_minDistance;
                 }
-
-                return retVal;
+                set
+                {
+                    _minDistance = value;
+                }
             }
-            private static StrokePointForce[] CalculateRepulseForces_Index(SwarmObjectiveStrokes.Stroke stroke, int index, double repulseStrength)
-            {
-                //NOTE: The last index will be an empty array.  Doing this so the caller doesn't need range checks, they just
-                //iterate through the forces and come up with nothing
-                List<StrokePointForce> retVal = new List<StrokePointForce>();
-
-                Point3D point = stroke.Points[index].Item1;
-                Vector3D direction = stroke.Points[index].Item2;
-
-                for (int cntr = index + 1; cntr < stroke.Points.Length; cntr++)
-                {
-                    StrokePointForce force = CalculateRepulseForces_Index_On(stroke, cntr, point, direction, repulseStrength);
-                    if (force == null)
-                    {
-                        // Once a null is encountered, the stroke has come back too far.  Just stop looking at the rest of the stroke.
-                        // It could also be valid to continue processing the stroke, and keep any points that loop back in front, but
-                        // that's extra processing, and a bit silly if they are just drawing spirals
-                        break;
-                    }
-
-                    retVal.Add(force);
-
-                    force = CalculateRepulseForces_Index_Half(stroke, cntr, point, direction, repulseStrength);
-                    if (force == null)
-                    {
-                        break;
-                    }
-
-                    retVal.Add(force);
-                }
-
-                return retVal.ToArray();
-            }
-            //TODO: Increase the influence radius a bit when the point is far from the initial
-            private static StrokePointForce CalculateRepulseForces_Index_On(SwarmObjectiveStrokes.Stroke stroke, int index, Point3D origPoint, Vector3D origDir, double repulseStrength)
-            {
-                double prevRadSqr = stroke.Points[index - 1].Item2.LengthSquared;
-                double curRadSqr = stroke.Points[index].Item2.LengthSquared;
-
-                double radius;
-                if (prevRadSqr < curRadSqr)
-                {
-                    radius = Math.Sqrt(prevRadSqr);
-
-                    // no need for a dot product check here, because it's not advancing past the current point
-                }
-                else
-                {
-                    radius = Math.Sqrt(curRadSqr);
-
-                    // Make sure this doesn't loop back too far
-                    Point3D extendPoint = stroke.Points[index].Item1 + (stroke.Points[index].Item2 * .5);
-                    if (Vector3D.DotProduct(extendPoint - origPoint, origDir) < 0)
-                    {
-                        return null;
-                    }
-                }
-
-                radius = RepulseIncreaseRadius(origPoint, stroke.Points[index].Item1, radius);
-
-                return new StrokePointForce(stroke.Points[index].Item1, radius, repulseStrength);
-            }
-            private static StrokePointForce CalculateRepulseForces_Index_Half(SwarmObjectiveStrokes.Stroke stroke, int index, Point3D origPoint, Vector3D origDir, double repulseStrength)
-            {
-                Point3D to;
-                if (index < stroke.Points.Length - 1)
-                {
-                    to = stroke.Points[index + 1].Item1;
-                }
-                else
-                {
-                    // This is the extension of the last item, so just use its velocity
-                    to = stroke.Points[index].Item1 + stroke.Points[index].Item2;
-                }
-
-                if (Vector3D.DotProduct(to - origPoint, origDir) < 0)
-                {
-                    // This is trying to loop back beyond the original point
-                    return null;
-                }
-
-                Point3D center = stroke.Points[index].Item1 + ((to - stroke.Points[index].Item1) * .5);
-
-                double radius = RepulseIncreaseRadius(origPoint, center, (center - stroke.Points[index].Item1).Length);
-
-                return new StrokePointForce(center, radius, repulseStrength);
-            }
-
-            private static double RepulseIncreaseRadius(Point3D origPoint, Point3D repulsePoint, double radius)
-            {
-                double distance = (repulsePoint - origPoint).Length;
-                double ratio = distance / radius;
-
-                if (ratio < 1)
-                {
-                    // This should never happen
-                    return distance * .9;
-                }
-
-                //TODO: Increase by ((ratio - 1) / 2d) + 1, or something
-                //But don't let it grow beyond (radius * 8), or something
-                //  :)
-
-                return radius;
-            }
-
-            #endregion
         }
+
+        #region ORIG
+
+        //private class CurrentChasingStroke_ORIG
+        //{
+        //    #region Constructor
+
+        //    public CurrentChasingStroke_ORIG(SwarmObjectiveStrokes.Stroke stroke, double repulseStrength)
+        //    {
+        //        const double VELOCITYMULT = 10;
+
+        //        var adjustedVelocities = stroke.Points.
+        //            Select(o => Tuple.Create(o.Item1, o.Item2 * VELOCITYMULT)).
+        //            ToArray();
+
+        //        this.Stroke = new SwarmObjectiveStrokes.Stroke(adjustedVelocities, stroke.DeathTime);
+
+        //        this.UpcomingPoints = CalculateRepulseForces(stroke, repulseStrength);
+        //    }
+
+        //    #endregion
+
+        //    public readonly SwarmObjectiveStrokes.Stroke Stroke;
+
+        //    //public readonly StrokePointForce[] ActivePoints;      // no need for special rules with attract.  Just go full accel toward
+        //    //public readonly StrokePointForce[] UpcomingPoints;      // the points that have already been passed have no more influence
+
+        //    /// <summary>
+        //    /// These will repulse the bot.  The purpose of these is to keep the bot from traveling along the stroke backward to
+        //    /// get to the first point (push the bot to the side so it takes a more circular path)
+        //    /// </summary>
+        //    public readonly StrokePointForce[][] UpcomingPoints;
+
+        //    public volatile int CurrentIndex = 0;
+
+        //    #region Private Methods
+
+        //    private static StrokePointForce[][] CalculateRepulseForces(SwarmObjectiveStrokes.Stroke stroke, double repulseStrength)
+        //    {
+        //        StrokePointForce[][] retVal = new StrokePointForce[stroke.Points.Length][];
+
+        //        for (int cntr = 0; cntr < retVal.Length; cntr++)
+        //        {
+        //            retVal[cntr] = CalculateRepulseForces_Index(stroke, cntr, repulseStrength);
+        //        }
+
+        //        return retVal;
+        //    }
+        //    private static StrokePointForce[] CalculateRepulseForces_Index(SwarmObjectiveStrokes.Stroke stroke, int index, double repulseStrength)
+        //    {
+        //        //NOTE: The last index will be an empty array.  Doing this so the caller doesn't need range checks, they just
+        //        //iterate through the forces and come up with nothing
+        //        List<StrokePointForce> retVal = new List<StrokePointForce>();
+
+        //        Point3D point = stroke.Points[index].Item1;
+        //        Vector3D direction = stroke.Points[index].Item2;
+
+        //        for (int cntr = index + 1; cntr < stroke.Points.Length; cntr++)
+        //        {
+        //            StrokePointForce force = CalculateRepulseForces_Index_On(stroke, cntr, point, direction, repulseStrength);
+        //            if (force == null)
+        //            {
+        //                // Once a null is encountered, the stroke has come back too far.  Just stop looking at the rest of the stroke.
+        //                // It could also be valid to continue processing the stroke, and keep any points that loop back in front, but
+        //                // that's extra processing, and a bit silly if they are just drawing spirals
+        //                break;
+        //            }
+
+        //            retVal.Add(force);
+
+        //            force = CalculateRepulseForces_Index_Half(stroke, cntr, point, direction, repulseStrength);
+        //            if (force == null)
+        //            {
+        //                break;
+        //            }
+
+        //            retVal.Add(force);
+        //        }
+
+        //        return retVal.ToArray();
+        //    }
+        //    //TODO: Increase the influence radius a bit when the point is far from the initial
+        //    private static StrokePointForce CalculateRepulseForces_Index_On(SwarmObjectiveStrokes.Stroke stroke, int index, Point3D origPoint, Vector3D origDir, double repulseStrength)
+        //    {
+        //        double prevRadSqr = stroke.Points[index - 1].Item2.LengthSquared;
+        //        double curRadSqr = stroke.Points[index].Item2.LengthSquared;
+
+        //        double radius;
+        //        if (prevRadSqr < curRadSqr)
+        //        {
+        //            radius = Math.Sqrt(prevRadSqr);
+
+        //            // no need for a dot product check here, because it's not advancing past the current point
+        //        }
+        //        else
+        //        {
+        //            radius = Math.Sqrt(curRadSqr);
+
+        //            // Make sure this doesn't loop back too far
+        //            Point3D extendPoint = stroke.Points[index].Item1 + (stroke.Points[index].Item2 * .5);
+        //            if (Vector3D.DotProduct(extendPoint - origPoint, origDir) < 0)
+        //            {
+        //                return null;
+        //            }
+        //        }
+
+        //        radius = RepulseIncreaseRadius(origPoint, stroke.Points[index].Item1, radius);
+
+        //        return new StrokePointForce(stroke.Points[index].Item1, radius, repulseStrength);
+        //    }
+        //    private static StrokePointForce CalculateRepulseForces_Index_Half(SwarmObjectiveStrokes.Stroke stroke, int index, Point3D origPoint, Vector3D origDir, double repulseStrength)
+        //    {
+        //        Point3D to;
+        //        if (index < stroke.Points.Length - 1)
+        //        {
+        //            to = stroke.Points[index + 1].Item1;
+        //        }
+        //        else
+        //        {
+        //            // This is the extension of the last item, so just use its velocity
+        //            to = stroke.Points[index].Item1 + stroke.Points[index].Item2;
+        //        }
+
+        //        if (Vector3D.DotProduct(to - origPoint, origDir) < 0)
+        //        {
+        //            // This is trying to loop back beyond the original point
+        //            return null;
+        //        }
+
+        //        Point3D center = stroke.Points[index].Item1 + ((to - stroke.Points[index].Item1) * .5);
+
+        //        double radius = RepulseIncreaseRadius(origPoint, center, (center - stroke.Points[index].Item1).Length);
+
+        //        return new StrokePointForce(center, radius, repulseStrength);
+        //    }
+
+        //    private static double RepulseIncreaseRadius(Point3D origPoint, Point3D repulsePoint, double radius)
+        //    {
+        //        double distance = (repulsePoint - origPoint).Length;
+        //        double ratio = distance / radius;
+
+        //        if (ratio < 1)
+        //        {
+        //            // This should never happen
+        //            return distance * .9;
+        //        }
+
+        //        //TODO: Increase by ((ratio - 1) / 2d) + 1, or something
+        //        //But don't let it grow beyond (radius * 8), or something
+        //        //  :)
+
+        //        return radius;
+        //    }
+
+        //    #endregion
+        //}
+
+        #endregion
 
         #endregion
         #region Class: StrokePointForce
@@ -228,6 +266,44 @@ namespace Game.Newt.Testers.SwarmBots
         }
 
         #endregion
+        #region Class: NearPointResult
+
+        private class NearPointResult
+        {
+            public NearPointResult(int nearestPoint, double distanceSquared, Tuple<Point3D, Vector3D>[] fullSegment)
+            {
+                this.IsSegmentHit = false;
+                this.NearestPoint = fullSegment[nearestPoint].Item1;
+                this.DistanceSquared = distanceSquared;
+                this.SegmentFrom = nearestPoint;
+                this.SegmentTo = nearestPoint;
+                this.FullSegment = fullSegment;
+            }
+            public NearPointResult(Point3D nearestPoint, int segmentFrom, int segmentTo, double percentAlongSegment, double distanceSquared, Tuple<Point3D, Vector3D>[] fullSegment)
+            {
+                this.IsSegmentHit = true;
+                this.NearestPoint = nearestPoint;
+                this.SegmentFrom = segmentFrom;
+                this.SegmentTo = segmentTo;
+                this.PercentAlongSegment = percentAlongSegment;
+                this.DistanceSquared = distanceSquared;
+                this.FullSegment = fullSegment;
+            }
+
+            public readonly bool IsSegmentHit;
+
+            public readonly Point3D NearestPoint;
+            public readonly double DistanceSquared;
+
+            public readonly int SegmentFrom;
+            public readonly int SegmentTo;
+
+            public readonly double PercentAlongSegment;
+
+            public readonly Tuple<Point3D, Vector3D>[] FullSegment;
+        }
+
+        #endregion
 
         #region Declaration Section
 
@@ -242,8 +318,9 @@ namespace Game.Newt.Testers.SwarmBots
         private ForceSettings_Initial _settings_OtherBot_Passive = null;
         private ForceSettings_Initial _settings_Asteroid = null;
 
-        private readonly object _currentStrokeLock = new object();
-        private CurrentChasingStroke _currentlyChasingStroke = null;
+        private volatile CurrentChasingStroke _currentlyChasingStroke = null;
+
+        private volatile Tuple<long, int> _stroke_index = null;
 
         #endregion
 
@@ -603,53 +680,6 @@ namespace Game.Newt.Testers.SwarmBots
 
         #region Private Methods - chasing forces
 
-        private Tuple<Vector3D?, Vector3D?> GetSeekForce_1()
-        {
-            #region velocity
-
-            double maxSpeed = this.MaxSpeed;
-            double maxAngSpeed = this.MaxAngularSpeed;
-
-            Vector3D velocity = this.VelocityWorld;
-            Vector3D angVelocity = this.PhysicsBody.AngularVelocity;
-
-            Vector3D desiredVelocity = velocity + Math3D.GetRandomVector_Spherical(maxSpeed / 10);
-            Vector3D desiredAngVelocity = angVelocity + Math3D.GetRandomVector_Spherical(maxAngSpeed / 10);
-
-            desiredVelocity = CapVector(desiredVelocity, maxSpeed);
-            desiredAngVelocity = CapVector(desiredAngVelocity, maxAngSpeed);
-
-            #endregion
-
-            #region acceleration
-
-            double maxAccel = this.MaxAccel;
-            double maxAngAccel = this.MaxAngularAccel;
-
-            //TODO: Come up with better units for converting velocity to acceleration
-            Vector3D accel = desiredAngVelocity - velocity;
-            Vector3D angAccel = desiredAngVelocity - angVelocity;
-
-            accel = CapVector(accel, maxAccel);
-            angAccel = CapVector(angAccel, maxAngAccel);
-
-            #endregion
-
-            #region force
-
-            // Multiply by mass to turn accel into force
-            accel *= this.PhysicsBody.Mass;
-
-            MassMatrix inertia = this.PhysicsBody.MassMatrix;
-            double dot = Math.Abs(Vector3D.DotProduct(angAccel.ToUnit(), inertia.Inertia.ToUnit()));
-
-            //TODO: Make sure this is right
-            angAccel *= dot * inertia.Inertia.Length;
-
-            #endregion
-
-            return new Tuple<Vector3D?, Vector3D?>(accel, angAccel);
-        }
         /// <summary>
         /// This is called when there is nothing nearby
         /// </summary>
@@ -693,30 +723,26 @@ namespace Game.Newt.Testers.SwarmBots
 
             #region force
 
-            // Multiply by mass to turn accel into force
-            accel *= this.PhysicsBody.Mass;
+            Tuple<Vector3D?, Vector3D?> retVal = new Tuple<Vector3D?, Vector3D?>(accel, angAccel);
 
-            MassMatrix inertia = this.PhysicsBody.MassMatrix;
-            double dot = Math.Abs(Vector3D.DotProduct(angAccel.ToUnit(), inertia.Inertia.ToUnit()));
-
-            //TODO: Make sure this is right
-            angAccel *= dot * inertia.Inertia.Length;
+            retVal = ConvertToForce(retVal);
 
             #endregion
 
-            return new Tuple<Vector3D?, Vector3D?>(accel, angAccel);
+            return retVal;
         }
 
         private Tuple<Vector3D?, Vector3D?> GetSwarmForce(Tuple<MapObjectInfo, double, ForceSettings_Initial>[] neighbors, Tuple<SwarmObjectiveStrokes.Stroke, double> objectiveStroke, Point3D position, Vector3D velocity)
         {
             // Get the influence of the neighbors
-            Vector3D? neighborForce = GetNeighborForce(neighbors, position, velocity);
+            Vector3D? neighborAccel = GetNeighborAccel(neighbors, position, velocity);
 
             // Get the pull toward the objective stroke
-            Vector3D? strokeForce = GetStrokeForce(objectiveStroke, position, velocity);
+            Vector3D? strokeAccel = GetStrokeAccel(objectiveStroke == null ? null : objectiveStroke.Item1, position, velocity);
 
             // Combine them (objective gets more influence as the bot gets closer)
-            var retVal = CombineForces(neighborForce, strokeForce, objectiveStroke == null ? (double?)null : objectiveStroke.Item2);
+            var retVal = CombineAccels(neighborAccel, strokeAccel, position);
+            //var retVal = Tuple.Create(strokeAccel, (Vector3D?)null);
 
             if (retVal == null ||
                 (
@@ -728,12 +754,15 @@ namespace Game.Newt.Testers.SwarmBots
             }
 
             // Cap it
-            retVal = CapForces(retVal);
+            retVal = CapAccel(retVal);
+
+            // Turn accel into force
+            retVal = ConvertToForce(retVal);
 
             return retVal;
         }
 
-        private static Vector3D? GetNeighborForce(Tuple<MapObjectInfo, double, ForceSettings_Initial>[] neighbors, Point3D position, Vector3D velocity)
+        private static Vector3D? GetNeighborAccel(Tuple<MapObjectInfo, double, ForceSettings_Initial>[] neighbors, Point3D position, Vector3D velocity)
         {
             Vector3D? retVal = null;
 
@@ -743,142 +772,48 @@ namespace Game.Newt.Testers.SwarmBots
 
                 ChasePoint_GetForceArgs args = new ChasePoint_GetForceArgs(neighbor.Item1.MapObject, neighbor.Item1.Position - position);
 
-                Vector3D? attractRepelForce = MapObject_ChasePoint_Forces.GetForce(args, neighbor.Item3.Forces);
+                Vector3D? attractRepelAccel = MapObject_ChasePoint_Forces.GetForce(args, neighbor.Item3.Forces);
 
                 #endregion
                 #region match velocity
 
-                Vector3D? force = null;
+                Vector3D? accel = null;
                 if (neighbor.Item3.MatchVelocityPercent != null)
                 {
                     Vector3D matchVelocity = GetMatchVelocityForce(neighbor.Item1, velocity);
 
                     // Combine forces
-                    if (attractRepelForce == null)
+                    if (attractRepelAccel == null)
                     {
-                        force = matchVelocity;
+                        accel = matchVelocity;
                     }
                     else
                     {
-                        force = Math3D.GetCenter(new[]
+                        accel = Math3D.GetAverage(new[]
                         {
-                            Tuple.Create(attractRepelForce.Value.ToPoint(), 1d),
-                            Tuple.Create(matchVelocity.ToPoint(), neighbor.Item3.MatchVelocityPercent.Value)        //NOTE: When the percent is 1 (100%), this will cause a 50/50 average with the other force
-                        }).ToVector();
+                            Tuple.Create(attractRepelAccel.Value, 1d),
+                            Tuple.Create(matchVelocity, neighbor.Item3.MatchVelocityPercent.Value)        //NOTE: When the percent is 1 (100%), this will cause a 50/50 average with the other accel
+                        });
                     }
                 }
                 else
                 {
-                    force = attractRepelForce;
+                    accel = attractRepelAccel;
                 }
 
                 #endregion
 
                 // Add to total
-                if (force != null)
+                if (accel != null)
                 {
                     if (retVal == null)
                     {
-                        retVal = force;
+                        retVal = accel;
                     }
                     else
                     {
-                        retVal = retVal.Value + force.Value;
+                        retVal = retVal.Value + accel.Value;
                     }
-                }
-            }
-
-            return retVal;
-        }
-
-        private Vector3D? GetStrokeForce_FIRSTPOINT(Tuple<SwarmObjectiveStrokes.Stroke, double> objectiveStroke, Point3D position, Vector3D velocity)
-        {
-            if (objectiveStroke == null)
-            {
-                return null;
-            }
-
-            // For now, just aim straight for the first point
-            return (objectiveStroke.Item1.Points[0].Item1 - position).ToUnit(false) * this.MaxAccel;
-        }
-        private Vector3D? GetStrokeForce(Tuple<SwarmObjectiveStrokes.Stroke, double> objectiveStroke, Point3D position, Vector3D velocity)
-        {
-            const double CLOSEENOUGHRADIUSMULT = 2;
-
-            // Null stroke
-            if (objectiveStroke == null)
-            {
-                lock (_currentStrokeLock) _currentlyChasingStroke = null;
-                return null;
-            }
-
-            #region current stroke
-
-            // Get currently chasing stroke
-
-            CurrentChasingStroke currentStroke = null;
-            lock (_currentStrokeLock)
-            {
-                currentStroke = _currentlyChasingStroke;
-                if (currentStroke == null || currentStroke.Stroke.Token != objectiveStroke.Item1.Token)
-                {
-                    currentStroke = new CurrentChasingStroke(objectiveStroke.Item1, ACCEL * 3);
-                    _currentlyChasingStroke = currentStroke;
-                }
-            }
-
-            #endregion
-            #region current index of stroke
-
-            int currentIndex = currentStroke.CurrentIndex;
-            Vector3D towardCurrentPoint;
-
-            while (true)
-            {
-                if (currentIndex >= currentStroke.Stroke.Points.Length)
-                {
-                    // Already went through all the points
-                    return null;
-                }
-
-                // If too close to the current point, then advance to the next
-                towardCurrentPoint = currentStroke.Stroke.Points[currentIndex].Item1 - position;
-                double closeEnoughDist = this.Radius * CLOSEENOUGHRADIUSMULT;
-
-                if (towardCurrentPoint.LengthSquared < closeEnoughDist * closeEnoughDist)
-                {
-                    currentIndex++;
-                    currentStroke.CurrentIndex = currentIndex;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            #endregion
-
-            // Start with attraction to the current point
-            Vector3D retVal = towardCurrentPoint.ToUnit(false) * this.MaxAccel;
-
-            foreach (var repulse in currentStroke.UpcomingPoints[currentIndex])
-            {
-                Vector3D dirToPoint = position - repulse.Position;
-                double lenSqr = dirToPoint.LengthSquared;
-
-                if (lenSqr > repulse.EffectRadius * repulse.EffectRadius)
-                {
-                    // Too far away to be influenced by this point
-                    continue;
-                }
-
-                if (lenSqr.IsNearZero())
-                {
-                    retVal += Math3D.GetRandomVector_Spherical_Shell(repulse.Strength);
-                }
-                else
-                {
-                    retVal += dirToPoint.ToUnit(false) * repulse.Strength;
                 }
             }
 
@@ -895,6 +830,726 @@ namespace Game.Newt.Testers.SwarmBots
 
             return dif;
         }
+
+        private Vector3D? GetStrokeAccel(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        {
+            const double VELOCITYINFLUENCERADIUS = 2d;
+            const double TOWARDRADIUSMULT = .5;     // making this smaller than the size of the velocity influence radius so there aren't any dead spots
+            const double SKIPPOINTRADIUSMULT = 1d;
+
+            if (objectiveStroke == null)
+            {
+                return null;
+            }
+
+            // Current stroke
+            CurrentChasingStroke currentlyChasingStroke = _currentlyChasingStroke;
+            if (currentlyChasingStroke == null || currentlyChasingStroke.Token != objectiveStroke.Token)
+            {
+                currentlyChasingStroke = new CurrentChasingStroke(objectiveStroke.Token);
+                _currentlyChasingStroke = currentlyChasingStroke;
+            }
+
+            // Get affected by the stroke
+            var hits = GetNearestSegmentsOrPoint(objectiveStroke.Points, position, currentlyChasingStroke.MinIndex);
+            if (hits == null || (hits.Item1 == null && (hits.Item2 == null || hits.Item2.Length == 0)))
+            {
+                currentlyChasingStroke.MinIndex = objectiveStroke.Points.Length;
+                currentlyChasingStroke.MinDistance = double.MaxValue;
+                return null;
+            }
+
+            // Stats
+            UpdateStrokeStats(currentlyChasingStroke, hits, objectiveStroke.Points, position, this.Radius * SKIPPOINTRADIUSMULT);
+
+            #region build return
+
+            Vector3D retVal = new Vector3D(0, 0, 0);
+
+            double accel = this.MaxAccel;
+
+            if (hits.Item1 != null)
+            {
+                retVal += GetStrokeAccel_Point(hits.Item1, position, accel, VELOCITYINFLUENCERADIUS, TOWARDRADIUSMULT);
+            }
+
+            if (hits.Item2 != null)
+            {
+                for (int cntr = 0; cntr < hits.Item2.Length; cntr++)
+                {
+                    bool shouldAttractToward = cntr == 0 && hits.Item1 == null;
+
+                    retVal += GetStrokeAccel_Segment(hits.Item2[cntr], position, accel, VELOCITYINFLUENCERADIUS, TOWARDRADIUSMULT, shouldAttractToward);
+                }
+            }
+
+            #endregion
+
+            return retVal;
+        }
+
+        private static Vector3D GetStrokeAccel_Point(NearPointResult point, Point3D position, double accel, double velocityInfluenceRadius, double towardRadiusMult)
+        {
+            double radius = point.FullSegment[point.SegmentFrom].Item2.Length * velocityInfluenceRadius;
+
+            // Acceleration toward
+            Vector3D toward = GetStrokeAccel_Toward(point, position, accel, radius * towardRadiusMult);
+
+            // Velocity influence
+            Vector3D velocity = GetStrokeAccel_Velocity(point, radius);
+
+            return toward + velocity;
+        }
+        private static Vector3D GetStrokeAccel_Segment(NearPointResult segment, Point3D position, double accel, double velocityInfluenceRadius, double towardRadiusMult, bool shouldAttractToward)
+        {
+            // LERP Radius
+            double fromRadius = segment.FullSegment[segment.SegmentFrom].Item2.Length * velocityInfluenceRadius;
+            double toRadius = segment.FullSegment[segment.SegmentTo].Item2.Length * velocityInfluenceRadius;
+            double radius = UtilityCore.GetScaledValue(fromRadius, toRadius, 0d, 1d, segment.PercentAlongSegment);
+
+            // Acceleration toward
+            Vector3D toward = shouldAttractToward ?
+                GetStrokeAccel_Toward(segment, position, accel, radius * towardRadiusMult) :
+                new Vector3D(0, 0, 0);
+
+            // Velocity influence
+            Vector3D velocity = GetStrokeAccel_Velocity(segment, radius);
+
+            return toward + velocity;
+        }
+
+        private static Vector3D GetStrokeAccel_Toward(NearPointResult destination, Point3D position, double accel, double radius)
+        {
+            if (destination.DistanceSquared.IsNearZero())
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
+            // Go full acceleration directly toward
+            Vector3D retVal = (destination.NearestPoint - position).ToUnit(false) * accel;
+
+            if (destination.DistanceSquared < radius * radius)
+            {
+                // Influence drops to zero when really close to the point
+                double percent = UtilityCore.GetScaledValue(0, 1, 0, radius, Math.Sqrt(destination.DistanceSquared));
+                retVal *= percent;
+            }
+
+            return retVal;
+        }
+        private static Vector3D GetStrokeAccel_Velocity(NearPointResult destination, double radius)
+        {
+            if (destination.DistanceSquared > radius * radius)
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
+            Vector3D retVal;
+            if (destination.IsSegmentHit)
+            {
+                retVal = Math3D.LERP(destination.FullSegment[destination.SegmentFrom].Item2, destination.FullSegment[destination.SegmentTo].Item2, destination.PercentAlongSegment);
+            }
+            else
+            {
+                retVal = destination.FullSegment[destination.SegmentFrom].Item2;
+            }
+
+            double percent = UtilityCore.GetScaledValue(1, 0, 0, radius, Math.Sqrt(destination.DistanceSquared));
+
+            return retVal * percent;
+        }
+
+        private static void UpdateStrokeStats(CurrentChasingStroke stroke, Tuple<NearPointResult, NearPointResult[]> hits, Tuple<Point3D, Vector3D>[] strokePoints, Point3D botPosition, double skipPointRadius)
+        {
+            List<NearPointResult> allHits = new List<NearPointResult>();
+            allHits.Add(hits.Item1);
+            if (hits.Item2 != null)
+            {
+                allHits.AddRange(hits.Item2);
+            }
+
+            double? distanceSquared = null;
+            int? index = null;
+
+            foreach (NearPointResult hit in allHits)
+            {
+                if (hit == null)
+                {
+                    continue;
+                }
+
+                if (distanceSquared == null || distanceSquared.Value > hit.DistanceSquared)
+                {
+                    distanceSquared = hit.DistanceSquared;
+                }
+
+                int maxIndex = Math.Max(hit.SegmentFrom, hit.SegmentTo);
+                if ((index == null || index.Value < maxIndex) && hit.DistanceSquared < skipPointRadius * skipPointRadius)
+                {
+                    index = maxIndex;
+                }
+
+                if (hit.SegmentTo == strokePoints.Length - 1 && Vector3D.DotProduct(botPosition - strokePoints[hit.SegmentFrom].Item1, strokePoints[hit.SegmentFrom].Item2) > 0)
+                {
+                    // Chasing the last point, and beyond the point's velocity.  So it would have to fly back to get to the point.
+                    // This means that it is done chasing this stroke
+                    index = strokePoints.Length;        // setting to an index beyond the stroke's range
+                }
+            }
+
+            // Store the values
+            if (distanceSquared != null)
+            {
+                stroke.MinDistance = Math.Sqrt(distanceSquared.Value);
+            }
+
+            if (index != null)
+            {
+                stroke.MinIndex = index.Value;
+            }
+        }
+
+        private static Tuple<NearPointResult, NearPointResult[]> GetNearestSegmentsOrPoint(Tuple<Point3D, Vector3D>[] segment, Point3D position, int minIndex)
+        {
+            if (segment == null || segment.Length == 0 || minIndex >= segment.Length)
+            {
+                return null;
+            }
+            else if (minIndex == segment.Length - 1)
+            {
+                // No segments, just the last point
+                return Tuple.Create(
+                    new NearPointResult(0, (position - segment[0].Item1).LengthSquared, segment),
+                    new NearPointResult[0]);
+            }
+
+            List<NearPointResult> pointHits = new List<NearPointResult>();
+            List<NearPointResult> segmentHits = new List<NearPointResult>();
+
+            for (int cntr = minIndex; cntr < segment.Length - 1; cntr++)
+            {
+                var closest = Math3D.GetClosestPoint_LineSegment_Point_verbose(segment[cntr].Item1, segment[cntr + 1].Item1, position);
+
+                double distSqr = (position - closest.Item1).LengthSquared;
+
+                switch (closest.Item2)
+                {
+                    case Math3D.LocationOnLineSegment.Start:
+                        pointHits.Add(new NearPointResult(cntr, distSqr, segment));
+                        break;
+
+                    case Math3D.LocationOnLineSegment.Stop:
+                        pointHits.Add(new NearPointResult(cntr + 1, distSqr, segment));
+                        break;
+
+                    case Math3D.LocationOnLineSegment.Middle:
+                        #region middle
+
+                        double segmentLen = (segment[cntr + 1].Item1 - segment[cntr].Item1).Length;
+
+                        double percentAlong;
+                        if (segmentLen.IsNearZero())
+                        {
+                            pointHits.Add(new NearPointResult(cntr, distSqr, segment));
+                        }
+                        else
+                        {
+                            percentAlong = (closest.Item1 - segment[cntr].Item1).Length / segmentLen;
+                            segmentHits.Add(new NearPointResult(closest.Item1, cntr, cntr + 1, percentAlong, distSqr, segment));
+                        }
+
+                        #endregion
+                        break;
+
+                    default:
+                        throw new ApplicationException("Unknown Math3D.LocationOnLineSegment: " + closest.Item2.ToString());
+                }
+            }
+
+            NearPointResult nearestPoint = pointHits.
+                OrderBy(o => o.DistanceSquared).
+                FirstOrDefault();
+
+            segmentHits = segmentHits.
+                OrderBy(o => o.DistanceSquared).
+                ToList();
+
+            // Only include a point hit if it's closer than all segment hits
+            if (nearestPoint != null && segmentHits.Count > 0 && segmentHits[0].DistanceSquared <= nearestPoint.DistanceSquared)
+            {
+                nearestPoint = null;        // it's farther than segment hits, so throw it out
+            }
+
+            return Tuple.Create(nearestPoint, segmentHits.ToArray());
+        }
+
+        #region FAIL
+
+        //private Tuple<Vector3D?, Vector3D?> GetSeekForce_1()
+        //{
+        //    #region velocity
+
+        //    double maxSpeed = this.MaxSpeed;
+        //    double maxAngSpeed = this.MaxAngularSpeed;
+
+        //    Vector3D velocity = this.VelocityWorld;
+        //    Vector3D angVelocity = this.PhysicsBody.AngularVelocity;
+
+        //    Vector3D desiredVelocity = velocity + Math3D.GetRandomVector_Spherical(maxSpeed / 10);
+        //    Vector3D desiredAngVelocity = angVelocity + Math3D.GetRandomVector_Spherical(maxAngSpeed / 10);
+
+        //    desiredVelocity = CapVector(desiredVelocity, maxSpeed);
+        //    desiredAngVelocity = CapVector(desiredAngVelocity, maxAngSpeed);
+
+        //    #endregion
+
+        //    #region acceleration
+
+        //    double maxAccel = this.MaxAccel;
+        //    double maxAngAccel = this.MaxAngularAccel;
+
+        //    //TODO: Come up with better units for converting velocity to acceleration
+        //    Vector3D accel = desiredAngVelocity - velocity;
+        //    Vector3D angAccel = desiredAngVelocity - angVelocity;
+
+        //    accel = CapVector(accel, maxAccel);
+        //    angAccel = CapVector(angAccel, maxAngAccel);
+
+        //    #endregion
+
+        //    #region force
+
+        //    // Multiply by mass to turn accel into force
+        //    accel *= this.PhysicsBody.Mass;
+
+        //    MassMatrix inertia = this.PhysicsBody.MassMatrix;
+        //    double dot = Math.Abs(Vector3D.DotProduct(angAccel.ToUnit(), inertia.Inertia.ToUnit()));
+
+        //    //TODO: Make sure this is right
+        //    angAccel *= dot * inertia.Inertia.Length;
+
+        //    #endregion
+
+        //    return new Tuple<Vector3D?, Vector3D?>(accel, angAccel);
+        //}
+
+        //private Vector3D? GetStrokeForce_FIRST(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    if (objectiveStroke == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    // For now, just aim straight for the first point
+        //    return (objectiveStroke.Points[0].Item1 - position).ToUnit(false) * this.MaxAccel;
+        //}
+        //private Vector3D? GetStrokeForce_HASREPULSE(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    //const double CLOSEENOUGHRADIUSMULT = 2;
+        //    //const double VELOCITYINFLUENCERADIUSMULT = 5;
+        //    const double CLOSEENOUGHRADIUSMULT = 8;
+        //    const double VELOCITYINFLUENCERADIUSMULT = 15;
+
+        //    // Null stroke
+        //    if (objectiveStroke == null)
+        //    {
+        //        lock (_currentStrokeLock) _currentlyChasingStroke = null;
+        //        return null;
+        //    }
+
+        //    #region current stroke
+
+        //    // Get currently chasing stroke
+
+        //    CurrentChasingStroke currentStroke = null;
+        //    lock (_currentStrokeLock)
+        //    {
+        //        currentStroke = _currentlyChasingStroke;
+        //        if (currentStroke == null || currentStroke.Stroke.Token != objectiveStroke.Token)
+        //        {
+        //            currentStroke = new CurrentChasingStroke(objectiveStroke, ACCEL * 3);
+        //            _currentlyChasingStroke = currentStroke;
+        //        }
+        //    }
+
+        //    #endregion
+        //    #region current index of stroke
+
+        //    int currentIndex = currentStroke.CurrentIndex;
+        //    Vector3D towardCurrentPoint;
+        //    double towardCurrentPointLenSqr;
+
+        //    while (true)
+        //    {
+        //        if (currentIndex >= currentStroke.Stroke.Points.Length)
+        //        {
+        //            // Already went through all the points
+        //            return null;
+        //        }
+
+        //        // If too close to the current point, then advance to the next
+        //        towardCurrentPoint = currentStroke.Stroke.Points[currentIndex].Item1 - position;
+        //        towardCurrentPointLenSqr = towardCurrentPoint.LengthSquared;
+        //        double closeEnoughDist = this.Radius * CLOSEENOUGHRADIUSMULT;
+
+        //        if (towardCurrentPointLenSqr < closeEnoughDist * closeEnoughDist)
+        //        {
+        //            currentIndex++;
+        //            currentStroke.CurrentIndex = currentIndex;
+        //        }
+        //        else
+        //        {
+        //            break;
+        //        }
+        //    }
+
+        //    #endregion
+
+        //    // Start with attraction to the current point
+        //    Vector3D retVal = towardCurrentPoint.ToUnit(false) * this.MaxAccel;
+
+        //    #region influence velocity
+
+        //    // Add the desired velocity
+
+        //    double velocityInfluenceDist = this.Radius * VELOCITYINFLUENCERADIUSMULT;
+
+        //    if (towardCurrentPointLenSqr < velocityInfluenceDist * velocityInfluenceDist)
+        //    {
+        //        double percent = UtilityCore.GetScaledValue(1d, 0d, 0d, velocityInfluenceDist, Math.Sqrt(towardCurrentPointLenSqr));
+
+        //        retVal += currentStroke.Stroke.Points[currentIndex].Item2 * percent;
+        //    }
+
+        //    #endregion
+        //    #region repulse
+
+        //    foreach (var repulse in currentStroke.UpcomingPoints[currentIndex])
+        //    {
+        //        Vector3D dirToPoint = position - repulse.Position;
+        //        double lenSqr = dirToPoint.LengthSquared;
+
+        //        if (lenSqr > repulse.EffectRadius * repulse.EffectRadius)
+        //        {
+        //            // Too far away to be influenced by this point
+        //            continue;
+        //        }
+
+        //        if (lenSqr.IsNearZero())
+        //        {
+        //            retVal += Math3D.GetRandomVector_Spherical_Shell(repulse.Strength);
+        //        }
+        //        else
+        //        {
+        //            retVal += dirToPoint.ToUnit(false) * repulse.Strength;
+        //        }
+        //    }
+
+        //    #endregion
+
+        //    return retVal;
+        //}
+        //private Vector3D? GetStrokeForce_LATEST(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    //const double CLOSEENOUGHRADIUSMULT = 2;
+        //    //const double VELOCITYINFLUENCERADIUSMULT = 5;
+        //    const double CLOSEENOUGHRADIUSMULT = 4;
+        //    const double VELOCITYINFLUENCERADIUSMULT = 15;
+
+        //    // Null stroke
+        //    if (objectiveStroke == null)
+        //    {
+        //        lock (_currentStrokeLock) _currentlyChasingStroke = null;
+        //        return null;
+        //    }
+
+        //    #region current stroke
+
+        //    // Get currently chasing stroke
+
+        //    CurrentChasingStroke currentStroke = null;
+        //    lock (_currentStrokeLock)
+        //    {
+        //        currentStroke = _currentlyChasingStroke;
+        //        if (currentStroke == null || currentStroke.Stroke.Token != objectiveStroke.Token)
+        //        {
+        //            currentStroke = new CurrentChasingStroke(objectiveStroke, ACCEL * 3);
+        //            _currentlyChasingStroke = currentStroke;
+        //        }
+        //    }
+
+        //    #endregion
+        //    #region current index of stroke
+
+        //    int currentIndex = currentStroke.CurrentIndex;
+        //    Vector3D towardCurrentPoint;
+        //    double towardCurrentPointLenSqr;
+
+        //    while (true)
+        //    {
+        //        //if (currentIndex > 0)
+        //        //{
+        //        //    return null;
+        //        //}
+
+        //        if (currentIndex >= currentStroke.Stroke.Points.Length)
+        //        {
+        //            // Already went through all the points
+        //            return null;
+        //        }
+
+        //        // If too close to the current point, then advance to the next
+        //        towardCurrentPoint = currentStroke.Stroke.Points[currentIndex].Item1 - position;
+        //        towardCurrentPointLenSqr = towardCurrentPoint.LengthSquared;
+        //        double closeEnoughDist = this.Radius * CLOSEENOUGHRADIUSMULT;
+
+        //        if (towardCurrentPointLenSqr < closeEnoughDist * closeEnoughDist)
+        //        {
+        //            currentIndex++;
+        //            currentStroke.CurrentIndex = currentIndex;
+        //        }
+        //        else
+        //        {
+        //            break;
+        //        }
+        //    }
+
+        //    #endregion
+
+        //    // Start with attraction to the current point
+        //    Vector3D retVal = towardCurrentPoint.ToUnit(false) * this.MaxAccel;
+
+        //    #region influence velocity
+
+        //    // Add the desired velocity
+
+        //    //double velocityInfluenceDist = this.Radius * VELOCITYINFLUENCERADIUSMULT;
+
+        //    //if (towardCurrentPointLenSqr < velocityInfluenceDist * velocityInfluenceDist)
+        //    //{
+        //    //    double percent = UtilityCore.GetScaledValue(1d, 0d, 0d, velocityInfluenceDist, Math.Sqrt(towardCurrentPointLenSqr));
+
+        //    //    retVal += currentStroke.Stroke.Points[currentIndex].Item2 * percent;
+        //    //}
+
+        //    #endregion
+        //    #region repulse
+
+        //    //foreach (var repulse in currentStroke.UpcomingPoints[currentIndex])
+        //    //{
+        //    //    Vector3D dirToPoint = position - repulse.Position;
+        //    //    double lenSqr = dirToPoint.LengthSquared;
+
+        //    //    if (lenSqr > repulse.EffectRadius * repulse.EffectRadius)
+        //    //    {
+        //    //        // Too far away to be influenced by this point
+        //    //        continue;
+        //    //    }
+
+        //    //    if (lenSqr.IsNearZero())
+        //    //    {
+        //    //        retVal += Math3D.GetRandomVector_Spherical_Shell(repulse.Strength);
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        retVal += dirToPoint.ToUnit(false) * repulse.Strength;
+        //    //    }
+        //    //}
+
+        //    #endregion
+
+        //    return retVal;
+        //}
+        //private Vector3D? GetStrokeForce_MULTINOVELOCITY(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    const double CLOSEENOUGHRADIUSMULT = 3;
+
+        //    if (objectiveStroke == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    Tuple<long, int> stroke_index = _stroke_index;
+        //    if (stroke_index == null || stroke_index.Item1 != objectiveStroke.Token)
+        //    {
+        //        stroke_index = Tuple.Create(objectiveStroke.Token, 0);
+        //        _stroke_index = stroke_index;
+        //    }
+
+        //    Vector3D toObjective;
+        //    while (true)
+        //    {
+        //        if (stroke_index.Item2 >= objectiveStroke.Points.Length)
+        //        {
+        //            return null;
+        //        }
+
+        //        toObjective = objectiveStroke.Points[stroke_index.Item2].Item1 - position;
+        //        if (toObjective.LengthSquared > (this.Radius * CLOSEENOUGHRADIUSMULT) * (this.Radius * CLOSEENOUGHRADIUSMULT))
+        //        {
+        //            break;
+        //        }
+
+        //        stroke_index = Tuple.Create(stroke_index.Item1, stroke_index.Item2 + 1);
+        //        _stroke_index = stroke_index;
+        //    }
+
+        //    // For now, just aim straight for the first point
+        //    return (toObjective).ToUnit(false) * this.MaxAccel;
+        //}
+        //private Vector3D? GetStrokeForce_MULTIWITHVELOCITY(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    const double CLOSEENOUGHRADIUSMULT = 3;
+        //    const double VELOCITYINFLUENCERADIUSMULT = 7;
+
+        //    // This fails when they are on or very near the stroke and try to swim up stream.  The point they are trying to
+        //    // go to is pushing them along.
+        //    //
+        //    // So need to just move on to the next point (or maybe just closest point).  Need to take dot product of direction
+        //    // and point's velocity into account
+
+        //    if (objectiveStroke == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    Tuple<long, int> stroke_index = _stroke_index;
+        //    if (stroke_index == null || stroke_index.Item1 != objectiveStroke.Token)
+        //    {
+        //        stroke_index = Tuple.Create(objectiveStroke.Token, 0);
+        //        _stroke_index = stroke_index;
+        //    }
+
+        //    #region get the next point
+
+        //    Vector3D toObjective;
+        //    while (true)
+        //    {
+        //        if (stroke_index.Item2 >= objectiveStroke.Points.Length)
+        //        {
+        //            return null;
+        //        }
+
+        //        toObjective = objectiveStroke.Points[stroke_index.Item2].Item1 - position;
+        //        if (toObjective.LengthSquared > (this.Radius * CLOSEENOUGHRADIUSMULT) * (this.Radius * CLOSEENOUGHRADIUSMULT))
+        //        {
+        //            break;
+        //        }
+
+        //        stroke_index = Tuple.Create(stroke_index.Item1, stroke_index.Item2 + 1);
+        //        _stroke_index = stroke_index;
+        //    }
+
+        //    #endregion
+
+        //    // For now, just aim straight for the first point
+        //    Vector3D retVal = (toObjective).ToUnit(false) * this.MaxAccel;
+
+        //    #region influence velocity
+
+        //    // Add the desired velocity
+
+        //    double velocityInfluenceDist = this.Radius * VELOCITYINFLUENCERADIUSMULT;
+
+        //    if (toObjective.LengthSquared < velocityInfluenceDist * velocityInfluenceDist)
+        //    {
+        //        double percent = UtilityCore.GetScaledValue(2d, 0d, 0d, velocityInfluenceDist, toObjective.Length);
+
+        //        retVal += objectiveStroke.Points[stroke_index.Item2].Item2 * percent;
+        //    }
+
+        //    #endregion
+
+        //    return retVal;
+        //}
+        //private Vector3D? GetStrokeForce_BETTER(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
+        //{
+        //    if (objectiveStroke == null)
+        //    {
+        //        return null;
+        //    }
+
+        //    double maxAccel = this.MaxAccel;
+        //    double radius = this.Radius;
+
+        //    //TODO: Don't just use the return length, have the function also return a weighted distance to the point (based on dot)
+        //    //TODO: Remember which points are objectives, and never choose any index less than that (once null, ignore the stroke)
+
+        //    int startIndex = 0;
+        //    var strokeIndex = _stroke_index;
+        //    if (strokeIndex != null && strokeIndex.Item1 == objectiveStroke.Token)
+        //    {
+        //        startIndex = strokeIndex.Item2;
+        //    }
+
+        //    if (startIndex >= objectiveStroke.Points.Length)
+        //    {
+        //        return null;
+        //    }
+
+        //    var candidates = Enumerable.Range(startIndex, objectiveStroke.Points.Length - startIndex).
+        //        Select(o => new { Index = o, Item = objectiveStroke.Points[o], Force = GetStrokePointForce_BETTER(objectiveStroke.Points[o], position, velocity, maxAccel, radius) }).
+        //        Where(o => o.Force != null).
+        //        OrderBy(o => o.Force.Value.LengthSquared).
+        //        FirstOrDefault();
+
+        //    if (candidates == null)
+        //    {
+        //        _stroke_index = Tuple.Create(objectiveStroke.Token, objectiveStroke.Points.Length);
+        //        return null;
+        //    }
+
+        //    _stroke_index = Tuple.Create(objectiveStroke.Token, candidates.Index);
+        //    return candidates.Force;
+        //}
+        //private static Vector3D? GetStrokePointForce_BETTER(Tuple<Point3D, Vector3D> strokePoint, Point3D position, Vector3D velocity, double maxAccel, double radius)
+        //{
+        //    const double VELOCITYINFLUENCERADIUSMULT = 7;
+        //    const double MINDOT = -.7;
+
+        //    Vector3D toPoint = strokePoint.Item1 - position;
+        //    double toPointLength = toPoint.Length;
+
+        //    if (toPointLength.IsNearZero())
+        //    {
+        //        // Sitting on top of the point.  The only force felt is the point's velocity
+        //        return strokePoint.Item2;
+        //    }
+
+        //    Vector3D toPointUnit = toPoint / toPointLength;
+
+        //    double dot = Vector3D.DotProduct(toPointUnit, strokePoint.Item2.ToUnit());
+
+        //    if (dot < MINDOT)
+        //    {
+        //        // It would have to fly too directly up stream to get to the point
+        //        return null;
+        //    }
+
+        //    // Toward Point
+        //    Vector3D retVal = toPointUnit * maxAccel;
+        //    //if (dot < 0)     // The larger the dot, the larger the force (because when the dot is small, this point is in the wrong direction)
+        //    //{
+        //    //    double percent = UtilityCore.GetScaledValue(0d, 1d, MINDOT, 0d, dot);
+        //    //    retVal *= percent;
+        //    //}
+
+        //    // Influence velocity
+        //    double velocityInfluenceDist = radius * VELOCITYINFLUENCERADIUSMULT;
+
+        //    if (toPointLength < velocityInfluenceDist)
+        //    {
+        //        double percent = UtilityCore.GetScaledValue(2d, 0d, 0d, velocityInfluenceDist, toPointLength);
+        //        retVal += strokePoint.Item2 * percent;
+        //    }
+
+        //    //TODO: Compare a dot with the return force and location/velocity of point to see if it's even possible
+        //    //to get to that point
+
+        //    return retVal;
+        //}
+
+        #endregion
 
         #endregion
         #region Private Methods - initial forces
@@ -1048,16 +1703,16 @@ namespace Game.Newt.Testers.SwarmBots
             return retVal.ToArray();
         }
 
-        private Vector3D? CapForces_Linear(Vector3D? force)
+        private Vector3D? CapAccel_Linear(Vector3D? accel)
         {
-            if (force == null)
+            if (accel == null)
             {
                 return null;
             }
 
-            var retVal = new Tuple<Vector3D?, Vector3D?>(force, null);
+            var retVal = new Tuple<Vector3D?, Vector3D?>(accel, null);
 
-            retVal = CapForces(retVal);
+            retVal = CapAccel(retVal);
 
             if (retVal == null)
             {
@@ -1068,20 +1723,17 @@ namespace Game.Newt.Testers.SwarmBots
                 return retVal.Item1;
             }
         }
-        private Tuple<Vector3D?, Vector3D?> CapForces(Tuple<Vector3D?, Vector3D?> forces)
+        private Tuple<Vector3D?, Vector3D?> CapAccel(Tuple<Vector3D?, Vector3D?> accels)
         {
-            if (forces == null)
+            if (accels == null)
             {
                 return null;
             }
 
-            Vector3D? linear = forces.Item1;
+            Vector3D? linear = accels.Item1;
             if (linear != null)
             {
-                // Turn the force into an acceleration
-                double mass = this.PhysicsBody.Mass;
-                Vector3D accel = linear.Value / mass;
-                bool wasModified = false;
+                Vector3D accel = linear.Value;
 
                 // See if a force in this direction will exceed the max speed
                 double maxSpeed = this.MaxSpeed;
@@ -1107,8 +1759,6 @@ namespace Game.Newt.Testers.SwarmBots
                         {
                             accel = linePoints[0] - velocity.ToPoint();        // there should only be one.  And the ray originated from inside the sphere, so spherePoints and linePoints should be the same
                         }
-
-                        wasModified = true;
                     }
                     else if (Vector3D.DotProduct(velocity, accel) > 0)
                     {
@@ -1120,7 +1770,6 @@ namespace Game.Newt.Testers.SwarmBots
                         //going dead
                         Vector3D alongAccel = accel.GetProjectedVector(velocity);
                         accel = accel - alongAccel;     // remove the component that is along the direction of the current velocity
-                        wasModified = true;
                     }
                     // else, speed is already too great, but accel is against current velocity, so will slow it down
 
@@ -1129,21 +1778,16 @@ namespace Game.Newt.Testers.SwarmBots
 
                 // See if this is too large
                 double maxAccel = this.MaxAccel;
-                double maxAccelSqr = maxAccel * maxAccel;
 
-                if (accel.LengthSquared > maxAccelSqr)
+                if (accel.LengthSquared > maxAccel * maxAccel)
                 {
                     accel = accel.ToUnit(false) * maxAccel;
-                    wasModified = true;
                 }
 
-                if (wasModified)
-                {
-                    linear = accel * mass;
-                }
+                linear = accel;
             }
 
-            Vector3D? angular = forces.Item2;
+            Vector3D? angular = accels.Item2;
             if (angular != null)
             {
                 //TODO: Angular
@@ -1161,7 +1805,7 @@ namespace Game.Newt.Testers.SwarmBots
             return vector.ToUnit(false) * maxLength;
         }
 
-        private Tuple<Vector3D?, Vector3D?> CombineForces(Vector3D? neighborForce, Vector3D? strokeForce, double? distance)
+        private Tuple<Vector3D?, Vector3D?> CombineAccels(Vector3D? neighborAccel, Vector3D? strokeAccel, Point3D position)
         {
             const double THRESHOLD = 10;        // the number of multiples of this.radius
             const double MINOBJECTIVEPERCENT = .7;
@@ -1170,39 +1814,48 @@ namespace Game.Newt.Testers.SwarmBots
             #region nulls
 
             // It's easy if one of them is null
-            if (neighborForce == null && strokeForce == null)
+            if (neighborAccel == null && strokeAccel == null)
             {
                 return null;
             }
-            else if (strokeForce == null)
+            else if (strokeAccel == null)
             {
-                return new Tuple<Vector3D?, Vector3D?>(neighborForce, null);
+                return new Tuple<Vector3D?, Vector3D?>(neighborAccel, null);
             }
-            else if (neighborForce == null)
+            else if (neighborAccel == null)
             {
-                return new Tuple<Vector3D?, Vector3D?>(strokeForce, null);
+                return new Tuple<Vector3D?, Vector3D?>(strokeAccel, null);
             }
 
             #endregion
 
             // They need to be capped before combining, or one could completely wash out the other
-            neighborForce = CapForces_Linear(neighborForce);
-            strokeForce = CapForces_Linear(strokeForce);
+            neighborAccel = CapAccel_Linear(neighborAccel);
+            strokeAccel = CapAccel_Linear(strokeAccel);
 
-            if (neighborForce == null || strokeForce == null)
+            if (neighborAccel == null || strokeAccel == null)
             {
-                return CombineForces(neighborForce, strokeForce, distance);     // one of them went null.  Recurse, and let the above if statement catch that case
+                return CombineAccels(neighborAccel, strokeAccel, position);     // one of them went null.  Recurse, and let the above if statement catch that case
+            }
+
+            double? distance = null;
+            var currentStroke = _currentlyChasingStroke;
+            if (currentStroke != null)
+            {
+                distance = currentStroke.MinDistance;
             }
 
             Vector3D retVal;
             if (distance == null)
             {
                 // This should never happen
-                retVal = Math3D.GetAverage(new[] { neighborForce.Value, strokeForce.Value });
+                retVal = Math3D.GetAverage(new[] { neighborAccel.Value, strokeAccel.Value });
             }
             else
             {
                 #region weighted average
+
+                // The intention of this is the influence of the swarm reduces as the objective gets closer
 
                 double numRadii = distance.Value / this.Radius;
 
@@ -1216,16 +1869,44 @@ namespace Game.Newt.Testers.SwarmBots
                     percent = UtilityCore.GetScaledValue(MAXOBJECTIVEPERCENT, MINOBJECTIVEPERCENT, 0d, THRESHOLD, numRadii);
                 }
 
-                retVal = Math3D.GetCenter(new[]
+                retVal = Math3D.GetAverage(new[]
                 {
-                    Tuple.Create(neighborForce.Value.ToPoint(), 1d - percent),
-                    Tuple.Create(strokeForce.Value.ToPoint(), percent),
-                }).ToVector();
+                    Tuple.Create(neighborAccel.Value, 1d - percent),
+                    Tuple.Create(strokeAccel.Value, percent),
+                });
 
                 #endregion
             }
 
             return new Tuple<Vector3D?, Vector3D?>(retVal, null);
+        }
+
+        private Tuple<Vector3D?, Vector3D?> ConvertToForce(Tuple<Vector3D?, Vector3D?> accel)
+        {
+            if (accel == null)
+            {
+                return null;
+            }
+
+            // Linear
+            Vector3D? linear = accel.Item1;
+            if (linear != null)
+            {
+                linear = linear.Value * this.PhysicsBody.Mass;      // f=ma
+            }
+
+            // Angular
+            Vector3D? angular = accel.Item2;
+            if (angular != null)
+            {
+                MassMatrix inertia = this.PhysicsBody.MassMatrix;
+                double dot = Math.Abs(Vector3D.DotProduct(angular.Value.ToUnit(), inertia.Inertia.ToUnit()));
+
+                //TODO: Make sure this is right
+                angular = angular.Value * (dot * inertia.Inertia.Length);
+            }
+
+            return Tuple.Create(linear, angular);
         }
 
         private static Model3D GetModel(double radius, Color? color = null)

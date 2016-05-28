@@ -126,6 +126,16 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
+        #region Enum: LocationOnLineSegment
+
+        public enum LocationOnLineSegment
+        {
+            Start,
+            Middle,
+            Stop,
+        }
+
+        #endregion
         #region Class: EvenDistribution
 
         /// <summary>
@@ -5508,6 +5518,37 @@ namespace Game.HelperClassesWPF
 
             return new Vector3D(x * oneOverLen, y * oneOverLen, z * oneOverLen);
         }
+        /// <summary>
+        /// This is identical to GetCenter
+        /// </summary>
+        public static Vector3D GetAverage(Tuple<Vector3D, double>[] weightedVectors)
+        {
+            if (weightedVectors == null || weightedVectors.Length == 0)
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
+            double totalWeight = weightedVectors.Sum(o => o.Item2);
+            if (Math1D.IsNearZero(totalWeight))
+            {
+                return GetAverage(weightedVectors.Select(o => o.Item1).ToArray());
+            }
+
+            double x = 0d;
+            double y = 0d;
+            double z = 0d;
+
+            foreach (var pointMass in weightedVectors)
+            {
+                x += pointMass.Item1.X * pointMass.Item2;
+                y += pointMass.Item1.Y * pointMass.Item2;
+                z += pointMass.Item1.Z * pointMass.Item2;
+            }
+
+            double totalWeightInverse = 1d / totalWeight;
+
+            return new Vector3D(x * totalWeightInverse, y * totalWeightInverse, z * totalWeightInverse);
+        }
 
         public static Vector3D GetSum(IEnumerable<Vector3D> vectors)
         {
@@ -6311,6 +6352,10 @@ namespace Game.HelperClassesWPF
 
         public static Point3D GetClosestPoint_LineSegment_Point(Point3D segmentStart, Point3D segmentStop, Point3D testPoint)
         {
+            return GetClosestPoint_LineSegment_Point_verbose(segmentStart, segmentStop, testPoint).Item1;
+        }
+        public static Tuple<Point3D, LocationOnLineSegment> GetClosestPoint_LineSegment_Point_verbose(Point3D segmentStart, Point3D segmentStop, Point3D testPoint)
+        {
             Vector3D lineDir = segmentStop - segmentStart;
 
             Point3D retVal = GetClosestPoint_Line_Point(segmentStart, lineDir, testPoint);
@@ -6320,17 +6365,17 @@ namespace Game.HelperClassesWPF
             if (Vector3D.DotProduct(lineDir, returnDir) < 0)
             {
                 // It's going in the wrong direction, so start point is the closest
-                return segmentStart;
+                return Tuple.Create(segmentStart, LocationOnLineSegment.Start);
             }
             else if (returnDir.LengthSquared > lineDir.LengthSquared)
             {
                 // It's past the segment stop
-                return segmentStop;
+                return Tuple.Create(segmentStop, LocationOnLineSegment.Stop);
             }
             else
             {
                 // The return point is sitting somewhere on the line segment
-                return retVal;
+                return Tuple.Create(retVal, LocationOnLineSegment.Middle);
             }
         }
 
