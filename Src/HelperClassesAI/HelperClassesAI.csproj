@@ -54,6 +54,7 @@
     <Compile Include="SelfOrganizingMaps.cs" />
     <Compile Include="SelfOrganizingMapsDB.cs" />
     <Compile Include="SelfOrganizingMapsWPF.cs" />
+    <Compile Include="UtilityAI.cs" />
     <Compile Include="UtilityEncog.cs" />
     <Compile Include="UtilityEncogWPF.cs" />
   </ItemGroup>

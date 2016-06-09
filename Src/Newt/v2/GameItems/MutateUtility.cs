@@ -13,7 +13,7 @@ using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.v2.GameItems
 {
-    //TODO: Build overloads that combine multiple ships into one
+    //TODO: Build overloads that combine multiple ships into one - that should be a separate genetic algorithms class
     //TODO: Mutate maps
     //TODO: Factor is too simple.  Make an args class
     public static class MutateUtility
@@ -98,7 +98,7 @@ namespace Game.Newt.v2.GameItems
         {
             #region Constructor
 
-            // These two only populate DefaultFactor
+            // These three only populate DefaultFactor
             public MuateArgs(double factor)
             {
                 this.NumProperties = null;
@@ -124,6 +124,23 @@ namespace Game.Newt.v2.GameItems
                 this.FactorByPropName = null;
                 this.FactorByDataType = null;
                 this.DefaultFactor = new MuateFactorArgs(FactorType.Percent, factor);
+            }
+            public MuateArgs(bool TrueIsNumProps_FalseIsPercentProps, double props, MuateFactorArgs factor)
+            {
+                if (TrueIsNumProps_FalseIsPercentProps)
+                {
+                    this.NumProperties = props;
+                    this.PercentProperties = null;
+                }
+                else
+                {
+                    this.PercentProperties = props;
+                    this.NumProperties = null;
+                }
+
+                this.FactorByPropName = null;
+                this.FactorByDataType = null;
+                this.DefaultFactor = factor;
             }
 
             // These two will populate all three (it's safe to pass null for some of the factor types)
@@ -179,13 +196,42 @@ namespace Game.Newt.v2.GameItems
 
             #region TODO
 
-            //TODO: Figure out how to make this work.  A larger standard deviation would mutate more properties, but less (but the sum of the mutation would still add up to NumProperties * Factor)
+            //TODO: Figure out how to make this work.  A larger standard deviation would mutate more properties, but less per prop (the sum of the mutation would still add up to NumProperties * Factor)
+            //so lots of props by a little, or few props by a lot
             //public readonly double? PropertyStandardDeviation;
 
             //TODO: Implement this
             //public readonly bool UseAllOfFactor;
 
             #endregion
+
+            public int GetChangeCount(int arrayLength)
+            {
+                int retVal;
+                if (this.NumProperties != null)
+                {
+                    retVal = this.NumProperties.Value.ToInt_Round();
+                }
+                else if (this.PercentProperties != null)
+                {
+                    retVal = (this.PercentProperties.Value * arrayLength).ToInt_Round();
+                }
+                else
+                {
+                    retVal = arrayLength;
+                }
+
+                if (retVal < 0)
+                {
+                    retVal = 0;
+                }
+                else if (retVal > arrayLength)
+                {
+                    retVal = arrayLength;
+                }
+
+                return retVal;
+            }
         }
 
         #endregion

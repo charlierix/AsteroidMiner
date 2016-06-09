@@ -21,8 +21,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private class ThrustContribution
         {
-            #region Constructor
-
             public ThrustContribution(Thruster thruster, int index, Vector3D translationForce, Vector3D torque)
             {
                 this.Thruster = thruster;
@@ -36,8 +34,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 this.Torque = torque;
                 this.TorqueUnit = new Vector3D(torque.X / this.TorqueLength, torque.Y / this.TorqueLength, torque.Z / this.TorqueLength);
             }
-
-            #endregion
 
             public readonly Thruster Thruster;
             public readonly int Index;

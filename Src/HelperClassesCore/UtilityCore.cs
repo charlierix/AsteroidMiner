@@ -341,6 +341,7 @@ namespace Game.HelperClassesCore
 
         /// <summary>
         /// This acts like Enumerable.Range, but the values returned are in a random order
+        /// NOTE: The return list is not sorted
         /// </summary>
         public static IEnumerable<int> RandomRange(int start, int count)
         {
@@ -366,6 +367,7 @@ namespace Game.HelperClassesCore
         }
         /// <summary>
         /// This overload wont iterate over all the values, just some of them
+        /// NOTE: The return list is not sorted
         /// </summary>
         /// <param name="rangeCount">When returning a subset of a big list, rangeCount is the size of the big list</param>
         /// <param name="iterateCount">When returning a subset of a big list, iterateCount is the size of the subset</param>
@@ -436,6 +438,7 @@ namespace Game.HelperClassesCore
         }
         /// <summary>
         /// This overload lets the user pass in their own random function -- ex: rand.NextPow(2)
+        /// NOTE: The return list is not sorted
         /// </summary>
         /// <param name="rand">
         /// int1 = min value

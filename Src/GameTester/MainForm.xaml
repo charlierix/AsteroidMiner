@@ -146,11 +146,11 @@
                     <ListBoxItem Content="OCR" MouseUp="EncogOCR_MouseUp"/>
                     <ListBoxItem Content="Extend Border" MouseUp="ExtendBorder_MouseUp"/>
                     <ListBoxItem Content="Image Filters" MouseUp="ImageFilters_MouseUp"/>
-                    <ListBoxItem Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
+                    <ListBoxItem Visibility="Collapsed" Content="Feature Recognizer" MouseUp="FeatureRecognizer_MouseUp"/>
                     <ListBoxItem Content="Convolution Chains" MouseUp="ConvolutionChains_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps" MouseUp="SelfOrganizingMaps_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps DB" MouseUp="SelfOrganizingMapsDB_MouseUp"/>
-                    <ListBoxItem Visibility="Visible" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
+                    <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->
@@ -162,6 +162,8 @@
                     <ListBoxItem Content="Multi Worlds (own threads)" MouseUp="MultithreadWorlds_MouseUp"/>
                     <ListBoxItem Content="Chase Forces" MouseUp="ChaseForces_MouseUp"/>
                     <ListBoxItem Content="Arcanorum" Style="{StaticResource boldItem}" MouseUp="Arcanorum_MouseUp"/>
+                    <ListBoxItem Content="Ship Part Tester" MouseUp="ShipPartTester_MouseUp"/>
+                    <ListBoxItem Content="Overlapping Parts" MouseUp="OverlappingPartsTester_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>
@@ -174,8 +176,6 @@
                     <Label Content="(continued)" Style="{StaticResource subHeaderLabelExtra}"/>
                 </StackPanel>
                 <ListBox>
-                    <ListBoxItem Content="Ship Part Tester" MouseUp="ShipPartTester_MouseUp"/>
-                    <ListBoxItem Content="Overlapping Parts" MouseUp="OverlappingPartsTester_MouseUp"/>
                     <ListBoxItem Content="Ship Editor" Style="{StaticResource boldItem}" MouseUp="ShipEditor_MouseUp"/>
                     <ListBoxItem Content="Brain Tester" MouseUp="BrainTester_MouseUp"/>
                     <ListBoxItem Content="Brain Links" MouseUp="BrainLinks_MouseUp"/>
@@ -188,6 +188,7 @@
                     <ListBoxItem Content="Asteroid Miner 2D" Style="{StaticResource boldItem}" MouseUp="AstMiner2D_2_MouseUp"/>
                     <ListBoxItem Content="Missile Command 0D" MouseUp="MissileCommand0D_MouseUp"/>
                     <ListBoxItem Content="Swarm Bots" MouseUp="SwarmBots2_MouseUp"/>
+                    <ListBoxItem Content="Thrust Controller" MouseUp="ThrustController_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

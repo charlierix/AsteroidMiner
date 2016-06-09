@@ -1790,6 +1790,47 @@ namespace Game.HelperClassesWPF
             return Color.FromArgb(alpha, Convert.ToByte(rand.Next(minRed, maxRed + 1)), Convert.ToByte(rand.Next(minGreen, maxGreen + 1)), Convert.ToByte(rand.Next(minBlue, maxBlue + 1)));
         }
 
+        /// <summary>
+        /// This returns random colors that are as far from each other as possible
+        /// </summary>
+        public static Color[] GetRandomColors(int count, byte min, byte max)
+        {
+            return GetRandomColors(count, 255, min, max);
+        }
+        public static Color[] GetRandomColors(int count, byte alpha, byte min, byte max)
+        {
+            return GetRandomColors(count, alpha, min, max, min, max, min, max);
+        }
+        public static Color[] GetRandomColors(int count, byte alpha, byte minRed, byte maxRed, byte minGreen, byte maxGreen, byte minBlue, byte maxBlue)
+        {
+            if (count < 1)
+            {
+                return new Color[0];
+            }
+
+            Color staticColor = GetRandomColor(alpha, minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue);
+
+            if (count == 1)
+            {
+                return new[] { staticColor };
+            }
+
+            Tuple<double[], double[]> aabb = Tuple.Create(new double[] { minRed, minGreen, minBlue }, new double[] { maxRed, maxGreen, maxBlue });
+
+            double[][] existingStatic = new[] { new double[] { staticColor.R, staticColor.G, staticColor.B } };
+
+            // Treat each RGB value as a 3D vector.  Now inject the items in a cube defined by aabb.  Each point
+            // pushes the others away, so the returned items are as far from each other as possible
+            //NOTE: Using a single static color to get unique values across runs (otherwise they get stuck in corners,
+            //and could be about the same from run to run)
+            double[][] colors = MathND.GetRandomVectors_Cube_EventDist(count - 1, aabb, existingStaticPoints: existingStatic);
+
+            return colors.
+                Concat(existingStatic).
+                Select(o => Color.FromArgb(alpha, o[0].ToByte_Round(), o[1].ToByte_Round(), o[2].ToByte_Round())).
+                ToArray();
+        }
+
         public static Color GetColorEGA(int number)
         {
             return GetColorEGA(255, number);

@@ -105,7 +105,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            if(this.ThrusterType == ThrusterType.Custom)
+            if (this.ThrusterType == ThrusterType.Custom)
             {
                 return new ThrusterDesign(this.Options, _directions);
             }
@@ -1121,7 +1121,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private volatile object _percent = null;
         /// <summary>
-        /// This lets the thruster to be set manually.  Each update, this.Percents is looked it.  If nonnull, this.Percents is used,
+        /// This lets the thruster to be set manually.  Each update, this.Percents is looked at.  If nonnull, this.Percents is used,
         /// otherwise neurons are used
         /// WARNING: This is stored as a volatile, so it's best to set the whole array at once
         /// </summary>

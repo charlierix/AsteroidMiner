@@ -296,7 +296,6 @@ namespace Game.GameTester
         {
             new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
         }
-
         private void ShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.ShipPartTesterWindow().Show();
@@ -305,6 +304,7 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.OverlappingPartsWindow().Show();
         }
+
         private void ShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
@@ -379,6 +379,10 @@ namespace Game.GameTester
         private void SwarmBots2_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.SwarmBots.SwarmBotTester().Show();
+        }
+        private void ThrustController_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.Controllers.ThrustControllerWindow().Show();
         }
 
         #endregion

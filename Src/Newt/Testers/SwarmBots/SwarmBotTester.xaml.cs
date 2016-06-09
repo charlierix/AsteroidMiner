@@ -315,6 +315,9 @@ namespace Game.Newt.Testers.SwarmBots
                 _map.ItemAdded += Map_ItemAdded;
                 _map.ItemRemoved += Map_ItemRemoved;
 
+                #endregion
+                #region Update Manager
+
                 _updateManager = new UpdateManager(
                     new Type[] { typeof(SwarmBot1a) },
                     new Type[] { typeof(SwarmBot1a) },

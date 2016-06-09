@@ -1,0 +1,171 @@
+﻿<Window x:Class="Game.Newt.Testers.Controllers.ThrustControllerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Thrust Controller" ResizeMode="CanResizeWithGrip" Width="900" Height="700" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <!-- Colors -->
+        <SolidColorBrush x:Key="color_MainBack" Color="#9EA6A7"/>
+
+        <SolidColorBrush x:Key="color_SettingsMainBack" Color="#A8ADAD"/>
+        <SolidColorBrush x:Key="color_SettingsMainBorder" Color="#9DB09E"/>
+
+        <SolidColorBrush x:Key="color_SceneBorder" Color="#407D6F62"/>
+
+        <SolidColorBrush x:Key="color_SettingsHeader" Color="#E8E8E8"/>
+        <SolidColorBrush x:Key="color_SettingsText" Color="#F5F5F5"/>
+
+        <!-- Styles -->
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="15" FontWeight="500" Foreground="{StaticResource color_SettingsHeader}"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <Setter Property="Margin" Value="2,3"/>
+        </Style>
+
+        <Style x:Key="panelBorder" TargetType="Border">
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Padding" Value="6"/>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <Style x:Key="promptLabel" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource color_SettingsText}"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource color_SettingsText}"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="MinWidth" Value="40"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource color_MainBack}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{StaticResource color_SettingsMainBack}" BorderBrush="{StaticResource color_SettingsMainBorder}" BorderThickness="1" CornerRadius="5" Padding="5,5,3,5" Margin="6,6,4,6">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,2,0">
+                <StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="2"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="# thrusters" Style="{StaticResource promptLabel}"/>
+                        <TextBox Grid.Column="2" Grid.Row="0" Name="txtNumThrusters" Text="5" TextChanged="txtNumThrusters_TextChanged"/>
+
+                        <TextBlock Grid.Column="0" Grid.Row="2" Text="type" Style="{StaticResource promptLabel}"/>
+                        <ComboBox Grid.Column="2" Grid.Row="2" Name="cboThrusterTypes"/>
+                    </Grid>
+                    <CheckBox IsChecked="True" Name="chkRandRotateThrusters" Content="Rand Orientation"/>
+                    <CheckBox IsChecked="True" Name="chkBalanceThrusters" Content="Balance Thrusters"/>
+
+                    <Button Content="Set Bot" Click="SetBot_Click"/>
+                    <Button Content="Clear Bot" Click="ClearBot_Click"/>
+
+
+                    <!-- TODO: Options for accelerate direction: -->
+                    <!-- Straight up -->
+                    <!-- Chase mouse -->
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="True" Header="Misc" Margin="0,9,0,0">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel>
+                                <Button Content="Balance Linear" Click="BalanceLinear_Click"/>
+                                <Button Content="Balance Spin" Click="BalanceSpin_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Genetic Algorithm Unit Tests -->
+                    <Expander IsExpanded="False" Header="GA Tests" ToolTip="Genetic algorithm unit tests">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel>
+                                <Button Content="Crossover - 2 parents" Click="Crossover2_Click"/>
+                                <Button Content="Crossover - 3 parents" Click="Crossover3_Click"/>
+                                <Button Content="Crossover - 6 parents" Click="Crossover6_Click"/>
+                                <Button Content="Crossover - 16 parents" Click="Crossover16_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Border Grid.Column="1" Name="grdViewPort" BorderThickness="1" BorderBrush="{StaticResource color_SceneBorder}" CornerRadius="3" Margin="2">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop  Offset="0" Color="#707070"/>
+                    <GradientStop Offset=".60" Color="#787878"/>
+                    <GradientStop Offset=".72" Color="#909090"/>
+                    <GradientStop Offset=".87" Color="#B8B8B8"/>
+                    <GradientStop Offset=".94" Color="#C8C8C8"/>
+                    <GradientStop Offset="1" Color="#D0D0D0"/>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="25*"/>
+                    <ColumnDefinition Width="400*"/>
+                    <ColumnDefinition Width="25*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="4*"/>
+                    <RowDefinition Height="207*"/>
+                    <RowDefinition Height="124*"/>
+                </Grid.RowDefinitions>
+
+                <Ellipse Grid.Column="1" Grid.Row="1" Opacity=".8">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush Center=".5,.65">
+                            <GradientStop Offset="0" Color="#30E0E0E0"/>
+                            <GradientStop Offset=".5" Color="#20C0C0C0"/>
+                            <GradientStop Offset=".7" Color="#10B0B0B0"/>
+                            <GradientStop Offset="1" Color="#00000000"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <Viewport3D Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Name="_viewport" IsHitTestVisible="False">
+                    <!-- Camera -->
+                    <Viewport3D.Camera>
+                        <PerspectiveCamera x:Name="_camera" Position="0,12,0" LookDirection="0,-1,0" UpDirection="0,0,1" FieldOfView="45"/>
+                    </Viewport3D.Camera>
+                    <!-- Lights -->
+                    <ModelVisual3D>
+                        <ModelVisual3D.Content>
+                            <Model3DGroup>
+                                <AmbientLight Color="DimGray" />
+                                <DirectionalLight Color="#E6E6E6" Direction="-1,-1,-1" />
+                                <DirectionalLight Color="#303030" Direction="1,1,1" />
+                            </Model3DGroup>
+                        </ModelVisual3D.Content>
+                    </ModelVisual3D>
+                </Viewport3D>
+
+                <ContentPresenter Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Name="debugOverlay" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

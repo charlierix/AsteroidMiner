@@ -243,10 +243,6 @@ namespace Game.Newt.v2.MissileCommand
 
                 #endregion
 
-                //TODO: See if setting mass to 0 or -1 will make it static
-                //TODO: May want an option on Body.OnApplyForceAndTorque to suppress ApplyForceAndTorque event
-                //TODO: Ship constructor params are huge.  Make an arg class that holds optional (with default values)
-
                 ShipCoreArgs core = new ShipCoreArgs()
                 {
                     Map = _map,

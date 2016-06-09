@@ -224,18 +224,18 @@ namespace Game.HelperClassesWPF
                 // Start with randomly placed dots
                 Dot[] dots = GetDots(returnCount, existingStaticPoints, aabb, movableRepulseMultipliers, staticRepulseMultipliers);
 
-                return GetCube_Finish(dots, returnCount, aabb, stopRadiusPercent, stopIterationCount);
+                return GetCube_Finish(dots, aabb, stopRadiusPercent, stopIterationCount);
             }
             public static double[][] GetCube(double[][] movable, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[][] existingStaticPoints, double[] staticRepulseMultipliers)
             {
                 Dot[] dots = GetDots(movable, existingStaticPoints, aabb, movableRepulseMultipliers, staticRepulseMultipliers);
 
-                return GetCube_Finish(dots, movable.Length, aabb, stopRadiusPercent, stopIterationCount);
+                return GetCube_Finish(dots, aabb, stopRadiusPercent, stopIterationCount);
             }
 
             #region Private Methods
 
-            private static double[][] GetCube_Finish(Dot[] dots, int returnCount, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount)
+            private static double[][] GetCube_Finish(Dot[] dots, Tuple<double[], double[]> aabb, double stopRadiusPercent, int stopIterationCount)
             {
                 const double MOVEPERCENT = .1;
 
@@ -244,9 +244,11 @@ namespace Game.HelperClassesWPF
                 double radius = MathND.GetLength(MathND.Subtract(aabb.Item2, aabb.Item1)) / 2;
                 double stopAmount = radius * stopRadiusPercent;
 
+                double? minDistance = GetMinDistance(dots, radius, aabb);
+
                 for (int cntr = 0; cntr < stopIterationCount; cntr++)
                 {
-                    double amountMoved = MoveStep(dots, MOVEPERCENT, aabb);
+                    double amountMoved = MoveStep(dots, MOVEPERCENT, aabb, minDistance);
                     if (amountMoved < stopAmount)
                     {
                         break;
@@ -313,7 +315,7 @@ namespace Game.HelperClassesWPF
                 return retVal;
             }
 
-            private static double MoveStep(IList<Dot> dots, double percent, Tuple<double[], double[]> aabb)
+            private static double MoveStep(IList<Dot> dots, double percent, Tuple<double[], double[]> aabb, double? minDistance)
             {
                 // Find shortest pair lengths
                 ShortPair[] shortPairs = MoveStep_GetShortest(dots);
@@ -324,6 +326,12 @@ namespace Game.HelperClassesWPF
 
                 // Move the shortest pair away from each other (based on how far they are away from the avg)
                 double avg = shortPairs.Average(o => o.LengthRatio);
+
+                // Artificially increase repulsive pressure
+                if (minDistance != null && avg < minDistance.Value)
+                {
+                    avg = minDistance.Value;
+                }
 
                 double distToMoveMax = avg - shortPairs[0].LengthRatio;
                 if (distToMoveMax.IsNearZero())
@@ -461,6 +469,22 @@ namespace Game.HelperClassesWPF
                         dot.Position[cntr] = aabb.Item2[cntr];
                     }
                 }
+            }
+
+            /// <summary>
+            /// Without this, a 2 point request will never pull from each other
+            /// </summary>
+            /// <remarks>
+            /// I didn't experiment too much with these values, but they seem pretty good
+            /// </remarks>
+            private static double? GetMinDistance(Dot[] dots, double radius, Tuple<double[], double[]> aabb)
+            {
+                int dimensions = aabb.Item1.Length;
+
+                double numerator = radius * 3d / 2d;
+                double divisor = Math.Pow(dots.Length, 1d / dimensions);
+
+                return numerator / divisor;
             }
 
             #endregion
@@ -927,7 +951,7 @@ namespace Game.HelperClassesWPF
             //return circumscribedDiam / 2;
 
             // Weighted average.  Dividing by 2 to turn diameter into radius
-            return ((circumscribedDiam * .85) + (inscribedDiam * .15)) / 2d;        
+            return ((circumscribedDiam * .85) + (inscribedDiam * .15)) / 2d;
         }
 
         #endregion

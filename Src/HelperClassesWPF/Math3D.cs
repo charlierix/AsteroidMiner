@@ -5570,6 +5570,26 @@ namespace Game.HelperClassesWPF
 
             return new Vector3D(x, y, z);
         }
+        public static Vector3D GetSum(Tuple<Vector3D, double>[] weightedVectors)
+        {
+            if (weightedVectors == null || weightedVectors.Length == 0)
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
+            double x = 0d;
+            double y = 0d;
+            double z = 0d;
+
+            foreach (var pointMass in weightedVectors)
+            {
+                x += pointMass.Item1.X * pointMass.Item2;
+                y += pointMass.Item1.Y * pointMass.Item2;
+                z += pointMass.Item1.Z * pointMass.Item2;
+            }
+
+            return new Vector3D(x, y, z);
+        }
 
         //TODO: See if there is a way to do something like points.Distinct((o,p) => IsNearValue(o,p))
         public static Point3D[] GetUnique(IEnumerable<Point3D> points)
