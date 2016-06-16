@@ -1613,7 +1613,8 @@ namespace Game.Newt.v2.GameItems.MapParts
         {
             get
             {
-                return _isDestroying || _hitTracker.IsDestroying || this.PhysicsBody.IsDisposed;
+                //return _isDestroying || _hitTracker.IsDestroying || this.PhysicsBody.IsDisposed;      //NOOOOO!!!!!!!!!     when this is true, the map won't return it in GetItems.  It should only return true when it's actually disposed
+                return this.PhysicsBody.IsDisposed;
             }
         }
 

@@ -107,6 +107,7 @@
     <Compile Include="AstMin2D\RefillButton.xaml.cs">
       <DependentUpon>RefillButton.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AstMin2D\ShipPlayerORIG.cs" />
     <Compile Include="AstMin2D\ShipPlayer.cs" />
     <Compile Include="AstMin2D\SpaceDockPanel.xaml.cs">
       <DependentUpon>SpaceDockPanel.xaml</DependentUpon>
@@ -161,6 +162,10 @@
     <Resource Include="Resources\gear_gray.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\HelperClassesAI\HelperClassesAI.csproj">
+      <Project>{bd763bb3-b9ab-4252-8265-ccb718b4519a}</Project>
+      <Name>HelperClassesAI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
       <Name>HelperClassesCore</Name>

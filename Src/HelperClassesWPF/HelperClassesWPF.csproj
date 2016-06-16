@@ -162,7 +162,6 @@
     <Compile Include="Primitives3D\ScreenSpaceLines3DHelper.cs" />
     <Compile Include="Rectangle3DIndexed.cs" />
     <Compile Include="SoundPool.cs" />
-    <Compile Include="StaTaskScheduler.cs" />
     <Compile Include="StaticRandomWPF.cs" />
     <Compile Include="Tetrahedron.cs" />
     <Compile Include="TrackBall.cs" />

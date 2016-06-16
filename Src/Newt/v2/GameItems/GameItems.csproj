@@ -150,6 +150,7 @@
     <Compile Include="ShipParts\TractorBeam.cs" />
     <Compile Include="Collections\ShortTermMemory.cs" />
     <Compile Include="Collections\SOMList.cs" />
+    <Compile Include="ThrustControlUtil.cs" />
     <Compile Include="UpdateManager.cs" />
     <Compile Include="WorldColors.cs" />
   </ItemGroup>

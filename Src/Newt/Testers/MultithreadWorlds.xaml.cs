@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
+using Game.HelperClassesCore.Threads;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers

@@ -16,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Game.HelperClassesAI;
 using Game.HelperClassesCore;
+using Game.HelperClassesCore.Threads;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
 

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Game.HelperClassesCore
+namespace Game.HelperClassesCore.Threads
 {
     /// <summary>
     /// This timer will create a new thread and fire all ticks on that thread.  It also exposes a startup and teardown delegate so that

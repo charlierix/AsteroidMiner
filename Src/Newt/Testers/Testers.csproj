@@ -146,7 +146,6 @@
     <Compile Include="Controllers\ThrustControllerWindow.xaml.cs">
       <DependentUpon>ThrustControllerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controllers\ThrustControlUtil.cs" />
     <Compile Include="Convolution\CompositeFilter.xaml.cs">
       <DependentUpon>CompositeFilter.xaml</DependentUpon>
     </Compile>

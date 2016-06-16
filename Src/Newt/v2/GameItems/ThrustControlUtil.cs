@@ -11,7 +11,7 @@ using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipParts;
 
-namespace Game.Newt.Testers.Controllers
+namespace Game.Newt.v2.GameItems
 {
     public static class ThrustControlUtil
     {
@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.Controllers
         /// <summary>
         /// This is a wrapper of UtilityAI.DiscoverSolution
         /// </summary>
-        public static Task<ThrusterMap> DiscoverSolutionAsync(ControlledThrustBot bot, Vector3D? idealLinear, Vector3D? idealRotation, CancellationToken? cancel = null, ThrustContributionModel model = null, Action<ThrusterMap> newBestFound = null)
+        public static void DiscoverSolutionAsync(Bot bot, Vector3D? idealLinear, Vector3D? idealRotation, CancellationToken? cancel = null, ThrustContributionModel model = null, Action<ThrusterMap> newBestFound = null, Action<ThrusterMap> finalFound = null, DiscoverSolutionOptions<Tuple<int, int, double>> options = null)
         {
             long token = bot.Token;
 
@@ -85,13 +85,20 @@ namespace Game.Newt.Testers.Controllers
                 });
             }
 
+            if (finalFound != null)
+            {
+                delegates.FinalFound = new Action<SolutionResult<Tuple<int, int, double>>>(o =>
+                {
+                    ThrusterMap map = new ThrusterMap(ThrustControlUtil.Normalize(o.Item), allThrusters, token);
+                    finalFound(map);
+                });
+            }
+
             #endregion
 
             // Do it
-            var task = Task.Run(() => UtilityAI.DiscoverSolution(delegates));
-
-            // Normalize and convert return value
-            return task.ContinueWith(o => new ThrusterMap(ThrustControlUtil.Normalize(o.Result.Item), allThrusters, token));
+            //NOTE: If options.ThreadShare is set, then there's no reason to do this async, but there's no harm either
+            Task.Run(() => UtilityAI.DiscoverSolution(delegates, options));
         }
 
         //TODO: Come up with some overloads that have various constraints (only thrusters that contribute to a direction, x percent of the thrusters, etc)
@@ -229,6 +236,43 @@ namespace Game.Newt.Testers.Controllers
 
             return new SolutionError(error, total);
         }
+        public static SolutionError GetThrustMapScore_FLAWED(ThrusterMap map, ThrustContributionModel model, Vector3D? linear, Vector3D? rotation, double maxPossibleLinear = 0, double maxPossibleRotate = 0)
+        {
+            if (linear == null && rotation == null)
+            {
+                throw new ApplicationException("Objective linear and rotate can't both be null");
+            }
+
+            Tuple<Vector3D, Vector3D> forces = ApplyThrust(map, model);
+
+            double[] error = new double[2];
+
+            if (forces.Item1.LengthSquared.IsNearZero() && forces.Item2.LengthSquared.IsNearZero())
+            {
+                // When there is zero contribution, give a large error.  Otherwise the winning strategy is not to play :)
+                error[0] = MAXERROR;        // Balance
+            }
+            else
+            {
+                // Balance
+                double linearScore = GetScore_Balance(linear, forces.Item1);
+                double rotateScore = GetScore_Balance(rotation, forces.Item2);
+                error[0] = linearScore + rotateScore;
+            }
+
+            // Inneficient
+            // I think the reason this failed is that it didn't take direction into account.  Maybe make something similar to GetScore_Balance, but without
+            // unit vectors? -- that won't work either, because perfect balance could still have a lot of wasted side thrust
+            error[1] = GetScore_Inneficient2(map, model, maxPossibleLinear, maxPossibleRotate);
+
+            // Total
+            // It's important to include the maximize thrust, but just a tiny bit.  Without it, the ship will be happy to
+            // fire thrusters in all directions.  But if maximize thrust is any stronger, the solution will have too much
+            // unbalance
+            double total = error[0] + (error[1] * .01);
+
+            return new SolutionError(error, total);
+        }
 
         /// <summary>
         /// This looks that which thrusters can contribute, then adds up the sum of their contributions when firing
@@ -320,6 +364,8 @@ namespace Game.Newt.Testers.Controllers
 
             return dotScale;
         }
+
+        //TODO: These two are aspects of the same thing.  Make a single method for this
         private static double GetScore_UnderPowered(Vector3D? objective, Vector3D actual, double maxPossible)
         {
             if (objective == null || objective.Value.LengthSquared.IsNearZero())
@@ -385,6 +431,46 @@ namespace Game.Newt.Testers.Controllers
             }
 
             return retVal;
+        }
+
+        private static double GetScore_Inneficient2(ThrusterMap map, ThrustContributionModel model, double maxPossibleLinear, double maxPossibleRotate)
+        {
+            if (map.Flattened.Length != model.Contributions.Length)
+            {
+                throw new ApplicationException("TODO: Handle mismatched map and model");
+            }
+
+            // Add up all of the thruster forces.  Don't worry about direction, just get the sum of the magnitude
+            var forces = Enumerable.Range(0, map.Flattened.Length).
+                Select(o =>
+                {
+                    if (map.Flattened[o].Item1 != model.Contributions[o].Item1 || map.Flattened[o].Item2 != model.Contributions[o].Item2)
+                    {
+                        throw new ApplicationException("TODO: Handle mismatched map and model");
+                    }
+
+                    return new
+                    {
+                        Linear = model.Contributions[o].Item3.TranslationForceLength * map.Flattened[o].Item3,
+                        Rotate = model.Contributions[o].Item3.TorqueLength * map.Flattened[o].Item3,
+                    };
+                }).
+                ToArray();
+
+            double linear = forces.Sum(o => o.Linear);
+            double rotate = forces.Sum(o => o.Rotate);
+
+            // Subtract max possible
+            linear -= maxPossibleLinear;
+            rotate -= maxPossibleRotate;
+
+            //linear = Math.Max(linear, 0);       // don't let scores go negative
+            //rotate = Math.Max(rotate, 0);
+            linear = Math.Abs(linear);       // negative scores are also bad
+            rotate = Math.Abs(rotate);
+
+            // Return remainder squared
+            return (linear * linear) + (rotate * rotate);
         }
 
         #endregion

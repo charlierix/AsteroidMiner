@@ -457,7 +457,7 @@ namespace Game.Newt.Testers.Controllers
             PhysicsBody_BodyMoved(this, new EventArgs());
         }
 
-        private async void BalanceBot_Forward(ControlledThrustBot bot)
+        private void BalanceBot_Forward(ControlledThrustBot bot)
         {
             if (_cancelCurrentBalancer != null)
             {
@@ -477,14 +477,9 @@ namespace Game.Newt.Testers.Controllers
 
             var newBestFound = new Action<ThrusterMap>(o => bot.ForwardMap = o);
 
-            ThrusterMap final = await ThrustControlUtil.DiscoverSolutionAsync(bot, ideal, null, _cancelCurrentBalancer.Token, null, newBestFound);
-
-            if (final != null)
-            {
-                bot.ForwardMap = final;
-            }
+            ThrustControlUtil.DiscoverSolutionAsync(bot, ideal, null, _cancelCurrentBalancer.Token, null, newBestFound);
         }
-        private async void BalanceBot_Spin(ControlledThrustBot bot)
+        private void BalanceBot_Spin(ControlledThrustBot bot)
         {
             if (_cancelCurrentBalancer != null)
             {
@@ -504,12 +499,7 @@ namespace Game.Newt.Testers.Controllers
 
             var newBestFound = new Action<ThrusterMap>(o => bot.ForwardMap = o);        // using forward map, even though this is spin
 
-            ThrusterMap final = await ThrustControlUtil.DiscoverSolutionAsync(bot, null, ideal, _cancelCurrentBalancer.Token, null, newBestFound);
-
-            if (final != null)
-            {
-                bot.ForwardMap = final;
-            }
+            ThrustControlUtil.DiscoverSolutionAsync(bot, null, ideal, _cancelCurrentBalancer.Token, null, newBestFound);
         }
 
         private static void RefillContainers(ControlledThrustBot bot)

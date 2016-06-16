@@ -10,6 +10,7 @@ using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesCore.Threads;
 
 namespace Game.Newt.v2.Arcanorum
 {

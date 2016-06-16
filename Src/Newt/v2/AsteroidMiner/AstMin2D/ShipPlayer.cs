@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Schedulers;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
+using Game.HelperClassesAI;
 using Game.HelperClassesCore;
+using Game.HelperClassesCore.Threads;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
@@ -17,51 +21,47 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class ShipPlayer : Bot
     {
-        #region Class: ThrustContribution
+        #region Class: KeyThrustRequest
 
-        private class ThrustContribution
+        private class KeyThrustRequest
         {
-            public ThrustContribution(Thruster thruster, int index, Vector3D translationForce, Vector3D torque)
-            {
-                this.Thruster = thruster;
-                this.Index = index;
+            public Vector3D? Linear { get; set; }
+            public Vector3D? Rotate { get; set; }
 
-                this.TranslationForceLength = translationForce.Length;
-                this.TranslationForce = translationForce;
-                this.TranslationForceUnit = new Vector3D(translationForce.X / this.TranslationForceLength, translationForce.Y / this.TranslationForceLength, translationForce.Z / this.TranslationForceLength);
+            public Key Key { get; set; }
 
-                this.TorqueLength = torque.Length;
-                this.Torque = torque;
-                this.TorqueUnit = new Vector3D(torque.X / this.TorqueLength, torque.Y / this.TorqueLength, torque.Z / this.TorqueLength);
-            }
-
-            public readonly Thruster Thruster;
-            public readonly int Index;
-
-            public readonly Vector3D TranslationForce;
-            public readonly Vector3D TranslationForceUnit;
-            public readonly double TranslationForceLength;
-
-            public readonly Vector3D Torque;
-            public readonly Vector3D TorqueUnit;
-            public readonly double TorqueLength;
+            public bool? Shift { get; set; }
+            public double? Max { get; set; }
         }
 
         #endregion
-        #region Class: ThrusterSetting
+        #region Class: ThrusterSolution
 
-        private class ThrusterSetting
+        private class ThrusterSolution
         {
-            public ThrusterSetting(Thruster thruster, int index, double percent)
+            public ThrusterSolution(KeyThrustRequest request, ThrustContributionModel model, MassMatrix inertia, double mass)
             {
-                this.Thruster = thruster;
-                this.Index = index;
-                this.Percent = percent;
+                this.Request = request;
+
+                this.Model = model;
+                this.Inertia = inertia;
+                this.Mass = mass;
             }
 
-            public readonly Thruster Thruster;
-            public readonly int Index;
-            public readonly double Percent;
+            /// <summary>
+            /// This is the key that was pressed, and how much acceleration they want
+            /// </summary>
+            public readonly KeyThrustRequest Request;
+
+            // These are used to figure out what percent of the map to use
+            public readonly ThrustContributionModel Model;
+            public readonly MassMatrix Inertia;
+            public readonly double Mass;
+
+            /// <summary>
+            /// This holds a map of which thrusters to fire at what percent in order to go the requested direction
+            /// </summary>
+            public volatile ThrusterMap Map = null;
         }
 
         #endregion
@@ -74,7 +74,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private readonly ProjectileGun[] _guns;
 
         private volatile bool _isThrustMapDirty = true;
-        private SortedList<Tuple<Key, bool?>, IEnumerable<ThrusterSetting>> _thrustLines = new SortedList<Tuple<Key, bool?>, IEnumerable<ThrusterSetting>>();
+        private SortedList<Tuple<Key, bool?>, ThrusterSolution> _thrustLines = new SortedList<Tuple<Key, bool?>, ThrusterSolution>();
+        private CancellationTokenSource _cancelCurrentBalancer = null;
+
+        /// <summary>
+        /// Workers that figure out which thrusters to fire will run on this thread
+        /// TODO: If there will be many instances of ShipPlayer, then they should share a common worker thread
+        /// </summary>
+        /// <remarks>
+        /// If the workers ran in their own threads, they would consume the threadpool, and the game would stutter
+        /// </remarks>
+        private readonly RoundRobinManager _thrustWorkerThread = new RoundRobinManager(new StaTaskScheduler(1));
 
         // bool is whether shift is down
         private List<Tuple<Key, bool?>> _downKeys = new List<Tuple<Key, bool?>>();
@@ -375,17 +385,26 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             if (_downKeys.Count > 0)
             {
-                EnsureThrustKeysBuilt();
+                EnsureThrustKeysBuilt_YISUP();
 
                 foreach (var key in _downKeys)
                 {
-                    IEnumerable<ThrusterSetting> thrusters;
-                    if (_thrustLines.TryGetValue(key, out thrusters) || _thrustLines.TryGetValue(Tuple.Create(key.Item1, (bool?)null), out thrusters))      // _downKeys will always have the bool set to true or false, but _thrustLines may have it stored as a null (null means ignore shift key)
+                    ThrusterSolution solution;
+                    if (_thrustLines.TryGetValue(key, out solution) || _thrustLines.TryGetValue(Tuple.Create(key.Item1, (bool?)null), out solution))      // _downKeys will always have the bool set to true or false, but _thrustLines may have it stored as a null (null means ignore shift key)
                     {
-                        foreach (ThrusterSetting thruster in thrusters)
+                        ThrusterMap map = solution.Map;
+                        if (map != null)
                         {
-                            //TODO: If this percent goes over 1, the Fire method will cap it.  The control theory logic will get confused, because not all of what it said was actually used
-                            thruster.Thruster.Percents[thruster.Index] += thruster.Percent;
+
+                            //TODO: The thrust map is normalized for maximum thrust.  If they want full thrust immediately, use it.  Otherwise roll on the thrust as they
+                            //hold the key in (start at a fixed min accel, then gradient up to full after a second or two)
+
+                            foreach (ThrusterSetting thruster in map.UsedThrusters)
+                            {
+                                //NOTE: If this percent goes over 1, the Fire method will cap it.  Any future control theory logic will get confused, because not all of what it said was actually used
+                                thruster.Thruster.Percents[thruster.SubIndex] += thruster.Percent;
+                            }
+
                         }
                     }
                 }
@@ -414,6 +433,20 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             // Internally, the dna is along Y, but externally, it needs to be along Z
             return RotateDNA_ToExternal(base.GetNewDNA());
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_cancelCurrentBalancer != null)
+                {
+                    _cancelCurrentBalancer.Cancel();
+                    _cancelCurrentBalancer = null;
+                }
+            }
+
+            base.Dispose(disposing);
         }
 
         #endregion
@@ -469,93 +502,56 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            _thrustLines.Clear();
-
-            ThrustContribution[] contributions = GetThrusterContributions(this.Thrusters, this.PhysicsBody.CenterOfMass);
-
-            MassMatrix inertia = this.PhysicsBody.MassMatrix;
-            double mass = inertia.Mass;
-
-            #region Linear
+            #region linear
 
             double? maxAccel = this.MaxAcceleration_Linear;
 
             var directions = new[]
             {
-                //new { Direction = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
 
-                //new { Direction = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
 
-                new { Direction = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
 
-                new { Direction = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
             };
 
-            foreach (var direction in directions)
-            {
-                IEnumerable<ThrusterSetting> thrusters;
-                if (direction.Max == null)
-                {
-                    thrusters = EnsureThrustKeysBuilt_Linear(direction.Direction, contributions);
-                }
-                else
-                {
-                    thrusters = EnsureThrustKeysBuilt_Linear(direction.Direction, contributions, direction.Max.Value, mass);
-                }
-
-                _thrustLines.Add(Tuple.Create(direction.Key, direction.Shift), thrusters);
-            }
-
             #endregion
-            #region Rotation
+            #region rotation
 
             maxAccel = this.MaxAcceleration_Rotate;
 
             var torques = new[]
             {
-                new { Torque = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
 
-                new { Torque = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
 
-                new { Torque = new Vector3D(0, 0, -1), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
-                new { Torque = new Vector3D(0, 0, 1), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
 
-                //new { Torque = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                //new { Torque = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                new { Torque = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
+                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
+                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
+                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
             };
-
-            foreach (var torque in torques)
-            {
-                IEnumerable<ThrusterSetting> thrusters;
-                if (torque.Max == null)
-                {
-                    thrusters = EnsureThrustKeysBuilt_Rotate(torque.Torque, contributions);
-                }
-                else
-                {
-                    thrusters = EnsureThrustKeysBuilt_Rotate(torque.Torque, contributions, torque.Max.Value, inertia);
-                }
-
-                _thrustLines.Add(Tuple.Create(torque.Key, torque.Shift), thrusters);
-            }
 
             #endregion
 
-            _isThrustMapDirty = false;
+            EnsureThrustKeysBuilt_Finish(directions.Concat(torques).ToArray());
         }
-        private void EnsureThrustKeysBuilt()
+        private void EnsureThrustKeysBuilt_YISUP()
         {
             if (!_isThrustMapDirty)
             {
@@ -568,276 +564,146 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            _thrustLines.Clear();
-
-            ThrustContribution[] contributions = GetThrusterContributions(this.Thrusters, this.PhysicsBody.CenterOfMass);
-
-            MassMatrix inertia = this.PhysicsBody.MassMatrix;
-            double mass = inertia.Mass;
-
-            #region Linear
+            #region linear
 
             double? maxAccel = this.MaxAcceleration_Linear;
 
             var directions = new[]
             {
-                //new { Direction = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
-                new { Direction = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
-                new { Direction = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
 
-                //new { Direction = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
-                new { Direction = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
-                new { Direction = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
 
-                new { Direction = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
 
-                new { Direction = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
-                new { Direction = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
             };
 
-            foreach (var direction in directions)
-            {
-                IEnumerable<ThrusterSetting> thrusters;
-                if (direction.Max == null)
-                {
-                    thrusters = EnsureThrustKeysBuilt_Linear(direction.Direction, contributions);
-                }
-                else
-                {
-                    thrusters = EnsureThrustKeysBuilt_Linear(direction.Direction, contributions, direction.Max.Value, mass);
-                }
-
-                _thrustLines.Add(Tuple.Create(direction.Key, direction.Shift), thrusters);
-            }
-
             #endregion
-            #region Rotation
+            #region rotation
 
             maxAccel = this.MaxAcceleration_Rotate;
 
             var torques = new[]
             {
-                new { Torque = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
 
-                new { Torque = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
 
-                new { Torque = new Vector3D(0, -1, 0), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
-                new { Torque = new Vector3D(0, 1, 0), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
 
-                //new { Torque = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                //new { Torque = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
-                new { Torque = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                new { Torque = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
+                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
+                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
+                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
             };
 
-            foreach (var torque in torques)
-            {
-                IEnumerable<ThrusterSetting> thrusters;
-                if (torque.Max == null)
-                {
-                    thrusters = EnsureThrustKeysBuilt_Rotate(torque.Torque, contributions);
-                }
-                else
-                {
-                    thrusters = EnsureThrustKeysBuilt_Rotate(torque.Torque, contributions, torque.Max.Value, inertia);
-                }
+            #endregion
 
-                _thrustLines.Add(Tuple.Create(torque.Key, torque.Shift), thrusters);
+            EnsureThrustKeysBuilt_Finish(directions.Concat(torques).ToArray());
+        }
+        private void EnsureThrustKeysBuilt_Finish(KeyThrustRequest[] requests)
+        {
+            if (_cancelCurrentBalancer != null)
+            {
+                _cancelCurrentBalancer.Cancel();
+                _cancelCurrentBalancer = null;
             }
 
-            #endregion
+            // Remember the current solutions, so they can help get a good start on the new solver
+            var previous = _thrustLines.Values.ToArray();
+
+            _thrustLines.Clear();
+            _cancelCurrentBalancer = new CancellationTokenSource();
+
+            ThrustContributionModel model = new ThrustContributionModel(this.Thrusters, this.PhysicsBody.CenterOfMass);
+            MassMatrix inertia = this.PhysicsBody.MassMatrix;
+            double mass = inertia.Mass;
+
+            // Several key combos may request the same direction, so group them
+            var grouped = requests.
+                ToLookup(KeyThrustRequestComparer);
+
+            //TODO: Share work on the same thread
+
+            foreach (var set in grouped)
+            {
+                // Create wrappers for this set
+                ThrusterSolution[] solutionWrappers = set.
+                    Select(o => new ThrusterSolution(o, model, inertia, mass)).
+                    ToArray();
+
+                // Store the wrappers
+                foreach (var wrapper in solutionWrappers)
+                {
+                    _thrustLines.Add(Tuple.Create(wrapper.Request.Key, wrapper.Request.Shift), wrapper);
+                }
+
+                // This delegate gets called when a better solution is found.  Distribute the map to the solution wrappers
+                var newBestFound = new Action<ThrusterMap>(o =>
+                {
+                    foreach (ThrusterSolution wrapper in solutionWrappers)
+                    {
+                        wrapper.Map = o;
+                    }
+                });
+
+                var options = new DiscoverSolutionOptions<Tuple<int, int, double>>()
+                {
+                    MaxIterations = 2000,
+                    ThreadShare = _thrustWorkerThread,
+                };
+
+                // Find the previous solution for this request
+                var prevMatch = previous.FirstOrDefault(o => KeyThrustRequestComparer(set.Key, o.Request));
+                if (prevMatch != null)
+                {
+                    options.Predefined = new[] { prevMatch.Map.Flattened };
+                }
+
+                // Find the combination of thrusters that push in the requested direction
+                ThrustControlUtil.DiscoverSolutionAsync(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
+            }
 
             _isThrustMapDirty = false;
         }
 
-        /// <summary>
-        /// This overload always fires contributing thrusters at 100%
-        /// </summary>
-        /// <remarks>
-        /// This isn't the most useful overload, but makes a good template for more complex attempts
-        /// </remarks>
-        private static IEnumerable<ThrusterSetting> EnsureThrustKeysBuilt_Linear(Vector3D direction, ThrustContribution[] contributions)
+        private static bool KeyThrustRequestComparer(KeyThrustRequest item1, KeyThrustRequest item2)
         {
-            direction = direction.ToUnit();     // doing this so the dot product can be used as a percent
-
-            List<Tuple<ThrustContribution, double>> retVal = new List<Tuple<ThrustContribution, double>>();
-
-            // Get a list of thrusters that will contribute to the direction
-            foreach (ThrustContribution contribution in contributions)
+            if (item1 == null && item2 == null)
             {
-                double dot = Vector3D.DotProduct(contribution.TranslationForceUnit, direction);
-
-                if (dot > .05d)
-                {
-                    retVal.Add(Tuple.Create(contribution, contribution.TranslationForceLength * dot));
-                }
+                return true;
+            }
+            else if (item1 == null || item2 == null)
+            {
+                return false;
             }
 
-            retVal = FilterThrusts(retVal, .05);
-
-            return retVal.Select(o => new ThrusterSetting(o.Item1.Thruster, o.Item1.Index, 1)).ToArray();     // commiting to array so that this linq isn't rerun each time it's iterated over
+            return VectorComparer(item1.Linear, item2.Linear) && VectorComparer(item1.Rotate, item2.Rotate);
         }
-        private static IEnumerable<ThrusterSetting> EnsureThrustKeysBuilt_Rotate(Vector3D torque, ThrustContribution[] contributions)
+        private static bool VectorComparer(Vector3D? item1, Vector3D? item2)
         {
-            torque = torque.ToUnit();     // doing this so the dot product can be used as a percent
-
-            List<Tuple<ThrustContribution, double>> retVal = new List<Tuple<ThrustContribution, double>>();
-
-            // Get a list of thrusters that will contribute to the direction
-            foreach (ThrustContribution contribution in contributions)
+            if (item1 == null && item2 == null)
             {
-                double dot = Vector3D.DotProduct(contribution.TorqueUnit, torque);
-
-                if (dot > .5d)
-                {
-                    retVal.Add(Tuple.Create(contribution, contribution.TorqueLength * dot));
-                }
-
-                //if (dot > .05d)
-                //{
-                //    retVal.Add(new ThrusterSetting(thruster, cntr, dot));     // for now, use the dot as the percent
-                //}
+                return true;
+            }
+            else if (item1 == null || item2 == null)
+            {
+                return false;
             }
 
-            retVal = FilterThrusts(retVal, .05);
-
-            return retVal.Select(o => new ThrusterSetting(o.Item1.Thruster, o.Item1.Index, 1)).ToArray();     // commiting to array so that this linq isn't rerun each time it's iterated over
-        }
-
-        /// <summary>
-        /// This overload will cut back the returned percents if the thrusters exceed the acceleration passed in
-        /// </summary>
-        private static IEnumerable<ThrusterSetting> EnsureThrustKeysBuilt_Linear(Vector3D direction, ThrustContribution[] contributions, double maxAcceleration, double mass)
-        {
-            direction = direction.ToUnit();     // doing this so the dot product can be used as a percent
-
-            List<Tuple<ThrustContribution, double>> retVal = new List<Tuple<ThrustContribution, double>>();
-
-            // Get a list of thrusters that will contribute to the direction
-            foreach (ThrustContribution contribution in contributions)
-            {
-                double dot = Vector3D.DotProduct(contribution.TranslationForceUnit, direction);
-
-                if (dot > .05d)
-                {
-                    retVal.Add(Tuple.Create(contribution, contribution.TranslationForceLength * dot));
-                }
-            }
-
-            retVal = FilterThrusts(retVal);
-
-            #region Reduce Percent
-
-            double percent = 1;
-
-            if (retVal.Count > 0)
-            {
-                double force = retVal.Sum(o => o.Item2);
-
-                //F=MA, A=F/M
-                double accel = force / mass;
-
-                if (accel > maxAcceleration)
-                {
-                    percent = maxAcceleration / accel;
-                }
-            }
-
-            #endregion
-
-            return retVal.Select(o => new ThrusterSetting(o.Item1.Thruster, o.Item1.Index, percent)).ToArray();     // commiting to array so that this linq isn't rerun each time it's iterated over
-        }
-        private static IEnumerable<ThrusterSetting> EnsureThrustKeysBuilt_Rotate(Vector3D axis, ThrustContribution[] contributions, double maxAcceleration, MassMatrix inertia)
-        {
-            axis = axis.ToUnit();     // doing this so the dot product can be used as a percent
-
-            List<Tuple<ThrustContribution, double>> retVal = new List<Tuple<ThrustContribution, double>>();
-
-            // Get a list of thrusters that will contribute to the direction
-            foreach (ThrustContribution contribution in contributions)
-            {
-                double dot = Vector3D.DotProduct(contribution.TorqueUnit, axis);
-
-                if (dot > .5d)
-                {
-                    //retVal.Add(new ThrusterSetting(contribution.Thruster, contribution.Index, 1));     // for now, just do 100%
-                    retVal.Add(Tuple.Create(contribution, contribution.TorqueLength * dot));
-                }
-            }
-
-            retVal = FilterThrusts(retVal);
-
-            #region Reduce Percent
-
-            double percent = 1;
-
-            if (retVal.Count > 0)
-            {
-                double torque = retVal.Sum(o => o.Item2);
-
-                // A=F/M
-                //double accel = torque / (Vector3D.DotProduct(inertia.Inertia, axis) * inertia.Mass);
-                double accel = torque / Math.Abs(Vector3D.DotProduct(inertia.Inertia, axis));
-
-                if (accel > maxAcceleration)
-                {
-                    percent = maxAcceleration / accel;
-                }
-            }
-
-            #endregion
-
-            return retVal.Select(o => new ThrusterSetting(o.Item1.Thruster, o.Item1.Index, percent)).ToArray();     // commiting to array so that this linq isn't rerun each time it's iterated over
-        }
-
-        /// <summary>
-        /// This removes anything that contributes less than percent of the max
-        /// </summary>
-        /// <remarks>
-        /// I had a case where a thruster was almost in line with the center of mass, but not quite.  The dot product of unit vectors
-        /// was pretty large, but the actual contribution was almost nothing.  However, firing that at 100% was completely wrong
-        /// </remarks>
-        private static List<Tuple<ThrustContribution, double>> FilterThrusts(List<Tuple<ThrustContribution, double>> thrusts, double percent = .1)
-        {
-            if (thrusts.Count == 0)
-            {
-                return thrusts;
-            }
-
-            double min = thrusts.Max(o => o.Item2) * percent;
-
-            return thrusts.Where(o => o.Item2 > min).ToList();
-        }
-
-        private static ThrustContribution[] GetThrusterContributions(IEnumerable<Thruster> thrusters, Point3D center)
-        {
-            //This method is copied from ShipPartTesterWindow
-
-            List<ThrustContribution> retVal = new List<ThrustContribution>();
-
-            foreach (Thruster thruster in thrusters)
-            {
-                for (int cntr = 0; cntr < thruster.ThrusterDirectionsShip.Length; cntr++)
-                {
-                    // This is copied from Body.AddForceAtPoint
-
-                    Vector3D offsetFromMass = thruster.Position - center;		// this is ship's local coords
-                    Vector3D force = thruster.ThrusterDirectionsShip[cntr] * thruster.ForceAtMax;
-
-                    Vector3D translationForce, torque;
-                    Math3D.SplitForceIntoTranslationAndTorque(out translationForce, out torque, offsetFromMass, force);
-
-                    retVal.Add(new ThrustContribution(thruster, cntr, translationForce, torque));
-                }
-            }
-
-            // Exit Function
-            return retVal.ToArray();
+            return Math3D.IsNearValue(item1.Value, item2.Value);
         }
 
         private static ShipDNA RotateDNA_FromExternal(ShipDNA dna)

@@ -198,6 +198,8 @@ namespace Game.Newt.v2.GameItems
                         if (cameras.Count == 0)
                         {
                             // Hang out for a bit, then try again.  No need to burn up the processor
+                            //TODO: UseAutoResetEvent (triggered by another thread in CameraPool.Add())
+                            //http://stackoverflow.com/questions/382173/what-are-alternative-ways-to-suspend-and-resume-a-thread
                             Thread.Sleep(450 + StaticRandom.Next(100));
                             continue;
                         }
@@ -484,9 +486,8 @@ namespace Game.Newt.v2.GameItems
 
             // Find the thread with the least to do
             TaskWrapper wrapper = _tasks.
-                Select(o => new { Count = o.Count, Wrapper = o }).
                 OrderBy(o => o.Count).
-                First().Wrapper;
+                First();
 
             // Add to the wrapper
             wrapper.AddRemoves.Enqueue(new Tuple<object, bool>(camera, true));
@@ -496,12 +497,11 @@ namespace Game.Newt.v2.GameItems
         }
         public void Remove(ICameraPoolCamera camera)
         {
-            if (!_cameraPointers.ContainsKey(camera.Token))
+            TaskWrapper wrapper = _cameraPointers[camera.Token];
+            if (!_cameraPointers.TryGetValue(camera.Token, out wrapper))
             {
                 throw new ArgumentException("This camera was never added");
             }
-
-            TaskWrapper wrapper = _cameraPointers[camera.Token];
 
             // Remove from the wrapper
             wrapper.AddRemoves.Enqueue(new Tuple<object, bool>(camera, false));

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Game.HelperClassesCore;
+using Game.HelperClassesCore.Threads;
 
 namespace Game.HelperClassesAI
 {
@@ -240,366 +241,469 @@ namespace Game.HelperClassesAI
             }
 
             #endregion
+            #region Class: SolutionWorker<T>
 
-            public static SolutionResult<T> DiscoverSolution<T>(DiscoverSolutionDelegates<T> delegates, DiscoverSolutionOptions<T> options = null)
+            private class SolutionWorker<T> : IRoundRobinWorker
             {
-                Random rand = StaticRandom.GetRandomForThread();
+                #region Declaration Section
 
-                options = options ?? new DiscoverSolutionOptions<T>();
+                private readonly DiscoverSolutionDelegates<T> _delegates;
+                private readonly DiscoverSolutionOptions<T> _options;
 
-                SolutionItem<T>[] predefined = GetPredefined(options.Predefined, delegates.GetError);
+                // These are stored in the worker thread (constructor gets called in a main thread, so it can't initialize things without memory barriers)
+                private Random _rand = null;
 
-                // Generate random samples
-                SolutionItem<T>[] generation = GetRandomSamples<T>(options.GenerationSize, predefined, delegates.GetNewSample, delegates.GetError, rand);
+                private SolutionItem<T>[] _generation = null;
+                private SolutionItem<T>[] _predefined = null;
+                private SolutionItem<T> _currentWinner = null;
 
-                SolutionItem<T> currentWinner = null;
-                List<double> errorHistory = new List<double>();       //TODO: A simple list of arrays is too simplistic.  Each category should get its own top performer, as well as a global top performing score
-                SolutionResultType? result = null;
+                private List<double> _errorHistory = null;       //TODO: A simple list of arrays is too simplistic.  Each category should get its own top performer, as well as a global top performing score
 
-                // Keep working them until there is an acceptable error
-                for (int cntr = 0; cntr < options.MaxIterations; cntr++)        // could break early if the error is low enough
+                private int _iterationCntr = 0;
+                private bool _isFinished = false;
+
+                #endregion
+
+                #region Constructor
+
+                public SolutionWorker(DiscoverSolutionDelegates<T> delegates, DiscoverSolutionOptions<T> options)
                 {
-                    errorHistory.Add(generation[0].Error.TotalError);
+                    _delegates = delegates;
+                    _options = options;
+                    this.Token = TokenGenerator.NextToken();
+                }
 
-                    // Check for success
-                    if (generation[0].Error.TotalError < options.StopError)        // they are sorted by sumerror
+                #endregion
+
+                #region IRoundRobinWorker Members
+
+                public bool Step()
+                {
+                    if (_rand == null)
                     {
-                        result = SolutionResultType.Final_ErrorThreshold;
-                        break;
+                        // This is the first time getting called.  Can't do this in the constructor, because the constructor is called in a different thread
+                        _rand = StaticRandom.GetRandomForThread();
+                        _errorHistory = new List<double>();
+                        _predefined = GetPredefined(_options.Predefined, _delegates.GetError);
                     }
 
-                    // Check for cancel
-                    if (delegates.Cancel.IsCancellationRequested)
+                    // Check for finished cases
+                    if (_isFinished)
                     {
-                        result = SolutionResultType.Premature_Cancelled;
-                        break;
+                        throw new InvalidOperationException("Step can't be called after it has returned false");
                     }
+                    else if (_delegates.Cancel.IsCancellationRequested)
+                    {
+                        OnFinished(SolutionResultType.Premature_Cancelled);
+                        return false;
+                    }
+                    else if (_iterationCntr >= _options.MaxIterations)
+                    {
+                        OnFinished(SolutionResultType.Premature_MaxIterations);
+                        return false;
+                    }
+
+                    _iterationCntr++;
+
+                    //TODO: Support species
+                    //https://codesachin.wordpress.com/2015/12/26/fuzzy-speciation-in-genetic-algorithms-using-k-d-trees/
+                    //
+                    //Func<T[],T[],double> getSpeciesDiff
+                    //
+                    //This will group items that are genetically similar to each other, crossover will choose between parents of the same species
+
+
+                    // Get the next generation
+                    if (_generation == null)
+                    {
+                        // First time
+                        _generation = GetRandomSamples<T>(_options.GenerationSize, _predefined, _delegates.GetNewSample, _delegates.GetError, _rand);
+                    }
+                    else
+                    {
+                        // Breed them (and rescore)
+                        _generation = Step(_generation, _options, _delegates, _predefined, _rand);
+                    }
+
+                    _errorHistory.Add(_generation[0].Error.TotalError);
 
                     // Check for new best
-                    if (delegates.NewBestFound != null && (currentWinner == null || generation[0].Error.TotalError < currentWinner.Error.TotalError))
+                    if (_delegates.NewBestFound != null && (_currentWinner == null || _generation[0].Error.TotalError < _currentWinner.Error.TotalError))
                     {
-                        currentWinner = generation[0];
-                        delegates.NewBestFound(new SolutionResult<T>(currentWinner.Item, SolutionResultType.Intermediate_NewBest, currentWinner.Error, errorHistory.ToArray()));
+                        _currentWinner = _generation[0];
+                        _delegates.NewBestFound(new SolutionResult<T>(_currentWinner.Item, SolutionResultType.Intermediate_NewBest, _currentWinner.Error, _errorHistory.ToArray()));
                     }
 
-                    // Breed them (and rescore)
-                    generation = Step(generation, options, delegates, predefined, rand);
+                    // Check for success
+                    if (_generation[0].Error.TotalError < _options.StopError)        // they are sorted by sumerror
+                    {
+                        OnFinished(SolutionResultType.Final_ErrorThreshold);
+                        return false;
+                    }
+
+                    return true;
                 }
 
-                result = result ?? SolutionResultType.Premature_MaxIterations;
-
-                return new SolutionResult<T>(generation[0].Item, result.Value, generation[0].Error, errorHistory.ToArray());
-            }
-
-            #region Private Methods
-
-            private static SolutionItem<T>[] Step<T>(SolutionItem<T>[] generation, DiscoverSolutionOptions<T> options, DiscoverSolutionDelegates<T> delegates, SolutionItem<T>[] predefined, Random rand)
-            {
-                // Take the top X items, and use them as parents for the next generation
-                Parents<T> parents = GetParents(generation, options.NumStraightCopies);
-
-                #region build new items
-
-                var retVal = new List<SolutionItem<T>>();
-
-                // Brand new samples
-                if (options.NumNewEachStep > 0)
+                public long Token
                 {
-                    retVal.AddRange(GetRandomSamples<T>(options.NumNewEachStep, predefined, delegates.GetNewSample, delegates.GetError, rand));       // this also scores them
-                }
-
-                // Children of top performers
-                while (retVal.Count < options.GenerationSize)
-                {
-                    retVal.AddRange(GetNewChildren(parents, delegates.Mutate, delegates.GetError, rand));
+                    get;
+                    private set;
                 }
 
                 #endregion
-                #region add parents
 
-                //NOTE: Adding parents at the end, so it doesn't affect generation size
+                #region Private Methods
 
-                retVal.AddRange(parents.Combined);       // no need to rescore these
-
-                #endregion
-
-                return retVal.
-                    OrderBy(o => o.Error.TotalError).
-                    ToArray();
-            }
-
-            /// <summary>
-            /// Find the items with the lowest error in each category
-            /// </summary>
-            private static Parents<T> GetParents<T>(SolutionItem<T>[] generation, int count)
-            {
-                //TODO: If a couple more have similar scores, it might be good to keep a few more parents (but just keep the standard number if the scores are climbing quickly)
-
-                // Get the top overall performers
-                SolutionItem<T>[] overall = generation.
-                    OrderBy(o => o.Error.TotalError).
-                    Take(count).
-                    ToArray();
-
-                // Get the top performers in each category
-                SolutionItem<T>[][] categories = null;
-                if (generation[0].Error.Error.Length > 1)     // if it's only one, then categories would just be a duplicate of overall
+                private static SolutionItem<T>[] Step<T>(SolutionItem<T>[] generation, DiscoverSolutionOptions<T> options, DiscoverSolutionDelegates<T> delegates, SolutionItem<T>[] predefined, Random rand)
                 {
-                    categories = Enumerable.Range(0, generation[0].Error.Error.Length).
-                        Select(o => generation.
-                            OrderBy(p => p.Error.Error[o]).
-                            Take(count).
-                            ToArray()).
+                    // Take the top X items, and use them as parents for the next generation
+                    Parents<T> parents = GetParents(generation, options.NumStraightCopies);
+
+                    #region build new items
+
+                    var retVal = new List<SolutionItem<T>>();
+
+                    // Brand new samples
+                    if (options.NumNewEachStep > 0)
+                    {
+                        retVal.AddRange(GetRandomSamples<T>(options.NumNewEachStep, predefined, delegates.GetNewSample, delegates.GetError, rand));       // this also scores them
+                    }
+
+                    // Children of top performers
+                    while (retVal.Count < options.GenerationSize)
+                    {
+                        retVal.AddRange(GetNewChildren(parents, delegates.Mutate, delegates.GetError, rand));
+                    }
+
+                    #endregion
+                    #region add parents
+
+                    //NOTE: Adding parents at the end, so it doesn't affect generation size
+
+                    retVal.AddRange(parents.Combined);       // no need to rescore these
+
+                    #endregion
+
+                    return retVal.
+                        OrderBy(o => o.Error.TotalError).
                         ToArray();
                 }
 
-                return new Parents<T>(overall, categories);
-            }
-
-            /// <summary>
-            /// This randomly creates 1 to N children based on random parents.  It randomly chooses asexual, or any number
-            /// of parents
-            /// </summary>
-            private static IEnumerable<SolutionItem<T>> GetNewChildren<T>(Parents<T> parents, Func<T[], T[]> mutate, Func<T[], SolutionError> getError, Random rand)
-            {
-                Tuple<int, SolutionItem<T>[]> numParents = GetNumParents(parents, rand);
-
-                SolutionItem<T>[] retVal = null;
-
-                if (numParents.Item1 < 1)
+                /// <summary>
+                /// This either picks a random predefined item, or requests a new random item
+                /// </summary>
+                private static SolutionItem<T>[] GetRandomSamples<T>(int count, SolutionItem<T>[] predefined, Func<T[]> getNew, Func<T[], SolutionError> getError, Random rand)
                 {
-                    throw new ApplicationException("Need at least one parent");
-                }
-                else if (numParents.Item1 == 1)
-                {
-                    // Asexual
-                    SolutionItem<T> child = numParents.Item2[rand.Next(numParents.Item2.Length)];
-                    child = new SolutionItem<T>(mutate(child.Item));
-                    retVal = new[] { child };
-                }
-                else
-                {
-                    // 2 or more parents
-                    retVal = GetNewChildren_Crossover(numParents.Item2, numParents.Item1, mutate, rand);
+                    var retVal = new SolutionItem<T>[count];
+
+                    // Create and score them
+                    for (int cntr = 0; cntr < count; cntr++)
+                    {
+                        if (predefined != null && rand.NextBool())
+                        {
+                            retVal[cntr] = predefined[rand.Next(predefined.Length)];        // predefined have already been scored
+                        }
+                        else
+                        {
+                            retVal[cntr] = new SolutionItem<T>(getNew());
+                            retVal[cntr].Error = getError(retVal[cntr].Item);
+                        }
+                    }
+
+                    // Always keep a generation sorted
+                    return retVal.
+                        OrderBy(o => o.Error.TotalError).
+                        ToArray();
                 }
 
-                // Score them
-                foreach (var item in retVal)
+                /// <summary>
+                /// Find the items with the lowest error in each category
+                /// </summary>
+                private static Parents<T> GetParents<T>(SolutionItem<T>[] generation, int count)
                 {
-                    item.Error = getError(item.Item);
+                    //TODO: If a couple more have similar scores, it might be good to keep a few more parents (but just keep the standard number if the scores are climbing quickly)
+
+                    // Get the top overall performers
+                    SolutionItem<T>[] overall = generation.
+                        OrderBy(o => o.Error.TotalError).
+                        Take(count).
+                        ToArray();
+
+                    // Get the top performers in each category
+                    SolutionItem<T>[][] categories = null;
+                    if (generation[0].Error.Error.Length > 1)     // if it's only one, then categories would just be a duplicate of overall
+                    {
+                        categories = Enumerable.Range(0, generation[0].Error.Error.Length).
+                            Select(o => generation.
+                                OrderBy(p => p.Error.Error[o]).
+                                Take(count).
+                                ToArray()).
+                            ToArray();
+                    }
+
+                    return new Parents<T>(overall, categories);
                 }
 
-                return retVal.
-                    OrderBy(o => o.Error.TotalError).
-                    ToArray();
-            }
-
-            private static SolutionItem<T>[] GetNewChildren_Crossover<T>(SolutionItem<T>[] parents, int numParents, Func<T[], T[]> mutate, Random rand)
-            {
-                // Choose which parents to use
-                T[][] chosenParents = UtilityCore.RandomRange(0, parents.Length, numParents).
-                    Select(o => parents[o].Item).
-                    ToArray();
-
-                // Figure out how many slices in each array
-                int numSlices = UtilityCore.GetScaledValue(1, chosenParents[0].Length - 1, 0, 1, rand.NextPow(2)).ToInt_Round();
-                if (numSlices < 1) numSlices = 1;
-                if (numSlices > chosenParents[0].Length - 1) numSlices = chosenParents[0].Length - 1;
-
-                // Crossover
-                T[][] children = Crossover(chosenParents, numSlices);
-
-                bool shouldMutate = rand.NextBool();
-
-                // Build return (maybe mutate)
-                return children.
-                    Select(o => new SolutionItem<T>(shouldMutate ? mutate(o) : o)).
-                    ToArray();      //NOTE: This doesn't score and sort.  That is done by the calling method
-            }
-
-            /// <summary>
-            /// This returns how many parents to use, and which bucket of parents to draw from
-            /// </summary>
-            private static Tuple<int, SolutionItem<T>[]> GetNumParents<T>(Parents<T> parents, Random rand)
-            {
-                const double ONE = .25;
-                const double TWO = .25;
-                const double POWER = 1.5;       // the larger the power, the higher the chance for 3 vs higher
-
-                int totalParents = parents.Combined.Length;
-
-                #region 0,1,2 total parents
-
-                if (totalParents <= 0)
+                /// <summary>
+                /// This randomly creates 1 to N children based on random parents.  It randomly chooses asexual, or any number
+                /// of parents
+                /// </summary>
+                private static IEnumerable<SolutionItem<T>> GetNewChildren<T>(Parents<T> parents, Func<T[], T[]> mutate, Func<T[], SolutionError> getError, Random rand)
                 {
-                    throw new ArgumentException("Need at least one parent in the pool");
+                    Tuple<int, SolutionItem<T>[]> numParents = GetNumParents(parents, rand);
+
+                    SolutionItem<T>[] retVal = null;
+
+                    if (numParents.Item1 < 1)
+                    {
+                        throw new ApplicationException("Need at least one parent");
+                    }
+                    else if (numParents.Item1 == 1)
+                    {
+                        // Asexual
+                        SolutionItem<T> child = numParents.Item2[rand.Next(numParents.Item2.Length)];
+                        child = new SolutionItem<T>(mutate(child.Item));
+                        retVal = new[] { child };
+                    }
+                    else
+                    {
+                        // 2 or more parents
+                        retVal = GetNewChildren_Crossover(numParents.Item2, numParents.Item1, mutate, rand);
+                    }
+
+                    // Score them
+                    foreach (var item in retVal)
+                    {
+                        item.Error = getError(item.Item);
+                    }
+
+                    return retVal.
+                        OrderBy(o => o.Error.TotalError).
+                        ToArray();
                 }
-                else if (totalParents == 1)
-                {
-                    return Tuple.Create(1, parents.Combined);
-                }
-                else if (totalParents == 2)
-                {
-                    int count = rand.NextDouble() <= (ONE / (ONE + TWO)) ? 1 : 2;
 
-                    if (count == 1)
+                private static SolutionItem<T>[] GetNewChildren_Crossover<T>(SolutionItem<T>[] parents, int numParents, Func<T[], T[]> mutate, Random rand)
+                {
+                    // Choose which parents to use
+                    T[][] chosenParents = UtilityCore.RandomRange(0, parents.Length, numParents).
+                        Select(o => parents[o].Item).
+                        ToArray();
+
+                    // Figure out how many slices in each array
+                    int numSlices = UtilityCore.GetScaledValue(1, chosenParents[0].Length - 1, 0, 1, rand.NextPow(2)).ToInt_Round();
+                    if (numSlices < 1) numSlices = 1;
+                    if (numSlices > chosenParents[0].Length - 1) numSlices = chosenParents[0].Length - 1;
+
+                    // Crossover
+                    T[][] children = Crossover(chosenParents, numSlices);
+
+                    bool shouldMutate = rand.NextBool();
+
+                    // Build return (maybe mutate)
+                    return children.
+                        Select(o => new SolutionItem<T>(shouldMutate ? mutate(o) : o)).
+                        ToArray();      //NOTE: This doesn't score and sort.  That is done by the calling method
+                }
+
+                /// <summary>
+                /// This returns how many parents to use, and which bucket of parents to draw from
+                /// </summary>
+                private static Tuple<int, SolutionItem<T>[]> GetNumParents<T>(Parents<T> parents, Random rand)
+                {
+                    const double ONE = .25;
+                    const double TWO = .25;
+                    const double POWER = 1.5;       // the larger the power, the higher the chance for 3 vs higher
+
+                    int totalParents = parents.Combined.Length;
+
+                    #region 0,1,2 total parents
+
+                    if (totalParents <= 0)
+                    {
+                        throw new ArgumentException("Need at least one parent in the pool");
+                    }
+                    else if (totalParents == 1)
                     {
                         return Tuple.Create(1, parents.Combined);
                     }
-                    else
+                    else if (totalParents == 2)
+                    {
+                        int count = rand.NextDouble() <= (ONE / (ONE + TWO)) ? 1 : 2;
+
+                        if (count == 1)
+                        {
+                            return Tuple.Create(1, parents.Combined);
+                        }
+                        else
+                        {
+                            SolutionItem<T>[] bucket = GetNumParents_Bucket_Two(parents, rand);
+                            return Tuple.Create(2, bucket);
+                        }
+                    }
+
+                    #endregion
+
+                    double val = rand.NextDouble();
+
+                    #region 1 or 2 return
+
+                    if (val <= ONE)
+                    {
+                        return Tuple.Create(1, parents.Combined);
+                    }
+                    else if (val <= ONE + TWO)
                     {
                         SolutionItem<T>[] bucket = GetNumParents_Bucket_Two(parents, rand);
                         return Tuple.Create(2, bucket);
                     }
+
+                    #endregion
+
+                    SolutionItem<T>[] bucket2 = GetNumParents_Bucket_Many(parents, rand);
+                    totalParents = bucket2.Length;
+
+                    totalParents = Math.Min(totalParents, 7);       // too many parents will just make a scrambled mess
+
+                    // Run random through power to give a non linear chance (favor fewer parents)
+                    int retVal = UtilityCore.GetScaledValue(3, totalParents, 0, 1, rand.NextPow(POWER)).ToInt_Round();
+
+                    if (retVal < 3) retVal = 3;
+                    if (retVal > totalParents) retVal = totalParents;
+
+                    return Tuple.Create(retVal, bucket2);
                 }
-
-                #endregion
-
-                double val = rand.NextDouble();
-
-                #region 1 or 2 return
-
-                if (val <= ONE)
+                private static SolutionItem<T>[] GetNumParents_Bucket_Two<T>(Parents<T> parents, Random rand)
                 {
-                    return Tuple.Create(1, parents.Combined);
-                }
-                else if (val <= ONE + TWO)
-                {
-                    SolutionItem<T>[] bucket = GetNumParents_Bucket_Two(parents, rand);
-                    return Tuple.Create(2, bucket);
-                }
+                    // It was decided there will be two children.  Decide whether to return combined, or one of the specific buckets
 
-                #endregion
-
-                SolutionItem<T>[] bucket2 = GetNumParents_Bucket_Many(parents, rand);
-                totalParents = bucket2.Length;
-
-                totalParents = Math.Min(totalParents, 7);       // too many parents will just make a scrambled mess
-
-                // Run random through power to give a non linear chance (favor fewer parents)
-                int retVal = UtilityCore.GetScaledValue(3, totalParents, 0, 1, rand.NextPow(POWER)).ToInt_Round();
-
-                if (retVal < 3) retVal = 3;
-                if (retVal > totalParents) retVal = totalParents;
-
-                return Tuple.Create(retVal, bucket2);
-            }
-            private static SolutionItem<T>[] GetNumParents_Bucket_Two<T>(Parents<T> parents, Random rand)
-            {
-                // It was decided there will be two children.  Decide whether to return combined, or one of the specific buckets
-
-                if (parents.Categories == null || rand.NextBool())
-                {
-                    return parents.Combined;
-                }
-
-                // Find categories that could potentially be returned
-                List<SolutionItem<T>[]> nonCombo = new List<SolutionItem<T>[]>();
-
-                if (parents.Overall.Length >= 2)
-                {
-                    nonCombo.Add(parents.Overall);
-                }
-
-                nonCombo.AddRange(parents.Categories.Where(o => o.Length >= 2));
-
-                if (nonCombo.Count == 0)
-                {
-                    // No single category has enough
-                    return parents.Combined;
-                }
-                else
-                {
-                    // Return one of the specific categories
-                    return nonCombo[rand.Next(nonCombo.Count)];
-                }
-            }
-            private static SolutionItem<T>[] GetNumParents_Bucket_Many<T>(Parents<T> parents, Random rand)
-            {
-                // If categories is null, then combined is the same as overall.  If it's not null, then flip a coin to see if combined
-                // should be returned, or one of the specific buckets
-                if (parents.Categories == null || rand.NextBool())
-                {
-                    return parents.Combined;
-                }
-                else
-                {
-                    // Choose a specific bucket
-                    int index = rand.Next(parents.Categories.Length + 1);       // even chance of choosing one of the categories, or overall
-
-                    if (index == parents.Categories.Length)
+                    if (parents.Categories == null || rand.NextBool())
                     {
-                        return parents.Overall;
+                        return parents.Combined;
+                    }
+
+                    // Find categories that could potentially be returned
+                    List<SolutionItem<T>[]> nonCombo = new List<SolutionItem<T>[]>();
+
+                    if (parents.Overall.Length >= 2)
+                    {
+                        nonCombo.Add(parents.Overall);
+                    }
+
+                    nonCombo.AddRange(parents.Categories.Where(o => o.Length >= 2));
+
+                    if (nonCombo.Count == 0)
+                    {
+                        // No single category has enough
+                        return parents.Combined;
                     }
                     else
                     {
-                        return parents.Categories[index];
+                        // Return one of the specific categories
+                        return nonCombo[rand.Next(nonCombo.Count)];
                     }
                 }
-            }
-
-            /// <summary>
-            /// This either picks a random predefined item, or requests a new random item
-            /// </summary>
-            private static SolutionItem<T>[] GetRandomSamples<T>(int count, SolutionItem<T>[] predefined, Func<T[]> getNew, Func<T[], SolutionError> getError, Random rand)
-            {
-                var retVal = new SolutionItem<T>[count];
-
-                // Create and score them
-                for (int cntr = 0; cntr < count; cntr++)
+                private static SolutionItem<T>[] GetNumParents_Bucket_Many<T>(Parents<T> parents, Random rand)
                 {
-                    if (predefined != null && rand.NextBool())
+                    // If categories is null, then combined is the same as overall.  If it's not null, then flip a coin to see if combined
+                    // should be returned, or one of the specific buckets
+                    if (parents.Categories == null || rand.NextBool())
                     {
-                        retVal[cntr] = predefined[rand.Next(predefined.Length)];        // predefined have already been scored
+                        return parents.Combined;
                     }
                     else
                     {
-                        retVal[cntr] = new SolutionItem<T>(getNew());
+                        // Choose a specific bucket
+                        int index = rand.Next(parents.Categories.Length + 1);       // even chance of choosing one of the categories, or overall
+
+                        if (index == parents.Categories.Length)
+                        {
+                            return parents.Overall;
+                        }
+                        else
+                        {
+                            return parents.Categories[index];
+                        }
+                    }
+                }
+
+                /// <summary>
+                /// This just converts to a solution item (which is a wrapper), then gets the error
+                /// </summary>
+                private static SolutionItem<T>[] GetPredefined<T>(T[][] predefined, Func<T[], SolutionError> getError)
+                {
+                    if (predefined == null || predefined.Length == 0)
+                    {
+                        return null;
+                    }
+
+                    SolutionItem<T>[] retVal = new SolutionItem<T>[predefined.Length];
+
+                    for (int cntr = 0; cntr < predefined.Length; cntr++)
+                    {
+                        retVal[cntr] = new SolutionItem<T>(predefined[cntr]);
                         retVal[cntr].Error = getError(retVal[cntr].Item);
                     }
+
+                    // no need to sort these
+
+                    return retVal;
                 }
 
-                // Always keep a generation sorted
-                return retVal.
-                    OrderBy(o => o.Error.TotalError).
-                    ToArray();
-            }
-
-            /// <summary>
-            /// This just converts to a solution item (which is a wrapper), then gets the error
-            /// </summary>
-            private static SolutionItem<T>[] GetPredefined<T>(T[][] predefined, Func<T[], SolutionError> getError)
-            {
-                if (predefined == null || predefined.Length == 0)
+                private void OnFinished(SolutionResultType result)
                 {
-                    return null;
+                    if (_isFinished)
+                    {
+                        throw new InvalidOperationException("This method should only be called once");
+                    }
+
+                    // Raise event
+                    if (_delegates.FinalFound != null)
+                    {
+                        if (_generation == null)
+                        {
+                            _delegates.FinalFound(new SolutionResult<T>(null, result, null, _errorHistory.ToArray()));      // this should only happen on a cancel
+                        }
+                        else
+                        {
+                            _delegates.FinalFound(new SolutionResult<T>(_generation[0].Item, result, _generation[0].Error, _errorHistory.ToArray()));
+                        }
+                    }
+
+                    // Mark this class as done
+                    _isFinished = true;
                 }
 
-                SolutionItem<T>[] retVal = new SolutionItem<T>[predefined.Length];
-
-                for (int cntr = 0; cntr < predefined.Length; cntr++)
-                {
-                    retVal[cntr] = new SolutionItem<T>(predefined[cntr]);
-                    retVal[cntr].Error = getError(retVal[cntr].Item);
-                }
-
-                // no need to sort these
-
-                return retVal;
+                #endregion
             }
 
             #endregion
+
+            public static void DiscoverSolution<T>(DiscoverSolutionDelegates<T> delegates, DiscoverSolutionOptions<T> options = null)
+            {
+                options = options ?? new DiscoverSolutionOptions<T>();
+
+                SolutionWorker<T> worker = new SolutionWorker<T>(delegates, options);
+
+                if (options.ThreadShare == null)
+                {
+                    while (worker.Step()) { }
+                }
+                else
+                {
+                    options.ThreadShare.Add(worker);
+                }
+            }
         }
 
         #endregion
 
         /// <summary>
-        /// This will create a bunch of random samples.  Then, score them breed/mutate them, repeat until a satisfactory
+        /// This will create a bunch of random samples.  Then, score them, breed/mutate them, repeat until a satisfactory
         /// solution is found
         /// </summary>
-        public static SolutionResult<T> DiscoverSolution<T>(DiscoverSolutionDelegates<T> delegates, DiscoverSolutionOptions<T> options = null)
+        public static void DiscoverSolution<T>(DiscoverSolutionDelegates<T> delegates, DiscoverSolutionOptions<T> options = null)
         {
-            return Discoverer.DiscoverSolution(delegates, options);
+            Discoverer.DiscoverSolution(delegates, options);
         }
 
         /// <summary>
@@ -664,10 +768,14 @@ namespace Game.HelperClassesAI
         /// up and right, pass those two here
         /// </remarks>
         public T[][] Predefined = null;
+
+        /// <summary>
+        /// If you want multiple discoverers to share the same thread, populate this
+        /// </summary>
+        public RoundRobinManager ThreadShare = null;
     }
 
     #endregion
-
     #region Class: DiscoverSolutionDelegates<T>
 
     public class DiscoverSolutionDelegates<T>
@@ -700,6 +808,11 @@ namespace Game.HelperClassesAI
         /// wants to use results immediately, even if they aren't optimal
         /// </summary>
         public Action<SolutionResult<T>> NewBestFound = null;
+
+        /// <summary>
+        /// This gets called when a final solution is found, or some other exit condition (cancel, max iterations, etc)
+        /// </summary>
+        public Action<SolutionResult<T>> FinalFound = null;
 
         /// <summary>
         /// The caller can set this if they want to stop early

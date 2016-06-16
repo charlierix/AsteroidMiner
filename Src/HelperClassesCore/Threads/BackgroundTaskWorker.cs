@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Game.HelperClassesCore
+namespace Game.HelperClassesCore.Threads
 {
     /// <summary>
     /// This is similar in concept to winform's BackgroundWorker, but with tasks.  And you don't have to wait for the current
