@@ -7,10 +7,9 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-
 using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
@@ -528,7 +527,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //a separate thread, and doesn't deal with energy draw, so this.IsOn is a loose compromise.  That tick could fire several times for each
             //one of this.Update, or the other way around.  But in the long run, they should be fairly synced.
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this anyway.  So
@@ -760,7 +759,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             radius *= BrainDesign.SCALE;		// scale it
 
             volume = 4d / 3d * Math.PI * radius * radius * radius;
-            mass = volume * itemOptions.BrainDensity;
+            mass = volume * itemOptions.Brain_Density;
         }
 
         private static Neuron_Fade[] CreateBrainChemicals(ShipPartDNA dna, ItemOptions itemOptions)
@@ -773,7 +772,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double radius, volume;
             GetNeuronVolume(out radius, out volume, dna, itemOptions);
 
-            int count = Convert.ToInt32(Math.Round(itemOptions.BrainChemicalDensity * volume));
+            int count = Convert.ToInt32(Math.Round(itemOptions.Brain_ChemicalDensity * volume));
             if (count == 0)
             {
                 return new Neuron_Fade[0];
@@ -794,7 +793,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Figure out the positions
             //NOTE: Only let them go to half radius.  Cluster% then needs to be doubled (doubling it again so that the brain chemicals don't get
             //too close together)
-            Vector3D[] positions = GetNeuronPositions_Cluster(brainChemPositions, count, radius * .5d, itemOptions.BrainNeuronMinClusterDistPercent * 4d);
+            Vector3D[] positions = GetNeuronPositions_Cluster(brainChemPositions, count, radius * .5d, itemOptions.Brain_NeuronMinClusterDistPercent * 4d);
 
             // Exit Function
             return positions.Select(o => new Neuron_Fade(o.ToPoint(), K_UP, K_DOWN, VALUECUTOFF)).ToArray();
@@ -805,14 +804,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double radius, volume;
             GetNeuronVolume(out radius, out volume, dna, itemOptions);
 
-            int count = Convert.ToInt32(Math.Round(itemOptions.BrainNeuronDensity * volume));
+            int count = Convert.ToInt32(Math.Round(itemOptions.Brain_NeuronDensity * volume));
             if (count == 0)
             {
                 count = 1;
             }
 
             // Figure out the positions
-            Vector3D[] positions = GetNeuronPositions_Cluster(dna.Neurons, brainChemicalPositions, 3d, count, radius, itemOptions.BrainNeuronMinClusterDistPercent);
+            Vector3D[] positions = GetNeuronPositions_Cluster(dna.Neurons, brainChemicalPositions, 3d, count, radius, itemOptions.Brain_NeuronMinClusterDistPercent);
 
             // Exit Function
             return positions.Select(o => new Neuron_NegPos(o.ToPoint())).ToArray();
@@ -822,7 +821,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
-            volume = Math.Pow(radius, itemOptions.BrainNeuronGrowthExponent);
+            volume = Math.Pow(radius, itemOptions.Brain_NeuronGrowthExponent);
         }
 
         private static Vector3D[] GetNeuronPositionsInitial(out Vector3D[] staticPoints, out double[] staticRepulseMult, Point3D[] dnaPositions, Point3D[] existingStaticPositions, double staticMultValue, int count, double radius, Func<double, Vector3D> getNewPoint)

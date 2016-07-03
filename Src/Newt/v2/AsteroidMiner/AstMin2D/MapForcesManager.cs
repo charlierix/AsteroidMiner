@@ -109,9 +109,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private void Map_ItemAdded(object sender, MapItemArgs e)
         {
-            if (e.Item is SpaceStation)
+            if (e.Item is SpaceStation || e.Item is Projectile)
             {
                 // Space stations are always stationary
+
+                // Not including projectiles, because guns could be mounted above and below the plane, and if projectiles are smashed onto
+                // the plane, they sometimes collide with each other or the ship
                 return;
             }
 
@@ -119,20 +122,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             #region Keep 2D
 
-            //NOTE: Not including projectiles, because guns could be mounted above and below the plane, and if projectiles are smashed onto
-            //the plane, they sometimes collide with each other or the ship
+            bool limitRotation = e.Item is Ship || e.Item is Bot;
 
-            if (e.Item is Asteroid || e.Item is Mineral || e.Item is Ship || e.Item is Bot)
-            {
-                bool limitRotation = e.Item is Ship || e.Item is Bot;
+            // Doing this in case the new item is the child of an exploding asteroid.  The parent asteroid can shatter in 3D, then ease
+            // back onto the plane
+            double animateDuration = 60;
+            double animatePreDelay = 2;
 
-                // Doing this in case the new item is the child of an exploding asteroid.  The parent asteroid can shatter in 3D, then ease
-                // back onto the plane
-                double animateDuration = 60;
-                double animatePreDelay = 2;
-
-                _keep2D.Add(e.Item, limitRotation, animateDuration, animatePreDelay);
-            }
+            _keep2D.Add(e.Item, limitRotation, animateDuration, animatePreDelay);
 
             #endregion
         }

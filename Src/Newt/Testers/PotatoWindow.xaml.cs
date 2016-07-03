@@ -7565,6 +7565,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
+
+        private void btnTruncatedOctahedron_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("finish this");
+        }
     }
 
     #region quickhull attempts

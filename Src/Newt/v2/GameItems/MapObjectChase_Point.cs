@@ -821,6 +821,7 @@ namespace Game.Newt.v2.GameItems
     public class ChasePoint_GetForceArgs
     {
         //TODO: Have a way to determine which props will be needed up front, and only populate those
+        /// <param name="item">NOTE: This is the item chasing, NOT the item being chased</param>
         public ChasePoint_GetForceArgs(IMapObject item, Vector3D direction)
         {
             this.Item = item;

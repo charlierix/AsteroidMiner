@@ -2,23 +2,23 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Media3D;
-
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
 using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: ConverterMatterToEnergyToolItem
+    #region Class: ConverterMatterToPlasmaToolItem
 
-    public class ConverterMatterToEnergyToolItem : PartToolItemBase
+    public class ConverterMatterToPlasmaToolItem : PartToolItemBase
     {
         #region Constructor
 
-        public ConverterMatterToEnergyToolItem(EditorOptions options)
+        public ConverterMatterToPlasmaToolItem(EditorOptions options)
             : base(options)
         {
             _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
@@ -33,14 +33,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return "Matter to Energy Converter";
+                return "Matter to Plasma Converter";
             }
         }
         public override string Description
         {
             get
             {
-                return "Pulls matter out of the cargo bay, and recharges the energy tank";
+                return "Pulls matter out of the cargo bay, and recharges the plasma tank";
             }
         }
         public override string Category
@@ -66,16 +66,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ConverterMatterToEnergyDesign(this.Options);
+            return new ConverterMatterToPlasmaDesign(this.Options);
         }
 
         #endregion
     }
 
     #endregion
-    #region Class: ConverterMatterToEnergyDesign
+    #region Class: ConverterMatterToPlasmaDesign
 
-    public class ConverterMatterToEnergyDesign : PartDesignBase
+    public class ConverterMatterToPlasmaDesign : PartDesignBase
     {
         #region Declaration Section
 
@@ -87,7 +87,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterMatterToEnergyDesign(EditorOptions options)
+        public ConverterMatterToPlasmaDesign(EditorOptions options)
             : base(options) { }
 
         #endregion
@@ -169,7 +169,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return ConverterMatterToFuelDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.ConverterBase, WorldColors.ConverterBaseSpecular, WorldColors.ConverterEnergy, WorldColors.ConverterEnergySpecular,
+                WorldColors.ConverterBase, WorldColors.ConverterBaseSpecular, WorldColors.ConverterPlasma, WorldColors.ConverterPlasmaSpecular,
                 isFinal);
         }
 
@@ -177,19 +177,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ConverterMatterToEnergy
+    #region Class: ConverterMatterToPlasma
 
-    public class ConverterMatterToEnergy : PartBase, IPartUpdatable, IContainer, IConverterMatter
+    public class ConverterMatterToPlasma : PartBase, IPartUpdatable, IContainer, IConverterMatter
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "ConverterMatterToEnergy";
+        public const string PARTTYPE = "ConverterMatterToPlasma";
 
         private readonly object _lock = new object();
 
         private ItemOptions _itemOptions = null;
 
-        private IContainer _energyTanks = null;
+        private IContainer _plasmaTanks = null;
 
         // This stays sorted from low to high density
         private List<Cargo> _cargo = new List<Cargo>();
@@ -200,13 +200,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterMatterToEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
+        public ConverterMatterToPlasma(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasmaTanks)
             : base(options, dna)
         {
             _itemOptions = itemOptions;
-            _energyTanks = energyTanks;
+            _plasmaTanks = plasmaTanks;
 
-            this.Design = new ConverterMatterToEnergyDesign(options);
+            this.Design = new ConverterMatterToPlasmaDesign(options);
             this.Design.SetDNA(dna);
 
             double volume;
@@ -214,10 +214,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             this.MaxVolume = volume;
 
-            if (_energyTanks != null)
+            if (_plasmaTanks != null)
             {
                 double scaleVolume = _scaleActual.X * _scaleActual.Y * _scaleActual.Z;      // can't use volume from above, because that is the amount of matter that can be held.  This is to get conversion ratios
-                _converter = new Converter(this, _energyTanks, _itemOptions.MatterToEnergy_ConversionRate, _itemOptions.MatterToEnergy_AmountToDraw * scaleVolume);
+                _converter = new Converter(this, _plasmaTanks, _itemOptions.MatterToPlasma_ConversionRate, _itemOptions.MatterToPlasma_AmountToDraw * scaleVolume);
             }
         }
 

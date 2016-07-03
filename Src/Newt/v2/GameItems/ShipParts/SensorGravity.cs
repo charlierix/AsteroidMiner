@@ -418,7 +418,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             this.Radius = radius;
 
-            _neurons = CreateNeurons(dna, itemOptions, itemOptions.GravitySensorNeuronDensity);
+            _neurons = CreateNeurons(dna, itemOptions, itemOptions.GravitySensor_NeuronDensity);
             _neuronMaxRadius = _neurons.Max(o => o.PositionLength);
         }
 
@@ -489,7 +489,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.GravitySensorAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.GravitySensor_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
                 {
                     // The energy tank didn't have enough
                     //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this
@@ -586,7 +586,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);
             radius *= SensorGravityDesign.SIZEPERCENTOFSCALE;
 
-            mass = volume * itemOptions.SensorDensity;
+            mass = volume * itemOptions.Sensor_Density;
 
             actualScale = new Vector3D(dna.Scale.X * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Y * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Z * SensorGravityDesign.SIZEPERCENTOFSCALE);
         }
@@ -596,7 +596,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
-            double volume = Math.Pow(radius, itemOptions.SensorNeuronGrowthExponent);
+            double volume = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
 
             int count = Convert.ToInt32(Math.Ceiling(neuronDensity * volume));
             if (count == 0)
@@ -619,6 +619,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private Vector3D GetGravityModelCoords()
         {
+            if(_field == null)
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
             Tuple<Point3D, Quaternion> worldCoords = GetWorldLocation();
 
             // Calculate the difference between the world orientation and model orientation

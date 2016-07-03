@@ -948,7 +948,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             Vector3D[] thrustDirections = ((ThrusterDesign)this.Design).ThrusterDirections;
             _mass = GetMass(itemOptions, thrustDirections.Length, cylinderVolume);
-            _forceAtMax = cylinderVolume * itemOptions.ThrusterStrengthRatio * ItemOptions.FORCESTRENGTHMULT;		//ThrusterStrengthRatio is stored as a lower value so that the user doesn't see such a huge number
+            _forceAtMax = cylinderVolume * itemOptions.Thruster_StrengthRatio * ItemOptions.FORCESTRENGTHMULT;		//ThrusterStrengthRatio is stored as a lower value so that the user doesn't see such a huge number
 
             RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(dna.Orientation));
             this.ThrusterDirectionsShip = thrustDirections.Select(o => transform.Transform(o)).ToArray();		//NOTE: It is expected that Design.ThrusterDirections are unit vectors
@@ -1267,13 +1267,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private static double GetMass(ItemOptions itemOptions, int thrustCount, double cylinderVolume)
         {
             // Get the mass of the cylinder
-            double retVal = cylinderVolume * itemOptions.ThrusterDensity;
+            double retVal = cylinderVolume * itemOptions.Thruster_Density;
 
             // Instead of trying some complex formula to figure out how much each extra thruster weighs, just add
             // a percent of the base mass for each additional thruster
             if (thrustCount > 1)
             {
-                retVal += (thrustCount - 1) * (retVal * itemOptions.ThrusterAdditionalMassPercent);
+                retVal += (thrustCount - 1) * (retVal * itemOptions.Thruster_AdditionalMassPercent);
             }
 
             // Exit Function

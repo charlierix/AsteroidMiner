@@ -12,7 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Primitives3D;
 using Game.Newt.v2.NewtonDynamics;

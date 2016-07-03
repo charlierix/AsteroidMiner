@@ -80,6 +80,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private BackImageManager _backImageManager = null;
         private MinimapHelper _miniMap = null;
         private CameraHelper _cameraHelper = null;
+        private SwarmObjectiveStrokes _brushStrokes = null;
 
         private MaterialManager _materialManager = null;
         private int _material_Ship = -1;
@@ -88,6 +89,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private int _material_Mineral = -1;
         private int _material_Asteroid = -1;
         private int _material_Projectile = -1;
+        private int _material_SwarmBot = -1;
+
+        private ShipExtraArgs _shipExtra = null;
 
         private Player _player = null;
         private SpaceStation2D[] _stations = null;
@@ -147,9 +151,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             try
             {
                 _itemOptions = new ItemOptions();
-                _itemOptions.ThrusterStrengthRatio *= 1.5;
+                _itemOptions.Thruster_StrengthRatio *= 1.5;
                 _itemOptions.FuelToThrustRatio *= .1;
-                _itemOptions.ProjectileColor = UtilityWPF.ColorFromHex("FFE330");        // using bee/wasp colors, because white looks too much like the stars
+                _itemOptions.Projectile_Color = UtilityWPF.ColorFromHex("FFE330");        // using bee/wasp colors, because white looks too much like the stars
 
                 _progressBars = new ShipProgressBarManager(pnlProgressBars);
                 _progressBars.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("BBB"));
@@ -225,12 +229,18 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 material.Elasticity = .95d;
                 _material_Projectile = _materialManager.AddMaterial(material);
 
+                // Swarmbot
+                material = new Game.Newt.v2.NewtonDynamics.Material();
+                material.Elasticity = .95d;
+                _material_SwarmBot = _materialManager.AddMaterial(material);
+
                 // Collisions
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Mineral, Collision_BotMineral);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Asteroid, Collision_ShipAsteroid);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Projectile, Collision_ShipProjectile);
 
                 _materialManager.RegisterCollisionEvent(_material_Asteroid, _material_Projectile, Collision_AsteroidProjectile);
+                _materialManager.RegisterCollisionEvent(_material_Asteroid, _material_SwarmBot, Collision_AsteroidSwarmBot);
                 _materialManager.RegisterCollisionEvent(_material_Asteroid, _material_Asteroid, Collision_AsteroidAsteroid);
 
                 #endregion
@@ -262,10 +272,19 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 #endregion
                 #region UpdateManager
 
+                //TODO: UpdateManager needs to inspect types as they are added to the map (map's ItemAdded event)
                 _updateManager = new UpdateManager(
-                    new Type[] { typeof(ShipPlayer), typeof(SpaceStation2D), typeof(Projectile), typeof(Asteroid) },
-                    new Type[] { typeof(ShipPlayer) },
+                    new Type[] { typeof(ShipPlayer), typeof(SpaceStation2D), typeof(Projectile), typeof(Asteroid), typeof(SwarmBot1b) },
+                    new Type[] { typeof(ShipPlayer), typeof(SwarmBot1b) },
                     _map);
+
+                #endregion
+                #region Brush Strokes
+
+                _brushStrokes = new SwarmObjectiveStrokes(_world.WorldClock, _itemOptions.SwarmBay_BirthSize * 4, 6);
+
+                // This would be for drawing the strokes
+                //_brushStrokes.PointsChanged += BrushStrokes_PointsChanged;
 
                 #endregion
                 #region Player
@@ -301,6 +320,20 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 #region BackImageManager
 
                 _backImageManager = new BackImageManager(backgroundCanvas, _player);
+
+                #endregion
+
+                #region Ship Extra
+
+                _shipExtra = new ShipExtraArgs()
+                {
+                    Options = _editorOptions,
+                    ItemOptions = _itemOptions,
+                    Material_Projectile = _material_Projectile,
+                    Material_SwarmBot = _material_SwarmBot,
+                    SwarmObjectiveStrokes = _brushStrokes,
+                    RunNeural = false,
+                };
 
                 #endregion
 
@@ -348,6 +381,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             try
             {
                 _updateManager.Update_MainThread(e.ElapsedTime);
+
+                _brushStrokes.Tick();
 
                 _backImageManager.Update();
                 _cameraHelper.Update();
@@ -522,6 +557,48 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void Collision_AsteroidSwarmBot(object sender, MaterialCollisionArgs e)
+        {
+            try
+            {
+                Body asteroidBody = e.GetBody(_material_Asteroid);
+                Body botBody = e.GetBody(_material_SwarmBot);
+
+                if (asteroidBody == null || botBody == null)
+                {
+                    return;
+                }
+
+                //NOTE: this.Map_ItemRemoved will dispose the projectile once the map removes it, so get these stats now
+                double botMass = botBody.Mass;
+                Point3D botPos = botBody.Position;
+                Vector3D botVelocity = botBody.Velocity;
+
+                // Damage the bot
+                SwarmBot1b bot = _map.GetItem<SwarmBot1b>(botBody);
+                if (bot != null)
+                {
+                    bot.TakeDamage(asteroidBody.Velocity);
+                }
+                else
+                {
+                    // Already gone
+                    return;
+                }
+
+                // Damage the asteroid
+                Asteroid asteroid = _map.GetItem<Asteroid>(asteroidBody);
+                if (asteroid != null)
+                {
+                    //TODO: When swarmbots can grow and specialize, remove this mass/vel boost
+                    asteroid.TakeDamage_Projectile(botMass * 5, botPos, botVelocity * 3);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void Collision_AsteroidAsteroid(object sender, MaterialCollisionArgs e)
         {
             try
@@ -674,6 +751,74 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
+        private readonly ITriangle _clickPlane = new Triangle(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(0, 1, 0));
+
+        private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.ChangedButton != MouseButton.Left)
+                {
+                    // All the special logic in this method is for the left button
+                    return;
+                }
+
+                // Fire a ray at the mouse point
+                Point clickPoint2D = e.GetPosition(grdViewPort);
+                var clickRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, clickPoint2D);
+
+                // No need for ray casting, just project down to the z=0 plane
+                //Point3D clickPoint3D = new Point3D(clickRay.Origin.X, clickRay.Origin.Y, 0);
+                Point3D clickPoint3D = Math3D.GetIntersection_Plane_Line(_clickPlane, clickRay.Origin, clickRay.Direction).Value;
+
+                // Store the point
+                _brushStrokes.AddPointToStroke(clickPoint3D);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grdViewPort_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                if (e.LeftButton != MouseButtonState.Pressed)
+                {
+                    return;
+                }
+
+                Point clickPoint2D = e.GetPosition(grdViewPort);
+                var clickRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, clickPoint2D);
+
+                //Point3D clickPoint3D = new Point3D(clickRay.Origin.X, clickRay.Origin.Y, 0);
+                Point3D clickPoint3D = Math3D.GetIntersection_Plane_Line(_clickPlane, clickRay.Origin, clickRay.Direction).Value;
+
+                _brushStrokes.AddPointToStroke(clickPoint3D);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grdViewPort_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (e.ChangedButton != MouseButton.Left)
+                {
+                    // All the special logic in this method is for the left button
+                    return;
+                }
+
+                _brushStrokes.StopStroke();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnFullMap_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -726,7 +871,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             if (_spaceDockPanel == null)
             {
-                _spaceDockPanel = new SpaceDockPanel(_editorOptions, _itemOptions, _map, _material_Ship, _material_Projectile);
+                _spaceDockPanel = new SpaceDockPanel(_editorOptions, _itemOptions, _map, _material_Ship, _shipExtra);
                 _spaceDockPanel.LaunchShip += new EventHandler(SpaceDockPanel_LaunchShip);
             }
 
@@ -1076,7 +1221,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             for (int cntr = 0; cntr < 30; cntr++)
             {
-                Projectile projectile = new Projectile(StaticRandom.NextDouble(.1, .5), 1000, new Point3D(15, 0, 0) + Math3D.GetRandomVector_Circular(3), _world, _material_Projectile, _itemOptions.ProjectileColor);
+                Projectile projectile = new Projectile(StaticRandom.NextDouble(.1, .5), 1000, new Point3D(15, 0, 0) + Math3D.GetRandomVector_Circular(3), _world, _material_Projectile, _itemOptions.Projectile_Color);
 
                 projectile.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(6);
 
@@ -1110,15 +1255,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         private ShipPlayer CreateShip(ShipDNA dna, bool shouldRotate = true)
         {
-            ShipExtraArgs args = new ShipExtraArgs()
-            {
-                Options = _editorOptions,
-                ItemOptions = _itemOptions,
-                Material_Projectile = _material_Projectile,
-                RunNeural = false,
-            };
-
-            ShipPlayer ship = ShipPlayer.GetNewShip(dna, _world, _material_Ship, _map, args);
+            ShipPlayer ship = ShipPlayer.GetNewShip(dna, _world, _material_Ship, _map, _shipExtra);
 
             //ship.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(Bot_ApplyForceAndTorque);
 

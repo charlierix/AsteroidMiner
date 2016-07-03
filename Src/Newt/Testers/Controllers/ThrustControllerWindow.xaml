@@ -86,8 +86,8 @@
                     <!-- Straight up -->
                     <!-- Chase mouse -->
 
-                    <!-- Misc -->
-                    <Expander IsExpanded="True" Header="Misc" Margin="0,9,0,0">
+                    <!-- Balances -->
+                    <Expander IsExpanded="True" Header="Balances" Margin="0,9,0,0">
                         <Border Style="{StaticResource panelBorder}">
                             <StackPanel>
                                 <Button Content="Balance Linear" Click="BalanceLinear_Click"/>
@@ -104,6 +104,31 @@
                                 <Button Content="Crossover - 3 parents" Click="Crossover3_Click"/>
                                 <Button Content="Crossover - 6 parents" Click="Crossover6_Click"/>
                                 <Button Content="Crossover - 16 parents" Click="Crossover16_Click"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander Visibility="Collapsed" IsExpanded="True" Header="Misc">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="1*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="# dimensions" Style="{StaticResource promptLabel}"/>
+                                    <TextBox Grid.Column="2" Grid.Row="0" Name="txtKDDimentions" Text="3" TextChanged="txtNumThrusters_TextChanged"/>
+                                </Grid>
+
+                                <Button Content="K-D Tree" Click="KDTree_Click"/>
                             </StackPanel>
                         </Border>
                     </Expander>

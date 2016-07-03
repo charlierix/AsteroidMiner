@@ -447,6 +447,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
+            if (snapshot.X0_Y0_Z0 == null && snapshot.X0_Y0_Z1 == null && snapshot.X0_Y1_Z0 == null && snapshot.X0_Y1_Z1 == null && snapshot.X1_Y0_Z0 == null && snapshot.X1_Y0_Z1 == null && snapshot.X1_Y1_Z0 == null && snapshot.X1_Y1_Z1 == null)
+            {
+                // Ran into this bug, wrote this if statement, and it never hit again.  All the items were in the root node
+                return;
+            }
+
             #region GetValue delegates
 
             // These get the value of the items in that node.  The value will be divided by the area of the node to figure out opacity.

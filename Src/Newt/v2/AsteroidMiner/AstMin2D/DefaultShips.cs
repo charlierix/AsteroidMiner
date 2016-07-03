@@ -26,7 +26,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                     parts.Add(new ShipPartDNA() { PartType = CargoBay.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.351601369140306), Scale = new Vector3D(1.43344624886732, 1, 1) });
 
-                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -1.53919035872714), Scale = new Vector3D(2.39179746637604, 2.39179746637604, 1.84590950818591) });
+                    //parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -1.53919035872714), Scale = new Vector3D(2.39179746637604, 2.39179746637604, 1.84590950818591) });
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -1.55), Scale = new Vector3D(2.39179746637604, 2.39179746637604, 1.84590950818591) });
 
                     parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = new Quaternion(-sqrt2div2, 0, 0, sqrt2div2), Position = new Point3D(0, 0, 0.368123117732111), Scale = new Vector3D(0.824785836257515, 0.531437069753381, 0.726770338763181) });
 
@@ -36,8 +37,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -1, 0, 0), Position = new Point3D(-1.27190576467114, 0, -0.584241777880554), Scale = new Vector3D(1.94002791062303, 1.94002791062303, 1.94002791062303), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
 
                     parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, 0.689034166030726), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
-                    //parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -2.29486784167327), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
-                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -2.4), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    //parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -2.4), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -2.5), Scale = new Vector3D(1, 1, 1), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+
                     #endregion
                     break;
 
@@ -61,13 +63,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = new Quaternion(0, 0, 1, 0), Position = new Point3D(-0.394841115317897, 0, 1.59863858641419), Scale = new Vector3D(0.793600071807675, 0.793600071807675, 0.793600071807675) });
                     parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = new Quaternion(0, 0, 0, 1), Position = new Point3D(0.394841199625966, 0, 1.59863858641419), Scale = new Vector3D(0.793600071807675, 0.793600071807675, 0.793600071807675) });
 
+                    // Big Thruster
                     parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(2.46367573808076, 2.46367573808076, 2.46367573808076), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
 
-                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0.729334005069577, -8.9744238735999E-05, 0.684157798982057, 8.41853258152711E-05), Position = new Point3D(-1.03957072315814, 0, 1.94997743987638), Scale = new Vector3D(1.052080902594, 1.052080902594, 1.052080902594), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -0.729334010591072, 0, 0.684157804161541), Position = new Point3D(1.03957072315814, 0, 1.94997743987638), Scale = new Vector3D(1.052080902594, 1.052080902594, 1.052080902594), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                    // Top Thrusters
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0.729334005069577, -8.9744238735999E-05, 0.684157798982057, 8.41853258152711E-05), Position = new Point3D(-1.28096414995941, 0, 2.10547023636209), Scale = new Vector3D(1.50075309653899, 1.50075309653899, 1.50075309653899), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -0.729334010591072, 0, 0.684157804161541), Position = new Point3D(1.28096414995941, 0, 2.10547023636209), Scale = new Vector3D(1.50075309653899, 1.50075309653899, 1.50075309653899), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
-                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(8.6267945584998E-06, -0.68401566032667, -9.14351796173045E-06, -0.729467323647773), Position = new Point3D(-0.726003601478887, 0, -2.59146012448352), Scale = new Vector3D(0.927867605076916, 0.927867605076916, 0.927867605076916), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
-                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(-0.684015657014172, -6.78676916703537E-05, 0.729467320120058, -7.23208707233711E-05), Position = new Point3D(0.726003601478887, 0, -2.59146012448352), Scale = new Vector3D(0.927867605076916, 0.927867605076916, 0.927867605076916), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                    // Bottom Thrusters
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(8.6267945584998E-06, -0.68401566032667, -9.14351796173045E-06, -0.729467323647773), Position = new Point3D(-0.726003601478887, 0, -2.68013152186471), Scale = new Vector3D(1.32356758692612, 1.32356758692612, 1.32356758692612), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(-0.684015657014172, -6.78676916703537E-05, 0.729467320120058, -7.23208707233711E-05), Position = new Point3D(0.726003601478887, 0, -2.68013152186471), Scale = new Vector3D(1.32356758692612, 1.32356758692612, 1.32356758692612), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One), ThrusterType = ThrusterType.One });
 
                     #endregion
                     break;
@@ -269,6 +274,37 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     #endregion
                     break;
 
+                case DefaultShipType.Hive:
+                    #region Hive
+
+                    parts.Add(new ShipPartDNA() { PartType = CargoBay.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0.566645574491999), Scale = new Vector3D(1.3146162844588, 1, 0.746001641471747) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ConverterMatterToPlasma.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.548364473683518, 0, -0.104397395), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ConverterMatterToAmmo.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.104397395), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ConverterMatterToFuel.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.548364473683518, 0, -0.104397395), Scale = new Vector3D(1, 1, 1) });
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.621160029978706), Scale = new Vector3D(1.3945933720746, 1, 0.636972730498334) });
+
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.33754162418803, 0, -0.0277902602030434), Scale = new Vector3D(1.7519483608434, 1.7519483608434, 1.81851460066594) });
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.33754162418803, 0, -0.0277902602030434), Scale = new Vector3D(1.7519483608434, 1.7519483608434, 1.81851460066594) });
+
+                    parts.Add(new ShipPartDNA() { PartType = PlasmaTank.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -1.16718087519328), Scale = new Vector3D(1, 1, 2.33574192401778) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 1.44783800163875), Scale = new Vector3D(0.852169384825627, 0.852169384825627, 0.852169384825627) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = new Quaternion(0.913307043276022, 0.000159488879511325, -0.407271671255826, 7.11209915474368E-05), Position = new Point3D(-1.018774605, 0, -1.83078653111444), Scale = new Vector3D(0.852169384825627, 0.852169384825627, 0.852169384825627) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = new Quaternion(1.81325328303877E-15, 0.913307057201625, -9.20025667659273E-16, 0.40727167746568), Position = new Point3D(1.018774605, 0, -1.83078653111444), Scale = new Vector3D(0.852169384825627, 0.852169384825627, 0.852169384825627) });
+
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(-1, 0, 0, 0), Position = new Point3D(0, 0, -2.10586754213348), Scale = new Vector3D(1.22904745098348, 1.22904745098348, 1.22904745098348) });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(-0.983556706055346, -0.000171756429715009, 0.180599489142851, -3.15377072542308E-05), Position = new Point3D(-1.76039818, 0, 1.50802029698188), Scale = new Vector3D(1.96247952900617, 1.96247952900617, 1.96247952900617), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -0.983556721052077, 0, -0.180599491896533), Position = new Point3D(1.76039818, 0, 1.50802029698188), Scale = new Vector3D(1.96247952900617, 1.96247952900617, 1.96247952900617), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(-0.986100951095401, -0.000172200725847872, -0.166147174980039, 2.90139301312891E-05), Position = new Point3D(-2.01363700443361, 0, -1.1470041346539), Scale = new Vector3D(1.96182335791366, 1.96182335791366, 1.96182335791366), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(-3.5422149461886E-15, -0.986100966130925, -3.26870111571977E-14, 0.166147177513359), Position = new Point3D(2.01363700443361, 0, -1.1470041346539), Scale = new Vector3D(1.96182335791366, 1.96182335791366, 1.96182335791366), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+
+                    #endregion
+                    break;
+
                 default:
                     throw new ApplicationException("Unknown DefaultShipType: " + type.ToString());
             }
@@ -293,7 +329,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         Horseshoe,
         Star,
         Pusher,
-        Artillery
+        Artillery,
+        Hive,
     }
 
     #endregion

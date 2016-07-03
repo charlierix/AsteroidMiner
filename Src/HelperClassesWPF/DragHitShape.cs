@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
+using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
 {

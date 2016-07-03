@@ -193,10 +193,11 @@
                                 <StackPanel Margin="8">
                                     <Button Name="btnRhombicuboctahedron" Content="Rhombicuboctahedron" Click="btnRhombicuboctahedron_Click"/>
                                     <Button Name="btnIcosidodecahedron" Content="Icosidodecahedron" Click="btnIcosidodecahedron_Click"/>
-                                    <Button Name="btnTruncatedIcosidodecahedron" Content="Truncated icosidodecahedron" Click="btnTruncatedIcosidodecahedron_Click"/>
+                                    <Button Name="btnTruncatedIcosidodecahedron" Content="Truncated Icosidodecahedron" Click="btnTruncatedIcosidodecahedron_Click"/>
                                     <Button Name="btnDodecahedron" Content="Dodecahedron" Click="btnDodecahedron_Click"/>
                                     <Button Name="btnPentakisDodecahedron" Content="Pentakis Dodecahedron" Click="btnPentakisDodecahedron_Click"/>
-                                    <Button Name="btnTruncatedIcosahedron" Content="Truncated icosahedron" ToolTip="Soccer Ball" Click="btnTruncatedIcosahedron_Click"/>
+                                    <Button Name="btnTruncatedIcosahedron" Content="Truncated Icosahedron" ToolTip="Soccer Ball" Click="btnTruncatedIcosahedron_Click"/>
+                                    <Button Name="btnTruncatedOctahedron" Content="Truncated Octahedron" Click="btnTruncatedOctahedron_Click"/>
                                     <Button Visibility="Collapsed" Content="Deltoidal icositetrahedron"/>
                                     <Button Visibility="Collapsed" Content="Pentagonal hexecontahedron"/>
                                     <Button Visibility="Collapsed" Content="Truncated cube" ToolTip="add a bevel % as input"/>

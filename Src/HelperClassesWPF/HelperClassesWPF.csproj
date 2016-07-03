@@ -108,7 +108,6 @@
     </Compile>
     <Compile Include="Gizmos3D\VisualToVisualLine3D.cs" />
     <Compile Include="Gizmos3D\VisualToVisualLine3D.Properties.cs" />
-    <Compile Include="Math1D.cs" />
     <Compile Include="Math2D.cs" />
     <Compile Include="MathND.cs" />
     <Compile Include="MIConvexHull\ConvexHull\Collections.cs" />

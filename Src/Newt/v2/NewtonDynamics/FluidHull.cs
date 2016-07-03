@@ -6,6 +6,7 @@ using System.Windows.Media.Media3D;
 
 using Game.HelperClassesWPF;
 using System.Windows;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.NewtonDynamics
 {

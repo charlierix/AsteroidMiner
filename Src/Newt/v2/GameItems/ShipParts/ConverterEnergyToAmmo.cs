@@ -201,10 +201,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             if (energyTanks != null && ammoBoxes != null)
             {
-                _converter = new Converter(energyTanks, ammoBoxes, itemOptions.EnergyToAmmoConversionRate, itemOptions.EnergyToAmmoAmountToDraw * volume);
+                _converter = new Converter(energyTanks, ammoBoxes, itemOptions.EnergyToAmmo_ConversionRate, itemOptions.EnergyToAmmo_AmountToDraw * volume);
             }
 
-            _mass = volume * itemOptions.EnergyToAmmoDensity;
+            _mass = volume * itemOptions.EnergyToAmmo_Density;
         }
 
         #endregion

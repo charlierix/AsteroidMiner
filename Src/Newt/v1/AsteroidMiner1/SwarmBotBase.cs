@@ -9,6 +9,7 @@ using System.Windows.Media.Media3D;
 using Game.Newt.v1.AsteroidMiner1.ShipAddons;
 using Game.HelperClassesWPF;
 using Game.Newt.v1.NewtonDynamics1;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.v1.AsteroidMiner1
 {

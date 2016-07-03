@@ -35,19 +35,19 @@ namespace Game.Newt.v2.GameItems
 
         #region Egg
 
-        private volatile object _eggDensity = 3500d;
+        private volatile object _egg_Density = 3500d;
         /// <summary>
         /// This is the mass of an egg that is a size of 1
         /// </summary>
-        public double EggDensity
+        public double Egg_Density
         {
             get
             {
-                return (double)_eggDensity;
+                return (double)_egg_Density;
             }
             set
             {
-                _eggDensity = value;
+                _egg_Density = value;
             }
         }
 
@@ -102,61 +102,61 @@ namespace Game.Newt.v2.GameItems
         // Containers
         #region Cargo Bay
 
-        private volatile object _cargoBayWallDensity = 20d;
+        private volatile object _cargoBay_WallDensity = 20d;
         /// <summary>
         /// This is the mass of the cargo bay's shell (it should be fairly light)
         /// </summary>
-        public double CargoBayWallDensity
+        public double CargoBay_WallDensity
         {
             get
             {
-                return (double)_cargoBayWallDensity;
+                return (double)_cargoBay_WallDensity;
             }
             set
             {
-                _cargoBayWallDensity = value;
+                _cargoBay_WallDensity = value;
             }
         }
 
         #endregion
         #region Ammo Box
 
-        private volatile object _ammoDensity = 10000d;
+        private volatile object _ammo_Density = 10000d;
         /// <summary>
         /// This is the mass of ammo that is a size of 1
         /// </summary>
-        public double AmmoDensity
+        public double Ammo_Density
         {
             get
             {
-                return (double)_ammoDensity;
+                return (double)_ammo_Density;
             }
             set
             {
-                _ammoDensity = value;
+                _ammo_Density = value;
             }
         }
 
-        private volatile object _ammoBoxWallDensity = 20d;
+        private volatile object _ammoBox_WallDensity = 20d;
         /// <summary>
         /// This is the mass of the ammo box's shell (it should be fairly light)
         /// </summary>
-        public double AmmoBoxWallDensity
+        public double AmmoBox_WallDensity
         {
             get
             {
-                return (double)_ammoBoxWallDensity;
+                return (double)_ammoBox_WallDensity;
             }
             set
             {
-                _ammoBoxWallDensity = value;
+                _ammoBox_WallDensity = value;
             }
         }
 
         #endregion
         #region Fuel Tank
 
-        private volatile object _fuelDensity = 750d;
+        private volatile object _fuel_Density = 750d;
         /// <summary>
         /// This is the mass of one unit of fuel
         /// </summary>
@@ -165,50 +165,50 @@ namespace Game.Newt.v2.GameItems
         /// Gasoline: 720 kg/m3
         /// Diesel: 830 kg/m3
         /// </remarks>
-        public double FuelDensity
+        public double Fuel_Density
         {
             get
             {
-                return (double)_fuelDensity;
+                return (double)_fuel_Density;
             }
             set
             {
-                _fuelDensity = value;
+                _fuel_Density = value;
             }
         }
 
-        private volatile object _fuelTankWallDensity = 10d;
+        private volatile object _fuelTank_WallDensity = 10d;
         /// <summary>
         /// This is the mass of the fuel tank's shell (it should be fairly light)
         /// </summary>
-        public double FuelTankWallDensity
+        public double FuelTank_WallDensity
         {
             get
             {
-                return (double)_fuelTankWallDensity;
+                return (double)_fuelTank_WallDensity;
             }
             set
             {
-                _fuelTankWallDensity = value;
+                _fuelTank_WallDensity = value;
             }
         }
 
         #endregion
         #region Energy Tank
 
-        private volatile object _energyTankDensity = 1000d;
+        private volatile object _energyTank_Density = 1000d;
         /// <summary>
         /// The energy tank has the same mass whether it's empty or full
         /// </summary>
-        public double EnergyTankDensity
+        public double EnergyTank_Density
         {
             get
             {
-                return (double)_energyTankDensity;
+                return (double)_energyTank_Density;
             }
             set
             {
-                _energyTankDensity = value;
+                _energyTank_Density = value;
             }
         }
 
@@ -223,19 +223,19 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Plasma Tank
 
-        private volatile object _plasmaTankDensity = 1800d;
+        private volatile object _plasmaTank_Density = 1800d;
         /// <summary>
         /// The plasma tank has the same mass whether it's empty or full
         /// </summary>
-        public double PlasmaTankDensity
+        public double PlasmaTank_Density
         {
             get
             {
-                return (double)_plasmaTankDensity;
+                return (double)_plasmaTank_Density;
             }
             set
             {
-                _plasmaTankDensity = value;
+                _plasmaTank_Density = value;
             }
         }
 
@@ -244,7 +244,7 @@ namespace Game.Newt.v2.GameItems
         // Converters
         #region Matter Converters - all
 
-        private volatile object _matterConverterWallDensity = 600d;
+        private volatile object _matterConverter_WallDensity = 600d;
         /// <summary>
         /// This is the mass of a matter converter's shell
         /// </summary>
@@ -252,303 +252,338 @@ namespace Game.Newt.v2.GameItems
         /// The wall density needs to be larger, and the volume smaller (because the converters have all kinds of
         /// high tech equipment in them, not just aluminum boxes)
         /// </remarks>
-        public double MatterConverterWallDensity
+        public double MatterConverter_WallDensity
         {
             get
             {
-                return (double)_matterConverterWallDensity;
+                return (double)_matterConverter_WallDensity;
             }
             set
             {
-                _matterConverterWallDensity = value;
+                _matterConverter_WallDensity = value;
             }
         }
 
-        private volatile object _matterConverterInternalVolume = .25d;
+        private volatile object _matterConverter_InternalVolume = .25d;
         /// <summary>
         /// This is how much of the total volume of a matter converter is available to storing the matter it's converting
         /// </summary>
         /// <remarks>
         /// 0 means 0%, 1 means 100%
         /// </remarks>
-        public double MatterConverterInternalVolume
+        public double MatterConverter_InternalVolume
         {
             get
             {
-                return (double)_matterConverterInternalVolume;
+                return (double)_matterConverter_InternalVolume;
             }
             set
             {
-                _matterConverterInternalVolume = value;
+                _matterConverter_InternalVolume = value;
             }
         }
 
         #endregion
         #region Matter -> Fuel
 
-        private volatile object _matterToFuelAmountToDraw = 100d;
+        private volatile object _matterToFuel_AmountToDraw = 100d;
         /// <summary>
         /// How much matter to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
         /// <remarks>
         /// The amount is volume * density, so it's the amount of mass that gets burned for one unit of time
         /// </remarks>
-        public double MatterToFuelAmountToDraw
+        public double MatterToFuel_AmountToDraw
         {
             get
             {
-                return (double)_matterToFuelAmountToDraw;
+                return (double)_matterToFuel_AmountToDraw;
             }
             set
             {
-                _matterToFuelAmountToDraw = value;
+                _matterToFuel_AmountToDraw = value;
             }
         }
 
-        private volatile object _matterToFuelConversionRate = .002d;		// 500 units of mass for one unit of fuel
-        public double MatterToFuelConversionRate
+        private volatile object _matterToFuel_ConversionRate = .01d;		// 100 units of mass for one unit of fuel
+        public double MatterToFuel_ConversionRate
         {
             get
             {
-                return (double)_matterToFuelConversionRate;
+                return (double)_matterToFuel_ConversionRate;
             }
             set
             {
-                _matterToFuelConversionRate = value;
+                _matterToFuel_ConversionRate = value;
             }
         }
 
         #endregion
         #region Matter -> Energy
 
-        private volatile object _matterToEnergyAmountToDraw = 100d;
+        private volatile object _matterToEnergy_AmountToDraw = 100d;
         /// <summary>
         /// How much matter to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
         /// <remarks>
         /// The amount is volume * density, so it's the amount of mass that gets burned for one unit of time
         /// </remarks>
-        public double MatterToEnergyAmountToDraw
+        public double MatterToEnergy_AmountToDraw
         {
             get
             {
-                return (double)_matterToEnergyAmountToDraw;
+                return (double)_matterToEnergy_AmountToDraw;
             }
             set
             {
-                _matterToEnergyAmountToDraw = value;
+                _matterToEnergy_AmountToDraw = value;
             }
         }
 
-        private volatile object _matterToEnergyConversionRate = .002d;		// 500 units of mass for one unit of energy
-        public double MatterToEnergyConversionRate
+        private volatile object _matterToEnergy_ConversionRate = .02d;		// 50 units of mass for one unit of energy?
+        public double MatterToEnergy_ConversionRate
         {
             get
             {
-                return (double)_matterToEnergyConversionRate;
+                return (double)_matterToEnergy_ConversionRate;
             }
             set
             {
-                _matterToEnergyConversionRate = value;
+                _matterToEnergy_ConversionRate = value;
             }
         }
 
         #endregion
         #region Matter -> Plasma
 
-        private volatile object _matterToPlasmaAmountToDraw = 100d;
+        private volatile object _matterToPlasma_AmountToDraw = 100d;
         /// <summary>
         /// How much matter to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
         /// <remarks>
         /// The amount is volume * density, so it's the amount of mass that gets burned for one unit of time
         /// </remarks>
-        public double MatterToPlasmaAmountToDraw
+        public double MatterToPlasma_AmountToDraw
         {
             get
             {
-                return (double)_matterToPlasmaAmountToDraw;
+                return (double)_matterToPlasma_AmountToDraw;
             }
             set
             {
-                _matterToPlasmaAmountToDraw = value;
+                _matterToPlasma_AmountToDraw = value;
             }
         }
 
-        private volatile object _matterToPlasmaConversionRate = .001d;		// 1000 units of mass for one unit of plasma
-        public double MatterToPlasmaConversionRate
+        private volatile object _matterToPlasma_ConversionRate = .005d;		// 500 units of mass for one unit of plasma? (or 200?)
+        public double MatterToPlasma_ConversionRate
         {
             get
             {
-                return (double)_matterToPlasmaConversionRate;
+                return (double)_matterToPlasma_ConversionRate;
             }
             set
             {
-                _matterToPlasmaConversionRate = value;
+                _matterToPlasma_ConversionRate = value;
+            }
+        }
+
+        #endregion
+        #region Matter -> Ammo
+
+        private volatile object _matterToAmmo_AmountToDraw = 100d;
+        /// <summary>
+        /// How much matter to pull in one unit of time (this gets multiplied by the size of the converter)
+        /// </summary>
+        /// <remarks>
+        /// The amount is volume * density, so it's the amount of mass that gets burned for one unit of time
+        /// </remarks>
+        public double MatterToAmmo_AmountToDraw
+        {
+            get
+            {
+                return (double)_matterToAmmo_AmountToDraw;
+            }
+            set
+            {
+                _matterToAmmo_AmountToDraw = value;
+            }
+        }
+
+        private volatile object _matterToAmmo_ConversionRate = .01d;		// 100 units of mass for one unit of ammo
+        public double MatterToAmmo_ConversionRate
+        {
+            get
+            {
+                return (double)_matterToAmmo_ConversionRate;
+            }
+            set
+            {
+                _matterToAmmo_ConversionRate = value;
             }
         }
 
         #endregion
         #region Energy -> Ammo
 
-        private volatile object _energyToAmmoConversionRate = .02d;		// 50 units of energy for one unit of ammo
-        public double EnergyToAmmoConversionRate
+        private volatile object _energyToAmmo_ConversionRate = .02d;		// 50 units of energy for one unit of ammo
+        public double EnergyToAmmo_ConversionRate
         {
             get
             {
-                return (double)_energyToAmmoConversionRate;
+                return (double)_energyToAmmo_ConversionRate;
             }
             set
             {
-                _energyToAmmoConversionRate = value;
+                _energyToAmmo_ConversionRate = value;
             }
         }
 
-        private volatile object _energyToAmmoAmountToDraw = .1d;
+        private volatile object _energyToAmmo_AmountToDraw = .1d;
         /// <summary>
         /// How much energy to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
-        public double EnergyToAmmoAmountToDraw
+        public double EnergyToAmmo_AmountToDraw
         {
             get
             {
-                return (double)_energyToAmmoAmountToDraw;
+                return (double)_energyToAmmo_AmountToDraw;
             }
             set
             {
-                _energyToAmmoAmountToDraw = value;
+                _energyToAmmo_AmountToDraw = value;
             }
         }
 
-        private volatile object _energyToAmmoDensity = 7500d;
-        public double EnergyToAmmoDensity
+        private volatile object _energyToAmmo_Density = 7500d;
+        public double EnergyToAmmo_Density
         {
             get
             {
-                return (double)_energyToAmmoDensity;
+                return (double)_energyToAmmo_Density;
             }
             set
             {
-                _energyToAmmoDensity = value;
+                _energyToAmmo_Density = value;
             }
         }
 
         #endregion
         #region Energy -> Fuel
 
-        private volatile object _energyToFuelConversionRate = .1d;		// 10 units of energy for one unit of fuel
-        public double EnergyToFuelConversionRate
+        private volatile object _energyToFuel_ConversionRate = .1d;		// 10 units of energy for one unit of fuel
+        public double EnergyToFuel_ConversionRate
         {
             get
             {
-                return (double)_energyToFuelConversionRate;
+                return (double)_energyToFuel_ConversionRate;
             }
             set
             {
-                _energyToFuelConversionRate = value;
+                _energyToFuel_ConversionRate = value;
             }
         }
 
-        private volatile object _energyToFuelAmountToDraw = .1d;
+        private volatile object _energyToFuel_AmountToDraw = .1d;
         /// <summary>
         /// How much energy to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
-        public double EnergyToFuelAmountToDraw
+        public double EnergyToFuel_AmountToDraw
         {
             get
             {
-                return (double)_energyToFuelAmountToDraw;
+                return (double)_energyToFuel_AmountToDraw;
             }
             set
             {
-                _energyToFuelAmountToDraw = value;
+                _energyToFuel_AmountToDraw = value;
             }
         }
 
-        private volatile object _energyToFuelDensity = 7500d;
-        public double EnergyToFuelDensity
+        private volatile object _energyToFuel_Density = 7500d;
+        public double EnergyToFuel_Density
         {
             get
             {
-                return (double)_energyToFuelDensity;
+                return (double)_energyToFuel_Density;
             }
             set
             {
-                _energyToFuelDensity = value;
+                _energyToFuel_Density = value;
             }
         }
 
         #endregion
         #region Fuel -> Energy
 
-        private volatile object _fuelToEnergyConversionRate = .9d;		// 10 units of fuel for 9 units of energy (it's just burning fuel)
-        public double FuelToEnergyConversionRate
+        private volatile object _fuelToEnergy_ConversionRate = .9d;		// 10 units of fuel for 9 units of energy (it's just burning fuel)
+        public double FuelToEnergy_ConversionRate
         {
             get
             {
-                return (double)_fuelToEnergyConversionRate;
+                return (double)_fuelToEnergy_ConversionRate;
             }
             set
             {
-                _fuelToEnergyConversionRate = value;
+                _fuelToEnergy_ConversionRate = value;
             }
         }
 
-        private volatile object _fuelToEnergyAmountToDraw = 1d;
+        private volatile object _fuelToEnergy_AmountToDraw = 1d;
         /// <summary>
         /// How much fuel to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
-        public double FuelToEnergyAmountToDraw
+        public double FuelToEnergy_AmountToDraw
         {
             get
             {
-                return (double)_fuelToEnergyAmountToDraw;
+                return (double)_fuelToEnergy_AmountToDraw;
             }
             set
             {
-                _fuelToEnergyAmountToDraw = value;
+                _fuelToEnergy_AmountToDraw = value;
             }
         }
 
-        private volatile object _fuelToEnergyDensity = 500d;
-        public double FuelToEnergyDensity
+        private volatile object _fuelToEnergy_Density = 500d;
+        public double FuelToEnergy_Density
         {
             get
             {
-                return (double)_fuelToEnergyDensity;
+                return (double)_fuelToEnergy_Density;
             }
             set
             {
-                _fuelToEnergyDensity = value;
+                _fuelToEnergy_Density = value;
             }
         }
 
         #endregion
         #region Solar Panel (Radiation -> Energy)
 
-        private volatile object _solarPanelConversionRate = .05d;
-        public double SolarPanelConversionRate
+        private volatile object _solarPanel_ConversionRate = .05d;
+        public double SolarPanel_ConversionRate
         {
             get
             {
-                return (double)_solarPanelConversionRate;
+                return (double)_solarPanel_ConversionRate;
             }
             set
             {
-                _solarPanelConversionRate = value;
+                _solarPanel_ConversionRate = value;
             }
         }
 
-        private volatile object _solarPanelDensity = 500d;
-        public double SolarPanelDensity
+        private volatile object _solarPanel_Density = 500d;
+        public double SolarPanel_Density
         {
             get
             {
-                return (double)_solarPanelDensity;
+                return (double)_solarPanel_Density;
             }
             set
             {
-                _solarPanelDensity = value;
+                _solarPanel_Density = value;
             }
         }
 
@@ -557,20 +592,20 @@ namespace Game.Newt.v2.GameItems
         // Sensors
         #region Sensors - all
 
-        private volatile object _sensorDensity = 1500d;
-        public double SensorDensity
+        private volatile object _sensor_Density = 1500d;
+        public double Sensor_Density
         {
             get
             {
-                return (double)_sensorDensity;
+                return (double)_sensor_Density;
             }
             set
             {
-                _sensorDensity = value;
+                _sensor_Density = value;
             }
         }
 
-        private volatile object _sensorNeuronGrowthExponent = .8d;
+        private volatile object _sensor_NeuronGrowthExponent = .8d;
         /// <summary>
         /// Even though the sensor appears to be a cube, the neurons are placed in a sphere, but if I calculate
         /// volume as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
@@ -581,83 +616,83 @@ namespace Game.Newt.v2.GameItems
         /// <remarks>
         /// If you want spherical growth, just set this to 3
         /// </remarks>
-        public double SensorNeuronGrowthExponent
+        public double Sensor_NeuronGrowthExponent
         {
             get
             {
-                return (double)_sensorNeuronGrowthExponent;
+                return (double)_sensor_NeuronGrowthExponent;
             }
             set
             {
-                _sensorNeuronGrowthExponent = value;
+                _sensor_NeuronGrowthExponent = value;
             }
         }
 
         #endregion
         #region Gravity Sensor
 
-        private volatile object _gravitySensorNeuronDensity = 20d;
+        private volatile object _gravitySensor_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a gravity sensor
         /// </summary>
-        public double GravitySensorNeuronDensity
+        public double GravitySensor_NeuronDensity
         {
             get
             {
-                return (double)_gravitySensorNeuronDensity;
+                return (double)_gravitySensor_NeuronDensity;
             }
             set
             {
-                _gravitySensorNeuronDensity = value;
+                _gravitySensor_NeuronDensity = value;
             }
         }
 
-        private volatile object _gravitySensorAmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
-        public double GravitySensorAmountToDraw
+        private volatile object _gravitySensor_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
+        public double GravitySensor_AmountToDraw
         {
             get
             {
-                return (double)_gravitySensorAmountToDraw;
+                return (double)_gravitySensor_AmountToDraw;
             }
             set
             {
-                _gravitySensorAmountToDraw = value;
+                _gravitySensor_AmountToDraw = value;
             }
         }
 
         #endregion
         #region Spin Sensor
 
-        private volatile object _spinSensorNeuronDensity = 20d;
+        private volatile object _spinSensor_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a spin sensor
         /// </summary>
-        public double SpinSensorNeuronDensity
+        public double SpinSensor_NeuronDensity
         {
             get
             {
-                return (double)_spinSensorNeuronDensity;
+                return (double)_spinSensor_NeuronDensity;
             }
             set
             {
-                _spinSensorNeuronDensity = value;
+                _spinSensor_NeuronDensity = value;
             }
         }
 
-        private volatile object _spinSensorAmountToDraw = 1d; //.001d;		this is multiplied by ENERGYDRAWMULT
-        public double SpinSensorAmountToDraw
+        private volatile object _spinSensor_AmountToDraw = 1d; //.001d;		this is multiplied by ENERGYDRAWMULT
+        public double SpinSensor_AmountToDraw
         {
             get
             {
-                return (double)_spinSensorAmountToDraw;
+                return (double)_spinSensor_AmountToDraw;
             }
             set
             {
-                _spinSensorAmountToDraw = value;
+                _spinSensor_AmountToDraw = value;
             }
         }
 
-        private volatile object _spinSensorMaxSpeed = 1d;
+        private volatile object _spinSensor_MaxSpeed = 1d;
         /// <summary>
         /// This is the angular speed where the neurons output 1 (anything over this speed is just one)
         /// </summary>
@@ -669,115 +704,115 @@ namespace Game.Newt.v2.GameItems
         /// But if there are cases where the variable model is needed, add an enum to the gravity sensor (but enums can't
         /// be mutated, so should be avoided)
         /// </remarks>
-        public double SpinSensorMaxSpeed
+        public double SpinSensor_MaxSpeed
         {
             get
             {
-                return (double)_spinSensorMaxSpeed;
+                return (double)_spinSensor_MaxSpeed;
             }
             set
             {
-                _spinSensorMaxSpeed = value;
+                _spinSensor_MaxSpeed = value;
             }
         }
 
         #endregion
         #region Velocity Sensor
 
-        private volatile object _velocitySensorNeuronDensity = 20d;
+        private volatile object _velocitySensor_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a velocity sensor
         /// </summary>
-        public double VelocitySensorNeuronDensity
+        public double VelocitySensor_NeuronDensity
         {
             get
             {
-                return (double)_velocitySensorNeuronDensity;
+                return (double)_velocitySensor_NeuronDensity;
             }
             set
             {
-                _velocitySensorNeuronDensity = value;
+                _velocitySensor_NeuronDensity = value;
             }
         }
 
-        private volatile object _velocitySensorAmountToDraw = 1d; //.001d;		this is multiplied by ENERGYDRAWMULT
-        public double VelocitySensorAmountToDraw
+        private volatile object _velocitySensor_AmountToDraw = 1d; //.001d;		this is multiplied by ENERGYDRAWMULT
+        public double VelocitySensor_AmountToDraw
         {
             get
             {
-                return (double)_velocitySensorAmountToDraw;
+                return (double)_velocitySensor_AmountToDraw;
             }
             set
             {
-                _velocitySensorAmountToDraw = value;
+                _velocitySensor_AmountToDraw = value;
             }
         }
 
         #endregion
         #region Camera - all
 
-        private volatile object _cameraDensity = 1100d;
-        public double CameraDensity
+        private volatile object _camera_Density = 1100d;
+        public double Camera_Density
         {
             get
             {
-                return (double)_cameraDensity;
+                return (double)_camera_Density;
             }
             set
             {
-                _cameraDensity = value;
+                _camera_Density = value;
             }
         }
 
-        private volatile object _cameraNeuronGrowthExponent = .8d;
+        private volatile object _camera_NeuronGrowthExponent = .8d;
         /// <summary>
         /// Volume is calculated as Math.Pow(radius, this.CameraNeuronGrowthExponent)
         /// </summary>
         /// <remarks>
         /// If you want growth to be like the area of a circle, just set this to 2
         /// </remarks>
-        public double CameraNeuronGrowthExponent
+        public double Camera_NeuronGrowthExponent
         {
             get
             {
-                return (double)_cameraNeuronGrowthExponent;
+                return (double)_camera_NeuronGrowthExponent;
             }
             set
             {
-                _cameraNeuronGrowthExponent = value;
+                _camera_NeuronGrowthExponent = value;
             }
         }
 
         #endregion
         #region CameraColorRGB
 
-        private volatile object _cameraColorRGBNeuronDensity = 20d * 3d;
+        private volatile object _cameraColorRGB_NeuronDensity = 20d * 3d;
         /// <summary>
         /// This is how many neurons to place inside of a brain
         /// NOTE: There are 3 plates of neurons, so each plate will be a third of this number
         /// </summary>
-        public double CameraColorRGBNeuronDensity
+        public double CameraColorRGB_NeuronDensity
         {
             get
             {
-                return (double)_cameraColorRGBNeuronDensity;
+                return (double)_cameraColorRGB_NeuronDensity;
             }
             set
             {
-                _cameraColorRGBNeuronDensity = value;
+                _cameraColorRGB_NeuronDensity = value;
             }
         }
 
-        private volatile object _cameraColorRGBAmountToDraw = 3d; //this is multiplied by ENERGYDRAWMULT
-        public double CameraColorRGBAmountToDraw
+        private volatile object _cameraColorRGB_AmountToDraw = 3d; //this is multiplied by ENERGYDRAWMULT
+        public double CameraColorRGB_AmountToDraw
         {
             get
             {
-                return (double)_cameraColorRGBAmountToDraw;
+                return (double)_cameraColorRGB_AmountToDraw;
             }
             set
             {
-                _cameraColorRGBAmountToDraw = value;
+                _cameraColorRGB_AmountToDraw = value;
             }
         }
 
@@ -785,33 +820,33 @@ namespace Game.Newt.v2.GameItems
 
         #region Brain
 
-        private volatile object _brainDensity = 800d;
-        public double BrainDensity
+        private volatile object _brain_Density = 800d;
+        public double Brain_Density
         {
             get
             {
-                return (double)_brainDensity;
+                return (double)_brain_Density;
             }
             set
             {
-                _brainDensity = value;
+                _brain_Density = value;
             }
         }
 
-        private volatile object _brainAmountToDraw = 5d; //.005d;  this is multiplied by ENERGYDRAWMULT
-        public double BrainAmountToDraw
+        private volatile object _brain_AmountToDraw = 5d; //.005d;  this is multiplied by ENERGYDRAWMULT
+        public double Brain_AmountToDraw
         {
             get
             {
-                return (double)_brainAmountToDraw;
+                return (double)_brain_AmountToDraw;
             }
             set
             {
-                _brainAmountToDraw = value;
+                _brain_AmountToDraw = value;
             }
         }
 
-        private volatile object _brainNeuronGrowthExponent = .8d;
+        private volatile object _brain_NeuronGrowthExponent = .8d;
         /// <summary>
         /// If I calculate volume as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
         /// quickly for smaller values.
@@ -821,145 +856,146 @@ namespace Game.Newt.v2.GameItems
         /// <remarks>
         /// If you want spherical growth, just set this to 3
         /// </remarks>
-        public double BrainNeuronGrowthExponent
+        public double Brain_NeuronGrowthExponent
         {
             get
             {
-                return (double)_brainNeuronGrowthExponent;
+                return (double)_brain_NeuronGrowthExponent;
             }
             set
             {
-                _brainNeuronGrowthExponent = value;
+                _brain_NeuronGrowthExponent = value;
             }
         }
 
-        private volatile object _brainNeuronDensity = 40d;
+        private volatile object _brain_NeuronDensity = 40d;
         /// <summary>
         /// This is how many neurons to place inside of a brain
         /// </summary>
-        public double BrainNeuronDensity
+        public double Brain_NeuronDensity
         {
             get
             {
-                return (double)_brainNeuronDensity;
+                return (double)_brain_NeuronDensity;
             }
             set
             {
-                _brainNeuronDensity = value;
+                _brain_NeuronDensity = value;
             }
         }
 
-        private volatile object _brainChemicalDensity = 3d;
+        private volatile object _brain_ChemicalDensity = 3d;
         /// <summary>
         /// This is how many brain chemical neurons to place inside of a brain
+        /// NOTE: It should probably be named Brain_BrainChemicalDensity, but that's tedious
         /// </summary>
-        public double BrainChemicalDensity
+        public double Brain_ChemicalDensity
         {
             get
             {
-                return (double)_brainChemicalDensity;
+                return (double)_brain_ChemicalDensity;
             }
             set
             {
-                _brainChemicalDensity = value;
+                _brain_ChemicalDensity = value;
             }
         }
 
-        private volatile object _brainNeuronMinClusterDistPercent = .075d;
+        private volatile object _brain_NeuronMinClusterDistPercent = .075d;
         /// <summary>
         /// Neurons won't be allowed to get closer together than this value
         /// (This is a percent of diameter)
         /// </summary>
-        public double BrainNeuronMinClusterDistPercent
+        public double Brain_NeuronMinClusterDistPercent
         {
             get
             {
-                return (double)_brainNeuronMinClusterDistPercent;
+                return (double)_brain_NeuronMinClusterDistPercent;
             }
             set
             {
-                _brainNeuronMinClusterDistPercent = value;
+                _brain_NeuronMinClusterDistPercent = value;
             }
         }
 
-        private volatile object _brainLinksPerNeuron_Internal = 3d;
-        public double BrainLinksPerNeuron_Internal
+        private volatile object _brain_LinksPerNeuron_Internal = 3d;
+        public double Brain_LinksPerNeuron_Internal
         {
             get
             {
-                return (double)_brainLinksPerNeuron_Internal;
+                return (double)_brain_LinksPerNeuron_Internal;
             }
             set
             {
-                _brainLinksPerNeuron_Internal = value;
+                _brain_LinksPerNeuron_Internal = value;
             }
         }
 
-        private volatile object _brainLinksPerNeuron_External_FromSensor = 1.2d;
+        private volatile object _brain_LinksPerNeuron_External_FromSensor = 1.2d;
         /// <summary>
         /// This uses the one with the fewer neurons (which is likely to be the sensor)
         /// </summary>
-        public double BrainLinksPerNeuron_External_FromSensor
+        public double Brain_LinksPerNeuron_External_FromSensor
         {
             get
             {
-                return (double)_brainLinksPerNeuron_External_FromSensor;
+                return (double)_brain_LinksPerNeuron_External_FromSensor;
             }
             set
             {
-                _brainLinksPerNeuron_External_FromSensor = value;
+                _brain_LinksPerNeuron_External_FromSensor = value;
             }
         }
 
-        private volatile object _brainLinksPerNeuron_External_FromBrain = .1d;
+        private volatile object _brain_LinksPerNeuron_External_FromBrain = .1d;
         /// <summary>
         /// This uses the average number of neurons between the two brains
         /// </summary>
-        public double BrainLinksPerNeuron_External_FromBrain
+        public double Brain_LinksPerNeuron_External_FromBrain
         {
             get
             {
-                return (double)_brainLinksPerNeuron_External_FromBrain;
+                return (double)_brain_LinksPerNeuron_External_FromBrain;
             }
             set
             {
-                _brainLinksPerNeuron_External_FromBrain = value;
+                _brain_LinksPerNeuron_External_FromBrain = value;
             }
         }
 
-        private volatile object _brainLinksPerNeuron_External_FromManipulator = 1.5d;
+        private volatile object _brain_LinksPerNeuron_External_FromManipulator = 1.5d;
         /// <summary>
         /// This uses the one with the fewer neurons (which is likely to be the manipulator)
         /// NOTE: This only considers the number of readable neurons exposed from the manipulator (which could be zero, the manipulator
         /// could be writeonly)
         /// </summary>
-        public double BrainLinksPerNeuron_External_FromManipulator
+        public double Brain_LinksPerNeuron_External_FromManipulator
         {
             get
             {
-                return (double)_brainLinksPerNeuron_External_FromManipulator;
+                return (double)_brain_LinksPerNeuron_External_FromManipulator;
             }
             set
             {
-                _brainLinksPerNeuron_External_FromManipulator = value;
+                _brain_LinksPerNeuron_External_FromManipulator = value;
             }
         }
 
-        private volatile object _neuralLinkMaxWeight = 2d;
-        public double NeuralLinkMaxWeight
+        private volatile object _neuralLink_MaxWeight = 2d;
+        public double NeuralLink_MaxWeight
         {
             get
             {
-                return (double)_neuralLinkMaxWeight;
+                return (double)_neuralLink_MaxWeight;
             }
             set
             {
-                _neuralLinkMaxWeight = value;
+                _neuralLink_MaxWeight = value;
             }
         }
 
         private volatile int _shortTermMemory_Size = 100;
-        public int ShortTermMemory_Size 
+        public int ShortTermMemory_Size
         {
             get
             {
@@ -986,40 +1022,41 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
+        // Propulsion
         #region Thruster (Fuel -> Force)
 
-        private volatile object _thrusterDensity = 600d;
-        public double ThrusterDensity
+        private volatile object _thruster_Density = 600d;
+        public double Thruster_Density
         {
             get
             {
-                return (double)_thrusterDensity;
+                return (double)_thruster_Density;
             }
             set
             {
-                _thrusterDensity = value;
+                _thruster_Density = value;
             }
         }
 
-        private volatile object _thrusterAdditionalMassPercent = .1d;
+        private volatile object _thruster_AdditionalMassPercent = .1d;
         /// <summary>
         /// A ThrusterType of One will just have a base mass.  But a two way thrust will have base + (base * %).
         /// A three way will have base + 2(base * %), etc
         /// </summary>
-        public double ThrusterAdditionalMassPercent
+        public double Thruster_AdditionalMassPercent
         {
             get
             {
-                return (double)_thrusterAdditionalMassPercent;
+                return (double)_thruster_AdditionalMassPercent;
             }
             set
             {
-                _thrusterAdditionalMassPercent = value;
+                _thruster_AdditionalMassPercent = value;
             }
         }
 
         public const double FORCESTRENGTHMULT = 1000d;
-        private volatile object _thrusterStrengthRatio = 30d; //30000d;		// thruster takes times FORCESTRENGTHMULT
+        private volatile object _thruster_StrengthRatio = 30d; //30000d;		// thruster takes times FORCESTRENGTHMULT
         /// <summary>
         /// This is the amount of force that the thruster is able to generate (this is taken times the volume of the
         /// thruster cylinder)
@@ -1027,15 +1064,15 @@ namespace Game.Newt.v2.GameItems
         /// <remarks>
         /// NOTE: This value is taken times 1000 by the thruster.  This is so that the number exposed to the user isn't so large
         /// </remarks>
-        public double ThrusterStrengthRatio
+        public double Thruster_StrengthRatio
         {
             get
             {
-                return (double)_thrusterStrengthRatio;
+                return (double)_thruster_StrengthRatio;
             }
             set
             {
-                _thrusterStrengthRatio = value;
+                _thruster_StrengthRatio = value;
             }
         }
 
@@ -1053,145 +1090,146 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private volatile object _thrusterLinksPerNeuron_Sensor = .5d;
+        private volatile object _thruster_LinksPerNeuron_Sensor = .5d;
         /// <summary>
         /// This uses the destination's number of neurons (always one neuron per thrust line)
         /// </summary>
-        public double ThrusterLinksPerNeuron_Sensor
+        public double Thruster_LinksPerNeuron_Sensor
         {
             get
             {
-                return (double)_thrusterLinksPerNeuron_Sensor;
+                return (double)_thruster_LinksPerNeuron_Sensor;
             }
             set
             {
-                _thrusterLinksPerNeuron_Sensor = value;
+                _thruster_LinksPerNeuron_Sensor = value;
             }
         }
 
-        private volatile object _thrusterLinksPerNeuron_Brain = 3d;
+        private volatile object _thruster_LinksPerNeuron_Brain = 3d;
         /// <summary>
         /// This uses the destination's number of neurons (always one neuron per thrust line)
         /// </summary>
-        public double ThrusterLinksPerNeuron_Brain
+        public double Thruster_LinksPerNeuron_Brain
         {
             get
             {
-                return (double)_thrusterLinksPerNeuron_Brain;
+                return (double)_thruster_LinksPerNeuron_Brain;
             }
             set
             {
-                _thrusterLinksPerNeuron_Brain = value;
+                _thruster_LinksPerNeuron_Brain = value;
             }
         }
 
         #endregion
         #region TractorBeam (Plasma -> Force)
 
-        private volatile object _tractorBeamDensity = 1800d;
-        public double TractorBeamDensity
+        private volatile object _tractorBeam_Density = 1800d;
+        public double TractorBeam_Density
         {
             get
             {
-                return (double)_tractorBeamDensity;
+                return (double)_tractorBeam_Density;
             }
             set
             {
-                _tractorBeamDensity = value;
+                _tractorBeam_Density = value;
             }
         }
 
         #endregion
 
+        // Guns
         #region ProjectileWeapon
 
-        private volatile object _projectileWeaponDensity = 1700d;
-        public double ProjectileWeaponDensity
+        private volatile object _projectileWeapon_Density = 1700d;
+        public double ProjectileWeapon_Density
         {
             get
             {
-                return (double)_projectileWeaponDensity;
+                return (double)_projectileWeapon_Density;
             }
             set
             {
-                _projectileWeaponDensity = value;
+                _projectileWeapon_Density = value;
             }
         }
 
-        private volatile object _projectileWeaponCaliberRatio = 1d;
+        private volatile object _projectileWeapon_CaliberRatio = 1d;
         /// <summary>
         /// The caliber is based on the Scale * BarrelRadius * ProjectileWeaponCaliberRatio
         /// </summary>
         /// <remarks>
         /// Caliber is the diameter of the bullet
         /// </remarks>
-        public double ProjectileWeaponCaliberRatio
+        public double ProjectileWeapon_CaliberRatio
         {
             get
             {
-                return (double)_projectileWeaponCaliberRatio;
+                return (double)_projectileWeapon_CaliberRatio;
             }
             set
             {
-                _projectileWeaponCaliberRatio = value;
+                _projectileWeapon_CaliberRatio = value;
             }
         }
 
-        private volatile object _projectileWeaponCaliberRangePercent = .1d;
+        private volatile object _projectileWeapon_CaliberRangePercent = .1d;
         /// <summary>
         /// This defines the range of calibers that a gun could fire (set to zero for an exact only)
         /// </summary>
-        public double ProjectileWeaponCaliberRangePercent
+        public double ProjectileWeapon_CaliberRangePercent
         {
             get
             {
-                return (double)_projectileWeaponCaliberRangePercent;
+                return (double)_projectileWeapon_CaliberRangePercent;
             }
             set
             {
-                _projectileWeaponCaliberRangePercent = value;
+                _projectileWeapon_CaliberRangePercent = value;
             }
         }
 
-        private volatile object _projectileColor = null;
-        public Color? ProjectileColor
+        private volatile object _projectile_Color = null;
+        public Color? Projectile_Color
         {
             get
             {
-                return (Color?)_projectileColor;
+                return (Color?)_projectile_Color;
             }
             set
             {
-                _projectileColor = value;
+                _projectile_Color = value;
             }
         }
 
-        private volatile object _projectileRadiusRatio = 2.5d;
-        public double ProjectileRadiusRatio
+        private volatile object _projectile_RadiusRatio = 2.5d;
+        public double Projectile_RadiusRatio
         {
             get
             {
-                return (double)_projectileRadiusRatio;
+                return (double)_projectile_RadiusRatio;
             }
             set
             {
-                _projectileRadiusRatio = value;
+                _projectile_RadiusRatio = value;
             }
         }
 
         #endregion
         #region BeamGun
 
-        private volatile object _beamGunDensity = 1800d;
-        public double BeamGunDensity
+        private volatile object _beamGun_Density = 1800d;
+        public double BeamGun_Density
         {
             get
             {
-                return (double)_beamGunDensity;
+                return (double)_beamGun_Density;
             }
             set
             {
-                _beamGunDensity = value;
+                _beamGun_Density = value;
             }
         }
 
@@ -1200,18 +1238,59 @@ namespace Game.Newt.v2.GameItems
         // Shields
         #region Shields - all
 
-        private volatile object _shieldDensity = 1800d;
-        public double ShieldDensity
+        private volatile object _shield_Density = 1800d;
+        public double Shield_Density
         {
             get
             {
-                return (double)_shieldDensity;
+                return (double)_shield_Density;
             }
             set
             {
-                _shieldDensity = value;
+                _shield_Density = value;
             }
         }
+
+        #endregion
+
+        // Misc
+        #region SwarmBay
+
+        private volatile object _swarmBay_Density = 3000d;
+        public double SwarmBay_Density
+        {
+            get
+            {
+                return (double)_swarmBay_Density;
+            }
+            set
+            {
+                _swarmBay_Density = value;
+            }
+        }
+
+        public double SwarmBay_BirthRate = 3;
+        public double SwarmBay_BirthCost = .015;
+        public double SwarmBay_BirthSize = 1;
+        public double SwarmBay_Birth_TankThresholdPercent = .65;
+        public double SwarmBay_MaxCount = 9;
+
+        #endregion
+        #region SwarmBot
+
+        public double SwarmBot_AmountToDraw;
+        public double SwarmBot_SearchRadius = 50;
+        public double SwarmBot_ChaseNeighborCount = 5;
+
+        public double SwarmBot_MaxAccel = 1;
+        public double SwarmBot_MaxAngAccel = 1;
+        public double SwarmBot_MinSpeed = 7;
+        public double SwarmBot_MaxSpeed = 13;
+        public double SwarmBot_MaxAngSpeed = 10;
+
+        public double SwarmBot_HealRate = 1;
+        public double SwarmBot_DamageAtMaxSpeed = 33;
+        public double SwarmBot_MaxHealth = 100;
 
         #endregion
     }

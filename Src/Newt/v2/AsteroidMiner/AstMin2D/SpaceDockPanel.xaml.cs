@@ -66,7 +66,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private readonly ItemOptions _itemOptions;
         private readonly Map _map;
         private readonly int _material_Ship;
-        private readonly int _material_Projectile;
+
+        private readonly ShipExtraArgs _shipExtra;
 
         private Player _player = null;
         private SpaceStation2D _station = null;
@@ -86,7 +87,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Constructor
 
-        public SpaceDockPanel(EditorOptions editorOptions, ItemOptions itemOptions, Map map, int material_Ship, int material_Projectile)
+        public SpaceDockPanel(EditorOptions editorOptions, ItemOptions itemOptions, Map map, int material_Ship, ShipExtraArgs shipExtra)
         {
             InitializeComponent();
 
@@ -94,7 +95,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _itemOptions = itemOptions;
             _map = map;
             _material_Ship = material_Ship;
-            _material_Projectile = material_Projectile;
+            _shipExtra = shipExtra;
         }
 
         #endregion
@@ -581,16 +582,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // Need to do this now so that the old ship is off the map before adding a new one (the new one sometimes goes flying from the collision)
             _player.Ship = null;
 
-            ShipExtraArgs args = new ShipExtraArgs()
-            {
-                Options = _editorOptions,
-                ItemOptions = _itemOptions,
-                Material_Projectile = _material_Projectile,
-                RunNeural = false,
-            };
-
             // Create the new ship
-            ShipPlayer ship = ShipPlayer.GetNewShip(entry.Inventory.Ship, _world, _material_Ship, _map, args);
+            ShipPlayer ship = ShipPlayer.GetNewShip(entry.Inventory.Ship, _world, _material_Ship, _map, _shipExtra);
 
             if (ship.Energy != null)
             {

@@ -269,7 +269,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             this.Radius = radius;
 
-            _mass = _container.QuantityMax * itemOptions.EnergyTankDensity;
+            _mass = _container.QuantityMax * itemOptions.EnergyTank_Density;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
         }

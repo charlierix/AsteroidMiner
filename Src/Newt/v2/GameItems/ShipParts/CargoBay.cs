@@ -699,7 +699,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // The cargo bay is 1:1 with scale (a lot of the other parts are smaller than scale, but cargo bay is full sized)
 
             double surfaceArea = (2d * dna.Scale.X * dna.Scale.Y) + (2d * dna.Scale.X * dna.Scale.Z) + (2d * dna.Scale.Y * dna.Scale.Z);
-            dryMass = surfaceArea * itemOptions.CargoBayWallDensity;
+            dryMass = surfaceArea * itemOptions.CargoBay_WallDensity;
 
             volume = dna.Scale.X * dna.Scale.Y * dna.Scale.Z;
 

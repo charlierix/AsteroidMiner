@@ -376,7 +376,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = (4d / 3d) * Math.PI * radX * radY * radZ;
 
-            mass = volume * itemOptions.ShieldDensity;
+            mass = volume * itemOptions.Shield_Density;
         }
 
         #endregion

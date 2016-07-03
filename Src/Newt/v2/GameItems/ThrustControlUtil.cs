@@ -100,6 +100,85 @@ namespace Game.Newt.v2.GameItems
             //NOTE: If options.ThreadShare is set, then there's no reason to do this async, but there's no harm either
             Task.Run(() => UtilityAI.DiscoverSolution(delegates, options));
         }
+        public static void DiscoverSolutionAsync2(Bot bot, Vector3D? idealLinear, Vector3D? idealRotation, CancellationToken? cancel = null, ThrustContributionModel model = null, Action<ThrusterMap> newBestFound = null, Action<ThrusterMap> finalFound = null, DiscoverSolutionOptions2<Tuple<int, int, double>> options = null)
+        {
+            long token = bot.Token;
+
+            // Cache Thrusters
+            Thruster[] allThrusters = bot.Thrusters;
+            if (allThrusters == null || allThrusters.Length == 0)
+            {
+                throw new ArgumentException("This bot has no thrusters");
+            }
+
+            // Ensure model is created (if the caller wants to find solutions for several directions at the same time, it would be
+            // more efficient to calculate the model once, and pass to all the solution finders)
+            model = model ?? new ThrustContributionModel(bot.Thrusters, bot.PhysicsBody.CenterOfMass);
+
+            // Figure out how much force can be generated in the ideal directions
+            double maxForceLinear = idealLinear == null ? 0d : ThrustControlUtil.GetMaximumPossible_Linear(model, idealLinear.Value);
+            double maxForceRotate = idealRotation == null ? 0d : ThrustControlUtil.GetMaximumPossible_Rotation(model, idealRotation.Value);
+
+            // Mutate 2% of the elements, with a 10% value drift
+            MutateUtility.MuateArgs mutateArgs = new MutateUtility.MuateArgs(false, .02, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .1));
+
+            #region delegates
+
+            //NOTE: While breeding/mutating, they don't get normalized.  But error calculation and returned maps need them normalized
+
+            var delegates = new DiscoverSolutionDelegates2<Tuple<int, int, double>>()
+            {
+                GetNewSample = new Func<Tuple<int, int, double>[]>(() =>
+                {
+                    ThrusterMap map = ThrustControlUtil.GenerateRandomMap(allThrusters, token);
+                    return map.Flattened;
+                }),
+
+                GetScore = new Func<Tuple<int, int, double>[], double[]>(o =>
+                {
+                    ThrusterMap map = new ThrusterMap(ThrustControlUtil.Normalize(o), allThrusters, token);
+                    return ThrustControlUtil.GetThrustMapScore3(map, model, idealLinear, idealRotation, maxForceLinear, maxForceRotate);
+                }),
+
+                Mutate = new Func<Tuple<int, int, double>[], Tuple<int, int, double>[]>(o =>
+                {
+                    ThrusterMap map = new ThrusterMap(o, allThrusters, token);
+                    return ThrustControlUtil.Mutate(map, mutateArgs, false).Flattened;
+                }),
+            };
+
+            if (cancel != null)
+            {
+                delegates.Cancel = cancel.Value;
+            }
+
+            if (newBestFound != null)
+            {
+                delegates.NewBestFound = new Action<SolutionResult2<Tuple<int, int, double>>>(o =>
+                {
+                    ThrusterMap map = new ThrusterMap(ThrustControlUtil.Normalize(o.Item), allThrusters, token);
+                    newBestFound(map);
+                });
+            }
+
+            if (finalFound != null)
+            {
+                delegates.FinalFound = new Action<SolutionResult2<Tuple<int, int, double>>>(o =>
+                {
+                    ThrusterMap map = new ThrusterMap(ThrustControlUtil.Normalize(o.Item), allThrusters, token);
+                    finalFound(map);
+                });
+            }
+
+            #endregion
+
+            options = options ?? new DiscoverSolutionOptions2<Tuple<int, int, double>>();
+            options.ScoreAscendDescend = new bool[] { false, false };
+
+            // Do it
+            //NOTE: If options.ThreadShare is set, then there's no reason to do this async, but there's no harm either
+            Task.Run(() => UtilityAI.DiscoverSolution2(delegates, options));
+        }
 
         //TODO: Come up with some overloads that have various constraints (only thrusters that contribute to a direction, x percent of the thrusters, etc)
         public static ThrusterMap GenerateRandomMap(Thruster[] allThrusters, long botToken)
@@ -226,7 +305,7 @@ namespace Game.Newt.v2.GameItems
             }
 
             // Inneficient
-            error[2] = GetScore_Inneficient(map, model);
+            error[2] = GetScore_Inefficient(map, model);
 
             // Total
             // It's important to include the maximize thrust, but just a tiny bit.  Without it, the ship will be happy to
@@ -236,7 +315,7 @@ namespace Game.Newt.v2.GameItems
 
             return new SolutionError(error, total);
         }
-        public static SolutionError GetThrustMapScore_FLAWED(ThrusterMap map, ThrustContributionModel model, Vector3D? linear, Vector3D? rotation, double maxPossibleLinear = 0, double maxPossibleRotate = 0)
+        public static double[] GetThrustMapScore3(ThrusterMap map, ThrustContributionModel model, Vector3D? linear, Vector3D? rotation, double maxPossibleLinear = 0, double maxPossibleRotate = 0)
         {
             if (linear == null && rotation == null)
             {
@@ -245,33 +324,28 @@ namespace Game.Newt.v2.GameItems
 
             Tuple<Vector3D, Vector3D> forces = ApplyThrust(map, model);
 
-            double[] error = new double[2];
+            double[] retVal = new double[2];
 
             if (forces.Item1.LengthSquared.IsNearZero() && forces.Item2.LengthSquared.IsNearZero())
             {
                 // When there is zero contribution, give a large error.  Otherwise the winning strategy is not to play :)
-                error[0] = MAXERROR;        // Balance
+                retVal[0] = MAXERROR;        // Balance
+                retVal[1] = MAXERROR;        // Inefficient
             }
             else
             {
                 // Balance
                 double linearScore = GetScore_Balance(linear, forces.Item1);
                 double rotateScore = GetScore_Balance(rotation, forces.Item2);
-                error[0] = linearScore + rotateScore;
+                retVal[0] = linearScore + rotateScore;
+
+                // Inefficient
+                linearScore = linear == null ? 0 : GetScore_Inefficient4(map, model, linear.Value, true);
+                rotateScore = rotation == null ? 0 : GetScore_Inefficient4(map, model, rotation.Value, false);
+                retVal[1] = linearScore + rotateScore;
             }
 
-            // Inneficient
-            // I think the reason this failed is that it didn't take direction into account.  Maybe make something similar to GetScore_Balance, but without
-            // unit vectors? -- that won't work either, because perfect balance could still have a lot of wasted side thrust
-            error[1] = GetScore_Inneficient2(map, model, maxPossibleLinear, maxPossibleRotate);
-
-            // Total
-            // It's important to include the maximize thrust, but just a tiny bit.  Without it, the ship will be happy to
-            // fire thrusters in all directions.  But if maximize thrust is any stronger, the solution will have too much
-            // unbalance
-            double total = error[0] + (error[1] * .01);
-
-            return new SolutionError(error, total);
+            return retVal;
         }
 
         /// <summary>
@@ -395,7 +469,7 @@ namespace Game.Newt.v2.GameItems
 
             return underPower;
         }
-        private static double GetScore_Inneficient(ThrusterMap map, ThrustContributionModel model)
+        private static double GetScore_Inefficient(ThrusterMap map, ThrustContributionModel model)
         {
             // Only focus on linear balance.  Torque balance is desired
 
@@ -433,7 +507,7 @@ namespace Game.Newt.v2.GameItems
             return retVal;
         }
 
-        private static double GetScore_Inneficient2(ThrusterMap map, ThrustContributionModel model, double maxPossibleLinear, double maxPossibleRotate)
+        private static double GetScore_Inefficient2(ThrusterMap map, ThrustContributionModel model, double maxPossibleLinear, double maxPossibleRotate)
         {
             if (map.Flattened.Length != model.Contributions.Length)
             {
@@ -471,6 +545,98 @@ namespace Game.Newt.v2.GameItems
 
             // Return remainder squared
             return (linear * linear) + (rotate * rotate);
+        }
+
+        private static double GetScore_Inefficient3(ThrusterMap map, ThrustContributionModel model)
+        {
+            if (map.Flattened.Length != model.Contributions.Length)
+            {
+                throw new ApplicationException("TODO: Handle mismatched map and model");
+            }
+
+            // Add up all the thruster forces, regardless of direction
+
+            double retVal = Enumerable.Range(0, map.Flattened.Length).
+                Select(o =>
+                {
+                    if (map.Flattened[o].Item1 != model.Contributions[o].Item1 || map.Flattened[o].Item2 != model.Contributions[o].Item2)
+                    {
+                        throw new ApplicationException("TODO: Handle mismatched map and model");
+                    }
+
+                    // The translation force is the same as the thrust produced by the thruster.  Don't want to include
+                    // torque, because this method only cares about how much fuel is being used, and adding torque
+                    // is an innacurate complication
+                    return model.Contributions[o].Item3.TranslationForceLength * map.Flattened[o].Item3;
+                }).
+                Sum();
+
+            return retVal;
+        }
+
+        // This should be called twice, once for linear and once for rotation.  It should add the force length if dot is close to zero.  May also want a smaller length if dot is close to -1
+        private static double GetScore_Inefficient4(ThrusterMap map, ThrustContributionModel model, Vector3D objectiveUnit, bool isLinear)
+        {
+            const double DOT_MAX = .3;      // when dot is >= this, there is no error
+            const double PERCENT_NEG = .5;      // when dot is -1, this is the returned percent error
+
+            if (map.Flattened.Length != model.Contributions.Length)
+            {
+                throw new ApplicationException("TODO: Handle mismatched map and model");
+            }
+
+            double retVal = Enumerable.Range(0, map.Flattened.Length).
+                Select(o =>
+                {
+                    if (map.Flattened[o].Item1 != model.Contributions[o].Item1 || map.Flattened[o].Item2 != model.Contributions[o].Item2)
+                    {
+                        throw new ApplicationException("TODO: Handle mismatched map and model");
+                    }
+
+                    // Get the actual vector
+                    Vector3D actualVect;
+                    double actualVal;
+                    if (isLinear)
+                    {
+                        actualVect = model.Contributions[o].Item3.TranslationForceUnit;
+                        actualVal = model.Contributions[o].Item3.TranslationForceLength;
+                    }
+                    else
+                    {
+                        actualVect = model.Contributions[o].Item3.TorqueUnit;
+                        actualVal = model.Contributions[o].Item3.TorqueLength;
+                    }
+
+                    // Use dot to see how in line this actual vector is with the ideal
+                    double dot = Vector3D.DotProduct(objectiveUnit, actualVect);
+
+                    // Convert dot into a percent
+                    //      - If dot is near zero, error should be maximum, because this doesn't contribute to ideal
+                    //      - Can't penalize positive and negative dots equally, or it will try to find a minimum fuel useage
+                    //        that is still balanced, instead of maximum thrust that is balanced (the goal is maximum thrust
+                    //        without venting fuel out the sides)
+                    double percent;
+                    if (dot > 0)
+                    {
+                        if(dot > DOT_MAX)
+                        {
+                            percent = 0;
+                        }
+                        else
+                        {
+                            percent = UtilityCore.GetScaledValue(1, 0, 0, DOT_MAX, dot);
+                        }
+                    }
+                    else
+                    {
+                        percent = UtilityCore.GetScaledValue(1, PERCENT_NEG, 0, 1, -dot);
+                    }
+
+                    return actualVal * map.Flattened[o].Item3 * percent;
+                }).
+                Sum();
+
+            return retVal;
         }
 
         #endregion
@@ -641,7 +807,7 @@ namespace Game.Newt.v2.GameItems
         public ThrusterSetting(Thruster thruster, int thrusterIndex, int subIndex, double percent)
         {
             this.Thruster = thruster;
-            this.ThrusterIndex = ThrusterIndex;
+            this.ThrusterIndex = thrusterIndex;
             this.SubIndex = subIndex;
             this.Percent = percent;
         }

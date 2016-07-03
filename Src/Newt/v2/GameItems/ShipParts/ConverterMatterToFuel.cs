@@ -9,6 +9,7 @@ using System.Windows.Media.Media3D;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -388,7 +389,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             if (_fuelTanks != null)
             {
                 double scaleVolume = _scaleActual.X * _scaleActual.Y * _scaleActual.Z;      // can't use volume from above, because that is the amount of matter that can be held.  This is to get conversion ratios
-                _converter = new Converter(this, _fuelTanks, _itemOptions.MatterToFuelConversionRate, _itemOptions.MatterToFuelAmountToDraw * scaleVolume);
+                _converter = new Converter(this, _fuelTanks, _itemOptions.MatterToFuel_ConversionRate, _itemOptions.MatterToFuel_AmountToDraw * scaleVolume);
             }
         }
 
@@ -557,10 +558,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             scale = dna.Scale * ConverterMatterToFuelDesign.SCALE;
 
             double surfaceArea = (2d * scale.X * scale.Y) + (2d * scale.X * scale.Z) + (2d * scale.Y * scale.Z);
-            dryMass = surfaceArea * itemOptions.MatterConverterWallDensity;
+            dryMass = surfaceArea * itemOptions.MatterConverter_WallDensity;
 
             volume = scale.X * scale.Y * scale.Z;
-            volume *= itemOptions.MatterConverterInternalVolume;        // this property should be between 0 and 1
+            volume *= itemOptions.MatterConverter_InternalVolume;        // this property should be between 0 and 1
         }
 
         /// <summary>
@@ -832,13 +833,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                             splitCargo.Volume = remaining[cntr];
                             cargo[0].Volume -= remaining[cntr];
+                            if(cargo[0].Volume.IsNearZero())
+                            {
+                                cargo.RemoveAt(0);
+                            }
 
                             if (!_converters[cntr].Add(splitCargo))
                             {
                                 throw new ApplicationException(string.Format("Couldn't add cargo to the converter: {0}, {1}", remaining[cntr].ToString(), (_converters[cntr].MaxVolume - _converters[cntr].UsedVolume).ToString()));
                             }
 
-                            remaining[0] = 0d;
+                            remaining[cntr] = 0d;
                             break;
                         }
                     }

@@ -8,11 +8,17 @@ using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
 {
+    //TODO: Move this to core, next to Math1D.  Need to make the GetPointOnSphere work for all dimensions, and not rely on wpf
+    //http://mathoverflow.net/questions/136314/what-is-a-good-method-to-find-random-points-on-the-n-sphere-when-n-is-large
+    //https://en.wikipedia.org/wiki/Box%E2%80%93Muller_transform
+    //http://www.mlahanas.de/Math/nsphere.htm
+    //http://mathworld.wolfram.com/HyperspherePointPicking.html
+
     /// <summary>
     /// This uses double arrays as vectors that can be any number of dimensions
     /// NOTE: Any method that takes multiple vectors in the params needs all vectors to be the same dimension
     /// </summary>
-    public static class MathND
+    public static partial class MathND
     {
         #region Class: BallOfSprings
 
@@ -496,12 +502,12 @@ namespace Game.HelperClassesWPF
 
         public static bool IsNearZero(double[] vector)
         {
-            return vector.All(o => Math.Abs(o) <= Math3D.NEARZERO);
+            return vector.All(o => Math.Abs(o) <= Math1D.NEARZERO);
         }
         public static bool IsNearValue(double[] vector1, double[] vector2)
         {
             return Enumerable.Range(0, vector1.Length).
-                All(o => vector1[o] >= vector2[o] - Math3D.NEARZERO && vector1[o] <= vector2[o] + Math3D.NEARZERO);
+                All(o => vector1[o] >= vector2[o] - Math1D.NEARZERO && vector1[o] <= vector2[o] + Math1D.NEARZERO);
         }
 
         public static double GetLength(double[] vector)

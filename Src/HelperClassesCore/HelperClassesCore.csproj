@@ -73,6 +73,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Math1D.cs" />
     <Compile Include="Threads\BackgroundTaskWorker.cs" />
     <Compile Include="DelegateComparer.cs" />
     <Compile Include="Extenders.cs" />

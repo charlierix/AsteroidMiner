@@ -1661,7 +1661,7 @@ namespace Game.Newt.Testers
                         Point3D bodyPoint = e.Body.PositionToWorld(thruster.Item1.Position);
                         e.Body.AddForceAtPoint(bodyForce, bodyPoint);
 
-                        Vector3D lineVect = GetThrustLine(bodyForce, _itemOptions.ThrusterStrengthRatio);		// this returns a vector in the opposite direction, so the line looks like a flame
+                        Vector3D lineVect = GetThrustLine(bodyForce, _itemOptions.Thruster_StrengthRatio);		// this returns a vector in the opposite direction, so the line looks like a flame
                         Point3D lineStart = bodyPoint + (lineVect.ToUnit() * thruster.Item1.ThrustVisualStartRadius);
                         _lines.AddLine(lineStart, lineStart + lineVect);
                     }
@@ -4358,7 +4358,7 @@ namespace Game.Newt.Testers
         {
             InitializeComponent();
 
-            _itemOptions.ThrusterStrengthRatio /= 3d;
+            _itemOptions.Thruster_StrengthRatio /= 3d;
             _itemOptions.FuelToThrustRatio /= 3d;
 
             _isInitialized = true;

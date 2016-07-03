@@ -287,7 +287,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double surfaceArea, radius;
             _container = GetContainer(out surfaceArea, out _scaleActual, out radius, itemOptions, dna);
 
-            _dryMass = surfaceArea * itemOptions.FuelTankWallDensity;
+            _dryMass = surfaceArea * itemOptions.FuelTank_WallDensity;
             this.Radius = radius;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
@@ -513,7 +513,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return _dryMass + (_container.QuantityCurrent * _itemOptions.FuelDensity);      // I don't want to bother with a lock.  Density is in another class and volatile, so current quantity is the only loose variable from this class
+                return _dryMass + (_container.QuantityCurrent * _itemOptions.Fuel_Density);      // I don't want to bother with a lock.  Density is in another class and volatile, so current quantity is the only loose variable from this class
             }
         }
 

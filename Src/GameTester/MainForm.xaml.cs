@@ -378,7 +378,7 @@ namespace Game.GameTester
         }
         private void SwarmBots2_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.SwarmBots.SwarmBotTester().Show();
+            new Game.Newt.Testers.SwarmBotTester().Show();
         }
         private void ThrustController_MouseUp(object sender, MouseButtonEventArgs e)
         {

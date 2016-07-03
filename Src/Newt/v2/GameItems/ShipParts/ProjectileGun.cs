@@ -376,11 +376,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 double projectileRadiusActual = caliber / 2d;
 
-                this.Radius = projectileRadiusActual * options.ProjectileRadiusRatio;
+                this.Radius = projectileRadiusActual * options.Projectile_RadiusRatio;
 
                 //NOTE: The mass of the projectile is a sphere, but the volume pull out of the ammo box is a cube (using the
                 //same density).  The difference can be assumed to be propellent
-                this.Mass = (4d / 3d) * Math.PI * projectileRadiusActual * projectileRadiusActual * projectileRadiusActual * options.AmmoDensity;
+                this.Mass = (4d / 3d) * Math.PI * projectileRadiusActual * projectileRadiusActual * projectileRadiusActual * options.Ammo_Density;
 
                 //TODO: options (bigger should go slightly slower)
                 this.Speed = 15;
@@ -429,10 +429,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// </remarks>
         private readonly Neuron_ZeroPos[] _neurons;
 
-
         private readonly Vector3D _kickDirectionUnit;
-
-
 
         #endregion
 
@@ -460,9 +457,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _kickDirectionUnit = transform.Transform(new Vector3D(0, 0, -1));
 
             // Caliber range (diameter of bullet)
-            double caliber = barrelRadius * 2 * _itemOptions.ProjectileWeaponCaliberRatio;
+            double caliber = barrelRadius * 2 * _itemOptions.ProjectileWeapon_CaliberRatio;
 
-            double range = (caliber * _itemOptions.ProjectileWeaponCaliberRangePercent) / 2d;
+            double range = (caliber * _itemOptions.ProjectileWeapon_CaliberRangePercent) / 2d;
             _caliberRange = Tuple.Create(caliber - range, caliber + range);
 
             this.Caliber = caliber;     //NOTE: Setting this will populate _projectileProps
@@ -801,7 +798,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             #endregion
 
             // Create the projectile
-            Projectile projectile = new Projectile(projProps.Radius, projProps.Mass, worldPosition, _world, _material_Projectile, _itemOptions.ProjectileColor, projProps.MaxAge, _map);
+            Projectile projectile = new Projectile(projProps.Radius, projProps.Mass, worldPosition, _world, _material_Projectile, _itemOptions.Projectile_Color, projProps.MaxAge, _map);
 
             projectile.PhysicsBody.Velocity = worldSpeed.Item1 + (worldDirectionUnit * projProps.Speed);
             projectile.PhysicsBody.AngularVelocity = worldDirectionUnit * 5;        // add a little spin along the direction of travel (emulate rifling)
@@ -1464,7 +1461,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = Math.PI * radX * radY * height;
 
-            mass = volume * itemOptions.ProjectileWeaponDensity;
+            mass = volume * itemOptions.ProjectileWeapon_Density;
         }
 
         /// <summary>

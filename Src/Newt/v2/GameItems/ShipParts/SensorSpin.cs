@@ -202,7 +202,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             this.Radius = radius;
 
-            _neurons = SensorGravity.CreateNeurons(dna, itemOptions, itemOptions.SpinSensorNeuronDensity);
+            _neurons = SensorGravity.CreateNeurons(dna, itemOptions, itemOptions.SpinSensor_NeuronDensity);
             _neuronMaxRadius = _neurons.Max(o => o.PositionLength);
         }
 
@@ -273,7 +273,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.SpinSensorAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.SpinSensor_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
                 {
                     // The energy tank didn't have enough
                     //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this
@@ -288,7 +288,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 var worldSpeed = GetWorldSpeed(null);
 
                 // Figure out the magnitude to use
-                double magnitude = SensorGravity.CalculateMagnitudePercent(worldSpeed.Item2.Length, _itemOptions.SpinSensorMaxSpeed);
+                double magnitude = SensorGravity.CalculateMagnitudePercent(worldSpeed.Item2.Length, _itemOptions.SpinSensor_MaxSpeed);
 
                 SensorGravity.UpdateNeurons(_neurons, _neuronMaxRadius, worldSpeed.Item2, magnitude);
             }

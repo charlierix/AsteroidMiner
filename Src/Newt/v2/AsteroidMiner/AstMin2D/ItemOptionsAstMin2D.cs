@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.AsteroidMiner.MapParts;
 using Game.Newt.v2.GameItems;
@@ -77,14 +78,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         public static decimal GetCredits_Mineral(MineralType mineralType)
         {
-            const decimal BASE = 3m;
+            //const decimal BASE = 3m;
+            const decimal BASE = 10m;
 
             //roughly x^2.7
 
             switch (mineralType)
             {
                 case MineralType.Ice:
-                    return BASE * 1m;
+                    //return BASE * 1m;
+                    return BASE * 3m;
 
                 case MineralType.Graphite:
                     return BASE * 6.5m;
@@ -174,10 +177,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 case HangarBay.PARTTYPE:
                     return BASE * 3m;
 
+                case SwarmBay.PARTTYPE:
+                    return BASE * 6m;
+
                 case Thruster.PARTTYPE:
                     return BASE * 1m;
 
                 case Brain.PARTTYPE:
+                case BrainRGBRecognizer.PARTTYPE:
                     return BASE * 1m;
 
                 case CameraColorRGB.PARTTYPE:
@@ -198,6 +205,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 case ConverterFuelToEnergy.PARTTYPE:
                 case ConverterMatterToAmmo.PARTTYPE:
                 case ConverterMatterToEnergy.PARTTYPE:
+                case ConverterMatterToPlasma.PARTTYPE:
                 case ConverterMatterToFuel.PARTTYPE:
                 case ConverterRadiationToEnergy.PARTTYPE:
                     return BASE * 10m;

@@ -858,6 +858,7 @@ namespace Game.Newt.v2.GameItems
         //NOTE: These events could be called from any thread
         public event EventHandler<PartRequestWorldLocationArgs> RequestWorldLocation = null;
         public event EventHandler<PartRequestWorldSpeedArgs> RequestWorldSpeed = null;
+        public event EventHandler<PartRequestParentArgs> RequestParent = null;
 
         #endregion
 
@@ -1147,6 +1148,26 @@ namespace Game.Newt.v2.GameItems
             }
 
             return Tuple.Create(args.Velocity.Value, args.AngularVelocity.Value, args.VelocityAtPoint);
+        }
+        /// <summary>
+        /// Try to avoid using this unless necessary.  If the part is hosted in something other than a map object, then the parent
+        /// could come back null
+        /// </summary>
+        /// <remarks>
+        /// The case that needed this was SwarmBay.  The swarm bots need to know the location/size/speed of the parent bot
+        /// </remarks>
+        public IMapObject GetParent()
+        {
+            if (this.RequestParent == null)
+            {
+                throw new ApplicationException("There is no event handler for RequestParent");
+            }
+
+            PartRequestParentArgs args = new PartRequestParentArgs();
+
+            this.RequestParent(this, args);
+
+            return args.Parent;
         }
 
         public static Tuple<Point3D, Point3D> GetAABB(IEnumerable<PartBase> parts)
@@ -1443,6 +1464,14 @@ namespace Game.Newt.v2.GameItems
 
         public Vector3D? Velocity = null;
         public Vector3D? AngularVelocity = null;
+    }
+
+    #endregion
+    #region Class: PartRequestParentArgs
+
+    public class PartRequestParentArgs : EventArgs
+    {
+        public IMapObject Parent = null;
     }
 
     #endregion

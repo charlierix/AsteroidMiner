@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Game.HelperClassesCore;
 
-namespace Game.HelperClassesWPF
+namespace Game.HelperClassesCore
 {
-    public static class Math1D
+    public static partial class Math1D
     {
         #region Declaration Section
+
+        public const double NEARZERO = UtilityCore.NEARZERO;
 
         private const double _180_over_PI = (180d / Math.PI);
         private const double _PI_over_180 = (Math.PI / 180d);
@@ -27,11 +28,11 @@ namespace Game.HelperClassesWPF
 
         public static bool IsNearZero(double testValue)
         {
-            return Math.Abs(testValue) <= Math3D.NEARZERO;
+            return Math.Abs(testValue) <= NEARZERO;
         }
         public static bool IsNearValue(double testValue, double compareTo)
         {
-            return testValue >= compareTo - Math3D.NEARZERO && testValue <= compareTo + Math3D.NEARZERO;
+            return testValue >= compareTo - NEARZERO && testValue <= compareTo + NEARZERO;
         }
 
         /// <summary>
@@ -45,11 +46,11 @@ namespace Game.HelperClassesWPF
         //TODO: Come up with a better name for these.  The test value must exceed a threshold before these return true (a value that IsNearZero would call true won't make these true)
         public static bool IsNearNegative(double testValue)
         {
-            return testValue < -Math3D.NEARZERO;
+            return testValue < -NEARZERO;
         }
         public static bool IsNearPositive(double testValue)
         {
-            return testValue > Math3D.NEARZERO;
+            return testValue > NEARZERO;
         }
 
         public static bool IsDivisible(double larger, double smaller)

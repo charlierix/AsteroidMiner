@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems

@@ -315,10 +315,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             if (fuelTanks != null && energyTanks != null)
             {
-                _converter = new Converter(fuelTanks, energyTanks, itemOptions.FuelToEnergyConversionRate, itemOptions.FuelToEnergyAmountToDraw * volume);
+                _converter = new Converter(fuelTanks, energyTanks, itemOptions.FuelToEnergy_ConversionRate, itemOptions.FuelToEnergy_AmountToDraw * volume);
             }
 
-            _mass = volume * itemOptions.FuelToEnergyDensity;
+            _mass = volume * itemOptions.FuelToEnergy_Density;
         }
 
         #endregion

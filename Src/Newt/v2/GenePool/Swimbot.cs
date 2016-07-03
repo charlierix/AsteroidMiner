@@ -129,7 +129,7 @@ namespace Game.Newt.v2.GenePool
             mass *= 1.1d;
 
             // Plasma is least important, take from that first
-            if (AddPoisonSprtContainer(ref mass, this.Plasma, _itemOptions.MatterToPlasmaConversionRate))
+            if (AddPoisonSprtContainer(ref mass, this.Plasma, _itemOptions.MatterToPlasma_ConversionRate))
             {
                 // There was enough to cover it
                 return;
@@ -141,14 +141,14 @@ namespace Game.Newt.v2.GenePool
                 this.ShouldRecalcMass_Large = true;     // fuel is about to be removed, so set this now
             }
 
-            if (AddPoisonSprtContainer(ref mass, this.Fuel, _itemOptions.MatterToFuelConversionRate))
+            if (AddPoisonSprtContainer(ref mass, this.Fuel, _itemOptions.MatterToFuel_ConversionRate))
             {
                 // There was enough to cover it
                 return;
             }
 
             // Go after energy as a last resort
-            if (AddPoisonSprtContainer(ref mass, this.Energy, _itemOptions.MatterToEnergyConversionRate))
+            if (AddPoisonSprtContainer(ref mass, this.Energy, _itemOptions.MatterToEnergy_ConversionRate))
             {
                 // There was enough to cover it
                 return;

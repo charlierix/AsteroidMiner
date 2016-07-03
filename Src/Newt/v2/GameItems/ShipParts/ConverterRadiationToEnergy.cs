@@ -838,7 +838,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Convert the radiation into energy
-            double amountToAdd = radiation * elapsedTime * _itemOptions.SolarPanelConversionRate;
+            double amountToAdd = radiation * elapsedTime * _itemOptions.SolarPanel_ConversionRate;
 
             // Add it (doesn't matter if the tank is full, just try)
             _energyTanks.AddQuantity(amountToAdd, false);
@@ -882,7 +882,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Figure out the mass
             double volume = normal.Length * (this.DNA.Scale.Z * ConverterRadiationToEnergyDesign.THICKNESS);
-            mass = volume * _itemOptions.SolarPanelDensity;
+            mass = volume * _itemOptions.SolarPanel_Density;
 
             // Actual Scale
             actualScale = new Vector3D(this.DNA.Scale.X, this.DNA.Scale.Y, this.DNA.Scale.Z * ConverterRadiationToEnergyDesign.THICKNESS);

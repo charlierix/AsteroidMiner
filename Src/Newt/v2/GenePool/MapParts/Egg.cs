@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.NewtonDynamics;
@@ -55,7 +56,7 @@ namespace Game.Newt.v2.GenePool.MapParts
             transform.Children.Add(new TranslateTransform3D(position.ToVector()));
 
             double volume = (4d / 3d) * Math.PI * scale.X * this.Radius * scale.Y * this.Radius * scale.Z * this.Radius;
-            double mass = volume * itemOptions.EggDensity;
+            double mass = volume * itemOptions.Egg_Density;
 
             using (CollisionHull hull = CollisionHull.CreateSphere(world, 0, scale * this.Radius, null))
             {

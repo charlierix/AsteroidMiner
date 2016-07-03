@@ -574,16 +574,16 @@ namespace Game.Newt.Testers
         {
             InitializeComponent();
 
-            txtGravNeuronDensity.Text = _itemOptions.GravitySensorNeuronDensity.ToString();
-            txtBrainNeuronDensity.Text = _itemOptions.BrainNeuronDensity.ToString();
-            txtBrainChemicalDensity.Text = _itemOptions.BrainChemicalDensity.ToString();
-            txtLinkBrainInternal.Text = _itemOptions.BrainLinksPerNeuron_Internal.ToString();
-            txtLinkBrainExternalFromSensor.Text = _itemOptions.BrainLinksPerNeuron_External_FromSensor.ToString();
-            txtLinkBrainExternalFromBrain.Text = _itemOptions.BrainLinksPerNeuron_External_FromBrain.ToString();
-            txtBrainNeuronMinDistPercent.Text = _itemOptions.BrainNeuronMinClusterDistPercent.ToString();
+            txtGravNeuronDensity.Text = _itemOptions.GravitySensor_NeuronDensity.ToString();
+            txtBrainNeuronDensity.Text = _itemOptions.Brain_NeuronDensity.ToString();
+            txtBrainChemicalDensity.Text = _itemOptions.Brain_ChemicalDensity.ToString();
+            txtLinkBrainInternal.Text = _itemOptions.Brain_LinksPerNeuron_Internal.ToString();
+            txtLinkBrainExternalFromSensor.Text = _itemOptions.Brain_LinksPerNeuron_External_FromSensor.ToString();
+            txtLinkBrainExternalFromBrain.Text = _itemOptions.Brain_LinksPerNeuron_External_FromBrain.ToString();
+            txtBrainNeuronMinDistPercent.Text = _itemOptions.Brain_NeuronMinClusterDistPercent.ToString();
 
-            txtLinkThrusterExternalFromSensor.Text = _itemOptions.ThrusterLinksPerNeuron_Sensor.ToString();
-            txtLinkThrusterExternalFromBrain.Text = _itemOptions.ThrusterLinksPerNeuron_Brain.ToString();
+            txtLinkThrusterExternalFromSensor.Text = _itemOptions.Thruster_LinksPerNeuron_Sensor.ToString();
+            txtLinkThrusterExternalFromBrain.Text = _itemOptions.Thruster_LinksPerNeuron_Brain.ToString();
 
             _isInitialized = true;
         }
@@ -796,7 +796,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtGravNeuronDensity);
                 if (newValue != null)
                 {
-                    _itemOptions.GravitySensorNeuronDensity = newValue.Value;
+                    _itemOptions.GravitySensor_NeuronDensity = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -842,7 +842,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtBrainNeuronDensity);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainNeuronDensity = newValue.Value;
+                    _itemOptions.Brain_NeuronDensity = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -857,7 +857,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtBrainChemicalDensity);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainChemicalDensity = newValue.Value;
+                    _itemOptions.Brain_ChemicalDensity = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -872,7 +872,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtBrainNeuronMinDistPercent);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainNeuronMinClusterDistPercent = newValue.Value;
+                    _itemOptions.Brain_NeuronMinClusterDistPercent = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -888,7 +888,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtLinkBrainInternal);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainLinksPerNeuron_Internal = newValue.Value;
+                    _itemOptions.Brain_LinksPerNeuron_Internal = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -903,7 +903,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtLinkBrainExternalFromSensor);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainLinksPerNeuron_External_FromSensor = newValue.Value;
+                    _itemOptions.Brain_LinksPerNeuron_External_FromSensor = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -918,7 +918,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtLinkBrainExternalFromBrain);
                 if (newValue != null)
                 {
-                    _itemOptions.BrainLinksPerNeuron_External_FromBrain = newValue.Value;
+                    _itemOptions.Brain_LinksPerNeuron_External_FromBrain = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -933,7 +933,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtLinkThrusterExternalFromSensor);
                 if (newValue != null)
                 {
-                    _itemOptions.ThrusterLinksPerNeuron_Sensor = newValue.Value;
+                    _itemOptions.Thruster_LinksPerNeuron_Sensor = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -948,7 +948,7 @@ namespace Game.Newt.Testers
                 double? newValue = UpdateSetting(_isInitialized, txtLinkThrusterExternalFromBrain);
                 if (newValue != null)
                 {
-                    _itemOptions.ThrusterLinksPerNeuron_Brain = newValue.Value;
+                    _itemOptions.Thruster_LinksPerNeuron_Brain = newValue.Value;
                 }
             }
             catch (Exception ex)
@@ -3059,12 +3059,12 @@ namespace Game.Newt.Testers
                         brain.Body.Token,
                         brain.Brain, NeuronContainerType.Brain,
                         brain.Brain.Position, brain.Brain.Orientation,
-                        _itemOptions.BrainLinksPerNeuron_Internal,
+                        _itemOptions.Brain_LinksPerNeuron_Internal,
                         new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.BrainLinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromManipulator)
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
 							},
                         Convert.ToInt32(Math.Round(brain.Brain.BrainChemicalCount * 1.33d, 0)),		// increasing so that there is a higher chance of listeners
                         brain.DNAInternalLinks, brain.DNAExternalLinks));
@@ -3084,8 +3084,8 @@ namespace Game.Newt.Testers
                         null,
                         new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Brain),
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Sensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Brain),
 							},
                         0,
                         null, thrust.DNAExternalLinks));
@@ -3098,7 +3098,7 @@ namespace Game.Newt.Testers
             NeuralUtility.ContainerOutput[] outputs = null;
             if (inputs.Count > 0)
             {
-                outputs = NeuralUtility.LinkNeurons(inputs.ToArray(), _itemOptions.NeuralLinkMaxWeight);
+                outputs = NeuralUtility.LinkNeurons(inputs.ToArray(), _itemOptions.NeuralLink_MaxWeight);
             }
 
             #region Show new links

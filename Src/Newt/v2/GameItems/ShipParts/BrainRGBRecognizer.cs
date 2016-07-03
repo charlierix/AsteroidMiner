@@ -535,7 +535,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             bool shouldBeZero;
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.BrainAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 _isOn = false;
                 shouldBeZero = true;
@@ -1056,7 +1056,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = Math.PI * rad * rad * height;
 
-            mass = volume * itemOptions.BrainDensity;
+            mass = volume * itemOptions.Brain_Density;
 
             radius = Math1D.Avg(rad, height);       // this is just approximate, and is used by INeuronContainer
             actualScale = new Vector3D(rad * 2d, rad * 2d, height);     // I think this is just used to get a bounding box

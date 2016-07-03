@@ -20,7 +20,7 @@ using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.NewtonDynamics;
 
-namespace Game.Newt.Testers.SwarmBots
+namespace Game.Newt.Testers
 {
     public partial class SwarmBotTester : Window
     {

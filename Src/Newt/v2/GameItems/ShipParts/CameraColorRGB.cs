@@ -447,7 +447,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _scaleActual = new Vector3D(radius * 2d, radius * 2d, radius * 2d);
 
             //TODO: Rework this method to take in the number of cone types (plates of neurons), instead of hardcoding to 3 and having all these out params
-            CreateNeurons(out _neuronsR, out _neuronsG, out _neuronsB, out _overlayR, out _overlayG, out _overlayB, out _pixelWidthHeight, dna, itemOptions, itemOptions.CameraColorRGBNeuronDensity);
+            CreateNeurons(out _neuronsR, out _neuronsG, out _neuronsB, out _overlayR, out _overlayG, out _overlayB, out _pixelWidthHeight, dna, itemOptions, itemOptions.CameraColorRGB_NeuronDensity);
 
             if (_cameraPool != null)
             {
@@ -554,7 +554,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //NOTE: This method is called by the physics thread, and is only worried about energy tanks.  StoreSnapshot() is called
             //from the camera pool thread, and the individual neurons are read independently by the ai pool thread
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.CameraColorRGBAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.CameraColorRGB_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this
@@ -679,7 +679,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             radius *= CameraColorRGBDesign.SCALE;		// scale it
 
             volume = 4d / 3d * Math.PI * radius * radius * radius;
-            mass = volume * itemOptions.CameraDensity;
+            mass = volume * itemOptions.Camera_Density;
         }
 
         internal static void CreateNeurons(out Neuron_SensorPosition[] neuronsR, out Neuron_SensorPosition[] neuronsG, out Neuron_SensorPosition[] neuronsB, out OverlayResult[][] overlayR, out OverlayResult[][] overlayG, out OverlayResult[][] overlayB, out int pixelWidthHeight, ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity)
@@ -691,7 +691,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Figure out how many neurons to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
-            double area = Math.Pow(radius, itemOptions.SensorNeuronGrowthExponent);
+            double area = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
 
             int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
             if (neuronCount == 0)

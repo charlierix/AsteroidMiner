@@ -76,8 +76,8 @@ namespace Game.Newt.v2.MissileCommand
             try
             {
                 _itemOptions = new ItemOptions();
-                _itemOptions.MatterToEnergyConversionRate *= .12;
-                _itemOptions.MatterToEnergyAmountToDraw *= 1.25;        //NOTE: In bot, the matter converter group doesn't check if empty often enough.  So if you draw much more, then there will be noticable pulses of not refilling (I assume that's the cause anyway)
+                _itemOptions.MatterToEnergy_ConversionRate *= .12;
+                _itemOptions.MatterToEnergy_AmountToDraw *= 1.25;        //NOTE: In bot, the matter converter group doesn't check if empty often enough.  So if you draw much more, then there will be noticable pulses of not refilling (I assume that's the cause anyway)
 
                 #region Init World
 

@@ -49,13 +49,15 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         {
             // Each part defines a default tab that it wants to be in.  I'll just use those defaults
             _partToolItems.Add(new CargoBayToolItem(editor1.Options));
-            _partToolItems.Add(new EnergyTankToolItem(editor1.Options));
             _partToolItems.Add(new FuelTankToolItem(editor1.Options));
+            _partToolItems.Add(new EnergyTankToolItem(editor1.Options));
             _partToolItems.Add(new PlasmaTankToolItem(editor1.Options));
             _partToolItems.Add(new AmmoBoxToolItem(editor1.Options));
             _partToolItems.Add(new HangarBayToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterMatterToEnergyToolItem(editor1.Options));
+            _partToolItems.Add(new SwarmBayToolItem(editor1.Options));
             _partToolItems.Add(new ConverterMatterToFuelToolItem(editor1.Options));
+            _partToolItems.Add(new ConverterMatterToEnergyToolItem(editor1.Options));
+            _partToolItems.Add(new ConverterMatterToPlasmaToolItem(editor1.Options));
             _partToolItems.Add(new ConverterMatterToAmmoToolItem(editor1.Options));
             _partToolItems.Add(new ConverterEnergyToFuelToolItem(editor1.Options));
             _partToolItems.Add(new ConverterEnergyToAmmoToolItem(editor1.Options));

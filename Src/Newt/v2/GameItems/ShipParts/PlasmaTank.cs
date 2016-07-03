@@ -200,7 +200,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double surfaceArea, radius;
             _container = FuelTank.GetContainer(out surfaceArea, out _scaleActual, out radius, itemOptions, dna);
 
-            _mass = _container.QuantityMax * itemOptions.PlasmaTankDensity;     // max quantity is the volume
+            _mass = _container.QuantityMax * itemOptions.PlasmaTank_Density;     // max quantity is the volume
             this.Radius = radius;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);

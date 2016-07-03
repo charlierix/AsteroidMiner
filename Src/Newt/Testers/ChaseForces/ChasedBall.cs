@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 
 namespace Game.Newt.Testers.ChaseForces

@@ -524,7 +524,7 @@ namespace Game.Newt.v2.Arcanorum
             // This isn't the radius of the cylinder, it is the radius of the bounding sphere
             radius = Math.Sqrt((radiusLocal * radiusLocal) + (halfHeightLocal * halfHeightLocal));
 
-            mass = volume * itemOptions.SensorDensity;
+            mass = volume * itemOptions.Sensor_Density;
 
             actualScale = new Vector3D(dna.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z);
         }
@@ -536,7 +536,7 @@ namespace Game.Newt.v2.Arcanorum
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             double radius = (dna.Scale.X + dna.Scale.Y) / (2d * 2d);		// XY should always be the same anyway (not looking at Z for this.  Z is just to keep the sensors from getting too close to each other)
-            double area = Math.Pow(radius, itemOptions.SensorNeuronGrowthExponent);
+            double area = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
 
             int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
             if (neuronCount == 0)

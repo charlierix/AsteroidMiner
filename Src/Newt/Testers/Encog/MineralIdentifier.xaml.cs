@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.MapParts;
 

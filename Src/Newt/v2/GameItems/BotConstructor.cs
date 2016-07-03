@@ -337,6 +337,16 @@ namespace Game.Newt.v2.GameItems
                             dna, standard, building.AllParts);
                         break;
 
+                    case ConverterMatterToPlasma.PARTTYPE:
+                        AddPart(new ConverterMatterToPlasma(options, itemOptions, dna, containers.PlasmaGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case ConverterMatterToAmmo.PARTTYPE:
+                        AddPart(new ConverterMatterToAmmo(options, itemOptions, dna, containers.AmmoGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
                     case ConverterEnergyToAmmo.PARTTYPE:
                         AddPart(new ConverterEnergyToAmmo(options, itemOptions, dna, containers.EnergyGroup, containers.AmmoGroup),
                             dna, standard, building.AllParts);
@@ -419,6 +429,11 @@ namespace Game.Newt.v2.GameItems
 
                     case ShieldTractor.PARTTYPE:
                         AddPart(new ShieldTractor(options, itemOptions, dna, containers.PlasmaGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case SwarmBay.PARTTYPE:
+                        AddPart(new SwarmBay(options, itemOptions, dna, core.Map, core.World, extra.Material_SwarmBot, containers.PlasmaGroup, extra.SwarmObjectiveStrokes),
                             dna, standard, building.AllParts);
                         break;
 
@@ -522,7 +537,7 @@ namespace Game.Newt.v2.GameItems
 
             NeuralUtility.ContainerInput[] neuralContainers = BuildNeuralContainers(parts, extra.ItemOptions);
 
-            NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons(partMap, neuralContainers, extra.ItemOptions.NeuralLinkMaxWeight);
+            NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons(partMap, neuralContainers, extra.ItemOptions.NeuralLink_MaxWeight);
 
             if (retVal.Length == 0)
             {
@@ -783,12 +798,12 @@ namespace Game.Newt.v2.GameItems
                             part.Item1.Token,
                             container, NeuronContainerType.Brain,
                             container.Position, container.Orientation,
-                            itemOptions.BrainLinksPerNeuron_Internal,
+                            itemOptions.Brain_LinksPerNeuron_Internal,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.BrainLinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.BrainLinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.BrainLinksPerNeuron_External_FromManipulator)
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
 							},
                             brainChemicalCount,
                             internalLinks, externalLinks));
@@ -806,8 +821,8 @@ namespace Game.Newt.v2.GameItems
                             null,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.ThrusterLinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.ThrusterLinksPerNeuron_Brain),
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
 							},
                             0,
                             null, externalLinks));
@@ -1032,11 +1047,11 @@ namespace Game.Newt.v2.GameItems
             // Link cargo bays with converters
             if (building.Containers.CargoBays.Count > 0)
             {
-                //TODO: Make a converter to plasma
                 IConverterMatter[] converters = building.
                     GetStandardParts<IConverterMatter>(ConverterMatterToEnergy.PARTTYPE).
                     Concat(building.GetStandardParts<IConverterMatter>(ConverterMatterToFuel.PARTTYPE)).
                     Concat(building.GetStandardParts<IConverterMatter>(ConverterMatterToAmmo.PARTTYPE)).
+                    Concat(building.GetStandardParts<IConverterMatter>(ConverterMatterToPlasma.PARTTYPE)).
                     ToArray();
 
                 if (converters.Length > 0)
@@ -1050,7 +1065,7 @@ namespace Game.Newt.v2.GameItems
             //TODO: This should be interface based
             #region LifeEventWatcher
 
-            foreach(BrainRGBRecognizer recognizer in building.GetStandardParts<BrainRGBRecognizer>(BrainRGBRecognizer.PARTTYPE))
+            foreach (BrainRGBRecognizer recognizer in building.GetStandardParts<BrainRGBRecognizer>(BrainRGBRecognizer.PARTTYPE))
             {
                 LifeEventToVector toVector = new LifeEventToVector(building.LifeEventWatcher, new[] { LifeEventType.AddedCargo, LifeEventType.LostPlasma });
                 recognizer.AssignOutputs(toVector);

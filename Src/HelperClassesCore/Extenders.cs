@@ -59,37 +59,28 @@ namespace Game.HelperClassesCore
 
         public static int ToInt_Round(this double value)
         {
-            return Convert.ToInt32(Math.Round(value));
+            return ToIntSafe(Math.Round(value));
         }
         public static int ToInt_Floor(this double value)
         {
-            return Convert.ToInt32(Math.Floor(value));
+            return ToIntSafe(Math.Floor(value));
         }
         public static int ToInt_Ceiling(this double value)
         {
-            return Convert.ToInt32(Math.Ceiling(value));
+            return ToIntSafe(Math.Ceiling(value));
         }
 
         public static byte ToByte_Round(this double value)
         {
-            int retVal = Convert.ToInt32(Math.Round(value));
-            if (retVal < 0) retVal = 0;
-            if (retVal > 255) retVal = 255;
-            return Convert.ToByte(retVal);
+            return ToByteSafe(Math.Round(value));
         }
         public static byte ToByte_Floor(this double value)
         {
-            int retVal = Convert.ToInt32(Math.Floor(value));
-            if (retVal < 0) retVal = 0;
-            if (retVal > 255) retVal = 255;
-            return Convert.ToByte(retVal);
+            return ToByteSafe(Math.Floor(value));
         }
         public static byte ToByte_Ceiling(this double value)
         {
-            int retVal = Convert.ToInt32(Math.Ceiling(value));
-            if (retVal < 0) retVal = 0;
-            if (retVal > 255) retVal = 255;
-            return Convert.ToByte(retVal);
+            return ToByteSafe(Math.Ceiling(value));
         }
 
         #endregion
@@ -639,6 +630,23 @@ namespace Game.HelperClassesCore
             string standard = ToStringSignificantDigits_Standard(Convert.ToDouble(match.Groups["num"].Value), significantDigits, false);
 
             return standard + match.Groups["exp"].Value;
+        }
+
+        private static int ToIntSafe(double value)
+        {
+            double retVal = value;
+            if (retVal < int.MinValue) retVal = int.MinValue;
+            else if (retVal > int.MaxValue) retVal = int.MaxValue;
+            else if (Math1D.IsInvalid(retVal)) retVal = int.MaxValue;
+            return Convert.ToInt32(retVal);
+        }
+        private static byte ToByteSafe(double value)
+        {
+            int retVal = ToIntSafe(Math.Ceiling(value));
+            if (retVal < 0) retVal = 0;
+            else if (retVal > 255) retVal = 255;
+            else if (Math1D.IsInvalid(retVal)) retVal = 255;
+            return Convert.ToByte(retVal);
         }
 
         #endregion

@@ -285,7 +285,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             double surfaceArea, radius;
             _container = GetContainer(out surfaceArea, out _scaleActual, out radius, itemOptions, dna);
 
-            _dryMass = surfaceArea * itemOptions.AmmoBoxWallDensity;
+            _dryMass = surfaceArea * itemOptions.AmmoBox_WallDensity;
 
             this.Radius = radius;
 
@@ -559,7 +559,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 lock (_lock)
                 {
-                    return _dryMass + (_container.QuantityCurrent * _itemOptions.AmmoDensity);
+                    return _dryMass + (_container.QuantityCurrent * _itemOptions.Ammo_Density);
                 }
             }
         }

@@ -275,6 +275,32 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public static Color ConverterPlasma
+        {
+            get
+            {
+                return UtilityWPF.AlphaBlend(PlasmaTank, ConverterBase, .75d);
+            }
+        }
+        [ThreadStatic]
+        private static SpecularMaterial _converterPlasmaSpecular;
+        public static SpecularMaterial ConverterPlasmaSpecular
+        {
+            get
+            {
+                if (_converterPlasmaSpecular == null)
+                {
+                    //Color ammoColor = UtilityWPF.ColorFromHex("D95448");
+                    //Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
+                    //_converterPlasmaSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
+
+                    _converterPlasmaSpecular = PlasmaTankSpecular;
+                }
+
+                return _converterPlasmaSpecular;
+            }
+        }
+
         public static Color ConverterAmmo
         {
             get
@@ -507,6 +533,29 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 return _hangarBayTrimSpecular;
+            }
+        }
+
+        // SwarmBay
+        public static Color SwarmBay
+        {
+            get
+            {
+                return UtilityWPF.ColorFromHex("BDA88E");
+            }
+        }
+        [ThreadStatic]
+        private static SpecularMaterial _swarmBaySpecular;
+        public static SpecularMaterial SwarmBaySpecular
+        {
+            get
+            {
+                if (_swarmBaySpecular == null)
+                {
+                    _swarmBaySpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
+                }
+
+                return _swarmBaySpecular;
             }
         }
 

@@ -205,7 +205,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             this.Radius = radius;
 
-            _neurons = SensorGravity.CreateNeurons(dna, itemOptions, itemOptions.VelocitySensorNeuronDensity);
+            _neurons = SensorGravity.CreateNeurons(dna, itemOptions, itemOptions.VelocitySensor_NeuronDensity);
             _neuronMaxRadius = _neurons.Max(o => o.PositionLength);
         }
 
@@ -276,7 +276,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensorAmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensor_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
                 {
                     // The energy tank didn't have enough
                     //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this

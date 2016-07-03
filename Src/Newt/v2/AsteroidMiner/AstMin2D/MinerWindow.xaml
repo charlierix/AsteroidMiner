@@ -11,7 +11,7 @@
         <Canvas Name="backgroundCanvas"/>
 
         <!-- Main Viewer -->
-        <Grid Name="grdViewPort" Background="Transparent">
+        <Grid Name="grdViewPort" Background="Transparent" MouseDown="grdViewPort_MouseDown" MouseMove="grdViewPort_MouseMove" MouseUp="grdViewPort_MouseUp">
             <Viewport3D Name="_viewport" IsHitTestVisible="False">
                 <!-- Camera -->
                 <Viewport3D.Camera>

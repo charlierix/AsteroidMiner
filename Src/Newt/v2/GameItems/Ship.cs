@@ -10,6 +10,7 @@ using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
@@ -108,7 +109,7 @@ namespace Game.Newt.v2.GameItems
                         if (thrusts[cntr] != null)
                         {
                             // Get coords for visual (these are in model coords.  The visual will be transformed to world outside of this class)
-                            var lineVect = GetThrustLine(thrusts[cntr].Value, _itemOptions.ThrusterStrengthRatio);		// this returns a vector in the opposite direction, so the line looks like a flame
+                            var lineVect = GetThrustLine(thrusts[cntr].Value, _itemOptions.Thruster_StrengthRatio);		// this returns a vector in the opposite direction, so the line looks like a flame
                             Point3D lineStart = thruster.Position + (lineVect.Item1.ToUnit() * thruster.ThrustVisualStartRadius);
 
                             // Add it
@@ -1597,12 +1598,12 @@ namespace Game.Newt.v2.GameItems
                             part.Item1.Token,
                             container, NeuronContainerType.Brain,
                             container.Position, container.Orientation,
-                            itemOptions.BrainLinksPerNeuron_Internal,
+                            itemOptions.Brain_LinksPerNeuron_Internal,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.BrainLinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.BrainLinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.BrainLinksPerNeuron_External_FromManipulator)
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
 							},
                             brainChemicalCount,
                             internalLinks, externalLinks));
@@ -1620,8 +1621,8 @@ namespace Game.Newt.v2.GameItems
                             null,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
 							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.ThrusterLinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.ThrusterLinksPerNeuron_Brain),
+								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
+								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
 							},
                             0,
                             null, externalLinks));
@@ -1643,7 +1644,7 @@ namespace Game.Newt.v2.GameItems
             NeuralUtility.ContainerOutput[] retVal = null;
             if (inputs.Count > 0)
             {
-                retVal = NeuralUtility.LinkNeurons(inputs.ToArray(), itemOptions.NeuralLinkMaxWeight);
+                retVal = NeuralUtility.LinkNeurons(inputs.ToArray(), itemOptions.NeuralLink_MaxWeight);
             }
 
             // Exit Function
@@ -1861,8 +1862,10 @@ namespace Game.Newt.v2.GameItems
         public RadiationField Radiation = null;
         public IGravityField Gravity = null;
         public CameraPool CameraPool = null;
+        public SwarmObjectiveStrokes SwarmObjectiveStrokes = null;
 
         public int Material_Projectile = 0;
+        public int Material_SwarmBot = 0;
 
         public bool RunNeural = true;
         public bool RepairPartPositions = true;
@@ -1998,7 +2001,7 @@ namespace Game.Newt.v2.GameItems
 
             ScaleTransform3D transform = new ScaleTransform3D(scale, scale, scale);
 
-            foreach(ShipPartDNA part in retVal.PartsByLayer.SelectMany(o => o.Value))
+            foreach (ShipPartDNA part in retVal.PartsByLayer.SelectMany(o => o.Value))
             {
                 //NOTE: Not bothering to scale the neural positions.  They are sort of in their own model space anyway
 

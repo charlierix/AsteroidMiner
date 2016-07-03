@@ -349,7 +349,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = Math.PI * radX * radY * height;
 
-            mass = volume * itemOptions.TractorBeamDensity;
+            mass = volume * itemOptions.TractorBeam_Density;
         }
 
         #endregion

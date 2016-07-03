@@ -111,6 +111,7 @@ namespace Game.Newt.v2.GameItems
             {
                 part.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(Part_RequestWorldLocation);
                 part.RequestWorldSpeed += new EventHandler<PartRequestWorldSpeedArgs>(Part_RequestWorldSpeed);
+                part.RequestParent += new EventHandler<PartRequestParentArgs>(Part_RequestParent);
             }
 
             // See if there are parts that can gradually change the ship's mass
@@ -827,6 +828,10 @@ namespace Game.Newt.v2.GameItems
             {
                 e.VelocityAtPoint = this.PhysicsBody.GetVelocityAtPoint(this.PhysicsBody.Position + this.PhysicsBody.PositionToWorld(e.GetVelocityAtPoint.Value).ToVector());
             }
+        }
+        private void Part_RequestParent(object sender, PartRequestParentArgs e)
+        {
+            e.Parent = this;
         }
 
         #endregion

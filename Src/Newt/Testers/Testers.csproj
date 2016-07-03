@@ -292,10 +292,7 @@
     <Compile Include="SoundTester.xaml.cs">
       <DependentUpon>SoundTester.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SwarmBots\SwarmClusters.cs" />
-    <Compile Include="SwarmBots\SwarmObjectiveStrokes.cs" />
-    <Compile Include="SwarmBots\SwarmBot1a.cs" />
-    <Compile Include="SwarmBots\SwarmBotTester.xaml.cs">
+    <Compile Include="SwarmBotTester.xaml.cs">
       <DependentUpon>SwarmBotTester.xaml</DependentUpon>
     </Compile>
     <Compile Include="TowerWrecker\ForceBeamSettings.xaml.cs">
@@ -610,7 +607,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="SwarmBots\SwarmBotTester.xaml">
+    <Page Include="SwarmBotTester.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

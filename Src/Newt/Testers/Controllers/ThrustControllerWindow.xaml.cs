@@ -418,6 +418,27 @@ namespace Game.Newt.Testers.Controllers
             }
         }
 
+        private void KDTree_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //From wikipedia:
+                //https://en.wikipedia.org/wiki/K-d_tree
+                //High-dimensional data[edit]
+                //k-d trees are not suitable for efficiently finding the nearest neighbour in high-dimensional spaces. As a general rule, if the
+                //dimensionality is k, the number of points in the data, N, should be N >> 2k. Otherwise, when k-d trees are used with
+                //high-dimensional data, most of the points in the tree will be evaluated and the efficiency is no better than exhaustive
+                //search,[11] and approximate nearest-neighbour methods should be used instead.
+
+
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -477,7 +498,7 @@ namespace Game.Newt.Testers.Controllers
 
             var newBestFound = new Action<ThrusterMap>(o => bot.ForwardMap = o);
 
-            ThrustControlUtil.DiscoverSolutionAsync(bot, ideal, null, _cancelCurrentBalancer.Token, null, newBestFound);
+            ThrustControlUtil.DiscoverSolutionAsync2(bot, ideal, null, _cancelCurrentBalancer.Token, null, newBestFound);
         }
         private void BalanceBot_Spin(ControlledThrustBot bot)
         {
@@ -499,7 +520,7 @@ namespace Game.Newt.Testers.Controllers
 
             var newBestFound = new Action<ThrusterMap>(o => bot.ForwardMap = o);        // using forward map, even though this is spin
 
-            ThrustControlUtil.DiscoverSolutionAsync(bot, null, ideal, _cancelCurrentBalancer.Token, null, newBestFound);
+            ThrustControlUtil.DiscoverSolutionAsync2(bot, null, ideal, _cancelCurrentBalancer.Token, null, newBestFound);
         }
 
         private static void RefillContainers(ControlledThrustBot bot)

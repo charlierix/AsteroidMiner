@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Media.Media3D;
-
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.NewtonDynamics

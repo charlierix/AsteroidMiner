@@ -31,7 +31,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             public Key Key { get; set; }
 
             public bool? Shift { get; set; }
-            public double? Max { get; set; }
+            public double? MaxLinear { get; set; }
+            public double? MaxRotate { get; set; }
         }
 
         #endregion
@@ -61,7 +62,28 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             /// <summary>
             /// This holds a map of which thrusters to fire at what percent in order to go the requested direction
             /// </summary>
-            public volatile ThrusterMap Map = null;
+            public volatile ThrusterSolutionMap Map = null;
+        }
+
+        #endregion
+        #region Class: ThrusterSolutionMap
+
+        /// <summary>
+        /// This holds a map and the resulting acceleration
+        /// </summary>
+        private class ThrusterSolutionMap
+        {
+            public ThrusterSolutionMap(ThrusterMap map, double linearAccel, double rotateAccel)
+            {
+                this.Map = map;
+                this.LinearAccel = linearAccel;
+                this.RotateAccel = rotateAccel;
+            }
+
+            public readonly ThrusterMap Map;
+
+            public readonly double LinearAccel;
+            public readonly double RotateAccel;
         }
 
         #endregion
@@ -171,16 +193,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             //this.PhysicsBody.Rotation = this.PhysicsBody.Rotation.RotateBy(new Quaternion(new Vector3D(1, 0, 0), -90));
 
             //this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
+
+            EnsureThrustKeysBuilt_YISUP();
         }
 
         #endregion
 
         #region Public Properties
 
-        //TODO: Let the user modify these (XWing vs TIE Fighter had a great energy management interface with F9 thru F12 keys)
-        //Lower values would naturally promote fuel savings, as well as controlability.  Have settings like { Low --- Max, Auto }.
-        //Auto would only go to low when fuel is scarce, and go to High/Max when threats are near/attacking.
-        private volatile object _maxAcceleration_Linear = 6d;
+        private volatile object _maxAcceleration_Linear = 100d; //6d;
         public double MaxAcceleration_Linear
         {
             get
@@ -194,7 +215,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private volatile object _maxAcceleration_Rotate = 2.5d;
+        private volatile object _maxAcceleration_Rotate = 3d; //2.5d;
         public double MaxAcceleration_Rotate
         {
             get
@@ -336,6 +357,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             //TODO: Let the user specify thresholds for which minerals to take ($, density, mass, type).  Also give an option to be less picky if near empty
             //TODO: Let the user specify thresholds for swapping lesser minerals for better ones
 
+            if (base.CargoBays == null)
+            {
+                return;
+            }
+
             var quantity = base.CargoBays.CargoVolume;
 
             if (quantity.Item2 - quantity.Item1 < mineral.VolumeInCubicMeters)
@@ -392,19 +418,32 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     ThrusterSolution solution;
                     if (_thrustLines.TryGetValue(key, out solution) || _thrustLines.TryGetValue(Tuple.Create(key.Item1, (bool?)null), out solution))      // _downKeys will always have the bool set to true or false, but _thrustLines may have it stored as a null (null means ignore shift key)
                     {
-                        ThrusterMap map = solution.Map;
+                        ThrusterSolutionMap map = solution.Map;
                         if (map != null)
                         {
-
                             //TODO: The thrust map is normalized for maximum thrust.  If they want full thrust immediately, use it.  Otherwise roll on the thrust as they
                             //hold the key in (start at a fixed min accel, then gradient up to full after a second or two)
+                            //solution.Request.Max
 
-                            foreach (ThrusterSetting thruster in map.UsedThrusters)
+                            double percentLin = 1d;
+                            if (solution.Request.Linear != null && solution.Request.MaxLinear != null && map.LinearAccel > solution.Request.MaxLinear.Value)
                             {
-                                //NOTE: If this percent goes over 1, the Fire method will cap it.  Any future control theory logic will get confused, because not all of what it said was actually used
-                                thruster.Thruster.Percents[thruster.SubIndex] += thruster.Percent;
+                                percentLin = solution.Request.MaxLinear.Value / map.LinearAccel;
                             }
 
+                            double percentRot = 1d;
+                            if (solution.Request.Rotate != null && solution.Request.MaxRotate != null && map.RotateAccel > solution.Request.MaxRotate.Value)
+                            {
+                                percentRot = solution.Request.MaxRotate.Value / map.RotateAccel;
+                            }
+
+                            double percent = Math.Min(percentLin, percentRot);
+
+                            foreach (ThrusterSetting thruster in map.Map.UsedThrusters)
+                            {
+                                //NOTE: If this percent goes over 1, the Fire method will cap it.  Any future control theory logic will get confused, because not all of what it said was actually used
+                                thruster.Thruster.Percents[thruster.SubIndex] += thruster.Percent * percent;
+                            }
                         }
                     }
                 }
@@ -508,21 +547,21 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             var directions = new[]
             {
-                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.W, Shift = (bool?)false },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, 1), Key = Key.Up, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.S, Shift = (bool?)false },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 0, -1), Key = Key.Down, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, MaxLinear = maxAccel },
             };
 
             #endregion
@@ -532,19 +571,19 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             var torques = new[]
             {
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Left, Shift = (bool?)false, MaxRotate = maxAccel },
 
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.Right, Shift = (bool?)false, MaxRotate = maxAccel },
 
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Q, Shift = (bool?)false },        // roll left
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.E, Shift = (bool?)false },
 
-                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
+                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true },     // pitch down
+                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true },     // pitch down
+                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true },
             };
 
             #endregion
@@ -570,21 +609,21 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             var directions = new[]
             {
-                //new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)null, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)false, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.W, Shift = (bool?)false },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)true},
+                new KeyThrustRequest(){ Linear = new Vector3D(0, 1, 0), Key = Key.Up, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                //new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)null, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)false, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)false, Max = maxAccel },
+                //new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)null },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.S, Shift = (bool?)false},
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(0, -1, 0), Key = Key.Down, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(-1, 0, 0), Key = Key.A, Shift = (bool?)false, MaxLinear = maxAccel },
 
-                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)true },
+                new KeyThrustRequest(){ Linear = new Vector3D(1, 0, 0), Key = Key.D, Shift = (bool?)false, MaxLinear = maxAccel },
             };
 
             #endregion
@@ -594,19 +633,19 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             var torques = new[]
             {
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, 1), Key = Key.Left, Shift = (bool?)false, MaxRotate = maxAccel },
 
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)false, Max = maxAccel },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 0, -1), Key = Key.Right, Shift = (bool?)false, MaxRotate = maxAccel },
 
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Q, Shift = (bool?)false, Max = (double?)null },        // roll left
-                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.E, Shift = (bool?)false, Max = (double?)null },
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, -1, 0), Key = Key.Q, Shift = (bool?)false },        // roll left
+                new KeyThrustRequest(){ Rotate = new Vector3D(0, 1, 0), Key = Key.E, Shift = (bool?)false },
 
-                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true, Max = (double?)null },
-                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true, Max = (double?)null },     // pitch down
-                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true, Max = (double?)null },
+                //new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.Q, Shift = (bool?)true },     // pitch down
+                //new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.E, Shift = (bool?)true },
+                new KeyThrustRequest(){ Rotate = new Vector3D(-1, 0, 0), Key = Key.W, Shift = (bool?)true },     // pitch down
+                new KeyThrustRequest(){ Rotate = new Vector3D(1, 0, 0), Key = Key.S, Shift = (bool?)true },
             };
 
             #endregion
@@ -635,8 +674,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             var grouped = requests.
                 ToLookup(KeyThrustRequestComparer);
 
-            //TODO: Share work on the same thread
-
             foreach (var set in grouped)
             {
                 // Create wrappers for this set
@@ -653,30 +690,64 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 // This delegate gets called when a better solution is found.  Distribute the map to the solution wrappers
                 var newBestFound = new Action<ThrusterMap>(o =>
                 {
+                    ThrusterSolutionMap solutionMap = GetThrusterSolutionMap(o, model, inertia, mass);
+
                     foreach (ThrusterSolution wrapper in solutionWrappers)
                     {
-                        wrapper.Map = o;
+                        wrapper.Map = solutionMap;
                     }
                 });
 
-                var options = new DiscoverSolutionOptions<Tuple<int, int, double>>()
+                var options = new DiscoverSolutionOptions2<Tuple<int, int, double>>()
                 {
-                    MaxIterations = 2000,
+                    //MaxIterations = 2000,     //TODO: Find a reasonable stop condition
                     ThreadShare = _thrustWorkerThread,
                 };
 
                 // Find the previous solution for this request
                 var prevMatch = previous.FirstOrDefault(o => KeyThrustRequestComparer(set.Key, o.Request));
-                if (prevMatch != null)
+                if (prevMatch != null && prevMatch.Map != null)
                 {
-                    options.Predefined = new[] { prevMatch.Map.Flattened };
+                    options.Predefined = new[] { prevMatch.Map.Map.Flattened };
                 }
 
                 // Find the combination of thrusters that push in the requested direction
-                ThrustControlUtil.DiscoverSolutionAsync(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
+                //ThrustControlUtil.DiscoverSolutionAsync(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
+                ThrustControlUtil.DiscoverSolutionAsync2(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
             }
 
             _isThrustMapDirty = false;
+        }
+
+        private static ThrusterSolutionMap GetThrusterSolutionMap(ThrusterMap map, ThrustContributionModel model, MassMatrix inertia, double mass)
+        {
+            // Add up the forces
+            Vector3D sumLinearForce = new Vector3D();
+            Vector3D sumTorque = new Vector3D();
+            foreach (ThrusterSetting thruster in map.UsedThrusters)
+            {
+                var contribution = model.Contributions.FirstOrDefault(o => o.Item1 == thruster.ThrusterIndex && o.Item2 == thruster.SubIndex);
+                if (contribution == null)
+                {
+                    throw new ApplicationException(string.Format("Didn't find contribution for thruster: {0}, {1}", thruster.ThrusterIndex, thruster.SubIndex));
+                }
+
+                sumLinearForce += contribution.Item3.TranslationForce * thruster.Percent;
+                sumTorque += contribution.Item3.Torque * thruster.Percent;
+            }
+
+            // Divide by mass
+            //F=MA, A=F/M
+            double accel = sumLinearForce.Length / mass;
+
+            Vector3D projected = inertia.Inertia.GetProjectedVector(sumTorque);
+            double angAccel = sumTorque.Length / projected.Length;
+            if(Math1D.IsInvalid(angAccel))
+            {
+                angAccel = 0;       // this happens when there is no net torque
+            }
+
+            return new ThrusterSolutionMap(map, accel, angAccel);
         }
 
         private static bool KeyThrustRequestComparer(KeyThrustRequest item1, KeyThrustRequest item2)
