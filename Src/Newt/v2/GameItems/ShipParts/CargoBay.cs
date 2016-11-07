@@ -23,8 +23,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public CargoBayToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -158,6 +158,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new CargoBayToolItem(this.Options);
         }
 
         #endregion
@@ -575,7 +580,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             lock (_lock)
             {
                 Cargo[] candidates = _cargo.
-                    Where(o => o.CargoType == CargoType.Mineral && ((Cargo_Mineral)o).MineralType == type).
+                    Where(o => o.Type == CargoType.Mineral && ((Cargo_Mineral)o).MineralType == type).
                     OrderBy(o => o.Volume).
                     ToArray();
 
@@ -600,7 +605,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             lock (_lock)
             {
                 Cargo[] candidates = _cargo.
-                    Where(o => o.CargoType == CargoType.Mineral).
+                    Where(o => o.Type == CargoType.Mineral).
                     OrderBy(o => o.Volume).
                     ToArray();
 
@@ -610,6 +615,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 return RemoveMineral_Continue(candidates, volume);
+            }
+        }
+
+        public bool RemovePart(ShipPartDNA part)
+        {
+            lock (_lock)
+            {
+                foreach (Cargo cargo in _cargo)
+                {
+                    if (cargo is Cargo_ShipPart && ((Cargo_ShipPart)cargo).PartDNA.IsEqual(part))
+                    {
+                        Remove_Continue(cargo.Token);
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 
@@ -780,9 +802,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
             lock (_lock)
             {
                 // See which cargo bays can hold this
-                CargoBay[] _available = _cargoBays.Where(o => o.MaxVolume - o.UsedVolume > cargo.Volume).ToArray();
+                CargoBay[] _available = _cargoBays.
+                    Where(o => o.MaxVolume - o.UsedVolume > cargo.Volume).
+                    ToArray();
+
                 if (_available.Length == 0)
                 {
+                    //TODO: If the cargo is a mineral, divide it among the cargobays
+                    //if (takeFraction && cargo is Cargo_Mineral)
+                    //{
+                    //}
+
                     return false;
                 }
 
@@ -811,7 +841,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     // Get all the minerals of the requested type from this cargo bay
                     Cargo[] candidates = _cargoBays[cntr].GetCargoSnapshot().
-                        Where(o => o.CargoType == CargoType.Mineral && ((Cargo_Mineral)o).MineralType == type).
+                        Where(o => o.Type == CargoType.Mineral && ((Cargo_Mineral)o).MineralType == type).
                         ToArray();
 
                     if (candidates.Length > 0)
@@ -821,7 +851,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 // Remove as many as necessary (smallest first)
-                var retVal = RemoveMineralSprtContinue_Volume(allCandidates.OrderBy(o => o.Item2.Volume).ToArray(), volume);
+                var retVal = RemoveMineral_Continue_Volume(allCandidates.OrderBy(o => o.Item2.Volume).ToArray(), volume);
 
                 // Fully remove any that are zero volume
                 foreach (var cargo in allCandidates)
@@ -850,7 +880,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     // Get all the minerals from this cargo bay
                     Cargo[] candidates = _cargoBays[cntr].GetCargoSnapshot().
-                        Where(o => o.CargoType == CargoType.Mineral).
+                        Where(o => o.Type == CargoType.Mineral).
                         ToArray();
 
                     if (candidates.Length > 0)
@@ -860,7 +890,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 // Remove as many as necessary (smallest first)
-                var retVal = RemoveMineralSprtContinue_Volume(allCandidates.OrderBy(o => o.Item2.Volume).ToArray(), volume);
+                var retVal = RemoveMineral_Continue_Volume(allCandidates.OrderBy(o => o.Item2.Volume).ToArray(), volume);
 
                 // Fully remove any that are zero volume
                 foreach (var cargo in allCandidates)
@@ -892,7 +922,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     // Get all the minerals from this cargo bay (lowest density first)
                     Cargo[] candidates = _cargoBays[cntr].GetCargoSnapshot().
-                        Where(o => o.CargoType == CargoType.Mineral).
+                        Where(o => o.Type == CargoType.Mineral).
                         ToArray();
 
                     if (candidates.Length > 0)
@@ -902,7 +932,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 // Remove as many as necessary (least dense, then lowest volume first)
-                var retVal = RemoveMineralSprtContinue_Mass(allCandidates.OrderBy(o => Tuple.Create(o.Item2.Density, o.Item2.Volume)).ToArray(), mass);
+                var retVal = RemoveMineral_Continue_Mass(allCandidates.OrderBy(o => Tuple.Create(o.Item2.Density, o.Item2.Volume)).ToArray(), mass);
 
                 // Fully remove any that are zero volume
                 foreach (var cargo in allCandidates)
@@ -914,6 +944,29 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 return retVal;
+            }
+        }
+
+        /// <summary>
+        /// This finds the specific part and removes it
+        /// </summary>
+        /// <returns>
+        /// True: the part was found and removed
+        /// False: the part wasn't in the cargo bays
+        /// </returns>
+        public bool RemovePart(ShipPartDNA part)
+        {
+            lock (_lock)
+            {
+                foreach (CargoBay bay in _cargoBays)
+                {
+                    if (bay.RemovePart(part))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 
@@ -936,7 +989,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private Tuple<double, Cargo[]> RemoveMineralSprtContinue_Volume(Tuple<int, Cargo>[] candidates, double volume)
+        private Tuple<double, Cargo[]> RemoveMineral_Continue_Volume(Tuple<int, Cargo>[] candidates, double volume)
         {
             //NOTE: The candidate cargo is sorted smallest to largest
 
@@ -973,7 +1026,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Exit Function
             return Tuple.Create(current, retVal.ToArray());
         }
-        private Tuple<double, Cargo[]> RemoveMineralSprtContinue_Mass(Tuple<int, Cargo>[] candidates, double mass)
+        private Tuple<double, Cargo[]> RemoveMineral_Continue_Mass(Tuple<int, Cargo>[] candidates, double mass)
         {
             //NOTE: The candidate cargo is sorted by density, volume
 
@@ -1031,17 +1084,43 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     public class Cargo_ShipPart : Cargo
     {
-        public Cargo_ShipPart(ShipPartDNA dna, double density, double volume)
-            : base(CargoType.ShipPart, density, volume)
+        public Cargo_ShipPart(ShipPartDNA dna, ItemOptions options, EditorOptions editorOptions)
+            : base(CargoType.ShipPart)
         {
-            this.DNA = dna;
+            PartDesignBase part = BotConstructor.GetPartDesign(dna, editorOptions);
+
+            //TODO: This is really ineficient, let design calculate it for real
+            //TODO: Volume and Mass should be calculated by the design class (add to PartBase interface)
+            var aabb = Math3D.GetAABB(UtilityWPF.GetPointsFromMesh(part.Model));
+            this.Volume = (aabb.Item2.X - aabb.Item1.X) * (aabb.Item2.Y - aabb.Item1.Y) * (aabb.Item2.Y - aabb.Item1.Y);
+
+            //TODO: Let the design class return this (expose a property called DryDensity)
+            this.Density = Math1D.Avg(options.Thruster_Density, options.Sensor_Density);
+
+            this.PartDNA = dna;
+        }
+        public Cargo_ShipPart(ShipPartDNA dna, double density, double volume)
+            : base(CargoType.ShipPart)
+        {
+            this.Density = density;
+            this.Volume = volume;
+
+            this.PartDNA = dna;
         }
 
-        public readonly ShipPartDNA DNA;
+        public readonly ShipPartDNA PartDNA;
 
         public override Cargo Clone()
         {
-            return new Cargo_ShipPart(ShipPartDNA.Clone(this.DNA), this.Density, this.Volume);
+            return new Cargo_ShipPart(ShipPartDNA.Clone(this.PartDNA), this.Density, this.Volume);
+        }
+
+        public override CargoDNA GetNewDNA()
+        {
+            CargoDNA retVal = base.GetNewDNA();
+            retVal.Part = this.PartDNA;
+
+            return retVal;
         }
     }
 
@@ -1051,8 +1130,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     public class Cargo_Mineral : Cargo
     {
         public Cargo_Mineral(MineralType mineralType, double density, double volume)
-            : base(CargoType.Mineral, density, volume)
+            : base(CargoType.Mineral)
         {
+            this.Density = density;
+            this.Volume = volume;
+
             this.MineralType = mineralType;
         }
 
@@ -1062,6 +1144,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return new Cargo_Mineral(this.MineralType, this.Density, this.Volume);
         }
+
+        public override CargoDNA GetNewDNA()
+        {
+            CargoDNA retVal = base.GetNewDNA();
+            retVal.MineralType = this.MineralType;
+
+            return retVal;
+        }
     }
 
     #endregion
@@ -1069,10 +1159,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     public class Cargo
     {
-        public Cargo(CargoType cargoType, double density, double volume)
+        public Cargo(CargoType cargoType)
         {
             this.Token = TokenGenerator.NextToken();
-            this.CargoType = cargoType;
+            this.Type = cargoType;
+        }
+        public Cargo(CargoType cargoType, double density, double volume)
+            : this(cargoType)
+        {
             this.Density = density;
             this.Volume = volume;
         }
@@ -1081,11 +1175,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// This is redundant, since the derived type will be this as well, but is easy to write switch statements
         /// on (but there could be some types that just need volume, so no need for a derived cargo class)
         /// </summary>
-        public readonly CargoType CargoType;
+        public readonly CargoType Type;
 
         public readonly long Token;
 
-        public readonly double Density;
+        // I wanted this readonly, but the derived class needs to figure it out in some cases
+        public double Density { get; protected set; }
 
         private volatile object _volume = 0d;
         /// <summary>
@@ -1105,7 +1200,53 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public virtual Cargo Clone()
         {
-            return new Cargo(this.CargoType, this.Density, this.Volume);
+            return new Cargo(this.Type, this.Density, this.Volume);
+        }
+
+        public virtual CargoDNA GetNewDNA()
+        {
+            return new CargoDNA()
+            {
+                Type = this.Type,
+                Density = this.Density,
+                Volume = this.Volume,
+            };
+        }
+    }
+
+    #endregion
+
+    #region Class: CargoDNA
+
+    /// <summary>
+    /// This gets serialized to file
+    /// </summary>
+    public class CargoDNA
+    {
+        public CargoType Type { get; set; }
+
+        // Only one of these will be populated
+        public ShipPartDNA Part { get; set; }
+        public MineralType? MineralType { get; set; }
+
+        // These will always be populated
+        public double Density { get; set; }
+        public double Volume { get; set; }
+
+        public Cargo ToCargo()
+        {
+            if (this.Part != null)
+            {
+                return new Cargo_ShipPart(this.Part, this.Density, this.Volume);
+            }
+            else if (this.MineralType != null)
+            {
+                return new Cargo_Mineral(this.MineralType.Value, this.Density, this.Volume);
+            }
+            else
+            {
+                return new Cargo(this.Type, this.Density, this.Volume);
+            }
         }
     }
 

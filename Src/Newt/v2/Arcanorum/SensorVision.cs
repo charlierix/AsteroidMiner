@@ -122,6 +122,11 @@ namespace Game.Newt.v2.Arcanorum
             return existing.Item1;
         }
 
+        public override PartToolItemBase GetToolItem()
+        {
+            throw new NotImplementedException("SensorVision doesn't have a tool item class");
+        }
+
         #endregion
 
         #region Private Methods

@@ -4,7 +4,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         Title="Asteroid Miner 2D" WindowState="Maximized" Width="1024" Height="768"
-        Loaded="Window_Loaded" Closed="Window_Closed" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp">
+        Loaded="Window_Loaded" Closing="Window_Closing" Closed="Window_Closed" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp">
+
+    <Window.Resources>
+        <Style x:Key="sideButton" TargetType="Button">
+            <Setter Property="Background" Value="#282828"/>
+            <Setter Property="Foreground" Value="#A0A0A0"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="LayoutTransform">
+                <Setter.Value>
+                    <RotateTransform Angle="-90"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid Background="#2C2C2C">
 
         <!-- This holds the 2D star images -->
@@ -33,11 +49,10 @@
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="10">
 
             <!-- TODO: Restyle this to not be so obnoxious.  Probably a glass button similar to the ship editor -->
-            <Button Name="btnFullMap" Content="full map" ToolTip="Show full map (Tab)" Background="#282828" Foreground="#A0A0A0" HorizontalAlignment="Left" Margin="0,0,0,36" Padding="6,2" Click="btnFullMap_Click">
-                <Button.LayoutTransform>
-                    <RotateTransform Angle="-90"/>
-                </Button.LayoutTransform>
-            </Button>
+            <Button Content="help" Margin="0,0,0,4" Style="{StaticResource sideButton}" Click="Help_Click"/>
+            <Button Content="load" ToolTip="Load a different session" Margin="0,0,0,4" Style="{StaticResource sideButton}" Click="Load_Click"/>
+            <Button Content="new" ToolTip="Start over with a new session" Margin="0,0,0,4" Style="{StaticResource sideButton}" Click="New_Click"/>
+            <Button Name="btnFullMap" Content="full map" ToolTip="Show full map (Tab)" Margin="0,0,0,36" Style="{StaticResource sideButton}" Click="btnFullMap_Click"/>
 
             <StackPanel Orientation="Horizontal">
 

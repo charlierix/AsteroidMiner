@@ -29,8 +29,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public BrainRGBRecognizerToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -204,6 +204,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new BrainRGBRecognizerToolItem(this.Options);
         }
 
         #endregion
@@ -427,6 +432,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
+            this.Design = new BrainRGBRecognizerDesign(options);
+            this.Design.SetDNA(dna);
+
             _dnaExtra = dna.Extra ?? BrainRGBRecognizerDNAExtra.GetDefaultDNA();
 
             _isColor = _dnaExtra.IsColor;
@@ -442,9 +450,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             _somDiscardDupes = _dnaExtra.ShouldSOMDiscardDupes;
             _somIsColor = _isColor;
-
-            this.Design = new BrainRGBRecognizerDesign(options);
-            this.Design.SetDNA(dna);
 
             _shortTermMemory = new ShortTermMemory<double[]>(itemOptions.ShortTermMemory_MillisecondsBetween, itemOptions.ShortTermMemory_Size);
             //TODO: Get params from itemOptions

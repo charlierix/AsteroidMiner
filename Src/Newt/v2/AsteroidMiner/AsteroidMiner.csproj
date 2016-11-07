@@ -88,6 +88,7 @@
     <Compile Include="AstMin2D\BackImageManager.cs" />
     <Compile Include="AstMin2D\CameraHelper.cs" />
     <Compile Include="AstMin2D\DefaultShips.cs" />
+    <Compile Include="AstMin2D\EditShipTransfer.cs" />
     <Compile Include="AstMin2D\InfoScreen.xaml.cs">
       <DependentUpon>InfoScreen.xaml</DependentUpon>
     </Compile>
@@ -99,6 +100,7 @@
     <Compile Include="AstMin2D\KeepItems2D.cs" />
     <Compile Include="AstMin2D\MapForcesManager.cs" />
     <Compile Include="AstMin2D\MapPopulationManager.cs" />
+    <Compile Include="AstMin2D\Miner2DSession.cs" />
     <Compile Include="AstMin2D\MinerWindow.xaml.cs">
       <DependentUpon>MinerWindow.xaml</DependentUpon>
     </Compile>
@@ -153,10 +155,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="AstMin2D\Stylesheet.xaml">
+    <Resource Include="AstMin2D\Stylesheet.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\gear_gray.png" />

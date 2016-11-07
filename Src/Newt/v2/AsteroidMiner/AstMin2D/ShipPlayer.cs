@@ -352,12 +352,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         /// This will take the mineral if it fits
         /// NOTE: This method removes the mineral from the map
         /// </summary>
-        public void CollidedMineral(Mineral mineral)
+        private void CollidedMineral_ORIG(Mineral mineral, World world, int materialID, SharedVisuals sharedVisuals)
         {
             //TODO: Let the user specify thresholds for which minerals to take ($, density, mass, type).  Also give an option to be less picky if near empty
             //TODO: Let the user specify thresholds for swapping lesser minerals for better ones
 
             if (base.CargoBays == null)
+            {
+                return;
+            }
+            else if (mineral.IsDisposed)
             {
                 return;
             }
@@ -369,6 +373,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 // The cargo bays are too full
                 return;
             }
+
+            // Save location in case it needs to be brought back
+            Point3D position = mineral.PositionWorld;
 
             // Try to pop this out of the map
             if (!_map.RemoveItem(mineral, true))
@@ -392,7 +399,48 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             else
             {
                 // It didn't fit, give it back to the map
-                _map.AddItem(mineral);
+                Mineral clone = new Mineral(mineral.MineralType, position, mineral.VolumeInCubicMeters, world, materialID, sharedVisuals, ItemOptionsAstMin2D.MINERAL_DENSITYMULT, mineral.Scale, mineral.Credits);
+                _map.AddItem(clone);
+            }
+        }
+        public void CollidedMineral(Mineral mineral, World world, int materialID, SharedVisuals sharedVisuals)
+        {
+            //TODO: Let the user specify thresholds for which minerals to take ($, density, mass, type).  Also give an option to be less picky if near empty
+            //TODO: Let the user specify thresholds for swapping lesser minerals for better ones
+            //TODO: Add a portion
+
+            if (base.CargoBays == null)
+            {
+                return;
+            }
+            else if (mineral.IsDisposed)
+            {
+                return;
+            }
+
+            var quantity = base.CargoBays.CargoVolume;
+
+            if (quantity.Item2 - quantity.Item1 < mineral.VolumeInCubicMeters)
+            {
+                // The cargo bays are too full
+                return;
+            }
+
+            // Save location in case it needs to be brought back
+            Point3D position = mineral.PositionWorld;
+
+            // Convert it to cargo
+            Cargo_Mineral cargo = new Cargo_Mineral(mineral.MineralType, mineral.Density, mineral.VolumeInCubicMeters);
+
+            // Try to add this to the cargo bays - the total volume may be enough, but the mineral may be too large for any
+            // one cargo bay
+            if (base.CargoBays.Add(cargo))
+            {
+                // Finish removing it from the real world
+                _map.RemoveItem(mineral, true);
+                mineral.PhysicsBody.Dispose();
+
+                this.ShouldRecalcMass_Large = true;
             }
         }
 
@@ -742,7 +790,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             Vector3D projected = inertia.Inertia.GetProjectedVector(sumTorque);
             double angAccel = sumTorque.Length / projected.Length;
-            if(Math1D.IsInvalid(angAccel))
+            if (Math1D.IsInvalid(angAccel))
             {
                 angAccel = 0;       // this happens when there is no net torque
             }

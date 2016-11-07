@@ -35,8 +35,10 @@
             <Setter Property="Opacity" Value=".75"/>
         </Style>
         <Style x:Key="subNumTextBlock" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
-            <!--<Setter Property="FontSize" Value="10"/>-->
             <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="subPercentTextBlock" TargetType="TextBlock" BasedOn="{StaticResource baseTextBlock}">
+            <Setter Property="FontSize" Value="9"/>
         </Style>
 
         <Style x:Key="actionPanel" TargetType="UniformGrid">
@@ -79,27 +81,49 @@
 
                 <Grid Margin="0,3,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="auto" SharedSizeGroup="volume"/>
-                        <ColumnDefinition Width="auto" SharedSizeGroup="mass"/>
                         <ColumnDefinition Width="auto" SharedSizeGroup="price"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="auto" SharedSizeGroup="volume"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="auto" SharedSizeGroup="mass"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- Price -->
+                    <Grid Grid.Column="0" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="price" Margin="0,0,4,0" Style="{StaticResource subTextBlock}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="0" Name="lblPrice" Style="{StaticResource subNumTextBlock}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="1" Name="lblPricePercent" Style="{StaticResource subPercentTextBlock}"/>
+                    </Grid>
+
                     <!-- Volume -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-                        <TextBlock Text="volume" Margin="0,0,4,0" Style="{StaticResource subTextBlock}"/>
-                        <TextBlock Name="lblVolume" Style="{StaticResource subNumTextBlock}"/>
-                    </StackPanel>
+                    <Grid Grid.Column="2" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0" Text="volume" Margin="0,0,4,0" Style="{StaticResource subTextBlock}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="0" Name="lblVolume" Style="{StaticResource subNumTextBlock}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="1" Name="lblVolumePercent" Style="{StaticResource subPercentTextBlock}"/>
+                    </Grid>
 
                     <!-- Mass -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                        <TextBlock Text="mass" Margin="10,0,4,0" Style="{StaticResource subTextBlock}"/>
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Top">
+                        <TextBlock Text="mass" Margin="0,0,4,0" Style="{StaticResource subTextBlock}"/>
                         <TextBlock Name="lblMass" Style="{StaticResource subNumTextBlock}"/>
-                    </StackPanel>
-
-                    <!-- Price -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <TextBlock Text="price" Margin="10,0,4,0" Style="{StaticResource subTextBlock}"/>
-                        <TextBlock Name="lblPrice" Style="{StaticResource subNumTextBlock}"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>

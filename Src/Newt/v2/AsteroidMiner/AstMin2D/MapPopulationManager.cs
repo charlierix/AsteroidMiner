@@ -282,6 +282,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
 
             IEnumerable<MapObjectInfo> allItems = snapshot.GetItems();
+            //_map.GetAllItems(true)        //TODO: May want to use this to get disposed items
 
             // Look for too few/many
             ChangeInstruction[] asteroids = ExamineAsteroids(allItems, _boundry);

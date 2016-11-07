@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
@@ -22,6 +23,8 @@ namespace Game.Newt.v2.GameItems
         #region Declaration Section
 
         private static Lazy<BezierMesh> _linkEstimateMesh = new Lazy<BezierMesh>(() => CreateLinkEstimateMesh());
+
+        private static Lazy<Type[]> _shipPartTypes = new Lazy<Type[]>(() => GetShipPartTypes());
 
         #endregion
 
@@ -116,6 +119,191 @@ namespace Game.Newt.v2.GameItems
                 Radius = radius,
             };
         }
+
+        /// <summary>
+        /// This is a helper method to convert dna into a design
+        /// </summary>
+        /// <remarks>
+        /// This class may not be the best place for this method, but I wanted the switch statements near each other (easier to remember
+        /// to update both)
+        /// </remarks>
+        public static PartDesignBase GetPartDesign(ShipPartDNA dna, EditorOptions options)
+        {
+            PartDesignBase retVal;
+
+            switch (dna.PartType)
+            {
+                case AmmoBox.PARTTYPE:
+                    retVal = new AmmoBoxDesign(options);
+                    break;
+
+                case FuelTank.PARTTYPE:
+                    retVal = new FuelTankDesign(options);
+                    break;
+
+                case EnergyTank.PARTTYPE:
+                    retVal = new EnergyTankDesign(options);
+                    break;
+
+                case PlasmaTank.PARTTYPE:
+                    retVal = new PlasmaTankDesign(options);
+                    break;
+
+                case CargoBay.PARTTYPE:
+                    retVal = new CargoBayDesign(options);
+                    break;
+
+                case ConverterMatterToFuel.PARTTYPE:
+                    retVal = new ConverterMatterToFuelDesign(options);
+                    break;
+
+                case ConverterMatterToEnergy.PARTTYPE:
+                    retVal = new ConverterMatterToEnergyDesign(options);
+                    break;
+
+                case ConverterMatterToPlasma.PARTTYPE:
+                    retVal = new ConverterMatterToPlasmaDesign(options);
+                    break;
+
+                case ConverterMatterToAmmo.PARTTYPE:
+                    retVal = new ConverterMatterToAmmoDesign(options);
+                    break;
+
+                case ConverterEnergyToAmmo.PARTTYPE:
+                    retVal = new ConverterEnergyToAmmoDesign(options);
+                    break;
+
+                case ConverterEnergyToFuel.PARTTYPE:
+                    retVal = new ConverterEnergyToFuelDesign(options);
+                    break;
+
+                case ConverterEnergyToPlasma.PARTTYPE:
+                    retVal = new ConverterEnergyToPlasmaDesign(options);
+                    break;
+
+                case ConverterFuelToEnergy.PARTTYPE:
+                    retVal = new ConverterFuelToEnergyDesign(options);
+                    break;
+
+                case ConverterRadiationToEnergy.PARTTYPE:
+                    ConverterRadiationToEnergyDNA dnaCon = (ConverterRadiationToEnergyDNA)dna;
+                    retVal = new ConverterRadiationToEnergyDesign(options, dnaCon.Shape);
+                    break;
+
+                case Thruster.PARTTYPE:
+                    ThrusterDNA dnaThrust = (ThrusterDNA)dna;
+                    if (dnaThrust.ThrusterType == ThrusterType.Custom)
+                        retVal = new ThrusterDesign(options, dnaThrust.ThrusterDirections);
+                    else
+                        retVal = new ThrusterDesign(options, dnaThrust.ThrusterType);
+                    break;
+
+                case TractorBeam.PARTTYPE:
+                    retVal = new TractorBeamDesign(options);
+                    break;
+
+                case Brain.PARTTYPE:
+                    retVal = new BrainDesign(options);
+                    break;
+
+                case BrainRGBRecognizer.PARTTYPE:
+                    retVal = new BrainRGBRecognizerDesign(options);
+                    break;
+
+                case SensorGravity.PARTTYPE:
+                    retVal = new SensorGravityDesign(options);
+                    break;
+
+                case SensorSpin.PARTTYPE:
+                    retVal = new SensorSpinDesign(options);
+                    break;
+
+                case SensorVelocity.PARTTYPE:
+                    retVal = new SensorVelocityDesign(options);
+                    break;
+
+                case SensorRadiation.PARTTYPE:
+                    retVal = new SensorRadiationDesign(options);
+                    break;
+
+                case SensorTractor.PARTTYPE:
+                    retVal = new SensorTractorDesign(options);
+                    break;
+
+                case SensorCollision.PARTTYPE:
+                    retVal = new SensorCollisionDesign(options);
+                    break;
+
+                case SensorFluid.PARTTYPE:
+                    retVal = new SensorFluidDesign(options);
+                    break;
+
+                case SensorInternalForce.PARTTYPE:
+                    retVal = new SensorInternalForceDesign(options);
+                    break;
+
+                case SensorNetForce.PARTTYPE:
+                    retVal = new SensorNetForceDesign(options);
+                    break;
+
+                case CameraColorRGB.PARTTYPE:
+                    retVal = new CameraColorRGBDesign(options);
+                    break;
+
+                case ProjectileGun.PARTTYPE:
+                    retVal = new ProjectileGunDesign(options);
+                    break;
+
+                case BeamGun.PARTTYPE:
+                    retVal = new BeamGunDesign(options);
+                    break;
+
+                case GrappleGun.PARTTYPE:
+                    retVal = new GrappleGunDesign(options);
+                    break;
+
+                case ShieldEnergy.PARTTYPE:
+                    retVal = new ShieldEnergyDesign(options);
+                    break;
+
+                case ShieldKinetic.PARTTYPE:
+                    retVal = new ShieldKineticDesign(options);
+                    break;
+
+                case ShieldTractor.PARTTYPE:
+                    retVal = new ShieldTractorDesign(options);
+                    break;
+
+                case SwarmBay.PARTTYPE:
+                    retVal = new SwarmBayDesign(options);
+                    break;
+
+                case HangarBay.PARTTYPE:
+                    retVal = new HangarBayDesign(options);
+                    break;
+
+                case SelfRepair.PARTTYPE:
+                    retVal = new SelfRepairDesign(options);
+                    break;
+
+                default:
+                    throw new ApplicationException("Unknown part type: " + dna.PartType);
+            }
+
+            retVal.SetDNA(dna);
+
+            return retVal;
+        }
+
+        /// <summary>
+        /// This is a convenience that uses reflection to get all ship parts
+        /// </summary>
+        /// <remarks>
+        /// This is for cases like having price fluctuations of each part type
+        /// </remarks>
+        public static Lazy<string[]> AllPartTypes = new Lazy<string[]>(() => GetAllPartTypes());
+
+        //public static Lazy<PartToolItemBase[]> AllPartToolItems = new Lazy<PartToolItemBase[]>(() => GetAllPartToolItems());
 
         #region profiled
 
@@ -354,6 +542,11 @@ namespace Game.Newt.v2.GameItems
 
                     case ConverterEnergyToFuel.PARTTYPE:
                         AddPart(new ConverterEnergyToFuel(options, itemOptions, dna, containers.EnergyGroup, containers.FuelGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case ConverterEnergyToPlasma.PARTTYPE:
+                        AddPart(new ConverterEnergyToPlasma(options, itemOptions, dna, containers.EnergyGroup, containers.PlasmaGroup),
                             dna, standard, building.AllParts);
                         break;
 
@@ -726,36 +919,36 @@ namespace Game.Newt.v2.GameItems
             double[] pointCounts = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 26, 35, 47, 61, 77, 96, 118, 142, 168, 197, 229, 263, 300 };       // y axis
             double[] linkCounts = new double[]      // z values
                 {
-                    0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 	0, 
-                    0, 	0, 	0, 	1, 	1, 	1, 	1, 	1, 	1, 	1, 	1, 
-                    0, 	0, 	2, 	2, 	2, 	2, 	2, 	2, 	2, 	3, 	3, 
-                    0, 	0, 	3, 	3, 	3, 	3, 	3, 	4, 	4, 	6, 	6, 
-                    0, 	0, 	4, 	4, 	4, 	4, 	5, 	7, 	7, 	7, 	9.65, 
-                    0, 	5, 	5, 	5, 	5, 	6, 	8, 	8, 	10.5875, 	10.7125, 	13.65, 
-                    0, 	6, 	6, 	6, 	7, 	9, 	9, 	11.6, 	14.875, 	15, 	18.35, 
-                    0, 	7, 	7, 	7, 	8, 	10, 	12.7, 	15.8875, 	15.8625, 	19.3125, 	22.9875, 
-                    0, 	8, 	8, 	9, 	11, 	11, 	13.6375, 	16.925, 	20.2625, 	24.15, 	28.3125, 
-                    0, 	9, 	9, 	10, 	12, 	14.725, 	17.85, 	21.4375, 	25.2125, 	29.4625, 	33.3125, 
-                    0, 	10, 	10, 	11, 	13, 	18.7375, 	22.175, 	26.35, 	30.1625, 	34.4125, 	38.5875, 
-                    0, 	11, 	11, 	14, 	16.7375, 	19.8, 	23.225, 	27.3875, 	35.8, 	39.7375, 	43.9125, 
-                    0, 	12, 	13, 	15, 	17.775, 	20.8875, 	28.2375, 	32.6, 	36.3125, 	45.5, 	49.7, 
-                    0, 	13, 	14, 	16, 	21.9125, 	25.2375, 	29.0625, 	37.275, 	41.55, 	51.1, 	55.6125, 
-                    0, 	14, 	15, 	17, 	22.8875, 	30.0625, 	33.9125, 	38.4375, 	47.4875, 	56.9, 	61.3, 
-                    0, 	15, 	16, 	20.65, 	23.9625, 	31.2625, 	39.4875, 	43.5, 	52.9625, 	57.75, 	67.4375, 
-                    0, 	19, 	22, 	27.7125, 	35.4125, 	43.325, 	52.575, 	61.8875, 	70.9625, 	81.325, 	92.025, 
-                    0, 	26, 	30.7125, 	41.3875, 	49.2375, 	62.7875, 	77.5875, 	87.5875, 	102.7875, 	112.9625, 	130.1625, 
-                    0, 	37, 	46.2, 	58.05, 	77.1875, 	96.7, 	111.2375, 	127.1625, 	149.225, 	170.65, 	187.2375, 
-                    0, 	51.725, 	66.25, 	88.4875, 	113.325, 	139.7, 	160.75, 	188.2125, 	216.375, 	239.225, 	268.4125, 
-                    0, 	68.775, 	93.7875, 	122.475, 	154.125, 	185.6875, 	224.4375, 	259.775, 	294.8, 	330.8125, 	366.6625, 
-                    0, 	92.0875, 	123.45, 	163.65, 	206.8625, 	246.5875, 	293.4875, 	338.775, 	386.3125, 	428.5, 	476.425, 
-                    0, 	119.3875, 	162.0875, 	216.4, 	266.2375, 	324.325, 	381.125, 	435.9, 	496.625, 	550.9375, 	613.95, 
-                    0, 	150.3875, 	210.2125, 	269.775, 	338.0125, 	409.425, 	482.075, 	554.5125, 	623.5125, 	696.275, 	769.2875, 
-                    0, 	183.4875, 	256.6125, 	340.5875, 	422.725, 	507.1125, 	591.3125, 	675.8625, 	768.6375, 	856.35, 	942.5375, 
-                    0, 	223.725, 	315.6625, 	407.325, 	507.8375, 	609.775, 	715.7, 	819.425, 	921.65, 	1026.95, 	1130.8125, 
-                    0, 	268.2125, 	373.125, 	490.2375, 	608.125, 	726.0375, 	847.1875, 	972.9625, 	1100.25, 	1219.45, 	1345.4875, 
-                    0, 	316.35, 	443.4625, 	581.4625, 	720.925, 	854.7875, 	1000.775, 	1144.6375, 	1290.3, 	1434.2875, 	1584.5125, 
-                    0, 	365.9875, 	520.325, 	675.4625, 	834.6, 	1003.275, 	1164.6, 	1328.7, 	1492.9625, 	1665.35, 	1830.9875, 
-                    0, 	424.6375, 	598.35, 	779.7, 	963.8, 	1151.2375, 	1340.875, 	1530.5, 	1722.0375, 	1914.4625, 	2106.5375
+                    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                    0,  0,  0,  1,  1,  1,  1,  1,  1,  1,  1,
+                    0,  0,  2,  2,  2,  2,  2,  2,  2,  3,  3,
+                    0,  0,  3,  3,  3,  3,  3,  4,  4,  6,  6,
+                    0,  0,  4,  4,  4,  4,  5,  7,  7,  7,  9.65,
+                    0,  5,  5,  5,  5,  6,  8,  8,  10.5875,    10.7125,    13.65,
+                    0,  6,  6,  6,  7,  9,  9,  11.6,   14.875,     15,     18.35,
+                    0,  7,  7,  7,  8,  10,     12.7,   15.8875,    15.8625,    19.3125,    22.9875,
+                    0,  8,  8,  9,  11,     11,     13.6375,    16.925,     20.2625,    24.15,  28.3125,
+                    0,  9,  9,  10,     12,     14.725,     17.85,  21.4375,    25.2125,    29.4625,    33.3125,
+                    0,  10,     10,     11,     13,     18.7375,    22.175,     26.35,  30.1625,    34.4125,    38.5875,
+                    0,  11,     11,     14,     16.7375,    19.8,   23.225,     27.3875,    35.8,   39.7375,    43.9125,
+                    0,  12,     13,     15,     17.775,     20.8875,    28.2375,    32.6,   36.3125,    45.5,   49.7,
+                    0,  13,     14,     16,     21.9125,    25.2375,    29.0625,    37.275,     41.55,  51.1,   55.6125,
+                    0,  14,     15,     17,     22.8875,    30.0625,    33.9125,    38.4375,    47.4875,    56.9,   61.3,
+                    0,  15,     16,     20.65,  23.9625,    31.2625,    39.4875,    43.5,   52.9625,    57.75,  67.4375,
+                    0,  19,     22,     27.7125,    35.4125,    43.325,     52.575,     61.8875,    70.9625,    81.325,     92.025,
+                    0,  26,     30.7125,    41.3875,    49.2375,    62.7875,    77.5875,    87.5875,    102.7875,   112.9625,   130.1625,
+                    0,  37,     46.2,   58.05,  77.1875,    96.7,   111.2375,   127.1625,   149.225,    170.65,     187.2375,
+                    0,  51.725,     66.25,  88.4875,    113.325,    139.7,  160.75,     188.2125,   216.375,    239.225,    268.4125,
+                    0,  68.775,     93.7875,    122.475,    154.125,    185.6875,   224.4375,   259.775,    294.8,  330.8125,   366.6625,
+                    0,  92.0875,    123.45,     163.65,     206.8625,   246.5875,   293.4875,   338.775,    386.3125,   428.5,  476.425,
+                    0,  119.3875,   162.0875,   216.4,  266.2375,   324.325,    381.125,    435.9,  496.625,    550.9375,   613.95,
+                    0,  150.3875,   210.2125,   269.775,    338.0125,   409.425,    482.075,    554.5125,   623.5125,   696.275,    769.2875,
+                    0,  183.4875,   256.6125,   340.5875,   422.725,    507.1125,   591.3125,   675.8625,   768.6375,   856.35,     942.5375,
+                    0,  223.725,    315.6625,   407.325,    507.8375,   609.775,    715.7,  819.425,    921.65,     1026.95,    1130.8125,
+                    0,  268.2125,   373.125,    490.2375,   608.125,    726.0375,   847.1875,   972.9625,   1100.25,    1219.45,    1345.4875,
+                    0,  316.35,     443.4625,   581.4625,   720.925,    854.7875,   1000.775,   1144.6375,  1290.3,     1434.2875,  1584.5125,
+                    0,  365.9875,   520.325,    675.4625,   834.6,  1003.275,   1164.6,     1328.7,     1492.9625,  1665.35,    1830.9875,
+                    0,  424.6375,   598.35,     779.7,  963.8,  1151.2375,  1340.875,   1530.5,     1722.0375,  1914.4625,  2106.5375
                 };
 
             return new BezierMesh(ratios, pointCounts, linkCounts);
@@ -800,11 +993,11 @@ namespace Game.Newt.v2.GameItems
                             container.Position, container.Orientation,
                             itemOptions.Brain_LinksPerNeuron_Internal,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
-							},
+                            {
+                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
+                            },
                             brainChemicalCount,
                             internalLinks, externalLinks));
 
@@ -820,10 +1013,10 @@ namespace Game.Newt.v2.GameItems
                             container.Position, container.Orientation,
                             null,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
-							},
+                            {
+                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
+                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
+                            },
                             0,
                             null, externalLinks));
 
@@ -1209,6 +1402,51 @@ namespace Game.Newt.v2.GameItems
             extra.ItemOptions = extra.ItemOptions ?? new ItemOptions();
             extra.PartLink_Overflow = extra.PartLink_Overflow ?? new ItemLinker_OverflowArgs();
             extra.PartLink_Extra = extra.PartLink_Extra ?? new ItemLinker_ExtraArgs();
+        }
+
+        private static Type[] GetShipPartTypes()
+        {
+            // All of the ship parts sit in their own assembly/namespace.  So just picking an arbitrary shippart so I can get at the rest
+            Type fuelTankType = typeof(FuelTank);
+
+            Assembly assembly = Assembly.GetAssembly(fuelTankType);
+
+            string ns = fuelTankType.Namespace;
+
+            return assembly.GetTypes().
+                Where(o => String.Equals(o.Namespace, ns, StringComparison.Ordinal)).
+                ToArray();
+        }
+
+        private static string[] GetAllPartTypes()
+        {
+            return _shipPartTypes.Value.
+                SelectMany(o => o.GetFields()).
+                Where(o => o.Name == "PARTTYPE").       // all of the ship parts have a string constant called PARTTYPE, to make methods like this easier :)
+                Select(o => o.GetRawConstantValue().ToString()).
+                OrderBy().
+                ToArray();
+        }
+
+        // This is flawed (some constructors want an extra enum).  Went with design class returning a toolitem
+        private static PartToolItemBase[] GetAllPartToolItems()
+        {
+            Type compare = typeof(PartToolItemBase);
+
+            object[] constructorArgs = new object[] { new EditorOptions() };
+            EditorOptions options = new EditorOptions();
+
+            var test = _shipPartTypes.Value.
+                Where(o => o.BaseType != null && o.BaseType == compare).
+                ToArray();
+
+            foreach (var test2 in test)
+            {
+                PartToolItemBase test3 = (PartToolItemBase)Activator.CreateInstance(test2, constructorArgs);
+            }
+
+
+            return null;
         }
 
         #endregion

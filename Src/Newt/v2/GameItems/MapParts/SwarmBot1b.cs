@@ -13,6 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 namespace Game.Newt.v2.GameItems.MapParts
 {
     //TODO: This really needs an active controller that enforces properties
+    //TODO: Put a weak attractor on the current mouse position (stronger than toward ship, but not too strong)
     public class SwarmBot1b : IDisposable, IMapObject, IPartUpdatable
     {
         #region Class: ForceSettings_Initial

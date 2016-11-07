@@ -170,7 +170,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier));
             this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.EditorColors.DraggableModifier));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifierSpecularColor), this.EditorColors.DraggableModifierSpecularPower);
+            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier_SpecularColor), this.EditorColors.DraggableModifier_SpecularPower);
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -353,7 +353,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier));
             this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.EditorColors.DraggableModifier));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifierSpecularColor), this.EditorColors.DraggableModifierSpecularPower);
+            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier_SpecularColor), this.EditorColors.DraggableModifier_SpecularPower);
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -471,7 +471,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier));
             this.MaterialBrushes.Add(new MaterialColorProps(diffuse, diffuse.Brush, this.EditorColors.DraggableModifier));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifierSpecularColor), this.EditorColors.DraggableModifierSpecularPower);
+            SpecularMaterial specular = new SpecularMaterial(new SolidColorBrush(this.EditorColors.DraggableModifier_SpecularColor), this.EditorColors.DraggableModifier_SpecularPower);
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -652,8 +652,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     }
                     else if (material.Specular != null)
                     {
-                        material.Specular.Brush = new SolidColorBrush(this.EditorColors.DraggableModifierHotTrackSpecularColor);
-                        material.Specular.SpecularPower = this.EditorColors.DraggableModifierHotTrackSpecularPower;
+                        material.Specular.Brush = new SolidColorBrush(this.EditorColors.DraggableModifierHotTrack_SpecularColor);
+                        material.Specular.SpecularPower = this.EditorColors.DraggableModifierHotTrack_SpecularPower;
                     }
                     else if (material.Emissive != null)
                     {

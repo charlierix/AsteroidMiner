@@ -22,8 +22,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             : base(options)
         {
             this.Shape = shape;
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -289,13 +289,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 case SolarPanelShape.Right_Triangle:
                 case SolarPanelShape.Triangle:
-                    var triangleBreakdown = GetMassBreakdownSprtTriangle(size, cellSize, this.Shape == SolarPanelShape.Right_Triangle);
+                    var triangleBreakdown = GetMassBreakdown_Triangle(size, cellSize, this.Shape == SolarPanelShape.Right_Triangle);
                     breakdown = UtilityNewt.Combine(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>[] { new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangleBreakdown.Item1, triangleBreakdown.Item2.ToPoint(), Quaternion.Identity, 1d) });
                     break;
 
                 case SolarPanelShape.Right_Trapazoid:
                 case SolarPanelShape.Trapazoid:
-                    breakdown = GetMassBreakdownSprtTrapazoid(this.Vertices.ToArray(), size, cellSize, this.Shape == SolarPanelShape.Right_Trapazoid);
+                    breakdown = GetMassBreakdown_Trapazoid(this.Vertices.ToArray(), size, cellSize, this.Shape == SolarPanelShape.Right_Trapazoid);
                     break;
 
                 default:
@@ -307,6 +307,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ConverterRadiationToEnergyToolItem(this.Options, this.Shape);
         }
 
         #endregion
@@ -421,13 +426,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             double thicknessHalf = thickness * .5d;
 
+            //Transform3D transform = Transform3D.Identity;
+            Transform3D transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 90));
+
             #region Top Cap
 
-            Transform3D polyTransform = MultiRingEndCapSprtGetTransform(Transform3D.Identity, true, -thicknessHalf);
-            Transform3D polyTransformNormal = MultiRingEndCapSprtGetNormalTransform(polyTransform);
+            Transform3D polyTransform = MultiRingEndCap_GetTransform(transform, true, -thicknessHalf);
+            Transform3D polyTransformNormal = MultiRingEndCap_GetNormalTransform(polyTransform);
 
             int pointOffsetCaps = 0;
-            GetShapeSprtEndCap(ref pointOffsetCaps, caps, capPoints, polyTransform, polyTransformNormal, true);
+            GetShape_EndCap(ref pointOffsetCaps, caps, capPoints, polyTransform, polyTransformNormal, true);
 
             #endregion
 
@@ -435,17 +443,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             int pointOffsetSides = 0;
 
-            GetShapeSprtSide(ref pointOffsetSides, sides, Transform3D.Identity, capPoints, midPoints, thicknessHalf, -thicknessHalf);
-            GetShapeSprtSide(ref pointOffsetSides, sides, Transform3D.Identity, midPoints, capPoints, thicknessHalf, 0);
+            GetShape_Side(ref pointOffsetSides, sides, transform, capPoints, midPoints, thicknessHalf, -thicknessHalf);
+            GetShape_Side(ref pointOffsetSides, sides, transform, midPoints, capPoints, thicknessHalf, 0);
 
             #endregion
 
             #region Bottom Cap
 
-            polyTransform = MultiRingEndCapSprtGetTransform(Transform3D.Identity, false, thicknessHalf);
-            polyTransformNormal = MultiRingEndCapSprtGetNormalTransform(polyTransform);
+            polyTransform = MultiRingEndCap_GetTransform(transform, false, thicknessHalf);
+            polyTransformNormal = MultiRingEndCap_GetNormalTransform(polyTransform);
 
-            GetShapeSprtEndCap(ref pointOffsetCaps, caps, capPoints, polyTransform, polyTransformNormal, false);
+            GetShape_EndCap(ref pointOffsetCaps, caps, capPoints, polyTransform, polyTransformNormal, false);
 
             #endregion
         }
@@ -453,7 +461,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// <summary>
         /// This is a copy of UtilityWPF.MultiRingEndCapSprtPlateSoft
         /// </summary>
-        private static void GetShapeSprtEndCap(ref int pointOffset, MeshGeometry3D geometry, Point[] points, Transform3D transform, Transform3D normalTransform, bool isFirst)
+        private static void GetShape_EndCap(ref int pointOffset, MeshGeometry3D geometry, Point[] points, Transform3D transform, Transform3D normalTransform, bool isFirst)
         {
             #region Positions/Normals
 
@@ -512,7 +520,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// <summary>
         /// This is a copy of UtilityWPF.MultiRingMiddleSprtTubeSoft
         /// </summary>
-        private static void GetShapeSprtSide(ref int pointOffset, MeshGeometry3D geometry, Transform3D transform, Point[] points1, Point[] points2, double distFrom1to2, double curZ)
+        private static void GetShape_Side(ref int pointOffset, MeshGeometry3D geometry, Transform3D transform, Point[] points1, Point[] points2, double distFrom1to2, double curZ)
         {
             if (points1.Length != points2.Length)
             {
@@ -573,7 +581,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             pointOffset = geometry.Positions.Count;
         }
 
-        private static Transform3D MultiRingEndCapSprtGetTransform(Transform3D transform, bool isFirst, double z)
+        private static Transform3D MultiRingEndCap_GetTransform(Transform3D transform, bool isFirst, double z)
         {
             // This overload is for a flat plate
 
@@ -595,7 +603,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return retVal;
         }
-        private static Transform3D MultiRingEndCapSprtGetNormalTransform(Transform3D transform)
+        private static Transform3D MultiRingEndCap_GetNormalTransform(Transform3D transform)
         {
             // Can't use all of the transform passed in for the normal, because translate portions will skew the normals funny
             Transform3DGroup retVal = new Transform3DGroup();
@@ -621,7 +629,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        private static Tuple<UtilityNewt.ObjectMassBreakdown, Vector3D> GetMassBreakdownSprtTriangle(Vector3D size, double cellSize, bool isRight)
+        private static Tuple<UtilityNewt.ObjectMassBreakdown, Vector3D> GetMassBreakdown_Triangle(Vector3D size, double cellSize, bool isRight)
         {
             // This is just a hack, because I'm too lazy to make the breakdown calculate a triangle.
             // I figure if the area of the breakdown is the same as the area of the triangle, and if the breakdown is offset, it should be pretty close
@@ -659,7 +667,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return new Tuple<UtilityNewt.ObjectMassBreakdown, Vector3D>(breakdown, new Vector3D(offsetX, offsetY, 0d));
         }
-        private static UtilityNewt.ObjectMassBreakdownSet GetMassBreakdownSprtTrapazoid(Point[] verticies, Vector3D size, double cellSize, bool isRight)
+        private static UtilityNewt.ObjectMassBreakdownSet GetMassBreakdown_Trapazoid(Point[] verticies, Vector3D size, double cellSize, bool isRight)
         {
             if (verticies.Length != 4)
             {
@@ -681,7 +689,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 // Triangle
                 double triangleBase = base2 - base1;
-                var triangle = GetMassBreakdownSprtTriangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
+                var triangle = GetMassBreakdown_Triangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
                 items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangle.Item1, new Vector3D(base1 * .5d, 0d, 0d) + triangle.Item2.ToPoint(), Quaternion.Identity, triangleBase * height * .5d));
             }
             else
@@ -693,7 +701,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 // Triangle - right
                 double triangleBase = (base2 - base1) * .5d;
-                var triangle = GetMassBreakdownSprtTriangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
+                var triangle = GetMassBreakdown_Triangle(new Vector3D(triangleBase, height, size.Z), cellSize, true);
                 Vector3D triangleOffset = new Vector3D((rectBase * .5d) + (triangleBase * .5d), 0d, 0d) + triangle.Item2;
                 double triangleArea = triangleBase * height * .5d;
                 items.Add(new Tuple<UtilityNewt.ObjectMassBreakdown, Point3D, Quaternion, double>(triangle.Item1, triangleOffset.ToPoint(), Quaternion.Identity, triangleArea));
@@ -714,7 +722,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     #endregion
     #region Class: ConverterRadiationToEnergy
 
-    public class ConverterRadiationToEnergy : PartBase
+    public class ConverterRadiationToEnergy : PartBase, IPartUpdatable
     {
         #region Declaration Section
 
@@ -759,6 +767,34 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _centerPoint = transform.Transform(center);
             _normalFront = transform.Transform(normal);
             _normalBack = transform.Transform(normal * -1d);
+        }
+
+        #endregion
+
+        #region IPartUpdatable Members
+
+        public void Update_MainThread(double elapsedTime)
+        {
+        }
+        public void Update_AnyThread(double elapsedTime)
+        {
+            //TODO: May need to get the transform in the constructor
+            this.Transfer(elapsedTime, Transform3D.Identity);
+        }
+
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
         }
 
         #endregion
@@ -901,6 +937,27 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get;
             set;
+        }
+
+        public override bool IsEqual(ShipPartDNA dna, bool comparePositionOrientation = false, bool compareNeural = false)
+        {
+            ConverterRadiationToEnergyDNA cast = dna as ConverterRadiationToEnergyDNA;
+            if (cast == null)
+            {
+                return false;
+            }
+
+            if (!base.IsEqual(dna, comparePositionOrientation, compareNeural))
+            {
+                return false;
+            }
+
+            if (this.Shape != cast.Shape)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 

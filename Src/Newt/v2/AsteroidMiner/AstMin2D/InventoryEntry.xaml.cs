@@ -12,7 +12,10 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Game.HelperClassesCore;
+using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
+using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.AsteroidMiner.AstMin2D
@@ -64,27 +67,10 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Public Methods
 
-        public void SetInventory(Inventory inventory, string name, decimal credits, World world, string[] actionButtons)
+        public void SetInventory(Inventory inventory, string name, decimal credits, double? creditsPercent, double? volumePercent, World world, string[] actionButtons, EditorOptions options)
         {
             // Icon
-            Icon3D icon = null;
-
-            if (inventory.Ship != null)
-            {
-                icon = new Icon3D("", inventory.Ship, world);
-            }
-            else if (inventory.Mineral != null)
-            {
-                icon = new Icon3D(inventory.Mineral.MineralType);
-            }
-
-            if (icon != null)
-            {
-                icon.ShowName = false;
-                icon.ShowBorder = false;
-            }
-
-            pnlIcon.Content = icon;
+            pnlIcon.Content = BuildIcon(inventory, world, options, this);
 
             // Name
             lblName.Text = name;
@@ -101,10 +87,31 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 lblMultiple.Text = inventory.Count.ToString("N0");
             }
 
-            // Quantities
-            lblVolume.Text = Math.Round(inventory.Volume, 2).ToString();
-            lblMass.Text = Math.Round(inventory.Mass, 2).ToString();
+            // Price
             lblPrice.Text = credits.ToString("N0");
+            if (creditsPercent == null)
+            {
+                lblPricePercent.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                lblPricePercent.Text = GetPercentText(creditsPercent.Value);
+            }
+
+            // Volume
+            lblVolume.Text = Math.Round(inventory.Volume, 2).ToString();
+            if (volumePercent == null)
+            {
+                lblVolumePercent.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                lblVolumePercent.Text = GetPercentText(volumePercent.Value);
+            }
+
+            // Mass
+            //lblMass.Text = Math.Round(inventory.Mass, 2).ToString();
+            lblMass.Text = inventory.Mass.ToStringSignificantDigits(2);
 
             // Action Buttons
             pnlActionButtons.Children.Clear();
@@ -166,6 +173,61 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 MessageBox.Show(ex.ToString(), "Inventory Entry", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static Icon3D BuildIcon(Inventory inventory, World world, EditorOptions options, FrameworkElement parent)
+        {
+            Icon3D retVal = null;
+
+            if (inventory.Ship != null)
+            {
+                retVal = new Icon3D("", inventory.Ship, world);       // don't want to autorotate the ship icons.  This is a 2D game, and the ships will always be viewed from the top
+            }
+            else if (inventory.Part != null)
+            {
+                retVal = new Icon3D(inventory.Part, options)
+                {
+                    AutoRotateOnMouseHover = true,
+                    AutoRotateParent = parent,
+                };
+            }
+            else if (inventory.Mineral != null)
+            {
+                retVal = new Icon3D(inventory.Mineral.MineralType)
+                {
+                    AutoRotateOnMouseHover = true,
+                    AutoRotateParent = parent,
+                };
+            }
+
+            if (retVal != null)
+            {
+                retVal.ShowName = false;
+                retVal.ShowBorder = false;
+            }
+
+            return retVal;
+        }
+
+        private static string GetPercentText(double percent)
+        {
+            percent *= 100d;
+
+            string number;
+            if (Math.Abs(percent) > 1)
+            {
+                number = percent.ToInt_Round().ToString();
+            }
+            else
+            {
+                number = percent.ToStringSignificantDigits(1);
+            }
+
+            return number + "%";
         }
 
         #endregion

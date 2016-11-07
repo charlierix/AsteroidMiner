@@ -40,9 +40,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _subName = thrusterType.ToString().ToLower().Replace('_', ' ');
             _directions = null;
 
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         public ThrusterToolItem(EditorOptions options, Vector3D[] directions, string name)
@@ -53,9 +53,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _subName = name;
             _directions = directions;
 
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
-
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -293,7 +293,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                         return CollisionHull.CreateCapsule(world, 0, radius, height, transform.Value);
                     }
 
-                    #endregion
+                #endregion
 
                 default:
                     #region Convex Hull
@@ -444,6 +444,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return retVal;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            if (this.ThrusterType == ThrusterType.Custom)
+            {
+                return new ThrusterToolItem(this.Options, this.ThrusterDirections, this.ThrusterType.ToString());
+            }
+            else
+            {
+                return new ThrusterToolItem(this.Options, this.ThrusterType);
+            }
         }
 
         #endregion
@@ -1316,6 +1328,48 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get;
             set;
+        }
+
+        public override bool IsEqual(ShipPartDNA dna, bool comparePositionOrientation = false, bool compareNeural = false)
+        {
+            ThrusterDNA cast = dna as ThrusterDNA;
+            if (cast == null)
+            {
+                return false;
+            }
+
+            if (!base.IsEqual(dna, comparePositionOrientation, compareNeural))
+            {
+                return false;
+            }
+
+            if (this.ThrusterType != cast.ThrusterType)
+            {
+                return false;
+            }
+
+            if (this.ThrusterType == ThrusterType.Custom)
+            {
+                if (this.ThrusterDirections == null || cast.ThrusterDirections == null)
+                {
+                    throw new ArgumentException("ThrusterDirections can't be null when ThrusterType is Custom");
+                }
+
+                if (this.ThrusterDirections.Length != cast.ThrusterDirections.Length)
+                {
+                    return false;
+                }
+
+                for (int cntr = 0; cntr < cast.ThrusterDirections.Length; cntr++)
+                {
+                    if (!Math3D.IsNearValue(this.ThrusterDirections[cntr], cast.ThrusterDirections[cntr]))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 

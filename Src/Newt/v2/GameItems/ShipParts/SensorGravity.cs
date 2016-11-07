@@ -22,8 +22,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public SensorGravityToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -173,6 +173,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return existing.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new SensorGravityToolItem(this.Options);
         }
 
         #endregion
@@ -619,7 +624,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private Vector3D GetGravityModelCoords()
         {
-            if(_field == null)
+            if (_field == null)
             {
                 return new Vector3D(0, 0, 0);
             }

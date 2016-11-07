@@ -21,7 +21,7 @@ namespace Game.Newt.v2.FlyingBeans
     {
         #region Declaration Section
 
-        public const string FILENAME_SESSION = "FlyingBean Options.xml";		//NOTE: This goes in the base folder (C:\Users\<user>\AppData\Roaming\Asteroid Miner\)
+        public const string FILENAME_SESSION = "FlyingBeans Options.xml";		//NOTE: This goes in the base folder (C:\Users\<user>\AppData\Roaming\Asteroid Miner\)
         public const string FILENAME_OPTIONS = "FlyingBeanOptions.xml";
         public const string FILENAME_ITEMOPTIONS = "ItemOptions.xml";
 
@@ -41,6 +41,7 @@ namespace Game.Newt.v2.FlyingBeans
 
         #endregion
 
+        //TODO: Rework this class to use SessionSaveLoad.cs
         public static void Save(string baseFolder, string saveFolder, FlyingBeanSession session, FlyingBeanOptions options, ItemOptions itemOptions)
         {
             // Session

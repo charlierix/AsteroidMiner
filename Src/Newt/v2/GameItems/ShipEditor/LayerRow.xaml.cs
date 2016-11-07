@@ -41,7 +41,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             //txtName.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
             txtName.Background = new SolidColorBrush(Color.FromArgb(0, colors.Background.R, colors.Background.G, colors.Background.B));
 
-            txtName.Foreground = new SolidColorBrush(colors.PartVisualTextColor);
+            txtName.Foreground = new SolidColorBrush(colors.PartVisual_TextColor);
         }
 
         #endregion
@@ -129,8 +129,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 if (_isSelected)
                 {
-                    selectBorder.BorderBrush = new SolidColorBrush(_colors.PanelSelectedItemBorder);
-                    selectBorder.Background = new SolidColorBrush(_colors.PanelSelectedItemBackground);
+                    selectBorder.BorderBrush = new SolidColorBrush(_colors.PanelSelectedItem_Border);
+                    selectBorder.Background = new SolidColorBrush(_colors.PanelSelectedItem_Background);
                 }
                 else
                 {

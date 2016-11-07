@@ -21,8 +21,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ShieldEnergyToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -172,6 +172,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             Vector3D size = new Vector3D(scale.X, scale.Y, scale.Z);
 
             return UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ShieldEnergyToolItem(this.Options);
         }
 
         #endregion

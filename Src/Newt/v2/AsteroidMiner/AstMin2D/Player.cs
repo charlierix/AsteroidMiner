@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
@@ -53,12 +54,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
             set
             {
-                if(value < -1m)
+                if (value < -1m)
                 {
                     //TODO: May want to throw an exception
                     throw new ArgumentException("Credits can't be negative");
                 }
-                else if(value < 0m)
+                else if (value < 0m)
                 {
                     // Probably just a rounding error - tough with decimal, but give the benefit of doubt
                     _credits = 0m;
@@ -86,7 +87,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         protected virtual void OnCreditsChanged()
         {
-            if(this.CreditsChanged != null)
+            if (this.CreditsChanged != null)
             {
                 this.CreditsChanged(this, new EventArgs());
             }
@@ -107,6 +108,25 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         public readonly ShipPlayer PreviousShip;
         public readonly ShipPlayer NewShip;
+    }
+
+    #endregion
+
+    #region Class: PlayerDNA
+
+    /// <summary>
+    /// This is what gets serialized to file
+    /// </summary>
+    public class PlayerDNA
+    {
+        public ShipDNA Ship { get; set; }
+
+        public double Fuel { get; set; }
+        public double Energy { get; set; }
+        public double Plasma { get; set; }
+        public double Ammo { get; set; }
+
+        public decimal Credits { get; set; }
     }
 
     #endregion

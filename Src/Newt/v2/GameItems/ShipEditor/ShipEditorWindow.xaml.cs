@@ -47,71 +47,79 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Each part defines a default tab that it wants to be in.  I'll just use those defaults
-            _partToolItems.Add(new CargoBayToolItem(editor1.Options));
-            _partToolItems.Add(new FuelTankToolItem(editor1.Options));
-            _partToolItems.Add(new EnergyTankToolItem(editor1.Options));
-            _partToolItems.Add(new PlasmaTankToolItem(editor1.Options));
-            _partToolItems.Add(new AmmoBoxToolItem(editor1.Options));
-            _partToolItems.Add(new HangarBayToolItem(editor1.Options));
-            _partToolItems.Add(new SwarmBayToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterMatterToFuelToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterMatterToEnergyToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterMatterToPlasmaToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterMatterToAmmoToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterEnergyToFuelToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterEnergyToAmmoToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterFuelToEnergyToolItem(editor1.Options));
-            _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Triangle));
-            _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Right_Triangle));
-            _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Square));
-            _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Trapazoid));
-            _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Right_Trapazoid));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.One));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_One));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two_One));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two_Two));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 0, 1) }, "elbow"));
-            _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 1, 0), new Vector3D(0, 0, 1) }, "elbow 3D"));
-            _partToolItems.Add(new TractorBeamToolItem(editor1.Options));
-            _partToolItems.Add(new BrainToolItem(editor1.Options));
-            _partToolItems.Add(new BrainRGBRecognizerToolItem(editor1.Options));
-            //_partToolItems.Add(new EyeToolItem(editor1.Options));
-            _partToolItems.Add(new CameraColorRGBToolItem(editor1.Options));
-            _partToolItems.Add(new SensorGravityToolItem(editor1.Options));
-            _partToolItems.Add(new SensorRadiationToolItem(editor1.Options));
-            _partToolItems.Add(new SensorTractorToolItem(editor1.Options));
-            _partToolItems.Add(new SensorCollisionToolItem(editor1.Options));
-            _partToolItems.Add(new SensorFluidToolItem(editor1.Options));
-            _partToolItems.Add(new SensorSpinToolItem(editor1.Options));
-            _partToolItems.Add(new SensorVelocityToolItem(editor1.Options));
-            _partToolItems.Add(new SensorInternalForceToolItem(editor1.Options));
-            _partToolItems.Add(new SensorNetForceToolItem(editor1.Options));
-            _partToolItems.Add(new ShieldEnergyToolItem(editor1.Options));
-            _partToolItems.Add(new ShieldKineticToolItem(editor1.Options));
-            _partToolItems.Add(new ShieldTractorToolItem(editor1.Options));
-            _partToolItems.Add(new ProjectileGunToolItem(editor1.Options));
-            _partToolItems.Add(new BeamGunToolItem(editor1.Options));
-            _partToolItems.Add(new GrappleGunToolItem(editor1.Options));
-            _partToolItems.Add(new SelfRepairToolItem(editor1.Options));
+            try
+            {
+                // Each part defines a default tab that it wants to be in.  I'll just use those defaults
+                _partToolItems.Add(new CargoBayToolItem(editor1.Options));
+                _partToolItems.Add(new FuelTankToolItem(editor1.Options));
+                _partToolItems.Add(new EnergyTankToolItem(editor1.Options));
+                _partToolItems.Add(new PlasmaTankToolItem(editor1.Options));
+                _partToolItems.Add(new AmmoBoxToolItem(editor1.Options));
+                _partToolItems.Add(new HangarBayToolItem(editor1.Options));       // halts it
+                _partToolItems.Add(new SwarmBayToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterMatterToFuelToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterMatterToEnergyToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterMatterToPlasmaToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterMatterToAmmoToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterEnergyToFuelToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterEnergyToPlasmaToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterEnergyToAmmoToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterFuelToEnergyToolItem(editor1.Options));
+                _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Triangle));
+                _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Right_Triangle));
+                _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Square));
+                _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Trapazoid));
+                _partToolItems.Add(new ConverterRadiationToEnergyToolItem(editor1.Options, SolarPanelShape.Right_Trapazoid));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.One));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_One));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two_One));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, ThrusterType.Two_Two_Two));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 0, 1) }, "elbow"));
+                _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 1, 0), new Vector3D(0, 0, 1) }, "elbow 3D"));
+                _partToolItems.Add(new TractorBeamToolItem(editor1.Options));
+                _partToolItems.Add(new BrainToolItem(editor1.Options));
+                _partToolItems.Add(new BrainRGBRecognizerToolItem(editor1.Options));
+                //_partToolItems.Add(new EyeToolItem(editor1.Options));
+                _partToolItems.Add(new CameraColorRGBToolItem(editor1.Options));
+                _partToolItems.Add(new SensorGravityToolItem(editor1.Options));
+                _partToolItems.Add(new SensorRadiationToolItem(editor1.Options));
+                _partToolItems.Add(new SensorTractorToolItem(editor1.Options));
+                _partToolItems.Add(new SensorCollisionToolItem(editor1.Options));
+                _partToolItems.Add(new SensorFluidToolItem(editor1.Options));
+                _partToolItems.Add(new SensorSpinToolItem(editor1.Options));
+                _partToolItems.Add(new SensorVelocityToolItem(editor1.Options));
+                _partToolItems.Add(new SensorInternalForceToolItem(editor1.Options));
+                _partToolItems.Add(new SensorNetForceToolItem(editor1.Options));
+                _partToolItems.Add(new ShieldEnergyToolItem(editor1.Options));
+                _partToolItems.Add(new ShieldKineticToolItem(editor1.Options));
+                _partToolItems.Add(new ShieldTractorToolItem(editor1.Options));
+                _partToolItems.Add(new ProjectileGunToolItem(editor1.Options));
+                _partToolItems.Add(new BeamGunToolItem(editor1.Options));
+                _partToolItems.Add(new GrappleGunToolItem(editor1.Options));
+                _partToolItems.Add(new SelfRepairToolItem(editor1.Options));
 
-            StackPanel panel = new StackPanel();
-            panel.Orientation = Orientation.Horizontal;
+                StackPanel panel = new StackPanel();
+                panel.Orientation = Orientation.Horizontal;
 
-            Button button = new Button();
-            button.Content = "Save";
-            button.Click += new RoutedEventHandler(Save_Click);
-            panel.Children.Add(button);
+                Button button = new Button();
+                button.Content = "Save";
+                button.Click += new RoutedEventHandler(Save_Click);
+                panel.Children.Add(button);
 
-            button = new Button();
-            button.Content = "Load";
-            button.Margin = new Thickness(4d, 0, 0, 0);
-            button.Click += new RoutedEventHandler(Load_Click);
-            panel.Children.Add(button);
+                button = new Button();
+                button.Content = "Load";
+                button.Margin = new Thickness(4d, 0, 0, 0);
+                button.Click += new RoutedEventHandler(Load_Click);
+                panel.Children.Add(button);
 
-            editor1.SetupEditor(this.Title, _partToolItems, panel);
+                editor1.SetupEditor(this.Title, _partToolItems, panel);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -393,111 +401,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             retVal.Model = visual;
 
             return retVal;
-
-            #region OLD
-
-            ////TODO: Instead of a switch, have tool item take in a dna, and make its own design (make the method abstract)
-            //switch (dna.PartType)
-            //{
-            //    case "CargoBay":
-            //        retVal.Part3D = new CargoBayDesign(editor1.Options);
-            //        break;
-
-            //    case "EnergyTank":
-            //        retVal.Part3D = new EnergyTankDesign(editor1.Options);
-            //        break;
-
-            //    case "FuelTank":
-            //        retVal.Part3D = new FuelTankDesign(editor1.Options);
-            //        break;
-
-            //    case "AmmoBox":
-            //        retVal.Part3D = new AmmoBoxDesign(editor1.Options);
-            //        break;
-
-            //    case "HangarBay":
-            //        retVal.Part3D = new HangarBayDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterMatterToEnergy":
-            //        retVal.Part3D = new ConverterMatterToEnergyDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterMatterToFuel":
-            //        retVal.Part3D = new ConverterMatterToFuelDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterMatterToAmmo":
-            //        retVal.Part3D = new ConverterMatterToAmmoDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterEnergyToFuel":
-            //        retVal.Part3D = new ConverterEnergyToFuelDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterEnergyToAmmo":
-            //        retVal.Part3D = new ConverterEnergyToAmmoDesign(editor1.Options);
-            //        break;
-
-            //    case "ConverterFuelToEnergy":
-            //        retVal.Part3D = new ConverterFuelToEnergyDesign(editor1.Options);
-            //        break;
-
-
-            //                    else if (dna.PartType == "ConverterRadiationToEnergy")
-            //{
-            //    //retVal.Part3D = new ConverterRadiationToEnergyDesign(editor1.Options);
-            //}
-            //else if (dna.PartType == "Thruster")
-            //{
-            //    //retVal.Part3D = new ThrusterDesign(editor1.Options);
-            //}
-
-            //    case "TractorBeam":
-            //        retVal.Part3D = new TractorBeamDesign(editor1.Options);
-            //        break;
-
-            //    case "Brain":
-            //        retVal.Part3D = new BrainDesign(editor1.Options);
-            //        break;
-
-            //    case "Eye":
-            //        retVal.Part3D = new EyeDesign(editor1.Options);
-            //        break;
-
-            //    case "ShieldEnergy":
-            //        retVal.Part3D = new ShieldEnergyDesign(editor1.Options);
-            //        break;
-
-            //    case "ShieldKinetic":
-            //        retVal.Part3D = new ShieldKineticDesign(editor1.Options);
-            //        break;
-
-            //    case "ShieldTractor":
-            //        retVal.Part3D = new ShieldTractorDesign(editor1.Options);
-            //        break;
-
-            //    case "ProjectileGun":
-            //        retVal.Part3D = new ProjectileGunDesign(editor1.Options);
-            //        break;
-
-            //    case "BeamGun":
-            //        retVal.Part3D = new BeamGunDesign(editor1.Options);
-            //        break;
-
-            //    case "GrappleGun":
-            //        retVal.Part3D = new GrappleGunDesign(editor1.Options);
-            //        break;
-
-            //    case "SelfRepair":
-            //        retVal.Part3D = new SelfRepairDesign(editor1.Options);
-            //        break;
-
-            //    default:
-            //        throw new ApplicationException("Unknown part type: " + dna.PartType);
-            //}
-
-            #endregion
         }
 
         #endregion

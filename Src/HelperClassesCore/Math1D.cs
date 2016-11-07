@@ -324,6 +324,24 @@ namespace Game.HelperClassesCore
             return (v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 8d;
         }
 
+        public static double Avg(Tuple<double, double>[] weightedValues)
+        {
+            if (weightedValues == null || weightedValues.Length == 0)
+            {
+                return 0;
+            }
+
+            double totalWeight = weightedValues.Sum(o => o.Item2);
+            if (Math1D.IsNearZero(totalWeight))
+            {
+                return weightedValues.Average(o => o.Item1);
+            }
+
+            double sum = weightedValues.Sum(o => o.Item1 * o.Item2);
+
+            return sum / totalWeight;
+        }
+
         /// <summary>
         /// This will try various inputs and come up with an input that produces the desired output
         /// NOTE: This method will only try positive inputs

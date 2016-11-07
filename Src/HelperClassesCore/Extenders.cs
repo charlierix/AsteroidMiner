@@ -106,6 +106,14 @@ namespace Game.HelperClassesCore
             }
         }
 
+        /// <summary>
+        /// This is a string.Join, but written to look like a linq statement
+        /// </summary>
+        public static string ToJoin(this IEnumerable<string> strings, string separator)
+        {
+            return string.Join(separator, strings);
+        }
+
         #endregion
 
         #region IEnumerable
@@ -359,19 +367,36 @@ namespace Game.HelperClassesCore
 
         public static IEnumerable<T> RemoveWhere<T>(this IList<T> list, Func<T, bool> constraint)
         {
+            List<T> removed = new List<T>();
+
             int index = 0;
 
             while (index < list.Count)
             {
                 if (constraint(list[index]))
                 {
-                    yield return list[index];
+                    //yield return list[index];
+                    removed.Add(list[index]);       //NOTE: can't use yield, because if there are no consumers of the returned results, the compiler wasn't even calling this method
                     list.RemoveAt(index);
                 }
                 else
                 {
                     index++;
                 }
+            }
+
+            return removed;
+        }
+
+        #endregion
+
+        #region MatchCollection
+
+        public static IEnumerable<Match> AsEnumerable(this MatchCollection matches)
+        {
+            foreach (Match match in matches)
+            {
+                yield return match;
             }
         }
 

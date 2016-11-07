@@ -22,8 +22,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ConverterMatterToFuelToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -161,6 +161,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ConverterMatterToFuelToolItem(this.Options);
         }
 
         #endregion
@@ -763,10 +768,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             foreach (var group in cargo.Item2.GroupBy(o => o.Density))
             {
                 // Distribute this set of cargo evenly among the converters (according to each converters percent of need)
-                Transfer_ManySprtDistributeGroup(group.ToList(), percentsOfCargo);
+                Transfer_Many_DistributeGroup(group.ToList(), percentsOfCargo);
             }
         }
-        private void Transfer_ManySprtDistributeGroup(List<Cargo> cargo, double[] percents)
+        private void Transfer_Many_DistributeGroup(List<Cargo> cargo, double[] percents)
         {
             double sumVolume = cargo.Sum(o => o.Volume);
 
@@ -833,7 +838,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                             splitCargo.Volume = remaining[cntr];
                             cargo[0].Volume -= remaining[cntr];
-                            if(cargo[0].Volume.IsNearZero())
+                            if (cargo[0].Volume.IsNearZero())
                             {
                                 cargo.RemoveAt(0);
                             }
@@ -852,8 +857,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
 
                 infiniteLoopCntr++;
-                if (infiniteLoopCntr > 10000)
+                if (infiniteLoopCntr > 100)
                 {
+                    // This happens when the cargo volumes are almost zero (but not quite below the NEARZERO threshold.  Don't bother trying to
+                    // distribute such a tiny amount, just exit
+                    //if(cargo.All(o => o.Volume.IsNearZero()))
+                    if (cargo.All(o => Math.Abs(o.Volume) < UtilityCore.NEARZERO * 100))
+                    {
+                        return;
+                    }
+
                     throw new ApplicationException("Infinite loop detected");
                 }
             }

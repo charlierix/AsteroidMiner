@@ -449,7 +449,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             if (snapshot.X0_Y0_Z0 == null && snapshot.X0_Y0_Z1 == null && snapshot.X0_Y1_Z0 == null && snapshot.X0_Y1_Z1 == null && snapshot.X1_Y0_Z0 == null && snapshot.X1_Y0_Z1 == null && snapshot.X1_Y1_Z0 == null && snapshot.X1_Y1_Z1 == null)
             {
-                // Ran into this bug, wrote this if statement, and it never hit again.  All the items were in the root node
+                // This was happening because build snapshot wasn't throwing out disposed objects
                 return;
             }
 

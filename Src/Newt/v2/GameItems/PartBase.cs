@@ -12,6 +12,7 @@ using System.Windows.Media.Media3D;
 using System.Xaml;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.Controls;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
 
@@ -151,26 +152,95 @@ namespace Game.Newt.v2.GameItems
 
         public abstract PartDesignBase GetNewDesignPart();
 
-        protected static UIElement GetVisual2D(string text, string description, EditorColors editorColors)
+        protected static UIElement GetVisual2D_OLD(string text, string description, EditorColors editorColors)
         {
             //TODO:  Use icons with tooltips
 
-            Border retVal = new Border();
-            retVal.BorderBrush = new SolidColorBrush(editorColors.PartVisualBorderColor);
-            retVal.BorderThickness = new Thickness(1d);
-            retVal.CornerRadius = new CornerRadius(3d);
-            retVal.Margin = new Thickness(2d);
+            Border retVal = new Border()
+            {
+                Background = Brushes.Transparent,       // this is needed for drag/drop to work
+                BorderBrush = new SolidColorBrush(editorColors.PartVisual_BorderColor),
+                BorderThickness = new Thickness(1d),
+                CornerRadius = new CornerRadius(3d),
+                Margin = new Thickness(2d),
+            };
 
-            TextBlock textblock = new TextBlock();
-            textblock.Text = text;
-            textblock.ToolTip = description;
-            textblock.Foreground = new SolidColorBrush(editorColors.PartVisualTextColor);
-            textblock.FontSize = 10d;
-            textblock.Margin = new Thickness(3d, 1d, 3d, 1d);
-            textblock.HorizontalAlignment = HorizontalAlignment.Center;
-            textblock.VerticalAlignment = VerticalAlignment.Center;
+            TextBlock textblock = new TextBlock()
+            {
+                Text = text,
+                ToolTip = description,
+                Foreground = new SolidColorBrush(editorColors.PartVisual_TextColor),
+                FontSize = 10d,
+                Margin = new Thickness(3d, 1d, 3d, 1d),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
 
             retVal.Child = textblock;
+
+            return retVal;
+        }
+        protected static UIElement GetVisual2D(string text, string description, EditorOptions options, PartToolItemBase partBase)
+        {
+            Brush standardBack = new SolidColorBrush(options.EditorColors.PartVisual_BackgroundColor);
+            Brush hoverBack = new SolidColorBrush(options.EditorColors.PartVisual_BackgroundColor_Hover);
+
+            // Border
+            Border retVal = new Border()
+            {
+                Background = standardBack,       // this at least needs to be transparent for drag/drop to work
+                BorderBrush = new SolidColorBrush(options.EditorColors.PartVisual_BorderColor),
+                BorderThickness = new Thickness(1d),
+                CornerRadius = new CornerRadius(7d),
+                Margin = new Thickness(3d),
+            };
+
+            retVal.MouseEnter += (s, e) => { retVal.Background = hoverBack; };
+            retVal.MouseLeave += (s, e) => { retVal.Background = standardBack; };
+
+            // Grid
+            Grid grid = new Grid()
+            {
+                Margin = new Thickness(2, 1, 6, 1),
+            };
+
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(4, GridUnitType.Pixel) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            retVal.Child = grid;
+
+            // Icon
+            Icon3D icon = new Icon3D(partBase.GetNewDesignPart().GetDNA(), options)
+            {
+                ShowName = false,
+                ShowBorder = false,
+                Width = 50,
+                Height = 50,
+                Margin = new Thickness(4),
+                AutoRotateOnMouseHover = true,
+                AutoRotateParent = retVal,
+            };
+
+            Grid.SetColumn(icon, 0);
+
+            grid.Children.Add(icon);
+
+            // Text
+            TextBlock textblock = new TextBlock()
+            {
+                Text = text,
+                ToolTip = description,
+                Foreground = new SolidColorBrush(options.EditorColors.PartVisual_TextColor),
+                FontSize = 11d,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextWrapping = TextWrapping.Wrap,
+            };
+
+            Grid.SetColumn(textblock, 2);
+
+            grid.Children.Add(textblock);
 
             return retVal;
         }
@@ -666,10 +736,13 @@ namespace Game.Newt.v2.GameItems
         }
         /// <summary>
         /// This loads this class up with the properties in the dna
+        /// NOTE: This will fix errors in DNA.  It changes the object passed in
         /// </summary>
         /// <remarks>
         /// NOTE: If a derived class has custom props, then you must override this method and store your own derived dna.  Don't call
         /// base.SetDNA, but instead call base.StoreDNA, which will store the properties that this class knows about
+        /// 
+        /// At first, I wasn't modifying dna, but then noticed PartBase constructor stores this.DNA
         /// </remarks>
         public virtual void SetDNA(ShipPartDNA dna)
         {
@@ -680,6 +753,11 @@ namespace Game.Newt.v2.GameItems
 
             StoreDNA(dna);
         }
+
+        /// <summary>
+        /// This will request a new tool item class (any design classes that the tool item creates will be different than this)
+        /// </summary>
+        public abstract PartToolItemBase GetToolItem();
 
         #endregion
         #region Protected Methods
@@ -712,11 +790,35 @@ namespace Game.Newt.v2.GameItems
             //    dna.ExternalLinks = 
             //}
         }
+        /// <summary>
+        /// NOTE: This will fix scale
+        /// </summary>
         protected virtual void StoreDNA(ShipPartDNA dna)
         {
             if (this.PartType != dna.PartType)
             {
                 throw new ArgumentException(string.Format("The dna passed in is not for this class.  DNA={0}, this={1}", dna.PartType, this.PartType));
+            }
+
+            PartDesignAllowedScale allowedScale = this.AllowedScale;
+            switch (allowedScale)
+            {
+                case PartDesignAllowedScale.XYZ:
+                    double scale1 = Math1D.Avg(dna.Scale.X, dna.Scale.Y, dna.Scale.Z);
+                    dna.Scale = new Vector3D(scale1, scale1, scale1);
+                    break;
+
+                case PartDesignAllowedScale.XY_Z:
+                    double scale2 = Math1D.Avg(dna.Scale.X, dna.Scale.Y);
+                    dna.Scale = new Vector3D(scale2, scale2, dna.Scale.Z);
+                    break;
+
+                case PartDesignAllowedScale.None:
+                case PartDesignAllowedScale.X_Y_Z:
+                    break;
+
+                default:
+                    throw new ApplicationException("Unknown PartDesignAllowedScale: " + allowedScale);
             }
 
             this.Scale = dna.Scale;
@@ -767,11 +869,11 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (_isLocked)
                     {
-                        selectionEmissives = this.Options.EditorColors.SelectedLockedEmissiveBrush;
+                        selectionEmissives = this.Options.EditorColors.SelectedLocked_EmissiveBrush;
                     }
                     else
                     {
-                        selectionEmissives = this.Options.EditorColors.SelectedEmissiveBrush;
+                        selectionEmissives = this.Options.EditorColors.Selected_EmissiveBrush;
                     }
                 }
             }
@@ -864,6 +966,9 @@ namespace Game.Newt.v2.GameItems
 
         #region Constructor
 
+        /// <summary>
+        /// WARNING: This will modify the dna's scale (if the scale is invalid)
+        /// </summary>
         /// <remarks>
         /// How these classes get instantiated and shared is a bit odd.  Not sure if this is the best way or not.  There are two+ different
         /// paths these parts are used:
@@ -1356,6 +1461,44 @@ namespace Game.Newt.v2.GameItems
             set;
         }
 
+        public virtual bool IsEqual(ShipPartDNA dna, bool comparePositionOrientation = false, bool compareNeural = false)
+        {
+            if (dna == null)
+            {
+                return false;
+            }
+
+            if (this.PartType != dna.PartType)
+            {
+                return false;
+            }
+
+            if (!Math3D.IsNearValue(this.Scale, dna.Scale))
+            {
+                return false;
+            }
+
+            if (comparePositionOrientation)
+            {
+                if (!Math3D.IsNearValue(this.Position, dna.Position))
+                {
+                    return false;
+                }
+
+                if (!Math3D.IsNearValue(this.Orientation, dna.Orientation))
+                {
+                    return false;
+                }
+            }
+
+            if (compareNeural)
+            {
+                throw new ApplicationException("finish this");
+            }
+
+            return true;
+        }
+
         public static ShipPartDNA Clone(ShipPartDNA dna)
         {
             // PartDNA could be a derived type, but since these are designed to be serializable, serialize it to do a deep clone
@@ -1661,6 +1804,10 @@ namespace Game.Newt.v2.GameItems
 
     public enum PartDesignAllowedScale
     {
+        /// <summary>
+        /// This is an override value for parts that can't be resized or copied, only moved around (purchased parts)
+        /// </summary>
+        None,
         /// <summary>
         /// Each of the 3 axis can be scaled independently
         /// </summary>

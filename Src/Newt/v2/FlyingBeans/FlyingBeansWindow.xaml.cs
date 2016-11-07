@@ -397,9 +397,11 @@ namespace Game.Newt.v2.FlyingBeans
                 _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
                 // Draw the lines
-                _boundryLines = new ScreenSpaceLines3D(true);
-                _boundryLines.Thickness = 1d;
-                _boundryLines.Color = _colors.BoundryLines;
+                _boundryLines = new ScreenSpaceLines3D(true)
+                {
+                    Thickness = 1d,
+                    Color = _colors.BoundryLines,
+                };
                 _viewport.Children.Add(_boundryLines);
 
                 foreach (Point3D[] line in innerLines)
@@ -451,12 +453,14 @@ namespace Game.Newt.v2.FlyingBeans
                 #endregion
                 #region Map
 
-                _map = new Map(_viewport, null, _world);
-                _map.SnapshotFequency_Milliseconds = 125;
-                _map.SnapshotMaxItemsPerNode = 10;
-                _map.ShouldBuildSnapshots = false;// true;
-                _map.ShouldShowSnapshotLines = false;
-                _map.ShouldSnapshotCentersDrift = true;
+                _map = new Map(_viewport, null, _world)
+                {
+                    SnapshotFequency_Milliseconds = 125,
+                    SnapshotMaxItemsPerNode = 10,
+                    ShouldBuildSnapshots = false,
+                    ShouldShowSnapshotLines = false,
+                    ShouldSnapshotCentersDrift = true,
+                };
 
                 _updateManager = new UpdateManager(
                     new Type[] { typeof(Bean) },
@@ -507,8 +511,10 @@ namespace Game.Newt.v2.FlyingBeans
 
                 // gravity was done by the file panel
 
-                _radiation = new RadiationField();
-                _radiation.AmbientRadiation = 0d;
+                _radiation = new RadiationField()
+                {
+                    AmbientRadiation = 0d,
+                };
 
                 _boundryField = new BoundryField(.5d, 7500d, 2d, _boundryMin, _boundryMax);
 

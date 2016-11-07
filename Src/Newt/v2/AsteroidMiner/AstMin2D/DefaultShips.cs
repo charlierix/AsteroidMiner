@@ -16,7 +16,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             List<ShipPartDNA> parts = new List<ShipPartDNA>();
 
-            // This is .7071.... (you see it a lot quaternions)
+            // This is .7071.... (you see it a lot in quaternions)
             double sqrt2div2 = Math.Sqrt(2d) / 2d;
 
             switch (type)
@@ -305,6 +305,204 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     #endregion
                     break;
 
+                case DefaultShipType.ThrusterPack1:
+                    #region ThrusterPack1
+
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1.21595934073765, 1.21595934073765, 1.60266885680206) });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.608038627523538, 0, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.608035279806904, -0.00201768948252767, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.310467550112967, -0.522800987841033, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.322246664406133, -0.51562395196483, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.315515500980355, 0.519770084943163, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.31723854673733, 0.518720230012956, 0), Scale = new Vector3D(1.30241042620443, 1.30241042620443, 1.30241042620443), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+
+                    #endregion
+                    break;
+                case DefaultShipType.ThrusterPack2:
+                    #region ThrusterPack2
+
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(2.06691438007685, 2.06691438007685, 1) });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.06254051920115, 0, 0), Scale = new Vector3D(1.64718422786896, 1.64718422786896, 1.64718422786896), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.06254051920115, 0, 0), Scale = new Vector3D(1.64718422786896, 1.64718422786896, 1.64718422786896), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -1.13206280163906), Scale = new Vector3D(1.64718422786896, 1.64718422786896, 1.64718422786896), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, 1.13206280163906), Scale = new Vector3D(1.64718422786896, 1.64718422786896, 1.64718422786896), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two), ThrusterType = ThrusterType.Two });
+
+                    #endregion
+                    break;
+                case DefaultShipType.ThrusterPack3:
+                    #region ThrusterPack3
+
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 2.12288744363112) });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.54582563958906, 0, 0), Scale = new Vector3D(1.86884958369789, 1.86884958369789, 1.86884958369789), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, 1, 0, 0), Position = new Point3D(1.54582563958906, 0, 0), Scale = new Vector3D(1.86884958369789, 1.86884958369789, 1.86884958369789), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_One), ThrusterType = ThrusterType.Two_One });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 1), Scale = new Vector3D(1.88817814825037, 1.88817814825037, 1.88817814825037), ThrusterDirections = new[] { new Vector3D(-1, 0, -1), new Vector3D(1, 0, -1) }, ThrusterType = ThrusterType.Custom });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -1), Scale = new Vector3D(1.88817814825037, 1.88817814825037, 1.88817814825037), ThrusterDirections = new[] { new Vector3D(-1, 0, 1), new Vector3D(1, 0, 1) }, ThrusterType = ThrusterType.Custom });
+
+                    #endregion
+                    break;
+                case DefaultShipType.ThrusterPack4:
+                    #region ThrusterPack4
+
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(-sqrt2div2, 0, 0, sqrt2div2), Position = new Point3D(-0.638616241, 0, -1.212044094), Scale = new Vector3D(1, 1, 1.47850516435542) });
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(-sqrt2div2, 0, 0, sqrt2div2), Position = new Point3D(0.638616241, 0, -1.212044094), Scale = new Vector3D(1, 1, 1.47850516435542) });
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(-sqrt2div2, 0, 0, sqrt2div2), Position = new Point3D(-0.638616241, 0, 1.212044094), Scale = new Vector3D(1, 1, 1.47850516435542) });
+                    parts.Add(new ShipPartDNA() { PartType = FuelTank.PARTTYPE, Orientation = new Quaternion(-sqrt2div2, 0, 0, sqrt2div2), Position = new Point3D(0.638616241, 0, 1.212044094), Scale = new Vector3D(1, 1, 1.47850516435542) });
+
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2 / 2, 0, 1), Position = new Point3D(-1.50534398462239, 0, -1.2046880267736), Scale = new Vector3D(1.80360068144214, 1.80360068144214, 1.80360068144214), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two), ThrusterType = ThrusterType.Two_Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2 / 2, 0, 1), Position = new Point3D(1.50534398462239, 0, -1.2046880267736), Scale = new Vector3D(1.80360068144214, 1.80360068144214, 1.80360068144214), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two), ThrusterType = ThrusterType.Two_Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2 / 2, 0, 1), Position = new Point3D(-1.50534398462239, 0, 1.2046880267736), Scale = new Vector3D(1.80360068144214, 1.80360068144214, 1.80360068144214), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two), ThrusterType = ThrusterType.Two_Two });
+                    parts.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2 / 2, 0, 1), Position = new Point3D(1.50534398462239, 0, 1.2046880267736), Scale = new Vector3D(1.80360068144214, 1.80360068144214, 1.80360068144214), ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.Two_Two), ThrusterType = ThrusterType.Two_Two });
+
+                    #endregion
+                    break;
+
+                case DefaultShipType.GunPack1:
+                    #region GunPack1
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.359488304064817), Scale = new Vector3D(0.740722286782034, 1, 0.447188240046024) });
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(0, 0, -0.845037591643844), Scale = new Vector3D(0.486647531698294, 1, 1) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0.600428061517778), Scale = new Vector3D(1.48921906025213, 1.48921906025213, 1.48921906025213) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.350479929104352, 0, 0.542018613802121), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.350479929104352, 0, 0.542018613802121), Scale = new Vector3D(1, 1, 1) });
+
+                    #endregion
+                    break;
+                case DefaultShipType.GunPack2:
+                    #region GunPack2
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.510426941375555), Scale = new Vector3D(1.3827605451072, 0.717210085171538, 0.357071853528449) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.155397015268484, 0, 0.188962868139779), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.440677674650502, 0, 0.188962868139779), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.155397015268484, 0, 0.188962868139779), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.440677674650502, 0, 0.188962868139779), Scale = new Vector3D(1, 1, 1) });
+
+                    #endregion
+                    break;
+                case DefaultShipType.GunPack3:
+                    #region GunPack3
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -1.40253359942577), Scale = new Vector3D(1, 1.3849694218147, 1) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.241516303159814, 0, 0), Scale = new Vector3D(1.94636975940612, 1.94636975940612, 1.94636975940612) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.241516303159814, 0, 0), Scale = new Vector3D(1.94636975940612, 1.94636975940612, 1.94636975940612) });
+
+                    #endregion
+                    break;
+                case DefaultShipType.GunPack4:
+                    #region GunPack4
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -1.41809716103841), Scale = new Vector3D(0.693253778676797, 1, 1.3376841310155) });
+
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.716722735172331, 0, -1.41192429975151), Scale = new Vector3D(0.552033986172998, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = AmmoBox.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.716722735172331, 0, -1.41192429975151), Scale = new Vector3D(0.552033986172998, 1, 1) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1.77102999586209, 1.77102999586209, 1.77102999586209) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.43270286179556, 0, -0.1375361237872), Scale = new Vector3D(1.40476592424605, 1.40476592424605, 1.40476592424605) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.43270286179556, 0, -0.1375361237872), Scale = new Vector3D(1.40476592424605, 1.40476592424605, 1.40476592424605) });
+
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.09697354483941, 0, -0.26), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.77489820441599, 0, -0.26), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.77489820441599, 0, -0.26), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = ProjectileGun.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.09697354483941, 0, -0.26), Scale = new Vector3D(1, 1, 1) });
+
+                    #endregion
+                    break;
+
+                case DefaultShipType.SolarPack1:
+                    #region SolarPack1
+
+                    parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.839705260000125), Scale = new Vector3D(1.78236967813923, 1.78236967813923, 1.00599318771775) });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.497616691156332, -0.498123278284321, -0.501865394679567, -0.502376307101586), Position = new Point3D(-1.10909536072, 0.00444429738647521, -1.06994696506863), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Square });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.387346563099166, 0.595158353476073, -0.384061748318819, 0.590123502176625), Position = new Point3D(-0.921315802678603, -1.05249304060646, -1.06343800724509), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Right_Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.00265941069493328, 0.00407751639853742, -0.545466510430476, 0.838118480522637), Position = new Point3D(-0.910573804138347, -1.07678673895002, 0.513541340293575), Scale = new Vector3D(1, 1, 2.06598515992626), Shape = SolarPanelShape.Right_Triangle });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.413621103848679, -0.56979536163178, -0.417152644233965, -0.574660334217111), Position = new Point3D(-0.913749428695176, 1.0543961264291, -1.04024863680155), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Right_Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(-0.00213456813488028, 0.00294053424986271, -0.587447180399454, -0.809254352548032), Position = new Point3D(-0.913828146920963, 1.05415453586618, 0.536954385105503), Scale = new Vector3D(1, 1, 2.06598515992626), Shape = SolarPanelShape.Right_Triangle });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.500440349985147, 0.495286409860839, -0.504713162203721, 0.49951521719786), Position = new Point3D(1.14239605516126, -0.00625026792786753, -1.06994696506863), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Square });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(-0.59334403143141, 0.390120091794577, 0.588324565992255, 0.386811813926279), Position = new Point3D(0.964490533295712, 1.05239382909038, -1.06343800724509), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Right_Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(-0.0040650598768345, 0.00267841248175432, 0.835563528328906, 0.54937227043356), Position = new Point3D(0.953975769369413, 1.07678673895002, 0.513541340293574), Scale = new Vector3D(1, 1, 2.06598515992626), Shape = SolarPanelShape.Right_Triangle });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0.571719625049254, 0.410957226508587, -0.576601027197554, 0.414466022429626), Position = new Point3D(0.937257983711392, -1.05433292120977, -1.04024863680155), Scale = new Vector3D(1, 1, 1), Shape = SolarPanelShape.Right_Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(-0.00295046476679195, -0.00212082070363839, -0.811987296076357, 0.583663796965179), Position = new Point3D(0.937338953605967, -1.05409207595793, 0.536954385105502), Scale = new Vector3D(1, 1, 2.06598515992626), Shape = SolarPanelShape.Right_Triangle });
+
+                    #endregion
+                    break;
+                case DefaultShipType.SolarPack2:
+                    #region SolarPack2
+
+                    parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, -0.73), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0.73), Scale = new Vector3D(1, 1, 1) });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.09067399884812, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.723431308988736), Shape = SolarPanelShape.Square });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(0.424338649252456, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(1.7570107632149, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -1, 0, 0), Position = new Point3D(1.08998941016696, 0, -0.66633428531784), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(1.08998941016696, 0, 0.66633428531784), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.09067399884812, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.723431308988736), Shape = SolarPanelShape.Square });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(-1.7570107632149, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(-0.424338649252456, 0, 0), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -1, 0, 0), Position = new Point3D(-1.08998941016696, 0, -0.66633428531784), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-1.08998941016696, 0, 0.66633428531784), Scale = new Vector3D(0.723431308988736, 1, 0.485349726766778), Shape = SolarPanelShape.Trapazoid });
+
+                    #endregion
+                    break;
+                case DefaultShipType.SolarPack3:
+                    #region SolarPack3
+
+                    parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(0.241548942411659, 0, 0), Scale = new Vector3D(0.682246236956509, 0.682246236956509, 1.46020504286002) });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(-0.846397025609697, 0, 0), Scale = new Vector3D(0.462184256141049, 1, 2.39182659166201), Shape = SolarPanelShape.Square });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(-1, 0, 0, 0), Position = new Point3D(0.26059638765034, 0, -0.83736819913164), Scale = new Vector3D(1.62466201000318, 1, 0.703111361766014), Shape = SolarPanelShape.Right_Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.26059638765034, 0, 0.83736819913164), Scale = new Vector3D(1.62466201000318, 1, 0.703111361766014), Shape = SolarPanelShape.Right_Trapazoid });
+
+                    #endregion
+                    break;
+                case DefaultShipType.SolarPack4:
+                    #region SolarPack4
+
+                    parts.Add(new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Orientation = new Quaternion(0, 0.218068992805724, 0, 0.975933355499594), Position = new Point3D(-0.591146181563435, 0, 0.723032883159889), Scale = new Vector3D(0.689484359512208, 0.689484359512208, 0.49700946105337) });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0), Scale = new Vector3D(1, 1, 0.315163112216065), Shape = SolarPanelShape.Square });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -1, 0, 0), Position = new Point3D(0, 0, -0.5430805882683), Scale = new Vector3D(1, 1, 0.675765655943646), Shape = SolarPanelShape.Trapazoid });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0.5430805882683), Scale = new Vector3D(1, 1, 0.675765655943646), Shape = SolarPanelShape.Trapazoid });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -1, 0, 0), Position = new Point3D(0, 0, -1.46215899363955), Scale = new Vector3D(0.313811027131742, 1, 1), Shape = SolarPanelShape.Triangle });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, sqrt2div2, 0, sqrt2div2), Position = new Point3D(1.08149144761653, 0, 0), Scale = new Vector3D(0.313811027131742, 1, 1), Shape = SolarPanelShape.Triangle });
+
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, -sqrt2div2, 0, sqrt2div2), Position = new Point3D(-0.744195298710256, 0, 0), Scale = new Vector3D(0.314302141349811, 1, 0.365007504849372), Shape = SolarPanelShape.Triangle });
+                    parts.Add(new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Orientation = new Quaternion(0, 0, 0, 1), Position = new Point3D(0, 0, 1.11889317105921), Scale = new Vector3D(0.314302141349811, 1, 0.365007504849372), Shape = SolarPanelShape.Triangle });
+
+                    #endregion
+                    break;
+
+                case DefaultShipType.SwarmPack:
+                    #region SwarmPack
+
+                    parts.Add(new ShipPartDNA() { PartType = PlasmaTank.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0.978406524617677, 0, 1.02608961031058), Scale = new Vector3D(1.72623267950863, 1.72623267950863, 1) });
+
+
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(0, -0.997396141851085, 0, 0.0721175167387891), Position = new Point3D(-0.285014229114893, 0, 0.448171272551123), Scale = new Vector3D(1.83739979192166, 1.83739979192166, 1.83739979192166) });
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(0, -0.998950265135782, 0, -0.0458079445636934), Position = new Point3D(1.12169700087435, 0, -0.378091903215706), Scale = new Vector3D(1.83739979192166, 1.83739979192166, 1.83739979192166) });
+
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(6.09545244108796E-15, -0.999409421220556, -1.55540633928754E-13, 0.0343628982420524), Position = new Point3D(0.0310384069984295, 0, -1.02608961031058), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(0, 0.875585109240185, 0, -0.483063884467523), Position = new Point3D(-1.54039689683519, 0, 0.630928824301011), Scale = new Vector3D(1, 1, 1) });
+                    parts.Add(new ShipPartDNA() { PartType = SwarmBay.PARTTYPE, Orientation = new Quaternion(0, -0.979944542294803, 0, 0.199270404291829), Position = new Point3D(-1.45015457320283, 0, -0.551828638123439), Scale = new Vector3D(1, 1, 1) });
+
+                    #endregion
+                    break;
+
                 default:
                     throw new ApplicationException("Unknown DefaultShipType: " + type.ToString());
             }
@@ -331,6 +529,24 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         Pusher,
         Artillery,
         Hive,
+
+        // ------ Below aren't complete ships, just part packs (they are still sold as ships, but they are meant to be scrapped) ------
+        ThrusterPack1,
+        ThrusterPack2,
+        ThrusterPack3,
+        ThrusterPack4,
+
+        GunPack1,
+        GunPack2,
+        GunPack3,
+        GunPack4,
+
+        SolarPack1,
+        SolarPack2,
+        SolarPack3,
+        SolarPack4,
+
+        SwarmPack,
     }
 
     #endregion

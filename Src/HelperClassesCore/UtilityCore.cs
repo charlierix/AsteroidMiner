@@ -251,6 +251,18 @@ namespace Game.HelperClassesCore
         {
             return (T[])Enum.GetValues(typeof(T));
         }
+        public static T[] GetEnums<T>(T excluding) where T : struct
+        {
+            return GetEnums<T>(new T[] { excluding });
+        }
+        public static T[] GetEnums<T>(IEnumerable<T> excluding) where T : struct
+        {
+            T[] all = (T[])Enum.GetValues(typeof(T));
+
+            return all.
+                Where(o => !excluding.Contains(o)).
+                ToArray();
+        }
 
         /// <summary>
         /// This is a strongly typed wrapper to Enum.Parse
@@ -335,6 +347,56 @@ namespace Game.HelperClassesCore
                         // This input size is exhausted (everything is as far right as they can go)
                         break;
                     }
+                }
+            }
+        }
+        /// <summary>
+        /// The sets are sets of indices that can be together.  Each row returned from this method will contain every index exactly once
+        /// </summary>
+        /// <remarks>
+        /// This is a pretty specialist method.  Not sure if it will be needed outside the one case I made it for
+        /// 
+        /// Example1        UtilityCore.AllCombosEnumerator(new[] { new[] { 0, 1, 2 }, new[] { 0, 2 }, new[] { 1, 3 } });
+        /// input: {0,1,2} {0,2} {1,3}
+        /// return: {0} {1} {2} {3}
+        /// return: {0,1,2} {3}
+        /// return: {0,2} {1,3}
+        /// return: {0,2} {1} {3}
+        /// return: {1,3} {0} {2}
+        /// 
+        /// Example2        UtilityCore.AllCombosEnumerator(new[] { new[] { 0, 1, 2 }, new[] { 3, 4 }, new[] { 0, 5 } }).ToArray();
+        /// input: {0,1,2} {3,4} {0,5}
+        /// return: {0} {1} {2} {3} {4} {5}
+        /// return: {0,1,2} {3,4} {5}
+        /// return: {0,1,2} {3} {4} {5}
+        /// return: {3,4} {0,5} {1} {2}
+        /// return: {3,4} {0} {1} {2} {5}
+        /// return: {0,5} {1} {2} {3} {4}
+        /// </remarks>
+        public static IEnumerable<int[][]> AllCombosEnumerator(int[][] sets, int? maxValue = null)
+        {
+            int max = sets.Max(o => o.Max());
+            if (maxValue != null)
+            {
+                if (maxValue.Value < max)
+                {
+                    throw new ArgumentException("maxValue is lower than the values in sets");
+                }
+
+                max = maxValue.Value;
+            }
+
+            // Create an entry that is all singles
+            yield return Enumerable.Range(0, max + 1).
+                Select(o => new[] { o }).
+                ToArray();
+
+            for (int cntr = 0; cntr < sets.Length; cntr++)
+            {
+                // Get all valid combinations that include sets[cntr]
+                foreach (int[][] subSet in AllCombosEnumerator_Set(sets, cntr, max))
+                {
+                    yield return subSet;
                 }
             }
         }
@@ -491,7 +553,7 @@ namespace Game.HelperClassesCore
 
                 List<int> available = new List<int>(Enumerable.Range(start, rangeCount));
 
-                for(int cntr = 0; cntr < iterateCount; cntr++)
+                for (int cntr = 0; cntr < iterateCount; cntr++)
                 {
                     int index = rand(0, available.Count);
 
@@ -1501,6 +1563,78 @@ namespace Game.HelperClassesCore
             }
 
             throw new ArgumentException(string.Format("Index is too large\r\nIndex={0}\r\nItemCount={1}\r\nLinkCount={2}", index, itemCount, ((itemCount * itemCount) - itemCount) / 2));
+        }
+
+        /// <summary>
+        /// This creates all possible full sets that include the major set passed in
+        /// NOTE: This doesn't go left of index, because it's assumed that this method was already called for those indices
+        /// </summary>
+        private static IEnumerable<int[][]> AllCombosEnumerator_Set(int[][] majorSets, int index, int max)
+        {
+            // There are two things this function needs to return:
+            //      major[index] + combos of major[index+n] + remaining singles
+            //      major[index] + remaining singles
+
+            // Cache this list
+            int[] remainingStarter = Enumerable.Range(0, max + 1).
+                Where(o => !majorSets[index].Contains(o)).
+                ToArray();
+
+            if (index < majorSets.Length - 1)
+            {
+                // Get a list of combinations of major sets to try
+                var majorSetComboIndexSets = UtilityCore.AllCombosEnumerator(majorSets.Length - index - 1).
+                    Select(o => o.Select(p => p + index + 1).ToArray());
+
+                foreach (int[] majorSetComboIndexSet in majorSetComboIndexSets)
+                {
+                    if (AllCombosEnumerator_IsUnique(majorSets, index, majorSetComboIndexSet))
+                    {
+                        yield return AllCombosEnumerator_BuildEntry(majorSets, index, majorSetComboIndexSet, remainingStarter);
+                    }
+                }
+            }
+
+            // Add singles
+            yield return AllCombosEnumerator_BuildEntry(majorSets, index, new int[0], remainingStarter);
+        }
+        /// <summary>
+        /// This will make sure that the jagged array holds one of everything
+        /// NOTE: It doesn't ensure there won't be dupes if majorSets contains dupes across index1-indices2
+        /// </summary>
+        private static int[][] AllCombosEnumerator_BuildEntry(int[][] majorSets, int index1, int[] indices2, int[] remainingStarter)
+        {
+            List<int[]> retVal = new List<int[]>();
+
+            List<int> remaining = new List<int>(remainingStarter);
+
+            foreach (int majorIndex in UtilityCore.Iterate<int>(index1, indices2))
+            {
+                retVal.Add(majorSets[majorIndex]);
+
+                remaining.RemoveWhere(o => majorSets[majorIndex].Contains(o));
+            }
+
+            // Add remaining singles to the end
+            retVal.AddRange(remaining.Select(o => new[] { o }));
+
+            return retVal.ToArray();
+        }
+        /// <summary>
+        /// This returns true if all internal indices (contained in majorSets) pointed to by majorSets[index1] and majorSets[indices2] are unique
+        /// </summary>
+        /// <param name="majorSets">Holds sets of indices to items</param>
+        /// <param name="index1">An index into majorSets</param>
+        /// <param name="indices2">More indices into majorSets</param>
+        private static bool AllCombosEnumerator_IsUnique(int[][] majorSets, int index1, int[] indices2)
+        {
+            // Get all the internal indices that are pointed to by majorSets
+            int[] raw = UtilityCore.Iterate<int>(index1, indices2).
+                SelectMany(o => majorSets[o]).
+                ToArray();
+
+            // If there are dupes, then the distinct count will be less than raw count
+            return raw.Distinct().Count() == raw.Length;
         }
 
         #endregion

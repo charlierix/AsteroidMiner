@@ -20,8 +20,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public SelfRepairToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -127,6 +127,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public override Model3D GetFinalModel()
         {
             return CreateGeometry(true);
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new SelfRepairToolItem(this.Options);
         }
 
         #endregion

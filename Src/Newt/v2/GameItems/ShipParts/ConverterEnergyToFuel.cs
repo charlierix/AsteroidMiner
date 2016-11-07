@@ -21,8 +21,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ConverterEnergyToFuelToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -211,6 +211,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return combined;
         }
 
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ConverterEnergyToFuelToolItem(this.Options);
+        }
+
         #endregion
 
         #region Private Methods
@@ -332,7 +337,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     #endregion
     #region Class: ConverterEnergyToFuel
 
-    public class ConverterEnergyToFuel : PartBase
+    public class ConverterEnergyToFuel : PartBase, IPartUpdatable
     {
         #region Declaration Section
 
@@ -366,6 +371,33 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             _mass = volume * itemOptions.EnergyToFuel_Density;
+        }
+
+        #endregion
+
+        #region IPartUpdatable Members
+
+        public void Update_MainThread(double elapsedTime)
+        {
+        }
+        public void Update_AnyThread(double elapsedTime)
+        {
+            this.Transfer(elapsedTime, 1);
+        }
+
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
         }
 
         #endregion

@@ -31,18 +31,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             this.Token = TokenGenerator.NextToken();
         }
-        public Inventory(ShipPartDNA part, double scale, int count)
+        public Inventory(ShipPartDNA part)
         {
-            //TODO: Rebuild the dna with a changed scaled
-            //PartDNA scaledPart = 
-
             this.Ship = null;
             this.Part = part;
             this.Mineral = null;
 
-            this.Count = count;
+            this.Count = 1;
 
-            this.Volume = 1;
+            this.Volume = Math1D.Avg(part.Scale.X, part.Scale.Y, part.Scale.Z);
             this.Mass = 1;
 
             this.Token = TokenGenerator.NextToken();
@@ -67,6 +64,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         public readonly double Mass;
 
+        //TODO: Create multiple entries instead
         /// <summary>
         /// This lets parts be sold as sets (when building a ship, it's you usually want it symetrical, so help the player
         /// out by two of the same kind of part)
@@ -79,5 +77,58 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         public readonly MineralDNA Mineral;     // can't store the actual mineral, because when a cargo bay removes, it reduces volume.  Since this is a readonly property, there's no way to overwrite with the clone
 
         public readonly long Token;
+
+        #region Public Methods
+
+        public InventoryDNA GetNewDNA()
+        {
+            return new InventoryDNA()
+            {
+                Volume = this.Volume,
+                Mass = this.Mass,
+                Count = this.Count,
+
+                Ship = this.Ship,
+                Part = this.Part,
+                Mineral = this.Mineral,
+            };
+        }
+
+        #endregion
     }
+
+    #region Class: InventoryDNA
+
+    public class InventoryDNA
+    {
+        public double Volume { get; set; }
+        public double Mass { get; set; }
+        public int Count { get; set; }
+
+        public ShipDNA Ship { get; set; }
+        public ShipPartDNA Part { get; set; }
+        public MineralDNA Mineral { get; set; }
+
+        public Inventory ToInventory()
+        {
+            if (this.Ship != null)
+            {
+                return new Inventory(this.Ship, this.Volume);       //TODO: handle scale vs volume better
+            }
+            else if (this.Part != null)
+            {
+                return new Inventory(this.Part);
+            }
+            else if (this.Mineral != null)
+            {
+                return new Inventory(this.Mineral);
+            }
+            else
+            {
+                throw new ApplicationException("Unknown type of inventory, everything is null");
+            }
+        }
+    }
+
+    #endregion
 }

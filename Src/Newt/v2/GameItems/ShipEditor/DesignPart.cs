@@ -33,6 +33,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         #region Public Properties
 
+        /// <summary>
+        /// This will be null if the part is for an item that can't be copied, resized
+        /// </summary>
         public PartToolItemBase Part2D
         {
             get;
@@ -79,7 +82,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             DesignPart retVal = new DesignPart(_options);
             retVal.Part2D = this.Part2D;		// this shouldn't be cloned, it's just a link to the source
 
-            retVal.Part3D = retVal.Part2D.GetNewDesignPart();
+            if(this.Part2D == null)
+            {
+                retVal.Part3D = BotConstructor.GetPartDesign(this.Part3D.GetDNA(), _options);
+            }
+            else
+            {
+                retVal.Part3D = retVal.Part2D.GetNewDesignPart();
+            }
 
             ModelVisual3D model = new ModelVisual3D();
             model.Content = retVal.Part3D.Model;
@@ -122,7 +132,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             {
                 color = WorldColors.CargoBay;
             }
-            else if (this.Part3D is ConverterEnergyToAmmoDesign || this.Part3D is ConverterEnergyToFuelDesign || this.Part3D is ConverterFuelToEnergyDesign || this.Part3D is ConverterMatterToAmmoDesign || this.Part3D is ConverterMatterToEnergyDesign || this.Part3D is ConverterMatterToFuelDesign || this.Part3D is ConverterRadiationToEnergyDesign)
+            else if (this.Part3D is ConverterEnergyToAmmoDesign || this.Part3D is ConverterEnergyToFuelDesign || this.Part3D is ConverterEnergyToPlasmaDesign || this.Part3D is ConverterFuelToEnergyDesign || this.Part3D is ConverterMatterToAmmoDesign || this.Part3D is ConverterMatterToEnergyDesign || this.Part3D is ConverterMatterToFuelDesign || this.Part3D is ConverterRadiationToEnergyDesign || this.Part3D is ConverterMatterToPlasmaDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.ConverterBase, .125d);
             }
@@ -161,6 +171,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             else if (this.Part3D is TractorBeamDesign)
             {
                 color = WorldColors.TractorBeamBase;
+            }
+            else if (this.Part3D is PlasmaTankDesign)
+            {
+                color = WorldColors.PlasmaTank;
+            }
+            else if(this.Part3D is SwarmBayDesign)
+            {
+                color = WorldColors.SwarmBay;
             }
             else
             {

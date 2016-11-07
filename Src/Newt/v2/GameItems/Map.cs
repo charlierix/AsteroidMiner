@@ -649,13 +649,14 @@ namespace Game.Newt.v2.GameItems
         /// <remarks>
         /// I didn't want map.dispose to dispose all the physics objects, so I'm exposing this method instead
         /// </remarks>
-        public IEnumerable<IMapObject> GetAllItems()
+        /// <param name="includeDisposed">Only include dipsosed if you are debugging the map.  Any regular code shouldn't request disposed objects</param>
+        public IEnumerable<IMapObject> GetAllItems(bool includeDisposed = false)
         {
             foreach (TypeNode node in GetNodeSnapshot())        // GetNodeSnapshot returns an array.  So a thread could change the tree around, but the foreach will be working against the array that was returned
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())        // this is also working against an array, so items could be added/removed from the node, and this foreach won't see those changes
                 {
-                    if(item.IsDisposed)
+                    if(!includeDisposed && item.IsDisposed)
                     {
                         continue;
                     }
@@ -1141,6 +1142,7 @@ namespace Game.Newt.v2.GameItems
                 // Turn all the items into a snapshot
                 MapObjectInfo[] mapObjects = GetNodeSnapshot().
                     SelectMany(o => o.GetItemsSnapshot().
+                        Where(p => !p.IsDisposed).
                         Select(p => new MapObjectInfo(p, o.Key))).
                     ToArray();
 

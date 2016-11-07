@@ -664,8 +664,10 @@ namespace Game.Newt.Testers
                 #endregion
                 #region Fields
 
-                _radiation = new RadiationField();
-                _radiation.AmbientRadiation = 0d;
+                _radiation = new RadiationField()
+                {
+                    AmbientRadiation = 0d,
+                };
 
                 _gravityField = new GravityFieldUniform();
 

@@ -1,0 +1,155 @@
+﻿<Window x:Class="Game.Newt.Testers.HopfieldNetwork"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Game.Newt.Testers"
+        mc:Ignorable="d"
+        Title="HopfieldNetwork" Width="900" Height="700" Background="#E8E8E8" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <Style x:Key="panelBorder" TargetType="Border">
+            <!--<Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#1A6F6148"/>
+            <Setter Property="Background" Value="#12CCBFA7"/>-->
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+
+        <Style x:Key="goButton" TargetType="Button">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="480"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+
+        <Style x:Key="minorButton" TargetType="Button">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="300"/>
+            <Setter Property="Padding" Value="4,1"/>
+        </Style>
+
+        <Style x:Key="promptText" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="valueText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="500"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel -->
+        <Border Grid.Column="0" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+
+                    <!-- Folders -->
+                    <Expander Name="expanderFolder" IsExpanded="False" Header="Image Folders">
+                        <Border Style="{StaticResource panelBorder}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
+                                    <Button Content="Add Folder..." Style="{StaticResource goButton}" Click="AddFolder_Click"/>
+                                    <Button Content="Clear" Margin="0,4,0,0" Style="{StaticResource minorButton}" Click="ClearImages_Click"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Column="0" Grid.Row="2" Text="# images" Style="{StaticResource promptText}" Height="16" Margin="0,0,4,1" Width="48"/>
+                                <TextBlock Grid.Column="2" Grid.Row="2" Name="lblNumImages" Text="0" Style="{StaticResource valueText}" Height="17"/>
+                            </Grid>
+                        </Border>
+                    </Expander>
+
+                    <!-- Canvas Tools -->
+                    <Expander IsExpanded="True" Header="Canvas Tools">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel RadioButton.Checked="PenDarkness_Checked" RadioButton.Unchecked="PenDarkness_Checked">
+                                <Button Content="Clear" Click="ClearCanvas_Click"/>
+
+                                <RadioButton Name="radPenDark" IsChecked="True" Content="Dark" ToolTip="Light Brush" Margin="0,8,0,0"/>
+                                <RadioButton Name="radPenMed" Content="Med" ToolTip="Medium Brush"/>
+                                <RadioButton Name="radPenLight" Content="Light" ToolTip="Light Brush"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Options -->
+                    <Expander IsExpanded="False" Header="Options">
+                        <Border Style="{StaticResource panelBorder}">
+
+                            <!-- # images to use -->
+                            <!-- Initial resolution -->
+                            <!-- Final resolution -->
+
+                        </Border>
+                    </Expander>
+
+                    <!-- Loaded Images -->
+                    <Expander IsExpanded="True" Header="Loaded Images">
+                        <Border Style="{StaticResource panelBorder}">
+                            <StackPanel>
+                                <TextBox Name="txtTrainCount" Text="10"/>
+                                <Button Content="Reset" Margin="0,4,0,0" Click="Reset_Click"/>
+
+                                <!-- Thumbnails of all the loaded images -->
+                                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Auto">
+                                    <WrapPanel Name="panelTrainingImages" Orientation="Vertical"/>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Canvas -->
+        <Viewbox Grid.Column="2" Stretch="Uniform">
+            <!-- NOTE: Viewbox will only maintain aspect by scaling, not force square.  Need to manually set the width and height to a reasonable size, and square (or it will just take the size at instantiation) -->
+            <Border CornerRadius="2" BorderThickness="1" BorderBrush="#40000000" Background="#D0FFFFFF" Width="500" Height="500">
+                <InkCanvas Name="canvasInk" Background="Transparent" Cursor="Pen">
+                    <InkCanvas.Strokes>
+                        <StrokeCollection StrokesChanged="StrokeCollection_StrokesChanged"/>
+                    </InkCanvas.Strokes>
+                    <InkCanvas.DefaultDrawingAttributes>
+                        <DrawingAttributes x:Name="penAttrib" Width="25" Height="25" Color="#000000" FitToCurve="True" IgnorePressure="True" IsHighlighter="False" StylusTip="Ellipse" StylusTipTransform="Identity"/>
+                    </InkCanvas.DefaultDrawingAttributes>
+                </InkCanvas>
+            </Border>
+        </Viewbox>
+
+        <!-- Guesses -->
+        <Border Grid.Column="4" CornerRadius="4" BorderBrush="#E0E0E0" BorderThickness="1">
+            <StackPanel>
+                <Image Name="imageCurrent"/>
+
+                <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <WrapPanel Name="panelGuessedImages" Orientation="Vertical"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
+
+    </Grid>
+</Window>

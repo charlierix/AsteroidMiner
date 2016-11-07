@@ -337,7 +337,7 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
         #endregion
         #region IPartUpdatable Members
 
-        public void Update_MainThread(double elapsedTime)
+        public virtual void Update_MainThread(double elapsedTime)
         {
             Vector3D axis = this.PhysicsBody.DirectionToWorld(new Vector3D(0, 0, 1));
 

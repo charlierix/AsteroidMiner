@@ -82,6 +82,11 @@ namespace Game.Newt.v2.Arcanorum
             return SensorVisionDesign.GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
         }
 
+        public override PartToolItemBase GetToolItem()
+        {
+            throw new NotImplementedException("MotionController_Linear doesn't have a tool item class");
+        }
+
         #endregion
 
         #region Private Methods

@@ -901,9 +901,9 @@ namespace Game.HelperClassesAI
                     Parents<T> parents = GetParents(_generation, _options, _delegates);
 
 
-                    string excelDump_Generation = string.Join("\r\n", _generation.Select(o => string.Join("\t", o.Score)));
-                    string excelDump_History = string.Join("\r\n", _scoreHistory.Select(o => string.Join("\t", o)));
-                    string excelDump_Parents = GetExcelDump(parents, _options.ScoreAscendDescend.Length);
+                    //string excelDump_Generation = string.Join("\r\n", _generation.Select(o => string.Join("\t", o.Score)));
+                    //string excelDump_History = string.Join("\r\n", _scoreHistory.Select(o => string.Join("\t", o)));
+                    //string excelDump_Parents = GetExcelDump(parents, _options.ScoreAscendDescend.Length);
 
 
 

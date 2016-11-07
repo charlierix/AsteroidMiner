@@ -62,7 +62,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         /// This is the folder that all saves for this game will go
         /// This will be a subfolder of AsteroidMiner
         /// </summary>
-        private const string FOLDER = "Miner2D";
+        private const string SAVENAME = "Miner2D";
+
+        private const double STATION_BOUNDRY_PERCENT = .7;
 
         private Point3D _boundryMin;
         private Point3D _boundryMax;
@@ -73,6 +75,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         private World _world = null;
         private Map _map = null;
+
+        private RadiationField _radiation;
 
         private UpdateManager _updateManager = null;
         private MapPopulationManager _mapPopulationManager = null;
@@ -91,12 +95,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private int _material_Projectile = -1;
         private int _material_SwarmBot = -1;
 
+        private readonly ITriangle _clickPlane = new Triangle(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(0, 1, 0));
+
         private ShipExtraArgs _shipExtra = null;
+
+        private Miner2DSession _session = null;
 
         private Player _player = null;
         private SpaceStation2D[] _stations = null;
 
         private SpaceStation2D _currentlyOverStation = null;
+        private EditShipTransfer _editShipTransfer = null;
 
         private ScreenSpaceLines3D _boundryLines = null;
         private Visual3D _stars = null;
@@ -112,6 +121,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private ShipProgressBarManager _progressBars = null;
 
         private SpaceDockPanel _spaceDockPanel = null;      // this gets lazy loaded
+        private Editor _shipEditor = null;      // this gets lazy loaded
+        private Border _shipEditorBorder = null;
+        private UIElement _shipEditorManagementControl = null;
         private InfoScreen _infoScreen = null;      // this gets lazy loaded
 
         /// <summary>
@@ -124,6 +136,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 Select(o => new MineralPrice(o.MineralType, o.Price, o.Price / 2d, o.Price * 2d)).
                 OrderBy(o => o.Price).
                 ToArray());
+
+        private DateTime _nextAutoSave = GetNextAutoSaveTime();
 
         private bool _initialized = false;
 
@@ -151,14 +165,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             try
             {
                 _itemOptions = new ItemOptions();
-                _itemOptions.Thruster_StrengthRatio *= 1.5;
-                _itemOptions.FuelToThrustRatio *= .1;
+                _itemOptions.Thruster_StrengthRatio *= 4.5;
+                _itemOptions.FuelToThrustRatio *= .03;
                 _itemOptions.Projectile_Color = UtilityWPF.ColorFromHex("FFE330");        // using bee/wasp colors, because white looks too much like the stars
 
                 _progressBars = new ShipProgressBarManager(pnlProgressBars);
                 _progressBars.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("BBB"));
-
-                //TODO: Load scene from file
 
                 #region Init World
 
@@ -248,14 +260,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 //TODO: Only use this when debugging the scene
 
-                // Trackball
-                _trackball = new TrackBallRoam(_camera);
-                _trackball.KeyPanScale = 15d;
-                _trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
-                _trackball.AllowZoomOnMouseWheel = true;
-                _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete_NoLeft));
-                //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
-                _trackball.ShouldHitTestOnOrbit = true;
+                //// Trackball
+                //_trackball = new TrackBallRoam(_camera);
+                //_trackball.KeyPanScale = 15d;
+                //_trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
+                //_trackball.AllowZoomOnMouseWheel = true;
+                //_trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete_NoLeft));
+                ////_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
+                //_trackball.ShouldHitTestOnOrbit = true;
 
                 #endregion
                 #region Map
@@ -268,6 +280,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _map.ShouldSnapshotCentersDrift = true;
 
                 _map.ItemRemoved += new EventHandler<MapItemArgs>(Map_ItemRemoved);
+
+                #endregion
+                #region Radiation
+
+                //TODO: Make radiation sources instead of a constant ambient -- sort of mini stars, or something manmade looking
+                _radiation = new RadiationField()
+                {
+                    AmbientRadiation = 1,
+                };
 
                 #endregion
                 #region UpdateManager
@@ -333,21 +354,36 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Material_SwarmBot = _material_SwarmBot,
                     SwarmObjectiveStrokes = _brushStrokes,
                     RunNeural = false,
+                    Radiation = _radiation,
                 };
 
                 #endregion
 
                 CreateStars3D();      //TODO: Move this to BackImageManager
-                //CreateStars3DGrid();
-                //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
-                CreateShip(DefaultShipType.Basic);
-                //CreateShip_3DFlyer();
-                CreateSpaceStations();
+                                      //CreateStars3DGrid();
+                                      //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
+
+                if (!LoadLatestSession())
+                {
+                    CreateNewSession();
+                }
+
                 CreateAsteroids();
                 CreateMinerals();
                 //CreateProjectile();
 
                 _world.UnPause();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                SaveSession(false, false);
             }
             catch (Exception ex)
             {
@@ -364,7 +400,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 _mapForcesManager.Dispose();
 
-                _map.Dispose();		// this will dispose the physics bodies
+                _map.Dispose();     // this will dispose the physics bodies
                 _map = null;
 
                 _world.Dispose();
@@ -425,6 +461,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                     #endregion
                 }
+
+                #region Autosave
+
+                if (DateTime.UtcNow > _nextAutoSave)
+                {
+                    SaveSession(true, true);
+                    _nextAutoSave = GetNextAutoSaveTime();
+                }
+
+                #endregion
             }
             catch (Exception ex)
             {
@@ -491,7 +537,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     return;
                 }
 
-                ((ShipPlayer)bot).CollidedMineral(mineral);
+                ((ShipPlayer)bot).CollidedMineral(mineral, _world, _material_Mineral, _sharedVisuals);
             }
             catch (Exception ex)
             {
@@ -617,6 +663,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 //this.Title = "KeyDown: " + e.Key.ToString();
 
+                if(ShouldIgnoreKeyPress())
+                {
+                    return;
+                }
+
                 if (_player.Ship != null)
                 {
                     if (e.Key == Key.F1)
@@ -628,7 +679,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                         //C:\Users\<username>\AppData\Roaming\Asteroid Miner\Miner2D\
                         string foldername = UtilityCore.GetOptionsFolder();
-                        foldername = System.IO.Path.Combine(foldername, FOLDER);
+                        foldername = System.IO.Path.Combine(foldername, SAVENAME);
                         Directory.CreateDirectory(foldername);
 
                         string filename = dna.ShipName;
@@ -686,29 +737,37 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                         #endregion
                     }
-                    else if (e.Key == Key.F5)
+
+                    #region manual rotate
+                    //else if (e.Key == Key.F5)
+                    //{
+                    //    ApplyShipRotation(new Vector3D(1, 0, 0));
+                    //}
+                    //else if (e.Key == Key.F6)
+                    //{
+                    //    ApplyShipRotation(new Vector3D(-1, 0, 0));
+                    //}
+                    //else if (e.Key == Key.F7)
+                    //{
+                    //    ApplyShipRotation(new Vector3D(0, 1, 0));
+                    //}
+                    //else if (e.Key == Key.F8)
+                    //{
+                    //    ApplyShipRotation(new Vector3D(0, -1, 0));
+                    //}
+                    //else if (e.Key == Key.F9)
+                    //{
+                    //    ApplyShipRotation(new Vector3D(0, 0, 1));
+                    //}
+                    //else if (e.Key == Key.System && e.SystemKey == Key.F10)     // not sure why F10 is a system key, none of the others are
+                    //{
+                    //    ApplyShipRotation(new Vector3D(0, 0, -1));
+                    //}
+                    #endregion
+
+                    else if (e.Key == Key.F12)
                     {
-                        ApplyShipRotation(new Vector3D(1, 0, 0));
-                    }
-                    else if (e.Key == Key.F6)
-                    {
-                        ApplyShipRotation(new Vector3D(-1, 0, 0));
-                    }
-                    else if (e.Key == Key.F7)
-                    {
-                        ApplyShipRotation(new Vector3D(0, 1, 0));
-                    }
-                    else if (e.Key == Key.F8)
-                    {
-                        ApplyShipRotation(new Vector3D(0, -1, 0));
-                    }
-                    else if (e.Key == Key.F9)
-                    {
-                        ApplyShipRotation(new Vector3D(0, 0, 1));
-                    }
-                    else if (e.Key == Key.System && e.SystemKey == Key.F10)
-                    {
-                        ApplyShipRotation(new Vector3D(0, 0, -1));
+                        DebugMethod_F12();
                     }
                 }
 
@@ -738,6 +797,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 //this.Title = "KeyUp: " + e.Key.ToString();
 
+                if (ShouldIgnoreKeyPress())
+                {
+                    return;
+                }
+
                 if (_player.Ship != null)
                 {
                     _player.Ship.KeyUp(e.Key);
@@ -751,7 +815,18 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private readonly ITriangle _clickPlane = new Triangle(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(0, 1, 0));
+        /// <summary>
+        /// This method is named from the perspective of the miner window intercepting the keypress.  So if the miner window ignores it, then
+        /// the keypress will be handled normally by whatever control has focus
+        /// </summary>
+        private bool ShouldIgnoreKeyPress()
+        {
+            return (
+                panelContainer.Child != null && panelContainer.Visibility == Visibility.Visible &&      // some panel is visible
+                (_shipEditorBorder != null && panelContainer.Child == _shipEditorBorder) ||
+                (_spaceDockPanel != null && panelContainer.Child == _spaceDockPanel)
+                );
+        }
 
         private void grdViewPort_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -819,6 +894,102 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
+        private void Load_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                #region unit tests
+
+                //Func<ISessionOptions> getSession = new Func<ISessionOptions>(() => new Miner2DSession());
+                //Func<ISessionOptions> getSession = null;
+
+                //var result1 = SessionSaveLoad.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner", SAVENAME, getSession);
+                //var result2 = SessionSaveLoad.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Miner2D", SAVENAME, getSession);
+                //var result3 = SessionSaveLoad.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Miner2D\Session 2016-10-23 21.17.36.641", SAVENAME, getSession);
+                //var result4 = SessionSaveLoad.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Miner2D\Session 2016-10-23 21.17.36.641\Save 2016-10-23 21.17.36.654", SAVENAME, getSession);
+                //var result5 = SessionSaveLoad.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Ships", SAVENAME, getSession);
+
+                #endregion
+
+                System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+
+                if (_session != null && _session.LatestSessionFolder != null)
+                {
+                    dialog.SelectedPath = _session.LatestSessionFolder;
+                }
+                else
+                {
+                    string baseFolder = UtilityCore.GetOptionsFolder();
+
+                    baseFolder = System.IO.Path.Combine(baseFolder, SAVENAME);
+                    if (Directory.Exists(baseFolder))
+                    {
+                        dialog.SelectedPath = baseFolder;
+                    }
+                }
+
+                dialog.Description = "Select save folder";
+                if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                {
+                    return;
+                }
+
+                // Save the current session first
+                SaveSession(false, false);
+
+                SessionFolderResults results = SessionSaveLoad.Load(dialog.SelectedPath, SAVENAME, () => new Miner2DSession());
+
+                if (!LoadSession(results))
+                {
+                    MessageBox.Show("Couldn't load the session", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void New_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CreateNewSession();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string help = @"Fly around, shoot asteroids, pick up minerals, buy/sell from space station, modify your ship
+
+Eventually, there will be AI bots to watch/help/kill
+
+Standard Keys:
+    ASDW Arrows - fly ship
+    Shift - 100% thrust
+    Ctrl - fire gun
+    Tab - map
+    Space - dock with space station
+
+Cheat Keys:
+    F1 - save ship to file
+    F2 - full stop
+    F3 - free money
+    F4 - refill containers
+    F12 - private debug method";
+
+                MessageBox.Show(help, this.Title, MessageBoxButton.OK, MessageBoxImage.Question);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void btnFullMap_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -836,6 +1007,29 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             try
             {
                 HideDialog();
+                SaveSession(false, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void SpaceDockPanel_EditShip(object sender, EventArgs e)
+        {
+            try
+            {
+                ShowShipEditor();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void CloseShipEditor_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CloseShipEditor();
             }
             catch (Exception ex)
             {
@@ -872,7 +1066,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             if (_spaceDockPanel == null)
             {
                 _spaceDockPanel = new SpaceDockPanel(_editorOptions, _itemOptions, _map, _material_Ship, _shipExtra);
-                _spaceDockPanel.LaunchShip += new EventHandler(SpaceDockPanel_LaunchShip);
+                _spaceDockPanel.LaunchShip += SpaceDockPanel_LaunchShip;
+                _spaceDockPanel.EditShip += SpaceDockPanel_EditShip;
             }
 
             _spaceDockPanel.ShipDocking(_player, station, _world);
@@ -882,6 +1077,87 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             panelContainer.Child = _spaceDockPanel;
             panelContainer.Visibility = Visibility.Visible;
         }
+
+        private void ShowShipEditor()
+        {
+            // Spacedock is currently showing.  Need to keep it alive, but change out panels
+
+            SaveSession(false, false);      // the editor can be unstable, so this is a good spot to save
+
+            if (_shipEditor == null)
+            {
+                #region instantiate _shipEditor
+
+                StackPanel panel = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal,
+                };
+
+                //TODO: Make Ok, Cancel, Apply instead
+
+                Button button = new Button()
+                {
+                    FontSize = 20,
+                    FontWeight = FontWeights.Bold,
+                    Padding = new Thickness(12, 4, 12, 4),
+                    Content = "Close",
+                };
+                button.Click += CloseShipEditor_Click;
+                panel.Children.Add(button);
+
+                _shipEditorManagementControl = panel;
+
+                _shipEditor = new Editor();
+
+                var resouceDict = new ResourceDictionary()
+                {
+                    Source = new Uri("/Game.Newt.v2.AsteroidMiner;component/AstMin2D/Stylesheet.xaml", UriKind.RelativeOrAbsolute),
+                };
+
+                _shipEditorBorder = new Border()
+                {
+                    Style = resouceDict["dialogBorder"] as Style,
+                    Child = _shipEditor,
+                };
+
+                #endregion
+            }
+
+            _editShipTransfer = new EditShipTransfer(_player, _spaceDockPanel, _shipEditor, _editorOptions, _world, _material_Ship, _map, _shipExtra);
+
+            _editShipTransfer.EditShip(this.Title, _shipEditorManagementControl);
+
+
+            //TODO: Uncomment to see contents of view model
+            //TabDebugWindow debugWindow = new TabDebugWindow(_shipEditor.TabControl_DEBUG);
+            //debugWindow.Owner = this;
+            ////debugWindow.Top = this.Top + this.ActualHeight - 200;
+            ////debugWindow.Left = this.Left + this.ActualWidth - 200;
+            //debugWindow.Show();
+
+
+            panelContainer.Child = _shipEditorBorder;
+        }
+        private void CloseShipEditor()
+        {
+            if (_spaceDockPanel == null)
+            {
+                // Ship editor can only be shown from space dock.  So this should never be null at this point
+                throw new InvalidOperationException("SpaceDock can't be null if ship editor was showing");
+            }
+
+            if (!_editShipTransfer.ShipEdited())
+            {
+                //TODO: Only show for a few seconds
+                statusMessage.Content = "Invalid Ship - ignoring changes";
+            }
+
+            _editShipTransfer = null;
+
+            // Just swap out the controls (panelContainer is currently showing the editor)
+            panelContainer.Child = _spaceDockPanel;
+        }
+
         private void ShowInfoScreen()
         {
             PauseWorld();
@@ -909,6 +1185,21 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             ResumeWorld();
         }
 
+        private static DesignPart CreateDesignPart(ShipPartDNA dna, EditorOptions options)
+        {
+            DesignPart retVal = new DesignPart(options)
+            {
+                Part2D = null,      // setting 2D to null will tell the editor that the part can't be resized or copied, only moved around
+                Part3D = BotConstructor.GetPartDesign(dna, options),
+            };
+
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = retVal.Part3D.Model;
+            retVal.Model = visual;
+
+            return retVal;
+        }
+
         private void PauseWorld()
         {
             _world.Pause();
@@ -919,6 +1210,146 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             darkPlate.Visibility = Visibility.Collapsed;
 
             _world.UnPause();
+        }
+
+        private void CreateNewSession()
+        {
+            DefaultShipType[] shipTypes = new[]
+            {
+                DefaultShipType.Basic,
+                DefaultShipType.Horseshoe,
+                DefaultShipType.Pusher,
+                DefaultShipType.Star,
+            };
+
+            CreateShip(shipTypes[StaticRandom.Next(shipTypes.Length)]);
+            //CreateShip(DefaultShipType.Basic);
+            //CreateShip_3DFlyer();
+            //CreateShip_FromFile();
+
+            _player.Credits = 100;
+
+            CreateSpaceStations();
+
+            _session = null;
+        }
+        private void SaveSession(bool async, bool pruneAutosavesAfter)
+        {
+            Miner2DSession session = _session ?? new Miner2DSession();
+            _session = session;
+
+            List<Tuple<string, object>> items = new List<Tuple<string, object>>();
+
+            // Player
+            items.Add(new Tuple<string, object>("Player", new PlayerDNA()
+            {
+                Ship = _player.Ship.GetNewDNA(),
+
+                Energy = _player.Ship.Energy != null ? _player.Ship.Energy.QuantityCurrent : 0d,
+                Plasma = _player.Ship.Plasma != null ? _player.Ship.Plasma.QuantityCurrent : 0d,
+                Fuel = _player.Ship.Fuel != null ? _player.Ship.Fuel.QuantityCurrent : 0d,
+                Ammo = _player.Ship.Ammo != null ? _player.Ship.Ammo.QuantityCurrent : 0d,
+
+                Credits = _player.Credits,
+            }));
+
+            // CargoBay Contents
+            if (_player.Ship != null && _player.Ship.CargoBays != null)
+            {
+                Cargo[] cargo = _player.Ship.CargoBays.GetCargoSnapshot();
+                if (cargo != null && cargo.Length > 0)
+                {
+                    items.AddRange(cargo.Select((o, i) => new Tuple<string, object>("Cargo_" + i.ToString(), o.GetNewDNA())));
+                }
+            }
+
+            // Stations
+            items.AddRange(_stations.Select((o, i) => new Tuple<string, object>("Station_" + i.ToString(), o.GetNewDNA())));
+
+            SessionSaveLoad.Save(SAVENAME, session, items, false);
+
+            if (pruneAutosavesAfter)
+            {
+                SessionSaveLoad.PruneAutosaves(session.LatestSessionFolder);
+            }
+        }
+        private bool LoadLatestSession()
+        {
+            SessionFolderResults results = SessionSaveLoad.Load(SAVENAME, () => new Miner2DSession());
+            return LoadSession(results);
+        }
+        private bool LoadSession(SessionFolderResults results)
+        {
+            if (results == null || results.SavedFiles == null)
+            {
+                return false;
+            }
+
+            #region group classes
+
+            SpaceStation2DDNA[] stations = results.SavedFiles.
+                Select(o => o.Item2 as SpaceStation2DDNA).
+                Where(o => o != null).
+                ToArray();
+
+            PlayerDNA player = results.SavedFiles.
+                Select(o => o.Item2 as PlayerDNA).
+                FirstOrDefault(o => o != null);
+
+            CargoDNA[] cargo = results.SavedFiles.
+                Select(o => o.Item2 as CargoDNA).
+                Where(o => o != null).
+                ToArray();
+
+            #endregion
+
+            if (player == null || player.Ship == null || stations == null || stations.Length == 0)
+            {
+                return false;
+            }
+
+            // Session
+            _session = results.SessionFile as Miner2DSession;       // could be null
+
+            // Stations
+            CreateSpaceStations(stations);
+
+            #region player
+
+            CreateShip(player.Ship);        // this stores it in _player
+
+            if (_player.Ship.Energy != null)
+            {
+                _player.Ship.Energy.QuantityCurrent = player.Energy;
+            }
+            if (_player.Ship.Plasma != null)
+            {
+                _player.Ship.Plasma.QuantityCurrent = player.Plasma;
+            }
+            if (_player.Ship.Fuel != null)
+            {
+                _player.Ship.Fuel.QuantityCurrent = player.Fuel;
+            }
+            if (_player.Ship.Ammo != null)
+            {
+                _player.Ship.Ammo.QuantityCurrent = player.Ammo;
+            }
+
+            if (_player.Ship.CargoBays != null && cargo != null && cargo.Length > 0)
+            {
+                foreach (CargoDNA cargoDNA in cargo)
+                {
+                    _player.Ship.CargoBays.Add(cargoDNA.ToCargo());
+                }
+            }
+
+            _player.Ship.RecalculateMass();
+
+            _player.Credits = player.Credits;
+
+            #endregion
+
+            return true;
         }
 
         private void CreateStars3D()
@@ -1015,9 +1446,24 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             const double ZMIN = -20;
             const double ZMAX = -12;
 
-            double xyCoord = _boundryMax.X * .7;
+            double xyCoord = _boundryMax.X * STATION_BOUNDRY_PERCENT;
             double zCoord = StaticRandom.NextDouble(ZMIN, ZMAX);
             double minDistanceBetweenStationsSquared = 200d * 200d;
+
+            #region clear the old
+
+            if (_stations != null)
+            {
+                foreach (var station in _stations)
+                {
+                    _map.RemoveItem(station);
+                }
+            }
+
+            _currentlyOverStation = null;
+            _stations = null;
+
+            #endregion
 
             List<SpaceStation2D> stations = new List<SpaceStation2D>();
 
@@ -1067,19 +1513,101 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             _stations = stations.ToArray();
         }
-        private SpaceStation2D CreateSpaceStations_Build(Point3D position)
+        private void CreateSpaceStations(SpaceStation2DDNA[] dna)
+        {
+            #region clear the old
+
+            if (_stations != null)
+            {
+                foreach (var station in _stations)
+                {
+                    _map.RemoveItem(station);
+                }
+            }
+
+            _currentlyOverStation = null;
+            _stations = null;
+
+            #endregion
+
+            if (dna == null || dna.Length == 0)
+            {
+                return;
+            }
+
+            #region get normalized positions
+
+            var positionStats = dna.
+                Select((o, i) =>
+                {
+                    Vector vect = o.Position.ToVector2D();
+
+                    return new
+                    {
+                        Index = i,
+                        Pos = o.Position,
+                        Pos2D = vect,
+                        LenSqr = vect.LengthSquared,
+                    };
+                }).
+                OrderByDescending(o => o.LenSqr).
+                ToArray();
+
+            // Take the largest distance, scale to this
+            double xyCoord = _boundryMax.X * STATION_BOUNDRY_PERCENT;
+            xyCoord *= StaticRandom.NextDouble(.75, 1d);        // don't always want to run the farthest to the edge
+
+            double multiplier = 1d;
+            if (!positionStats[0].LenSqr.IsNearZero())
+            {
+                multiplier = xyCoord / Math.Sqrt(positionStats[0].LenSqr);
+            }
+
+            // Overwrite the positions
+            foreach (var stat in positionStats)
+            {
+                dna[stat.Index].Position = (stat.Pos2D * multiplier).ToPoint3D(stat.Pos.Z);
+            }
+
+            #endregion
+
+            List<SpaceStation2D> stations = new List<SpaceStation2D>();
+
+            foreach (SpaceStation2DDNA stationDNA in dna)
+            {
+                Inventory[] inventory = null;
+                if (stationDNA.PlayerInventory != null)
+                {
+                    inventory = stationDNA.PlayerInventory.
+                        Select(o => o.ToInventory()).
+                        ToArray();
+                }
+
+                stations.Add(CreateSpaceStations_Build(stationDNA.Position, stationDNA.Flag, stationDNA.PurchasedVolume, inventory));
+            }
+
+            _stations = stations.ToArray();
+        }
+        private SpaceStation2D CreateSpaceStations_Build(Point3D position, FlagProps flag = null, int? purchasedVolume = null, Inventory[] playerInventory = null)
         {
             Vector3D axis = new Vector3D(0, 0, 1);
             Quaternion rotation = Math3D.GetRotation(axis, Math3D.GetRandomVector_Cone(axis, 30));
 
-            SpaceStation2D retVal = new SpaceStation2D(position, _world, _material_SpaceStation, rotation);
+            SpaceStation2D retVal = new SpaceStation2D(position, _world, _material_SpaceStation, rotation, flag);
 
             retVal.SpinDegreesPerSecond = Math1D.GetNearZeroValue(.33, 1.1);
 
             retVal.RandomizeInventory(true);
 
-            //TODO: Comment this out when finished testing
-            //retVal.StationInventory.AddRange(UtilityCore.GetEnums<DefaultShipType>().Select(o => new Inventory(DefaultShips.GetDNA(o), 1d)));
+            if (purchasedVolume != null && purchasedVolume.Value > retVal.PurchasedVolume)
+            {
+                retVal.PurchasedVolume = purchasedVolume.Value;
+            }
+
+            if (playerInventory != null)
+            {
+                retVal.PlayerInventory.AddRange(playerInventory);
+            }
 
             _map.AddItem(retVal);
 
@@ -1182,28 +1710,28 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             for (int cntr = 0; cntr < 20; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Ice, position);
+                CreateMinerals_Build(MineralType.Ice, position);
             }
 
             for (int cntr = 0; cntr < 15; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Graphite, position);
+                CreateMinerals_Build(MineralType.Graphite, position);
             }
 
             for (int cntr = 0; cntr < 10; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Diamond, position);
+                CreateMinerals_Build(MineralType.Diamond, position);
             }
 
             for (int cntr = 0; cntr < 3; cntr++)
             {
                 position = Math3D.GetRandomVector_Circular(minPos, maxPos).ToPoint();
-                CreateMineralsSprtBuild(MineralType.Emerald, position);
+                CreateMinerals_Build(MineralType.Emerald, position);
             }
         }
-        private void CreateMineralsSprtBuild(MineralType mineralType, Point3D position)
+        private void CreateMinerals_Build(MineralType mineralType, Point3D position)
         {
             double volume = StaticRandom.NextPercent(ItemOptionsAstMin2D.MINERAL_AVGVOLUME, 2);
             decimal credits = ItemOptionsAstMin2D.GetCredits_Mineral(mineralType, volume);
@@ -1229,6 +1757,10 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
+        private void CreateShip(DefaultShipType type)
+        {
+            CreateShip(DefaultShips.GetDNA(type));
+        }
         private void CreateShip_3DFlyer()
         {
             List<ShipPartDNA> parts = new List<ShipPartDNA>();
@@ -1249,11 +1781,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             CreateShip(dna);
         }
-        private void CreateShip(DefaultShipType type)
+        private void CreateShip_FromFile()
         {
-            CreateShip(DefaultShips.GetDNA(type));
+            string filename = @"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Miner2D\gun fail.xml";
+
+            ShipDNA dna = UtilityCore.DeserializeFromFile<ShipDNA>(filename);
+
+            CreateShip(dna);
         }
-        private ShipPlayer CreateShip(ShipDNA dna, bool shouldRotate = true)
+        private ShipPlayer CreateShip(ShipDNA dna)
         {
             ShipPlayer ship = ShipPlayer.GetNewShip(dna, _world, _material_Ship, _map, _shipExtra);
 
@@ -1293,7 +1829,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private static MineralDNA[] GetMineralsFromDestroyedAsteroid(double destroyedMass)
         {
             //const double MASS_MONEY_RATIO = 1d / 750d;
-            const double MASS_MONEY_RATIO = 1d / 600d;
+            //const double MASS_MONEY_RATIO = 1d / 600d;
+            const double MASS_MONEY_RATIO = 1d / 100d;
 
             Random rand = StaticRandom.GetRandomForThread();
 
@@ -1371,6 +1908,34 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             #endregion
 
             return retVal.ToArray();
+        }
+
+        /// <summary>
+        /// This gets called when they push F12.  Use it to diagnose whatever problem you're having at the time
+        /// </summary>
+        private void DebugMethod_F12()
+        {
+            IMapObject[] all = _map.GetAllItems(true).
+                ToArray();
+
+
+            // Created a ghost mineral by bumping into it.  Looks like the ship tried to take it, but failed.  So a disposed mineral is now floating around the map
+            // Actually, the ship may have successfully taken it, but the map didn't remove it
+            IMapObject[] disposed = all.
+                Where(o => o.IsDisposed).
+                ToArray();
+
+            Point3D shipPos = _player.Ship.PositionWorld;
+
+            var energy = _player.Ship.Energy;
+            var rad = _radiation;
+
+
+        }
+
+        private static DateTime GetNextAutoSaveTime()
+        {
+            return DateTime.UtcNow + TimeSpan.FromMinutes(StaticRandom.NextPercent(3, .2));
         }
 
         #endregion

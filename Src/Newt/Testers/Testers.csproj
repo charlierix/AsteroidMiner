@@ -179,6 +179,9 @@
     <Compile Include="EvenDistributionCube.xaml.cs">
       <DependentUpon>EvenDistributionCube.xaml</DependentUpon>
     </Compile>
+    <Compile Include="HopfieldNetwork.xaml.cs">
+      <DependentUpon>HopfieldNetwork.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MadShatter.xaml.cs">
       <DependentUpon>MadShatter.xaml</DependentUpon>
     </Compile>
@@ -440,6 +443,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="EvenDistributionCube.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="HopfieldNetwork.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

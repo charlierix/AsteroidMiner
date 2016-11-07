@@ -161,6 +161,83 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         public static decimal GetCredits_ShipPart_Base(string partType)
         {
+            const decimal BASE = 18m;
+
+            switch (partType)
+            {
+                case FuelTank.PARTTYPE:
+                case EnergyTank.PARTTYPE:
+                case PlasmaTank.PARTTYPE:
+                case AmmoBox.PARTTYPE:
+                    return BASE * 1m;
+
+                case CargoBay.PARTTYPE:
+                    return BASE * 1.5m;
+
+                case HangarBay.PARTTYPE:
+                    return BASE * 10m;
+
+                case SwarmBay.PARTTYPE:
+                    return BASE * 20m;
+
+                case Thruster.PARTTYPE:
+                    return BASE * 1m;
+
+                case Brain.PARTTYPE:
+                case BrainRGBRecognizer.PARTTYPE:
+                    return BASE * 1m;
+
+                case CameraColorRGB.PARTTYPE:
+                case Eye.PARTTYPE:
+                case SensorCollision.PARTTYPE:
+                case SensorFluid.PARTTYPE:
+                case SensorGravity.PARTTYPE:
+                case SensorInternalForce.PARTTYPE:
+                case SensorNetForce.PARTTYPE:
+                case SensorRadiation.PARTTYPE:
+                case SensorSpin.PARTTYPE:
+                case SensorTractor.PARTTYPE:
+                case SensorVelocity.PARTTYPE:
+                    return BASE * .5m;
+
+                case ConverterEnergyToAmmo.PARTTYPE:
+                case ConverterEnergyToFuel.PARTTYPE:
+                case ConverterEnergyToPlasma.PARTTYPE:
+                case ConverterFuelToEnergy.PARTTYPE:
+                case ConverterMatterToAmmo.PARTTYPE:
+                case ConverterMatterToEnergy.PARTTYPE:
+                case ConverterMatterToPlasma.PARTTYPE:
+                case ConverterMatterToFuel.PARTTYPE:
+                case ConverterRadiationToEnergy.PARTTYPE:
+                    return BASE * 60m;
+
+                case SelfRepair.PARTTYPE:
+                    return BASE * 150m;
+
+                case ShieldEnergy.PARTTYPE:
+                case ShieldKinetic.PARTTYPE:
+                case ShieldTractor.PARTTYPE:
+                    return BASE * 40m;
+
+                case TractorBeam.PARTTYPE:
+                    return BASE * 7m;
+
+                case ProjectileGun.PARTTYPE:
+                    return BASE * 4m;
+                case BeamGun.PARTTYPE:
+                    return BASE * 5m;
+                case GrappleGun.PARTTYPE:
+                    return BASE * 3m;
+
+                default:
+                    return 20m;
+            }
+        }
+
+        private static decimal GetCredits_ShipPart_Base_CHEAPFLAT(string partType)
+        {
+            // the prices are a bit too flat (exotic parts should cost a lot more)
+
             const decimal BASE = 12m;
 
             switch (partType)
@@ -202,6 +279,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 case ConverterEnergyToAmmo.PARTTYPE:
                 case ConverterEnergyToFuel.PARTTYPE:
+                case ConverterEnergyToPlasma.PARTTYPE:
                 case ConverterFuelToEnergy.PARTTYPE:
                 case ConverterMatterToAmmo.PARTTYPE:
                 case ConverterMatterToEnergy.PARTTYPE:

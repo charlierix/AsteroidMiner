@@ -343,7 +343,8 @@ namespace Game.Newt.v2.GameItems
                 //NOTE: Throwing a min in there, because if I have breakpoints set elsewhere, and resume after awhile, elapsed time will be
                 //huge, and the calculated next transer time will be obscene.  In those cases, the odds are good that the bot will be fairly young
                 //so a simple 110% of age should be enough of a safeguard
-                _nextMatterTransferTime = Math.Min(age * 1.1, age + (elapsedTime * StaticRandom.Next(80, 120)));      // no need to spin the processor unnecessarily each tick
+                //_nextMatterTransferTime = Math.Min(age * 1.1, age + (elapsedTime * StaticRandom.Next(80, 120)));      // no need to spin the processor unnecessarily each tick
+                _nextMatterTransferTime = Math.Min(age * 1.1, age + (elapsedTime * StaticRandom.Next(20, 60)));      // no need to spin the processor unnecessarily each tick
             }
 
             #endregion

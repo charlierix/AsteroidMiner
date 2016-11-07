@@ -32,6 +32,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         #region Events
 
         public event EventHandler LaunchShip = null;
+        public event EventHandler EditShip = null;
 
         #endregion
 
@@ -49,6 +50,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private const string ACTION_VIEW = "View";
         private const string ACTION_BUY = "Buy";
         private const string ACTION_SELL = "Sell";
+        private const string ACTION_SCRAP = "Scrap";        // convert an owned ship into parts
         private const string ACTION_HANGAR = "Hangar";        // store in hangar
         private const string ACTION_USE = "Use";        // store in ship
         private const string ACTION_REMOVE = "Remove";        // remove from ship/hangar into free space
@@ -57,10 +59,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private readonly string[] _actions_Station_Parts = new[] { ACTION_VIEW, ACTION_BUY };
         private readonly string[] _actions_Station_Minerals = new[] { ACTION_VIEW, ACTION_BUY };
 
-        //TODO: allow renaming ships (also need an option for the current ship)
-        private readonly string[] _actions_Player_Cargo = new[] { ACTION_VIEW, ACTION_SELL, ACTION_HANGAR, ACTION_REMOVE };
-        private readonly string[] _actions_Player_Hangar = new[] { ACTION_VIEW, ACTION_SELL, ACTION_USE, ACTION_REMOVE };
-        private readonly string[] _actions_Player_FreeSpace = new[] { ACTION_VIEW, ACTION_SELL, ACTION_USE, ACTION_HANGAR };
+        //TODO: allow renaming ships (also need an option for the current ship) --- this can be done when editing a ship
+        private readonly string[] _actions_Player_Cargo_ship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_SCRAP, ACTION_HANGAR, ACTION_REMOVE };
+        private readonly string[] _actions_Player_Hangar_ship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_SCRAP, ACTION_USE, ACTION_REMOVE };
+        private readonly string[] _actions_Player_FreeSpace_ship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_SCRAP, ACTION_USE, ACTION_HANGAR };
+
+        private readonly string[] _actions_Player_Cargo_nonship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_HANGAR, ACTION_REMOVE };
+        private readonly string[] _actions_Player_Hangar_nonship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_USE, ACTION_REMOVE };
+        private readonly string[] _actions_Player_FreeSpace_nonship = new[] { ACTION_VIEW, ACTION_SELL, ACTION_USE, ACTION_HANGAR };
 
         private readonly EditorOptions _editorOptions;
         private readonly ItemOptions _itemOptions;
@@ -128,9 +134,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             OnHangarChanged();
 
-            //TODO: Finish showing all the panels
             ShowStationMinerals();
-            //ShowStationParts();
+            ShowStationParts();
             ShowStationShips(world);
 
             ShowShipCargo();
@@ -140,13 +145,39 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             GenerateRefillButtons();
         }
 
+        //TODO: There should be a viewmodel instead of implementing all of this list->panel logic here
+        public void AddInventory(Inventory inventory, bool isPlayerOwned)
+        {
+            if (isPlayerOwned)
+            {
+                string name = GetName(inventory);
+                StoreIn_Hangar_Nearby(inventory, name);
+            }
+            else
+            {
+                StoreIn_Mineral_Part_Ship(inventory);
+            }
+        }
+        public void RemoveInventory(InventoryEntry entry, bool isPlayerOwned)
+        {
+            if (isPlayerOwned)
+            {
+                RemoveFrom_Cargo_Hangar_Neaby(entry);
+            }
+            else
+            {
+                RemoveFrom_Mineral_Part_Ship(entry);
+            }
+        }
+
         #endregion
 
         #region Event Listeners
 
         private void UserControl_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            const double MINWIDTH = 280;
+            //const double MINWIDTH = 280;
+            const double MINWIDTH = 310;
 
             try
             {
@@ -207,6 +238,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 }
 
                 GenerateRefillButtons();
+                ShowShipCargo();
             }
             catch (Exception ex)
             {
@@ -355,6 +387,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                         #endregion
                         break;
 
+                    case ACTION_SCRAP:
+                        if (e.Inventory.Ship != null)
+                        {
+                            ScrapShip(entry);
+                        }
+                        else
+                        {
+                            throw new ApplicationException("can only scrap ships");     // should also warn the user that scrapping can't be reversed
+                        }
+                        break;
+
                     case ACTION_USE:
                         #region Use
 
@@ -467,6 +510,24 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
+        private void EditShip_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (this.EditShip == null)
+                {
+                    MessageBox.Show("There is no event listener for the edit button", "Edit Button", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                this.EditShip(this, new EventArgs());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnLaunch_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -552,9 +613,29 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             StoreIn_Mineral_Part_Ship(entry.Inventory);
         }
 
+        private void ScrapShip(InventoryEntry entry)
+        {
+            if (entry == null || entry.Inventory == null || entry.Inventory.Ship == null)
+            {
+                throw new ArgumentException("entry is/contains null");
+            }
+
+            // Remove the old entry
+            RemoveFrom_Cargo_Hangar_Neaby(entry);
+
+            // Pull all the parts out of the ship, and turn them into inventory
+            foreach (ShipPartDNA part in entry.Inventory.Ship.PartsByLayer.Values.SelectMany(o => o))
+            {
+                Inventory inventory = new Inventory(part);
+                string name = GetName(inventory);
+
+                StoreIn_Cargo_Hangar_Nearby(inventory, name);
+            }
+        }
+
         private async void SwapShip(InventoryEntry entry)
         {
-            const double STARTPERCENT = .25;
+            const double STARTPERCENT = .25;        // don't make it too high, or they will cheat and switch ships to refuel
 
 
 
@@ -623,7 +704,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
             else if (inventory.Part != null)
             {
-                throw new ApplicationException("finish this");
+                AddStationPartGraphic(inventory);
             }
             else if (inventory.Mineral != null)
             {
@@ -665,23 +746,23 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             if (_station.PurchasedVolume - _station.UsedVolume >= inventory.Volume)
             {
                 // Hangar
-                actions = _actions_Player_Hangar;
+                actions = inventory.Ship != null ? _actions_Player_Hangar_ship : _actions_Player_Hangar_nonship;
                 panel = pnlHangar;
                 isHangar = true;
             }
             else
             {
                 // Nearby
-                actions = _actions_Player_FreeSpace;
+                actions = inventory.Ship != null ? _actions_Player_FreeSpace_ship : _actions_Player_FreeSpace_nonship;
                 panel = pnlNearbyItems;
                 isHangar = false;
             }
 
             // Create an entry with the sell price
-            decimal credits = _station.GetPrice_Sell(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Sell(inventory);
 
             InventoryEntry newEntry = new InventoryEntry();
-            newEntry.SetInventory(inventory, name, credits, _world, actions);
+            newEntry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, actions, _editorOptions);
 
             // Store it
             //panel.Children.Add(newEntry);
@@ -696,15 +777,21 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         private void StoreIn_Cargo_Hangar_Nearby(Inventory inventory, string name)
         {
-            if (inventory.Mineral == null)
+            Cargo cargo = null;
+            if (inventory.Mineral != null)
             {
-                //TODO: Also support storing other than mineral
+                cargo = new Cargo_Mineral(inventory.Mineral.MineralType, inventory.Mineral.Density, inventory.Mineral.Volume);
+            }
+            else if (inventory.Part != null)
+            {
+                cargo = new Cargo_ShipPart(inventory.Part, _itemOptions, _editorOptions);
+            }
+            else
+            {
                 throw new ApplicationException("finish this");
             }
 
-            Cargo_Mineral cargo = new Cargo_Mineral(inventory.Mineral.MineralType, inventory.Mineral.Density, inventory.Mineral.Volume);
-
-            if (_player.Ship.CargoBays.Add(cargo))
+            if (_player.Ship.CargoBays != null && _player.Ship.CargoBays.Add(cargo))
             {
                 AddShipCargoGraphic(inventory);
             }
@@ -716,13 +803,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void StoreIn_Nearby(Inventory inventory, string name)
         {
             // Create an entry with the sell price
-            decimal credits = _station.GetPrice_Sell(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Sell(inventory);
+
+            string[] actions = inventory.Ship != null ?
+                _actions_Player_FreeSpace_ship :
+                _actions_Player_FreeSpace_nonship;
 
             InventoryEntry newEntry = new InventoryEntry();
-            newEntry.SetInventory(inventory, name, credits, _world, _actions_Player_FreeSpace);
+            newEntry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, actions, _editorOptions);
 
             // Store it
-            //pnlNearbyItems.Children.Add(newEntry);
             AddToPanel(pnlNearbyItems, newEntry);
             InventoryEntryAdded(newEntry);
         }
@@ -741,10 +831,10 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 {
                     _player.Ship.CargoBays.RemoveMineral_Volume(entry.Inventory.Mineral.MineralType, entry.Inventory.Mineral.Volume);
                 }
-                //else if (entry.Inventory.Part != null)
-                //{
-
-                //}
+                else if (entry.Inventory.Part != null)
+                {
+                    _player.Ship.CargoBays.RemovePart(entry.Inventory.Part);
+                }
                 else
                 {
                     throw new ApplicationException("Unknown type of entry");
@@ -796,13 +886,40 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void AddStationShipGraphic(Inventory inventory)
         {
             string name = GetName(inventory);
-            decimal credits = _station.GetPrice_Buy(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Buy(inventory);
 
             InventoryEntry entry = new InventoryEntry();
-            entry.SetInventory(inventory, name, credits, _world, _actions_Station_Ships);
+            entry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, _actions_Station_Ships, _editorOptions);
 
-            //pnlStationShips.Children.Add(entry);
             AddToPanel(pnlStationShips, entry);
+
+            InventoryEntryAdded(entry);
+        }
+
+        private void ShowStationParts()
+        {
+            // Clear old
+            foreach (InventoryEntry entry in pnlStationParts.Children)
+            {
+                InventoryEntryRemoved(entry);
+            }
+            pnlStationParts.Children.Clear();
+
+            // Add new
+            foreach (Inventory inventory in _station.StationInventory.Where(o => o.Part != null))
+            {
+                AddStationPartGraphic(inventory);
+            }
+        }
+        private void AddStationPartGraphic(Inventory inventory)
+        {
+            string name = GetName(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Buy(inventory);
+
+            InventoryEntry entry = new InventoryEntry();
+            entry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, _actions_Station_Parts, _editorOptions);
+
+            AddToPanel(pnlStationParts, entry);
 
             InventoryEntryAdded(entry);
         }
@@ -825,12 +942,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void AddStationMineralGraphic(Inventory inventory)
         {
             string name = GetName(inventory);
-            decimal credits = _station.GetPrice_Buy(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Buy(inventory);
 
             InventoryEntry entry = new InventoryEntry();
-            entry.SetInventory(inventory, name, credits, _world, _actions_Station_Minerals);
+            entry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, _actions_Station_Minerals, _editorOptions);
 
-            //pnlStationMinerals.Children.Add(entry);
             AddToPanel(pnlStationMinerals, entry);
 
             InventoryEntryAdded(entry);
@@ -855,7 +971,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 Inventory inventory = null;
 
-                switch (cargo.CargoType)
+                switch (cargo.Type)
                 {
                     case CargoType.Mineral:
                         Cargo_Mineral cargoMineral = (Cargo_Mineral)cargo;
@@ -864,11 +980,11 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                     case CargoType.ShipPart:
                         Cargo_ShipPart part = (Cargo_ShipPart)cargo;
-                        inventory = new Inventory(part.DNA, 1, 1);
+                        inventory = new Inventory(part.PartDNA);
                         break;
 
                     default:
-                        throw new ApplicationException("Unknown CargoType: " + cargo.CargoType.ToString());
+                        throw new ApplicationException("Unknown CargoType: " + cargo.Type.ToString());
                 }
 
                 AddShipCargoGraphic(inventory);
@@ -877,10 +993,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void AddShipCargoGraphic(Inventory inventory)
         {
             string name = GetName(inventory);
-            decimal credits = _station.GetPrice_Sell(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Sell(inventory);
+
+            string[] actions = inventory.Ship != null ?
+                _actions_Player_Cargo_ship :
+                _actions_Player_Cargo_nonship;
 
             InventoryEntry entry = new InventoryEntry();
-            entry.SetInventory(inventory, name, credits, _world, _actions_Player_Cargo);
+            entry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, actions, _editorOptions);
 
             //pnlCargo.Children.Add(entry);
             AddToPanel(pnlCargo, entry);
@@ -906,12 +1026,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private void AddHangarItemGraphic(Inventory inventory)
         {
             string name = GetName(inventory);
-            decimal credits = _station.GetPrice_Sell(inventory);
+            Tuple<decimal, decimal> credits = _station.GetPrice_Sell(inventory);
+
+            string[] actions = inventory.Ship != null ?
+                _actions_Player_Hangar_ship :
+                _actions_Player_Hangar_nonship;
 
             InventoryEntry entry = new InventoryEntry();
-            entry.SetInventory(inventory, name, credits, _world, _actions_Player_Hangar);
+            entry.SetInventory(inventory, name, credits.Item1 * credits.Item2, Convert.ToDouble(credits.Item2), null, _world, actions, _editorOptions);
 
-            //pnlHangar.Children.Add(entry);
             AddToPanel(pnlHangar, entry);
 
             InventoryEntryAdded(entry);

@@ -8,6 +8,7 @@ using System.Windows.Media.Media3D;
 
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
@@ -69,6 +70,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         private DraggableModifierSphere _ballZ2 = null;
 
         private DraggingModifier _draggingModifier = DraggingModifier.None;
+
+        /// <summary>
+        /// This is used to figure out which enums are more restrictive (ordered from most to least restrictive)
+        /// </summary>
+        private static Lazy<PartDesignAllowedScale[]> _scaleOrder = new Lazy<PartDesignAllowedScale[]>(() => new[] { PartDesignAllowedScale.None, PartDesignAllowedScale.XYZ, PartDesignAllowedScale.XY_Z, PartDesignAllowedScale.X_Y_Z });
 
         #endregion
 
@@ -155,7 +161,23 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                         _parts.Max(o => o.Part3D.Position.Y + (o.Part3D.Scale.Y * .5d)),
                         _parts.Max(o => o.Part3D.Position.Z + (o.Part3D.Scale.Z * .5d)));
 
-                    return max - min;
+                    switch (this.AllowedScale)
+                    {
+                        case PartDesignAllowedScale.None:
+                        case PartDesignAllowedScale.XYZ:
+                            double avg1 = Math1D.Avg(max.X - min.X, max.Y - min.Y, max.Z - min.Z);
+                            return new Vector3D(avg1, avg1, avg1);
+
+                        case PartDesignAllowedScale.XY_Z:
+                            double avg2 = Math1D.Avg(max.X - min.X, max.Y - min.Y);
+                            return new Vector3D(avg2, avg2, max.Z - min.Z);
+
+                        case PartDesignAllowedScale.X_Y_Z:
+                            return max - min;
+
+                        default:
+                            throw new ApplicationException("Unknown PartDesignAllowedScale: " + this.AllowedScale.ToString());
+                    }
                 }
             }
             private set
@@ -195,7 +217,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                                 break;
 
                             case PartDesignAllowedScale.XYZ:
-                                double xyzAvg = (scale.X + scale.Y + scale.Z) / 3d;
+                                double xyzAvg = Math1D.Avg(scale.X, scale.Y, scale.Z);
                                 part.Part3D.Scale = new Vector3D(xyzAvg, xyzAvg, xyzAvg);
                                 break;
 
@@ -313,13 +335,27 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         {
             get
             {
+                if (_parts.Any(o => o.Part2D == null))
+                {
+                    // When part2D is null, then the part is a unique item that can only be moved around
+                    return PartDesignAllowedScale.None;
+                }
+
                 if (_parts.Count == 1)
                 {
                     return _parts[0].Part3D.AllowedScale;
                 }
                 else
                 {
-                    return PartDesignAllowedScale.X_Y_Z;		// there is no enum value for none, so just return all, even if there are no parts
+                    // Figure out which part has the most restrictive scaling, and use that
+                    PartDesignAllowedScale[] order = _scaleOrder.Value;
+
+                    int lowestIndex = _parts.
+                        Select(o => Array.IndexOf<PartDesignAllowedScale>(order, o.Part3D.AllowedScale)).
+                        OrderBy().
+                        First();
+
+                    return order[lowestIndex];
                 }
             }
         }
@@ -636,7 +672,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                             this.Scale = new Vector3D(newScale, newScale, scale.Z);
                             break;
 
-                        case PartDesignAllowedScale.XYZ:		// only z is visible for this one
+                        case PartDesignAllowedScale.XYZ:        // only z is visible for this one
+                        case PartDesignAllowedScale.None:
                         default:
                             throw new ApplicationException("Unexpected PartDesignAllowedScale: " + this.AllowedScale.ToString());
                     }
@@ -819,89 +856,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
 
             return retVal;
-
-            #region OLD
-
-            //List<Visual3D> retVal = new List<Visual3D>();
-
-            //if (_arrowX1 != null)
-            //{
-            //    retVal.Add(_arrowX1.Model);
-            //}
-
-            //if (_arrowX2 != null)
-            //{
-            //    retVal.Add(_arrowX2.Model);
-            //}
-
-            //if (_arrowY1 != null)
-            //{
-            //    retVal.Add(_arrowY1.Model);
-            //}
-
-            //if (_arrowY2 != null)
-            //{
-            //    retVal.Add(_arrowY2.Model);
-            //}
-
-            //if (_arrowZ1 != null)
-            //{
-            //    retVal.Add(_arrowZ1.Model);
-            //}
-
-            //if (_arrowZ2 != null)
-            //{
-            //    retVal.Add(_arrowZ2.Model);
-            //}
-
-            //if (_ringX != null)
-            //{
-            //    retVal.Add(_ringX.Model);
-            //}
-
-            //if (_ringY != null)
-            //{
-            //    retVal.Add(_ringY.Model);
-            //}
-
-            //if (_ringZ != null)
-            //{
-            //    retVal.Add(_ringZ.Model);
-            //}
-
-            //if (_ballX1 != null)
-            //{
-            //    retVal.Add(_ballX1.Model);
-            //}
-
-            //if (_ballX2 != null)
-            //{
-            //    retVal.Add(_ballX2.Model);
-            //}
-
-            //if (_ballY1 != null)
-            //{
-            //    retVal.Add(_ballY1.Model);
-            //}
-
-            //if (_ballY2 != null)
-            //{
-            //    retVal.Add(_ballY2.Model);
-            //}
-
-            //if (_ballZ1 != null)
-            //{
-            //    retVal.Add(_ballZ1.Model);
-            //}
-
-            //if (_ballZ2 != null)
-            //{
-            //    retVal.Add(_ballZ2.Model);
-            //}
-
-            //return retVal;
-
-            #endregion
         }
 
         public IEnumerable<DesignPart> GetParts()
@@ -911,14 +865,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         public IEnumerable<DesignPart> CloneParts()
         {
-            List<DesignPart> retVal = new List<DesignPart>();
-
-            foreach (DesignPart part in _parts)
+            // caller should show some kind of error message if no parts returned
+            foreach (DesignPart part in _parts.Where(o => o.Part2D != null))
             {
-                retVal.Add(part.Clone());
+                yield return part.Clone();
             }
-
-            return retVal;
         }
 
         #endregion
@@ -945,6 +896,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 case PartDesignAllowedScale.XYZ:
                     GetNewArrows(out _arrowZ1, out _arrowZ2, DraggingModifier.ArrowZ1);
+                    break;
+
+                case PartDesignAllowedScale.None:
                     break;
 
                 default:

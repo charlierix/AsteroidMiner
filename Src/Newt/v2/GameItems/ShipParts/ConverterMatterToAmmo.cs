@@ -21,8 +21,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ConverterMatterToAmmoToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -159,6 +159,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ConverterMatterToAmmoToolItem(this.Options);
         }
 
         #endregion

@@ -151,6 +151,7 @@
                     <ListBoxItem Content="Self Organizing Maps" MouseUp="SelfOrganizingMaps_MouseUp"/>
                     <ListBoxItem Content="Self Organizing Maps DB" MouseUp="SelfOrganizingMapsDB_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
+                    <ListBoxItem Content="Hopfield Network" MouseUp="HopfieldNetwork_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->

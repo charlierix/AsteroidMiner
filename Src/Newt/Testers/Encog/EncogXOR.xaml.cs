@@ -411,7 +411,7 @@ namespace Game.Newt.Testers.Encog
 
                 #endregion
 
-                BasicNetwork network= UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds_PerAttempt: MAXSECONDSPER, maxSeconds_Total: MAXSECONDSTOTAL).NetworkOrNull;
+                BasicNetwork network = UtilityEncog.GetTrainedNetwork(trainingInput.ToArray(), trainingOutput.ToArray(), maxSeconds_PerAttempt: MAXSECONDSPER, maxSeconds_Total: MAXSECONDSTOTAL).NetworkOrNull;
 
                 #region Test
 

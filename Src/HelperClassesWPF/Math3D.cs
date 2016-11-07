@@ -3327,7 +3327,7 @@ namespace Game.HelperClassesWPF
 
                 #region Chains
 
-                string report = string.Join("\r\n", edges.Select(o => o.Index.ToString() + " : " + o.Edge.ToString()));
+                //string report = string.Join("\r\n", edges.Select(o => o.Index.ToString() + " : " + o.Edge.ToString()));
 
                 foreach (var segment in edges.Where(o => o.Edge.EdgeType == EdgeType.Segment))
                 {

@@ -20,8 +20,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ConverterEnergyToAmmoToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -153,6 +153,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return _massBreakdown.Item1;
         }
 
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ConverterEnergyToAmmoToolItem(this.Options);
+        }
+
         #endregion
 
         #region Private Methods
@@ -171,7 +176,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     #endregion
     #region Class: ConverterEnergyToAmmo
 
-    public class ConverterEnergyToAmmo : PartBase
+    public class ConverterEnergyToAmmo : PartBase, IPartUpdatable
     {
         #region Declaration Section
 
@@ -205,6 +210,33 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             _mass = volume * itemOptions.EnergyToAmmo_Density;
+        }
+
+        #endregion
+
+        #region IPartUpdatable Members
+
+        public void Update_MainThread(double elapsedTime)
+        {
+        }
+        public void Update_AnyThread(double elapsedTime)
+        {
+            this.Transfer(elapsedTime, 1);
+        }
+
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
         }
 
         #endregion

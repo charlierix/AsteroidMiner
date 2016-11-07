@@ -172,7 +172,7 @@ namespace Game.Newt.Testers.Encog
                     BasicNetwork network = null;
                     try
                     {
-                        network = UtilityEncog.GetTrainedNetwork(inputs.ToArray(), outputs.ToArray(), UtilityEncog.ERROR, 20, 300, cancelToken).NetworkOrNull;
+                        network = UtilityEncog.GetTrainedNetwork2(inputs.ToArray(), outputs.ToArray(), 20, 300, cancelToken).NetworkOrNull;
                     }
                     catch (Exception) { }
 
@@ -1230,7 +1230,8 @@ namespace Game.Newt.Testers.Encog
 
             #region Show final guess
 
-            int? matchIndex = UtilityEncog.IsMatch(allOutputs.Select(o => o.Value).ToArray());
+            //int? matchIndex = UtilityEncog.IsMatch(allOutputs.Select(o => o.Value).ToArray());
+            int? matchIndex = UtilityEncog.IsMatch(allOutputs.Select(o => o.Value).ToArray(), .4, .51);      // when using softmax, the threshold needs to be lower
 
             if (matchIndex != null)
             {

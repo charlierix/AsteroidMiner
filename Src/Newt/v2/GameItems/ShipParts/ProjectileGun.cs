@@ -22,8 +22,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public ProjectileGunToolItem(EditorOptions options)
             : base(options)
         {
-            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options.EditorColors);
             this.TabName = PartToolItemBase.TAB_SHIPPART;
+            _visual2D = PartToolItemBase.GetVisual2D(this.Name, this.Description, options, this);
         }
 
         #endregion
@@ -177,6 +177,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Exit Function
             return _massBreakdown.Item1;
+        }
+
+        public override PartToolItemBase GetToolItem()
+        {
+            return new ProjectileGunToolItem(this.Options);
         }
 
         #endregion
@@ -356,8 +361,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             /// Each firing fires all guns
             /// </summary>
             public readonly int Firings;
-
-            //public readonly double Error;     // not sure if there is a need for error here
         }
 
         #endregion
@@ -769,7 +772,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Pull from ammo
-            if(ammo.RemoveQuantity(projProps.AmountToPull, true) > 0)
+            if (ammo.RemoveQuantity(projProps.AmountToPull, true) > 0)
             {
                 // Not enough ammo
                 return new Vector3D(0, 0, 0);
@@ -817,7 +820,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// </summary>
         public Vector3D? GetKickLastUpdate()
         {
-            lock(_kickLock)
+            lock (_kickLock)
             {
                 Vector3D? retVal = _kickLastUpdate;
                 _kickLastUpdate = null;
@@ -827,12 +830,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public static void AssignAmmoBoxes(IEnumerable<ProjectileGun> guns, IEnumerable<AmmoBox> boxes)
         {
+            //var gunCombos = GetPossibleGroupings(guns);
             var gunCombos = GetPossibleGroupings(guns);
 
             var gunAmmoGroupings = GetAmmoGroupings(gunCombos, boxes);
 
             // Choose the best set - some combination of most guns used with the most even spread of firings
             GunAmmoGroup[] best = GetBestAmmoAssignment(gunAmmoGroupings);
+
+            #region REPORTS
+            //var report_Combos = gunCombos.
+            //    Select(n => n.Select(o => new
+            //    {
+            //        Caliber = o.Caliber,
+            //        Guns = string.Join(", ", o.Guns.Select(p => p.Token)),
+            //    }).ToArray()).
+            //    ToArray();
+
+            //var report_Groupings = gunAmmoGroupings.
+            //    Select(n => n.Select(o => new
+            //    {
+            //        Ammo = o.Ammo == null ? "null" : o.Ammo.Length.ToString(),
+            //        Guns = o.Guns == null || o.Guns.Guns == null || o.Guns.Guns.Length == 0 ? "null" : string.Join(", ", o.Guns.Guns.Select(p => p.Token)),
+            //    }).
+            //    ToArray()
+            //    ).ToArray();
+
+            //var report_Best = best.
+            //    Select(o => new
+            //    {
+            //        Ammo = o.Ammo == null ? "null" : o.Ammo.Length.ToString(),
+            //        Guns = o.Guns == null || o.Guns.Guns == null || o.Guns.Guns.Length == 0 ? "null" : string.Join(", ", o.Guns.Guns.Select(p => p.Token)),
+            //    }).
+            //    ToArray();
+            #endregion
 
             // Lock the ammo boxes and guns into the calibers, distribute ammo boxes to guns
             foreach (GunAmmoGroup group in best)
@@ -871,24 +902,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods - gun combos
 
-        #region Class: GunMajorCombo
-
-        private class GunMajorCombo
-        {
-            public GunMajorCombo(GunCombo[] combos)
-            {
-                this.Combos = combos;
-            }
-
-            public readonly GunCombo[] Combos;
-
-            public override string ToString()
-            {
-                return string.Join("  |  ", this.Combos.Select(o => o.ToString()));
-            }
-        }
-
-        #endregion
         #region Class: GunCombo
 
         /// <summary>
@@ -1021,29 +1034,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #endregion
 
-        /// <summary>
-        /// This returns a list of possible groupings
-        /// </summary>
-        /// <remarks>
-        /// return[0] - a combination of guns
-        /// return[1] - a different combination of guns
-        /// etc
-        /// 
-        /// NOTE: return[0] will have exactly one of each of the guns
-        /// return[1] will have exactly one each
-        /// etc
-        /// </remarks>
-        private static GunGroup[][] GetPossibleGroupings(IEnumerable<ProjectileGun> guns)
-        {
-            ProjectileGun[] singles = guns.ToArray();
-
-            // Build groups that can be the same caliber
-            int[][] majorSets = GetMajorSets(singles);
-
-            // Generate combinations of guns, each group set to a specific caliber
-            return GetAllSetCombos(majorSets, singles);
-        }
-
         private static int[][] GetMajorSets(ProjectileGun[] guns)
         {
             if (guns.Length == 1)
@@ -1150,187 +1140,88 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return true;
         }
 
+        /// <summary>
+        /// This returns a list of possible groupings of guns (only looking at guns, no ammo yet)
+        /// </summary>
+        /// <remarks>
+        /// return[0] - a combination of guns
+        /// return[1] - a different combination of guns
+        /// etc
+        /// </remarks>
+        private static GunGroup[][] GetPossibleGroupings(IEnumerable<ProjectileGun> guns)
+        {
+            ProjectileGun[] singles = guns.ToArray();
+
+            // Build groups that can be the same caliber
+            int[][] majorSets = GetMajorSets(singles);
+
+            return GetAllSetCombos(majorSets, singles);
+        }
+
         private static GunGroup[][] GetAllSetCombos(int[][] majorSets, ProjectileGun[] guns)
         {
-            const int MAXRETURN = 1000;
+            // singles
+            // unique sets + remainder singles
+            int[][][] fullSets = UtilityCore.AllCombosEnumerator(majorSets).ToArray();
 
-            // Get all combos within each major set
-            GunMajorCombo[] intermediate = GetAllSetCombos_Intermediate(majorSets, guns);
+            Tuple<double, double>[][] caliberRanges = fullSets.
+                Select(o => o.Select(p => GetCaliberRange(guns, p)).ToArray()).
+                ToArray();
 
-            // Each element of intermediate is all combos of a major set.  So now, generate all combos of intermediate
-            GunCombo[][] allCombos = IterateChain(intermediate);
+            if (caliberRanges.SelectMany(o => o).Any(o => o.Item1 > o.Item2))
+            {
+                throw new ApplicationException("Invalid caliber range.  majorSets was probably built wrong");
+            }
 
-            // Each element of allCombos is a unique arrangement of groups of guns.  Now need to come up with the caliber that the
-            // groups will use
-            //
-            // Could have:
-            //      All Min
-            //      All Max
-            //      All Avg
-            //
-            // --- and/or ---
-            //
-            //      Each group Rnd
-            //
-            // If allCombos.Length < X, then go nuts.  Otherwise, take randoms, and limit to a total of Y
-
-
+            // Turn each full set into a gungroup[]
             List<GunGroup[]> retVal = new List<GunGroup[]>();
 
-            retVal.AddRange(ConvertSets(allCombos, o => o.Item1));     // min
-            retVal.AddRange(ConvertSets(allCombos, o => o.Item1));     // max
-            retVal.AddRange(ConvertSets(allCombos, o => (o.Item1 + o.Item2) / 2));     // avg
+            retVal.AddRange(ConvertSets(fullSets, guns, caliberRanges, o => o.Item1));     // min
+            retVal.AddRange(ConvertSets(fullSets, guns, caliberRanges, o => o.Item2));     // max
+            retVal.AddRange(ConvertSets(fullSets, guns, caliberRanges, o => (o.Item1 + o.Item2) / 2));     // avg
 
             Random rand = StaticRandom.GetRandomForThread();
             for (int cntr = 0; cntr < 10; cntr++)
             {
-                retVal.AddRange(ConvertSets(allCombos, o => rand.NextDouble(o.Item1, o.Item2)));     // rand
-            }
-
-            if (retVal.Count <= MAXRETURN)
-            {
-                return retVal.ToArray();
-            }
-            else
-            {
-                // Too many, return a random subset
-                return UtilityCore.RandomRange(0, retVal.Count, MAXRETURN).
-                    Select(o => retVal[o]).
-                    ToArray();
-            }
-        }
-        private static GunMajorCombo[] GetAllSetCombos_Intermediate(int[][] majorSets, ProjectileGun[] guns)
-        {
-            GunMajorCombo[] retVal = new GunMajorCombo[majorSets.Length];
-
-            for (int cntr = 0; cntr < retVal.Length; cntr++)
-            {
-                int[] set = majorSets[cntr];
-
-                int[][] permutations = UtilityCore.AllCombosEnumerator(set.Length).
-                    Select(o => o.Select(p => set[p]).ToArray()).       //core.combos returns 0 based combinations.  Use those as indices into set
-                    ToArray();
-
-                retVal[cntr] = new GunMajorCombo(GetAllSetCombos_Intermediate_Set(permutations, guns));
-            }
-
-            return retVal;
-        }
-        private static GunCombo[] GetAllSetCombos_Intermediate_Set(int[][] permutations, ProjectileGun[] guns)
-        {
-            List<GunCombo> retVal = new List<GunCombo>();
-
-            int numGuns = permutations.SelectMany(o => o).Distinct().Count();
-
-            if (numGuns == 1)
-            {
-                int index = permutations[0][0];
-                return new[] { new GunCombo(new[] { new[] { Tuple.Create(index, guns[index]) } }) };
-            }
-
-            for (int outer = 0; outer < permutations.Length - 1; outer++)
-            {
-                int? currentSecondary = null;
-
-                // There could be multiple combos that start with this outer, so keep looping until none are found
-                while (true)
-                {
-                    List<int[]> blocks = new List<int[]>();
-
-                    blocks.Add(permutations[outer]);
-
-                    int innerStart = currentSecondary == null ? outer + 1 : currentSecondary.Value + 1;
-
-                    for (int inner = innerStart; inner < permutations.Length; inner++)
-                    {
-                        // See if this block is unique to the blocks that are being built up
-                        if (permutations[inner].All(o => !blocks.Any(p => p.Contains(o))))
-                        {
-                            if (blocks.Count == 1)
-                            {
-                                currentSecondary = inner;
-                            }
-
-                            blocks.Add(permutations[inner]);
-                        }
-                    }
-
-                    if (blocks.SelectMany(o => o).Count() == numGuns)
-                    {
-                        retVal.Add(new GunCombo(blocks.Select(o => o.Select(p => Tuple.Create(p, guns[p])).ToArray()).ToArray()));
-                    }
-
-                    if (blocks.Count == 1)
-                    {
-                        // No secondaries for this outer were found, so quit looking
-                        break;
-                    }
-                }
+                retVal.AddRange(ConvertSets(fullSets, guns, caliberRanges, o => rand.NextDouble(o.Item1, o.Item2)));     // rand
             }
 
             return retVal.ToArray();
         }
 
-        /// <summary>
-        /// This is a recursive method
-        /// </summary>
-        private static GunCombo[][] IterateChain(GunMajorCombo[] chain)
+        private static Tuple<double, double> GetCaliberRange(ProjectileGun[] guns, int[] indices)
         {
-            // Get all combos of the links to the right of the the first link
-            GunCombo[][] rightChain = null;
-            if (chain.Length > 1)
-            {
-                rightChain = IterateChain(chain.Skip(1).ToArray());
-            }
+            return Tuple.Create(
+                indices.Max(o => guns[o].CaliberRange.Item1),       // Item1 is as small as the gun can go.  So max(item1) will find the gun that is the bottleneck (the largest of the small range)
+                indices.Min(o => guns[o].CaliberRange.Item2));
 
-            GunMajorCombo link = chain[0];
-
-            List<GunCombo[]> retVal = new List<GunCombo[]>();
-
-            // Iterate over all the items in the first link
-            for (int outer = 0; outer < link.Combos.Length; outer++)
-            {
-                List<GunCombo> set = new List<GunCombo>();
-
-                set.Add(link.Combos[outer]);
-
-                if (rightChain != null)
-                {
-                    for (int inner = 0; inner < rightChain.Length; inner++)
-                    {
-                        set.AddRange(rightChain[inner]);
-                    }
-                }
-
-                retVal.Add(set.ToArray());
-            }
-
-            return retVal.ToArray();
+            //return Tuple.Create(
+            //    indices.Min(o => guns[o].Caliber),        // can't just use caliber.  Some guns may have a standard caliber that is outside the range of other guns in the set
+            //    indices.Max(o => guns[o].Caliber));
         }
 
-        private static GunGroup[][] ConvertSets(GunCombo[][] combos, Func<Tuple<double, double>, double> caliberFunc)
+        private static GunGroup[][] ConvertSets(int[][][] combos, ProjectileGun[] guns, Tuple<double, double>[][] caliberRanges, Func<Tuple<double, double>, double> caliberFunc)
         {
             GunGroup[][] retVal = new GunGroup[combos.Length][];
 
-            for (int outer = 0; outer < combos.Length; outer++)
+            for (int i = 0; i < combos.Length; i++)
             {
-                List<GunGroup> set = new List<GunGroup>();
+                GunGroup[] set = new GunGroup[combos[i].Length];
 
-                foreach (GunCombo combo in combos[outer])
+                for (int j = 0; j < combos[i].Length; j++)
                 {
-                    for (int inner = 0; inner < combo.Guns.Length; inner++)
-                    {
-                        double caliber = caliberFunc(combo.Calibers[inner]);
+                    double caliber = caliberFunc(caliberRanges[i][j]);
 
-                        ProjectileGun[] guns = combo.Guns[inner].Select(o => o.Item2).ToArray();
+                    ProjectileGun[] gunSet = combos[i][j].
+                        Select(o => guns[o]).
+                        ToArray();
 
-                        double demand = GetAmmoVolume(caliber);
+                    double demand = GetAmmoVolume(caliber);
 
-                        set.Add(new GunGroup(guns, caliber, demand));
-                    }
+                    set[j] = new GunGroup(gunSet, caliber, demand);
                 }
 
-                retVal[outer] = set.ToArray();
+                retVal[i] = set;
             }
 
             return retVal;
@@ -1474,6 +1365,210 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return (4d / 3d) * Math.PI * radius * radius * radius * mult;
         }
+
+        #endregion
+
+        #region OLD
+
+        //private static GunGroup[][] GetPossibleGroupings(IEnumerable<ProjectileGun> guns)
+        //{
+        //    ProjectileGun[] singles = guns.ToArray();
+
+        //    // Build groups that can be the same caliber
+        //    int[][] majorSets = GetMajorSets(singles);
+
+        //    // Generate combinations of guns, each group set to a specific caliber
+        //    return GetAllSetCombos(majorSets, singles);
+        //}
+
+        //private static GunGroup[][] GetAllSetCombos(int[][] majorSets, ProjectileGun[] guns)
+        //{
+        //    const int MAXRETURN = 1000;
+
+        //    // Get all combos within each major set
+        //    GunMajorCombo[] intermediate = GetAllSetCombos_Intermediate(majorSets, guns);
+
+        //    // Each element of intermediate is all combos of a major set.  So now, generate all combos of intermediate
+        //    GunCombo[][] allCombos = IterateChain(intermediate);
+
+        //    // Each element of allCombos is a unique arrangement of groups of guns.  Now need to come up with the caliber that the
+        //    // groups will use
+        //    //
+        //    // Could have:
+        //    //      All Min
+        //    //      All Max
+        //    //      All Avg
+        //    //
+        //    // --- and/or ---
+        //    //
+        //    //      Each group Rnd
+        //    //
+        //    // If allCombos.Length < X, then go nuts.  Otherwise, take randoms, and limit to a total of Y
+
+
+        //    List<GunGroup[]> retVal = new List<GunGroup[]>();
+
+        //    retVal.AddRange(ConvertSets(allCombos, o => o.Item1));     // min
+        //    retVal.AddRange(ConvertSets(allCombos, o => o.Item2));     // max
+        //    retVal.AddRange(ConvertSets(allCombos, o => (o.Item1 + o.Item2) / 2));     // avg
+
+        //    Random rand = StaticRandom.GetRandomForThread();
+        //    for (int cntr = 0; cntr < 10; cntr++)
+        //    {
+        //        retVal.AddRange(ConvertSets(allCombos, o => rand.NextDouble(o.Item1, o.Item2)));     // rand
+        //    }
+
+        //    if (retVal.Count <= MAXRETURN)
+        //    {
+        //        return retVal.ToArray();
+        //    }
+        //    else
+        //    {
+        //        // Too many, return a random subset
+        //        return UtilityCore.RandomRange(0, retVal.Count, MAXRETURN).
+        //            Select(o => retVal[o]).
+        //            ToArray();
+        //    }
+        //}
+        //private static GunMajorCombo[] GetAllSetCombos_Intermediate(int[][] majorSets, ProjectileGun[] guns)
+        //{
+        //    GunMajorCombo[] retVal = new GunMajorCombo[majorSets.Length];
+
+        //    for (int cntr = 0; cntr < retVal.Length; cntr++)
+        //    {
+        //        int[] set = majorSets[cntr];
+
+        //        int[][] permutations = UtilityCore.AllCombosEnumerator(set.Length).
+        //            Select(o => o.Select(p => set[p]).ToArray()).       //core.combos returns 0 based combinations.  Use those as indices into set
+        //            ToArray();
+
+        //        retVal[cntr] = new GunMajorCombo(GetAllSetCombos_Intermediate_Set(permutations, guns));
+        //    }
+
+        //    return retVal;
+        //}
+        //private static GunCombo[] GetAllSetCombos_Intermediate_Set(int[][] permutations, ProjectileGun[] guns)
+        //{
+        //    List<GunCombo> retVal = new List<GunCombo>();
+
+        //    int numGuns = permutations.
+        //        SelectMany(o => o).
+        //        Distinct().
+        //        Count();
+
+        //    if (numGuns == 1)
+        //    {
+        //        int index = permutations[0][0];
+        //        return new[] { new GunCombo(new[] { new[] { Tuple.Create(index, guns[index]) } }) };
+        //    }
+
+        //    for (int outer = 0; outer < permutations.Length - 1; outer++)
+        //    {
+        //        int? currentSecondary = null;
+
+        //        // There could be multiple combos that start with this outer, so keep looping until none are found
+        //        while (true)
+        //        {
+        //            List<int[]> blocks = new List<int[]>();
+
+        //            blocks.Add(permutations[outer]);
+
+        //            int innerStart = currentSecondary == null ? outer + 1 : currentSecondary.Value + 1;
+
+        //            for (int inner = innerStart; inner < permutations.Length; inner++)
+        //            {
+        //                // See if this block is unique to the blocks that are being built up
+        //                if (permutations[inner].All(o => !blocks.Any(p => p.Contains(o))))
+        //                {
+        //                    if (blocks.Count == 1)
+        //                    {
+        //                        currentSecondary = inner;
+        //                    }
+
+        //                    blocks.Add(permutations[inner]);
+        //                }
+        //            }
+
+        //            if (blocks.SelectMany(o => o).Count() == numGuns)
+        //            {
+        //                retVal.Add(new GunCombo(blocks.Select(o => o.Select(p => Tuple.Create(p, guns[p])).ToArray()).ToArray()));
+        //            }
+
+        //            if (blocks.Count == 1)
+        //            {
+        //                // No secondaries for this outer were found, so quit looking
+        //                break;
+        //            }
+        //        }
+        //    }
+
+        //    return retVal.ToArray();
+        //}
+
+        //private static GunGroup[][] ConvertSets(GunCombo[][] combos, Func<Tuple<double, double>, double> caliberFunc)
+        //{
+        //    GunGroup[][] retVal = new GunGroup[combos.Length][];
+
+        //    for (int outer = 0; outer < combos.Length; outer++)
+        //    {
+        //        List<GunGroup> set = new List<GunGroup>();
+
+        //        foreach (GunCombo combo in combos[outer])
+        //        {
+        //            for (int inner = 0; inner < combo.Guns.Length; inner++)
+        //            {
+        //                double caliber = caliberFunc(combo.Calibers[inner]);
+
+        //                ProjectileGun[] guns = combo.Guns[inner].Select(o => o.Item2).ToArray();
+
+        //                double demand = GetAmmoVolume(caliber);
+
+        //                set.Add(new GunGroup(guns, caliber, demand));
+        //            }
+        //        }
+
+        //        retVal[outer] = set.ToArray();
+        //    }
+
+        //    return retVal;
+        //}
+
+        ///// <summary>
+        ///// This is a recursive method
+        ///// </summary>
+        //private static GunCombo[][] IterateChain(GunMajorCombo[] chain)
+        //{
+        //    // Get all combos of the links to the right of the the first link
+        //    GunCombo[][] rightChain = null;
+        //    if (chain.Length > 1)
+        //    {
+        //        rightChain = IterateChain(chain.Skip(1).ToArray());
+        //    }
+
+        //    GunMajorCombo link = chain[0];
+
+        //    List<GunCombo[]> retVal = new List<GunCombo[]>();
+
+        //    // Iterate over all the items in the first link
+        //    for (int outer = 0; outer < link.Combos.Length; outer++)
+        //    {
+        //        List<GunCombo> set = new List<GunCombo>();
+
+        //        set.Add(link.Combos[outer]);
+
+        //        if (rightChain != null)
+        //        {
+        //            for (int inner = 0; inner < rightChain.Length; inner++)
+        //            {
+        //                set.AddRange(rightChain[inner]);
+        //            }
+        //        }
+
+        //        retVal.Add(set.ToArray());
+        //    }
+
+        //    return retVal.ToArray();
+        //}
 
         #endregion
     }

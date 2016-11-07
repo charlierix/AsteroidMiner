@@ -18,6 +18,9 @@ using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Primitives3D;
+using Game.Newt.v2.GameItems.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
@@ -25,16 +28,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     //TODO: Part design base should have a default scale property.  Each CreateGeometry method needs to create a part that has a size of one
     //TODO: Enable/Disable unusable buttons (delete layer, undo/redo, cut/copy/paste)
     //TODO: Cut/Copy/Paste Icons
-    //TODO: Tool part icons
     //TODO: Other misc icons
     //TODO: Arrow Keys: Slowly move selected part
     //TODO: Add an extended description to the tool item base class
     //TODO: After paste, put them in auto moving the selection (only if pasting onto the same layer).  Have a private bool for isdraggingselection, and keep going until mouse down.  Move all the code from mouse up/down into privates, because their roles can reverse
-    //TODO: Some parts should be allowed to be unique (only position/rotation change, no clone, scale, etc).  These would represent salvaged parts
     //TODO: Mouse Up/Down/Move have a lot of code in them, pull that out into classes?
     //TODO: Instead of storing an array of undos, store a class that has a list of change sets (remove parts, remove layer)
     //TODO: Snap to other parts (toggle: None | Ortho | Radial) (sensitivity)
-    //TODO: More parts
     public partial class Editor : UserControl
     {
         #region Enum: DragHitShapeType
@@ -74,11 +74,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         /// This listens to the mouse/keyboard and controls the camera
         /// </summary>
         private TrackBallRoam _trackball = null;
-
-        /// <summary>
-        /// These are all the parts in the toolbox (tab control)
-        /// </summary>
-        private List<PartToolItemBase> _partsToolbox = new List<PartToolItemBase>();
 
         /// <summary>
         /// These are all the actual parts currently on the 3D surface
@@ -150,6 +145,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         private List<ModelVisual3D> _debugVisuals = new List<ModelVisual3D>();
 
         private ModelVisual3D _compassRose = null;
+
+        /// <summary>
+        /// This is used to set the error message back to nothing
+        /// </summary>
+        private DispatcherTimer _errMsgTimer = null;
 
         // These are for manipulating capslock
         // http://msdn.microsoft.com/en-us/library/windows/desktop/ms646304(v=vs.85).aspx
@@ -280,9 +280,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             // black, so I'm making the background transparent black, which makes the cursor white;
             //txtName.Background = new SolidColorBrush(Color.FromArgb(0, 0, 0, 0));
             //txtShipName.Background = new SolidColorBrush(Color.FromArgb(0, _options.EditorColors.Background.R, _options.EditorColors.Background.G, _options.EditorColors.Background.B));
-            txtDesignName.Background = new SolidColorBrush(Color.FromArgb(25, _options.EditorColors.PanelBackground.R, _options.EditorColors.PanelBackground.G, _options.EditorColors.PanelBackground.B));
+            txtDesignName.Background = new SolidColorBrush(Color.FromArgb(25, _options.EditorColors.Panel_Background.R, _options.EditorColors.Panel_Background.G, _options.EditorColors.Panel_Background.B));
 
-            txtDesignName.Foreground = new SolidColorBrush(_options.EditorColors.PartVisualTextColor);
+            txtDesignName.Foreground = new SolidColorBrush(_options.EditorColors.PartVisual_TextColor);
 
             #endregion
 
@@ -293,6 +293,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         }
 
         #endregion
+
+        public TabControlParts TabControl_DEBUG
+        {
+            get
+            {
+                return tabCtrl;
+            }
+        }
 
         #region Public Properties
 
@@ -321,13 +329,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             get { return (Brush)GetValue(PanelBackgroundProperty); }
             set { SetValue(PanelBackgroundProperty, value); }
         }
-        private static readonly DependencyProperty PanelBackgroundProperty = DependencyProperty.Register("PanelBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelBackground)));
+        private static readonly DependencyProperty PanelBackgroundProperty = DependencyProperty.Register("PanelBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.Panel_Background)));
         private Brush PanelBorder
         {
             get { return (Brush)GetValue(PanelBorderProperty); }
             set { SetValue(PanelBorderProperty, value); }
         }
-        private static readonly DependencyProperty PanelBorderProperty = DependencyProperty.Register("PanelBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelBorder)));
+        private static readonly DependencyProperty PanelBorderProperty = DependencyProperty.Register("PanelBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.Panel_Border)));
 
         private Brush TextStandard
         {
@@ -336,19 +344,34 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         }
         private static readonly DependencyProperty TextStandardProperty = DependencyProperty.Register("TextStandard", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TextStandard)));
 
+        // Error message (set this by calling ShowErrorMsg, which removes it after a short time)
+        public string ErrorMsg
+        {
+            get { return (string)GetValue(ErrorMsgProperty); }
+            set { SetValue(ErrorMsgProperty, value); }
+        }
+        public static readonly DependencyProperty ErrorMsgProperty = DependencyProperty.Register("ErrorMsg", typeof(string), typeof(Editor), new PropertyMetadata(""));
+
+        private Brush ErrorMsgBrush
+        {
+            get { return (Brush)GetValue(ErrorMsgBrushProperty); }
+            set { SetValue(ErrorMsgBrushProperty, value); }
+        }
+        private static readonly DependencyProperty ErrorMsgBrushProperty = DependencyProperty.Register("ErrorMsgBrush", typeof(Brush), typeof(Editor), new PropertyMetadata(new SolidColorBrush(_dpColors.ErorMessage)));
+
         // The only current use is the selected layer item
         private Brush PanelSelectedItemBackground
         {
             get { return (Brush)GetValue(PanelSelectedItemBackgroundProperty); }
             set { SetValue(PanelSelectedItemBackgroundProperty, value); }
         }
-        private static readonly DependencyProperty PanelSelectedItemBackgroundProperty = DependencyProperty.Register("PanelSelectedItemBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelSelectedItemBackground)));
+        private static readonly DependencyProperty PanelSelectedItemBackgroundProperty = DependencyProperty.Register("PanelSelectedItemBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelSelectedItem_Background)));
         private Brush PanelSelectedItemBorder
         {
             get { return (Brush)GetValue(PanelSelectedItemBorderProperty); }
             set { SetValue(PanelSelectedItemBorderProperty, value); }
         }
-        private static readonly DependencyProperty PanelSelectedItemBorderProperty = DependencyProperty.Register("PanelSelectedItemBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelSelectedItemBorder)));
+        private static readonly DependencyProperty PanelSelectedItemBorderProperty = DependencyProperty.Register("PanelSelectedItemBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.PanelSelectedItem_Border)));
 
         // The color of the current tab page's header
         private Brush TabItemSelectedBackground
@@ -356,19 +379,39 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             get { return (Brush)GetValue(TabItemSelectedBackgroundProperty); }
             set { SetValue(TabItemSelectedBackgroundProperty, value); }
         }
-        private static readonly DependencyProperty TabItemSelectedBackgroundProperty = DependencyProperty.Register("TabItemSelectedBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelectedBackground)));
+        private static readonly DependencyProperty TabItemSelectedBackgroundProperty = DependencyProperty.Register("TabItemSelectedBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelected_Background)));
         private Brush TabItemSelectedBorder
         {
             get { return (Brush)GetValue(TabItemSelectedBorderProperty); }
             set { SetValue(TabItemSelectedBorderProperty, value); }
         }
-        private static readonly DependencyProperty TabItemSelectedBorderProperty = DependencyProperty.Register("TabItemSelectedBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelectedBorder)));
+        private static readonly DependencyProperty TabItemSelectedBorderProperty = DependencyProperty.Register("TabItemSelectedBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelected_Border)));
         private Brush TabItemSelectedText
         {
             get { return (Brush)GetValue(TabItemSelectedTextProperty); }
             set { SetValue(TabItemSelectedTextProperty, value); }
         }
-        private static readonly DependencyProperty TabItemSelectedTextProperty = DependencyProperty.Register("TabItemSelectedText", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelectedText)));
+        private static readonly DependencyProperty TabItemSelectedTextProperty = DependencyProperty.Register("TabItemSelectedText", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemSelected_Text)));
+
+        // The color of a hovered tab page's header
+        private Brush TabItemHoveredBackground
+        {
+            get { return (Brush)GetValue(TabItemHoveredBackgroundProperty); }
+            set { SetValue(TabItemHoveredBackgroundProperty, value); }
+        }
+        private static readonly DependencyProperty TabItemHoveredBackgroundProperty = DependencyProperty.Register("TabItemHoveredBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemHovered_Background)));
+        private Brush TabItemHoveredBorder
+        {
+            get { return (Brush)GetValue(TabItemHoveredBorderProperty); }
+            set { SetValue(TabItemHoveredBorderProperty, value); }
+        }
+        private static readonly DependencyProperty TabItemHoveredBorderProperty = DependencyProperty.Register("TabItemHoveredBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemHovered_Border)));
+        private Brush TabItemHoveredText
+        {
+            get { return (Brush)GetValue(TabItemHoveredTextProperty); }
+            set { SetValue(TabItemHoveredTextProperty, value); }
+        }
+        private static readonly DependencyProperty TabItemHoveredTextProperty = DependencyProperty.Register("TabItemHoveredText", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.TabItemHovered_Text)));
 
         // The expander panels on the side of the window
         private Brush SideExpanderBackground
@@ -376,19 +419,19 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             get { return (Brush)GetValue(SideExpanderBackgroundProperty); }
             set { SetValue(SideExpanderBackgroundProperty, value); }
         }
-        private static readonly DependencyProperty SideExpanderBackgroundProperty = DependencyProperty.Register("SideExpanderBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpanderBackground)));
+        private static readonly DependencyProperty SideExpanderBackgroundProperty = DependencyProperty.Register("SideExpanderBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpander_Background)));
         private Brush SideExpanderBorder
         {
             get { return (Brush)GetValue(SideExpanderBorderProperty); }
             set { SetValue(SideExpanderBorderProperty, value); }
         }
-        private static readonly DependencyProperty SideExpanderBorderProperty = DependencyProperty.Register("SideExpanderBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpanderBorder)));
+        private static readonly DependencyProperty SideExpanderBorderProperty = DependencyProperty.Register("SideExpanderBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpander_Border)));
         private Brush SideExpanderText
         {
             get { return (Brush)GetValue(SideExpanderTextProperty); }
             set { SetValue(SideExpanderTextProperty, value); }
         }
-        private static readonly DependencyProperty SideExpanderTextProperty = DependencyProperty.Register("SideExpanderText", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpanderText)));
+        private static readonly DependencyProperty SideExpanderTextProperty = DependencyProperty.Register("SideExpanderText", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SideExpander_Text)));
 
         // The rectangle they drag to select multiple parts
         private Brush SelectionRectangleBorder
@@ -396,13 +439,13 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             get { return (Brush)GetValue(SelectionRectangleBorderProperty); }
             set { SetValue(SelectionRectangleBorderProperty, value); }
         }
-        private static readonly DependencyProperty SelectionRectangleBorderProperty = DependencyProperty.Register("SelectionRectangleBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SelectionRectangleBorder)));
+        private static readonly DependencyProperty SelectionRectangleBorderProperty = DependencyProperty.Register("SelectionRectangleBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SelectionRectangle_Border)));
         private Brush SelectionRectangleBackground
         {
             get { return (Brush)GetValue(SelectionRectangleBackgroundProperty); }
             set { SetValue(SelectionRectangleBackgroundProperty, value); }
         }
-        private static readonly DependencyProperty SelectionRectangleBackgroundProperty = DependencyProperty.Register("SelectionRectangleBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SelectionRectangleBackground)));
+        private static readonly DependencyProperty SelectionRectangleBackgroundProperty = DependencyProperty.Register("SelectionRectangleBackground", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.SelectionRectangle_Background)));
 
         // The undo/redo button colors
         private Brush UndoRedoBorder
@@ -410,19 +453,19 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             get { return (Brush)GetValue(UndoRedoBorderProperty); }
             set { SetValue(UndoRedoBorderProperty, value); }
         }
-        private static readonly DependencyProperty UndoRedoBorderProperty = DependencyProperty.Register("UndoRedoBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedoBorder)));
+        private static readonly DependencyProperty UndoRedoBorderProperty = DependencyProperty.Register("UndoRedoBorder", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedo_Border)));
         private Brush UndoRedoGradientFrom
         {
             get { return (Brush)GetValue(UndoRedoGradientFromProperty); }
             set { SetValue(UndoRedoGradientFromProperty, value); }
         }
-        private static readonly DependencyProperty UndoRedoGradientFromProperty = DependencyProperty.Register("UndoRedoGradientFrom", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedoGradientFrom)));
+        private static readonly DependencyProperty UndoRedoGradientFromProperty = DependencyProperty.Register("UndoRedoGradientFrom", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedo_GradientFrom)));
         private Brush UndoRedoGradientTo
         {
             get { return (Brush)GetValue(UndoRedoGradientToProperty); }
             set { SetValue(UndoRedoGradientToProperty, value); }
         }
-        private static readonly DependencyProperty UndoRedoGradientToProperty = DependencyProperty.Register("UndoRedoGradientTo", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedoGradientTo)));
+        private static readonly DependencyProperty UndoRedoGradientToProperty = DependencyProperty.Register("UndoRedoGradientTo", typeof(Brush), typeof(Editor), new UIPropertyMetadata(new SolidColorBrush(_dpColors.UndoRedo_GradientTo)));
 
         #endregion
 
@@ -430,65 +473,25 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         public void SetupEditor(string msgboxCaption, IEnumerable<PartToolItemBase> parts, UIElement managementControl)
         {
+            TabControlPartsVM_CreateNew vm = new TabControlPartsVM_CreateNew(_dpColors, parts);
+
+            SetupEditor(msgboxCaption, vm, managementControl);
+        }
+        public void SetupEditor(string msgboxCaption, IEnumerable<PartDesignBase> parts, UIElement managementControl)
+        {
+            TabControlPartsVM_FixedSupply vm = new TabControlPartsVM_FixedSupply(_dpColors, parts);
+
+            SetupEditor(msgboxCaption, vm, managementControl);
+        }
+        private void SetupEditor(string msgboxCaption, TabControlPartsVM vm, UIElement managementControl)
+        {
             //TODO: Take in some other settings, like max size
+
+            ClearAll();
 
             _msgboxCaption = msgboxCaption;
 
-            #region Toolbox
-
-            // Remove existing tabs (except test)
-            int index = 0;
-            while (index < tabControl.Items.Count)
-            {
-                //if (((TabItem)tabControl.Items[index]).Header == "Test")
-                if (string.Equals(((TabItem)tabControl.Items[index]).Header, "Test"))		// can't use ==, because header is an object
-                {
-                    index++;
-                }
-                else
-                {
-                    tabControl.Items.RemoveAt(index);
-                }
-            }
-
-            TabItem defaultTab = null;
-
-            // Make the tabs
-            foreach (string tabName in parts.Select(o => o.TabName).Distinct())
-            {
-                TabItem tab = new TabItem();
-                //TODO: Use icons instead of text
-                tab.Header = tabName;
-                //tab.ToolTip = tabName;		//TODO: Uncomment this when icons are used
-
-                ScrollViewer scroll = new ScrollViewer();
-                scroll.Style = (Style)FindResource("tabScrollViewer");
-
-                WrapPanel wrap = new WrapPanel();
-                scroll.Content = wrap;
-
-                tab.Content = scroll;
-
-                // Add the parts that belong in this tab
-                //TODO: Make some kind of sub control for each category (an expander is a bit extreme, but something like that)
-                foreach (PartToolItemBase part in parts.Where(o => o.TabName == tabName).OrderBy(o => o.Category))
-                {
-                    _partsToolbox.Add(part);
-                    wrap.Children.Add(part.Visual2D);
-                }
-
-                tabControl.Items.Add(tab);
-
-                if (defaultTab == null)
-                {
-                    defaultTab = tab;
-                }
-            }
-
-            // Set the default tab
-            tabControl.SelectedItem = defaultTab;
-
-            #endregion
+            tabCtrl.DataContext = vm;
 
             pnlManagement.Child = managementControl;
         }
@@ -520,18 +523,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         }
         public void SetDesign(string name, List<string> layerNames, SortedList<int, List<DesignPart>> partsByLayer)
         {
-            #region Wipe existing parts
-
-            List<DesignPart> existingParts = _parts.SelectMany(o => o).ToList();
-            if (existingParts.Count > 0)
-            {
-                ClearSelectedParts();
-                DeleteParts(existingParts);
-            }
-
-            _parts.Clear();		// This will get rebuilt in two passes.  First is layers, second is parts per layer
-
-            #endregion
+            // Wipe existing parts
+            ClearAll();
 
             SwapLayers(layerNames);
 
@@ -612,14 +605,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             // The style is ignored, so these need to be set manually (I think it's because the undo graphic control has private properties, and swaps out when enabled/disabled)
             Game.HelperClassesWPF.Controls2D.UndoRedo undoGraphic = (Game.HelperClassesWPF.Controls2D.UndoRedo)btnUndo.ButtonContent;
             //undoGraphic.Style = undoStyle;
-            undoGraphic.ArrowBorder = _options.EditorColors.UndoRedoBorder;
-            undoGraphic.ArrowBackgroundFrom = _options.EditorColors.UndoRedoGradientFrom;
-            undoGraphic.ArrowBackgroundTo = _options.EditorColors.UndoRedoGradientTo;
+            undoGraphic.ArrowBorder = _options.EditorColors.UndoRedo_Border;
+            undoGraphic.ArrowBackgroundFrom = _options.EditorColors.UndoRedo_GradientFrom;
+            undoGraphic.ArrowBackgroundTo = _options.EditorColors.UndoRedo_GradientTo;
 
             undoGraphic = (Game.HelperClassesWPF.Controls2D.UndoRedo)btnRedo.ButtonContent;
-            undoGraphic.ArrowBorder = _options.EditorColors.UndoRedoBorder;
-            undoGraphic.ArrowBackgroundFrom = _options.EditorColors.UndoRedoGradientFrom;
-            undoGraphic.ArrowBackgroundTo = _options.EditorColors.UndoRedoGradientTo;
+            undoGraphic.ArrowBorder = _options.EditorColors.UndoRedo_Border;
+            undoGraphic.ArrowBackgroundFrom = _options.EditorColors.UndoRedo_GradientFrom;
+            undoGraphic.ArrowBackgroundTo = _options.EditorColors.UndoRedo_GradientTo;
 
             #endregion
         }
@@ -638,113 +631,56 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             grdViewPort.Focus();
         }
 
-        private void Tool_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            try
-            {
-                _draggingDropObject = null;
-
-                // Find the tool item that started this
-                PartToolItemBase part = FindPart(e.Source as DependencyObject);
-                if (part == null)
-                {
-                    return;
-                }
-
-                // Since they are dragging a new part, make sure nothing is selected
-                ClearSelectedParts();
-
-                // Reset the snap plane
-                //ChangeDragPlane(_isVertical);
-                ChangeDragHitShape();
-
-                // Store the mouse position and tool that is dragging
-                _draggingDropObject = new DraggingDropPart();
-                _draggingDropObject.DragStart = e.GetPosition(null);
-                _draggingDropObject.Part2D = part;		// don't build a 3D object yet, they may quit dragging before they get to the viewport
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void Tool_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            try
-            {
-                if (_draggingDropObject == null)
-                {
-                    return;
-                }
-
-                // Get the current mouse position
-                Point mousePos = e.GetPosition(null);
-                Vector diff = _draggingDropObject.DragStart - mousePos;
-
-                if (e.LeftButton == MouseButtonState.Pressed && (
-                    Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
-                    Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
-                {
-                    // Store this so mouse move can drag this around
-                    _draggingDropObject.Part3D = _draggingDropObject.Part2D.GetNewDesignPart();
-
-                    ModelVisual3D model = new ModelVisual3D();
-                    model.Content = _draggingDropObject.Part3D.Model;
-                    _draggingDropObject.Model = model;
-
-                    // Initialize the drag & drop operation
-                    DataObject dragData = new DataObject(DATAFORMAT_PART, _partsToolbox[0]);
-                    if (DragDrop.DoDragDrop(_draggingDropObject.Part2D.Visual2D, dragData, DragDropEffects.Move) == DragDropEffects.None)
-                    {
-                        // If they drag around, but not in a place where Drop gets fired, then execution reenters here.
-                        // Get rid of the dragging part
-                        if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)
-                        {
-                            _viewport.Children.Remove(_draggingDropObject.Model);
-                        }
-
-                        _draggingDropObject = null;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
         private void grdViewPort_PreviewDragOver(object sender, DragEventArgs e)
         {
             try
             {
-                if (e.Data.GetDataPresent(DATAFORMAT_PART))
+                if (!e.Data.GetDataPresent(TabControlParts.DRAGDROP_FORMAT))
                 {
-                    if (_draggingDropObject != null)
+                    e.Effects = DragDropEffects.None;
+                }
+
+                if (_draggingDropObject == null)
+                {
+                    TabControlParts_DragItem dragItem = (TabControlParts_DragItem)e.Data.GetData(TabControlParts.DRAGDROP_FORMAT);
+
+                    // Since they are dragging a new part, make sure nothing is selected
+                    ClearSelectedParts();
+
+                    // Reset the snap plane
+                    //ChangeDragPlane(_isVertical);
+                    ChangeDragHitShape();
+
+                    ModelVisual3D model = new ModelVisual3D();
+                    model.Content = dragItem.Part3D.Model;
+
+                    _draggingDropObject = new DraggingDropPart()
                     {
-                        // Move the object to where the mouse is pointing
-                        RayHitTestParameters clickRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, e.GetPosition(grdViewPort));
-                        Point3D? dragPoint = _dragHitShape.CastRay(clickRay, clickRay, clickRay, _camera, _viewport);
+                        Part2D = dragItem.Part2D,
+                        Part3D = dragItem.Part3D,
+                        DragItem = dragItem,
+                        Model = model,
+                    };
+                }
 
-                        if (dragPoint == null)
-                        {
-                            _draggingDropObject.Part3D.Position = new Point3D(0, 0, 0);
-                        }
-                        else
-                        {
-                            _draggingDropObject.Part3D.Position = dragPoint.Value;
-                        }
+                // Move the object to where the mouse is pointing
+                RayHitTestParameters clickRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, e.GetPosition(grdViewPort));
+                Point3D? dragPoint = _dragHitShape.CastRay(clickRay, clickRay, clickRay, _camera, _viewport);
 
-                        // Since this model is in the active portion of the 3D surface, make sure the model is visible
-                        if (!_draggingDropObject.HasAddedToViewport)
-                        {
-                            _viewport.Children.Add(_draggingDropObject.Model);
-                            _draggingDropObject.HasAddedToViewport = true;
-                        }
-                    }
+                if (dragPoint == null)
+                {
+                    _draggingDropObject.Part3D.Position = new Point3D(0, 0, 0);
                 }
                 else
                 {
-                    e.Effects = DragDropEffects.None;
+                    _draggingDropObject.Part3D.Position = dragPoint.Value;
+                }
+
+                // Since this model is in the active portion of the 3D surface, make sure the model is visible
+                if (!_draggingDropObject.HasAddedToViewport)
+                {
+                    _viewport.Children.Add(_draggingDropObject.Model);
+                    _draggingDropObject.HasAddedToViewport = true;
                 }
 
                 e.Handled = true;
@@ -756,28 +692,57 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         }
         private void grdViewPort_Drop(object sender, DragEventArgs e)
         {
-            //TODO:  Remove it if it's too far away from the origin
-
             try
             {
-                // Mousemove already moved it, just leave it committed
-                if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)		// just making sure
+                if (e.Data.GetDataPresent(TabControlParts.DRAGDROP_FORMAT))
                 {
-                    #region Store Part
-
-                    DesignPart design = new DesignPart(_options)
+                    // Mousemove already moved it, just leave it committed
+                    if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)      // just making sure
                     {
-                        Model = _draggingDropObject.Model,
-                        Part2D = _draggingDropObject.Part2D,
-                        Part3D = _draggingDropObject.Part3D
-                    };
+                        #region Store Part
 
-                    _parts[_currentLayerIndex].Add(design);
+                        DesignPart design = new DesignPart(_options)
+                        {
+                            Model = _draggingDropObject.Model,
+                            Part2D = _draggingDropObject.Part2D,        // could be null
+                            Part3D = _draggingDropObject.Part3D
+                        };
 
-                    #endregion
+                        while (_parts.Count <= _currentLayerIndex)
+                        {
+                            _parts.Add(new List<DesignPart>());
+                        }
 
-                    // Store in undo/redo
-                    AddNewUndoRedoItem(new UndoRedoAddRemove[] { new UndoRedoAddRemove(true, design, _currentLayerIndex) });
+                        _parts[_currentLayerIndex].Add(design);
+
+                        #endregion
+
+                        // Store in undo/redo
+                        AddNewUndoRedoItem(new UndoRedoAddRemove[] { new UndoRedoAddRemove(true, design, _currentLayerIndex) });
+                    }
+
+                    // Let the source know.  This is useful for cases when the tab control represents specific inventory (the part is either in inventory, or
+                    // on this surface)
+                    TabControlParts_DragItem dragItem = (TabControlParts_DragItem)e.Data.GetData(TabControlParts.DRAGDROP_FORMAT);
+                    dragItem.Dropped();
+
+                    _draggingDropObject = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void tabCtrl_DragDropCancelled(object sender, TabControlParts_DragItem e)
+        {
+            try
+            {
+                // Since the tabcontrol started the dragdrop, it knows when the drop failed
+                // Get rid of the dragging part
+                if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)      // this will be null if they started dragging, but not over the 3D viewport
+                {
+                    _viewport.Children.Remove(_draggingDropObject.Model);
                 }
 
                 _draggingDropObject = null;
@@ -950,7 +915,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     }
 
                     // Store the undo items
-                    AddNewUndoRedoItem(undoItems.ToArray());
+                    if (undoItems.Count > 0)     // parts that need to be unique can't be cloned
+                    {
+                        AddNewUndoRedoItem(undoItems.ToArray());
+                    }
+                    else
+                    {
+                        ShowErrorMsg("Can't copy this part");
+                    }
 
                     #endregion
                 }
@@ -1130,11 +1102,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                         foreach (int layerIndex in selectedPartsByLayer.Keys)
                         {
                             undoItems.AddRange(selectedPartsByLayer[layerIndex].Select(o => new UndoRedoTransformChange(o.Part3D.Token, layerIndex)
-                                {
-                                    Orientation = o.Part3D.Orientation,
-                                    Position = o.Part3D.Position,
-                                    Scale = o.Part3D.Scale
-                                }));
+                            {
+                                Orientation = o.Part3D.Orientation,
+                                Position = o.Part3D.Position,
+                                Scale = o.Part3D.Scale
+                            }));
                         }
 
                         AddNewUndoRedoItem(undoItems.ToArray());
@@ -1796,6 +1768,29 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
         }
 
+        private void btnHelp_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string help = @"Drag items from the toolbox onto the surface
+
+Changing the drag snap shape affects where in 3D the mouse will click
+
+Keys:
+    Shift - drag orthogonal to plane
+    CapsLock - drag in 1 dimension
+    Alt - copy part (can't copy unique parts)
+    Ctrl - select multiple parts (add to current selection)
+    Space - lock selected parts";
+
+                MessageBox.Show(help, _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Question);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void btnResetCamera_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1864,8 +1859,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 window.Text = _trackball.GetMappingReport();
 
                 window.Background = new SolidColorBrush(_options.EditorColors.Background);
-                window.InnerBorderBrush = new SolidColorBrush(_options.EditorColors.PartVisualBorderColor);
-                window.TextColor = new SolidColorBrush(_options.EditorColors.PartVisualTextColor);
+                window.InnerBorderBrush = new SolidColorBrush(_options.EditorColors.PartVisual_BorderColor);
+                window.TextColor = new SolidColorBrush(_options.EditorColors.PartVisual_TextColor);
                 window.Show();
 
                 MessageBox.Show("TODO: Show part manipulation keys");
@@ -1874,144 +1869,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             {
                 MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
             }
-        }
-
-        //TODO: Move these to the calling window
-        private void btnSave_Click(object sender, RoutedEventArgs e)
-        {
-            //try
-            //{
-            //    if (txtDesignName.Text.Trim() == "")
-            //    {
-            //        MessageBox.Show("Please give this a name first", _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
-            //        return;
-            //    }
-
-            //    // Get the definition of the ship
-            //    ShipDNA ship = new ShipDNA();
-            //    ship.ShipName = txtDesignName.Text.Trim();
-            //    ship.PartsByLayer = new SortedList<int, List<PartDNA>>();
-            //    for (int cntr = 0; cntr < _parts.Count; cntr++)
-            //    {
-            //        if (_parts[cntr].Count == 0)
-            //        {
-            //            continue;
-            //        }
-
-            //        ship.PartsByLayer.Add(cntr, _parts[cntr].Select(o => o.Part3D.GetDNA()).ToList());
-            //    }
-            //    //_parts.SelectMany(o => o).Select(o => o.Part3D.GetDNA()).ToList();
-
-
-            //    //TODO: Store these in a database (RavenDB), fail over to storing on file if can't connect to DB
-
-
-            //    // Make sure the folder exists
-            //    string foldername = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            //    foldername = System.IO.Path.Combine(foldername, "Asteroid Miner\\Ships");
-            //    if (!Directory.Exists(foldername))
-            //    {
-            //        Directory.CreateDirectory(foldername);
-            //    }
-
-            //    //string xamlText = XamlWriter.Save(ship);
-            //    //XamlServices.Load/Save in system.xaml.dll
-            //    string xamlText = XamlServices.Save(ship);
-
-            //    int infiniteLoopDetector = 0;
-            //    while (true)
-            //    {
-            //        char[] illegalChars = System.IO.Path.GetInvalidFileNameChars();
-            //        string filename = new string(ship.ShipName.Select(o => illegalChars.Contains(o) ? '_' : o).ToArray());
-            //        filename = DateTime.Now.ToString("yyyy-MM-dd HH.mm.ss.fff") + " - " + filename + ".xml";
-            //        filename = System.IO.Path.Combine(foldername, filename);
-
-            //        try
-            //        {
-            //            using (StreamWriter writer = new StreamWriter(new FileStream(filename, FileMode.CreateNew)))
-            //            {
-            //                writer.Write(xamlText);
-            //                break;
-            //            }
-            //        }
-            //        catch (IOException ex)
-            //        {
-            //            infiniteLoopDetector++;
-            //            if (infiniteLoopDetector > 100)
-            //            {
-            //                throw new ApplicationException("Couldn't create the file\r\n" + filename, ex);
-            //            }
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
-        }
-        private void btnLoad_Click(object sender, RoutedEventArgs e)
-        {
-            //try
-            //{
-            //    //TODO: If there is a current scene, question if they want to save first (save would need to be moved into a method)
-
-            //    string foldername = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            //    foldername = System.IO.Path.Combine(foldername, "Asteroid Miner\\Ships");
-
-            //    if (!Directory.Exists(foldername) || Directory.GetFiles(foldername).Length == 0)
-            //    {
-            //        MessageBox.Show("No existing ships were found", _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Warning);
-            //        return;
-            //    }
-
-            //    OpenFileDialog dialog = new OpenFileDialog();
-            //    dialog.InitialDirectory = foldername;
-            //    dialog.Multiselect = false;
-            //    dialog.Title = "Please select a ship";
-            //    bool? result = dialog.ShowDialog();
-            //    if (result == null || !result.Value)
-            //    {
-            //        return;
-            //    }
-
-            //    // Load the file
-            //    object deserialized = null;
-            //    using (FileStream file = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            //    {
-            //        //deserialized = XamlReader.Load(file);
-            //        deserialized = XamlServices.Load(file);
-            //    }
-
-            //    ShipDNA ship = deserialized as ShipDNA;
-
-            //    if (ship == null)
-            //    {
-            //        MessageBox.Show("nooooooo");
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show("yes");
-            //    }
-
-
-
-
-
-
-            //    //TODO: Finish this
-
-            //    //// Wipe the current scene
-            //    //DeleteParts(_parts.SelectMany(o => o).ToList());
-
-
-            //    // Rebuild the parts (need some kind of factory class that instantiates the right derived design class for each dna)
-
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
         }
 
         #region TESTS
@@ -2076,14 +1933,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 _debugVisuals.Clear();
 
                 TriangleIndexed plane1 = new TriangleIndexed(0, 1, 2, new Point3D[] {
-					Math3D.GetRandomVector_Spherical(10).ToPoint(),
-					Math3D.GetRandomVector_Spherical(10).ToPoint(),
-					Math3D.GetRandomVector_Spherical(10).ToPoint() });
+                    Math3D.GetRandomVector_Spherical(10).ToPoint(),
+                    Math3D.GetRandomVector_Spherical(10).ToPoint(),
+                    Math3D.GetRandomVector_Spherical(10).ToPoint() });
 
                 TriangleIndexed plane2 = new TriangleIndexed(0, 1, 2, new Point3D[] {
-					Math3D.GetRandomVector_Spherical(10).ToPoint(),
-					Math3D.GetRandomVector_Spherical(10).ToPoint(),
-					Math3D.GetRandomVector_Spherical(10).ToPoint() });
+                    Math3D.GetRandomVector_Spherical(10).ToPoint(),
+                    Math3D.GetRandomVector_Spherical(10).ToPoint(),
+                    Math3D.GetRandomVector_Spherical(10).ToPoint() });
 
                 // Intersect Line
                 Point3D resultPoint;
@@ -3694,6 +3551,20 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         #region Private Methods
 
+        private void ClearAll()
+        {
+            List<DesignPart> existingParts = _parts.SelectMany(o => o).ToList();
+            if (existingParts.Count > 0)
+            {
+                ClearSelectedParts();
+                DeleteParts(existingParts);
+            }
+
+            _parts.Clear();		// This will get rebuilt in two passes.  First is layers, second is parts per layer
+
+            ClearUndoRedo();
+        }
+
         private void ClearSelectedParts()
         {
             HideGuideLines();
@@ -3805,6 +3676,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                     // Build undo item
                     undoItems.Add(new UndoRedoAddRemove(false, part, layerIndex));
+
+                    // Give this back to the tab control
+                    AddPartToTabCtrl(part);
                 }
             }
 
@@ -4213,6 +4087,17 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
         }
 
+        private void ClearUndoRedo()
+        {
+            // Make sure there is nothing selected
+            ClearSelectedParts();
+
+            _undoRedo.Clear();
+            _undoRedoIndex = -1;
+
+            btnUndo.IsEnabled = false;
+            btnRedo.IsEnabled = false;
+        }
         private void AddNewUndoRedoItem(UndoRedoBase[] items)
         {
             // Remove everything in the list above the current point
@@ -4275,11 +4160,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                             {
                                 UndoRedoAddRemove matchCast = (UndoRedoAddRemove)match;
                                 prevPos = new UndoRedoTransformChange(match.Token, matchCast.LayerIndex)
-                                    {
-                                        Orientation = matchCast.Part.Part3D.Orientation,
-                                        Position = matchCast.Part.Part3D.Position,
-                                        Scale = matchCast.Part.Part3D.Scale
-                                    };
+                                {
+                                    Orientation = matchCast.Part.Part3D.Orientation,
+                                    Position = matchCast.Part.Part3D.Position,
+                                    Scale = matchCast.Part.Part3D.Scale
+                                };
                             }
 
                             //NOTE: There is no else here, because there are other types of undo objects, but they aren't related to movement
@@ -4310,12 +4195,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             else if (_undoRedo[_undoRedoIndex] is UndoRedoAddRemove[] && ((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex])[0].IsAdd)
             {
                 // Parts Added
-                UndoRedoSprtRemove((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);		// undoing an add is a remove
+                UndoRedo_Remove((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);		// undoing an add is a remove
             }
             else if (_undoRedo[_undoRedoIndex] is UndoRedoAddRemove[] && !((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex])[0].IsAdd)
             {
                 // Parts Removed
-                UndoRedoSprtAdd((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);		// undoing a remove is an add
+                UndoRedo_Add((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);		// undoing a remove is an add
             }
             else if (_undoRedo[_undoRedoIndex] is UndoRedoLockUnlock[])
             {
@@ -4352,12 +4237,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     if (undoLayer.IsAdd)
                     {
                         // Layer Added
-                        UndoRedoSprtLayerRemove(new UndoRedoLayerAddRemove[] { undoLayer });		// undoing an add is a remove
+                        UndoRedo_LayerRemove(new UndoRedoLayerAddRemove[] { undoLayer });		// undoing an add is a remove
                     }
                     else
                     {
                         // Layer Removed
-                        UndoRedoSprtLayerAdd(new UndoRedoLayerAddRemove[] { undoLayer });		// undoing a remove is an add
+                        UndoRedo_LayerAdd(new UndoRedoLayerAddRemove[] { undoLayer });		// undoing a remove is an add
                     }
                 }
 
@@ -4419,12 +4304,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             else if (_undoRedo[_undoRedoIndex] is UndoRedoAddRemove[] && ((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex])[0].IsAdd)
             {
                 // Parts Added
-                UndoRedoSprtAdd((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);
+                UndoRedo_Add((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);
             }
             else if (_undoRedo[_undoRedoIndex] is UndoRedoAddRemove[] && !((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex])[0].IsAdd)
             {
                 // Parts Removed
-                UndoRedoSprtRemove((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);
+                UndoRedo_Remove((UndoRedoAddRemove[])_undoRedo[_undoRedoIndex], isAllLayers);
             }
             else if (_undoRedo[_undoRedoIndex] is UndoRedoLockUnlock[])
             {
@@ -4461,12 +4346,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     if (undoLayer.IsAdd)
                     {
                         // Layer Added
-                        UndoRedoSprtLayerAdd(new UndoRedoLayerAddRemove[] { undoLayer });
+                        UndoRedo_LayerAdd(new UndoRedoLayerAddRemove[] { undoLayer });
                     }
                     else
                     {
                         // Layer Removed
-                        UndoRedoSprtLayerRemove(new UndoRedoLayerAddRemove[] { undoLayer });
+                        UndoRedo_LayerRemove(new UndoRedoLayerAddRemove[] { undoLayer });
                     }
                 }
 
@@ -4480,7 +4365,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             btnUndo.IsEnabled = true;
             btnRedo.IsEnabled = _undoRedoIndex < _undoRedo.Count - 1;
         }
-        private void UndoRedoSprtAdd(UndoRedoAddRemove[] items, bool isAllLayers)
+        private void UndoRedo_Add(UndoRedoAddRemove[] items, bool isAllLayers)
         {
             if (isAllLayers)
             {
@@ -4499,9 +4384,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 _viewport.Children.Add(clonedPart.Model);
                 _parts[item.LayerIndex].Add(clonedPart);
+
+                RemovePartFromTabCtrl(clonedPart);
             }
         }
-        private void UndoRedoSprtRemove(UndoRedoAddRemove[] items, bool isAllLayers)
+        private void UndoRedo_Remove(UndoRedoAddRemove[] items, bool isAllLayers)
         {
             if (isAllLayers)
             {
@@ -4528,9 +4415,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     _viewport.Children.Remove(actualPart.Model);		// I can't remove change.Part.Model, because that is a clone
                 }
                 _parts.Single(o => o.Contains(actualPart)).Remove(actualPart);
+
+                // Give it back to the tab control
+                AddPartToTabCtrl(actualPart);
             }
         }
-        private void UndoRedoSprtLayerAdd(UndoRedoLayerAddRemove[] items)
+        private void UndoRedo_LayerAdd(UndoRedoLayerAddRemove[] items)
         {
             foreach (UndoRedoLayerAddRemove item in items)
             {
@@ -4548,7 +4438,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 ChangeLayer(item.LayerIndex, true);
             }
         }
-        private void UndoRedoSprtLayerRemove(UndoRedoLayerAddRemove[] items)
+        private void UndoRedo_LayerRemove(UndoRedoLayerAddRemove[] items)
         {
             foreach (UndoRedoLayerAddRemove item in items)
             {
@@ -4584,6 +4474,25 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
 
             _clipboard = _selectedParts.CloneParts().ToArray();
+
+            // Deselect any parts that couldn't be cloned
+            if (_clipboard.Length == 0)
+            {
+                // Parts are selected, but clone failed
+                ShowErrorMsg("Can't copy parts");
+                return;
+            }
+
+            DesignPart[] selected = _selectedParts.GetParts().ToArray();
+
+            if (_clipboard.Length < selected.Length)
+            {
+                // Only some were cloned.  Only delete the ones that were cloned
+                //TODO: Finish implementing this.  DesignPart doesn't have an Equals that will work between selected and cloned
+                ShowErrorMsg("Only some parts could be copied.  Doing a Copy instead of Cut");
+                return;
+            }
+
             DeleteSelectedParts();
         }
         private void Copy()
@@ -4594,10 +4503,16 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
 
             _clipboard = _selectedParts.CloneParts().ToArray();
+
+            if (_clipboard.Length == 0)
+            {
+                // Parts are selected, but clone failed
+                ShowErrorMsg("Can't copy parts");
+            }
         }
         private void Paste()
         {
-            if (_clipboard == null)
+            if (_clipboard == null || _clipboard.Length == 0)
             {
                 return;
             }
@@ -4635,6 +4550,23 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
         }
 
+        private void AddPartToTabCtrl(DesignPart part)
+        {
+            TabControlPartsVM vm = tabCtrl.DataContext as TabControlPartsVM;
+            if (vm != null)
+            {
+                vm.AddPart(part.Part2D, part.Part3D);
+            }
+        }
+        private void RemovePartFromTabCtrl(DesignPart part)
+        {
+            TabControlPartsVM vm = tabCtrl.DataContext as TabControlPartsVM;
+            if (vm != null)
+            {
+                vm.RemovePart(part.Part2D, part.Part3D);
+            }
+        }
+
         private ModelVisual3D GetCompassRose(EditorColors colors)
         {
             Model3DGroup models = new Model3DGroup();
@@ -4643,8 +4575,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             // Material
             MaterialGroup material = new MaterialGroup();
-            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRoseColor)));
-            material.Children.Add(_options.EditorColors.CompassRoseSpecular);
+            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRose_Color)));
+            material.Children.Add(_options.EditorColors.CompassRose_Specular);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -4664,8 +4596,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             // Material
             material = new MaterialGroup();
-            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRoseColor)));
-            material.Children.Add(_options.EditorColors.CompassRoseSpecular);
+            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRose_Color)));
+            material.Children.Add(_options.EditorColors.CompassRose_Specular);
 
             // Geometry Model
             geometry = new GeometryModel3D();
@@ -4686,8 +4618,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             // Material
             material = new MaterialGroup();
-            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRoseColor)));
-            material.Children.Add(_options.EditorColors.CompassRoseSpecular);
+            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRose_Color)));
+            material.Children.Add(_options.EditorColors.CompassRose_Specular);
 
             // Geometry Model
             geometry = new GeometryModel3D();
@@ -4708,8 +4640,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             // Material
             material = new MaterialGroup();
-            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRoseColor)));
-            material.Children.Add(_options.EditorColors.CompassRoseSpecular);
+            material.Children.Add(new DiffuseMaterial(new SolidColorBrush(_options.EditorColors.CompassRose_Color)));
+            material.Children.Add(_options.EditorColors.CompassRose_Specular);
 
             // Geometry Model
             geometry = new GeometryModel3D();
@@ -4750,24 +4682,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             return retVal;
         }
 
-        private PartToolItemBase FindPart(DependencyObject visual)
-        {
-            if (visual == null || visual is TabItem || visual is TabControl)
-            {
-                return null;
-            }
-
-            // See if this is one of the toolbox item's visuals
-            var matches = _partsToolbox.Where(o => o.Visual2D == visual);
-            if (matches.Count() == 1)		// the count should never be greater than one
-            {
-                return matches.First();
-            }
-
-            // Recurse
-            return FindPart(VisualTreeHelper.GetParent(visual));
-        }
-
         private void AddDebugDot(Point3D position, double radius, Color color)
         {
             // Material
@@ -4791,317 +4705,366 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             _viewport.Children.Add(model);
         }
 
-        #region DRAGITEM_OLD
+        /// <summary>
+        /// Shows a message for the desired duration
+        /// </summary>
+        private void ShowErrorMsg(string message, double durationSeconds = 3)
+        {
+            if (_errMsgTimer == null)
+            {
+                _errMsgTimer = new DispatcherTimer();
+                _errMsgTimer.Tick += (s, e) =>
+                {
+                    _errMsgTimer.IsEnabled = false;
+                    this.ErrorMsg = "";
+                };
+            }
 
-        ///// <summary>
-        ///// This is called when the user is dragging a part around (either during initial drag/drop, or dragging a selected part)
-        ///// </summary>
-        //private Point3D DragItem(Point3D position, IEnumerable<ModelVisual3D> models, Point clickPoint, IEnumerable<Visual3D> ignoreVisuals)
+            _errMsgTimer.IsEnabled = false;
+            _errMsgTimer.Interval = TimeSpan.FromSeconds(durationSeconds);
+
+            this.ErrorMsg = message;
+
+            _errMsgTimer.IsEnabled = true;
+        }
+
+        #region TABCONTROL OLD
+
+        ////NOTE: This is the old dragdrop logic
+        ////TODO: The custom tab control should take care of converting 2D to 3D.  This editor should only care about taking a 3D part, and giving back deleted parts (for cases when the tab control represents inventory)
+
+        /// <summary>
+        /// These are all the parts in the toolbox (tab control)
+        /// </summary>
+        //private List<PartToolItemBase> _partsToolbox = new List<PartToolItemBase>();
+
+
+        //private void Tool_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         //{
-        //    #region OLD
-
-        //    ////TODO:  Cast ray should only do a plane check if there isn't a model hit
-        //    ////TODO:  Only need to return the first hit 
-
-        //    //List<Visual3D> allIgnores = new List<Visual3D>();
-        //    //if (ignoreVisuals != null)
-        //    //{
-        //    //    allIgnores.AddRange(ignoreVisuals);
-        //    //}
-        //    //allIgnores.Add(model);
-
-        //    //// Do a hit test for 3D objects under the mouse
-        //    //List<MyHitTestResult> hits = CastRay(clickPoint, allIgnores, true);
-
-        //    //Point3D planeHitPoint = hits.Where(o => o.PlaneHit != null).First().Point;
-
-        //    ////NOTE: _camera.LookDirection and _camera.UpDirection are really screwed up (I think that trackball messed them up), so fire a ray instead
-        //    //// I'm not using the mouse click point, because that can change as they drag, and the inconsistency would be jarring
-        //    //RayHitTestParameters cameraLook = UtilityWPF.RayFromViewportPoint(_camera, _viewport, new Point(_viewport.ActualWidth / 2d, _viewport.ActualHeight / 2d));
-
-        //    //double dot = Vector3D.DotProduct(_plane.Normal.ToUnit(), cameraLook.Direction.ToUnit());
-        //    //if (Math.Abs(dot) < .1)
-        //    //{
-        //    //    // They are looking along the plane, so snap to a line instead of a plane
-        //    //    Vector3D? snapLine = DragItemSprtGetSnapLine(cameraLook.Direction);		// the returned vector is used like 3 bools, with only one axis set to true
-
-        //    //    if (snapLine != null)
-        //    //    {
-        //    //        // I can't use the plane hit results (because the farther the mouse is from the plane, the farther the ray will travel before it hits the plane, so the
-        //    //        // object still drifts funny).  Instead, do a line-line compare
-        //    //        //part.Position = new Point3D(
-        //    //        //    snapLine.Value.X == 0 ? part.Position.X : planeHitPoint.X,
-        //    //        //    snapLine.Value.Y == 0 ? part.Position.Y : planeHitPoint.Y,
-        //    //        //    snapLine.Value.Z == 0 ? part.Position.Z : planeHitPoint.Z);
-
-        //    //        RayHitTestParameters mouseRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, clickPoint);
-
-        //    //        Point3D? lineHitPoint, dummy1;
-        //    //        if (Math3D.GetClosestPointsBetweenLines(out lineHitPoint, out dummy1, part.Position, snapLine.Value, mouseRay.Origin, mouseRay.Direction))
-        //    //        {
-        //    //            part.Position = lineHitPoint.Value;
-        //    //        }
-        //    //    }
-        //    //}
-        //    //else
-        //    //{
-        //    //    part.Position = planeHitPoint;
-        //    //}
-
-
-        //    ////part.Position = hits.Where(o => o.PlaneHit != null).First().Point;		//TODO: Give the user the option to always snap to the plane
-        //    ////part.Position = hits[0].Point - clickOffset;		//TODO:  Depending on what the first hit is, translate to the dragging object's center or edge
-
-
-
-        //    //// I can't get the projection logic to work, and am tired of fighting it
-        //    //// After some thought, the reason it's failing, is because I'm storing the offset from the hull perimiter to the center of position.  The offset should have
-        //    //// been from the plane to the center.  This will be difficult, because the part won't always be sliding against a plane (or the same plane)
-        //    ////part.Position = hits[0].Point;
-
-
-
-
-        //    ////if (clickOffset.IsNearZero())
-        //    ////{
-        //    ////    part.Position = hits[0].Point;		// the projection fails if there is no offset vector
-        //    ////}
-        //    ////else
-        //    ////{
-        //    ////    // When they first clicked on the object, the hit was somewhere on its perimiter.
-        //    ////    // When they drag around, the hit is on the plane.
-        //    ////    // The object's position needs to stay on the plane, but keep the part of the offset that is along the plane
-        //    ////    Vector3D offsetAlongPlane = clickOffset.GetProjectedVector(_plane);
-
-        //    ////    part.Position = hits[0].Point - offsetAlongPlane;
-        //    ////}
-
-        //    #endregion
-
-        //    List<Visual3D> allIgnores = new List<Visual3D>();
-        //    if (ignoreVisuals != null)
+        //    try
         //    {
-        //        allIgnores.AddRange(ignoreVisuals);
-        //    }
-        //    allIgnores.AddRange(models.Cast<Visual3D>());
+        //        _draggingDropObject = null;
 
-        //    // Do a hit test for 3D objects under the mouse
-        //    RayHitTestParameters clickRay;
-        //    List<MyHitTestResult> hits = CastRay(out clickRay, clickPoint, allIgnores, true);
-
-        //    Point3D planeHitPoint = hits.Where(o => o.DragShapeHit != null).First().Point;
-
-        //    //NOTE: _camera.LookDirection and _camera.UpDirection are really screwed up (I think that the trackball messed them up), so fire a ray instead
-        //    // I'm not using the mouse click point, because that can change as they drag, and the inconsistency would be jarring
-        //    RayHitTestParameters cameraLook = UtilityWPF.RayFromViewportPoint(_camera, _viewport, new Point(_viewport.ActualWidth / 2d, _viewport.ActualHeight / 2d));
-
-        //    double dot = Vector3D.DotProduct(_plane.Normal.ToUnit(), cameraLook.Direction.ToUnit());
-
-        //    Point3D retVal = position;
-
-        //    if (Math.Abs(dot) < .15)
-        //    {
-        //        // They are looking along the plane, so snap to a line instead of a plane
-        //        Vector3D? snapLine = DragItemSprtGetSnapLine(cameraLook.Direction);		// the returned vector is used like 3 bools, with only one axis set to true
-
-        //        if (snapLine != null)
+        //        // Find the tool item that started this
+        //        PartToolItemBase part = FindPart(e.Source as DependencyObject);
+        //        if (part == null)
         //        {
-        //            // I can't use the plane hit results (because the farther the mouse is from the plane, the farther the ray will travel before it hits the plane, so the
-        //            // object still drifts funny).  Instead, do a line-line compare
-        //            //part.Position = new Point3D(
-        //            //    snapLine.Value.X == 0 ? part.Position.X : planeHitPoint.X,
-        //            //    snapLine.Value.Y == 0 ? part.Position.Y : planeHitPoint.Y,
-        //            //    snapLine.Value.Z == 0 ? part.Position.Z : planeHitPoint.Z);
+        //            return;
+        //        }
 
-        //            RayHitTestParameters mouseRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, clickPoint);
+        //        // Since they are dragging a new part, make sure nothing is selected
+        //        ClearSelectedParts();
 
-        //            Point3D? lineHitPoint, dummy1;
-        //            if (Math3D.GetClosestPointsBetweenLines(out lineHitPoint, out dummy1, position, snapLine.Value, mouseRay.Origin, mouseRay.Direction))
+        //        // Reset the snap plane
+        //        //ChangeDragPlane(_isVertical);
+        //        ChangeDragHitShape();
+
+        //        // Store the mouse position and tool that is dragging
+        //        _draggingDropObject = new DraggingDropPart();
+        //        _draggingDropObject.DragStart = e.GetPosition(null);
+        //        _draggingDropObject.Part2D = part;		// don't build a 3D object yet, they may quit dragging before they get to the viewport
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        //private void Tool_PreviewMouseMove(object sender, MouseEventArgs e)
+        //{
+        //    try
+        //    {
+        //        if (_draggingDropObject == null)
+        //        {
+        //            return;
+        //        }
+
+        //        // Get the current mouse position
+        //        Point mousePos = e.GetPosition(null);
+        //        Vector diff = _draggingDropObject.DragStart - mousePos;
+
+        //        if (e.LeftButton == MouseButtonState.Pressed && (
+        //            Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+        //            Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
+        //        {
+        //            // Store this so mouse move can drag this around
+        //            _draggingDropObject.Part3D = _draggingDropObject.Part2D.GetNewDesignPart();
+
+        //            ModelVisual3D model = new ModelVisual3D();
+        //            model.Content = _draggingDropObject.Part3D.Model;
+        //            _draggingDropObject.Model = model;
+
+        //            // Initialize the drag & drop operation
+        //            DataObject dragData = new DataObject(DATAFORMAT_PART, _partsToolbox[0]);
+        //            if (DragDrop.DoDragDrop(_draggingDropObject.Part2D.Visual2D, dragData, DragDropEffects.Move) == DragDropEffects.None)
         //            {
-        //                retVal = lineHitPoint.Value;
+        //                // If they drag around, but not in a place where Drop gets fired, then execution reenters here.
+        //                // Get rid of the dragging part
+        //                if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)
+        //                {
+        //                    _viewport.Children.Remove(_draggingDropObject.Model);
+        //                }
+
+        //                _draggingDropObject = null;
         //            }
         //        }
         //    }
-        //    else
+        //    catch (Exception ex)
         //    {
-        //        retVal = planeHitPoint;
+        //        MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
         //    }
-
-        //    // Exit Function
-        //    return retVal;
-        //}
-        //private Vector3D? DragItemSprtGetSnapLine(Vector3D lookDirection)
-        //{
-        //    const double THRESHOLD = .33d;
-
-        //    DoubleVector testVectors;
-
-        //    if (_isVertical)
-        //    {
-        //        // XZ plane
-        //        testVectors = new DoubleVector(1, 0, 0, 0, 0, 1);
-        //    }
-        //    else
-        //    {
-        //        // XY plane
-        //        testVectors = new DoubleVector(1, 0, 0, 0, 1, 0);
-        //    }
-
-        //    //Quaternion cameraOrientation = testVectors.GetAngleAroundAxis(new DoubleVector(_camera.LookDirection.ToUnit(), _camera.UpDirection.ToUnit()));
-        //    //RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(cameraOrientation));
-        //    //DoubleVector testVectorsTransformed = new DoubleVector(transform.Transform(testVectors.Standard), transform.Transform(testVectors.Orth));
-
-        //    double dot = Vector3D.DotProduct(testVectors.Standard, lookDirection.ToUnit());
-        //    if (Math.Abs(dot) < THRESHOLD)
-        //    {
-        //        return testVectors.Standard;		// standard is fairly orhogonal to the camera's look direction, so only allow the part to slide along this axis
-        //    }
-
-        //    dot = Vector3D.DotProduct(testVectors.Orth, lookDirection.ToUnit());
-        //    if (Math.Abs(dot) < THRESHOLD)
-        //    {
-        //        return testVectors.Orth;
-        //    }
-
-        //    return null;
         //}
 
-        //private void ChangeDragPlane(bool isVertical)
+        //private void grdViewPort_PreviewDragOver(object sender, DragEventArgs e)
         //{
-        //    if (_selectedParts == null)
+        //    try
         //    {
-        //        if (isVertical)
+        //        if (e.Data.GetDataPresent(DATAFORMAT_PART))
         //        {
-        //            _plane = new Triangle(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(0, 0, 1));
+        //            if (_draggingDropObject != null)
+        //            {
+        //                // Move the object to where the mouse is pointing
+        //                RayHitTestParameters clickRay = UtilityWPF.RayFromViewportPoint(_camera, _viewport, e.GetPosition(grdViewPort));
+        //                Point3D? dragPoint = _dragHitShape.CastRay(clickRay, clickRay, clickRay, _camera, _viewport);
+
+        //                if (dragPoint == null)
+        //                {
+        //                    _draggingDropObject.Part3D.Position = new Point3D(0, 0, 0);
+        //                }
+        //                else
+        //                {
+        //                    _draggingDropObject.Part3D.Position = dragPoint.Value;
+        //                }
+
+        //                // Since this model is in the active portion of the 3D surface, make sure the model is visible
+        //                if (!_draggingDropObject.HasAddedToViewport)
+        //                {
+        //                    _viewport.Children.Add(_draggingDropObject.Model);
+        //                    _draggingDropObject.HasAddedToViewport = true;
+        //                }
+        //            }
         //        }
         //        else
         //        {
-        //            _plane = new Triangle(new Point3D(1, 0, 0), new Point3D(0, 1, 0), new Point3D(0, 0, 0));
+        //            e.Effects = DragDropEffects.None;
         //        }
-        //    }
-        //    else
-        //    {
-        //        Point3D point = _selectedParts.Position;
 
-        //        if (isVertical)
+        //        e.Handled = true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+        //private void grdViewPort_Drop(object sender, DragEventArgs e)
+        //{
+        //    //TODO:  Remove it if it's too far away from the origin
+
+        //    try
+        //    {
+        //        // Mousemove already moved it, just leave it committed
+        //        if (_draggingDropObject != null && _draggingDropObject.HasAddedToViewport)		// just making sure
         //        {
-        //            _plane = new Triangle(new Point3D(0, point.Y, 0), new Point3D(1, point.Y, 0), new Point3D(0, point.Y, 1));
+        //            #region Store Part
+
+        //            DesignPart design = new DesignPart(_options)
+        //            {
+        //                Model = _draggingDropObject.Model,
+        //                Part2D = _draggingDropObject.Part2D,
+        //                Part3D = _draggingDropObject.Part3D
+        //            };
+
+        //            _parts[_currentLayerIndex].Add(design);
+
+        //            #endregion
+
+        //            // Store in undo/redo
+        //            AddNewUndoRedoItem(new UndoRedoAddRemove[] { new UndoRedoAddRemove(true, design, _currentLayerIndex) });
+        //        }
+
+        //        _draggingDropObject = null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString(), _msgboxCaption, MessageBoxButton.OK, MessageBoxImage.Error);
+        //    }
+        //}
+
+        //private void BuildToolBox_OLD(IEnumerable<PartToolItemBase> parts)
+        //{
+        //    // Remove existing tabs (except test)
+        //    int index = 0;
+        //    while (index < tabControl.Items.Count)
+        //    {
+        //        //if (((TabItem)tabControl.Items[index]).Header == "Test")
+        //        if (string.Equals(((TabItem)tabControl.Items[index]).Header, "Test"))		// can't use ==, because header is an object
+        //        {
+        //            index++;
         //        }
         //        else
         //        {
-        //            _plane = new Triangle(new Point3D(1, 0, point.Z), new Point3D(0, 1, point.Z), new Point3D(0, 0, point.Z));
+        //            tabControl.Items.RemoveAt(index);
         //        }
         //    }
 
-        //    _isVertical = isVertical;
+        //    TabItem defaultTab = null;
+
+        //    // Make the tabs
+        //    //foreach (string tabName in parts.Select(o => o.TabName).Distinct())
+        //    foreach (string tabName in parts.Select(o => o.Category).Distinct())
+        //    {
+        //        TabItem tab = new TabItem();
+        //        //TODO: Use icons instead of text
+        //        tab.Header = tabName;
+        //        //tab.ToolTip = tabName;		//TODO: Uncomment this when icons are used
+
+        //        ScrollViewer scroll = new ScrollViewer();
+        //        scroll.Style = (Style)FindResource("tabScrollViewer");
+
+        //        UniformGrid panel = new UniformGrid() { Columns = 1, };
+        //        //Grid panel = new Grid();
+        //        //panel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Auto) });
+        //        //panel.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+        //        scroll.Content = panel;
+
+        //        tab.Content = scroll;
+
+        //        // Add the parts that belong in this tab
+        //        //TODO: Make some kind of sub control for each category (an expander is a bit extreme, but something like that)
+        //        //foreach (PartToolItemBase part in parts.Where(o => o.TabName == tabName).OrderBy(o => o.Category))
+        //        foreach (PartToolItemBase part in parts.Where(o => o.Category == tabName))
+        //        {
+        //            _partsToolbox.Add(part);
+
+        //            #region COMBINE
+
+        //            //panel.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1, GridUnitType.Auto) });
+
+        //            //// Icon
+        //            //Icon3D icon = new Icon3D(part)
+        //            //{
+        //            //    ShowName = false,
+        //            //    ShowBorder = false,
+        //            //    Width = 64,
+        //            //    Height = 64,
+        //            //};
+
+        //            //Grid.SetColumn(icon, 0);
+        //            //Grid.SetRow(icon, panel.RowDefinitions.Count - 1);
+
+        //            //panel.Children.Add(icon);
+
+        //            //// Description (also has drag/drop support)
+        //            //Grid.SetColumn(part.Visual2D, 1);
+        //            //Grid.SetRow(part.Visual2D, panel.RowDefinitions.Count - 1);
+
+        //            //panel.Children.Add(part.Visual2D);
+
+        //            #endregion
+        //            #region OLD
+
+        //            //StackPanel partPanel = new StackPanel()
+        //            //{
+        //            //    Orientation = Orientation.Horizontal,
+        //            //};
+
+        //            //partPanel.Children.Add(new Icon3D(part)
+        //            //{
+        //            //    ShowName = false,
+        //            //    ShowBorder = false,
+        //            //    Width = 64,
+        //            //    Height = 64,
+        //            //});
+        //            //partPanel.Children.Add(part.Visual2D);
+
+        //            //panel.Children.Add(partPanel);
+
+        //            #endregion
+
+        //            panel.Children.Add(part.Visual2D);
+        //        }
+
+        //        tabControl.Items.Add(tab);
+
+        //        if (defaultTab == null)
+        //        {
+        //            defaultTab = tab;
+        //        }
+        //    }
+
+        //    // Set the default tab
+        //    tabControl.SelectedItem = defaultTab;
+        //}
+        //private void BuildToolBox(IEnumerable<PartToolItemBase> parts)
+        //{
+        //    // Remove existing tabs
+        //    tabControl.Items.Clear();
+
+
+        //    //tabControl.ItemsSource = null;
+
+
+        //    Brush brushPrimary = new SolidColorBrush(_dpColors.TabIcon_Primary);
+        //    Brush brushSecondary = new SolidColorBrush(_dpColors.TabIcon_Secondary);
+
+        //    TabItem defaultTab = null;
+
+        //    // Make the tabs
+        //    //TODO: Put distinct tabs across the top, categories down the side
+        //    foreach (Tuple<string, string> tab_cat in parts.Select(o => Tuple.Create(o.TabName, o.Category)).Distinct())
+        //    {
+        //        TabItem tab = new TabItem();
+
+        //        tab.Header = PartCategoryIcons.GetIcon(tab_cat.Item1, tab_cat.Item2, brushPrimary, brushSecondary, 24);
+        //        tab.ToolTip = tab_cat.Item2;
+
+        //        ScrollViewer scroll = new ScrollViewer();
+        //        scroll.Style = (Style)FindResource("tabScrollViewer");
+
+        //        UniformGrid panel = new UniformGrid()
+        //        {
+        //            Columns = 1,
+        //            MaxWidth = 200,
+        //        };
+        //        scroll.Content = panel;
+
+        //        tab.Content = scroll;
+
+        //        // Add the parts that belong in this tab/category
+        //        foreach (PartToolItemBase part in parts.Where(o => o.TabName == tab_cat.Item1 && o.Category == tab_cat.Item2))
+        //        {
+        //            _partsToolbox.Add(part);
+
+        //            panel.Children.Add(part.Visual2D);
+        //        }
+
+        //        tabControl.Items.Add(tab);
+
+        //        if (defaultTab == null)
+        //        {
+        //            defaultTab = tab;
+        //        }
+        //    }
+
+        //    // Set the default tab
+        //    tabControl.SelectedItem = defaultTab;
         //}
 
-        #endregion
-        #region OLD
-
-        //private void Undo_OLD()
+        //private PartToolItemBase FindPart(DependencyObject visual)
         //{
-        //    if (_undoRedoIndex <= 0)
+        //    if (visual == null || visual is TabItem || visual is TabControl)
         //    {
-        //        // There is nothing left to undo
-        //        return;
+        //        return null;
         //    }
 
-        //    // Make sure there is nothing selected
-        //    ClearSelectedParts();
-
-        //    _undoRedoIndex--;
-
-        //    // Figure out what changed
-        //    if (_undoRedo[_undoRedoIndex] is UndoRedoTransformChange[])
+        //    // See if this is one of the toolbox item's visuals
+        //    var matches = _partsToolbox.Where(o => o.Visual2D == visual);
+        //    if (matches.Count() == 1)		// the count should never be greater than one
         //    {
-        //        // Parts Moved
-        //        UndoRedoSprtMoveParts_OLD((UndoRedoTransformChange[])_undoRedo[_undoRedoIndex]);
-        //    }
-        //    else
-        //    {
-        //        throw new ApplicationException("Unknown type of undo/redo item");
-        //    }
-        //}
-        //private void Redo_OLD()
-        //{
-        //    if (_undoRedoIndex >= _undoRedo.Count - 1)
-        //    {
-        //        // There is nothing left to redo
-        //        return;
+        //        return matches.First();
         //    }
 
-        //    // Make sure there is nothing selected
-        //    ClearSelectedParts();
-
-        //    _undoRedoIndex++;
-
-        //    // Figure out what changed
-        //    if (_undoRedo[_undoRedoIndex] is UndoRedoTransformChange[])
-        //    {
-        //        // Parts Moved
-        //        UndoRedoSprtMoveParts_OLD((UndoRedoTransformChange[])_undoRedo[_undoRedoIndex]);
-        //    }
-        //    else
-        //    {
-        //        throw new ApplicationException("Unknown type of undo/redo item");
-        //    }
-        //}
-        //private void UndoRedoSprtMoveParts_OLD(UndoRedoTransformChange[] changes)
-        //{
-        //    foreach (UndoRedoTransformChange change in changes)
-        //    {
-        //        //DesignPart part = _parts.Where(o => o.Part3D.Token == change.Token).First();
-        //        DesignPart part = _parts.Single(o => o.Part3D.Token == change.Token);
-
-        //        part.Part3D.SetTransform(change.Scale, change.Position, change.Orientation);
-        //    }
-        //}
-
-        #endregion
-        #region OLD
-
-        //private static List<TubeRingBase> GetThrusterRings1Full()
-        //{
-        //    List<TubeRingBase> retVal = new List<TubeRingBase>();
-
-        //    retVal.Add(new TubeRingRegularPolygon(0, false, .25, .25, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.2, false, .9, .9, false));
-        //    retVal.Add(new TubeRingRegularPolygon(.5, false, 1, 1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.5, false, 1.1, 1.1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.5, false, 1.05, 1.05, false));
-        //    retVal.Add(new TubeRingDome(.66, false, 4));
-
-        //    return retVal;
-        //}
-        //private static List<TubeRingBase> GetThrusterRings1Half(bool includeDome)
-        //{
-        //    List<TubeRingBase> retVal = new List<TubeRingBase>();
-
-        //    retVal.Add(new TubeRingRegularPolygon(0, false, .25, .25, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.2, false, .9, .9, false));
-        //    retVal.Add(new TubeRingRegularPolygon(.5, false, 1, 1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.5, false, 1.1, 1.1, false));
-        //    if (includeDome)
-        //    {
-        //        retVal.Add(new TubeRingDome(.55, false, 4));
-        //    }
-
-        //    return retVal;
-        //}
-        //private static List<TubeRingBase> GetThrusterRings2Full()
-        //{
-        //    List<TubeRingBase> retVal = new List<TubeRingBase>();
-
-        //    retVal.Add(new TubeRingRegularPolygon(0, false, .25, .25, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.2, false, .9, .9, false));
-        //    retVal.Add(new TubeRingRegularPolygon(.5, false, 1, 1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.5, false, 1.1, 1.1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.5, false, 1, 1, false));
-        //    retVal.Add(new TubeRingRegularPolygon(.5, false, .9, .9, false));
-        //    retVal.Add(new TubeRingRegularPolygon(1.2, false, .25, .25, false));
-
-        //    return retVal;
+        //    // Recurse
+        //    return FindPart(VisualTreeHelper.GetParent(visual));
         //}
 
         #endregion

@@ -186,6 +186,7 @@ namespace Game.Newt.v2.GameItems
 
             public List<ConverterEnergyToAmmo> ConvertEnergyToAmmo = new List<ConverterEnergyToAmmo>();
             public List<ConverterEnergyToFuel> ConvertEnergyToFuel = new List<ConverterEnergyToFuel>();
+            public List<ConverterEnergyToPlasma> ConvertEnergyToPlasma = new List<ConverterEnergyToPlasma>();
             public List<ConverterFuelToEnergy> ConverterFuelToEnergy = new List<ConverterFuelToEnergy>();
             public List<ConverterRadiationToEnergy> ConvertRadiationToEnergy = new List<ConverterRadiationToEnergy>();
 
@@ -291,6 +292,7 @@ namespace Game.Newt.v2.GameItems
 
             public readonly ConverterEnergyToAmmo[] ConvertEnergyToAmmo;
             public readonly ConverterEnergyToFuel[] ConvertEnergyToFuel;
+            public readonly ConverterEnergyToPlasma[] ConvertEnergyToPlasma;
             public readonly ConverterFuelToEnergy[] ConverterFuelToEnergy;
             public readonly ConverterRadiationToEnergy[] ConvertRadiationToEnergy;
 
@@ -1366,6 +1368,11 @@ namespace Game.Newt.v2.GameItems
                     case ConverterEnergyToFuel.PARTTYPE:
                         BuildParts_Add(new ConverterEnergyToFuel(options, itemOptions, dna, container.EnergyGroup, container.FuelGroup),
                             dna, container.ConvertEnergyToFuel, retVal);
+                        break;
+
+                    case ConverterEnergyToPlasma.PARTTYPE:
+                        BuildParts_Add(new ConverterEnergyToPlasma(options, itemOptions, dna, container.EnergyGroup, container.PlasmaGroup),
+                            dna, container.ConvertEnergyToPlasma, retVal);
                         break;
 
                     case ConverterFuelToEnergy.PARTTYPE:

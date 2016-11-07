@@ -180,12 +180,14 @@ namespace Game.Newt.v2.GenePool
                 #endregion
                 #region Map
 
-                _map = new Map(_viewport, _cameraPool, _world);
-                _map.SnapshotFequency_Milliseconds = 250;// 125;
-                _map.SnapshotMaxItemsPerNode = 10;
-                _map.ShouldBuildSnapshots = true;
-                _map.ShouldShowSnapshotLines = false;
-                _map.ShouldSnapshotCentersDrift = true;
+                _map = new Map(_viewport, _cameraPool, _world)
+                {
+                    SnapshotFequency_Milliseconds = 250,        // 125
+                    SnapshotMaxItemsPerNode = 10,
+                    ShouldBuildSnapshots = true,
+                    ShouldShowSnapshotLines = false,
+                    ShouldSnapshotCentersDrift = true,
+                };
 
                 _updateManager = new UpdateManager(
                     new Type[] { typeof(Swimbot) },
@@ -195,11 +197,15 @@ namespace Game.Newt.v2.GenePool
                 #endregion
                 #region Fields
 
-                _radiation = new RadiationField();
-                _radiation.AmbientRadiation = 0d;
+                _radiation = new RadiationField()
+                {
+                    AmbientRadiation = 0d,
+                };
 
-                //_gravity = new GravityFieldUniform();
-                //_gravity.Gravity = new Vector3D(0, 0, 0);
+                //_gravity = new GravityFieldUniform()
+                //{
+                //    Gravity = new Vector3D(0, 0, 0),
+                //};
 
                 //TODO: Support a uniform fluid
                 //FluidField
@@ -207,16 +213,17 @@ namespace Game.Newt.v2.GenePool
                 #endregion
                 #region ItemSelectDragLogic
 
-                _selectionLogic = new ItemSelectDragLogic(_map, _camera, _viewport, grdViewPort);
+                _selectionLogic = new ItemSelectDragLogic(_map, _camera, _viewport, grdViewPort)
+                {
+                    ShouldMoveItemWithSpring = true,
+                    ShouldSpringCauseTorque = false,
+                    SpringColor = null,     // Colors.Chartreuse
+                    ShowDebugVisuals = false,       // true
+                };
 
                 _selectionLogic.SelectableTypes.Add(typeof(Bot));
                 _selectionLogic.SelectableTypes.Add(typeof(Mineral));
                 _selectionLogic.SelectableTypes.Add(typeof(Egg));
-
-                _selectionLogic.ShouldMoveItemWithSpring = true;
-                _selectionLogic.ShouldSpringCauseTorque = false;
-                _selectionLogic.SpringColor = null;  // Colors.Chartreuse;
-                _selectionLogic.ShowDebugVisuals = false;// true;
 
                 _selectionLogic.ItemSelected += new EventHandler<ItemSelectedArgs>(SelectionLogic_ItemSelected);
 

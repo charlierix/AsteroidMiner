@@ -426,7 +426,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Energy -> Ammo
 
-        private volatile object _energyToAmmo_ConversionRate = .02d;		// 50 units of energy for one unit of ammo
+        private volatile object _energyToAmmo_ConversionRate = .033d;		// 30 units of energy for one unit of ammo
         public double EnergyToAmmo_ConversionRate
         {
             get
@@ -439,7 +439,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private volatile object _energyToAmmo_AmountToDraw = .1d;
+        private volatile object _energyToAmmo_AmountToDraw = .3d;
         /// <summary>
         /// How much energy to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
@@ -484,7 +484,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private volatile object _energyToFuel_AmountToDraw = .1d;
+        private volatile object _energyToFuel_AmountToDraw = .3d;
         /// <summary>
         /// How much energy to pull in one unit of time (this gets multiplied by the size of the converter)
         /// </summary>
@@ -510,6 +510,51 @@ namespace Game.Newt.v2.GameItems
             set
             {
                 _energyToFuel_Density = value;
+            }
+        }
+
+        #endregion
+        #region Energy -> Plasma
+
+        private volatile object _energyToPlasma_ConversionRate = .05d;		// 20 units of energy for one unit of plasma
+        public double EnergyToPlasma_ConversionRate
+        {
+            get
+            {
+                return (double)_energyToPlasma_ConversionRate;
+            }
+            set
+            {
+                _energyToPlasma_ConversionRate = value;
+            }
+        }
+
+        private volatile object _energyToPlasma_AmountToDraw = .3d;
+        /// <summary>
+        /// How much energy to pull in one unit of time (this gets multiplied by the size of the converter)
+        /// </summary>
+        public double EnergyToPlasma_AmountToDraw
+        {
+            get
+            {
+                return (double)_energyToPlasma_AmountToDraw;
+            }
+            set
+            {
+                _energyToPlasma_AmountToDraw = value;
+            }
+        }
+
+        private volatile object _energyToPlasma_Density = 7500d;
+        public double EnergyToPlasma_Density
+        {
+            get
+            {
+                return (double)_energyToPlasma_Density;
+            }
+            set
+            {
+                _energyToPlasma_Density = value;
             }
         }
 
@@ -561,7 +606,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Solar Panel (Radiation -> Energy)
 
-        private volatile object _solarPanel_ConversionRate = .05d;
+        private volatile object _solarPanel_ConversionRate = .003d;
         public double SolarPanel_ConversionRate
         {
             get

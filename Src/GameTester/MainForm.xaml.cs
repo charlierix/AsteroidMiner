@@ -268,6 +268,10 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.Encog.MineralIdentifier().Show();
         }
+        private void HopfieldNetwork_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.HopfieldNetwork().Show();
+        }
 
         #endregion
         #region Newton 2.36

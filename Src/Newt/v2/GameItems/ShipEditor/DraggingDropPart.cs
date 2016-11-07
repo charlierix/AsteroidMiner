@@ -21,5 +21,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 		public bool HasAddedToViewport = false;
 
 		public Point DragStart;
-	}
+
+
+
+        public TabControlParts_DragItem DragItem = null;
+
+
+    }
 }

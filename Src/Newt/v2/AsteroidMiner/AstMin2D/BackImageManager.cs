@@ -142,7 +142,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     ToArray();
             });
 
-
             #endregion
 
             #region Constructor
@@ -150,6 +149,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             //TODO: Take in the points/sizes/colorindex instead of deriving them here
             public StarfieldVisual2(double size, double margin, int numStars, double starSizeMult, Tuple<Vector[], int> vectorField = null, Color? color = null)
             {
+                this.Size = size;
+
                 Brush[] brushes_Small;
                 Brush[] brushes_Large;
                 if (color == null)
@@ -206,6 +207,12 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 //_visual.BitmapEffect
                 //_visual.CacheMode
             }
+
+            #endregion
+
+            #region Public Properties
+
+            public readonly double Size;
 
             #endregion
 
@@ -396,6 +403,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Declaration Section
 
+        private const string TITLE = "BackImageManager";
+
         private readonly Canvas _canvas;
         private readonly Player _player;
 
@@ -411,6 +420,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             _canvas = canvas;
             _player = player;
+
+            _canvas.SizeChanged += Canvas_SizeChanged;
         }
 
         #endregion
@@ -535,14 +546,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 _visuals2 = new Tuple<StarfieldVisual2, double>[5];
 
-
-
                 //NOTE: Playing around with different values.  8,60 looks good with 500x500, but isn't enough for 3000x3000
                 //Tuple<Vector[], int> vectorField = GetVectorField(8, 60);
                 Tuple<Vector[], int> vectorField = GetVectorField(30, 500);
-
-
-
 
                 for (int cntr = 0; cntr < _visuals2.Length; cntr++)
                 {
@@ -564,8 +570,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     {
                         _visuals2[cntr] = Tuple.Create(new StarfieldVisual2(SIZE, MARGIN, numStars, starSizeMult), slideSpeed);
                     }
-
-
 
                     Canvas.SetLeft(_visuals2[cntr].Item1, (_canvas.ActualWidth / 2) - HALF);
                     Canvas.SetTop(_visuals2[cntr].Item1, (_canvas.ActualHeight / 2) - HALF);
@@ -600,6 +604,36 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 #endregion
 
                 _visuals2[cntr].Item1.RenderTransform = transform;
+            }
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void Canvas_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            try
+            {
+                if (_visuals2 == null)
+                {
+                    return;
+                }
+
+                double canvasHalfWidth = _canvas.ActualWidth / 2;
+                double canvasHalfHeight = _canvas.ActualHeight / 2;
+
+                foreach (var visual in _visuals2)
+                {
+                    double visualHalf = visual.Item1.Size / 2;
+
+                    Canvas.SetLeft(visual.Item1, canvasHalfWidth - visualHalf);
+                    Canvas.SetTop(visual.Item1, canvasHalfHeight - visualHalf);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

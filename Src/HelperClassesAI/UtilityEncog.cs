@@ -99,7 +99,8 @@ namespace Game.HelperClassesAI
 
         #region Declaration Section
 
-        public const double ERROR = 0.001;      // this is .1%, which may be a bit excessive
+        public const double ERROR = .001;      // this is .1%, which may be a bit excessive
+        private const double ERROR2 = .1;
 
         #endregion
 
@@ -153,7 +154,7 @@ namespace Game.HelperClassesAI
                 {
                     maxSecActual = maxSeconds_PerAttempt.Value;
                 }
-                else if(maxSecActual == null && maxSeconds_PerAttempt != null)
+                else if (maxSecActual == null && maxSeconds_PerAttempt != null)
                 {
                     maxSecActual = maxSeconds_PerAttempt.Value;
                 }
@@ -178,6 +179,85 @@ namespace Game.HelperClassesAI
             }
 
             return retVal;
+        }
+
+        //TODO: The first thing to do is make a CreateNetwork2.  Initialized weights with xavier instead of random.  Add a softmax layer at the end
+        /// <summary>
+        /// This looks at the training data, and builds a neural net for it
+        /// </summary>
+        /// <remarks>
+        /// This makes a lot of assumptions.  There are all kinds of ways those assumptions could be tweaked, but hopefully this
+        /// will make a satisfactory network for most cases.
+        /// </remarks>
+        public static EncogTrainingResponse GetTrainedNetwork2(double[][] trainingInput, double[][] trainingOutput, double? maxSeconds_PerAttempt = null, double? maxSeconds_Total = null, CancellationToken? cancelToken = null)
+        {
+            const double MULTGROWTH = .1;
+
+            double maxError = ERROR2;
+
+            CancellationToken cancelTokenActual = cancelToken ?? CancellationToken.None;        // can't default to CancellationToken.None in the params (compiler complains)
+
+            TrainingData training = new TrainingData(trainingInput, trainingOutput);
+
+            Stopwatch elapsed = new Stopwatch();
+            elapsed.Start();
+
+            //NOTE: Even if a network is a failure, it will still be stored here until a better one is made
+            EncogTrainingResponse retVal = null;
+
+            for (int cntr = 0; cntr < 1000; cntr++)
+            {
+                if (cancelTokenActual.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                double? maxSecActual = null;
+                if (maxSeconds_Total != null)
+                {
+                    maxSecActual = maxSeconds_Total.Value - elapsed.Elapsed.TotalSeconds;
+                    if (maxSecActual.Value < 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (maxSecActual != null && maxSeconds_PerAttempt != null && maxSeconds_PerAttempt.Value < maxSecActual.Value)
+                {
+                    maxSecActual = maxSeconds_PerAttempt.Value;
+                }
+                else if (maxSecActual == null && maxSeconds_PerAttempt != null)
+                {
+                    maxSecActual = maxSeconds_PerAttempt.Value;
+                }
+
+                // Train it
+                double hiddenMultActual = 1d + (cntr * MULTGROWTH);
+                EncogTrainingResponse network = GetTrainedNetworkAsync2(training, hiddenMultActual, maxError, cancelTokenActual, maxSecActual).Result;
+
+                if (network.IsSuccess)
+                {
+                    return network;
+                }
+                else if (retVal == null || network.Error < retVal.Error)
+                {
+                    retVal = network;
+                }
+
+                if (cancelTokenActual.IsCancellationRequested || (maxSeconds_Total != null && elapsed.Elapsed.TotalSeconds >= maxSeconds_Total.Value))
+                {
+                    break;
+                }
+            }
+
+            return retVal;
+        }
+        /// <summary>
+        /// This takes an existing network, and overlays the training onto it (returns a new network, the network passed in isn't changed)
+        /// </summary>
+        public static EncogTrainingResponse GetTrainedNetwork2(EncogTrainingResponse existing, double[][] trainingInput, double[][] trainingOutput, CancellationToken? cancelToken = null)
+        {
+            throw new ApplicationException("finish this");
         }
 
         #region OLD
@@ -242,6 +322,7 @@ namespace Game.HelperClassesAI
 
         #region Misc
 
+        //NOTE: This method was written before I knew about softmax algorithm, so needs to be phased out
         /// <summary>
         /// This is a helper method for recognizers that have one output neuron per item.  In order for it to be a match, only one of the outputs can
         /// be a one, and everything else needs to be a zero
@@ -331,6 +412,18 @@ namespace Game.HelperClassesAI
                 return TrainNetwork(network, training, maxError, cancelToken, maxSeconds);        // lower score is better
             }, cancelToken);
         }
+        private static Task<EncogTrainingResponse> GetTrainedNetworkAsync2(TrainingData training, double hiddenMultiplier, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
+        {
+            return Task.Run(() =>
+            {
+                // Create a network, build input/hidden/output layers
+                //TODO: Figure out why telling it to use the faster activation functions always causes the trainer to return an error of NaN
+                BasicNetwork network = CreateNetwork2(training, hiddenMultiplier, false);
+
+                // Train the network
+                return TrainNetwork2(network, training, maxError, cancelToken, maxSeconds);        // lower score is better
+            }, cancelToken);
+        }
 
         /// <summary>
         /// Create a network with input/hidden/output layers
@@ -404,6 +497,78 @@ namespace Game.HelperClassesAI
             retVal.Reset();     // Randomize the links
             return retVal;
         }
+        private static BasicNetwork CreateNetwork2(TrainingData training, double hiddenMultiplier, bool useFast = true)
+        {
+            const double TWOTHIRDS = 2d / 3d;
+            const double HIDDENLAYER_RANDRANGE = .5;        // the number of neurons in a layer will be +- 50% of desired
+            const double ANOTHERLAYERPERCENT = .1;      // 10% chance of creating another hidden layer (so 10% for 2 layers, 1% for 3, .1% for 4, etc)
+
+            Random rand = StaticRandom.GetRandomForThread();
+
+            BasicNetwork retVal = new BasicNetwork();
+
+            // Input Layer
+            retVal.AddLayer(new BasicLayer(GetActivationFunction(training.InputHasNegative, useFast), true, training.InputSize));
+
+            #region Hidden Layers
+
+            // Initialize these with the input layer's values
+            bool wasPrevNeg = training.InputHasNegative;
+            int prevCount = training.InputSize;
+
+            do
+            {
+                // Use Negative
+                bool isCurNeg = false;
+                if (wasPrevNeg || training.OutputHasNegative)
+                {
+                    isCurNeg = rand.NextBool();
+                }
+
+                // Neuron Count
+                int minNodes = Math.Min(prevCount, training.OutputSize);
+
+                double desiredNodes = (prevCount + training.OutputSize) * TWOTHIRDS * hiddenMultiplier;
+                desiredNodes = rand.NextPercent(desiredNodes, HIDDENLAYER_RANDRANGE);       // randomize the count
+
+                int curCount = Convert.ToInt32(Math.Round(desiredNodes));
+                if (curCount < minNodes)
+                {
+                    curCount = minNodes;
+                }
+                else if (curCount < 4)
+                {
+                    curCount = 4;
+                }
+
+                // Create it
+                retVal.AddLayer(new BasicLayer(GetActivationFunction(isCurNeg, useFast), true, curCount));     // hidden layer
+
+                // Prep for the next iteration
+                wasPrevNeg = isCurNeg;
+                prevCount = curCount;
+            } while (rand.NextDouble() < ANOTHERLAYERPERCENT);      // see if another hidden layer should be created
+
+            #endregion
+
+            // Output Layer
+            retVal.AddLayer(new BasicLayer(GetActivationFunction(training.OutputHasNegative, useFast), true, training.OutputSize));
+
+            //TODO: May want to do this
+            //if (isFinalLayerSoftmax)       
+            //{
+            //    // Softmax is useful for turning raw output into a percent (the sum of all neurons in this layer add to one)
+            retVal.AddLayer(new BasicLayer(new ActivationSoftMax(), false, training.OutputSize));
+            //}
+
+            // Finish
+            retVal.Structure.FinalizeStructure();
+
+            //TODO: May want to do xavier initialization (seems to only make sense for deep networks)
+            retVal.Reset();     // Randomize the links
+
+            return retVal;
+        }
 
         /// <summary>
         /// This trains the data until the error is acceptable
@@ -414,6 +579,63 @@ namespace Game.HelperClassesAI
         /// </remarks>
         private static EncogTrainingResponse TrainNetwork(BasicNetwork network, TrainingData training, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
         {
+            const int MAXITERATIONS = 5000;
+
+            INeuralDataSet trainingSet = new BasicNeuralDataSet(training.Input, training.Output);
+            ITrain train = new ResilientPropagation(network, trainingSet);
+
+            DateTime startTime = DateTime.UtcNow;
+            TimeSpan? maxTime = maxSeconds != null ? TimeSpan.FromSeconds(maxSeconds.Value) : (TimeSpan?)null;
+
+            bool success = false;
+
+            //List<double> log = new List<double>();
+            int iteration = 1;
+            double error = double.MaxValue;
+            while (true)
+            {
+                if (cancelToken.IsCancellationRequested)
+                {
+                    break;
+                }
+
+                train.Iteration();
+
+                error = train.Error;
+                //log.Add(error);
+
+                iteration++;
+
+                if (double.IsNaN(error))
+                {
+                    break;
+                }
+                else if (error < maxError)
+                {
+                    success = true;
+                    break;
+                }
+                else if (iteration >= MAXITERATIONS)
+                {
+                    break;
+                }
+                else if (maxTime != null && DateTime.UtcNow - startTime > maxTime)
+                {
+                    break;
+                }
+            }
+
+            //string logExcel = string.Join("\r\n", log);       // paste this into excel and chart it to see the error trend
+
+            train.FinishTraining();
+
+            return new EncogTrainingResponse(network, success, error, iteration, (DateTime.UtcNow - startTime).TotalSeconds);
+        }
+        private static EncogTrainingResponse TrainNetwork2(BasicNetwork network, TrainingData training, double maxError, CancellationToken cancelToken, double? maxSeconds = null)
+        {
+
+            //TODO: When the final layer is softmax, the error seems to be higher.  Probably because the training outputs need to be run through softmax
+
             const int MAXITERATIONS = 5000;
 
             INeuralDataSet trainingSet = new BasicNeuralDataSet(training.Input, training.Output);
@@ -539,7 +761,7 @@ namespace Game.HelperClassesAI
         {
             get
             {
-                if(this.IsSuccess)
+                if (this.IsSuccess)
                 {
                     return this.Network;
                 }

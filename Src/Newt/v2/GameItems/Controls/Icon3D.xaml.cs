@@ -13,9 +13,11 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
+using Game.Newt.v2.GameItems.ShipEditor;
 
 namespace Game.Newt.v2.GameItems.Controls
 {
@@ -26,10 +28,17 @@ namespace Game.Newt.v2.GameItems.Controls
     {
         #region Declaration Section
 
+        private const string TITLE = "Icon3D";
+
         /// <summary>
         /// This listens to the mouse/keyboard and controls the camera
         /// </summary>
         private TrackBallRoam _trackball = null;
+
+        private AnimateRotation _rotateAnimate = null;
+        private DispatcherTimer _rotateTimer = null;
+        private QuaternionRotation3D _rotateTransform = null;
+        private DateTime _lastTick;
 
         private PointLight _hoverLight = null;
         private AmbientLight _selectedLight = null;
@@ -68,6 +77,29 @@ namespace Game.Newt.v2.GameItems.Controls
             RenderMineral();
             InitializeLight();
         }
+        public Icon3D(ShipPartDNA dna, EditorOptions options)
+        {
+            InitializeComponent();
+
+            // Need to set position to zero, or the image won't be centered (part's model considers position/orientation)
+            dna = ShipPartDNA.Clone(dna);
+            dna.Position = new Point3D();
+            dna.Orientation = Quaternion.Identity;
+
+            PartDesignBase part = BotConstructor.GetPartDesign(dna, options);
+
+            this.ItemName = part.PartType;
+            this.Part = part;
+
+            lblName.Text = this.ItemName;
+
+            lblName.Visibility = _showName ? Visibility.Visible : Visibility.Collapsed;
+
+            InitializeTrackball();
+
+            RenderPart();
+            InitializeLight();
+        }
 
         #endregion
 
@@ -90,11 +122,19 @@ namespace Game.Newt.v2.GameItems.Controls
             get;
             private set;
         }
-
         /// <summary>
         /// This is set when the icon shows a mineral
         /// </summary>
         public MineralType MineralType
+        {
+            get;
+            private set;
+        }
+        /// <summary>
+        /// This is set when the icon shows a part (ship part)
+        /// NOTE: Give this icon a unique part design to avoid visuals trying to share models
+        /// </summary>
+        public PartDesignBase Part
         {
             get;
             private set;
@@ -153,6 +193,61 @@ namespace Game.Newt.v2.GameItems.Controls
             }
         }
 
+        private bool _autoRotateOnMouseHover = false;
+        /// <summary>
+        /// Set to true if you want the item to randomly rotate when the mouse is over the control
+        /// </summary>
+        public bool AutoRotateOnMouseHover
+        {
+            get
+            {
+                return _autoRotateOnMouseHover;
+            }
+            set
+            {
+                _autoRotateOnMouseHover = value;
+
+                if (!_autoRotateOnMouseHover)
+                {
+                    _rotateAnimate = null;
+                    if (_rotateTimer != null)
+                    {
+                        _rotateTimer.Tick -= RotateTimer_Tick;
+                        _rotateTimer = null;
+                    }
+                }
+            }
+        }
+
+        private FrameworkElement _autoRotateParent = null;
+        /// <summary>
+        /// If AutoRotateOnMouseHover is true, you can set this to a parent of the icon so the rotate happens when the mouse is anywhere over that
+        /// control
+        /// </summary>
+        public FrameworkElement AutoRotateParent
+        {
+            get
+            {
+                return _autoRotateParent;
+            }
+            set
+            {
+                if (_autoRotateParent != null)
+                {
+                    _autoRotateParent.MouseEnter -= AutoRotateParent_MouseEnter;
+                    _autoRotateParent.MouseLeave -= AutoRotateParent_MouseLeave;
+                }
+
+                _autoRotateParent = value;
+
+                if (_autoRotateParent != null)
+                {
+                    _autoRotateParent.MouseEnter += AutoRotateParent_MouseEnter;
+                    _autoRotateParent.MouseLeave += AutoRotateParent_MouseLeave;
+                }
+            }
+        }
+
         #endregion
 
         #region Event Listeners
@@ -163,10 +258,15 @@ namespace Game.Newt.v2.GameItems.Controls
             {
                 MoveHoverLight(e);
                 _lightGroup.Children.Add(_hoverLight);
+
+                if (_autoRotateParent == null)
+                {
+                    AutoRotate_MouseEnter();
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "BeanIcon", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void pnlIconBorder_MouseLeave(object sender, MouseEventArgs e)
@@ -175,10 +275,15 @@ namespace Game.Newt.v2.GameItems.Controls
             {
                 //_hoverLight.Color = Colors.Transparent;
                 _lightGroup.Children.Remove(_hoverLight);
+
+                if (_autoRotateParent == null)
+                {
+                    AutoRotate_MouseLeave();
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "BeanIcon", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void pnlIconBorder_MouseMove(object sender, MouseEventArgs e)
@@ -189,7 +294,49 @@ namespace Game.Newt.v2.GameItems.Controls
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.ToString(), "BeanIcon", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void AutoRotateParent_MouseEnter(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                AutoRotate_MouseEnter();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void AutoRotateParent_MouseLeave(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                AutoRotate_MouseLeave();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RotateTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_rotateAnimate != null)
+                {
+                    DateTime newTime = DateTime.UtcNow;
+                    double elapsedTime = (newTime - _lastTick).TotalSeconds;
+                    _lastTick = newTime;
+
+                    _rotateAnimate.Tick(elapsedTime);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), TITLE, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -243,11 +390,38 @@ namespace Game.Newt.v2.GameItems.Controls
         {
             ModelVisual3D visual = new ModelVisual3D();
             visual.Content = Mineral.GetNewVisual(this.MineralType);
-            visual.Transform = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation()));
+            _rotateTransform = new QuaternionRotation3D(Math3D.GetRandomRotation());
+            visual.Transform = new RotateTransform3D(_rotateTransform);
 
             _viewport.Children.Add(visual);
 
             _camera.Position = (_camera.Position.ToVector().ToUnit() * 2.5d).ToPoint();
+        }
+
+        private void RenderPart()
+        {
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = this.Part.Model;
+            _rotateTransform = new QuaternionRotation3D(Math3D.GetRandomRotation());
+            visual.Transform = new RotateTransform3D(_rotateTransform);
+
+            // Pull the camera back far enough to see the part
+            double? maxDist = UtilityWPF.GetPointsFromMesh(this.Part.Model).
+                Select(o => o.ToVector().LengthSquared).
+                OrderByDescending(o => o).
+                FirstOrDefault();
+
+            double cameraDist = 2.1;
+            if (maxDist != null)
+            {
+                maxDist = Math.Sqrt(maxDist.Value);
+
+                cameraDist = maxDist.Value * 3;
+            }
+
+            _viewport.Children.Add(visual);
+
+            _camera.Position = (_camera.Position.ToVector().ToUnit() * cameraDist).ToPoint();
         }
 
         private void InitializeTrackball()
@@ -292,6 +466,31 @@ namespace Game.Newt.v2.GameItems.Controls
             Quaternion rotation = standard.GetRotation(camera);
 
             _hoverLight.Position = rotation.GetRotatedVector(projectedPos * 2d).ToPoint();
+        }
+
+        private void AutoRotate_MouseEnter()
+        {
+            if (_autoRotateOnMouseHover && _rotateTimer == null && _rotateTransform != null)
+            {
+                _rotateTimer = new DispatcherTimer();
+                _rotateTimer.Interval = TimeSpan.FromMilliseconds(25);
+                _rotateTimer.Tick += RotateTimer_Tick;
+
+                _rotateAnimate = AnimateRotation.Create_AnyOrientation(_rotateTransform, 45d);
+            }
+
+            if (_autoRotateOnMouseHover && _rotateTimer != null)
+            {
+                _lastTick = DateTime.UtcNow;
+                _rotateTimer.IsEnabled = true;
+            }
+        }
+        private void AutoRotate_MouseLeave()
+        {
+            if (_rotateTimer != null)
+            {
+                _rotateTimer.IsEnabled = false;
+            }
         }
 
         // Copied from trackball
