@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new BrainRGBRecognizerDesign(this.Options);
+            return new BrainRGBRecognizerDesign(this.Options, false);
         }
 
         #endregion
@@ -99,8 +99,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public BrainRGBRecognizerDesign(EditorOptions options)
-            : base(options) { }
+        public BrainRGBRecognizerDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -121,28 +121,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometry = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override ShipPartDNA GetDNA()
         {
@@ -427,12 +422,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public BrainRGBRecognizer(EditorOptions options, ItemOptions itemOptions, BrainRGBRecognizerDNA dna, IContainer energyTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.Brain_Damage.HitpointMin, itemOptions.Brain_Damage.HitpointSlope, itemOptions.Brain_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            this.Design = new BrainRGBRecognizerDesign(options);
+            this.Design = new BrainRGBRecognizerDesign(options, true);
             this.Design.SetDNA(dna);
 
             _dnaExtra = dna.Extra ?? BrainRGBRecognizerDNAExtra.GetDefaultDNA();
@@ -540,7 +535,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             bool shouldBeZero;
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (this.IsDestroyed || _energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 _isOn = false;
                 shouldBeZero = true;

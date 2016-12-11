@@ -68,7 +68,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new TractorBeamDesign(this.Options);
+            return new TractorBeamDesign(this.Options, false);
         }
 
         #endregion
@@ -92,8 +92,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public TractorBeamDesign(EditorOptions options)
-            : base(options) { }
+        public TractorBeamDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -114,28 +114,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -293,12 +288,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public TractorBeam(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasma)
-            : base(options, dna)
+            : base(options, dna, itemOptions.TractorBeam_Damage.HitpointMin, itemOptions.TractorBeam_Damage.HitpointSlope, itemOptions.TractorBeam_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _plasma = plasma;
 
-            this.Design = new TractorBeamDesign(options);
+            this.Design = new TractorBeamDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume, radius;

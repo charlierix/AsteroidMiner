@@ -45,25 +45,29 @@ namespace Game.Newt.Testers.ChaseForces
             // Adding initial values, because these are pretty much the minimum required
             if (_isLinear)
             {
-                ForceEntry entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Direction, 80);        // 80 attract
+                ForceEntry entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Attract_Direction, 80);        // 80 attract
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
 
-                entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Velocity_Orth, 8);        // 8 drag orth
+                entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Drag_Velocity_Orth, 8);        // 8 drag orth
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
 
-                entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Velocity_AlongIfVelocityAway, 25);        // 25 drag when away
+                entry = ForceEntry.GetNewEntry_Linear(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, 25);        // 25 drag when away
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
             }
             else
             {
-                ForceEntry entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Direction, .1, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(10d, 1d) });        // toward .1, gradient {0,0} {10,1}
+                ForceEntry entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Attract_Direction, .1, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(10d, 1d) });        // toward .1, gradient {0,0} {10,1}
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
 
-                entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Velocity_Any, .03);        // drag .03
+                entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Drag_Velocity_Any, .03, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(5d, 1d) });        // drag .03
+                entry.ValueChanged += new EventHandler(Entry_ValueChanged);
+                pnlForces.Children.Add(entry);
+
+                entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, .02);      // extra torque when away
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
             }

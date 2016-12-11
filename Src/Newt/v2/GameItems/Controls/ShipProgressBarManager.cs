@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.v2.GameItems.Controls
 {
@@ -91,94 +92,20 @@ namespace Game.Newt.v2.GameItems.Controls
             }
 
             // Energy
-            if (_energy != null && _bot.Energy != null)
-            {
-                _energy.Maximum = _bot.Energy.QuantityMax;
-                _energy.Value = _bot.Energy.QuantityCurrent;
-            }
-            else if (_energy == null && _bot.Energy != null)
-            {
-                _energy = CreateProgressBar(_bot.Energy.QuantityCurrent, _bot.Energy.QuantityMax, "energy", WorldColors.EnergyTank);
-            }
-            else if (_energy != null && _bot.Energy == null)
-            {
-                _panel.Children.Remove(_energy);
-                _energy = null;
-            }
+            UpdateStandardContainer(ref _energy, _bot.Energy, "energy", WorldColors.EnergyTank);
 
             // Fuel
-            if (_fuel != null && _bot.Fuel != null)
-            {
-                _fuel.Maximum = _bot.Fuel.QuantityMax;
-                _fuel.Value = _bot.Fuel.QuantityCurrent;
-            }
-            else if (_fuel == null && _bot.Fuel != null)
-            {
-                _fuel = CreateProgressBar(_bot.Fuel.QuantityCurrent, _bot.Fuel.QuantityMax, "fuel", WorldColors.FuelTank);
-            }
-            else if (_fuel != null && _bot.Fuel == null)
-            {
-                _panel.Children.Remove(_fuel);
-                _fuel = null;
-            }
+            UpdateStandardContainer(ref _fuel, _bot.Fuel, "fuel", WorldColors.FuelTank);
 
             // Plasma
-            if (_plasma != null && _bot.Plasma != null)
-            {
-                _plasma.Maximum = _bot.Plasma.QuantityMax;
-                _plasma.Value = _bot.Plasma.QuantityCurrent;
-            }
-            else if (_plasma == null && _bot.Plasma != null)
-            {
-                _plasma = CreateProgressBar(_bot.Plasma.QuantityCurrent, _bot.Plasma.QuantityMax, "plasma", WorldColors.PlasmaTank);
-            }
-            else if (_plasma != null && _bot.Plasma == null)
-            {
-                _panel.Children.Remove(_plasma);
-                _plasma = null;
-            }
+            UpdateStandardContainer(ref _plasma, _bot.Plasma, "plasma", WorldColors.PlasmaTank);
 
             // Cargo
-            Tuple<double, double> cargo = null;
-            if (_bot.CargoBays != null)
-            {
-                cargo = _bot.CargoBays.CargoVolume;
-            }
-
-            if (cargo != null && cargo.Item2 > 0d)
-            {
-                if (_cargo != null)
-                {
-                    _cargo.Maximum = cargo.Item2;
-                    _cargo.Value = cargo.Item1;
-                }
-                else
-                {
-                    _cargo = CreateProgressBar(cargo.Item1, cargo.Item2, "cargo", WorldColors.CargoBay);
-                }
-            }
-            else if (_cargo != null)
-            {
-                _panel.Children.Remove(_cargo);
-                _cargo = null;
-            }
+            UpdateCargoContainer(ref _cargo, _bot.CargoBays, "cargo", WorldColors.CargoBay);
 
             // Ammo
             //TODO: Break this down by caliber
-            if (_ammo != null && _bot.Ammo != null)
-            {
-                _ammo.Maximum = _bot.Ammo.QuantityMax;
-                _ammo.Value = _bot.Ammo.QuantityCurrent;
-            }
-            else if (_ammo == null && _bot.Ammo != null)
-            {
-                _ammo = CreateProgressBar(_bot.Ammo.QuantityCurrent, _bot.Ammo.QuantityMax, "ammo", WorldColors.AmmoBox);
-            }
-            else if (_ammo != null && _bot.Ammo == null)
-            {
-                _panel.Children.Remove(_ammo);
-                _ammo = null;
-            }
+            UpdateStandardContainer(ref _ammo, _bot.Ammo, "ammo", WorldColors.AmmoBox);
         }
 
         #endregion
@@ -196,7 +123,7 @@ namespace Game.Newt.v2.GameItems.Controls
             _panel.Children.Clear();
         }
 
-        protected ProgressBarGame CreateProgressBar(double quantityCurrent, double quantityMax, string name, Color color)
+        protected ProgressBarGame CreateProgressBar(double quantityCurrent, double quantityMax, double damagePercent, string name, Color color)
         {
             ProgressBarGame retVal = new ProgressBarGame();
             retVal.RightLabelVisibility = Visibility.Visible;
@@ -207,10 +134,81 @@ namespace Game.Newt.v2.GameItems.Controls
             retVal.Minimum = 0;
             retVal.Maximum = quantityMax;
             retVal.Value = quantityCurrent;
+            retVal.DamagedPercent = damagePercent;
 
             _panel.Children.Add(retVal);
 
             return retVal;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void UpdateStandardContainer(ref ProgressBarGame progressBar, IContainer container, string name, Color color)
+        {
+            #region damage %
+
+            double damagePercent = 0d;
+            if (container != null)
+            {
+                if (container is ContainerGroup)
+                {
+                    damagePercent = ((ContainerGroup)container).DamagePercent;
+                }
+                else if (container is ITakesDamage && ((ITakesDamage)container).IsDestroyed)
+                {
+                    damagePercent = 1d;
+                }
+            }
+
+            #endregion
+
+            if (progressBar != null && container != null)
+            {
+                progressBar.Maximum = container.QuantityMax;
+                progressBar.Value = container.QuantityCurrent;
+                progressBar.DamagedPercent = damagePercent;
+            }
+            else if (progressBar == null && container != null)
+            {
+                progressBar = CreateProgressBar(container.QuantityCurrent, container.QuantityMax, damagePercent, name, color);
+            }
+            else if (progressBar != null && container == null)
+            {
+                _panel.Children.Remove(progressBar);
+                progressBar = null;
+            }
+        }
+        private void UpdateCargoContainer(ref ProgressBarGame progressBar, CargoBayGroup cargoBays, string name, Color color)
+        {
+            double damagePercent = 0d;
+            Tuple<double, double> cargo = null;
+            if (cargoBays != null)
+            {
+                cargo = cargoBays.CargoVolume;
+                damagePercent = cargoBays.DamagePercent;
+            }
+
+            if (cargo != null && cargo.Item2 > 0d)
+            {
+                if (progressBar != null)
+                {
+                    progressBar.Maximum = cargo.Item2;
+                    progressBar.Value = cargo.Item1;
+                    progressBar.DamagedPercent = damagePercent;
+                }
+                else
+                {
+                    progressBar = CreateProgressBar(cargo.Item1, cargo.Item2, damagePercent, name, color);
+                }
+            }
+            else if (progressBar != null)
+            {
+                _panel.Children.Remove(progressBar);
+                progressBar = null;
+            }
+
         }
 
         #endregion

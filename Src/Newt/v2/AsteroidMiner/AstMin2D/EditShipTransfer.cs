@@ -69,7 +69,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         /// </summary>
         public void EditShip(string title, UIElement managementControl)
         {
-            PartDesignBase[] combinedParts = GatherParts();
+            PartDesignBase[] combinedParts = GatherParts(false);
 
             // Fix the orientations (or they will be random when dragged to the surface, which is really annoying to manually fix)
             foreach (PartDesignBase part in combinedParts)
@@ -136,7 +136,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #region Private Methods
 
-        private PartDesignBase[] GatherParts()
+        private PartDesignBase[] GatherParts(bool isFinalModel)
         {
             // CargoBay
             _fromCargo = _player.Ship.CargoBays == null ?
@@ -144,14 +144,14 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _player.Ship.CargoBays.GetCargoSnapshot().
                     Select(o => o as Cargo_ShipPart).
                     Where(o => o != null).
-                    Select(o => Tuple.Create(o, BotConstructor.GetPartDesign(o.PartDNA, _editorOptions))).
+                    Select(o => Tuple.Create(o, BotConstructor.GetPartDesign(o.PartDNA, _editorOptions, isFinalModel))).
                     ToArray();
 
             // Nearby
-            _fromNearby = GatherParts_FromPanel(_spaceDock.pnlNearbyItems.Children, _editorOptions);
+            _fromNearby = GatherParts_FromPanel(_spaceDock.pnlNearbyItems.Children, _editorOptions, isFinalModel);
 
             // Hangar
-            _fromHangar = GatherParts_FromPanel(_spaceDock.pnlHangar.Children, _editorOptions);
+            _fromHangar = GatherParts_FromPanel(_spaceDock.pnlHangar.Children, _editorOptions, isFinalModel);
 
             // Combine them
             return _fromCargo.Select(o => o.Item2).
@@ -160,7 +160,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 ToArray();
         }
 
-        private static Tuple<InventoryEntry, PartDesignBase>[] GatherParts_FromPanel(UIElementCollection panel, EditorOptions editorOptions)
+        private static Tuple<InventoryEntry, PartDesignBase>[] GatherParts_FromPanel(UIElementCollection panel, EditorOptions editorOptions, bool isFinalModel)
         {
             var retVal = new List<Tuple<InventoryEntry, PartDesignBase>>();
 
@@ -172,7 +172,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     continue;
                 }
 
-                PartDesignBase part = BotConstructor.GetPartDesign(inventory.Inventory.Part, editorOptions);
+                PartDesignBase part = BotConstructor.GetPartDesign(inventory.Inventory.Part, editorOptions, isFinalModel);
 
                 retVal.Add(Tuple.Create(inventory, part));
             }
@@ -185,7 +185,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             DesignPart retVal = new DesignPart(options)
             {
                 Part2D = null,      // setting 2D to null will tell the editor that the part can't be resized or copied, only moved around
-                Part3D = BotConstructor.GetPartDesign(dna, options),
+                Part3D = BotConstructor.GetPartDesign(dna, options, false),
             };
 
             ModelVisual3D visual = new ModelVisual3D();

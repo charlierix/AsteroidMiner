@@ -66,7 +66,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ConverterMatterToEnergyDesign(this.Options);
+            return new ConverterMatterToEnergyDesign(this.Options, false);
         }
 
         #endregion
@@ -87,8 +87,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterMatterToEnergyDesign(EditorOptions options)
-            : base(options) { }
+        public ConverterMatterToEnergyDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -109,28 +109,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -206,12 +201,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public ConverterMatterToEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.MatterConverter_Damage.HitpointMin, itemOptions.MatterConverter_Damage.HitpointSlope, itemOptions.MatterConverter_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            this.Design = new ConverterMatterToEnergyDesign(options);
+            this.Design = new ConverterMatterToEnergyDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume;
@@ -224,6 +219,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 double scaleVolume = _scaleActual.X * _scaleActual.Y * _scaleActual.Z;      // can't use volume from above, because that is the amount of matter that can be held.  This is to get conversion ratios
                 _converter = new Converter(this, _energyTanks, _itemOptions.MatterToEnergy_ConversionRate, _itemOptions.MatterToEnergy_AmountToDraw * scaleVolume);
             }
+
+            this.Destroyed += ConverterMatterToEnergy_Destroyed;
         }
 
         #endregion
@@ -237,7 +234,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_converter != null && _cargo.Count > 0)
+                if (!this.IsDestroyed && _converter != null && _cargo.Count > 0)
                 {
                     _converter.Transfer(elapsedTime);
                 }
@@ -291,7 +288,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 throw new NotImplementedException();
             }
         }
+        public double QuantityMax_Usable
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         public double QuantityMaxMinusCurrent
+        {
+            get { throw new NotImplementedException(); }
+        }
+        public double QuantityMaxMinusCurrent_Usable
         {
             get { throw new NotImplementedException(); }
         }
@@ -413,6 +419,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
             get
             {
                 return _scaleActual;
+            }
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void ConverterMatterToEnergy_Destroyed(object sender, EventArgs e)
+        {
+            lock (_lock)
+            {
+                _cargo.Clear();
             }
         }
 

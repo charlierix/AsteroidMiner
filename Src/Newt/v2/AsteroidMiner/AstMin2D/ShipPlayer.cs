@@ -182,6 +182,16 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _cargoBays = base.Parts.Where(o => o is CargoBay).Select(o => (CargoBay)o).ToArray();
             _guns = base.Parts.Where(o => o is ProjectileGun).Select(o => (ProjectileGun)o).ToArray();
 
+            // Listen to part destructions
+            foreach(PartBase part in base.Parts)
+            {
+                if(part is Thruster)
+                {
+                    part.Destroyed += Part_DestroyedResurrected;
+                    part.Resurrected += Part_DestroyedResurrected;
+                }
+            }
+
             // Explicitly set the bool so that the neurons are ignored (the ship shouldn't have a brain anyway, but it might)
             foreach (ProjectileGun gun in _guns)
             {
@@ -433,7 +443,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             Cargo_Mineral cargo = new Cargo_Mineral(mineral.MineralType, mineral.Density, mineral.VolumeInCubicMeters);
 
             // Try to add this to the cargo bays - the total volume may be enough, but the mineral may be too large for any
-            // one cargo bay
+            // one cargo bay (or some of the cargo bays could be destroyed)
             if (base.CargoBays.Add(cargo))
             {
                 // Finish removing it from the real world
@@ -534,6 +544,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
 
             base.Dispose(disposing);
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void Part_DestroyedResurrected(object sender, EventArgs e)
+        {
+            _isThrustMapDirty = true;
         }
 
         #endregion

@@ -66,7 +66,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new CameraColorRGBDesign(this.Options);
+            return new CameraColorRGBDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public CameraColorRGBDesign(EditorOptions options)
-            : base(options) { }
+        public CameraColorRGBDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -436,13 +431,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public CameraColorRGB(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, CameraPool cameraPool)
-            : base(options, dna)
+            : base(options, dna, itemOptions.CameraColorRGB_Damage.HitpointMin, itemOptions.CameraColorRGB_Damage.HitpointSlope, itemOptions.CameraColorRGB_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
             _cameraPool = cameraPool;
 
-            this.Design = new CameraColorRGBDesign(options);
+            this.Design = new CameraColorRGBDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius;
@@ -559,7 +554,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //NOTE: This method is called by the physics thread, and is only worried about energy tanks.  StoreSnapshot() is called
             //from the camera pool thread, and the individual neurons are read independently by the ai pool thread
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.CameraColorRGB_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (this.IsDestroyed || _energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.CameraColorRGB_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this

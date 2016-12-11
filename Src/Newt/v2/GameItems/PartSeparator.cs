@@ -99,7 +99,10 @@ namespace Game.Newt.v2.GameItems
             changed = false;
 
             bool[] hasMoved = new bool[parts.Length];		// defaults to false
-            CollisionHull[] hulls = parts.Select(o => o.CreateCollisionHull(world)).ToArray();
+
+            CollisionHull[] hulls = parts.
+                Select(o => o.CreateCollisionHull(world)).
+                ToArray();
 
             // Move the parts
             for (int cntr = 0; cntr < MAXSTEPS; cntr++)		// execution will break out of this loop early if parts are no longer intersecting
@@ -230,17 +233,17 @@ namespace Game.Newt.v2.GameItems
                     Vector3D translation, torque;
                     Vector3D offset1 = intersectPoint.ContactPoint - parts[intersection.Index1].Position;
                     Math3D.SplitForceIntoTranslationAndTorque(out translation, out torque, offset1, direction * (-1d * distance1));
-                    DoStepSprtAddForce(moves, intersection.Index1, translation, DoStepSprtRotate(torque, intersection.AvgSize1, sizeScale));		// don't use the full size, or the rotation won't even be noticable
+                    DoStep_AddForce(moves, intersection.Index1, translation, DoStep_Rotate(torque, intersection.AvgSize1, sizeScale));		// don't use the full size, or the rotation won't even be noticable
 
                     // Part2
                     Vector3D offset2 = intersectPoint.ContactPoint - parts[intersection.Index2].Position;
                     Math3D.SplitForceIntoTranslationAndTorque(out translation, out torque, offset2, direction * distance2);
-                    DoStepSprtAddForce(moves, intersection.Index2, translation, DoStepSprtRotate(torque, intersection.AvgSize2, sizeScale));
+                    DoStep_AddForce(moves, intersection.Index2, translation, DoStep_Rotate(torque, intersection.AvgSize2, sizeScale));
                 }
             }
 
             // Apply the movements
-            DoStepSprtMove(parts, moves);
+            DoStep_Move(parts, moves);
 
             // Remember which parts were modified
             foreach (int index in moves.Keys)
@@ -249,7 +252,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private static Quaternion? DoStepSprtRotate(Vector3D torque, double size, double penetrationScale)
+        private static Quaternion? DoStep_Rotate(Vector3D torque, double size, double penetrationScale)
         {
             const double MAXANGLE = 12d; //22.5d;
 
@@ -274,7 +277,7 @@ namespace Game.Newt.v2.GameItems
             return new Quaternion(axis, angle);
         }
 
-        private static void DoStepSprtAddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
+        private static void DoStep_AddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
         {
             if (!moves.ContainsKey(index))
             {
@@ -284,7 +287,7 @@ namespace Game.Newt.v2.GameItems
             moves[index].Add(Tuple.Create(translation, rotation));
         }
 
-        private static void DoStepSprtMove(PartSeparator_Part[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
+        private static void DoStep_Move(PartSeparator_Part[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
         {
             foreach (int partIndex in moves.Keys)
             {

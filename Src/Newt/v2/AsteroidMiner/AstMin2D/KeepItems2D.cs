@@ -161,7 +161,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Tuple.Create(.7d, .28d),
                     Tuple.Create(1d, 1d),
                 };
-                forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, 500, gradient: gradient));
+                forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, 500, gradient: gradient));
 
                 // This acts like a shock absorber
                 gradient = new[]
@@ -170,11 +170,47 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Tuple.Create(.75d, 1d),
                     //Tuple.Create(3d, 0d),
                 };
-                forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_Along, 10));
+                forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_Along, 10));
 
                 chaseForces = new MapObject_ChasePoint_Forces(item, false);
                 chaseForces.Forces = forces.ToArray();
             }
+
+            #endregion
+            #region Torques - ORIG
+
+            //MapObject_ChaseOrientation_Torques chaseTorques = null;
+
+            //if (_shouldApplyTorques && shouldLimitRotation)
+            //{
+            //    List<ChaseOrientation_Torque> torques = new List<ChaseOrientation_Torque>();
+
+            //    double mult = 60;
+
+            //    // Attraction
+            //    gradient = new[]
+            //    {
+            //        Tuple.Create(0d, 0d),     // distance, %
+            //        Tuple.Create(10d, 1d),
+            //    };
+            //    torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Attract_Direction, .6 * mult, gradient: gradient));
+
+            //    // Drag
+            //    torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_Orth, .015 * mult));
+
+            //    gradient = new[]
+            //    {
+            //        Tuple.Create(0d, 1d),
+            //        Tuple.Create(1.6d, .3d),
+            //        Tuple.Create(5d, 0d),
+            //    };
+            //    //torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, .04 * mult, gradient: gradient));
+            //    torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, .04 * mult, gradient: gradient));
+
+
+            //    chaseTorques = new MapObject_ChaseOrientation_Torques(item);
+            //    chaseTorques.Torques = torques.ToArray();
+            //}
 
             #endregion
             #region Torques
@@ -185,7 +221,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 List<ChaseOrientation_Torque> torques = new List<ChaseOrientation_Torque>();
 
-                double mult = 60;
+                double mult = 300; //600;
 
                 // Attraction
                 gradient = new[]
@@ -193,19 +229,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Tuple.Create(0d, 0d),     // distance, %
                     Tuple.Create(10d, 1d),
                 };
-                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Direction, .6 * mult, gradient: gradient));
+                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Attract_Direction, .4 * mult, gradient: gradient));
 
                 // Drag
-                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Velocity_Orth, .015 * mult));
-
-                gradient = new[]
+                gradient = new[]        // this gradient is needed, because there needs to be no drag along the desired axis (otherwise, this drag will fight with the user's desire to rotate the ship)
                 {
-                    Tuple.Create(0d, 1d),
-                    Tuple.Create(1.6d, .3d),
-                    Tuple.Create(5d, 0d),
+                    Tuple.Create(0d, 0d),     // distance, %
+                    Tuple.Create(5d, 1d),
                 };
-                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Velocity_AlongIfVelocityToward, .04 * mult, gradient: gradient));
+                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_Orth, .0739 * mult, gradient: gradient));
 
+                torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, .0408 * mult));
 
                 chaseTorques = new MapObject_ChaseOrientation_Torques(item);
                 chaseTorques.Torques = torques.ToArray();
@@ -425,10 +459,10 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Tuple.Create(0d, .04d),     // distance, %
                     Tuple.Create(1d, 1d),
                 };
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, 500, gradient: gradient));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, 500, gradient: gradient));
 
             // These act like a shock absorber
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityAway, 50));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, 50));
 
             gradient = new[]
                 {
@@ -436,7 +470,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     Tuple.Create(.75d, .2d),
                     Tuple.Create(2d, 0d),
                 };
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityToward, 100d, gradient: gradient));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, 100d, gradient: gradient));
 
 
             MapObject_ChasePoint_Forces chaseForces = new MapObject_ChasePoint_Forces(item, false);

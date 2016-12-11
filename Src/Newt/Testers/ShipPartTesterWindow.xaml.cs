@@ -4300,6 +4300,63 @@ namespace Game.Newt.Testers
         }
 
         #endregion
+        #region Class: DestructibleContainer
+
+        private class DestructibleContainer : Container, ITakesDamage
+        {
+            public event EventHandler Destroyed = null;
+            public event EventHandler Resurrected = null;
+
+            public double HitPoints_Current
+            {
+                get;
+                set;
+            }
+            public double HitPoints_Max
+            {
+                get;
+                set;
+            }
+
+            private bool _isDestroyed = false;
+            public bool IsDestroyed
+            {
+                get
+                {
+                    return _isDestroyed;
+                }
+                set
+                {
+                    _isDestroyed = value;
+
+                    if (_isDestroyed)
+                    {
+                        if (this.Destroyed != null)
+                            this.Destroyed(this, new EventArgs());
+                    }
+                    else
+                    {
+                        if (this.Resurrected != null)
+                            this.Resurrected(this, new EventArgs());
+                    }
+                }
+            }
+
+            public void TakeDamage_Collision(IMapObject collidedWith, Point3D positionModel, Vector3D velocityModel, double mass1, double mass2)
+            {
+                throw new NotImplementedException();
+            }
+            public void TakeDamage_Energy(double amount, Point3D positionModel)
+            {
+                throw new NotImplementedException();
+            }
+            public void TakeDamage_Heat(double amount, Point3D positionModel)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
 
         #region Declaration Section
 
@@ -4920,6 +4977,144 @@ namespace Game.Newt.Testers
 
                 percent = 1d;
                 thrust = thruster.Fire(ref percent, 0, 1d);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void btnContainerGroup_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                DestructibleContainer[] containers = null;
+                ContainerGroup group = null;
+
+                #region test1
+
+                // Set up 3 containers with different sizes
+                containers = new[]
+                {
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 100 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 50 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 70 },
+                };
+
+                group = new ContainerGroup() { Ownership = ContainerGroup.ContainerOwnershipType.GroupIsSoleOwner };
+
+                foreach (var container in containers)
+                    group.AddContainer(container);
+
+                // Fill them all up
+                group.AddQuantity(group.QuantityMax, false);
+
+                // Add more
+                group.AddQuantity(10, false);
+
+                // Destroy one
+                containers[1].IsDestroyed = true;
+
+                // Add more
+                group.AddQuantity(5, false);
+
+                // Repair
+                containers[1].IsDestroyed = false;
+
+                // Add more
+                group.AddQuantity(5, false);
+
+                #endregion
+                #region test 2
+
+                // Set up 3 containers with different sizes
+                containers = new[]
+                {
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 100 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 50 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 70 },
+                };
+
+                group = new ContainerGroup() { Ownership = ContainerGroup.ContainerOwnershipType.GroupIsSoleOwner };
+
+                foreach (var container in containers)
+                    group.AddContainer(container);
+
+                // Fill them all up
+                group.AddQuantity(group.QuantityMax, false);
+
+                // Remove some
+                group.RemoveQuantity(5, false);
+
+                // Destroy one
+                containers[0].IsDestroyed = true;
+
+                // Remove more
+                group.RemoveQuantity(10, false);
+
+                // Fix it
+                containers[0].IsDestroyed = false;
+
+                // Remove more
+                group.RemoveQuantity(2, false);
+
+                #endregion
+                #region test 3
+
+                // Set up 3 containers with different sizes
+                containers = new[]
+                {
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 100 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 50 },
+                    new DestructibleContainer() { HitPoints_Max = 1, HitPoints_Current = 1, QuantityMax = 70 },
+                };
+
+                group = new ContainerGroup() { Ownership = ContainerGroup.ContainerOwnershipType.GroupIsSoleOwner };
+
+                foreach (var container in containers)
+                    group.AddContainer(container);
+
+                // Fill them halfway
+                group.AddQuantity(group.QuantityMax / 2, false);
+
+                // Destroy one
+                containers[2].IsDestroyed = true;
+
+                // Repair it
+                containers[2].IsDestroyed = false;
+
+                // Destroy again
+                containers[2].IsDestroyed = true;
+
+                // Repair it
+                containers[2].IsDestroyed = false;
+
+                // Add some
+                group.AddQuantity(15, false);
+
+                // Remove some
+                group.RemoveQuantity(5, false);
+
+                #endregion
+                #region test 4
+
+                // Delete two containers from 2 different threads as close to simulataneous as possible
+                //
+                // The group will see the first destruction, try to rebalance.  It will only know about one destruction and will be off
+                // Then the second destruction will be registered, and another rebalance will occur - but quantities will be off
+                //
+                // While it's possible this could happen, it's more likely that a dual destruction will happen in one thread.  The event listener
+                // is called from that destroying thread, so everything will work out
+
+                #endregion
+                #region test 5
+
+                // Set up threads that hammer it with rapid destoy/repair add/remove
+
+                // Look for quantities trending to empty or full vs staying stable
+
+                // If containers are getting destroyed and repaired that rapidly, I don't know if it matters if some quantity is lost.  Just make sure no exceptions occur
+
+                #endregion
             }
             catch (Exception ex)
             {

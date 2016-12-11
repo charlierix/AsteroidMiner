@@ -1358,7 +1358,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Interface: ITakesWeaponDamage
+    #region Interface: ITakesDamage
 
     public interface ITakesDamage
     {

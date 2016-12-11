@@ -66,7 +66,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new SensorVelocityDesign(this.Options);
+            return new SensorVelocityDesign(this.Options, false);
         }
 
         #endregion
@@ -87,8 +87,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public SensorVelocityDesign(EditorOptions options)
-            : base(options) { }
+        public SensorVelocityDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -109,28 +109,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometry = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -197,12 +192,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public SensorVelocity(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.Sensor_Damage.HitpointMin, itemOptions.Sensor_Damage.HitpointSlope, itemOptions.Sensor_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            this.Design = new SensorVelocityDesign(options);
+            this.Design = new SensorVelocityDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius;
@@ -281,7 +276,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensor_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+                if (this.IsDestroyed || _energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.VelocitySensor_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
                 {
                     // The energy tank didn't have enough
                     //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this

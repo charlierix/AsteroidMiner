@@ -455,19 +455,19 @@ namespace Game.Newt.v2.Arcanorum
         {
             MutateUtility.NeuronMutateArgs retVal = null;
 
-            MutateUtility.MuateArgs neuronMovement = new MutateUtility.MuateArgs(false, options.NeuronPercentToMutate, null, null,
-                new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.NeuronMovementAmount));		// neurons are all point3D (positions need to drift around freely.  percent doesn't make much sense)
+            MutateUtility.MuateArgs neuronMovement = new MutateUtility.MuateArgs(false, options.Neuron_PercentToMutate, null, null,
+                new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Neuron_MovementAmount));		// neurons are all point3D (positions need to drift around freely.  percent doesn't make much sense)
 
-            MutateUtility.MuateArgs linkMovement = new MutateUtility.MuateArgs(false, options.LinkPercentToMutate,
+            MutateUtility.MuateArgs linkMovement = new MutateUtility.MuateArgs(false, options.Link_PercentToMutate,
                 new Tuple<string, MutateUtility.MuateFactorArgs>[]
 					{
-						Tuple.Create("FromContainerPosition", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkContainerMovementAmount)),
-						Tuple.Create("FromContainerOrientation", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, options.LinkContainerRotateAmount))
+						Tuple.Create("FromContainerPosition", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkContainer_MovementAmount)),
+						Tuple.Create("FromContainerOrientation", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, options.LinkContainer_RotateAmount))
 					},
                 new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
 					{
-						Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkWeightAmount)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
-						Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkMovementAmount)),		// using a larger value for the links
+						Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Link_WeightAmount)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
+						Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Link_MovementAmount)),		// using a larger value for the links
 					},
                 null);
 

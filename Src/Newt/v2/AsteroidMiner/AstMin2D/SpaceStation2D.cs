@@ -220,6 +220,31 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             return ItemOptionsAstMin2D.GetCredits_Ammo();
         }
 
+        public decimal GetPrice_Repair(PartBase part)
+        {
+            const decimal MULT_DESTROYED = .75m;
+            const decimal MULT_PARTIAL = .4m;
+
+            if (!part.IsDestroyed && part.HitPoints_Current.IsNearValue(part.HitPoints_Max))
+            {
+                return 0m;
+            }
+
+            // Make the repair cost some fraction of the cost of a new part
+            decimal purchasePrice = ItemOptionsAstMin2D.GetCredits_ShipPart(part.GetNewDNA());
+
+            if (part.IsDestroyed)
+            {
+                return purchasePrice * MULT_DESTROYED;
+            }
+            else
+            {
+                double percent = (part.HitPoints_Max - part.HitPoints_Current) / part.HitPoints_Max;
+
+                return Convert.ToDecimal(percent) * purchasePrice * MULT_PARTIAL;
+            }
+        }
+
         public Tuple<decimal, decimal> GetPrice_Sell(Inventory inventory)
         {
             Tuple<decimal, decimal> retVal = GetPrice_Base(inventory);
@@ -635,22 +660,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             const double MAXVALUE = 4;      // output goes form 1/MAX to MAX
 
-            // Get a value from 0 to 1 (majority of the time it is near .5)
-            double retVal = rand.NextBell(bell);
-
-            // Adjust to centered at zero.  Multiply by two so it goes -1 to 1.  Then multiply by MAX-1 so it goes -MAX-1 to MAX-1
-            // (the 1 gets added in the next step)
-            retVal = (retVal - .5) * (2 * (MAXVALUE - 1));
-
-            // Turn into a multiplier
-            if (retVal < 0)
-            {
-                retVal = 1 / (1 + Math.Abs(retVal));
-            }
-            else
-            {
-                retVal += 1;
-            }
+            double retVal = rand.NextBellPercent(bell, MAXVALUE);
 
             return Convert.ToDecimal(retVal);
         }

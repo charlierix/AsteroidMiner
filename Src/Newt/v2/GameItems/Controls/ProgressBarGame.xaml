@@ -17,16 +17,26 @@
 
         <!-- Progress Bar Background -->
         <Border Grid.Column="1" CornerRadius="3" BorderThickness="1" BorderBrush="{Binding Path=ProgressBackBorderBrush, ElementName=thisControl}" Background="{Binding Path=ProgressBackBrush, ElementName=thisControl}" Margin="0,2,0,2">
-
             <Grid>
+                <Grid.OpacityMask>
+                    <VisualBrush Visual="{Binding ElementName=clipMask}" Stretch="None" />
+                </Grid.OpacityMask>
+
                 <!-- I can't know what my parent border's width is, but I can set these two to get the bar to any percent I want -->
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Name="barWidth" Width="1*"/>
                     <ColumnDefinition Name="remainderWidth" Width="1*"/>
+                    <ColumnDefinition Name="damageWidth" Width=".25*"/>
                 </Grid.ColumnDefinitions>
 
+                <!-- http://stackoverflow.com/questions/5649875/how-to-make-the-border-trim-the-child-elements -->
+                <Border Grid.ColumnSpan="3" x:Name="clipMask" Background="{Binding Path=ProgressBackBrush, ElementName=thisControl}" CornerRadius="3" />
+
                 <!-- Color Part -->
-                <Border Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{Binding Path=ProgressBrush, ElementName=thisControl}" BorderThickness="0" BorderBrush="Transparent" CornerRadius="3"/>
+                <Border Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{Binding Path=ProgressBrush, ElementName=thisControl}" BorderThickness="0" BorderBrush="Transparent" CornerRadius="0"/>
+
+                <!-- Damaged Part -->
+                <Border Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{Binding Path=ProgressDamageBrush, ElementName=thisControl}" BorderThickness="0" BorderBrush="Transparent" CornerRadius="0"/>
             </Grid>
         </Border>
 

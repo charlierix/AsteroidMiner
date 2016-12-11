@@ -72,7 +72,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new SwarmBayDesign(this.Options);
+            return new SwarmBayDesign(this.Options, false);
         }
 
         #endregion
@@ -95,8 +95,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public SwarmBayDesign(EditorOptions options)
-            : base(options) { }
+        public SwarmBayDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -117,28 +117,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -287,7 +282,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public SwarmBay(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, Map map, World world, int material_SwarmBot, IContainer plasma, SwarmObjectiveStrokes strokes)
-            : base(options, dna)
+            : base(options, dna, itemOptions.SwarmBay_Damage.HitpointMin, itemOptions.SwarmBay_Damage.HitpointSlope, itemOptions.SwarmBay_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _map = map;
@@ -296,7 +291,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _plasma = plasma;
             _strokes = strokes;
 
-            this.Design = new SwarmBayDesign(options);
+            this.Design = new SwarmBayDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume, radius;
@@ -321,6 +316,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 _map.ItemRemoved += Map_ItemRemoved;
             }
+
+            this.Destroyed += SwarmBay_Destroyed;
         }
 
         #endregion
@@ -353,7 +350,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // See if enough time has passed for another shot to be fired
             _timeSinceLastBot += elapsedTime;
 
-            if (_timeSinceLastBot >= _timeBetweenBots && _bots.Count < _maxBots)
+            if (!this.IsDestroyed && _timeSinceLastBot >= _timeBetweenBots && _bots.Count < _maxBots)
             {
                 bool plasmaThresholdMet = false;
                 if (_plasma != null)
@@ -436,6 +433,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     index++;
                 }
             }
+        }
+
+        private void SwarmBay_Destroyed(object sender, EventArgs e)
+        {
+            foreach (SwarmBot1b bot in _bots.ToArray())     // to array, just in case the list is manipulated inside the loop
+            {
+                _map.RemoveItem(bot);
+            }
+            _bots.Clear();
         }
 
         #endregion

@@ -473,7 +473,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 switch (senderCast.Text)
                 {
                     case REFILL_REPAIR:
-                        throw new ApplicationException("Finish this: " + senderCast.Text);
+                        RepairParts(ship.Parts, senderCast);
+                        break;
 
                     case REFILL_FUEL:
                         FillContainer(ship.Fuel, _station.GetPrice_Buy_Fuel(), senderCast);
@@ -492,6 +493,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                         break;
 
                     case REFILL_ALL:
+                        RepairParts(ship.Parts, senderCast);
                         FillContainer(ship.Fuel, _station.GetPrice_Buy_Fuel(), senderCast);
                         FillContainer(ship.Energy, _station.GetPrice_Buy_Energy(), senderCast);
                         FillContainer(ship.Plasma, _station.GetPrice_Buy_Plasma(), senderCast);
@@ -1097,7 +1099,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            RefillButton button;
             Thickness margin = new Thickness(2);
 
             //NOTE: Credits are populated at the end of this method
@@ -1184,6 +1185,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     switch (button.Text)
                     {
                         case REFILL_REPAIR:
+                            cost = _player.Ship.Parts.Sum(o => _station.GetPrice_Repair(o));
                             break;
 
                         case REFILL_FUEL:
@@ -1226,13 +1228,13 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
             else
             {
-                return Convert.ToDecimal(container.QuantityMax - container.QuantityCurrent) * costPerUnit;
+                return Convert.ToDecimal(container.QuantityMaxMinusCurrent_Usable) * costPerUnit;
             }
         }
 
         private void FillContainer(IContainer container, decimal costPerUnit, UIElement clickedControl)
         {
-            if (container == null || container.QuantityCurrent == container.QuantityMax)
+            if (container == null || container.QuantityCurrent == container.QuantityMax_Usable)
             {
                 // Just exit, this isn't an error
                 return;
@@ -1243,7 +1245,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            double amountToBy = container.QuantityMax - container.QuantityCurrent;
+            double amountToBy = container.QuantityMaxMinusCurrent_Usable;
 
             // Figure out how much to spend
             decimal cost = Convert.ToDecimal(amountToBy) * costPerUnit;
@@ -1258,6 +1260,44 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // Buy it
             container.QuantityCurrent += amountToBy;
             _player.Credits -= cost;        //NOTE: There is an event listener tied to this property that will update the label
+        }
+
+        private void RepairParts(IEnumerable<PartBase> parts, UIElement clickedControl)
+        {
+            if (_player.Credits == 0m)
+            {
+                PlayFailSound(clickedControl);
+                return;
+            }
+
+            foreach (PartBase part in UtilityCore.RandomOrder(parts.ToArray()))      // random order in case they only have enough money to fix some of the parts
+            {
+                if (!part.IsDestroyed && part.HitPoints_Current == part.HitPoints_Max)
+                {
+                    continue;
+                }
+
+                decimal price = _station.GetPrice_Repair(part);
+
+                // Check for partial fix
+                double fixAmount = part.HitPoints_Max - part.HitPoints_Current;
+                if (price > _player.Credits)
+                {
+                    if (part.IsDestroyed)
+                    {
+                        //TODO: If you want to partially fix a destroyed part, split the cost between the destruction and hitpoints
+                        continue;
+                    }
+
+                    double percent = Convert.ToDouble(_player.Credits / price);
+                    fixAmount *= percent;
+                    price = _player.Credits;
+                }
+
+                // Fix it
+                part.AdjustHitpoints(fixAmount);
+                _player.Credits -= price;
+            }
         }
 
         private void PlayFailSound(UIElement clickedControl)

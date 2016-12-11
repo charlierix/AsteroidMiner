@@ -78,7 +78,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new BrainDesign(this.Options);
+            return new BrainDesign(this.Options, false);
         }
 
         #endregion
@@ -102,8 +102,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public BrainDesign(EditorOptions options)
-            : base(options) { }
+        public BrainDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -124,17 +124,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
@@ -150,11 +150,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -442,12 +437,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public Brain(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.Brain_Damage.HitpointMin, itemOptions.Brain_Damage.HitpointSlope, itemOptions.Brain_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            this.Design = new BrainDesign(options);
+            this.Design = new BrainDesign(options, true);
             this.Design.SetDNA(dna);
 
             // Build the neurons (not doing the links yet - or maybe do the internal links?)
@@ -532,7 +527,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //a separate thread, and doesn't deal with energy draw, so this.IsOn is a loose compromise.  That tick could fire several times for each
             //one of this.Update, or the other way around.  But in the long run, they should be fairly synced.
 
-            if (_energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (this.IsDestroyed || _energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this anyway.  So

@@ -67,7 +67,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new FuelTankDesign(this.Options);
+            return new FuelTankDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public FuelTankDesign(EditorOptions options)
-            : base(options) { }
+        public FuelTankDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3D _geometry = null;
+        private Model3D _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -282,11 +277,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public FuelTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
-            : base(options, dna)
+            : base(options, dna, itemOptions.FuelTank_Damage.HitpointMin, itemOptions.FuelTank_Damage.HitpointSlope, itemOptions.FuelTank_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new FuelTankDesign(options);
+            this.Design = new FuelTankDesign(options, true);
             this.Design.SetDNA(dna);
 
             double surfaceArea, radius;
@@ -296,6 +291,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Radius = radius;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
+
+            this.Destroyed += FuelTank_Destroyed;
         }
 
         #endregion
@@ -326,11 +323,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 throw new NotSupportedException("The container max can't be set directly.  It is derived from the dna.scale");
             }
         }
+        public double QuantityMax_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMax;
+                }
+            }
+        }
+
         public double QuantityMaxMinusCurrent
         {
             get
             {
                 return _container.QuantityMaxMinusCurrent;
+            }
+        }
+        public double QuantityMaxMinusCurrent_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMaxMinusCurrent;
+                }
             }
         }
 
@@ -362,6 +388,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public double AddQuantity(double amount, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return amount;
+            }
+
             double retVal = _container.AddQuantity(amount, exactAmountOnly);        // no need for a lock, this statement is atomic
 
             if (retVal < amount)
@@ -373,6 +404,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public double AddQuantity(IContainer pullFrom, double amount, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return amount;
+            }
+
             double retVal = _container.AddQuantity(pullFrom, amount, exactAmountOnly);      // no need for a lock, this statement is atomic
 
             if (retVal < amount)
@@ -384,6 +420,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public double AddQuantity(IContainer pullFrom, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return pullFrom.QuantityCurrent;
+            }
+
             bool shouldRaiseEvent = false;
             double retVal;
 
@@ -528,6 +569,22 @@ namespace Game.Newt.v2.GameItems.ShipParts
             get
             {
                 return _scaleActual;
+            }
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void FuelTank_Destroyed(object sender, EventArgs e)
+        {
+            double prev = _container.QuantityCurrent;
+
+            _container.QuantityCurrent = 0;
+
+            if (prev > 0)
+            {
+                OnMassChanged();
             }
         }
 

@@ -64,7 +64,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ConverterEnergyToPlasmaDesign(this.Options);
+            return new ConverterEnergyToPlasmaDesign(this.Options, false);
         }
 
         #endregion
@@ -85,8 +85,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterEnergyToPlasmaDesign(EditorOptions options)
-            : base(options) { }
+        public ConverterEnergyToPlasmaDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -107,28 +107,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -194,11 +189,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         /// could be the tanks passed in directly
         /// </summary>
         public ConverterEnergyToPlasma(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, IContainer plasmaTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.EnergyConverter_Damage.HitpointMin, itemOptions.EnergyConverter_Damage.HitpointSlope, itemOptions.EnergyConverter_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new ConverterEnergyToPlasmaDesign(options);
+            this.Design = new ConverterEnergyToPlasmaDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume = ConverterEnergyToFuel.GetVolume(out _scaleActual, dna);
@@ -220,6 +215,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
+            if (this.IsDestroyed)
+            {
+                return;
+            }
+
             this.Transfer(elapsedTime, 1);
         }
 

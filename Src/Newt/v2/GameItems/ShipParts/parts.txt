@@ -1,0 +1,48 @@
+ Volume in drive C is OSDisk
+ Volume Serial Number is 0E74-0F22
+
+ Directory of C:\!Dev\!Personal\PartyPeople Attempt8 (GitHub)\Src\Newt\v2\GameItems\ShipParts
+
+11/23/2016  10:11 PM    <DIR>          .
+11/23/2016  10:11 PM    <DIR>          ..
+11/23/2016  06:20 PM            18,944 AmmoBox.cs
+11/22/2016  09:25 PM            16,492 BeamGun.cs
+11/22/2016  09:02 PM            35,407 Brain.cs
+11/22/2016  09:02 PM            53,630 BrainRGBRecognizer.cs
+11/22/2016  09:03 PM            45,833 CameraColorRGB.cs
+11/22/2016  09:26 PM            42,846 CargoBay.cs
+11/22/2016  09:04 PM             7,727 ConverterEnergyToAmmo.cs
+11/22/2016  09:04 PM            16,530 ConverterEnergyToFuel.cs
+11/22/2016  09:04 PM             7,777 ConverterEnergyToPlasma.cs
+11/23/2016  09:23 AM            14,427 ConverterFuelToEnergy.cs
+11/22/2016  09:05 PM            12,610 ConverterMatterToAmmo.cs
+11/22/2016  09:05 PM            12,360 ConverterMatterToEnergy.cs
+11/22/2016  09:06 PM            32,372 ConverterMatterToFuel.cs
+11/22/2016  09:06 PM            12,389 ConverterMatterToPlasma.cs
+11/23/2016  09:26 AM            37,770 ConverterRadiationToEnergy.cs
+11/22/2016  09:26 PM            15,572 EnergyTank.cs
+11/22/2016  09:17 PM            11,997 Eye.cs
+11/22/2016  09:17 PM            20,576 FuelTank.cs
+11/22/2016  09:17 PM             9,830 GrappleGun.cs
+11/23/2016  09:24 AM             8,695 HangarBay.cs
+11/23/2016  10:11 PM                 0 parts.txt
+11/22/2016  09:18 PM            11,618 PlasmaTank.cs
+11/22/2016  09:18 PM            58,099 ProjectileGun.cs
+11/23/2016  09:24 AM             7,045 SelfRepair.cs
+11/22/2016  09:19 PM             4,402 SensorCollision.cs
+11/22/2016  09:26 PM             4,363 SensorFluid.cs
+11/22/2016  09:19 PM            28,239 SensorGravity.cs
+11/22/2016  09:19 PM             4,518 SensorInternalForce.cs
+11/22/2016  09:20 PM             4,407 SensorNetForce.cs
+11/22/2016  09:20 PM             4,463 SensorRadiation.cs
+11/22/2016  09:20 PM            10,360 SensorSpin.cs
+11/23/2016  09:24 AM             4,664 SensorTractor.cs
+11/22/2016  09:21 PM            10,219 SensorVelocity.cs
+11/22/2016  09:21 PM            12,230 ShieldEnergy.cs
+11/22/2016  09:02 PM             6,332 ShieldKinetic.cs
+11/22/2016  09:21 PM             6,336 ShieldTractor.cs
+11/22/2016  09:27 PM            17,577 SwarmBay.cs
+11/22/2016  09:22 PM            54,294 Thruster.cs
+11/22/2016  09:27 PM            12,089 TractorBeam.cs
+              39 File(s)        695,039 bytes
+               2 Dir(s)  275,850,862,592 bytes free

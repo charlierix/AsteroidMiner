@@ -119,7 +119,7 @@ namespace Game.Newt.v2.Arcanorum
 
             // Energy tank
             _energy = new Container();
-            _energy.QuantityMax = _itemOptions.NestEnergy_Max * radius;
+            _energy.QuantityMax = _itemOptions.Nest_Energy_Max * radius;
             _energy.QuantityCurrent = _energy.QuantityMax * .5d;
 
             // Finish
@@ -285,7 +285,7 @@ namespace Game.Newt.v2.Arcanorum
         {
             _time += elapsedTime;
 
-            _energy.AddQuantity(_itemOptions.NestEnergy_Add * elapsedTime, false);
+            _energy.AddQuantity(_itemOptions.Nest_Energy_Add * elapsedTime, false);
 
             // Get the currently live bots
             ArcBotNPC[] bots;
@@ -458,7 +458,7 @@ namespace Game.Newt.v2.Arcanorum
             //    // Not ready to create a new egg
             //    return;
             //}
-            else if (!Math1D.IsNearZero(_energy.RemoveQuantity(_itemOptions.NestEnergy_Egg, true)))
+            else if (!Math1D.IsNearZero(_energy.RemoveQuantity(_itemOptions.Nest_Energy_Egg, true)))
             {
                 // Not enough energy to create an egg
                 return;

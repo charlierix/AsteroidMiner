@@ -107,11 +107,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             if (this.ThrusterType == ThrusterType.Custom)
             {
-                return new ThrusterDesign(this.Options, _directions);
+                return new ThrusterDesign(this.Options, false, _directions);
             }
             else
             {
-                return new ThrusterDesign(this.Options, this.ThrusterType);
+                return new ThrusterDesign(this.Options, false, this.ThrusterType);
             }
         }
 
@@ -137,8 +137,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ThrusterDesign(EditorOptions options, ThrusterType thrusterType)
-            : base(options)
+        public ThrusterDesign(EditorOptions options, bool isFinalModel, ThrusterType thrusterType)
+            : base(options, isFinalModel)
         {
             if (thrusterType == ThrusterType.Custom)
             {
@@ -148,8 +148,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.ThrusterType = thrusterType;
             this.ThrusterDirections = GetThrusterDirections(this.ThrusterType);
         }
-        public ThrusterDesign(EditorOptions options, Vector3D[] thrusters)
-            : base(options)
+        public ThrusterDesign(EditorOptions options, bool isFinalModel, Vector3D[] thrusters)
+            : base(options, isFinalModel)
         {
             if (thrusters == null || thrusters.Length == 0)
             {
@@ -210,28 +210,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false, true);
+                    _model = CreateGeometry(this.IsFinalModel, true);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true, true);
-        }
 
         public override ShipPartDNA GetDNA()
         {
@@ -938,18 +933,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public Thruster(EditorOptions options, ItemOptions itemOptions, ThrusterDNA dna, IContainer fuelTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.Thruster_Damage.HitpointMin, itemOptions.Thruster_Damage.HitpointSlope, itemOptions.Thruster_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _fuelTanks = fuelTanks;
 
             if (dna.ThrusterType == ThrusterType.Custom)
             {
-                this.Design = new ThrusterDesign(options, dna.ThrusterDirections);
+                this.Design = new ThrusterDesign(options, true, dna.ThrusterDirections);
             }
             else
             {
-                this.Design = new ThrusterDesign(options, dna.ThrusterType);
+                this.Design = new ThrusterDesign(options, true, dna.ThrusterType);
             }
             this.Design.SetDNA(dna);
 
@@ -1216,7 +1211,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 double actualForce;
 
-                if (_fuelTanks != null && _fuelTanks.QuantityCurrent > 0d)
+                if (!this.IsDestroyed && _fuelTanks != null && _fuelTanks.QuantityCurrent > 0d)
                 {
                     // Cap at 100%
                     if (percentMax > 1d)
@@ -1362,7 +1357,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 for (int cntr = 0; cntr < cast.ThrusterDirections.Length; cntr++)
                 {
-                    if (!Math3D.IsNearValue(this.ThrusterDirections[cntr], cast.ThrusterDirections[cntr]))
+                    // Ran into a case where original thruster directions weren't unit vectors, but the editor made them unit vectors
+                    if (!Math3D.IsNearValue(this.ThrusterDirections[cntr].ToUnit(false), cast.ThrusterDirections[cntr].ToUnit(false)))
                     {
                         return false;
                     }

@@ -38,67 +38,88 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
-        // Vision Sensor
-        private volatile object _visionSensorNeuronDensity = 20d;
+        #region Vision Sensor
+
+        private volatile object _visionSensor_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a vision sensor
         /// </summary>
-        public double VisionSensorNeuronDensity
+        public double VisionSensor_NeuronDensity
         {
             get
             {
-                return (double)_visionSensorNeuronDensity;
+                return (double)_visionSensor_NeuronDensity;
             }
             set
             {
-                _visionSensorNeuronDensity = value;
+                _visionSensor_NeuronDensity = value;
             }
         }
 
-        private volatile object _visionSensorAmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
-        public double VisionSensorAmountToDraw
+        private volatile object _visionSensor_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
+        public double VisionSensor_AmountToDraw
         {
             get
             {
-                return (double)_visionSensorAmountToDraw;
+                return (double)_visionSensor_AmountToDraw;
             }
             set
             {
-                _visionSensorAmountToDraw = value;
+                _visionSensor_AmountToDraw = value;
             }
         }
 
-        // Homing Sensor
-        private volatile object _homingSensorNeuronDensity = 20d;
+        public readonly DamageProps VisionSensor_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region Homing Sensor
+
+        private volatile object _homingSensor_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a homing sensor
         /// </summary>
-        public double HomingSensorNeuronDensity
+        public double HomingSensor_NeuronDensity
         {
             get
             {
-                return (double)_homingSensorNeuronDensity;
+                return (double)_homingSensor_NeuronDensity;
             }
             set
             {
-                _homingSensorNeuronDensity = value;
+                _homingSensor_NeuronDensity = value;
             }
         }
 
-        private volatile object _homingSensorAmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
-        public double HomingSensorAmountToDraw
+        private volatile object _homingSensor_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
+        public double HomingSensor_AmountToDraw
         {
             get
             {
-                return (double)_homingSensorAmountToDraw;
+                return (double)_homingSensor_AmountToDraw;
             }
             set
             {
-                _homingSensorAmountToDraw = value;
+                _homingSensor_AmountToDraw = value;
             }
         }
 
-        // Plate Writer
+        public readonly DamageProps HomingSensor_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region Motion Controller
+
         private volatile object _motionController_Linear_NeuronDensity = 20d;
         /// <summary>
         /// This is how many neurons to place inside of a plate writer
@@ -128,142 +149,154 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
-        // Nest
+        public readonly DamageProps MotionController_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region Nest
+
         //TODO: Instead of absolutes, these should be multipliers (to be multiplied with dna props)
-        private volatile object _nestEnergy_Max = 100d;
-        public double NestEnergy_Max
+        private volatile object _nest_Energy_Max = 100d;
+        public double Nest_Energy_Max
         {
             get
             {
-                return (double)_nestEnergy_Max;
+                return (double)_nest_Energy_Max;
             }
             set
             {
-                _nestEnergy_Max = value;
+                _nest_Energy_Max = value;
             }
         }
 
-        private volatile object _nestEnergy_Add = 15d;
+        private volatile object _nest_Energy_Add = 15d;
         /// <summary>
         /// How much energy to add per second
         /// </summary>
-        public double NestEnergy_Add
+        public double Nest_Energy_Add
         {
             get
             {
-                return (double)_nestEnergy_Add;
+                return (double)_nest_Energy_Add;
             }
             set
             {
-                _nestEnergy_Add = value;
+                _nest_Energy_Add = value;
             }
         }
 
-        private volatile object _nestEnergy_Egg = 60d;
+        private volatile object _nest_Energy_Egg = 60d;
         /// <summary>
         /// This is the cost of an egg
         /// </summary>
-        public double NestEnergy_Egg
+        public double Nest_Energy_Egg
         {
             get
             {
-                return (double)_nestEnergy_Egg;
+                return (double)_nest_Energy_Egg;
             }
             set
             {
-                _nestEnergy_Egg = value;
+                _nest_Energy_Egg = value;
             }
         }
+
+        #endregion
 
         //-------------------------- Mutation
-        private volatile object _neuronPercentToMutate = .02d;
-        public double NeuronPercentToMutate
+        private volatile object _neuron_PercentToMutate = .02d;
+        public double Neuron_PercentToMutate
         {
             get
             {
-                return (double)_neuronPercentToMutate;
+                return (double)_neuron_PercentToMutate;
             }
             set
             {
-                _neuronPercentToMutate = value;
+                _neuron_PercentToMutate = value;
             }
         }
 
-        private volatile object _neuronMovementAmount = .04d;
-        public double NeuronMovementAmount
+        private volatile object _neuron_MovementAmount = .04d;
+        public double Neuron_MovementAmount
         {
             get
             {
-                return (double)_neuronMovementAmount;
+                return (double)_neuron_MovementAmount;
             }
             set
             {
-                _neuronMovementAmount = value;
+                _neuron_MovementAmount = value;
             }
         }
 
-        private volatile object _linkPercentToMutate = .02d;
-        public double LinkPercentToMutate
+        private volatile object _link_PercentToMutate = .02d;
+        public double Link_PercentToMutate
         {
             get
             {
-                return (double)_linkPercentToMutate;
+                return (double)_link_PercentToMutate;
             }
             set
             {
-                _linkPercentToMutate = value;
+                _link_PercentToMutate = value;
             }
         }
 
-        private volatile object _linkContainerMovementAmount = .1d;
-        public double LinkContainerMovementAmount
+        private volatile object _linkContainer_MovementAmount = .1d;
+        public double LinkContainer_MovementAmount
         {
             get
             {
-                return (double)_linkContainerMovementAmount;
+                return (double)_linkContainer_MovementAmount;
             }
             set
             {
-                _linkContainerMovementAmount = value;
+                _linkContainer_MovementAmount = value;
             }
         }
 
-        private volatile object _linkContainerRotateAmount = .08d;
-        public double LinkContainerRotateAmount
+        private volatile object _linkContainer_RotateAmount = .08d;
+        public double LinkContainer_RotateAmount
         {
             get
             {
-                return (double)_linkContainerRotateAmount;
+                return (double)_linkContainer_RotateAmount;
             }
             set
             {
-                _linkContainerRotateAmount = value;
+                _linkContainer_RotateAmount = value;
             }
         }
 
-        private volatile object _linkWeightAmount = .1d;
-        public double LinkWeightAmount
+        private volatile object _link_WeightAmount = .1d;
+        public double Link_WeightAmount
         {
             get
             {
-                return (double)_linkWeightAmount;
+                return (double)_link_WeightAmount;
             }
             set
             {
-                _linkWeightAmount = value;
+                _link_WeightAmount = value;
             }
         }
 
-        private volatile object _linkMovementAmount = .2d;
-        public double LinkMovementAmount
+        private volatile object _link_MovementAmount = .2d;
+        public double Link_MovementAmount
         {
             get
             {
-                return (double)_linkMovementAmount;
+                return (double)_link_MovementAmount;
             }
             set
             {
-                _linkMovementAmount = value;
+                _link_MovementAmount = value;
             }
         }
     }

@@ -1250,6 +1250,25 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
+        /// This clones the set of triangles, but with the points run through a transform
+        /// </summary>
+        public static ITriangleIndexed[] Clone_Transformed(ITriangleIndexed[] triangles, Transform3D transform)
+        {
+            if (triangles == null)
+            {
+                return new TriangleIndexed[0];
+            }
+
+            Point3D[] transformedPoints = triangles[0].AllPoints.
+                Select(o => transform.Transform(o)).
+                ToArray();
+
+            return triangles.
+                Select(o => new TriangleIndexed(o.Index0, o.Index1, o.Index2, transformedPoints)).
+                ToArray();
+        }
+
+        /// <summary>
         /// This looks at all the lines in the triangles passed in, and returns the unique indices
         /// </summary>
         public static Tuple<int, int>[] GetUniqueLines(IEnumerable<ITriangleIndexed> triangles)
@@ -1272,7 +1291,7 @@ namespace Game.HelperClassesWPF
         /// <param name="forcePointCompare">If the points should be directly compared (ignore indices), then pass true</param>
         public static Point3D[] GetUsedPoints(IEnumerable<ITriangleIndexed> triangles, bool forcePointCompare = false)
         {
-            if(forcePointCompare)
+            if (forcePointCompare)
             {
                 return Triangle.GetUniquePoints(triangles);
             }

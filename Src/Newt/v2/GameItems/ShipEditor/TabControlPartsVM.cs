@@ -345,9 +345,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 return _tabParts.Select(o => o.Item2);
             }
         }
-        public readonly List<long> PreviousRemoved = new List<long>();
+        public readonly List<Tuple<long, DateTime>> PreviousRemoved = new List<Tuple<long, DateTime>>();
         public readonly long Token = TokenGenerator.NextToken();
-        public readonly List<Tuple<System.Collections.Specialized.NotifyCollectionChangedAction, string, long>> PartChangeHistory = new List<Tuple<System.Collections.Specialized.NotifyCollectionChangedAction, string, long>>();
+        public readonly List<Tuple<System.Collections.Specialized.NotifyCollectionChangedAction, string, long, DateTime>> PartChangeHistory = new List<Tuple<System.Collections.Specialized.NotifyCollectionChangedAction, string, long, DateTime>>();
 
         private void TabParts_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
@@ -372,7 +372,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 }
             }
 
-            this.PartChangeHistory.Add(Tuple.Create(e.Action, Environment.StackTrace, token));
+            this.PartChangeHistory.Add(Tuple.Create(e.Action, Environment.StackTrace, token, DateTime.UtcNow));
         }
 
         #region Public Methods
@@ -409,7 +409,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             {
                 RemoveFromTab(part3D);
 
-                this.PreviousRemoved.Add(part3D.Token);
+                this.PreviousRemoved.Add(Tuple.Create(part3D.Token, DateTime.UtcNow));
             }
         }
 
@@ -421,7 +421,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         {
             RemoveFromTab(e.Part3D);
 
-            this.PreviousRemoved.Add(e.Part3D.Token);
+            this.PreviousRemoved.Add(Tuple.Create(e.Part3D.Token, DateTime.UtcNow));
         }
 
         #endregion
@@ -459,6 +459,22 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         }
         private void RemoveFromTab(PartDesignBase part)
         {
+            var previouslyRemoved = this.PreviousRemoved.
+                Where(o => o.Item1 == part.Token).
+                OrderByDescending(o => o.Item2).
+                FirstOrDefault();
+
+            if(previouslyRemoved != null)
+            {
+                DateTime utcNow = DateTime.UtcNow;
+                TimeSpan gap = utcNow - previouslyRemoved.Item2;
+                double milliseconds = gap.TotalMilliseconds;
+            }
+
+
+
+
+
             // Find the part
             int partIndex = FindPart(part);
             if (partIndex < 0)

@@ -86,7 +86,7 @@ namespace Game.Newt.v2.GameItems.Controls
             dna.Position = new Point3D();
             dna.Orientation = Quaternion.Identity;
 
-            PartDesignBase part = BotConstructor.GetPartDesign(dna, options);
+            PartDesignBase part = BotConstructor.GetPartDesign(dna, options, false);
 
             this.ItemName = part.PartType;
             this.Part = part;

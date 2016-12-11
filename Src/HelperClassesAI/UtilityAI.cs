@@ -895,7 +895,6 @@ namespace Game.HelperClassesAI
                         return true;
                     }
 
-
                     // Breed them (and rescore)
                     // Take the best performers, and use them as parents for the next generation
                     Parents<T> parents = GetParents(_generation, _options, _delegates);
@@ -909,8 +908,7 @@ namespace Game.HelperClassesAI
 
                     _generation = Step(parents, _options, _delegates, _predefined, _rand);
 
-                    //TODO: This should be handed the current parents
-                    SolutionItem<T> winner = GetWinner(parents);
+                    SolutionItem<T> winner = GetWinner(parents, 1);
 
                     _scoreHistory.Add(winner.Score);
 
@@ -1287,7 +1285,10 @@ namespace Game.HelperClassesAI
                     return Tuple.Create(retVal, set);
                 }
 
-                private static SolutionItem<T> GetWinner(Parents<T> parents)
+
+
+
+                private static SolutionItem<T> GetWinner_ORIG(Parents<T> parents)
                 {
                     // They should have been added in order, best to worst.  So the first item at each step will be the winner
 
@@ -1300,6 +1301,179 @@ namespace Game.HelperClassesAI
 
                     return group.Items[0];
                 }
+
+
+
+                private static SolutionItem<T> GetWinner_ALMOST(Parents<T> parents, double threshold = .1)
+                {
+                    // They should have been added in order, best to worst.  So the first item at each step will be the winner
+
+                    ParentGroup<T> group = parents.Groups[0];
+
+                    //var topScores = new List<Tuple<double[], double[]>>();
+                    var topScores = new List<Tuple<double, double>[]>();
+
+                    while (true)
+                    {
+                        Tuple<double, double>[] scoresAtLevel = new Tuple<double, double>[group.Items[0].Score.Length];
+
+                        for (int cntr = 0; cntr < scoresAtLevel.Length; cntr++)
+                        {
+                            scoresAtLevel[cntr] = Tuple.Create(
+                                group.Items.Min(o => o.Score[cntr]),
+                                group.Items.Max(o => o.Score[cntr])
+                                );
+                        }
+
+                        topScores.Add(scoresAtLevel);
+
+
+
+                        if (group.Groups == null)
+                        {
+                            break;
+                        }
+
+                        group = group.Groups[0];
+                    }
+
+
+
+
+
+                    //example:
+                    //note that the mins and maxes are indepenent
+                    //group 0       100     10000
+                    //                      20      800         <---- ignore these
+
+                    //group 1       100     1000
+                    //                      20      200
+
+
+                    // really only need to look at the last top scores
+                    //double allowed = UtilityCore.GetScaledValue(topScores[topScores.Count - 1][0].Item1, max, 0, 1, threshold);
+                    double[] allowd = topScores[topScores.Count - 1].
+                        Select(o => UtilityCore.GetScaledValue(o.Item1, o.Item2, 0, 1, threshold)).
+                        ToArray();
+
+
+
+                    // the final will come from group, but don't just take the first item, because its score at its level is good, but the scores
+                    // at previous levels may not be
+
+                    for (int cntr = 0; cntr < group.Items.Length; cntr++)
+                    {
+                        // take the first one that has a good threshold
+
+                        if (group.Items[cntr].Score[0] < allowd[0])
+                        {
+                            return group.Items[cntr];
+                        }
+                    }
+
+                    // No clear winner, return a comprimise
+                    return group.Items[0];
+                }
+                private static SolutionItem<T> GetWinner(Parents<T> parents, double threshold = .1)
+                {
+                    // They should have been added in order, best to worst.  So the first item at each step will be the winner
+
+                    #region get deepest group
+
+                    // Each group layer represents a different error function (a way of evaluating how good a particular solution is).  Get the final group, and
+                    // the ascend/descend of each group
+                    ParentGroup<T> group = parents.Groups[0];
+
+                    List<bool> isAscending = new List<bool>();
+
+                    while (true)
+                    {
+                        isAscending.Add(group.IsScoreAscending);
+
+                        if (group.Groups == null)
+                        {
+                            break;
+                        }
+
+                        group = group.Groups[0];
+                    }
+
+                    #endregion
+
+                    #region get best scores of each layer
+
+                    Tuple<double, double>[] topScores = new Tuple<double, double>[group.Items[0].Score.Length - 1];
+
+                    for (int cntr = 0; cntr < topScores.Length; cntr++)
+                    {
+                        topScores[cntr] = Tuple.Create(
+                            group.Items.Min(o => o.Score[cntr]),
+                            group.Items.Max(o => o.Score[cntr])
+                            );
+                    }
+
+                    #endregion
+
+                    #region determine thresholds
+
+                    //example:
+                    //note that the mins and maxes are indepenent
+                    //group 0       100     10000
+                    //                      20      800         <---- ignore these
+
+                    //group 1       100     1000
+                    //                      20      200
+
+                    double[] allowed = topScores.
+                        Select(o => UtilityCore.GetScaledValue(o.Item1, o.Item2, 0, 1, threshold)).
+                        ToArray();
+
+                    #endregion
+
+                    // the final will come from group, but don't just take the first item, because its score at its level is good, but the scores
+                    // at previous levels may not be
+
+                    for (int outer = 0; outer < group.Items.Length; outer++)
+                    {
+                        // take the first one that has a good threshold
+                        bool isGoodEnough = true;
+
+                        for (int inner = 0; inner < allowed.Length; inner++)
+                        {
+                            if(isAscending[inner])
+                            {
+                                if (group.Items[outer].Score[inner] < allowed[inner])        // ascend means bigger score is better (approaching infinity)
+                                {
+                                    isGoodEnough = false;
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                if (group.Items[outer].Score[inner] > allowed[inner])        // descend means lower score is better (approaching zero)
+                                {
+                                    isGoodEnough = false;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isGoodEnough)
+                        {
+                            return group.Items[outer];
+                        }
+                    }
+
+                    // No clear winner, return a comprimise
+                    return group.Items[0];
+                }
+
+
+
+
+
+
+
 
                 /// <summary>
                 /// This just converts to a solution item (which is a wrapper), then gets the error

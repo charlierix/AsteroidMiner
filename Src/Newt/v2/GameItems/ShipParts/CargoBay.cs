@@ -68,7 +68,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new CargoBayDesign(this.Options);
+            return new CargoBayDesign(this.Options, false);
         }
 
         #endregion
@@ -89,8 +89,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public CargoBayDesign(EditorOptions options)
-            : base(options) { }
+        public CargoBayDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -111,28 +111,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private GeometryModel3D _geometry = null;
+        private GeometryModel3D _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -372,11 +367,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public CargoBay(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
-            : base(options, dna)
+            : base(options, dna, itemOptions.CargoBay_Damage.HitpointMin, itemOptions.CargoBay_Damage.HitpointSlope, itemOptions.CargoBay_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new CargoBayDesign(options);
+            this.Design = new CargoBayDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume, radius;
@@ -388,6 +383,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Radius = radius;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
+
+            this.Destroyed += CargoBay_Destroyed;
         }
 
         #endregion
@@ -544,7 +541,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                if (this.UsedVolume + cargo.Volume > this.MaxVolume)
+                if (this.IsDestroyed || this.UsedVolume + cargo.Volume > this.MaxVolume)
                 {
                     return false;
                 }
@@ -654,6 +651,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public void UpdateVolume()
         {
             this.UsedVolume = GetUsedVolume();
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void CargoBay_Destroyed(object sender, EventArgs e)
+        {
+            ClearContents();
+
+
+
         }
 
         #endregion
@@ -785,6 +794,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
+        /// <summary>
+        /// NOTE: This doesn't look at partial damage, only fully damaged sub cargobays (because they can't hold cargo)
+        /// </summary>
+        public double DamagePercent
+        {
+            get
+            {
+                lock (_lock)
+                {
+                    double dmgTotal = 0d;
+                    double max = 0d;
+
+                    for (int cntr = 0; cntr < _cargoBays.Length; cntr++)
+                    {
+                        if (_cargoBays[cntr] is ITakesDamage && ((ITakesDamage)_cargoBays[cntr]).IsDestroyed)
+                        {
+                            dmgTotal += _cargoBays[cntr].MaxVolume;
+                        }
+
+                        max += _cargoBays[cntr].MaxVolume;
+                    }
+
+                    if (max > 0)
+                    {
+                        return dmgTotal / max;
+                    }
+                    else
+                    {
+                        return 0d;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -801,25 +844,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             lock (_lock)
             {
-                // See which cargo bays can hold this
-                CargoBay[] _available = _cargoBays.
-                    Where(o => o.MaxVolume - o.UsedVolume > cargo.Volume).
-                    ToArray();
-
-                if (_available.Length == 0)
+                // Add it to a random cargo bay
+                foreach (int index in UtilityCore.RandomRange(0, _cargoBays.Length))
                 {
-                    //TODO: If the cargo is a mineral, divide it among the cargobays
-                    //if (takeFraction && cargo is Cargo_Mineral)
-                    //{
-                    //}
-
-                    return false;
+                    if (_cargoBays[index].Add(cargo))
+                    {
+                        return true;
+                    }
                 }
 
-                // Add it to a random cargo bay
-                _available[StaticRandom.Next(_available.Length)].Add(cargo);
-
-                return true;
+                return false;
             }
         }
 
@@ -1087,7 +1121,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public Cargo_ShipPart(ShipPartDNA dna, ItemOptions options, EditorOptions editorOptions)
             : base(CargoType.ShipPart)
         {
-            PartDesignBase part = BotConstructor.GetPartDesign(dna, editorOptions);
+            PartDesignBase part = BotConstructor.GetPartDesign(dna, editorOptions, true);
 
             //TODO: This is really ineficient, let design calculate it for real
             //TODO: Volume and Mass should be calculated by the design class (add to PartBase interface)

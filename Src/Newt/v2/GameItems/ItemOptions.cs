@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Media;
+using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -30,6 +32,144 @@ namespace Game.Newt.v2.GameItems
         // Ruby: 4000
         // Diamond: 3515
         // Rixium: 66666
+
+        #endregion
+
+        #region HitPoints
+
+        public const double HITPOINTMIN = 32;
+        public const double HITPOINTSLOPE = 1;
+
+        public const double DAMAGE_VELOCITYTHRESHOLD = 8.5;       // I saw speed of 6 for really light taps, 100 for incredibly fast hits (so figure the standard range is 12 - 40)
+        public const double DAMAGE_ENERGYTHESHOLD = 0;
+        //public const double DAMAGE_ENERGYTOHITPOINTMULT = 1d / 12000000d;      // energy is velocity squared, but hitpoints are linear
+        public const double DAMAGE_ENERGYTOHITPOINTMULT = 1d / 500000d;
+        public const double DAMAGE_RANDOMMAX = 2.2;
+        public static RandomBellArgs DAMAGE_RANDOMBELL = new RandomBellArgs(1, -45, 1, -45);      // this is a bell curve centered at x=.5 (see nonlinear random tester for a visual)
+
+        #endregion
+        #region Class: DamageProps
+
+        public class DamageProps
+        {
+            public DamageProps(double hitpointMin, double hitpointSlope, double damage_VelocityThreshold, double damage_EnergyTheshold, double damage_EnergyToHitpointMult, double damage_RandomMult)
+            {
+                _hitpointMin = hitpointMin;
+                _hitpointSlope = hitpointSlope;
+                _damage_VelocityThreshold = damage_VelocityThreshold;
+                _damage_EnergyTheshold = damage_EnergyTheshold;
+                _damage_EnergyToHitpointMult = damage_EnergyToHitpointMult;
+                _damage_RandomMult = damage_RandomMult;
+            }
+
+            private volatile object _hitpointMin = HITPOINTMIN;
+            public double HitpointMin
+            {
+                get
+                {
+                    return (double)_hitpointMin;
+                }
+                set
+                {
+                    _hitpointMin = value;
+                }
+            }
+
+            private volatile object _hitpointSlope = HITPOINTSLOPE;
+            public double HitpointSlope
+            {
+                get
+                {
+                    return (double)_hitpointSlope;
+                }
+                set
+                {
+                    _hitpointSlope = value;
+                }
+            }
+
+            private volatile object _damage_VelocityThreshold = DAMAGE_VELOCITYTHRESHOLD;
+            public double Damage_VelocityThreshold
+            {
+                get
+                {
+                    return (double)_damage_VelocityThreshold;
+                }
+                set
+                {
+                    _damage_VelocityThreshold = value;
+                    _damage = null;
+                }
+            }
+
+            private volatile object _damage_EnergyTheshold = DAMAGE_ENERGYTHESHOLD;
+            public double Damage_EnergyTheshold
+            {
+                get
+                {
+                    return (double)_damage_EnergyTheshold;
+                }
+                set
+                {
+                    _damage_EnergyTheshold = value;
+                    _damage = null;
+                }
+            }
+
+            private volatile object _damage_EnergyToHitpointMult = DAMAGE_ENERGYTOHITPOINTMULT;
+            public double Damage_EnergyToHitpointMult
+            {
+                get
+                {
+                    return (double)_damage_EnergyToHitpointMult;
+                }
+                set
+                {
+                    _damage_EnergyToHitpointMult = value;
+                    _damage = null;
+                }
+            }
+
+            private volatile object _damage_RandomMult = DAMAGE_RANDOMMAX;
+            public double Damage_RandomMult
+            {
+                get
+                {
+                    return (double)_damage_RandomMult;
+                }
+                set
+                {
+                    _damage_RandomMult = value;
+                    _damage = null;
+                }
+            }
+
+            private volatile TakesDamageWorker _damage = null;
+            public TakesDamageWorker Damage
+            {
+                get
+                {
+                    if (_damage == null)
+                    {
+                        TakesDamageWorker_Props props = new TakesDamageWorker_Props()
+                        {
+                            VelocityThreshold = Damage_VelocityThreshold,
+                            EnergyTheshold = Damage_EnergyTheshold,
+                            EnergyToHitpointMult = Damage_EnergyToHitpointMult,
+                            RandomPercent = Damage_RandomMult,
+                        };
+                        TakesDamageWorker newInstance = new TakesDamageWorker(props);       // currently not bothering with type specific overrides
+                        Interlocked.CompareExchange(ref _damage, newInstance, null);       //NOTE: This only stores the new instance if it's still null (there's a chance that another thread already populated the volatile)
+                    }
+
+                    return _damage;
+                }
+                set
+                {
+                    _damage = value;
+                }
+            }
+        }
 
         #endregion
 
@@ -118,6 +258,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps CargoBay_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region Ammo Box
 
@@ -152,6 +300,14 @@ namespace Game.Newt.v2.GameItems
                 _ammoBox_WallDensity = value;
             }
         }
+
+        public readonly DamageProps AmmoBox_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
         #region Fuel Tank
@@ -193,6 +349,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps FuelTank_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region Energy Tank
 
@@ -220,6 +384,14 @@ namespace Game.Newt.v2.GameItems
         /// </remarks>
         public const double ENERGYDRAWMULT = .001d;
 
+        public readonly DamageProps EnergyTank_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region Plasma Tank
 
@@ -238,6 +410,14 @@ namespace Game.Newt.v2.GameItems
                 _plasmaTank_Density = value;
             }
         }
+
+        public readonly DamageProps PlasmaTank_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -282,6 +462,28 @@ namespace Game.Newt.v2.GameItems
                 _matterConverter_InternalVolume = value;
             }
         }
+
+        #endregion
+        #region Matter Converters - matter ->
+
+        public readonly DamageProps MatterConverter_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region Matter Converters - energy ->
+
+        public readonly DamageProps EnergyConverter_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
         #region Matter -> Fuel
@@ -603,6 +805,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps FuelToEnergy_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region Solar Panel (Radiation -> Energy)
 
@@ -631,6 +841,14 @@ namespace Game.Newt.v2.GameItems
                 _solarPanel_Density = value;
             }
         }
+
+        public readonly DamageProps SolarPanel_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -672,6 +890,14 @@ namespace Game.Newt.v2.GameItems
                 _sensor_NeuronGrowthExponent = value;
             }
         }
+
+        public readonly DamageProps Sensor_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
         #region Gravity Sensor
@@ -828,6 +1054,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps Camera_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region CameraColorRGB
 
@@ -860,6 +1094,14 @@ namespace Game.Newt.v2.GameItems
                 _cameraColorRGB_AmountToDraw = value;
             }
         }
+
+        public readonly DamageProps CameraColorRGB_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -1065,6 +1307,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps Brain_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
 
         // Propulsion
@@ -1167,6 +1417,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps Thruster_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region TractorBeam (Plasma -> Force)
 
@@ -1182,6 +1440,14 @@ namespace Game.Newt.v2.GameItems
                 _tractorBeam_Density = value;
             }
         }
+
+        public readonly DamageProps TractorBeam_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -1262,6 +1528,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        public readonly DamageProps ProjectileWeapon_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
         #endregion
         #region BeamGun
 
@@ -1277,6 +1551,14 @@ namespace Game.Newt.v2.GameItems
                 _beamGun_Density = value;
             }
         }
+
+        public readonly DamageProps BeamGun_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -1295,6 +1577,14 @@ namespace Game.Newt.v2.GameItems
                 _shield_Density = value;
             }
         }
+
+        public readonly DamageProps Shield_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
 
@@ -1319,6 +1609,14 @@ namespace Game.Newt.v2.GameItems
         public double SwarmBay_BirthSize = 1;
         public double SwarmBay_Birth_TankThresholdPercent = .65;
         public double SwarmBay_MaxCount = 9;
+
+        public readonly DamageProps SwarmBay_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
 
         #endregion
         #region SwarmBot

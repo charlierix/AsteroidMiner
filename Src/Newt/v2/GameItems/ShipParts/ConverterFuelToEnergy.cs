@@ -66,7 +66,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ConverterFuelToEnergyDesign(this.Options);
+            return new ConverterFuelToEnergyDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterFuelToEnergyDesign(EditorOptions options)
-            : base(options) { }
+        public ConverterFuelToEnergyDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -309,11 +304,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public ConverterFuelToEnergy(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer fuelTanks, IContainer energyTanks)
-            : base(options, dna)
+            : base(options, dna, itemOptions.FuelToEnergy_Damage.HitpointMin, itemOptions.FuelToEnergy_Damage.HitpointSlope, itemOptions.FuelToEnergy_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new ConverterFuelToEnergyDesign(options);
+            this.Design = new ConverterFuelToEnergyDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume = GetVolume(out _scaleActual, dna);
@@ -335,6 +330,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
+            if (this.IsDestroyed)
+            {
+                return;
+            }
+
             this.Transfer(elapsedTime, 1);
         }
 

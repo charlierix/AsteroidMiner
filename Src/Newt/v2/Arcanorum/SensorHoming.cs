@@ -31,8 +31,8 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public SensorHomingDesign(EditorOptions options)
-            : base(options) { }
+        public SensorHomingDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -60,7 +60,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 if (_geometry == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _geometry = CreateGeometry(this.IsFinalModel);
                 }
 
                 return _geometry;
@@ -70,11 +70,6 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -190,7 +185,7 @@ namespace Game.Newt.v2.Arcanorum
         #region Constructor
 
         public SensorHoming(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, Map map, Point3D homePoint, double homeRadius)
-            : base(options, dna)
+            : base(options, dna, itemOptions.HomingSensor_Damage.HitpointMin, itemOptions.HomingSensor_Damage.HitpointSlope, itemOptions.HomingSensor_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _map = map;
@@ -198,7 +193,7 @@ namespace Game.Newt.v2.Arcanorum
             _homePoint = homePoint;
             _homeRadius = homeRadius;
 
-            this.Design = new SensorHomingDesign(options);
+            this.Design = new SensorHomingDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius, volume;
@@ -206,7 +201,7 @@ namespace Game.Newt.v2.Arcanorum
 
             this.Radius = radius;
 
-            _neurons = CreateNeurons(dna, itemOptions, itemOptions.HomingSensorNeuronDensity, true);
+            _neurons = CreateNeurons(dna, itemOptions, itemOptions.HomingSensor_NeuronDensity, true);
 
             double scale = homeRadius / _neurons.Max(o => o.PositionLength);
             this.NeuronWorldPositions = _neurons.Select(o => (o.PositionUnit.Value * (o.PositionLength * scale)).ToPoint()).ToArray();

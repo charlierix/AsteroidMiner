@@ -125,6 +125,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                         return;
                     }
 
+                    // This isn't null on the reentry.  It's like DragDrop.DoDragDrop is double calling
+                    //if(_dragStart == null)
+                    //{
+                    //    return;
+                    //}
+
                     shouldClearDragStart = false;
 
                     // Initialize the drag & drop operation

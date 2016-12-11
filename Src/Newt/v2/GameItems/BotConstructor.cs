@@ -59,6 +59,36 @@ namespace Game.Newt.v2.GameItems
 
             parts.AllPartsArray = parts.AllParts.Select(o => o.Item1).ToArray();
 
+            // Separate parts (don't allow parts to intersect each other)
+            //NOTE: This must be done after linking parts together (or the linker would get wild results)
+            Tuple<ShipPartDNA[], CollisionHull[], bool> dna_hulls = SeparateParts(parts.AllPartsArray, parts.AllParts.Select(o => o.Item2).ToArray(), extra.RepairPartPositions, core.World);
+
+            if (dna_hulls.Item3)
+            {
+                #region recurse
+
+                foreach(CollisionHull hull in dna_hulls.Item2)
+                {
+                    hull.Dispose();
+                }
+
+                // Recurse, but don't pull apart
+                extra.RepairPartPositions = false;      // I was going to clone the extra, but that's a lot of work
+
+                BotConstruction_Result recursed;
+                try
+                {
+                    recursed = ConstructBot(ShipDNA.Create(dna, dna_hulls.Item1), core, extra, events);
+                }
+                finally
+                {
+                    extra.RepairPartPositions = true;       // put it back (execution won't get here unless it was originally true)
+                }
+
+                #endregion
+                return recursed;
+            }
+
             // These are parts that need to have Update called each tick
             IPartUpdatable[] updatable = parts.AllPartsArray.Where(o => o is IPartUpdatable).Select(o => (IPartUpdatable)o).ToArray();
             IPartUpdatable[] updatableParts_MainThread = updatable.Where(o => o.IntervalSkips_MainThread != null).ToArray();
@@ -72,10 +102,6 @@ namespace Game.Newt.v2.GameItems
 
             // Link Neural
             NeuralUtility.ContainerOutput[] links = LinkNeural(extra, parts);
-
-            // Separate parts (don't allow parts to intersect each other)
-            //NOTE: This must be done after linking parts together (or the linker would get wild results)
-            Tuple<ShipPartDNA[], CollisionHull[]> dna_hulls = SeparateParts(parts.AllPartsArray, parts.AllParts.Select(o => o.Item2).ToArray(), extra.RepairPartPositions, core.World);
 
             // Rebuild AllParts just in case something will use it later (the parts construction class will be stored in the Bot class)
             parts.AllParts = Enumerable.Range(0, parts.AllParts.Count).
@@ -127,163 +153,163 @@ namespace Game.Newt.v2.GameItems
         /// This class may not be the best place for this method, but I wanted the switch statements near each other (easier to remember
         /// to update both)
         /// </remarks>
-        public static PartDesignBase GetPartDesign(ShipPartDNA dna, EditorOptions options)
+        public static PartDesignBase GetPartDesign(ShipPartDNA dna, EditorOptions options, bool isFinalModel)
         {
             PartDesignBase retVal;
 
             switch (dna.PartType)
             {
                 case AmmoBox.PARTTYPE:
-                    retVal = new AmmoBoxDesign(options);
+                    retVal = new AmmoBoxDesign(options, isFinalModel);
                     break;
 
                 case FuelTank.PARTTYPE:
-                    retVal = new FuelTankDesign(options);
+                    retVal = new FuelTankDesign(options, isFinalModel);
                     break;
 
                 case EnergyTank.PARTTYPE:
-                    retVal = new EnergyTankDesign(options);
+                    retVal = new EnergyTankDesign(options, isFinalModel);
                     break;
 
                 case PlasmaTank.PARTTYPE:
-                    retVal = new PlasmaTankDesign(options);
+                    retVal = new PlasmaTankDesign(options, isFinalModel);
                     break;
 
                 case CargoBay.PARTTYPE:
-                    retVal = new CargoBayDesign(options);
+                    retVal = new CargoBayDesign(options, isFinalModel);
                     break;
 
                 case ConverterMatterToFuel.PARTTYPE:
-                    retVal = new ConverterMatterToFuelDesign(options);
+                    retVal = new ConverterMatterToFuelDesign(options, isFinalModel);
                     break;
 
                 case ConverterMatterToEnergy.PARTTYPE:
-                    retVal = new ConverterMatterToEnergyDesign(options);
+                    retVal = new ConverterMatterToEnergyDesign(options, isFinalModel);
                     break;
 
                 case ConverterMatterToPlasma.PARTTYPE:
-                    retVal = new ConverterMatterToPlasmaDesign(options);
+                    retVal = new ConverterMatterToPlasmaDesign(options, isFinalModel);
                     break;
 
                 case ConverterMatterToAmmo.PARTTYPE:
-                    retVal = new ConverterMatterToAmmoDesign(options);
+                    retVal = new ConverterMatterToAmmoDesign(options, isFinalModel);
                     break;
 
                 case ConverterEnergyToAmmo.PARTTYPE:
-                    retVal = new ConverterEnergyToAmmoDesign(options);
+                    retVal = new ConverterEnergyToAmmoDesign(options, isFinalModel);
                     break;
 
                 case ConverterEnergyToFuel.PARTTYPE:
-                    retVal = new ConverterEnergyToFuelDesign(options);
+                    retVal = new ConverterEnergyToFuelDesign(options, isFinalModel);
                     break;
 
                 case ConverterEnergyToPlasma.PARTTYPE:
-                    retVal = new ConverterEnergyToPlasmaDesign(options);
+                    retVal = new ConverterEnergyToPlasmaDesign(options, isFinalModel);
                     break;
 
                 case ConverterFuelToEnergy.PARTTYPE:
-                    retVal = new ConverterFuelToEnergyDesign(options);
+                    retVal = new ConverterFuelToEnergyDesign(options, isFinalModel);
                     break;
 
                 case ConverterRadiationToEnergy.PARTTYPE:
                     ConverterRadiationToEnergyDNA dnaCon = (ConverterRadiationToEnergyDNA)dna;
-                    retVal = new ConverterRadiationToEnergyDesign(options, dnaCon.Shape);
+                    retVal = new ConverterRadiationToEnergyDesign(options, isFinalModel, dnaCon.Shape);
                     break;
 
                 case Thruster.PARTTYPE:
                     ThrusterDNA dnaThrust = (ThrusterDNA)dna;
                     if (dnaThrust.ThrusterType == ThrusterType.Custom)
-                        retVal = new ThrusterDesign(options, dnaThrust.ThrusterDirections);
+                        retVal = new ThrusterDesign(options, isFinalModel, dnaThrust.ThrusterDirections);
                     else
-                        retVal = new ThrusterDesign(options, dnaThrust.ThrusterType);
+                        retVal = new ThrusterDesign(options, isFinalModel, dnaThrust.ThrusterType);
                     break;
 
                 case TractorBeam.PARTTYPE:
-                    retVal = new TractorBeamDesign(options);
+                    retVal = new TractorBeamDesign(options, isFinalModel);
                     break;
 
                 case Brain.PARTTYPE:
-                    retVal = new BrainDesign(options);
+                    retVal = new BrainDesign(options, isFinalModel);
                     break;
 
                 case BrainRGBRecognizer.PARTTYPE:
-                    retVal = new BrainRGBRecognizerDesign(options);
+                    retVal = new BrainRGBRecognizerDesign(options, isFinalModel);
                     break;
 
                 case SensorGravity.PARTTYPE:
-                    retVal = new SensorGravityDesign(options);
+                    retVal = new SensorGravityDesign(options, isFinalModel);
                     break;
 
                 case SensorSpin.PARTTYPE:
-                    retVal = new SensorSpinDesign(options);
+                    retVal = new SensorSpinDesign(options, isFinalModel);
                     break;
 
                 case SensorVelocity.PARTTYPE:
-                    retVal = new SensorVelocityDesign(options);
+                    retVal = new SensorVelocityDesign(options, isFinalModel);
                     break;
 
                 case SensorRadiation.PARTTYPE:
-                    retVal = new SensorRadiationDesign(options);
+                    retVal = new SensorRadiationDesign(options, isFinalModel);
                     break;
 
                 case SensorTractor.PARTTYPE:
-                    retVal = new SensorTractorDesign(options);
+                    retVal = new SensorTractorDesign(options, isFinalModel);
                     break;
 
                 case SensorCollision.PARTTYPE:
-                    retVal = new SensorCollisionDesign(options);
+                    retVal = new SensorCollisionDesign(options, isFinalModel);
                     break;
 
                 case SensorFluid.PARTTYPE:
-                    retVal = new SensorFluidDesign(options);
+                    retVal = new SensorFluidDesign(options, isFinalModel);
                     break;
 
                 case SensorInternalForce.PARTTYPE:
-                    retVal = new SensorInternalForceDesign(options);
+                    retVal = new SensorInternalForceDesign(options, isFinalModel);
                     break;
 
                 case SensorNetForce.PARTTYPE:
-                    retVal = new SensorNetForceDesign(options);
+                    retVal = new SensorNetForceDesign(options, isFinalModel);
                     break;
 
                 case CameraColorRGB.PARTTYPE:
-                    retVal = new CameraColorRGBDesign(options);
+                    retVal = new CameraColorRGBDesign(options, isFinalModel);
                     break;
 
                 case ProjectileGun.PARTTYPE:
-                    retVal = new ProjectileGunDesign(options);
+                    retVal = new ProjectileGunDesign(options, isFinalModel);
                     break;
 
                 case BeamGun.PARTTYPE:
-                    retVal = new BeamGunDesign(options);
+                    retVal = new BeamGunDesign(options, isFinalModel);
                     break;
 
                 case GrappleGun.PARTTYPE:
-                    retVal = new GrappleGunDesign(options);
+                    retVal = new GrappleGunDesign(options, isFinalModel);
                     break;
 
                 case ShieldEnergy.PARTTYPE:
-                    retVal = new ShieldEnergyDesign(options);
+                    retVal = new ShieldEnergyDesign(options, isFinalModel);
                     break;
 
                 case ShieldKinetic.PARTTYPE:
-                    retVal = new ShieldKineticDesign(options);
+                    retVal = new ShieldKineticDesign(options, isFinalModel);
                     break;
 
                 case ShieldTractor.PARTTYPE:
-                    retVal = new ShieldTractorDesign(options);
+                    retVal = new ShieldTractorDesign(options, isFinalModel);
                     break;
 
                 case SwarmBay.PARTTYPE:
-                    retVal = new SwarmBayDesign(options);
+                    retVal = new SwarmBayDesign(options, isFinalModel);
                     break;
 
                 case HangarBay.PARTTYPE:
-                    retVal = new HangarBayDesign(options);
+                    retVal = new HangarBayDesign(options, isFinalModel);
                     break;
 
                 case SelfRepair.PARTTYPE:
-                    retVal = new SelfRepairDesign(options);
+                    retVal = new SelfRepairDesign(options, isFinalModel);
                     break;
 
                 default:
@@ -1305,9 +1331,10 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        private static Tuple<ShipPartDNA[], CollisionHull[]> SeparateParts(PartBase[] parts, ShipPartDNA[] dna, bool repairPartPositions, World world)
+        private static Tuple<ShipPartDNA[], CollisionHull[], bool> SeparateParts(PartBase[] parts, ShipPartDNA[] dna, bool repairPartPositions, World world)
         {
             CollisionHull[] hulls = null;
+            bool changed = false;
 
             if (repairPartPositions)
             {
@@ -1323,17 +1350,23 @@ namespace Game.Newt.v2.GameItems
                 // Separate intersecting parts
                 hulls = PartSeparator.Separate(out changed2, partWrappers, world);
 
-                if (changed1 || changed2)
+                changed = changed1 || changed2;
+
+                if (changed)
                 {
-                    dna = parts.Select(o => o.GetNewDNA()).ToArray();
+                    dna = parts.
+                        Select(o => o.GetNewDNA()).
+                        ToArray();
                 }
             }
             else
             {
-                hulls = parts.Select(o => o.CreateCollisionHull(world)).ToArray();
+                hulls = parts.
+                    Select(o => o.CreateCollisionHull(world)).
+                    ToArray();
             }
 
-            return Tuple.Create(dna, hulls);
+            return Tuple.Create(dna, hulls, changed);
         }
 
         private static Tuple<Model3DGroup, ModelVisual3D> GetWPFMain(PartBase[] parts)
@@ -1345,6 +1378,7 @@ namespace Game.Newt.v2.GameItems
             foreach (PartBase part in parts)
             {
                 models.Children.Add(part.Model);
+                part.EnsureCorrectGraphics_StandardDestroyed();
             }
 
             ModelVisual3D visual = new ModelVisual3D();

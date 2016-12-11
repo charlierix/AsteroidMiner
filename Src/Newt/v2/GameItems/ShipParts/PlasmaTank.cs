@@ -67,7 +67,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new PlasmaTankDesign(this.Options);
+            return new PlasmaTankDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public PlasmaTankDesign(EditorOptions options)
-            : base(options) { }
+        public PlasmaTankDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3D _geometry = null;
+        private Model3D _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -195,11 +190,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public PlasmaTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
-            : base(options, dna)
+            : base(options, dna, itemOptions.PlasmaTank_Damage.HitpointMin, itemOptions.PlasmaTank_Damage.HitpointSlope, itemOptions.PlasmaTank_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new PlasmaTankDesign(options);
+            this.Design = new PlasmaTankDesign(options, true);
             this.Design.SetDNA(dna);
 
             double surfaceArea, radius;
@@ -209,6 +204,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Radius = radius;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
+
+            this.Destroyed += PlasmaTank_Destroyed;
         }
 
         #endregion
@@ -224,7 +221,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             set
             {
                 _container.QuantityCurrent = value;
-                base.OnMassChanged();
             }
         }
         public double QuantityMax
@@ -239,11 +235,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 throw new NotSupportedException("The container max can't be set directly.  It is derived from the dna.scale");
             }
         }
+        public double QuantityMax_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMax;
+                }
+            }
+        }
+
         public double QuantityMaxMinusCurrent
         {
             get
             {
                 return _container.QuantityMaxMinusCurrent;
+            }
+        }
+        public double QuantityMaxMinusCurrent_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMaxMinusCurrent;
+                }
             }
         }
 
@@ -275,36 +300,36 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public double AddQuantity(double amount, bool exactAmountOnly)
         {
-            double retVal = _container.AddQuantity(amount, exactAmountOnly);
-
-            if (retVal < amount)
+            if (this.IsDestroyed)
             {
-                OnMassChanged();
+                return amount;
             }
+
+            double retVal = _container.AddQuantity(amount, exactAmountOnly);
 
             return retVal;
         }
         public double AddQuantity(IContainer pullFrom, double amount, bool exactAmountOnly)
         {
-            double retVal = _container.AddQuantity(pullFrom, amount, exactAmountOnly);
-
-            if (retVal < amount)
+            if (this.IsDestroyed)
             {
-                OnMassChanged();
+                return amount;
             }
+
+            double retVal = _container.AddQuantity(pullFrom, amount, exactAmountOnly);
 
             return retVal;
         }
         public double AddQuantity(IContainer pullFrom, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return pullFrom.QuantityCurrent;
+            }
+
             double prevQuantity = this.QuantityCurrent;
 
             double retVal = _container.AddQuantity(pullFrom, exactAmountOnly);
-
-            if (this.QuantityCurrent > prevQuantity)
-            {
-                OnMassChanged();
-            }
 
             return retVal;
         }
@@ -312,11 +337,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public double RemoveQuantity(double amount, bool exactAmountOnly)
         {
             double retVal = _container.RemoveQuantity(amount, exactAmountOnly);
-
-            if (retVal < amount)
-            {
-                OnMassChanged();
-            }
 
             return retVal;
         }
@@ -431,6 +451,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 return _scaleActual;
             }
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void PlasmaTank_Destroyed(object sender, EventArgs e)
+        {
+            _container.QuantityCurrent = 0;
         }
 
         #endregion

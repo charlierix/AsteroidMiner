@@ -247,7 +247,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _material_SwarmBot = _materialManager.AddMaterial(material);
 
                 // Collisions
-                _materialManager.RegisterCollisionEvent(_material_Ship, _material_Mineral, Collision_BotMineral);
+                _materialManager.RegisterCollisionEvent(_material_Ship, _material_Mineral, Collision_ShipMineral);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Asteroid, Collision_ShipAsteroid);
                 _materialManager.RegisterCollisionEvent(_material_Ship, _material_Projectile, Collision_ShipProjectile);
 
@@ -512,7 +512,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        private void Collision_BotMineral(object sender, MaterialCollisionArgs e)
+        private void Collision_ShipMineral(object sender, MaterialCollisionArgs e)
         {
             try
             {
@@ -548,7 +548,68 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         {
             try
             {
-                //TODO: Damage ship (possibly asteroid if the ship is in some kind of ram mode)
+                Body asteroidBody = e.GetBody(_material_Asteroid);
+                Body shipBody = e.GetBody(_material_Ship);
+                if (asteroidBody == null || shipBody == null)
+                {
+                    return;
+                }
+
+                Asteroid asteroid = _map.GetItem<Asteroid>(asteroidBody);
+                Bot ship = _map.GetItem<Bot>(shipBody);
+                if (asteroid == null || ship == null)
+                {
+                    return;
+                }
+
+                // Cache some props
+                double asteroidMass = asteroidBody.Mass;
+                //Point3D asteroidPos = asteroidBody.Position;
+                //Vector3D asteroidVelocity = asteroidBody.Velocity;
+
+                double shipMass = shipBody.Mass;
+                //Point3D shipPos = shipBody.Position;
+                //Vector3D shipVelocity = shipBody.Velocity;
+
+
+
+                var collisions = e.Collisions.
+                    Select(o =>
+                    {
+                        Point3D pos; Vector3D norm; double speed;
+                        o.GetContactPositionAndNormalWorld(out pos, out norm, out speed, asteroidBody);
+                        return new { Position = pos, Normal = norm, Speed = speed };
+                    }).
+                    ToArray();
+
+                Point3D collisionPos = Math3D.GetCenter(collisions.Select(o => o.Position));
+                Vector3D collisionVelocity = Math3D.GetAverage(collisions.Select(o => o.Normal)).ToUnit() * collisions.Average(o => o.Speed);       // this is relative to the ship.  It will need to be reversed for the asteroid
+
+                if (collisionVelocity.IsNearZero())
+                {
+                    return;
+                }
+
+
+                //var test1 = ship.PositionWorld;
+                //var test2 = ship.Radius;
+
+                //var test3 = asteroid.PositionWorld;
+                //var test4 = asteroid.Radius;
+
+                //var test5 = Math3D.GetAABB(collisions.Select(o => o.Position));
+                //var test6 = (test5.Item2 - test5.Item1).Length;
+
+
+                // Damage the asteroid
+                // The asteroid has a hit counter, and breaks up after a few hits.  That would need to be removed for this type of hit
+                //TODO: The asteroid should only take damage if the impact exceeds a threshold
+                //asteroid.TakeDamage_Other(shipMass, collisionPos, -collisionVelocity);      // negative velocity, because the collision velocity is in reference to the ship
+
+                // Damage the ship
+                Point3D posModel = ship.PhysicsBody.PositionFromWorld(collisionPos);
+                Vector3D velModel = ship.PhysicsBody.DirectionFromWorld(collisionVelocity);
+                ship.TakeDamage_Collision(asteroid, posModel, velModel, asteroidMass, shipMass);
             }
             catch (Exception ex)
             {
@@ -615,7 +676,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                     return;
                 }
 
-                //NOTE: this.Map_ItemRemoved will dispose the projectile once the map removes it, so get these stats now
+                //NOTE: this.Map_ItemRemoved will dispose the swarmbot once the map removes it, so get these stats now
                 double botMass = botBody.Mass;
                 Point3D botPos = botBody.Position;
                 Vector3D botVelocity = botBody.Velocity;
@@ -663,7 +724,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 //this.Title = "KeyDown: " + e.Key.ToString();
 
-                if(ShouldIgnoreKeyPress())
+                if (ShouldIgnoreKeyPress())
                 {
                     return;
                 }
@@ -1183,21 +1244,6 @@ Cheat Keys:
             this.Focus();
 
             ResumeWorld();
-        }
-
-        private static DesignPart CreateDesignPart(ShipPartDNA dna, EditorOptions options)
-        {
-            DesignPart retVal = new DesignPart(options)
-            {
-                Part2D = null,      // setting 2D to null will tell the editor that the part can't be resized or copied, only moved around
-                Part3D = BotConstructor.GetPartDesign(dna, options),
-            };
-
-            ModelVisual3D visual = new ModelVisual3D();
-            visual.Content = retVal.Part3D.Model;
-            retVal.Model = visual;
-
-            return retVal;
         }
 
         private void PauseWorld()

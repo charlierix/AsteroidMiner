@@ -649,11 +649,18 @@ namespace Game.Newt.v2.GameItems
         //TODO: Take in the mass matrix - this isn't necessary, but helps with fine tuning
         public ThrustContributionModel(Thruster[] thrusters, Point3D centerOfMass)
         {
-            this.Contributions = GetThrusterContributions(thrusters, centerOfMass);
+            this.IsDestroyed = thrusters.       // caching this in case the property changes mid calculations
+                Select(o => o.IsDestroyed).
+                ToArray();
+
             this.CenterOfMass = centerOfMass;
+
+            this.Contributions = GetThrusterContributions(thrusters, this.IsDestroyed, centerOfMass);
         }
 
         public readonly Tuple<int, int, ThrustContribution>[] Contributions;
+
+        public readonly bool[] IsDestroyed;
 
         /// <summary>
         /// This is in bot's model coords
@@ -662,7 +669,7 @@ namespace Game.Newt.v2.GameItems
 
         #region Private Methods
 
-        private static Tuple<int, int, ThrustContribution>[] GetThrusterContributions(Thruster[] thrusters, Point3D centerOfMass)
+        private static Tuple<int, int, ThrustContribution>[] GetThrusterContributions(Thruster[] thrusters, bool[] isDestroyed, Point3D centerOfMass)
         {
             //This method is copied from ShipPartTesterWindow (and ShipPlayer)
 
@@ -670,6 +677,17 @@ namespace Game.Newt.v2.GameItems
 
             for (int outer = 0; outer < thrusters.Length; outer++)
             {
+                if(isDestroyed[outer])
+                {
+                    // This thruster is destroyed, so it has no contribution (leaving it in the list of contributions so that thruster maps stay the same size as
+                    // thrusters get destroyed and repaired
+                    retVal.AddRange(
+                        Enumerable.Range(0, thrusters[outer].ThrusterDirectionsShip.Length).
+                            Select(o => Tuple.Create(outer, o, new ThrustContribution(thrusters[outer], o, true, new Vector3D(0, 0, 0), new Vector3D(0, 0, 0))))
+                        );
+                    continue;
+                }
+
                 for (int inner = 0; inner < thrusters[outer].ThrusterDirectionsShip.Length; inner++)
                 {
                     // This is copied from Body.AddForceAtPoint
@@ -680,7 +698,7 @@ namespace Game.Newt.v2.GameItems
                     Vector3D translationForce, torque;
                     Math3D.SplitForceIntoTranslationAndTorque(out translationForce, out torque, offsetFromMass, force);
 
-                    retVal.Add(Tuple.Create(outer, inner, new ThrustContribution(thrusters[outer], inner, translationForce, torque)));
+                    retVal.Add(Tuple.Create(outer, inner, new ThrustContribution(thrusters[outer], inner, false, translationForce, torque)));
                 }
             }
 
@@ -695,10 +713,12 @@ namespace Game.Newt.v2.GameItems
 
     public class ThrustContribution
     {
-        public ThrustContribution(Thruster thruster, int index, Vector3D translationForce, Vector3D torque)
+        public ThrustContribution(Thruster thruster, int index, bool isDestroyed, Vector3D translationForce, Vector3D torque)
         {
             this.Thruster = thruster;
             this.Index = index;
+
+            this.IsDestroyed = isDestroyed;
 
             this.TranslationForceLength = translationForce.Length;
             this.TranslationForce = translationForce;
@@ -714,6 +734,8 @@ namespace Game.Newt.v2.GameItems
         /// This is the sub index
         /// </summary>
         public readonly int Index;
+
+        public readonly bool IsDestroyed;
 
         public readonly Vector3D TranslationForce;
         public readonly Vector3D TranslationForceUnit;

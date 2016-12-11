@@ -29,7 +29,50 @@ namespace Game.Newt.v2.GameItems
         public static Color SpaceBackground = UtilityWPF.ColorFromHex("383838");		// this is hardcoded in xaml, but I want it here for reference
         public static Color BoundryLines = UtilityWPF.ColorFromHex("303030");
 
-        // Star
+        #region Destroyed
+
+        [ThreadStatic]
+        private static Brush _destroyedBrush;
+        public static Brush DestroyedBrush
+        {
+            get
+            {
+                if (_destroyedBrush == null)
+                {
+                    _destroyedBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("211A16"));
+                }
+
+                return _destroyedBrush;
+            }
+        }
+
+        [ThreadStatic]
+        private static Brush _destroyedSpecularBrush;
+        public static Brush DestroyedSpecularBrush
+        {
+            get
+            {
+                if (_destroyedSpecularBrush == null)
+                {
+                    _destroyedSpecularBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("30CF750E"));
+                }
+
+                return _destroyedSpecularBrush;
+            }
+        }
+
+        public static double DestroyedSpecularPower
+        {
+            get
+            {
+                return 4;
+            }
+        }
+
+        #endregion
+
+        #region Star
+
         public static Color StarColor
         {
             get
@@ -59,7 +102,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Asteroid
+        #endregion
+        #region Asteroid
+
         public static Color AsteroidColor
         {
             get
@@ -93,7 +138,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // SpaceStation
+        #endregion
+        #region SpaceStation
+
         public static Color SpaceStationHull
         {
             get
@@ -174,7 +221,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Egg
+        #endregion
+        #region Egg
+
         public static Color EggColor
         {
             get
@@ -197,9 +246,12 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        #endregion
+
         // ******************** Parts
 
-        // CargoBay
+        #region CargoBay
+
         public static Color CargoBay
         {
             get
@@ -222,7 +274,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Converters
+        #endregion
+        #region Converters
+
         public static Color ConverterBase
         {
             get
@@ -325,7 +379,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Sensors
+        #endregion
+        #region Sensors
+
         public static Color SensorBase
         {
             get
@@ -492,7 +548,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // HangarBay
+        #endregion
+        #region HangarBay
+
         public static Color HangarBay
         {
             get
@@ -536,7 +594,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // SwarmBay
+        #endregion
+        #region SwarmBay
+
         public static Color SwarmBay
         {
             get
@@ -559,7 +619,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // AmmoBox
+        #endregion
+        #region AmmoBox
+
         public static Color AmmoBox
         {
             get
@@ -605,7 +667,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Gun
+        #endregion
+        #region Gun
+
         public static Color GunBase
         {
             get
@@ -672,7 +736,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Grapple
+        #endregion
+        #region Grapple
+
         public static Color GrapplePad
         {
             get
@@ -695,7 +761,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // BeamGun
+        #endregion
+        #region BeamGun
+
         public static Color BeamGunDish
         {
             get
@@ -774,7 +842,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // FuelTank
+        #endregion
+        #region FuelTank
+
         public static Color FuelTank
         {
             get
@@ -798,7 +868,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // EnergyTank
+        #endregion
+        #region EnergyTank
+
         public static Color EnergyTank
         {
             get
@@ -835,7 +907,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // PlasmaTank
+        #endregion
+        #region PlasmaTank
+
         public static Color PlasmaTank
         {
             get
@@ -858,7 +932,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Thruster
+        #endregion
+        #region Thruster
+
         public static Color Thruster
         {
             get
@@ -888,7 +964,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // TractorBeam
+        #endregion
+        #region TractorBeam
+
         public static Color TractorBeamBase
         {
             get
@@ -948,7 +1026,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Camera
+        #endregion
+        #region Camera
+
         public static Color CameraBase
         {
             get
@@ -993,7 +1073,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Brain
+        #endregion
+        #region Brain
+
         public static Color Brain
         {
             get
@@ -1040,7 +1122,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // Shields
+        #endregion
+        #region Shields
+
         public static Color ShieldBase
         {
             get
@@ -1137,7 +1221,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        // SelfRepair
+        #endregion
+        #region SelfRepair
+
         public static Color SelfRepairBase
         {
             get
@@ -1180,6 +1266,8 @@ namespace Game.Newt.v2.GameItems
                 return _selfRepairCrossSpecular;
             }
         }
+
+        #endregion
 
         // Light armor should be whitish (plastic)
         // Heavy armor should be silverish (metal)

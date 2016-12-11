@@ -75,6 +75,7 @@
     <Compile Include="Flag.cs" />
     <Compile Include="HullVoronoiExploder.cs" />
     <Compile Include="IMapObject.cs" />
+    <Compile Include="ITakesDamage.cs" />
     <Compile Include="ItemLinker.cs" />
     <Compile Include="ItemOptions.cs" />
     <Compile Include="ItemSelectDragLogic.cs" />

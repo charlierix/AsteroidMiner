@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ConverterRadiationToEnergyDesign(this.Options, this.Shape);
+            return new ConverterRadiationToEnergyDesign(this.Options, false, this.Shape);
         }
 
         #endregion
@@ -99,8 +99,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ConverterRadiationToEnergyDesign(EditorOptions options, SolarPanelShape shape)
-            : base(options)
+        public ConverterRadiationToEnergyDesign(EditorOptions options, bool isFinalModel, SolarPanelShape shape)
+            : base(options, isFinalModel)
         {
             this.Shape = shape;
         }
@@ -124,17 +124,17 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
@@ -214,11 +214,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Public Methods
 
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
-
         public override ShipPartDNA GetDNA()
         {
             ConverterRadiationToEnergyDNA retVal = new ConverterRadiationToEnergyDNA();
@@ -247,7 +242,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Get points
             if (this.Vertices == null)
             {
-                CreateGeometry(true);
+                CreateGeometry(this.IsFinalModel);
             }
 
             Vector3D scale = this.Scale;
@@ -743,13 +738,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public ConverterRadiationToEnergy(EditorOptions options, ItemOptions itemOptions, ConverterRadiationToEnergyDNA dna, IContainer energyTanks, RadiationField radiationField)
-            : base(options, dna)
+            : base(options, dna, itemOptions.SolarPanel_Damage.HitpointMin, itemOptions.SolarPanel_Damage.HitpointSlope, itemOptions.SolarPanel_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
             _radiationField = radiationField;
 
-            this.Design = new ConverterRadiationToEnergyDesign(options, dna.Shape);
+            this.Design = new ConverterRadiationToEnergyDesign(options, true, dna.Shape);
             this.Design.SetDNA(dna);
 
             this.ClarityPercent_Front = 1d;
@@ -778,6 +773,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
+            if(this.IsDestroyed)
+            {
+                return;
+            }
+
             //TODO: May need to get the transform in the constructor
             this.Transfer(elapsedTime, Transform3D.Identity);
         }

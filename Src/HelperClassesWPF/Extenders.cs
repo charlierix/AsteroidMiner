@@ -798,6 +798,31 @@ namespace Game.HelperClassesWPF
             return retVal;
         }
 
+        /// <summary>
+        /// The percent will go to 1/max to max
+        /// </summary>
+        public static double NextBellPercent(this Random rand, RandomBellArgs args, double max)
+        {
+            // Get a value from 0 to 1 (the bell args could be anything, but it would make sense for this method if it's centered on .5)
+            double retVal = rand.NextBell(args);
+
+            // Adjust to centered at zero.  Multiply by two so it goes -1 to 1.  Then multiply by max-1 so it goes -max-1 to max-1
+            // (the 1 gets added in the next step)
+            retVal = (retVal - .5) * (2 * (max - 1));
+
+            // Turn into a multiplier
+            if (retVal < 0)
+            {
+                retVal = 1 / (1 + Math.Abs(retVal));
+            }
+            else
+            {
+                retVal += 1;
+            }
+
+            return retVal;
+        }
+
         #endregion
 
         #region Private Methods

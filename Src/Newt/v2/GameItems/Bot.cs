@@ -22,7 +22,7 @@ namespace Game.Newt.v2.GameItems
     /// <summary>
     /// This is a rewrite of Ship (eventually, ship will be removed)
     /// </summary>
-    public class Bot : IDisposable, IMapObject, IPartUpdatable
+    public class Bot : IDisposable, IMapObject, IPartUpdatable, ITakesDamage
     {
         #region Declaration Section
 
@@ -44,6 +44,11 @@ namespace Game.Newt.v2.GameItems
         private long _partUpdateCount_AnyThread = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
 
         /// <summary>
+        /// These are used to transform from ship coords to the part's model coords
+        /// </summary>
+        private readonly Transform3D[] _partTransformToModel;
+
+        /// <summary>
         /// This should be set to true if the act of calling one of the part's update has a chance of slowly changing the
         /// ship's mass (like thrusters using fuel, or matter converters)
         /// </summary>
@@ -55,6 +60,8 @@ namespace Game.Newt.v2.GameItems
 
         private volatile object _lastMassRecalculateTime = 5d;
         private volatile object _nextMatterTransferTime = 5d;        // since it multiplies by elapsed time, don't do this on the first tick - elasped time is larger than normal
+
+        private volatile object _ammoVolumeAtRecalc = null;
 
         private Ship.VisualEffects _visualEffects = null;
 
@@ -101,6 +108,16 @@ namespace Game.Newt.v2.GameItems
 
             this.Radius = construction.Radius;
 
+            _partTransformToModel = _parts.AllPartsArray.
+                Select(o =>
+                {
+                    Transform3DGroup transform = new Transform3DGroup();
+                    transform.Children.Add(new TranslateTransform3D(-o.Position.ToVector()));
+                    transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(o.Orientation.ToReverse())));
+                    return transform;
+                }).
+                ToArray();
+
             // Hook up events
             if (!_isPhysicsStatic)
             {
@@ -112,6 +129,9 @@ namespace Game.Newt.v2.GameItems
                 part.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(Part_RequestWorldLocation);
                 part.RequestWorldSpeed += new EventHandler<PartRequestWorldSpeedArgs>(Part_RequestWorldSpeed);
                 part.RequestParent += new EventHandler<PartRequestParentArgs>(Part_RequestParent);
+
+                part.Resurrected += Part_Resurrected;
+                part.Destroyed += Part_Destroyed;
             }
 
             // See if there are parts that can gradually change the ship's mass
@@ -302,8 +322,6 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region IPartUpdatable Members
 
-        private volatile object _ammoVolumeAtRecalc = null;
-
         public virtual void Update_MainThread(double elapsedTime)
         {
             _partUpdateCount_MainThread++;
@@ -426,6 +444,103 @@ namespace Game.Newt.v2.GameItems
                 {
                     return null;
                 }
+            }
+        }
+
+        #endregion
+        #region ITakesDamage
+
+        public event EventHandler Destroyed = null;
+        public event EventHandler Resurrected = null;
+
+        public virtual void TakeDamage_Collision(IMapObject collidedWith, Point3D positionModel, Vector3D velocityModel, double mass1, double mass2)
+        {
+            if (_parts == null || _parts.AllPartsArray == null || _parts.AllPartsArray.Length == 0)
+            {
+                return;
+            }
+
+            #region EXTREME
+
+            // This is a lot of work, but just finding the closest point seems to return the same thing
+
+            //var allHits = _parts.AllPartsArray.
+            //    Select(o =>
+            //    {
+            //        Point3D nearest = Math3D.GetClosestPoint_Line_Point(positionModel, velocityModel, o.Position);
+
+            //        return new
+            //        {
+            //            Part = o,
+            //            PartRadius = Math1D.Avg(o.ScaleActual.X, o.ScaleActual.Y, o.ScaleActual.Z) / 2,
+            //            Nearest = nearest,
+            //            DistFromLineSqr = (nearest - o.Position).LengthSquared,
+            //            DistFromHitSqr = (o.Position - positionModel).LengthSquared,
+            //        };
+            //    }).
+            //    //OrderBy(o => o.DistFromHitSqr).       // don't bother yet
+            //    ToArray();
+
+            // Only consider parts that the impact velocity line pierces
+            //var bestHit = allHits.
+            //    Where(o => o.DistFromLineSqr <= o.PartRadius * o.PartRadius).
+            //    OrderBy(o => o.DistFromHitSqr).
+            //    FirstOrDefault();
+
+            //if (bestHit == null)
+            //{
+            //    // The impact line doesn't intersect any parts.  Just choose the part that is closest to the impact point
+            //    bestHit = allHits.
+            //        OrderBy(o => o.DistFromHitSqr).
+            //        First();
+            //}
+
+            #endregion
+
+            //TODO: If it's a hard enough impact, damage parts that are in line and touching - make the chance of distribution higher if the impacted
+            //part is already destroyed
+
+            // Find the nearest part
+            Tuple<PartBase, int> nearestPart = _parts.AllPartsArray.
+                Select((o, i) => Tuple.Create(o, i)).
+                OrderBy(o => (o.Item1.Position - positionModel).LengthSquared).
+                First();
+
+            // Transform the hit into part's coords
+            Point3D positionPart = _partTransformToModel[nearestPart.Item2].Transform(positionModel);
+            Vector3D velocityPart = _partTransformToModel[nearestPart.Item2].Transform(velocityModel);
+
+            nearestPart.Item1.TakeDamage_Collision(collidedWith, positionPart, velocityPart, mass1, mass2);
+        }
+        public virtual void TakeDamage_Energy(double amount, Point3D positionModel)
+        {
+        }
+        public virtual void TakeDamage_Heat(double amount, Point3D positionModel)
+        {
+        }
+
+        public virtual bool IsDestroyed
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        public virtual double HitPoints_Current
+        {
+            get
+            {
+                //return 1;
+                return _parts.AllPartsArray.Sum(o => o.HitPoints_Max);
+            }
+        }
+        public virtual double HitPoints_Max
+        {
+            get
+            {
+                //return 1;
+                return _parts.AllPartsArray.Sum(o => o.HitPoints_Max);
             }
         }
 
@@ -835,6 +950,99 @@ namespace Game.Newt.v2.GameItems
             e.Parent = this;
         }
 
+        private void Part_Resurrected(object sender, EventArgs e)
+        {
+            // If there is only one part that isn't destroyed, then that must be what was resurrected.  Which means the bot went from a destroyed to resurrected state
+            if (this.Resurrected != null && _parts.AllPartsArray.Count(o => !o.IsDestroyed) == 1)
+            {
+                this.Resurrected(this, new EventArgs());
+            }
+        }
+        private void Part_Destroyed(object sender, EventArgs e)
+        {
+            // Only raise event if all parts are destroyed
+            if (this.Destroyed != null && _parts.AllPartsArray.All(o => o.IsDestroyed))
+            {
+                this.Destroyed(this, new EventArgs());
+            }
+        }
+
+        #endregion
+
+        #region OLD
+        //private static void UnitTestToModel()
+        //{
+        //    Point3D[] testPositions = new[]
+        //    {
+        //        new Point3D(0, 0, 0),
+        //        new Point3D(1, 0, 0),
+        //        new Point3D(0, 1, 0),
+        //        new Point3D(0, 0, 1),
+        //        new Point3D(1, 1, 1),
+        //    };
+
+        //    Vector3D[] testDirections = new[]
+        //    {
+        //        new Vector3D(0, 0, 0),
+        //        new Vector3D(1, 0, 0),
+        //        new Vector3D(0, 1, 0),
+        //        new Vector3D(0, 0, 1),
+        //        new Vector3D(1, 1, 1),
+        //    };
+
+        //    #region test 1
+
+        //    Point3D bodyPos1 = new Point3D(1, 0, 0);
+        //    Quaternion bodyRot1 = Quaternion.Identity;
+
+        //    Transform3D transform1 = new TranslateTransform3D(-bodyPos1.ToVector());
+
+        //    var transformed1a = testPositions.
+        //        Select(o => new { Orig = o, New = transform1.Transform(o) }).
+        //        ToArray();
+
+        //    var transformed1b = testDirections.
+        //        Select(o => new { Orig = o, New = transform1.Transform(o) }).
+        //        ToArray();
+
+        //    #endregion
+
+        //    #region test 2
+
+        //    Point3D bodyPos2 = new Point3D(0, 0, 0);
+        //    Quaternion bodyRot2 = new Quaternion(new Vector3D(0, 0, 1), 90);
+
+        //    Transform3D transform2 = new RotateTransform3D(new QuaternionRotation3D(bodyRot2.ToReverse()));
+
+        //    var transformed2a = testPositions.
+        //        Select(o => new { Orig = o, New = transform2.Transform(o) }).
+        //        ToArray();
+
+        //    var transformed2b = testDirections.
+        //        Select(o => new { Orig = o, New = transform2.Transform(o) }).
+        //        ToArray();
+
+        //    #endregion
+
+        //    #region test 3
+
+        //    Point3D bodyPos3 = new Point3D(1, 0, 0);
+        //    Quaternion bodyRot3 = new Quaternion(new Vector3D(0, 0, 1), 90);
+
+        //    Transform3DGroup transform3 = new Transform3DGroup();
+        //    transform3.Children.Add(new TranslateTransform3D(-bodyPos3.ToVector()));
+        //    transform3.Children.Add(new RotateTransform3D(new QuaternionRotation3D(bodyRot3.ToReverse())));
+
+        //    var transformed3a = testPositions.
+        //        Select(o => new { Orig = o, New = transform3.Transform(o) }).
+        //        ToArray();
+
+        //    var transformed3b = testDirections.
+        //        Select(o => new { Orig = o, New = transform3.Transform(o) }).
+        //        ToArray();
+
+        //    #endregion
+        //}
         #endregion
     }
 }

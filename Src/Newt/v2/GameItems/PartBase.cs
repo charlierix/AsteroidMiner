@@ -351,9 +351,10 @@ namespace Game.Newt.v2.GameItems
 
         #region Constructor
 
-        public PartDesignBase(EditorOptions options)
+        public PartDesignBase(EditorOptions options, bool isFinalModel)
         {
             this.Options = options;
+            this.IsFinalModel = isFinalModel;
 
             // _orientation is threadsafe, _rotateTransform isn't
             _orientation = new Quaternion(options.DefaultOrientation.X, options.DefaultOrientation.Y, options.DefaultOrientation.Z, options.DefaultOrientation.W);
@@ -570,6 +571,15 @@ namespace Game.Newt.v2.GameItems
             set;
         }
 
+        /// <summary>
+        /// This is the model that will be seen in the world (not the editor)
+        /// </summary>
+        /// <remarks>
+        /// This will be mostly the same as the editor model, but shouldn't have debug visuals, and will probably
+        /// have a lower triangle count
+        /// </remarks>
+        public readonly bool IsFinalModel;
+
         public long Token
         {
             get;
@@ -630,16 +640,14 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        /// <summary>
-        /// These will be transparent until the user hovers/selects the object (the derived class just needs to embed these into
-        /// the geometry.  This base class will color them based on user interaction
-        /// </summary>
+        // These will be transparent until the user hovers/selects the object (the derived class just needs to embed these into
+        // the geometry.  This base class will color them based on user interaction
         protected List<EmissiveMaterial> SelectionEmissives
         {
             get;
             private set;
         }
-        protected List<MaterialColorProps> MaterialBrushes
+        protected internal List<MaterialColorProps> MaterialBrushes
         {
             get;
             private set;
@@ -655,14 +663,7 @@ namespace Game.Newt.v2.GameItems
 
         #region Public Methods
 
-        /// <summary>
-        /// This is the model that will be seen in the world (not the editor)
-        /// </summary>
-        /// <remarks>
-        /// This will be mostly the same as the editor model, but shouldn't have debug visuals, and will probably
-        /// have a lower triangle count
-        /// </remarks>
-        public abstract Model3D GetFinalModel();
+        //public abstract Model3D GetFinalModel();
 
         //TODO: Make this abstract
         /// <summary>
@@ -951,7 +952,7 @@ namespace Game.Newt.v2.GameItems
     #endregion
     #region Class: PartBase
 
-    public abstract class PartBase : IDisposable
+    public abstract class PartBase : IDisposable, ITakesDamage
     {
         #region Events
 
@@ -961,6 +962,17 @@ namespace Game.Newt.v2.GameItems
         public event EventHandler<PartRequestWorldLocationArgs> RequestWorldLocation = null;
         public event EventHandler<PartRequestWorldSpeedArgs> RequestWorldSpeed = null;
         public event EventHandler<PartRequestParentArgs> RequestParent = null;
+
+        public event EventHandler Destroyed = null;
+        public event EventHandler Resurrected = null;
+
+        #endregion
+
+        #region Declaration Section
+
+        private readonly TakesDamageWorker _damageWorker;
+
+        private bool _initialized = false;
 
         #endregion
 
@@ -979,7 +991,7 @@ namespace Game.Newt.v2.GameItems
         /// 	World:
         /// 		PartDNA -> PartBase -> (which internally creates PartDesignBase)
         /// </remarks>
-        public PartBase(EditorOptions options, ShipPartDNA dna)
+        public PartBase(EditorOptions options, ShipPartDNA dna, double hitpointMin, double hitpointSlope, TakesDamageWorker damageWorker)
         {
             if (dna.PartType != this.PartType)
             {
@@ -989,6 +1001,27 @@ namespace Game.Newt.v2.GameItems
             this.Options = options;
             this.DNA = dna;
             this.Token = TokenGenerator.NextToken();
+
+            // Can't use this.ScaleActual yet
+            double size = Math1D.Avg(dna.Scale.X, dna.Scale.Y, dna.Scale.Z);
+            this.HitPoints_Max = hitpointMin + (size * hitpointSlope);
+
+            if (dna.PercentDamaged <= 0)
+            {
+                this.HitPoints_Current = this.HitPoints_Max;
+            }
+            else if (dna.PercentDamaged >= 1)
+            {
+                this.HitPoints_Current = 0;
+            }
+            else
+            {
+                this.HitPoints_Current = UtilityCore.GetScaledValue(0, this.HitPoints_Max, 0, 1, 1 - dna.PercentDamaged);
+            }
+
+            _damageWorker = damageWorker;
+
+            _initialized = true;
         }
 
         #endregion
@@ -1006,6 +1039,111 @@ namespace Game.Newt.v2.GameItems
             //if (disposing)
             //{
             //}
+        }
+
+        #endregion
+        #region ITakesDamage
+
+        private readonly object _hitPointLock = new object();
+
+        public bool IsDestroyed
+        {
+            get
+            {
+                double hitPoints = this.HitPoints_Current;
+                return hitPoints < 0 || hitPoints.IsNearZero();
+            }
+        }
+
+        private double _hitPoints_Current;
+        public double HitPoints_Current
+        {
+            get
+            {
+                lock (_hitPointLock)
+                {
+                    return _hitPoints_Current;
+                }
+            }
+            protected set
+            {
+                bool wasDetroyed, isDestroyed;
+
+                lock (_hitPointLock)
+                {
+                    wasDetroyed = _hitPoints_Current < 0 || _hitPoints_Current.IsNearZero();        //NOTE: Can't call IsDestroyed, because it call this get, which has a lock
+                    isDestroyed = value < 0 || value.IsNearZero();
+
+                    _hitPoints_Current = value;
+                }
+
+                // Don't want to call these inside a lock
+                if (!wasDetroyed && isDestroyed)
+                {
+                    OnDestroyed();
+                }
+                else if (wasDetroyed && !isDestroyed)
+                {
+                    OnResurrected();
+                }
+            }
+        }
+
+        public double HitPoints_Max
+        {
+            get;
+            private set;
+        }
+
+        public void AdjustHitpoints(double delta)
+        {
+            bool wasDetroyed, isDestroyed;
+
+            lock (_hitPointLock)
+            {
+                double newValue = _hitPoints_Current + delta;
+                if (newValue < 0)
+                {
+                    newValue = 0;
+                }
+                else if (newValue > this.HitPoints_Max)
+                {
+                    newValue = this.HitPoints_Max;
+                }
+
+                wasDetroyed = _hitPoints_Current < 0 || _hitPoints_Current.IsNearZero();        //NOTE: Can't call IsDestroyed, because it call this get, which has a lock
+                isDestroyed = newValue.IsNearZero();
+
+                _hitPoints_Current = newValue;
+            }
+
+            // Don't want to call these inside a lock
+            if (!wasDetroyed && isDestroyed)
+            {
+                OnDestroyed();
+            }
+            else if (wasDetroyed && !isDestroyed)
+            {
+                OnResurrected();
+            }
+        }
+
+        public virtual void TakeDamage_Collision(IMapObject collidedWith, Point3D positionModel, Vector3D velocityModel, double mass1, double mass2)
+        {
+            if (_damageWorker == null)
+            {
+                return;
+            }
+
+            double damage = _damageWorker.GetDamage_Collision(collidedWith, positionModel, velocityModel, mass1, mass2);
+
+            AdjustHitpoints(-damage);
+        }
+        public virtual void TakeDamage_Energy(double amount, Point3D positionModel)
+        {
+        }
+        public virtual void TakeDamage_Heat(double amount, Point3D positionModel)
+        {
         }
 
         #endregion
@@ -1029,6 +1167,8 @@ namespace Game.Newt.v2.GameItems
 
         /// <summary>
         /// This is in model coords
+        /// WARNING: This is currently only used by PartSeparator.  The old logic was clearing the model, but I think that was flawed.  The editor plays
+        /// with the design class's live transforms.  I think it's best to create all new parts
         /// </summary>
         public virtual Point3D Position
         {
@@ -1043,11 +1183,12 @@ namespace Game.Newt.v2.GameItems
             set
             {
                 this.Design.Position = value;
-                _model = null;		// if they moved the part, then the next time Model is requested, it will need to be redrawn
+                //_model = null;		// if they moved the part, then the next time Model is requested, it will need to be redrawn
             }
         }
         /// <summary>
         /// This is in model coords
+        /// WARNING: If you set orientation, think of this part as burned.  It's best to create a new part for the final world worthy body
         /// </summary>
         public virtual Quaternion Orientation
         {
@@ -1061,7 +1202,7 @@ namespace Game.Newt.v2.GameItems
             set
             {
                 this.Design.Orientation = value;
-                _model = null;		// if they moved the part, then the next time Model is requested, it will need to be redrawn
+                //_model = null;		// if they moved the part, then the next time Model is requested, it will need to be redrawn
             }
         }
 
@@ -1076,7 +1217,6 @@ namespace Game.Newt.v2.GameItems
             get;
         }
 
-        private Model3D _model = null;
         /// <summary>
         /// This is the visual
         /// </summary>
@@ -1090,12 +1230,12 @@ namespace Game.Newt.v2.GameItems
         {
             get
             {
-                if (_model == null)
+                if (!this.Design.IsFinalModel)
                 {
-                    _model = this.Design.GetFinalModel();
+                    throw new ApplicationException("The design's IsFinalModel must be true for a final (world viewed) part");
                 }
 
-                return _model;
+                return this.Design.Model;
             }
         }
 
@@ -1185,6 +1325,8 @@ namespace Game.Newt.v2.GameItems
                 //be cumbersome.  Instead, the owner of the parts (the ship) should be responsible for populating the returned dna class with
                 //links
             }
+
+            retVal.PercentDamaged = (this.HitPoints_Max - this.HitPoints_Current) / this.HitPoints_Max;
 
             return retVal;
         }
@@ -1348,10 +1490,162 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        //TODO: Have another graphic option in Design for informational.  It would be the same color set used for all parts (health: Green-Yellow-Red | unused parts: White-Red | etc)
+        protected virtual void OnDestroyed()
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            EnsureCorrectGraphics_StandardDestroyed();
+
+            if (this.Destroyed != null)
+            {
+                this.Destroyed(this, new EventArgs());
+            }
+        }
+        protected virtual void OnResurrected()
+        {
+            //NOTE: This gets called when hitpoints are first assigned (before the part's derived constructor has created the design)
+            if (!_initialized)
+            {
+                return;
+            }
+
+            EnsureCorrectGraphics_StandardDestroyed();
+
+            if (this.Resurrected != null)
+            {
+                this.Resurrected(this, new EventArgs());
+            }
+        }
+
+        public void EnsureCorrectGraphics_StandardDestroyed()
+        {
+            if (this.IsDestroyed)
+            {
+                #region destroyed
+
+                foreach (PartDesignBase.MaterialColorProps material in this.Design.MaterialBrushes)
+                {
+                    if (material.Diffuse != null)
+                    {
+                        material.Diffuse.Brush = WorldColors.DestroyedBrush;
+                    }
+                    else if (material.Specular != null)
+                    {
+                        material.Specular.Brush = WorldColors.DestroyedSpecularBrush;
+                        material.Specular.SpecularPower = WorldColors.DestroyedSpecularPower;
+                    }
+                    else if (material.Emissive != null)
+                    {
+                        material.Emissive.Brush = Brushes.Transparent;
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Unknown material type");
+                    }
+                }
+
+                #endregion
+            }
+            else
+            {
+                #region standard
+
+                foreach (PartDesignBase.MaterialColorProps material in this.Design.MaterialBrushes)
+                {
+                    if (material.Diffuse != null)
+                    {
+                        material.Diffuse.Brush = material.OrigBrush;
+                    }
+                    else if (material.Specular != null)
+                    {
+                        material.Specular.Brush = material.OrigBrush;
+                        material.Specular.SpecularPower = material.OrigSpecular;
+                    }
+                    else if (material.Emissive != null)
+                    {
+                        material.Emissive.Brush = material.OrigBrush;
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Unknown material type");
+                    }
+                }
+
+                #endregion
+            }
+        }
+
         #endregion
     }
 
     #endregion
+
+
+    #region THOUGHTS
+
+    public class PartVisuals
+    {
+        public readonly Model3D Model;
+
+        public readonly PartVisuals_MaterialSet[] Materials;
+
+        public Color InfoColor
+        {
+            get
+            {
+                //return this.Materials_Info.Item1.Color;
+                return Colors.Yellow;
+            }
+            set
+            {
+                //this.Materials_Info.Item1.Color = value;
+            }
+        }
+    }
+    public class PartVisuals_MaterialSet
+    {
+        public readonly MaterialGroup Group;
+
+        // These are overlay brushes
+        public readonly EmissiveMaterial SelectionEmissive;
+        public readonly PartDesignBase.MaterialColorProps MaterialBrush;
+
+        //No need for these - just update the brush in this.MaterialBrush (see PartDesignBase.SetEditorBrushes)
+        // Only one of these sets will be applied at a time
+        /// <summary>
+        /// These are the standard set of materials
+        /// </summary>
+        public readonly System.Windows.Media.Media3D.Material[] Materials_Standard;
+        /// <summary>
+        /// These are what to use when the part is destroyed
+        /// </summary>
+        public readonly System.Windows.Media.Media3D.Material[] Materials_Destroyed;
+        /// <summary>
+        /// These are used to convey informational (they are colored with InfoColor)
+        /// </summary>
+        /// <remarks>
+        /// Item1=The material that takes the variable color
+        /// Item2=Any other materials to make it look nice (probably just specular)
+        /// 
+        /// One example of informational coloring would be health: { Red, Yellow, Green }
+        /// 
+        /// Others could be:
+        ///     stress analysis
+        ///     shield coverage
+        ///     contribution to moment of inertia
+        ///     mass
+        ///     parts in line of fire (from weapons or thrusters)
+        ///     parts that aren't fed by containers
+        /// </remarks>
+        public readonly Tuple<DiffuseMaterial, System.Windows.Media.Media3D.Material[]> Materials_Info;
+    }
+
+    #endregion
+
 
     #region Class: ShipPartDNA
 
@@ -1456,6 +1750,19 @@ namespace Game.Newt.v2.GameItems
         /// But that couldn't be serialized (no default constructor), so I had to create a derived class
         /// </remarks>
         public NeuralLinkExternalDNA[] ExternalLinks
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// This is named so that the default of 0 is fully healthy (in case the property is never set)
+        /// </summary>
+        /// <remarks>
+        /// 0 - full hit points
+        /// 1 - fully destroyed
+        /// </remarks>
+        public double PercentDamaged
         {
             get;
             set;

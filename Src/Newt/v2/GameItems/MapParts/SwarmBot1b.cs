@@ -1672,8 +1672,8 @@ namespace Game.Newt.v2.GameItems.MapParts
             List<ChasePoint_Force> forces = new List<ChasePoint_Force>();
 
             // Toward -- constant pull toward other bots
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, ACCEL * 1.2));
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, ACCEL * 20, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(50d, 0d), Tuple.Create(100d, 1d) }));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * 1.2));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * 20, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(50d, 0d), Tuple.Create(100d, 1d) }));
 
             // Repel -- ramp up repulsion if too close to other bots
             // Friction if about to collide
@@ -1696,17 +1696,17 @@ namespace Game.Newt.v2.GameItems.MapParts
             List<ChasePoint_Force> forces = new List<ChasePoint_Force>();
 
             // Toward -- constant pull toward other bots
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, ACCEL));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL));
 
             // Repel -- ramp up repulsion if too close to other bots
             // Friction if about to collide
             forces.AddRange(GetRepelInitialForces());
 
             // Friction orthogonal to desired vector -- orth friction will help reduce orbits
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_Orth, ACCEL / 8));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_Orth, ACCEL / 8));
 
             // Extra friction when overshooting the target (not sure if this is useful) -- big ramp up of friction when it gets really close to another bot
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityAway, ACCEL / 3.2));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, ACCEL / 3.2));
 
             return new ForceSettings_Initial()
             {
@@ -1740,7 +1740,7 @@ namespace Game.Newt.v2.GameItems.MapParts
                 Tuple.Create(10d * distMult, 0d),
             };
 
-            ChasePoint_Force repel = new ChasePoint_Force(ChaseDirectionType.Direction, ACCEL * -3 * powerMult, gradient: gradient);
+            ChasePoint_Force repel = new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * -3 * powerMult, gradient: gradient);
 
             gradient = new[]
             {
@@ -1748,7 +1748,7 @@ namespace Game.Newt.v2.GameItems.MapParts
                 Tuple.Create(1.5 * distMult, .7d),
                 Tuple.Create(3d * distMult, 0d),
             };
-            ChasePoint_Force tooCloseAndHotFriction = new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityToward, ACCEL * 4 * powerMult, gradient: gradient);
+            ChasePoint_Force tooCloseAndHotFriction = new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, ACCEL * 4 * powerMult, gradient: gradient);
 
             return new[] { repel, tooCloseAndHotFriction };
         }

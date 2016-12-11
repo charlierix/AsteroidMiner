@@ -607,7 +607,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             /// removed from the map)
             /// </remarks>
             /// <param name="position">Point of impact</param>
-            /// <param name="amount">Direction and intensity of impace</param>
+            /// <param name="amount">Direction and intensity of impact</param>
             /// <param name="piercePercent">
             /// 0 to 1
             /// This affects where voronoi control points are created, and where the impact velocities originate.  Percent of zero will make points at the surface.
@@ -652,8 +652,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                 Point3D parentPos = _parent.PositionWorld;
                 Vector3D parentVel = _parent.VelocityWorld;
-
-                Matrix3D toWorld = _parent.OffsetMatrix;
+                Quaternion parentRot = _parent.PhysicsBody.Rotation;
 
                 #endregion
 
@@ -665,12 +664,12 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                 double overDamage = _damage / _radiusMin;
 
-                AsteroidOrMineralDefinition[] children = GetChildAsteroidsOrMinerals(_hits.ToArray(), overDamage, parentPos, parentVel, toWorld);
+                AsteroidOrMineralDefinition[] children = GetChildAsteroidsOrMinerals(_hits.ToArray(), overDamage);
 
                 //NOTE: This parent asteroid was already removed from the map
                 if (children != null)
                 {
-                    IMapObject[] mapObjects = ConvertToMapObjects(children, parentPos, parentVel, toWorld);
+                    IMapObject[] mapObjects = ConvertToMapObjects(children, parentPos, parentVel, parentRot);
                     AddToMap(mapObjects);
                 }
 
@@ -681,12 +680,12 @@ namespace Game.Newt.v2.GameItems.MapParts
             /// This will convert to real minerals, pull them apart, and place them on the map
             /// NOTE: If these are replacing an asteroid, be sure the asteroid is removed before calling this
             /// </summary>
-            public void PlaceMinerals(MineralDNA[] minerals, Point3D position, Vector3D velocity, Matrix3D toWorld, double? maxRandomVelocity = null)
+            public void PlaceMinerals(MineralDNA[] minerals, Point3D position, Vector3D velocity, double? maxRandomVelocity = null)
             {
                 //TODO: Angular velocity
                 AsteroidOrMineralDefinition[] positioned = PositionMinerals(minerals, maxRandomVelocity);
 
-                IMapObject[] mapObjects = ConvertToMapObjects(positioned, position, velocity, toWorld);
+                IMapObject[] mapObjects = ConvertToMapObjects(positioned, position, velocity, Quaternion.Identity);
 
                 AddToMap(mapObjects);
             }
@@ -696,7 +695,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             #region Private Methods
 
             // This also creates minerals
-            private AsteroidOrMineralDefinition[] GetChildAsteroidsOrMinerals(Tuple<Point3D, Vector3D, double>[] hits, double overDamage, Point3D parentPos, Vector3D parentVel, Matrix3D toWorld)
+            private AsteroidOrMineralDefinition[] GetChildAsteroidsOrMinerals(Tuple<Point3D, Vector3D, double>[] hits, double overDamage)
             {
                 int childCount = GetChildCounts(overDamage);
 
@@ -924,7 +923,6 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                 return retVal;
             }
-
             private AsteroidOrMineralDefinition[] DetermineDestroyedChildrenMinerals_Minerals(Vector3D parentRadius, Func<double, ITriangleIndexed[], double> getMassByRadius, Func<double, MineralDNA[]> getMineralsByDestroyedMass)
             {
                 double parentVolume = GetEllipsoidVolume(parentRadius);     // this returned volume is ellipse like
@@ -1063,20 +1061,22 @@ namespace Game.Newt.v2.GameItems.MapParts
                 return retVal.ToArray();
             }
 
-            private IMapObject[] ConvertToMapObjects(AsteroidOrMineralDefinition[] items, Point3D parentPos, Vector3D parentVel, Matrix3D toWorld)
+            private IMapObject[] ConvertToMapObjects(AsteroidOrMineralDefinition[] items, Point3D parentPos, Vector3D parentVel, Quaternion parentRot)
             {
                 IMapObject[] retVal = new IMapObject[items.Length];
 
+                RotateTransform3D rotate = new RotateTransform3D(new QuaternionRotation3D(parentRot));
+
                 for (int cntr = 0; cntr < retVal.Length; cntr++)
                 {
-                    Point3D position = parentPos + items[cntr].Part.Position.ToVector();
+                    Point3D position = parentPos + rotate.Transform(items[cntr].Part.Position.ToVector());
 
                     if (items[cntr].IsAsteroid)
                     {
                         // Asteroid
                         AsteroidExtra extra = new AsteroidExtra()
                         {
-                            Triangles = items[cntr].AsteroidTriangles,
+                            Triangles = TriangleIndexed.Clone_Transformed(items[cntr].AsteroidTriangles, rotate),
                             GetMineralsByDestroyedMass = _getMineralsByDestroyedMass,
                             MineralMaterialID = _mineralMaterialID,
                             MinChildRadius = _minChildRadius,
@@ -1095,36 +1095,10 @@ namespace Game.Newt.v2.GameItems.MapParts
                         retVal[cntr] = new Mineral(mindef.MineralType, position, mindef.Volume, _world, _mineralMaterialID, _sharedVisuals.Value, densityMult, mindef.Scale);
                     }
 
-                    retVal[cntr].PhysicsBody.Rotation = items[cntr].Part.Orientation;
+                    retVal[cntr].PhysicsBody.Velocity = parentVel + rotate.Transform(items[cntr].Velocity);
 
-                    retVal[cntr].PhysicsBody.Velocity = parentVel + toWorld.Transform(items[cntr].Velocity);
-
+                    // Need to be careful if setting this.  Too much, and it will come apart unnaturally
                     //retVal[cntr].PhysicsBody.AngularVelocity = ;
-
-                    #region OLD
-
-                    //Point3D position = parentPos + shards.Shards[cntr].Center_ParentCoords.ToVector();
-
-                    //AsteroidExtra extra = new AsteroidExtra()
-                    //{
-                    //    Triangles = shards.Shards[cntr].Hull_Centered,
-                    //    GetMineralsByDestroyedMass = _getMineralsByDestroyedMass,
-                    //    MineralMaterialID = _mineralMaterialID,
-                    //    MinChildRadius = _minChildRadius,
-                    //    RandomRotation = false,
-                    //    //SelfDestructAfterElapse = cntr == 0 ? 4d : (double?)null,
-                    //};
-
-                    //retVal[cntr] = new Asteroid(shards.Shards[cntr].Radius, _getMassByRadius, position, _world, _map, _materialID, extra);
-
-                    //if (shards.Velocities != null && shards.Velocities.Length == shards.Shards.Length)
-                    //{
-                    //    retVal[cntr].PhysicsBody.Velocity = parentVel + toWorld.Transform(shards.Velocities[cntr]);
-                    //}
-
-                    ////retVal[cntr].PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(UtilityCore.GetScaledValue(.5, 8, 1, MAXOVERDMG, overDamage));
-
-                    #endregion
                 }
 
                 return retVal;
@@ -1711,7 +1685,6 @@ namespace Game.Newt.v2.GameItems.MapParts
 
             Point3D position = this.PositionWorld;
             Vector3D velocity = this.VelocityWorld;
-            Matrix3D toWorld = this.OffsetMatrix;
 
             //NOTE: It is expected that something is listening to Map.Map_ItemRemoved, and is disposing those objects
             if (!_map.RemoveItem(this))
@@ -1722,7 +1695,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             // Replace with minerals
             if (_mineralsWhenSelfDestruct != null && _mineralsWhenSelfDestruct.Length > 0)
             {
-                _hitTracker.PlaceMinerals(_mineralsWhenSelfDestruct, position, velocity * .75, toWorld, 5);
+                _hitTracker.PlaceMinerals(_mineralsWhenSelfDestruct, position, velocity * .75, 5);
             }
         }
         public void Update_AnyThread(double elapsedTime)

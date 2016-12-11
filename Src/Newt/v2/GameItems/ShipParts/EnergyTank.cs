@@ -67,7 +67,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new EnergyTankDesign(this.Options);
+            return new EnergyTankDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public EnergyTankDesign(EditorOptions options)
-            : base(options) { }
+        public EnergyTankDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private GeometryModel3D _geometry = null;
+        private GeometryModel3D _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometry == null)
+                if (_model == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometry;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -262,11 +257,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public EnergyTank(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna)
-            : base(options, dna)
+            : base(options, dna, itemOptions.EnergyTank_Damage.HitpointMin, itemOptions.EnergyTank_Damage.HitpointSlope, itemOptions.EnergyTank_Damage.Damage)
         {
             _itemOptions = itemOptions;
 
-            this.Design = new EnergyTankDesign(options);
+            this.Design = new EnergyTankDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius;
@@ -277,6 +272,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _mass = _container.QuantityMax * itemOptions.EnergyTank_Density;
 
             _neuron = new Neuron_SensorPosition(new Point3D(0, 0, 0), false);
+
+            this.Destroyed += EnergyTank_Destroyed;
         }
 
         #endregion
@@ -306,11 +303,40 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 //_container.QuantityMax = value;
             }
         }
+        public double QuantityMax_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMax;
+                }
+            }
+        }
+
         public double QuantityMaxMinusCurrent
         {
             get
             {
                 return _container.QuantityMaxMinusCurrent;
+            }
+        }
+        public double QuantityMaxMinusCurrent_Usable
+        {
+            get
+            {
+                if (this.IsDestroyed)
+                {
+                    return 0d;
+                }
+                else
+                {
+                    return _container.QuantityMaxMinusCurrent;
+                }
             }
         }
 
@@ -342,14 +368,29 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public double AddQuantity(double amount, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return amount;
+            }
+
             return _container.AddQuantity(amount, exactAmountOnly);
         }
         public double AddQuantity(IContainer pullFrom, double amount, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return amount;
+            }
+
             return _container.AddQuantity(pullFrom, amount, exactAmountOnly);
         }
         public double AddQuantity(IContainer pullFrom, bool exactAmountOnly)
         {
+            if (this.IsDestroyed)
+            {
+                return pullFrom.QuantityCurrent;
+            }
+
             return _container.AddQuantity(pullFrom, exactAmountOnly);
         }
 
@@ -468,6 +509,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 return _scaleActual;
             }
+        }
+
+        #endregion
+
+        #region Event Listeners
+
+        private void EnergyTank_Destroyed(object sender, EventArgs e)
+        {
+            _container.QuantityCurrent = 0;
         }
 
         #endregion

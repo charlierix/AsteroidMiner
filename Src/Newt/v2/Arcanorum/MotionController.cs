@@ -28,8 +28,8 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public MotionController_LinearDesign(EditorOptions options)
-            : base(options) { }
+        public MotionController_LinearDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -57,7 +57,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 if (_geometry == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _geometry = CreateGeometry(this.IsFinalModel);
                 }
 
                 return _geometry;
@@ -67,11 +67,6 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -209,12 +204,12 @@ namespace Game.Newt.v2.Arcanorum
         #region Constructor
 
         public MotionController_Linear(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, AIMousePlate mousePlate)
-            : base(options, dna)
+            : base(options, dna, itemOptions.MotionController_Damage.HitpointMin, itemOptions.MotionController_Damage.HitpointSlope, itemOptions.MotionController_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _mousePlate = mousePlate;
 
-            this.Design = new MotionController_LinearDesign(options);
+            this.Design = new MotionController_LinearDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius, volume;

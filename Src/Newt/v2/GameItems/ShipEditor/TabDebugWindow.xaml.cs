@@ -69,9 +69,9 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             });
 
 
-            foreach(long token in _vm.PreviousRemoved)
+            foreach (var token in _vm.PreviousRemoved)
             {
-                panel.Children.Add(new TextBlock() { Text = token.ToString() });
+                panel.Children.Add(new TextBlock() { Text = token.Item1.ToString() });
             }
         }
     }

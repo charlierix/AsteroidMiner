@@ -628,7 +628,7 @@ namespace Game.Newt.v2.GameItems
             get
             {
                 // Direction is attract, all else is drag
-                return this.Direction != ChaseDirectionType.Direction;
+                return this.Direction != ChaseDirectionType.Attract_Direction;
             }
         }
 
@@ -756,8 +756,8 @@ namespace Game.Newt.v2.GameItems
 
         private bool IsDirectionValid(bool isVelocityAlongTowards)
         {
-            if ((this.Direction == ChaseDirectionType.Velocity_AlongIfVelocityAway && isVelocityAlongTowards) ||
-                (this.Direction == ChaseDirectionType.Velocity_AlongIfVelocityToward && !isVelocityAlongTowards))
+            if ((this.Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway && isVelocityAlongTowards) ||
+                (this.Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward && !isVelocityAlongTowards))
             {
                 return false;
             }
@@ -771,24 +771,24 @@ namespace Game.Newt.v2.GameItems
         {
             switch (direction)
             {
-                case ChaseDirectionType.Velocity_Along:
-                case ChaseDirectionType.Velocity_AlongIfVelocityAway:
-                case ChaseDirectionType.Velocity_AlongIfVelocityToward:
+                case ChaseDirectionType.Drag_Velocity_Along:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward:
                     unit = e.VelocityAlongUnit;
                     length = e.VelocityAlongLength;
                     break;
 
-                case ChaseDirectionType.Direction:
+                case ChaseDirectionType.Attract_Direction:
                     unit = e.DirectionUnit;
                     length = e.DirectionLength;
                     break;
 
-                case ChaseDirectionType.Velocity_Any:
+                case ChaseDirectionType.Drag_Velocity_Any:
                     unit = e.VelocityUnit;
                     length = e.VelocityLength;
                     break;
 
-                case ChaseDirectionType.Velocity_Orth:
+                case ChaseDirectionType.Drag_Velocity_Orth:
                     unit = e.VelocityOrthUnit;
                     length = e.VelocityOrthLength;
                     break;
@@ -877,32 +877,32 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// The force is along the direction vector
         /// </summary>
-        Direction,
+        Attract_Direction,
 
         //------ everything below is a drag force
 
         /// <summary>
         /// Drag is applied to the entire velocity
         /// </summary>
-        Velocity_Any,
+        Drag_Velocity_Any,
         /// <summary>
         /// Drag is only applied along the part of the velocity that is along the direction to the chase point
         /// </summary>
-        Velocity_Along,
+        Drag_Velocity_Along,
         /// <summary>
         /// Drag is only applied along the part of the velocity that is along the direction to the chase point.
         /// But only if that velocity is toward the chase point
         /// </summary>
-        Velocity_AlongIfVelocityToward,
+        Drag_Velocity_AlongIfVelocityToward,
         /// <summary>
         /// Drag is only applied along the part of the velocity that is along the direction to the chase point.
         /// But only if that velocity is away from chase point
         /// </summary>
-        Velocity_AlongIfVelocityAway,
+        Drag_Velocity_AlongIfVelocityAway,
         /// <summary>
         /// Drag is only applied along the part of the velocity that is othrogonal to the direction to the chase point
         /// </summary>
-        Velocity_Orth
+        Drag_Velocity_Orth
     }
 
     #endregion

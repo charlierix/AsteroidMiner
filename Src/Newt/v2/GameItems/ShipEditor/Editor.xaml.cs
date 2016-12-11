@@ -2495,7 +2495,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.One);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.One);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2562,7 +2562,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.Two);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.Two);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2641,7 +2641,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.Two_One);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.Two_One);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2717,7 +2717,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.Two_Two);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.Two_Two);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2790,7 +2790,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.Two_Two_One);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.Two_Two_One);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2876,7 +2876,7 @@ Keys:
 
                 #endregion
 
-                ThrusterDesign thruster = new ThrusterDesign(_options, ThrusterType.Two_Two_Two);
+                ThrusterDesign thruster = new ThrusterDesign(_options, false, ThrusterType.Two_Two_Two);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2932,7 +2932,7 @@ Keys:
 
                 #endregion
 
-                FuelTankDesign fuelTank = new FuelTankDesign(_options);
+                FuelTankDesign fuelTank = new FuelTankDesign(_options, false);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -2978,7 +2978,7 @@ Keys:
 
                 #endregion
 
-                EnergyTankDesign energyTank = new EnergyTankDesign(_options);
+                EnergyTankDesign energyTank = new EnergyTankDesign(_options, false);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -3019,7 +3019,7 @@ Keys:
 
                 #endregion
 
-                CargoBayDesign cargoBay = new CargoBayDesign(_options);
+                CargoBayDesign cargoBay = new CargoBayDesign(_options, false);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
@@ -3060,7 +3060,7 @@ Keys:
 
                 #endregion
 
-                CargoBayDesign cargoBay = new CargoBayDesign(_options);
+                CargoBayDesign cargoBay = new CargoBayDesign(_options, false);
                 cargoBay.Scale = new Vector3D(2, 1, 1);
 
                 // Model
@@ -3102,7 +3102,7 @@ Keys:
 
                 #endregion
 
-                CargoBayDesign cargoBay = new CargoBayDesign(_options);
+                CargoBayDesign cargoBay = new CargoBayDesign(_options, false);
                 cargoBay.Scale = new Vector3D(2, 2, 1);
 
                 // Model
@@ -3144,7 +3144,7 @@ Keys:
 
                 #endregion
 
-                CargoBayDesign cargoBay = new CargoBayDesign(_options);
+                CargoBayDesign cargoBay = new CargoBayDesign(_options, false);
                 cargoBay.Scale = new Vector3D(3, 2, 1);
 
                 // Model
@@ -3186,7 +3186,7 @@ Keys:
 
                 #endregion
 
-                CargoBayDesign cargoBay = new CargoBayDesign(_options);
+                CargoBayDesign cargoBay = new CargoBayDesign(_options, false);
                 cargoBay.Scale = new Vector3D(3, 3, 1);
 
                 // Model
@@ -3254,7 +3254,7 @@ Keys:
 
                 #endregion
 
-                TractorBeamDesign tractor = new TractorBeamDesign(_options);
+                TractorBeamDesign tractor = new TractorBeamDesign(_options, false);
 
                 // Model
                 ModelVisual3D model = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible

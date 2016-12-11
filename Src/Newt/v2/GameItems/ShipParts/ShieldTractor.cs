@@ -65,7 +65,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ShieldTractorDesign(this.Options);
+            return new ShieldTractorDesign(this.Options, false);
         }
 
         #endregion
@@ -86,8 +86,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ShieldTractorDesign(EditorOptions options)
-            : base(options) { }
+        public ShieldTractorDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -108,28 +108,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -190,12 +185,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public ShieldTractor(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer plasma)
-            : base(options, dna)
+            : base(options, dna, itemOptions.Shield_Damage.HitpointMin, itemOptions.Shield_Damage.HitpointSlope, itemOptions.Shield_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _plasma = plasma;
 
-            this.Design = new ShieldTractorDesign(options);
+            this.Design = new ShieldTractorDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume, radius;

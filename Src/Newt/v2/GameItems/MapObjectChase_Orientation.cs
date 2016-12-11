@@ -367,7 +367,7 @@ namespace Game.Newt.v2.GameItems
             get
             {
                 // Direction is attract, all else is drag
-                return this.Direction != ChaseDirectionType.Direction;
+                return this.Direction != ChaseDirectionType.Attract_Direction;
             }
         }
 
@@ -462,24 +462,24 @@ namespace Game.Newt.v2.GameItems
         {
             switch (direction)
             {
-                case ChaseDirectionType.Velocity_Along:
-                case ChaseDirectionType.Velocity_AlongIfVelocityAway:
-                case ChaseDirectionType.Velocity_AlongIfVelocityToward:
+                case ChaseDirectionType.Drag_Velocity_Along:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward:
                     unit = e.AngVelocityAlongUnit;
                     length = e.AngVelocityAlongLength;
                     break;
 
-                case ChaseDirectionType.Direction:
+                case ChaseDirectionType.Attract_Direction:
                     unit = e.Rotation.Axis;
                     length = e.Rotation.Angle;
                     break;
 
-                case ChaseDirectionType.Velocity_Any:
+                case ChaseDirectionType.Drag_Velocity_Any:
                     unit = e.AngVelocityUnit;
                     length = e.AngVelocityLength;
                     break;
 
-                case ChaseDirectionType.Velocity_Orth:
+                case ChaseDirectionType.Drag_Velocity_Orth:
                     unit = e.AngVelocityOrthUnit;
                     length = e.AngVelocityOrthLength;
                     break;

@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             if(this.Part2D == null)
             {
-                retVal.Part3D = BotConstructor.GetPartDesign(this.Part3D.GetDNA(), _options);
+                retVal.Part3D = BotConstructor.GetPartDesign(this.Part3D.GetDNA(), _options, this.Part3D.IsFinalModel);
             }
             else
             {

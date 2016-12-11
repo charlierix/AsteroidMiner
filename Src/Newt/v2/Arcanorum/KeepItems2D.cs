@@ -107,10 +107,10 @@ namespace Game.Newt.v2.Arcanorum
                     Tuple.Create(0d, .04d),     // distance, %
                     Tuple.Create(1d, 1d),
                 };
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Direction, 500d, gradient: gradient));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, 500d, gradient: gradient));
 
             // These act like a shock absorber
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityAway, 50d));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, 50d));
 
             gradient = new[]
                 {
@@ -118,7 +118,7 @@ namespace Game.Newt.v2.Arcanorum
                     Tuple.Create(.75d, .2d),
                     Tuple.Create(2d, 0d),
                 };
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Velocity_AlongIfVelocityToward, 100d, gradient: gradient));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, 100d, gradient: gradient));
 
 
             MapObject_ChasePoint_Forces chaseForces = new MapObject_ChasePoint_Forces(item, false);

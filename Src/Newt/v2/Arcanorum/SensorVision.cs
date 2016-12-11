@@ -36,8 +36,8 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Constructor
 
-        public SensorVisionDesign(EditorOptions options)
-            : base(options) { }
+        public SensorVisionDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -65,7 +65,7 @@ namespace Game.Newt.v2.Arcanorum
             {
                 if (_geometry == null)
                 {
-                    _geometry = CreateGeometry(false);
+                    _geometry = CreateGeometry(this.IsFinalModel);
                 }
 
                 return _geometry;
@@ -75,11 +75,6 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -246,13 +241,13 @@ namespace Game.Newt.v2.Arcanorum
         #region Constructor
 
         public SensorVision(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, Map map, double searchRadius, Type filterType = null)
-            : base(options, dna)
+            : base(options, dna, itemOptions.VisionSensor_Damage.HitpointMin, itemOptions.VisionSensor_Damage.HitpointSlope, itemOptions.VisionSensor_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _map = map;
             _filterType = filterType;
 
-            this.Design = new SensorVisionDesign(options);
+            this.Design = new SensorVisionDesign(options, true);
             this.Design.SetDNA(dna);
 
             double radius, volume;
@@ -260,7 +255,7 @@ namespace Game.Newt.v2.Arcanorum
 
             this.Radius = radius;
 
-            _neurons = CreateNeurons(dna, itemOptions, itemOptions.VisionSensorNeuronDensity, true, true);
+            _neurons = CreateNeurons(dna, itemOptions, itemOptions.VisionSensor_NeuronDensity, true, true);
 
             #region Store stats about neurons
 

@@ -67,7 +67,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override PartDesignBase GetNewDesignPart()
         {
-            return new ProjectileGunDesign(this.Options);
+            return new ProjectileGunDesign(this.Options, false);
         }
 
         #endregion
@@ -90,8 +90,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public ProjectileGunDesign(EditorOptions options)
-            : base(options) { }
+        public ProjectileGunDesign(EditorOptions options, bool isFinalModel)
+            : base(options, isFinalModel) { }
 
         #endregion
 
@@ -112,28 +112,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        private Model3DGroup _geometries = null;
+        private Model3DGroup _model = null;
         public override Model3D Model
         {
             get
             {
-                if (_geometries == null)
+                if (_model == null)
                 {
-                    _geometries = CreateGeometry(false);
+                    _model = CreateGeometry(this.IsFinalModel);
                 }
 
-                return _geometries;
+                return _model;
             }
         }
 
         #endregion
 
         #region Public Methods
-
-        public override Model3D GetFinalModel()
-        {
-            return CreateGeometry(true);
-        }
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
@@ -439,7 +434,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Constructor
 
         public ProjectileGun(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, Map map, World world, int material_Projectile)
-            : base(options, dna)
+            : base(options, dna, itemOptions.ProjectileWeapon_Damage.HitpointMin, itemOptions.ProjectileWeapon_Damage.HitpointSlope, itemOptions.ProjectileWeapon_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _world = world;
@@ -448,7 +443,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             _neurons = new[] { new Neuron_ZeroPos(new Point3D(0, 0, 0)) };
 
-            this.Design = new ProjectileGunDesign(options);
+            this.Design = new ProjectileGunDesign(options, true);
             this.Design.SetDNA(dna);
 
             double volume, radius, barrelRadius;
@@ -545,7 +540,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // See if enough time has passed for another shot to be fired
             _timeSinceLastShot += elapsedTime;
 
-            if (_timeSinceLastShot >= _timeBetweenShots)
+            if (!this.IsDestroyed && _timeSinceLastShot >= _timeBetweenShots)
             {
                 #region Possibly Fire
 
@@ -755,6 +750,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public Vector3D Fire()
         {
+            if(this.IsDestroyed)
+            {
+                return new Vector3D(0, 0, 0);
+            }
+
             #region Pull ammo
 
             var projProps = _projectileProps;

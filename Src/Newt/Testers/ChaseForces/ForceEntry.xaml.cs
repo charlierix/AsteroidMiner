@@ -485,22 +485,22 @@ namespace Game.Newt.Testers.ChaseForces
             switch (selection.Text)
             {
                 case DIRECTION_DIRECTION:
-                    return ChaseDirectionType.Direction;
+                    return ChaseDirectionType.Attract_Direction;
 
                 case DIRECTION_VELOCITY_ANY:
-                    return ChaseDirectionType.Velocity_Any;
+                    return ChaseDirectionType.Drag_Velocity_Any;
 
                 case DIRECTION_VELOCITY_ALONG:
-                    return ChaseDirectionType.Velocity_Along;
+                    return ChaseDirectionType.Drag_Velocity_Along;
 
                 case DIRECTION_VELOCITY_ALONGIFTOWARD:
-                    return ChaseDirectionType.Velocity_AlongIfVelocityToward;
+                    return ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward;
 
                 case DIRECTION_VELOCITY_ALONGIFAWAY:
-                    return ChaseDirectionType.Velocity_AlongIfVelocityAway;
+                    return ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway;
 
                 case DIRECTION_VELOCITY_ORTH:
-                    return ChaseDirectionType.Velocity_Orth;
+                    return ChaseDirectionType.Drag_Velocity_Orth;
 
                 default:
                     throw new ApplicationException("Unknown ChasePoint_DirectionType: " + selection.Text);
@@ -511,27 +511,27 @@ namespace Game.Newt.Testers.ChaseForces
             string searchFor = null;
             switch (direction)
             {
-                case ChaseDirectionType.Direction:
+                case ChaseDirectionType.Attract_Direction:
                     searchFor = DIRECTION_DIRECTION;
                     break;
 
-                case ChaseDirectionType.Velocity_Along:
+                case ChaseDirectionType.Drag_Velocity_Along:
                     searchFor = DIRECTION_VELOCITY_ALONG;
                     break;
 
-                case ChaseDirectionType.Velocity_AlongIfVelocityAway:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway:
                     searchFor = DIRECTION_VELOCITY_ALONGIFAWAY;
                     break;
 
-                case ChaseDirectionType.Velocity_AlongIfVelocityToward:
+                case ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward:
                     searchFor = DIRECTION_VELOCITY_ALONGIFTOWARD;
                     break;
 
-                case ChaseDirectionType.Velocity_Any:
+                case ChaseDirectionType.Drag_Velocity_Any:
                     searchFor = DIRECTION_VELOCITY_ANY;
                     break;
 
-                case ChaseDirectionType.Velocity_Orth:
+                case ChaseDirectionType.Drag_Velocity_Orth:
                     searchFor = DIRECTION_VELOCITY_ORTH;
                     break;
 

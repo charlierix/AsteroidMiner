@@ -24,6 +24,7 @@ namespace Game.Newt.Testers.ChaseForces
         private double _elapsedDirection = 0;
 
         private Vector3D _velocityUnit = Math3D.GetRandomVector_Spherical_Shell(1);
+        private Quaternion _angVel = new Quaternion(Math3D.GetRandomVector_Spherical_Shell(1), 20);
 
         #endregion
 
@@ -124,22 +125,22 @@ namespace Game.Newt.Testers.ChaseForces
 
             switch (this.MotionType_Position)
             {
-                case Testers.ChaseForces.MotionType_Position.Stop:
+                case MotionType_Position.Stop:
                     break;
 
-                case Testers.ChaseForces.MotionType_Position.Jump:
+                case MotionType_Position.Jump:
                     Update_Position_Jump();
                     break;
 
-                case Testers.ChaseForces.MotionType_Position.Brownian:
+                case MotionType_Position.Brownian:
                     Update_Position_Brownian(elapsedTime);
                     break;
 
-                case Testers.ChaseForces.MotionType_Position.BounceOffWalls:
+                case MotionType_Position.BounceOffWalls:
                     Update_Position_BounceOffWalls(elapsedTime);
                     break;
 
-                case Testers.ChaseForces.MotionType_Position.Orbit:
+                case MotionType_Position.Orbit:
                     Update_Position_Orbit(elapsedTime);
                     break;
 
@@ -152,11 +153,19 @@ namespace Game.Newt.Testers.ChaseForces
 
             switch (this.MotionType_Orientation)
             {
-                case Testers.ChaseForces.MotionType_Orientation.Stop:
+                case MotionType_Orientation.Stop:
                     break;
 
-                case Testers.ChaseForces.MotionType_Orientation.Jump:
+                case MotionType_Orientation.Jump:
                     Update_Direction_Jump();
+                    break;
+
+                case MotionType_Orientation.Brownian:
+                    Update_Direction_Brownian();
+                    break;
+
+                case MotionType_Orientation.Constant:
+                    Update_Direction_Constant(elapsedTime);
                     break;
 
                 default:
@@ -239,6 +248,23 @@ namespace Game.Newt.Testers.ChaseForces
             this.Direction = Math3D.GetRandomVector_Spherical_Shell(1);
 
             _elapsedDirection = 0;
+        }
+        private void Update_Direction_Brownian()
+        {
+            if (_elapsedDirection < this.Delay_Orientation)
+            {
+                return;
+            }
+
+            this.Direction = Math3D.GetRandomVector_Cone(this.Direction, 45);
+
+            _elapsedDirection = 0;
+        }
+        private void Update_Direction_Constant(double elapsedTime)
+        {
+            Quaternion delta = new Quaternion(_angVel.Axis, _angVel.Angle * this.Speed_Orientation * elapsedTime);
+
+            this.Direction = delta.GetRotatedVector(this.Direction);
         }
 
         private void ReflectOffWall_Velocity(double elapsedTime)
