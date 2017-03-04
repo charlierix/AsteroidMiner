@@ -100,7 +100,7 @@ namespace Game.Newt.v2.GameItems
             //NOTE: If options.ThreadShare is set, then there's no reason to do this async, but there's no harm either
             Task.Run(() => UtilityAI.DiscoverSolution(delegates, options));
         }
-        public static void DiscoverSolutionAsync2(Bot bot, Vector3D? idealLinear, Vector3D? idealRotation, CancellationToken? cancel = null, ThrustContributionModel model = null, Action<ThrusterMap> newBestFound = null, Action<ThrusterMap> finalFound = null, DiscoverSolutionOptions2<Tuple<int, int, double>> options = null)
+        public static void DiscoverSolutionAsync2(Bot bot, Vector3D? idealLinear, Vector3D? idealRotation, CancellationToken? cancel = null, ThrustContributionModel model = null, Action<ThrusterMap> newBestFound = null, Action<ThrusterMap> finalFound = null, Action<Tuple<ThrusterMap, double[]>[]> logGeneration = null, DiscoverSolutionOptions2<Tuple<int, int, double>> options = null)
         {
             long token = bot.Token;
 
@@ -167,6 +167,18 @@ namespace Game.Newt.v2.GameItems
                 {
                     ThrusterMap map = new ThrusterMap(ThrustControlUtil.Normalize(o.Item), allThrusters, token);
                     finalFound(map);
+                });
+            }
+
+            if (logGeneration != null)
+            {
+                delegates.LogGeneration = new Action<Tuple<Tuple<int, int, double>[], double[]>[]>(o =>
+                {
+                    Tuple<ThrusterMap, double[]>[] generation = o.
+                        Select(p => Tuple.Create(new ThrusterMap(ThrustControlUtil.Normalize(p.Item1), allThrusters, token), p.Item2)).
+                        ToArray();
+
+                    logGeneration(generation);
                 });
             }
 
@@ -618,7 +630,7 @@ namespace Game.Newt.v2.GameItems
                     double percent;
                     if (dot > 0)
                     {
-                        if(dot > DOT_MAX)
+                        if (dot > DOT_MAX)
                         {
                             percent = 0;
                         }
@@ -677,7 +689,7 @@ namespace Game.Newt.v2.GameItems
 
             for (int outer = 0; outer < thrusters.Length; outer++)
             {
-                if(isDestroyed[outer])
+                if (isDestroyed[outer])
                 {
                     // This thruster is destroyed, so it has no contribution (leaving it in the list of contributions so that thruster maps stay the same size as
                     // thrusters get destroyed and repaired
@@ -722,11 +734,25 @@ namespace Game.Newt.v2.GameItems
 
             this.TranslationForceLength = translationForce.Length;
             this.TranslationForce = translationForce;
-            this.TranslationForceUnit = new Vector3D(translationForce.X / this.TranslationForceLength, translationForce.Y / this.TranslationForceLength, translationForce.Z / this.TranslationForceLength);
+            if (this.TranslationForceLength.IsNearZero())
+            {
+                this.TranslationForceUnit = new Vector3D(0, 0, 0);      // this can happen with destroyed thrusters
+            }
+            else
+            {
+                this.TranslationForceUnit = new Vector3D(translationForce.X / this.TranslationForceLength, translationForce.Y / this.TranslationForceLength, translationForce.Z / this.TranslationForceLength);
+            }
 
             this.TorqueLength = torque.Length;
             this.Torque = torque;
-            this.TorqueUnit = new Vector3D(torque.X / this.TorqueLength, torque.Y / this.TorqueLength, torque.Z / this.TorqueLength);
+            if (this.TorqueLength.IsNearZero())
+            {
+                this.TorqueUnit = new Vector3D(0, 0, 0);
+            }
+            else
+            {
+                this.TorqueUnit = new Vector3D(torque.X / this.TorqueLength, torque.Y / this.TorqueLength, torque.Z / this.TorqueLength);
+            }
         }
 
         public readonly Thruster Thruster;

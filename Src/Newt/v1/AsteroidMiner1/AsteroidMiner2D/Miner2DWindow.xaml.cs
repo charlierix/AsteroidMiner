@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v1.NewtonDynamics1;
 
 namespace Game.Newt.v1.AsteroidMiner1.AsteroidMiner2D_153

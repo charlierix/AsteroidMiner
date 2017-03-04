@@ -225,7 +225,7 @@ namespace Game.HelperClassesAI
             double scaledNumber = absNumber * scale;
             int desiredBase = Math.Pow(scaledNumber, 1d / numDigits).ToInt_Ceiling();
 
-            if(desiredBase < 2)
+            if (desiredBase < 2)
             {
                 desiredBase = 2;
             }
@@ -245,7 +245,7 @@ namespace Game.HelperClassesAI
 
                     return ConvertToVector_LeftSignificant(castDbl1, convertProps);
 
-                    #endregion
+                #endregion
 
                 case SOMFieldType.DateTime:
                     #region date
@@ -260,7 +260,7 @@ namespace Game.HelperClassesAI
 
                     return ConvertToVector_LeftSignificant(castDbl2, convertProps);
 
-                    #endregion
+                #endregion
 
                 case SOMFieldType.AlphaNumeric:
                 case SOMFieldType.AnyText:
@@ -268,7 +268,7 @@ namespace Game.HelperClassesAI
 
                     return ConvertToVector_Text(text, convertProps, stats.UniqueChars_NonWhitespace);
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("finish this: " + stats.FieldType.ToString());

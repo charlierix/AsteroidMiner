@@ -18,7 +18,7 @@ using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers

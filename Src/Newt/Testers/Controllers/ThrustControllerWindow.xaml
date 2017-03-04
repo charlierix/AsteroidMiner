@@ -76,7 +76,9 @@
                         <ComboBox Grid.Column="2" Grid.Row="2" Name="cboThrusterTypes"/>
                     </Grid>
                     <CheckBox IsChecked="True" Name="chkRandRotateThrusters" Content="Rand Orientation"/>
+                    <CheckBox IsChecked="False" Name="chkSomeDestroyed" Content="Some Destroyed"/>
                     <CheckBox IsChecked="True" Name="chkBalanceThrusters" Content="Balance Thrusters"/>
+                    <CheckBox IsChecked="True" Name="chkShowErrorGraph" Content="Show Error Graphs"/>
 
                     <Button Content="Set Bot" Click="SetBot_Click"/>
                     <Button Content="Clear Bot" Click="ClearBot_Click"/>
@@ -190,6 +192,7 @@
                 </Viewport3D>
 
                 <ContentPresenter Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Name="debugOverlay" />
+                <Canvas Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Grid.RowSpan="3" Name="_canvas"/>
             </Grid>
         </Border>
     </Grid>

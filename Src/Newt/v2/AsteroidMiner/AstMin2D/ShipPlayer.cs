@@ -99,6 +99,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         private SortedList<Tuple<Key, bool?>, ThrusterSolution> _thrustLines = new SortedList<Tuple<Key, bool?>, ThrusterSolution>();
         private CancellationTokenSource _cancelCurrentBalancer = null;
 
+        private KeyThrustRequest[] _keyThrustRequests = null;
+
         /// <summary>
         /// Workers that figure out which thrusters to fire will run on this thread
         /// TODO: If there will be many instances of ShipPlayer, then they should share a common worker thread
@@ -183,9 +185,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _guns = base.Parts.Where(o => o is ProjectileGun).Select(o => (ProjectileGun)o).ToArray();
 
             // Listen to part destructions
-            foreach(PartBase part in base.Parts)
+            foreach (PartBase part in base.Parts)
             {
-                if(part is Thruster)
+                if (part is Thruster)
                 {
                     part.Destroyed += Part_DestroyedResurrected;
                     part.Resurrected += Part_DestroyedResurrected;
@@ -460,19 +462,38 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         public override void Update_MainThread(double elapsedTime)
         {
+            #region clear thrusters/impulse
+
             // Reset the thrusters
             //TODO: It's ineficient to do this every tick
-            foreach (Thruster thruster in this.Thrusters)
+            if (this.Thrusters != null)
             {
-                thruster.Percents = new double[thruster.ThrusterDirectionsModel.Length];
+                foreach (Thruster thruster in this.Thrusters)
+                {
+                    thruster.Percents = new double[thruster.ThrusterDirectionsModel.Length];
+                }
             }
+
+            if (this.ImpulseEngines != null)
+            {
+                foreach (ImpulseEngine impulse in this.ImpulseEngines)
+                {
+                    impulse.SetDesiredDirection(null);      // can't call clear, because then it will listen to its neurons
+                }
+            }
+
+            #endregion
 
             if (_downKeys.Count > 0)
             {
                 EnsureThrustKeysBuilt_YISUP();
 
+                List<Tuple<Vector3D?, Vector3D?>> impulseEngineCommand = new List<Tuple<Vector3D?, Vector3D?>>();
+
                 foreach (var key in _downKeys)
                 {
+                    #region thrusters
+
                     ThrusterSolution solution;
                     if (_thrustLines.TryGetValue(key, out solution) || _thrustLines.TryGetValue(Tuple.Create(key.Item1, (bool?)null), out solution))      // _downKeys will always have the bool set to true or false, but _thrustLines may have it stored as a null (null means ignore shift key)
                     {
@@ -504,7 +525,103 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                             }
                         }
                     }
+
+                    #endregion
+
+                    #region impulse engines - WRONG
+
+                    // This converts to acceleration, then force.  It ignored the size of the engine
+                    // But I changed the impulse engines to take percents, and they can output force based on their scale
+
+                    //if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0)
+                    //{
+                    //    // Figure out what vector (linear and/or torque) is associated with this key
+                    //    var match = _keyThrustRequests.
+                    //        Where(o => o.Key == key.Item1).
+                    //        Select(o => new
+                    //        {
+                    //            Request = o,
+                    //            Score = o.Shift == null || key.Item2 == null ? 1 :      // shift press is null, this is the middle score
+                    //                o.Shift.Value == key.Item2.Value ? 0 :      // shift presses match, this is the best score
+                    //                2,      // shift presses don't match, this is the worst score
+                    //        }).
+                    //        OrderBy(o => o.Score).
+                    //        Select(o => o.Request).
+                    //        FirstOrDefault();
+
+                    //    if (match != null)
+                    //    {
+                    //        double magnitude;
+                    //        Vector3D? force = null;
+                    //        if (match.Linear != null)
+                    //        {
+                    //            magnitude = match.MaxLinear ?? this.MaxAcceleration_Linear;
+                    //            double mass = PhysicsBody.Mass;
+                    //            force = match.Linear.Value * magnitude * mass;        //NOTE: The request force is expected to be a unit vector
+                    //        }
+
+                    //        Vector3D? torque = null;
+                    //        if (match.Rotate != null)
+                    //        {
+                    //            magnitude = match.MaxRotate ?? this.MaxAcceleration_Rotate;
+
+                    //            MassMatrix massMatrix = PhysicsBody.MassMatrix;
+                    //            //double massMult = Vector3D.DotProduct(massMatrix.Inertia.ToUnit(false), match.Rotate.Value.ToUnit(false));
+                    //            //massMult = Math.Abs(massMult);
+                    //            //massMult *= massMatrix.Mass;
+                    //            double massMult = Vector3D.DotProduct(massMatrix.Inertia, match.Rotate.Value.ToUnit(false));
+                    //            massMult = Math.Abs(massMult);
+                    //            //massMult *= massMatrix.Mass;
+
+                    //            torque = match.Rotate.Value * magnitude * massMult;
+                    //        }
+
+                    //        impulseEngineCommand.Add(Tuple.Create(force, torque));
+                    //    }
+                    //}
+
+                    #endregion
+                    #region impulse engines
+
+                    if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0)
+                    {
+                        // Figure out what vector (linear and/or torque) is associated with this key
+                        var match = _keyThrustRequests.
+                            Where(o => o.Key == key.Item1).
+                            Select(o => new
+                            {
+                                Request = o,
+                                Score = o.Shift == null || key.Item2 == null ? 1 :      // shift press is null, this is the middle score
+                                    o.Shift.Value == key.Item2.Value ? 0 :      // shift presses match, this is the best score
+                                    2,      // shift presses don't match, this is the worst score
+                            }).
+                            OrderBy(o => o.Score).
+                            Select(o => o.Request).
+                            FirstOrDefault();
+
+                        if (match != null)
+                        {
+                            // Impulse engine wants the vectors to be percents (length up to 1)
+                            impulseEngineCommand.Add(Tuple.Create(match.Linear, match.Rotate));
+                        }
+                    }
+
+                    #endregion
                 }
+
+                #region impulse engines
+
+                if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0 && impulseEngineCommand.Count > 0)
+                {
+                    var impulseCommand = impulseEngineCommand.ToArray();
+
+                    foreach (ImpulseEngine impulseEngine in this.ImpulseEngines)
+                    {
+                        impulseEngine.SetDesiredDirection(impulseCommand);
+                    }
+                }
+
+                #endregion
             }
 
             base.Update_MainThread(elapsedTime);
@@ -602,12 +719,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            if (this.Thrusters == null || this.Thrusters.Length == 0)
-            {
-                _isThrustMapDirty = false;
-                return;
-            }
-
             #region linear
 
             double? maxAccel = this.MaxAcceleration_Linear;
@@ -664,12 +775,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 return;
             }
 
-            if (this.Thrusters == null || this.Thrusters.Length == 0)
-            {
-                _isThrustMapDirty = false;
-                return;
-            }
-
             #region linear
 
             double? maxAccel = this.MaxAcceleration_Linear;
@@ -721,6 +826,15 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
         private void EnsureThrustKeysBuilt_Finish(KeyThrustRequest[] requests)
         {
+            // Remember the mappings between key and desired thrust (this is used to drive the impulse engine)
+            _keyThrustRequests = requests;
+
+            if (this.Thrusters == null || this.Thrusters.Length == 0)
+            {
+                _isThrustMapDirty = false;
+                return;
+            }
+
             if (_cancelCurrentBalancer != null)
             {
                 _cancelCurrentBalancer.Cancel();
@@ -780,7 +894,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 // Find the combination of thrusters that push in the requested direction
                 //ThrustControlUtil.DiscoverSolutionAsync(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
-                ThrustControlUtil.DiscoverSolutionAsync2(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, null, options);
+                ThrustControlUtil.DiscoverSolutionAsync2(this, solutionWrappers[0].Request.Linear, solutionWrappers[0].Request.Rotate, _cancelCurrentBalancer.Token, model, newBestFound, options: options);
             }
 
             _isThrustMapDirty = false;

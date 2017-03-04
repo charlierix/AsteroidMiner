@@ -669,7 +669,7 @@ namespace Game.Newt.Testers.Encog
 
                 foreach (SOMNode node in som.Nodes)
                 {
-                    ConvChain_ConvChain chain = CreateSOMChain(instructions, node.Weights);
+                    ConvChain_ConvChain chain = CreateSOMChain(instructions, node.Weights.VectorArray);
                     AddChain(chain);
                 }
             }
@@ -2558,7 +2558,7 @@ namespace Game.Newt.Testers.Encog
 
                 // Score is the distance from ideal
                 //TODO: See if there is a more statistically sound way of calculating distance (least mean squares, or something?)
-                double distance = MathND.GetDistance(output, idealOutputs[categoryIndex]);
+                double distance = (output.ToVectorND() - idealOutputs[categoryIndex].ToVectorND()).Length;
 
                 sampleCounts_all[categoryIndex]++;
                 sumErrors_all[categoryIndex] += distance;
@@ -2823,11 +2823,11 @@ namespace Game.Newt.Testers.Encog
             if (nn.TrainingImageIDs != null && nn.TrainingImageIDs.Any(o => o == image.UniqueID))
             {
                 mainPanel.Children.Add(new TextBlock()
-                    {
-                        Text = "used in training",
-                        Foreground = Brushes.Gray,
-                        Margin = new Thickness(0, RESULTMARGIN, 0, 0),
-                    });
+                {
+                    Text = "used in training",
+                    Foreground = Brushes.Gray,
+                    Margin = new Thickness(0, RESULTMARGIN, 0, 0),
+                });
             }
 
             // To the right of the guess should be visuals of the neural net: (also put an option in the context menu)
@@ -2965,7 +2965,7 @@ namespace Game.Newt.Testers.Encog
                 Select(o => new SOMInput<FeatureRecognizer_Image>()
                 {
                     Source = o,
-                    Weights = GetSOMVector(o, instructions),
+                    Weights = GetSOMVector(o, instructions).ToVectorND(),
                 }).
                 ToArray();
         }

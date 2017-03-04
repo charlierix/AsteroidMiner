@@ -283,7 +283,7 @@ namespace Game.Newt.Testers.SOM
         public class RowInput : ISOMInput
         {
             public string[] Row { get; set; }
-            public double[] Weights { get; set; }
+            public VectorND Weights { get; set; }
         }
 
         #endregion
@@ -408,7 +408,8 @@ C";
                         Weights = finalColumns.
                             Select(p => SelfOrganizingMapsDB.ConvertToVector(results.Results[o][p.Item1.Index], p.Item2, p.Item3)).
                             SelectMany(p => p).
-                            ToArray(),
+                            ToArray().
+                            ToVectorND(),
                     };
                 }).
                 ToArray();
@@ -1238,13 +1239,13 @@ C";
 
             #endregion
 
-            double[] nodeCenter = inputs.Length == 0 ? node.Weights : MathND.GetCenter(inputs.Select(o => o.Weights));
+            VectorND nodeCenter = inputs.Length == 0 ? node.Weights : MathND.GetCenter(inputs.Select(o => o.Weights));
 
             #region node hash
 
             if (showNodeHash)
             {
-                var nodeCtrl = GetVectorVisual(node.Weights);
+                var nodeCtrl = GetVectorVisual(node.Weights.VectorArray);
 
                 // Place on canvas
                 Rect nodeRect = SelfOrganizingMapsWPF.GetFreeSpot(new Size(nodeCtrl.Item2.X, nodeCtrl.Item2.Y), new Point(0, 0), new Vector(0, -1), rectangles);

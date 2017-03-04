@@ -42,7 +42,7 @@ namespace Game.HelperClassesAI
         /// <param name="returnEmptyNodes">This shouldn't even be an option.  Empty nodes are just artifacts that polute the final result</param>
         public static SOMResult TrainSOM(ISOMInput[] inputs, SOMRules rules, bool isDisplay2D, bool returnEmptyNodes = false)
         {
-            double[][] nodeWeights = GetRandomNodeWeights(rules.NumNodes, inputs);
+            VectorND[] nodeWeights = GetRandomNodeWeights(rules.NumNodes, inputs);
 
             SOMNode[] nodes = nodeWeights.
                 Select(o => new SOMNode() { Weights = o }).
@@ -117,10 +117,13 @@ namespace Game.HelperClassesAI
         }
 
         /// <summary>
-        /// K-Means is a simpler algorithm than SOM.  Probably not as good, but it may have its uses
+        /// K-Means is a simpler algorithm than SOM
         /// </summary>
         /// <remarks>
         /// https://en.wikipedia.org/wiki/K-means_clustering
+        /// 
+        /// SOM will make better quality clusters (but could fail and just make 1 or 2 massive clusters), K-Means is a good way of guaranteeing
+        /// a certain number of clusters
         /// 
         /// K-Means is a very different algorithm than SOM, but the inputs and outputs look the same, and the goal is very similar.  So
         /// throwing it in this class
@@ -140,7 +143,7 @@ namespace Game.HelperClassesAI
 
         public static SOMResult ArrangeNodes_LikesAttract(SOMResult result)
         {
-            double[][] weights = result.Nodes.
+            VectorND[] weights = result.Nodes.
                 Select(o => o.Weights).
                 ToArray();
 
@@ -169,16 +172,12 @@ namespace Game.HelperClassesAI
         /// This is similar logic as standard deviation, but this returns the max distance from the average
         /// NOTE: Spread is probably the wrong word, since this only returns the max distance (radius instead of diameter)
         /// </summary>
-        public static double GetTotalSpread(IEnumerable<double[]> values)
+        public static double GetTotalSpread(IEnumerable<VectorND> values)
         {
-            double[] mean = MathND.GetCenter(values);
+            VectorND mean = MathND.GetCenter(values);
 
             double distancesSquared = values.
-                Select(o =>
-                {
-                    double[] diff = MathND.Subtract(o, mean);
-                    return MathND.GetLengthSquared(diff);
-                }).
+                Select(o => (o - mean).LengthSquared).
                 OrderByDescending().
                 First();
 
@@ -193,7 +192,7 @@ namespace Game.HelperClassesAI
 
             for (int cntr = 0; cntr < nodes.Length; cntr++)
             {
-                double distSquared = MathND.GetDistanceSquared(nodes[cntr].Weights, input.Weights);
+                double distSquared = (nodes[cntr].Weights - input.Weights).LengthSquared;
 
                 if (distSquared < closest)
                 {
@@ -279,7 +278,7 @@ namespace Game.HelperClassesAI
                     continue;
                 }
 
-                double distSquared = MathND.GetDistanceSquared(nodes[cntr].Weights, match.Weights);
+                double distSquared = (nodes[cntr].Weights - match.Weights).LengthSquared;
 
                 if (distSquared < maxDistanceSquared)
                 {
@@ -290,14 +289,11 @@ namespace Game.HelperClassesAI
             return retVal.ToArray();
         }
 
-        private static void AdjustNodeWeights(SOMNode node, double[] position, double percent)
+        private static void AdjustNodeWeights(SOMNode node, VectorND position, double percent)
         {
             //W(t+1) = W(t) + (pos - W(t)) * %
 
-            for (int cntr = 0; cntr < position.Length; cntr++)
-            {
-                node.Weights[cntr] += (position[cntr] - node.Weights[cntr]) * percent;
-            }
+            node.Weights += (position - node.Weights) * percent;
         }
 
         private static double GetInfluence(SOMAttractionFunction attractionFunction, double distSquared, double searchRadius)
@@ -359,7 +355,7 @@ namespace Game.HelperClassesAI
             }
 
             // Get random node weights.  Don't let any of those weights be closer to other nodes than this node
-            double[][] weights = GetRandomWeights_InsideCell(rules.NumNodes, inputs, result.Nodes, index);
+            VectorND[] weights = GetRandomWeights_InsideCell(rules.NumNodes, inputs, result.Nodes, index);
 
             SOMNode[] nodes = Enumerable.Range(0, rules.NumNodes).
                 Select(o => new SOMNode() { Weights = weights[o] }).
@@ -638,32 +634,10 @@ namespace Game.HelperClassesAI
 
             return IsSame(input1.Weights, input2.Weights);
         }
-        private static bool IsSame(double[] arr1, double[] arr2)
+        private static bool IsSame(VectorND vector1, VectorND vector2)
         {
-            if (arr1 == null && arr2 == null)
-            {
-                return true;
-            }
-            else if (arr1 == null || arr2 == null)
-            {
-                return false;
-            }
-
-            if (arr1.Length != arr2.Length)
-            {
-                return false;
-            }
-
-            for (int cntr = 0; cntr < arr1.Length; cntr++)
-            {
-                //NOTE: Not using Math1D.IsNearValue, because this method wants exact equality
-                if (arr1[cntr] != arr2[cntr])
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            //NOTE: Not using IsNearValue, because this method wants exact equality
+            return VectorND.Equals(vector1, vector2);
         }
 
         #endregion
@@ -672,7 +646,7 @@ namespace Game.HelperClassesAI
         /// <summary>
         /// This gets the bounding box of all the input values, then creates random vectors within that box
         /// </summary>
-        private static double[][] GetRandomNodeWeights(int count, ISOMInput[] inputs)
+        private static VectorND[] GetRandomNodeWeights(int count, ISOMInput[] inputs)
         {
             var aabb = MathND.GetAABB(inputs.Select(o => o.Weights));
             aabb = MathND.ResizeAABB(aabb, 1.1);     // allow the return vectors to be slightly outside the input box
@@ -685,7 +659,7 @@ namespace Game.HelperClassesAI
         /// This does a bounding box of inputs, and also makes sure all positions are closer to the desired node than
         /// other nodes
         /// </summary>
-        private static double[][] GetRandomWeights_InsideCell(int count, ISOMInput[] inputs, SOMNode[] nodes, int nodeIndex)
+        private static VectorND[] GetRandomWeights_InsideCell(int count, ISOMInput[] inputs, SOMNode[] nodes, int nodeIndex)
         {
             var inputAABB = MathND.GetAABB(inputs.Select(o => o.Weights));
 
@@ -695,7 +669,7 @@ namespace Game.HelperClassesAI
             //    throw new ArgumentException("The node sits outside the input's aabb");
             //}
 
-            List<double[]> retVal = new List<double[]>();
+            List<VectorND> retVal = new List<VectorND>();
 
             for (int cntr = 0; cntr < count; cntr++)
             {
@@ -703,10 +677,10 @@ namespace Game.HelperClassesAI
 
                 while (true)
                 {
-                    double[] attempt = MathND.GetRandomVector(inputAABB.Item1, inputAABB.Item2);
+                    VectorND attempt = MathND.GetRandomVector(inputAABB.Item1, inputAABB.Item2);
 
                     var closest = nodes.
-                        Select((o, i) => new { Index = i, DistSquared = MathND.GetDistanceSquared(attempt, o.Weights) }).
+                        Select((o, i) => new { Index = i, DistSquared = (attempt - o.Weights).LengthSquared }).
                         OrderBy(o => o.DistSquared).
                         First();
 
@@ -732,7 +706,7 @@ namespace Game.HelperClassesAI
         /// Only call this from the other overload.  This uses a much larger bounding box (it still makes sure all returned points
         /// are closer to the desired node than other nodes)
         /// </summary>
-        private static double[][] GetRandomWeights_InsideCell_LARGERBUTFAIL(int count, ISOMInput[] inputs, SOMNode[] nodes, int nodeIndex)
+        private static VectorND[] GetRandomWeights_InsideCell_LARGERBUTFAIL(int count, ISOMInput[] inputs, SOMNode[] nodes, int nodeIndex)
         {
             //TODO: May want to get a voronoi, then choose random points within the convex hull (more elegant, but may not be any faster)
 
@@ -744,7 +718,7 @@ namespace Game.HelperClassesAI
             // Get some nearby nodes
             double? largestDistance = Enumerable.Range(0, nodes.Length).
                 Where(o => o != nodeIndex).
-                Select(o => MathND.GetDistanceSquared(nodes[o].Weights, nodes[nodeIndex].Weights)).
+                Select(o => (nodes[o].Weights - nodes[nodeIndex].Weights).LengthSquared).
                 OrderByDescending(o => o).
                 FirstOrDefault();
 
@@ -753,16 +727,16 @@ namespace Game.HelperClassesAI
             if (largestDistance == null)
             {
                 largestDistance = Math.Max(
-                    MathND.GetDistanceSquared(inputAABB.Item1, nodes[nodeIndex].Weights),
-                    MathND.GetDistanceSquared(inputAABB.Item2, nodes[nodeIndex].Weights));
+                    (inputAABB.Item1 - nodes[nodeIndex].Weights).LengthSquared,
+                    (inputAABB.Item2 - nodes[nodeIndex].Weights).LengthSquared);
             }
 
             largestDistance = Math.Sqrt(largestDistance.Value);
 
             var bounds = MathND.GetAABB(new[]
             {
-                nodes[nodeIndex].Weights.Select(o => o - largestDistance.Value).ToArray(),
-                nodes[nodeIndex].Weights.Select(o => o + largestDistance.Value).ToArray(),
+                nodes[nodeIndex].Weights.Select(o => o - largestDistance.Value).ToArray().ToVectorND(),
+                nodes[nodeIndex].Weights.Select(o => o + largestDistance.Value).ToArray().ToVectorND(),
                 inputAABB.Item1,
                 inputAABB.Item2,
             });
@@ -771,7 +745,7 @@ namespace Game.HelperClassesAI
 
 
 
-            List<double[]> retVal = new List<double[]>();
+            List<VectorND> retVal = new List<VectorND>();
             //int largestIteration = 0;
 
             for (int cntr = 0; cntr < count; cntr++)
@@ -785,10 +759,10 @@ namespace Game.HelperClassesAI
                     //    largestIteration = infiniteLoopDetector;      // I tested several times, and averaged about 5-15 iterations
                     //}
 
-                    double[] attempt = MathND.GetRandomVector(bounds.Item1, bounds.Item2);
+                    VectorND attempt = MathND.GetRandomVector(bounds.Item1, bounds.Item2);
 
                     var closest = nodes.
-                        Select((o, i) => new { Index = i, DistSquared = MathND.GetDistanceSquared(attempt, o.Weights) }).
+                        Select((o, i) => new { Index = i, DistSquared = (attempt - o.Weights).LengthSquared }).
                         OrderBy(o => o.DistSquared).
                         First();
 
@@ -811,8 +785,8 @@ namespace Game.HelperClassesAI
 
         private static void InjectNodePositions2D(SOMNode[] nodes)
         {
-            double[][] positions = Math3D.GetRandomVectors_Circular_EvenDist(nodes.Length, 1).
-                Select(o => new[] { o.X, o.Y }).
+            VectorND[] positions = Math3D.GetRandomVectors_Circular_EvenDist(nodes.Length, 1).
+                Select(o => new[] { o.X, o.Y }.ToVectorND()).
                 ToArray();
 
             for (int cntr = 0; cntr < nodes.Length; cntr++)
@@ -827,7 +801,7 @@ namespace Game.HelperClassesAI
         /// </summary>
         private static SOMNode[] MoveNodes_BallOfSprings(SOMNode[] nodes, Tuple<int, int, double>[] desiredDistances, int numIterations)
         {
-            double[][] positions = nodes.
+            VectorND[] positions = nodes.
                 Select(o => o.Position).
                 ToArray();
 
@@ -935,7 +909,7 @@ namespace Game.HelperClassesAI
 
     public interface ISOMInput
     {
-        double[] Weights { get; }
+        VectorND Weights { get; }
     }
 
     #endregion
@@ -947,7 +921,7 @@ namespace Game.HelperClassesAI
     public class SOMInput<T> : ISOMInput
     {
         public T Source { get; set; }
-        public double[] Weights { get; set; }
+        public VectorND Weights { get; set; }
     }
 
     #endregion
@@ -961,7 +935,7 @@ namespace Game.HelperClassesAI
         /// <summary>
         /// These should be from 0 to 1
         /// </summary>
-        public double[] Weights { get; set; }
+        public VectorND Weights { get; set; }
 
         /// <summary>
         /// This doesn't have anything to do with the SOM algorithm.  It is the location of the node in presentation
@@ -974,7 +948,7 @@ namespace Game.HelperClassesAI
         /// If you go the voronoi route, rearrange the positions after the weights have been trained, so that nodes with
         /// similar weights get displayed near each other
         /// </remarks>
-        public double[] Position { get; set; }
+        public VectorND Position { get; set; }
 
         public SOMNode Clone()
         {
@@ -982,12 +956,12 @@ namespace Game.HelperClassesAI
 
             if (this.Weights != null)
             {
-                retVal.Weights = this.Weights.ToArray();
+                retVal.Weights = this.Weights.Clone();
             }
 
             if (this.Position != null)
             {
-                retVal.Position = this.Position.ToArray();
+                retVal.Position = this.Position.Clone();
             }
 
             return retVal;

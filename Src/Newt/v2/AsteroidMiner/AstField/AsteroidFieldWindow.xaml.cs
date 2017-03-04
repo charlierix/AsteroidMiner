@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.AsteroidMiner.MapParts;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
@@ -491,8 +491,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
 
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.StarColor)));
-                materials.Children.Add(new EmissiveMaterial(new SolidColorBrush(WorldColors.StarEmissive)));
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.Star_Color)));
+                materials.Children.Add(new EmissiveMaterial(new SolidColorBrush(WorldColors.Star_Emissive)));
 
                 // Geometry Model
                 GeometryModel3D geometry = new GeometryModel3D();

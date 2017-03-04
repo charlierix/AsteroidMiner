@@ -95,7 +95,7 @@ namespace Game.Newt.Testers.SOM
 
         private class ImageInput : ISOMInput
         {
-            public ImageInput(FeatureRecognizer_Image image, double[] value_orig, double[] value_normalized)
+            public ImageInput(FeatureRecognizer_Image image, VectorND value_orig, VectorND value_normalized)
             {
                 this.Image = image;
                 this.Weights_Orig = value_orig;
@@ -106,8 +106,8 @@ namespace Game.Newt.Testers.SOM
             /// <summary>
             /// These should be from 0 to 1
             /// </summary>
-            public readonly double[] Weights_Orig;
-            public double[] Weights { get; private set; }
+            public readonly VectorND Weights_Orig;
+            public VectorND Weights { get; private set; }
         }
 
         #endregion
@@ -626,7 +626,7 @@ namespace Game.Newt.Testers.SOM
             SOMResult result = SelfOrganizingMaps.TrainSOM(inputs, rules, true, returnEmptyNodes);
 
             SimpleColorScheme scheme = (SimpleColorScheme)cboSimpleOutputColor.SelectedItem;
-            var getNodeColor = new Func<SOMNode, Color>(o => GetColor(o.Weights, scheme));
+            var getNodeColor = new Func<SOMNode, Color>(o => GetColor(o.Weights.VectorArray, scheme));
 
             // Show results
             switch (layout)
@@ -1256,7 +1256,7 @@ namespace Game.Newt.Testers.SOM
 
             #endregion
 
-            double[] nodeCenter = images.Length == 0 ? node.Weights : MathND.GetCenter(nodeImages);
+            VectorND nodeCenter = images.Length == 0 ? node.Weights : MathND.GetCenter(nodeImages);
 
             #region node hash
 
@@ -1264,7 +1264,7 @@ namespace Game.Newt.Testers.SOM
             {
                 ImageInput nodeImage = new ImageInput(null, node.Weights, node.Weights);
 
-                double nodeDist = MathND.GetDistance(nodeImage.Weights, nodeCenter);
+                double nodeDist = (nodeImage.Weights - nodeCenter).Length;
                 double nodeDistPercent = nodeSpread.IsNearZero() ? 1d : (nodeDist / nodeSpread);     // if zero or one node, then spread will be zero
 
                 Tuple<UIElement, VectorInt> nodeCtrl = GetPreviewImage(nodeImage, true, NODEHASHSIZE, showPerImageDistance, nodeDistPercent);
@@ -1292,7 +1292,7 @@ namespace Game.Newt.Testers.SOM
                 }
                 else
                 {
-                    imageDistPercent = MathND.GetDistance(image.Weights, nodeCenter) / nodeSpread;
+                    imageDistPercent = (image.Weights - nodeCenter).Length / nodeSpread;
                 }
 
                 // Create the image (and any other graphics for that image)
@@ -1383,7 +1383,7 @@ namespace Game.Newt.Testers.SOM
                 int width, height;
 
                 bool isColor = false;
-                double widthHeight = Math.Sqrt(image.Weights_Orig.Length);
+                double widthHeight = Math.Sqrt(image.Weights_Orig.Size);
                 if (widthHeight.ToInt_Floor() == widthHeight.ToInt_Ceiling())
                 {
                     // Black and white, 2D
@@ -1391,7 +1391,7 @@ namespace Game.Newt.Testers.SOM
                 }
                 else
                 {
-                    double widthHeight2 = Math.Sqrt(image.Weights_Orig.Length / 3);
+                    double widthHeight2 = Math.Sqrt(image.Weights_Orig.Size / 3);
                     if (widthHeight2.ToInt_Floor() == widthHeight2.ToInt_Ceiling())
                     {
                         // Color, 2D
@@ -1401,7 +1401,7 @@ namespace Game.Newt.Testers.SOM
                     else
                     {
                         // Black and white, 1D
-                        width = image.Weights_Orig.Length;
+                        width = image.Weights_Orig.Size;
                         height = 1;
                     }
                 }
@@ -1412,11 +1412,11 @@ namespace Game.Newt.Testers.SOM
 
                 if (isColor)
                 {
-                    bitmap = UtilityWPF.GetBitmap_Aliased_RGB(image.Weights_Orig, width, height, width * ALIASMULT, height * ALIASMULT);
+                    bitmap = UtilityWPF.GetBitmap_Aliased_RGB(image.Weights_Orig.VectorArray, width, height, width * ALIASMULT, height * ALIASMULT);
                 }
                 else
                 {
-                    bitmap = UtilityWPF.GetBitmap_Aliased(image.Weights_Orig, width, height, width * ALIASMULT, height * ALIASMULT);
+                    bitmap = UtilityWPF.GetBitmap_Aliased(image.Weights_Orig.VectorArray, width, height, width * ALIASMULT, height * ALIASMULT);
                 }
 
                 #endregion
@@ -1620,7 +1620,7 @@ namespace Game.Newt.Testers.SOM
                     {
                         double[] values = getValueFromImage(o);
                         double[] normalized = GetNormalizedVector(values, normalizationType);
-                        return new ImageInput(o, values, normalized);
+                        return new ImageInput(o, new VectorND(values), new VectorND(normalized));
                     }).
                 ToArray();
         }
@@ -1633,10 +1633,16 @@ namespace Game.Newt.Testers.SOM
                     return vector;
 
                 case NormalizationType.Normalize:
-                    return MathND.Normalize(vector);
+                    return vector.
+                        ToVectorND().
+                        ToScaledCap().
+                        VectorArray;
 
                 case NormalizationType.ToUnit:
-                    return MathND.ToUnit(vector, false);
+                    return vector.
+                        ToVectorND().
+                        ToUnit(false).
+                        VectorArray;
 
                 default:
                     throw new ApplicationException("Unknown NormalizationType: " + normalizationType.ToString());

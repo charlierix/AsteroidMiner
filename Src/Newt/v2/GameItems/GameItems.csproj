@@ -85,6 +85,7 @@
     <Compile Include="MapObjectChase_Point.cs" />
     <Compile Include="MapParts\Asteroid.cs" />
     <Compile Include="MapParts\DispatchTimer.cs" />
+    <Compile Include="MapParts\Egg.cs" />
     <Compile Include="MapParts\MapDNA.cs" />
     <Compile Include="MapParts\Mineral.cs" />
     <Compile Include="MapParts\Projectile.cs" />
@@ -130,6 +131,7 @@
     <Compile Include="ShipParts\Brain.cs" />
     <Compile Include="ShipParts\BrainRGBRecognizer.cs" />
     <Compile Include="ShipParts\CameraColorRGB.cs" />
+    <Compile Include="ShipParts\CameraHardCoded.cs" />
     <Compile Include="ShipParts\CargoBay.cs" />
     <Compile Include="ShipParts\ConverterEnergyToAmmo.cs" />
     <Compile Include="ShipParts\ConverterEnergyToFuel.cs" />
@@ -140,11 +142,14 @@
     <Compile Include="ShipParts\ConverterMatterToFuel.cs" />
     <Compile Include="ShipParts\ConverterMatterToPlasma.cs" />
     <Compile Include="ShipParts\ConverterRadiationToEnergy.cs" />
+    <Compile Include="ShipParts\DirectionControllerRing.cs" />
+    <Compile Include="ShipParts\DirectionControllerSphere.cs" />
     <Compile Include="ShipParts\EnergyTank.cs" />
     <Compile Include="ShipParts\Eye.cs" />
     <Compile Include="ShipParts\FuelTank.cs" />
     <Compile Include="ShipParts\GrappleGun.cs" />
     <Compile Include="ShipParts\HangarBay.cs" />
+    <Compile Include="ShipParts\ImpulseEngine.cs" />
     <Compile Include="ShipParts\PlasmaTank.cs" />
     <Compile Include="ShipParts\ProjectileGun.cs" />
     <Compile Include="ShipParts\SelfRepair.cs" />

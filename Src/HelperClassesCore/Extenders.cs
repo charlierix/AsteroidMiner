@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -271,6 +272,22 @@ namespace Game.HelperClassesCore
         #endregion
 
         #region IList
+
+        //NOTE: AsEnumerable doesn't exist for IList, but when I put it here, it was ambiguous with other collections.  So this is spelled with an i
+        public static IEnumerable<object> AsEnumerabIe(this IList list)
+        {
+            foreach(object item in list)
+            {
+                yield return item;
+            }
+        }
+        public static IEnumerable<T> AsEnumerabIe<T>(this IList<T> list)
+        {
+            foreach(T item in list)
+            {
+                yield return item;
+            }
+        }
 
         public static void AddRange<T>(this IList<T> list, IEnumerable<T> items)
         {

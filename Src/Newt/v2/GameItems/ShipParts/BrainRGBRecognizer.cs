@@ -55,7 +55,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return PartToolItemBase.CATEGORY_EQUIPMENT;
+                return PartToolItemBase.CATEGORY_BRAIN;
             }
         }
 
@@ -239,7 +239,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            Color shellColor = WorldColors.Brain;
+            Color shellColor = WorldColors.Brain_Color;
             if (!isFinal)
             {
                 shellColor = UtilityWPF.AlphaBlend(shellColor, Colors.Transparent, .75d);
@@ -248,7 +248,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.MaterialBrushes.Add(new MaterialColorProps(diffuse, shellColor));
             material.Children.Add(diffuse);
 
-            specular = WorldColors.BrainSpecular;
+            specular = WorldColors.Brain_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -939,7 +939,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var somList = _somList;
             if (somList != null)
             {
-                somList.Add(nnInput);
+                somList.Add(nnInput.ToVectorND());
             }
 
             LifeEventToVector lifeEvents = _lifeEvents;
@@ -1337,12 +1337,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
             int returnCount = 100;
             int dimensions = points[0].Length;
 
-            //TODO: Examine mins/maxes of the points to see if negative is allowed
-            Tuple<double[], double[]> aabb = Tuple.Create(
-                Enumerable.Range(0, dimensions).Select(o => 0d).ToArray(),
-                Enumerable.Range(0, dimensions).Select(o => 1d).ToArray());
+            VectorND[] pointsVect = points.
+                Select(o => o.ToVectorND()).
+                ToArray();
 
-            return MathND.GetRandomVectors_Cube_EventDist(returnCount, aabb, existingStaticPoints: points);
+            //TODO: Examine mins/maxes of the points to see if negative is allowed
+            Tuple<VectorND, VectorND> aabb = Tuple.Create(
+                Enumerable.Range(0, dimensions).Select(o => 0d).ToArray().ToVectorND(),
+                Enumerable.Range(0, dimensions).Select(o => 1d).ToArray().ToVectorND());
+
+            return MathND.GetRandomVectors_Cube_EventDist(returnCount, aabb, existingStaticPoints: pointsVect).
+                Select(o => o.VectorArray).
+                ToArray();
         }
 
         private static void SaveImages(string parentFolder, string childFolder, TrainerInput trainerInput)
@@ -1389,6 +1395,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     return cast.Source.Original;
                 }).
                 Where(o => o != null).
+                Select(o => o.VectorArray).
                 ToArray();
 
             SaveImages(parentFolder, childFolder, width, height, images, isColor);

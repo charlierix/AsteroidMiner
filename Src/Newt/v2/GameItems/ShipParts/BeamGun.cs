@@ -198,10 +198,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBase));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBase));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBase_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBase_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.GunBaseSpecular;
+            specular = WorldColors.GunBase_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -225,10 +225,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBarrel));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBarrel));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.GunBarrel_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.GunBarrel_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.GunBarrelSpecular;
+            specular = WorldColors.GunBarrel_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -262,10 +262,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunDish));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunDish));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunDish_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunDish_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.BeamGunDishSpecular;
+            specular = WorldColors.BeamGunDish_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -294,13 +294,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunCrystal));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunCrystal));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunCrystal_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunCrystal_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.BeamGunCrystalSpecular;
+            specular = WorldColors.BeamGunCrystal_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
-            emissive = WorldColors.BeamGunCrystalEmissive;
+            emissive = WorldColors.BeamGunCrystal_Emissive;
             this.MaterialBrushes.Add(new MaterialColorProps(emissive));
             material.Children.Add(emissive);
 
@@ -337,10 +337,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunTrim));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunTrim));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.BeamGunTrim_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.BeamGunTrim_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.BeamGunTrimSpecular;
+            specular = WorldColors.BeamGunTrim_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 

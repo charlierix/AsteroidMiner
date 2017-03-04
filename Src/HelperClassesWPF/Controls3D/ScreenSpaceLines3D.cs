@@ -19,7 +19,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.ComponentModel;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     /// <summary>
     ///     ScreenSpaceLines3D are a 3D line primitive whose thickness

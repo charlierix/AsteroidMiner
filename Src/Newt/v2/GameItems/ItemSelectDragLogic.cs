@@ -9,7 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.Newt.v2.GameItems
 {

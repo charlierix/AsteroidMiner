@@ -1,9 +1,9 @@
 using System;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     public static class ScreenSpaceLines3DHelper
     {

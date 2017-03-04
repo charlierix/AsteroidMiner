@@ -80,7 +80,7 @@ namespace Game.HelperClassesAI
         {
             #region validate
 #if DEBUG
-            if (!result.Nodes.All(o => o.Position.Length == 2))
+            if (!result.Nodes.All(o => o.Position.Size == 2))
             {
                 throw new ArgumentException("Node positions need to be 2D");
             }
@@ -146,7 +146,7 @@ namespace Game.HelperClassesAI
             var raw = GetNodeColor_RGB(node.Weights);
             return GetNodeColor_Finish(raw);
         }
-        public static Color GetNodeColor(double[] weights)
+        public static Color GetNodeColor(VectorND weights)
         {
             var raw = GetNodeColor_RGB(weights);
             return GetNodeColor_Finish(raw);
@@ -552,26 +552,28 @@ namespace Game.HelperClassesAI
         /// <summary>
         /// This gets the raw values that will be used for RGB (could return negative)
         /// </summary>
-        private static Tuple<double, double, double> GetNodeColor_RGB(double[] nodeWeights)
+        private static Tuple<double, double, double> GetNodeColor_RGB(VectorND nodeWeights)
         {
-            if (nodeWeights.Length == 0)
+            int size = nodeWeights.Size;
+
+            if (size == 0)
             {
                 return Tuple.Create(0d, 0d, 0d);
             }
-            else if (nodeWeights.Length == 3)
+            else if (size == 3)
             {
                 return Tuple.Create(nodeWeights[0], nodeWeights[1], nodeWeights[2]);
             }
-            else if (nodeWeights.Length < 3)
+            else if (size < 3)
             {
                 double left = nodeWeights[0];
-                double right = nodeWeights[nodeWeights.Length - 1];
+                double right = nodeWeights[size - 1];
 
                 return Tuple.Create(left, Math1D.Avg(left, right), right);
             }
 
-            int div = nodeWeights.Length / 3;
-            int rem = nodeWeights.Length % 3;
+            int div = size / 3;
+            int rem = size % 3;
 
             // Start them all off with the same amount
             int[] widths = Enumerable.Range(0, 3).
@@ -637,7 +639,7 @@ namespace Game.HelperClassesAI
             // The image tiles will be drawn spiraling out from the center.  Order the list so that tiles closest to the node are first (so that
             // they are drawn closer to the center of the spiral)
             ISOMInput[] orderedSamples = samples.
-                OrderBy(o => MathND.GetDistanceSquared(o.Weights, node.Weights)).
+                OrderBy(o => (o.Weights - node.Weights).LengthSquared).
                 ToArray();
 
             //int tilehalf_left = tileWidth / 2;

@@ -149,10 +149,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairBase));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairBase));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairBase_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairBase_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.SelfRepairBaseSpecular;
+            specular = WorldColors.SelfRepairBase_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -183,10 +183,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 geometry = new GeometryModel3D();
                 material = new MaterialGroup();
-                diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairCross));
-                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairCross));
+                diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SelfRepairCross_Color));
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SelfRepairCross_Color));
                 material.Children.Add(diffuse);
-                specular = WorldColors.SelfRepairCrossSpecular;
+                specular = WorldColors.SelfRepairCross_Specular;
                 this.MaterialBrushes.Add(new MaterialColorProps(specular));
                 material.Children.Add(specular);
 

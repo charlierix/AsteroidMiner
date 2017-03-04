@@ -18,7 +18,7 @@ using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.NewtonDynamics;
 using Game.Newt.v2.GameItems.ShipParts;
 
@@ -41,7 +41,7 @@ namespace Game.Newt.Testers
     {
         #region Class: ItemColors
 
-        private class ItemColors
+        internal class ItemColors
         {
             public Color BoundryLines = UtilityWPF.ColorFromHex("C4BDAB");
 
@@ -689,7 +689,6 @@ namespace Game.Newt.Testers
         {
             try
             {
-
                 // Copied from btnClear_Click
                 ClearDebugVisuals();
                 ClearLinks();
@@ -697,9 +696,6 @@ namespace Game.Newt.Testers
                 ClearBrains();
                 ClearThrusters();
                 ClearContainers();
-
-
-
 
                 //_map.Dispose();		// this will dispose the physics bodies
                 //_map = null;
@@ -2498,7 +2494,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private static void BuildNeuronVisuals(out List<Tuple<INeuron, SolidColorBrush>> outNeurons, out ModelVisual3D model, IEnumerable<INeuron> inNeurons, INeuronContainer container, ItemColors colors)
+        internal static void BuildNeuronVisuals(out List<Tuple<INeuron, SolidColorBrush>> outNeurons, out ModelVisual3D model, IEnumerable<INeuron> inNeurons, INeuronContainer container, ItemColors colors)
         {
             outNeurons = new List<Tuple<INeuron, SolidColorBrush>>();
 
@@ -2543,7 +2539,7 @@ namespace Game.Newt.Testers
             //model.Transform = new TranslateTransform3D(position.ToVector());
             model.Transform = GetContainerTransform(new Dictionary<INeuronContainer, Transform3D>(), container);
         }
-        private static void BuildLinkVisual(ref Model3DGroup posLines, ref DiffuseMaterial posDiffuse, ref Model3DGroup negLines, ref DiffuseMaterial negDiffuse, Point3D from, Point3D to, double weight, double[] brainChemicals, ItemColors colors)
+        internal static void BuildLinkVisual(ref Model3DGroup posLines, ref DiffuseMaterial posDiffuse, ref Model3DGroup negLines, ref DiffuseMaterial negDiffuse, Point3D from, Point3D to, double weight, double[] brainChemicals, ItemColors colors)
         {
             const double GAP = .05d;
             const double CHEMSPACE = .01d;
@@ -2792,11 +2788,7 @@ namespace Game.Newt.Testers
         }
         private void ClearDebugVisuals()
         {
-            foreach (Visual3D visual in _debugVisuals)
-            {
-                _viewportNeural.Children.Remove(visual);
-            }
-
+            _viewportNeural.Children.RemoveAll(_debugVisuals);
             _debugVisuals.Clear();
         }
 

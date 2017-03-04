@@ -189,10 +189,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.AmmoBox));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.AmmoBox));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.AmmoBox_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.AmmoBox_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.AmmoBoxSpecular;
+            specular = WorldColors.AmmoBox_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -218,10 +218,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 geometry = new GeometryModel3D();
                 material = new MaterialGroup();
-                diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.AmmoBoxPlate));
-                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.AmmoBoxPlate));
+                diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.AmmoBoxPlate_Color));
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.AmmoBoxPlate_Color));
                 material.Children.Add(diffuse);
-                specular = WorldColors.AmmoBoxPlateSpecular;
+                specular = WorldColors.AmmoBoxPlate_Specular;
                 this.MaterialBrushes.Add(new MaterialColorProps(specular));
                 material.Children.Add(specular);
 

@@ -32,36 +32,36 @@ namespace Game.Newt.v2.GameItems
         #region Destroyed
 
         [ThreadStatic]
-        private static Brush _destroyedBrush;
-        public static Brush DestroyedBrush
+        private static Brush _destroyed_Brush;
+        public static Brush Destroyed_Brush
         {
             get
             {
-                if (_destroyedBrush == null)
+                if (_destroyed_Brush == null)
                 {
-                    _destroyedBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("211A16"));
+                    _destroyed_Brush = new SolidColorBrush(UtilityWPF.ColorFromHex("211A16"));
                 }
 
-                return _destroyedBrush;
+                return _destroyed_Brush;
             }
         }
 
         [ThreadStatic]
-        private static Brush _destroyedSpecularBrush;
-        public static Brush DestroyedSpecularBrush
+        private static Brush _destroyed_SpecularBrush;
+        public static Brush Destroyed_SpecularBrush
         {
             get
             {
-                if (_destroyedSpecularBrush == null)
+                if (_destroyed_SpecularBrush == null)
                 {
-                    _destroyedSpecularBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("30CF750E"));
+                    _destroyed_SpecularBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("30CF750E"));
                 }
 
-                return _destroyedSpecularBrush;
+                return _destroyed_SpecularBrush;
             }
         }
 
-        public static double DestroyedSpecularPower
+        public static double Destroyed_SpecularPower
         {
             get
             {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems
 
         #region Star
 
-        public static Color StarColor
+        public static Color Star_Color
         {
             get
             {
@@ -88,7 +88,7 @@ namespace Game.Newt.v2.GameItems
                 }
             }
         }
-        public static Color StarEmissive
+        public static Color Star_Emissive
         {
             get
             {
@@ -105,7 +105,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Asteroid
 
-        public static Color AsteroidColor
+        public static Color Asteroid_Color
         {
             get
             {
@@ -123,97 +123,101 @@ namespace Game.Newt.v2.GameItems
                 }
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _asteroidSpecular;
-        public static SpecularMaterial AsteroidSpecular
+        private static SpecularMaterial _asteroid_Specular;
+        public static SpecularMaterial Asteroid_Specular
         {
             get
             {
-                if (_asteroidSpecular == null)
+                if (_asteroid_Specular == null)
                 {
-                    _asteroidSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0404040")), 5d);
+                    _asteroid_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0404040")), 5d);
                 }
 
-                return _asteroidSpecular;
+                return _asteroid_Specular;
             }
         }
 
         #endregion
         #region SpaceStation
 
-        public static Color SpaceStationHull
+        public static Color SpaceStationHull_Color
         {
             get
             {
                 return UtilityWPF.AlphaBlend(UtilityWPF.GetRandomColor(108, 148), Colors.Gray, .25);
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _spaceStationHullSpecular;
-        public static SpecularMaterial SpaceStationHullSpecular
+        private static SpecularMaterial _spaceStationHull_Specular;
+        public static SpecularMaterial SpaceStationHull_Specular
         {
             get
             {
-                if (_spaceStationHullSpecular == null)
+                if (_spaceStationHull_Specular == null)
                 {
-                    _spaceStationHullSpecular = new SpecularMaterial(Brushes.Silver, 75d);
+                    _spaceStationHull_Specular = new SpecularMaterial(Brushes.Silver, 75d);
                 }
 
-                return _spaceStationHullSpecular;
+                return _spaceStationHull_Specular;
             }
         }
 
-        public static Color SpaceStationGlass
+        public static Color SpaceStationGlass_Color
         {
             get
             {
                 return Color.FromArgb(25, 220, 240, 240);		// the skin is semitransparent, so you can see the components inside
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _spaceStationGlassSpecular_Front;
-        public static SpecularMaterial SpaceStationGlassSpecular_Front
+        private static SpecularMaterial _spaceStationGlass_Specular_Front;
+        public static SpecularMaterial SpaceStationGlass_Specular_Front
         {
             get
             {
-                if (_spaceStationGlassSpecular_Front == null)
+                if (_spaceStationGlass_Specular_Front == null)
                 {
-                    _spaceStationGlassSpecular_Front = new SpecularMaterial(Brushes.White, 85d);
+                    _spaceStationGlass_Specular_Front = new SpecularMaterial(Brushes.White, 85d);
                 }
 
-                return _spaceStationGlassSpecular_Front;
+                return _spaceStationGlass_Specular_Front;
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _spaceStationGlassSpecular_Back;
-        public static SpecularMaterial SpaceStationGlassSpecular_Back
+        private static SpecularMaterial _spaceStationGlass_Specular_Back;
+        public static SpecularMaterial SpaceStationGlass_Specular_Back
         {
             get
             {
-                if (_spaceStationGlassSpecular_Back == null)
+                if (_spaceStationGlass_Specular_Back == null)
                 {
-                    _spaceStationGlassSpecular_Back = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(255, 20, 20, 20)), 10d);
+                    _spaceStationGlass_Specular_Back = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(255, 20, 20, 20)), 10d);
                 }
 
-                return _spaceStationGlassSpecular_Back;
+                return _spaceStationGlass_Specular_Back;
             }
         }
 
-        public static Color SpaceStationForceField
+        public static Color SpaceStationForceField_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("#2086E7FF");
             }
         }
-        public static Color SpaceStationForceFieldEmissive_Front
+        public static Color SpaceStationForceField_Emissive_Front
         {
             get
             {
                 return UtilityWPF.ColorFromHex("#0A89BBC7");
             }
         }
-        public static Color SpaceStationForceFieldEmissive_Back
+        public static Color SpaceStationForceField_Emissive_Back
         {
             get
             {
@@ -224,25 +228,26 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Egg
 
-        public static Color EggColor
+        public static Color Egg_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("E5E4C7");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _eggSpecular;
-        public static SpecularMaterial EggSpecular
+        private static SpecularMaterial _egg_Specular;
+        public static SpecularMaterial Egg_Specular
         {
             get
             {
-                if (_eggSpecular == null)
+                if (_egg_Specular == null)
                 {
-                    _eggSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("20B8B69C")), 2d);
+                    _egg_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("20B8B69C")), 2d);
                 }
 
-                return _eggSpecular;
+                return _egg_Specular;
             }
         }
 
@@ -252,32 +257,33 @@ namespace Game.Newt.v2.GameItems
 
         #region CargoBay
 
-        public static Color CargoBay
+        public static Color CargoBay_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("34543B");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _cargoBaySpecular;
-        public static SpecularMaterial CargoBaySpecular
+        private static SpecularMaterial _cargoBay_Specular;
+        public static SpecularMaterial CargoBay_Specular
         {
             get
             {
-                if (_cargoBaySpecular == null)
+                if (_cargoBay_Specular == null)
                 {
-                    _cargoBaySpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("5E5448")), 80d);
+                    _cargoBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("5E5448")), 80d);
                 }
 
-                return _cargoBaySpecular;
+                return _cargoBay_Specular;
             }
         }
 
         #endregion
         #region Converters
 
-        public static Color ConverterBase
+        public static Color ConverterBase_Color
         {
             get
             {
@@ -285,104 +291,104 @@ namespace Game.Newt.v2.GameItems
             }
         }
         [ThreadStatic]
-        private static SpecularMaterial _converterBaseSpecular;
-        public static SpecularMaterial ConverterBaseSpecular
+        private static SpecularMaterial _converterBase_Specular;
+        public static SpecularMaterial ConverterBase_Specular
         {
             get
             {
-                if (_converterBaseSpecular == null)
+                if (_converterBase_Specular == null)
                 {
-                    _converterBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("1F1F61")), 70d);
+                    _converterBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("1F1F61")), 70d);
                 }
 
-                return _converterBaseSpecular;
+                return _converterBase_Specular;
             }
         }
 
-        public static Color ConverterFuel
+        public static Color ConverterFuel_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(FuelTank, ConverterBase, .75d);
+                return UtilityWPF.AlphaBlend(FuelTank_Color, ConverterBase_Color, .75d);
             }
         }
-        public static SpecularMaterial ConverterFuelSpecular
+        public static SpecularMaterial ConverterFuel_Specular
         {
             get
             {
-                return ConverterBaseSpecular;
-            }
-        }
-
-        public static Color ConverterEnergy
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(EnergyTank, ConverterBase, .75d);
-            }
-        }
-        public static SpecularMaterial ConverterEnergySpecular
-        {
-            get
-            {
-                return ConverterBaseSpecular;
+                return ConverterBase_Specular;
             }
         }
 
-        public static Color ConverterPlasma
+        public static Color ConverterEnergy_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(PlasmaTank, ConverterBase, .75d);
+                return UtilityWPF.AlphaBlend(EnergyTank_Color, ConverterBase_Color, .75d);
+            }
+        }
+        public static SpecularMaterial ConverterEnergy_Specular
+        {
+            get
+            {
+                return ConverterBase_Specular;
+            }
+        }
+
+        public static Color ConverterPlasma_Color
+        {
+            get
+            {
+                return UtilityWPF.AlphaBlend(PlasmaTank_Color, ConverterBase_Color, .75d);
             }
         }
         [ThreadStatic]
-        private static SpecularMaterial _converterPlasmaSpecular;
-        public static SpecularMaterial ConverterPlasmaSpecular
+        private static SpecularMaterial _converterPlasma_Specular;
+        public static SpecularMaterial ConverterPlasma_Specular
         {
             get
             {
-                if (_converterPlasmaSpecular == null)
+                if (_converterPlasma_Specular == null)
                 {
                     //Color ammoColor = UtilityWPF.ColorFromHex("D95448");
                     //Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
                     //_converterPlasmaSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
 
-                    _converterPlasmaSpecular = PlasmaTankSpecular;
+                    _converterPlasma_Specular = PlasmaTank_Specular;
                 }
 
-                return _converterPlasmaSpecular;
+                return _converterPlasma_Specular;
             }
         }
 
-        public static Color ConverterAmmo
+        public static Color ConverterAmmo_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(AmmoBox, ConverterBase, .75d);
+                return UtilityWPF.AlphaBlend(AmmoBox_Color, ConverterBase_Color, .75d);
             }
         }
         [ThreadStatic]
-        private static SpecularMaterial _converterAmmoSpecular;
-        public static SpecularMaterial ConverterAmmoSpecular
+        private static SpecularMaterial _converterAmmo_Specular;
+        public static SpecularMaterial ConverterAmmo_Specular
         {
             get
             {
-                if (_converterAmmoSpecular == null)
+                if (_converterAmmo_Specular == null)
                 {
                     Color ammoColor = UtilityWPF.ColorFromHex("D95448");
                     Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
-                    _converterAmmoSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
+                    _converterAmmo_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
                 }
 
-                return _converterAmmoSpecular;
+                return _converterAmmo_Specular;
             }
         }
 
         #endregion
         #region Sensors
 
-        public static Color SensorBase
+        public static Color SensorBase_Color
         {
             get
             {
@@ -390,239 +396,243 @@ namespace Game.Newt.v2.GameItems
             }
         }
         [ThreadStatic]
-        private static SpecularMaterial _sensorBaseSpecular;
-        public static SpecularMaterial SensorBaseSpecular
+        private static SpecularMaterial _sensorBase_Specular;
+        public static SpecularMaterial SensorBase_Specular
         {
             get
             {
-                if (_sensorBaseSpecular == null)
+                if (_sensorBase_Specular == null)
                 {
-                    _sensorBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")), 35);
+                    _sensorBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")), 35);
                 }
 
-                return _sensorBaseSpecular;
+                return _sensorBase_Specular;
             }
         }
 
-        public static Color SensorGravity
+        public static Color SensorGravity_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("856E5A");
             }
         }
-        public static SpecularMaterial SensorGravitySpecular
+        public static SpecularMaterial SensorGravity_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorRadiation
+        public static Color SensorRadiation_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(EnergyTank, SensorBase, .75d);
+                return UtilityWPF.AlphaBlend(EnergyTank_Color, SensorBase_Color, .75d);
             }
         }
-        public static SpecularMaterial SensorRadiationSpecular
+        public static SpecularMaterial SensorRadiation_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorTractor
+        public static Color SensorTractor_Color
         {
             get
             {
                 //NOTE: This color is the same as ShieldTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), SensorBase, .75d);
+                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), SensorBase_Color, .75d);
             }
         }
-        public static SpecularMaterial SensorTractorSpecular
+        public static SpecularMaterial SensorTractor_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorCollision
+        public static Color SensorCollision_Color
         {
             get
             {
                 //NOTE: This color is the same as ShieldTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), SensorBase, .75d);
+                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), SensorBase_Color, .75d);
             }
         }
         [ThreadStatic]
-        private static SpecularMaterial _sensorCollisionSpecular;
-        public static SpecularMaterial SensorCollisionSpecular
+        private static SpecularMaterial _sensorCollision_Specular;
+        public static SpecularMaterial SensorCollision_Specular
         {
             get
             {
-                if (_sensorCollisionSpecular == null)
+                if (_sensorCollision_Specular == null)
                 {
-                    _sensorCollisionSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D12A2A")), 70d);
+                    _sensorCollision_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D12A2A")), 70d);
                 }
 
-                return _sensorCollisionSpecular;
+                return _sensorCollision_Specular;
             }
         }
 
-        public static Color SensorFluid
+        public static Color SensorFluid_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("58756D");
             }
         }
-        public static SpecularMaterial SensorFluidSpecular
+        public static SpecularMaterial SensorFluid_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorSpin
+        public static Color SensorSpin_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("818F27");
             }
         }
-        public static SpecularMaterial SensorSpinSpecular
+        public static SpecularMaterial SensorSpin_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorVelocity
+        public static Color SensorVelocity_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("A3691D");
             }
         }
-        public static SpecularMaterial SensorVelocitySpecular
+        public static SpecularMaterial SensorVelocity_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorInternalForce
+        public static Color SensorInternalForce_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("22272B");
             }
         }
-        public static SpecularMaterial SensorInternalForceSpecular
+        public static SpecularMaterial SensorInternalForce_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
-        public static Color SensorNetForce
+        public static Color SensorNetForce_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("B0B4B8");
             }
         }
-        public static SpecularMaterial SensorNetForceSpecular
+        public static SpecularMaterial SensorNetForce_Specular
         {
             get
             {
-                return SensorBaseSpecular;
+                return SensorBase_Specular;
             }
         }
 
         #endregion
         #region HangarBay
 
-        public static Color HangarBay
+        public static Color HangarBay_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("BDA88E");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _hangarBaySpecular;
-        public static SpecularMaterial HangarBaySpecular
+        private static SpecularMaterial _hangarBay_Specular;
+        public static SpecularMaterial HangarBay_Specular
         {
             get
             {
-                if (_hangarBaySpecular == null)
+                if (_hangarBay_Specular == null)
                 {
-                    _hangarBaySpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
+                    _hangarBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
                 }
 
-                return _hangarBaySpecular;
+                return _hangarBay_Specular;
             }
         }
-        public static Color HangarBayTrim
+
+        public static Color HangarBayTrim_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("968671");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _hangarBayTrimSpecular;
-        public static SpecularMaterial HangarBayTrimSpecular
+        private static SpecularMaterial _hangarBayTrim_Specular;
+        public static SpecularMaterial HangarBayTrim_Specular
         {
             get
             {
-                if (_hangarBayTrimSpecular == null)
+                if (_hangarBayTrim_Specular == null)
                 {
-                    _hangarBayTrimSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("704A443D")), 35d);
+                    _hangarBayTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("704A443D")), 35d);
                 }
 
-                return _hangarBayTrimSpecular;
+                return _hangarBayTrim_Specular;
             }
         }
 
         #endregion
         #region SwarmBay
 
-        public static Color SwarmBay
+        public static Color SwarmBay_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("BDA88E");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _swarmBaySpecular;
-        public static SpecularMaterial SwarmBaySpecular
+        private static SpecularMaterial _swarmBay_Specular;
+        public static SpecularMaterial SwarmBay_Specular
         {
             get
             {
-                if (_swarmBaySpecular == null)
+                if (_swarmBay_Specular == null)
                 {
-                    _swarmBaySpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
+                    _swarmBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
                 }
 
-                return _swarmBaySpecular;
+                return _swarmBay_Specular;
             }
         }
 
         #endregion
         #region AmmoBox
 
-        public static Color AmmoBox
+        public static Color AmmoBox_Color
         {
             get
             {
@@ -630,89 +640,95 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("4B515E");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _ammoBoxSpecular;
-        public static SpecularMaterial AmmoBoxSpecular
+        private static SpecularMaterial _ammoBox_Specular;
+        public static SpecularMaterial AmmoBox_Specular
         {
             get
             {
-                if (_ammoBoxSpecular == null)
+                if (_ammoBox_Specular == null)
                 {
-                    _ammoBoxSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D95448")), 65d);
+                    _ammoBox_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D95448")), 65d);
                 }
 
-                return _ammoBoxSpecular;
+                return _ammoBox_Specular;
             }
         }
 
-        public static Color AmmoBoxPlate
+        public static Color AmmoBoxPlate_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("5E3131");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _ammoBoxPlateSpecular;
-        public static SpecularMaterial AmmoBoxPlateSpecular
+        private static SpecularMaterial _ammoBoxPlate_Specular;
+        public static SpecularMaterial AmmoBoxPlate_Specular
         {
             get
             {
-                if (_ammoBoxPlateSpecular == null)
+                if (_ammoBoxPlate_Specular == null)
                 {
-                    _ammoBoxPlateSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0DE2C2C")), 65d);
+                    _ammoBoxPlate_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0DE2C2C")), 65d);
                 }
 
-                return _ammoBoxPlateSpecular;
+                return _ammoBoxPlate_Specular;
             }
         }
 
         #endregion
         #region Gun
 
-        public static Color GunBase
+        public static Color GunBase_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("4F5359");		// flatter dark gray
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _gunBaseSpecular;
-        public static SpecularMaterial GunBaseSpecular
+        private static SpecularMaterial _gunBase_Specular;
+        public static SpecularMaterial GunBase_Specular
         {
             get
             {
-                if (_gunBaseSpecular == null)
+                if (_gunBase_Specular == null)
                 {
-                    _gunBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("546B6F78")), 35d);
+                    _gunBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("546B6F78")), 35d);
                 }
 
-                return _gunBaseSpecular;
+                return _gunBase_Specular;
             }
         }
-        public static Color GunBarrel
+
+        public static Color GunBarrel_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("3C424C");		// gunmetal
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _gunBarrelSpecular;
-        public static SpecularMaterial GunBarrelSpecular
+        private static SpecularMaterial _gunBarrel_Specular;
+        public static SpecularMaterial GunBarrel_Specular
         {
             get
             {
-                if (_gunBarrelSpecular == null)
+                if (_gunBarrel_Specular == null)
                 {
-                    _gunBarrelSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D023355C")), 75d);
+                    _gunBarrel_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D023355C")), 75d);
                 }
 
-                return _gunBarrelSpecular;
+                return _gunBarrel_Specular;
             }
         }
-        public static Color GunTrim
+
+        public static Color GunTrim_Color
         {
             get
             {
@@ -721,131 +737,139 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("5E6166");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _gunTrimSpecular;
-        public static SpecularMaterial GunTrimSpecular
+        private static SpecularMaterial _gunTrim_Specular;
+        public static SpecularMaterial GunTrim_Specular
         {
             get
             {
-                if (_gunTrimSpecular == null)
+                if (_gunTrim_Specular == null)
                 {
-                    _gunTrimSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80D12A2A")), 50d);
+                    _gunTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80D12A2A")), 50d);
                 }
 
-                return _gunTrimSpecular;
+                return _gunTrim_Specular;
             }
         }
 
         #endregion
         #region Grapple
 
-        public static Color GrapplePad
+        public static Color GrapplePad_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("573A3A");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _grapplePadSpecular;
-        public static SpecularMaterial GrapplePadSpecular
+        private static SpecularMaterial _grapplePad_Specular;
+        public static SpecularMaterial GrapplePad_Specular
         {
             get
             {
-                if (_grapplePadSpecular == null)
+                if (_grapplePad_Specular == null)
                 {
-                    _grapplePadSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80BF8E8E")), 25d);
+                    _grapplePad_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80BF8E8E")), 25d);
                 }
 
-                return _grapplePadSpecular;
+                return _grapplePad_Specular;
             }
         }
 
         #endregion
         #region BeamGun
 
-        public static Color BeamGunDish
+        public static Color BeamGunDish_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("324669");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _beamGunDishSpecular;
-        public static SpecularMaterial BeamGunDishSpecular
+        private static SpecularMaterial _beamGunDish_Specular;
+        public static SpecularMaterial BeamGunDish_Specular
         {
             get
             {
-                if (_beamGunDishSpecular == null)
+                if (_beamGunDish_Specular == null)
                 {
-                    _beamGunDishSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A80F45A3")), 40d);
+                    _beamGunDish_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A80F45A3")), 40d);
                 }
 
-                return _beamGunDishSpecular;
+                return _beamGunDish_Specular;
             }
         }
-        public static Color BeamGunCrystal
+
+        public static Color BeamGunCrystal_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("3B5B94");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _beamGunCrystalSpecular;
-        public static SpecularMaterial BeamGunCrystalSpecular
+        private static SpecularMaterial _beamGunCrystal_Specular;
+        public static SpecularMaterial BeamGunCrystal_Specular
         {
             get
             {
-                if (_beamGunCrystalSpecular == null)
+                if (_beamGunCrystal_Specular == null)
                 {
-                    _beamGunCrystalSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0F45A3")), 90d);
+                    _beamGunCrystal_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0F45A3")), 90d);
                 }
 
-                return _beamGunCrystalSpecular;
+                return _beamGunCrystal_Specular;
             }
         }
+
         [ThreadStatic]
-        private static EmissiveMaterial _beamGunCrystalEmissive;
-        public static EmissiveMaterial BeamGunCrystalEmissive
+        private static EmissiveMaterial _beamGunCrystal_Emissive;
+        public static EmissiveMaterial BeamGunCrystal_Emissive
         {
             get
             {
-                if (_beamGunCrystalEmissive == null)
+                if (_beamGunCrystal_Emissive == null)
                 {
-                    _beamGunCrystalEmissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30719BE3")));
+                    _beamGunCrystal_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30719BE3")));
                 }
 
-                return _beamGunCrystalEmissive;
+                return _beamGunCrystal_Emissive;
             }
         }
-        public static Color BeamGunTrim
+
+        public static Color BeamGunTrim_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("5E6166");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _beamGunTrimSpecular;
-        public static SpecularMaterial BeamGunTrimSpecular
+        private static SpecularMaterial _beamGunTrim_Specular;
+        public static SpecularMaterial BeamGunTrim_Specular
         {
             get
             {
-                if (_beamGunTrimSpecular == null)
+                if (_beamGunTrim_Specular == null)
                 {
-                    _beamGunTrimSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("802A67D1")), 50d);
+                    _beamGunTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("802A67D1")), 50d);
                 }
 
-                return _beamGunTrimSpecular;
+                return _beamGunTrim_Specular;
             }
         }
 
         #endregion
         #region FuelTank
 
-        public static Color FuelTank
+        public static Color FuelTank_Color
         {
             get
             {
@@ -853,110 +877,116 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("A38521");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _fuelTankSpecular;
-        public static SpecularMaterial FuelTankSpecular
+        private static SpecularMaterial _fuelTank_Specular;
+        public static SpecularMaterial FuelTank_Specular
         {
             get
             {
-                if (_fuelTankSpecular == null)
+                if (_fuelTank_Specular == null)
                 {
-                    _fuelTankSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80659C9E")), 40d);
+                    _fuelTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80659C9E")), 40d);
                 }
 
-                return _fuelTankSpecular;
+                return _fuelTank_Specular;
             }
         }
 
         #endregion
         #region EnergyTank
 
-        public static Color EnergyTank
+        public static Color EnergyTank_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("507BC7");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _energyTankSpecular;
-        public static SpecularMaterial EnergyTankSpecular
+        private static SpecularMaterial _energyTank_Specular;
+        public static SpecularMaterial EnergyTank_Specular
         {
             get
             {
-                if (_energyTankSpecular == null)
+                if (_energyTank_Specular == null)
                 {
-                    _energyTankSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D0551FB8")), 80d);
+                    _energyTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D0551FB8")), 80d);
                 }
 
-                return _energyTankSpecular;
+                return _energyTank_Specular;
             }
         }
+
         [ThreadStatic]
-        private static EmissiveMaterial _energyTankEmissive;
-        public static EmissiveMaterial EnergyTankEmissive
+        private static EmissiveMaterial _energyTank_Emissive;
+        public static EmissiveMaterial EnergyTank_Emissive
         {
             get
             {
-                if (_energyTankEmissive == null)
+                if (_energyTank_Emissive == null)
                 {
-                    _energyTankEmissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203348D4")));
+                    _energyTank_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203348D4")));
                 }
 
-                return _energyTankEmissive;
+                return _energyTank_Emissive;
             }
         }
 
         #endregion
         #region PlasmaTank
 
-        public static Color PlasmaTank
+        public static Color PlasmaTank_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("6A66D9");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _plasmaTankSpecular;
-        public static SpecularMaterial PlasmaTankSpecular
+        private static SpecularMaterial _plasmaTank_Specular;
+        public static SpecularMaterial PlasmaTank_Specular
         {
             get
             {
-                if (_plasmaTankSpecular == null)
+                if (_plasmaTank_Specular == null)
                 {
-                    _plasmaTankSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("DE6491")), 90d);
+                    _plasmaTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("DE6491")), 90d);
                 }
 
-                return _plasmaTankSpecular;
+                return _plasmaTank_Specular;
             }
         }
 
         #endregion
         #region Thruster
 
-        public static Color Thruster
+        public static Color Thruster_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("754F42");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _thrusterSpecular;
-        public static SpecularMaterial ThrusterSpecular
+        private static SpecularMaterial _thruster_Specular;
+        public static SpecularMaterial Thruster_Specular
         {
             get
             {
-                if (_thrusterSpecular == null)
+                if (_thruster_Specular == null)
                 {
-                    _thrusterSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("906B7D5A")), 20d);
+                    _thruster_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("906B7D5A")), 20d);
                 }
 
-                return _thrusterSpecular;
+                return _thruster_Specular;
             }
         }
-        public static Color ThrusterBack
+
+        public static Color ThrusterBack_Color
         {
             get
             {
@@ -967,7 +997,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region TractorBeam
 
-        public static Color TractorBeamBase
+        public static Color TractorBeamBase_Color
         {
             get
             {
@@ -975,21 +1005,23 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("6F8185");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _tractorBeamBaseSpecular;
-        public static SpecularMaterial TractorBeamBaseSpecular
+        private static SpecularMaterial _tractorBeamBase_Specular;
+        public static SpecularMaterial TractorBeamBase_Specular
         {
             get
             {
-                if (_tractorBeamBaseSpecular == null)
+                if (_tractorBeamBase_Specular == null)
                 {
-                    _tractorBeamBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF6599A3")), 60);
+                    _tractorBeamBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF6599A3")), 60);
                 }
 
-                return _tractorBeamBaseSpecular;
+                return _tractorBeamBase_Specular;
             }
         }
-        public static Color TractorBeamRod
+
+        public static Color TractorBeamRod_Color
         {
             get
             {
@@ -997,60 +1029,128 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("8A788F");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _tractorBeamRodSpecular;
-        public static SpecularMaterial TractorBeamRodSpecular
+        private static SpecularMaterial _tractorBeamRod_Specular;
+        public static SpecularMaterial TractorBeamRod_Specular
         {
             get
             {
-                if (_tractorBeamRodSpecular == null)
+                if (_tractorBeamRod_Specular == null)
                 {
-                    _tractorBeamRodSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("8A30A1")), 100);
+                    _tractorBeamRod_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("8A30A1")), 100);
                 }
 
-                return _tractorBeamRodSpecular;
+                return _tractorBeamRod_Specular;
             }
         }
+
         [ThreadStatic]
-        private static EmissiveMaterial _tractorBeamRodEmissive;
-        public static EmissiveMaterial TractorBeamRodEmissive
+        private static EmissiveMaterial _tractorBeamRod_Emissive;
+        public static EmissiveMaterial TractorBeamRod_Emissive
         {
             get
             {
-                if (_tractorBeamRodEmissive == null)
+                if (_tractorBeamRod_Emissive == null)
                 {
-                    _tractorBeamRodEmissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40AE75BA")));
+                    _tractorBeamRod_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40AE75BA")));
                 }
 
-                return _tractorBeamRodEmissive;
+                return _tractorBeamRod_Emissive;
+            }
+        }
+
+        #endregion
+        #region ImpulseEngine
+
+        public static Color ImpulseEngine_Color
+        {
+            get
+            {
+                return UtilityWPF.ColorFromHex("2B271D");
+            }
+        }
+
+        [ThreadStatic]
+        private static SpecularMaterial _impulseEngine_Specular;
+        public static SpecularMaterial ImpulseEngine_Specular
+        {
+            get
+            {
+                if (_impulseEngine_Specular == null)
+                {
+                    _impulseEngine_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("885B74AB")), 25);
+                }
+
+                return _impulseEngine_Specular;
+            }
+        }
+
+        public static Color ImpulseEngineGlowball_Color
+        {
+            get
+            {
+                return UtilityWPF.ColorFromHex("AB49F2");
+            }
+        }
+
+        [ThreadStatic]
+        private static SpecularMaterial _impulseEngineGlowball_Specular;
+        public static SpecularMaterial ImpulseEngineGlowball_Specular
+        {
+            get
+            {
+                if (_impulseEngineGlowball_Specular == null)
+                {
+                    _impulseEngineGlowball_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30C94AFF")), 3);
+                }
+
+                return _impulseEngineGlowball_Specular;
+            }
+        }
+
+        [ThreadStatic]
+        private static EmissiveMaterial _impulseEngineGlowball_Emissive;
+        public static EmissiveMaterial ImpulseEngineGlowball_Emissive
+        {
+            get
+            {
+                if (_impulseEngineGlowball_Emissive == null)
+                {
+                    _impulseEngineGlowball_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("504F2B69")));
+                }
+
+                return _impulseEngineGlowball_Emissive;
             }
         }
 
         #endregion
         #region Camera
 
-        public static Color CameraBase
+        public static Color CameraBase_Color
         {
             get
             {
                 return Color.FromRgb(75, 75, 75);
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _cameraBaseSpecular;
-        public static SpecularMaterial CameraBaseSpecular
+        private static SpecularMaterial _cameraBase_Specular;
+        public static SpecularMaterial CameraBase_Specular
         {
             get
             {
-                if (_cameraBaseSpecular == null)
+                if (_cameraBase_Specular == null)
                 {
-                    _cameraBaseSpecular = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), 35d);
+                    _cameraBase_Specular = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), 35d);
                 }
 
-                return _cameraBaseSpecular;
+                return _cameraBase_Specular;
             }
         }
-        public static Color CameraLens
+
+        public static Color CameraLens_Color
         {
             get
             {
@@ -1058,46 +1158,57 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.ColorFromHex("49211B");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _cameraLensSpecular;
-        public static SpecularMaterial CameraLensSpecular
+        private static SpecularMaterial _cameraLens_Specular;
+        public static SpecularMaterial CameraLens_Specular
         {
             get
             {
-                if (_cameraLensSpecular == null)
+                if (_cameraLens_Specular == null)
                 {
-                    _cameraLensSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80A00000")), 75d);
+                    _cameraLens_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80A00000")), 75d);
                 }
 
-                return _cameraLensSpecular;
+                return _cameraLens_Specular;
+            }
+        }
+
+        public static Color CameraHardCodedLens_Color
+        {
+            get
+            {
+                return UtilityWPF.AlphaBlend(Brain_Color, CameraLens_Color, .75);
             }
         }
 
         #endregion
         #region Brain
 
-        public static Color Brain
+        public static Color Brain_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("FFE32078");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _brainSpecular;
-        public static SpecularMaterial BrainSpecular
+        private static SpecularMaterial _brain_Specular;
+        public static SpecularMaterial Brain_Specular
         {
             get
             {
-                if (_brainSpecular == null)
+                if (_brain_Specular == null)
                 {
-                    _brainSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0ED8EB9")), 35d);
+                    _brain_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0ED8EB9")), 35d);
                 }
 
-                return _brainSpecular;
+                return _brain_Specular;
             }
         }
-        public static Color BrainInsideStrand
+
+        public static Color BrainInsideStrand_Color
         {
             get
             {
@@ -1107,163 +1218,197 @@ namespace Game.Newt.v2.GameItems
                 return UtilityWPF.AlphaBlend(color1, color2, StaticRandom.NextDouble());
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _brainInsideStrandSpecular;
-        public static SpecularMaterial BrainInsideStrandSpecular
+        private static SpecularMaterial _brainInsideStrand_Specular;
+        public static SpecularMaterial BrainInsideStrand_Specular
         {
             get
             {
-                if (_brainInsideStrandSpecular == null)
+                if (_brainInsideStrand_Specular == null)
                 {
-                    _brainInsideStrandSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0073")), 100d);
+                    _brainInsideStrand_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0073")), 100d);
                 }
 
-                return _brainInsideStrandSpecular;
+                return _brainInsideStrand_Specular;
+            }
+        }
+
+        #endregion
+        #region DirectionController
+
+        public static Color DirectionControllerRing_Color
+        {
+            get
+            {
+                return UtilityWPF.AlphaBlend(WorldColors.Brain_Color, WorldColors.SensorBase_Color, .15);
+            }
+        }
+
+        [ThreadStatic]
+        private static SpecularMaterial _directionControllerRing_Specular;
+        public static SpecularMaterial DirectionControllerRing_Specular
+        {
+            get
+            {
+                if (_directionControllerRing_Specular == null)
+                {
+                    _directionControllerRing_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30FFFFFF")), 18d);
+                }
+
+                return _directionControllerRing_Specular;
             }
         }
 
         #endregion
         #region Shields
 
-        public static Color ShieldBase
+        public static Color ShieldBase_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("1D8F8D");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _shieldBaseSpecular;
-        public static SpecularMaterial ShieldBaseSpecular
+        private static SpecularMaterial _shieldBase_Specular;
+        public static SpecularMaterial ShieldBase_Specular
         {
             get
             {
-                if (_shieldBaseSpecular == null)
+                if (_shieldBase_Specular == null)
                 {
-                    _shieldBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("503FB2")), 100d);
+                    _shieldBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("503FB2")), 100d);
                 }
 
-                return _shieldBaseSpecular;
+                return _shieldBase_Specular;
             }
         }
+
         [ThreadStatic]
-        private static EmissiveMaterial _shieldBaseEmissive;
-        public static EmissiveMaterial ShieldBaseEmissive
+        private static EmissiveMaterial _shieldBase_Emissive;
+        public static EmissiveMaterial ShieldBase_Emissive
         {
             get
             {
-                if (_shieldBaseEmissive == null)
+                if (_shieldBase_Emissive == null)
                 {
-                    _shieldBaseEmissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("205FD4CE")));
+                    _shieldBase_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("205FD4CE")));
                 }
 
-                return _shieldBaseEmissive;
+                return _shieldBase_Emissive;
             }
         }
 
-        public static Color ShieldEnergy
+        public static Color ShieldEnergy_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(EnergyTank, ShieldBase, .65d);
+                return UtilityWPF.AlphaBlend(EnergyTank_Color, ShieldBase_Color, .65d);
             }
         }
-        public static SpecularMaterial ShieldEnergySpecular
+        public static SpecularMaterial ShieldEnergy_Specular
         {
             get
             {
-                return ShieldBaseSpecular;
+                return ShieldBase_Specular;
             }
         }
 
-        public static Color ShieldKinetic
+        public static Color ShieldKinetic_Color
         {
             get
             {
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), ShieldBase, .9d);
+                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), ShieldBase_Color, .9d);
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _shieldKineticSpecular;
-        public static SpecularMaterial ShieldKineticSpecular
+        private static SpecularMaterial _shieldKinetic_Specular;
+        public static SpecularMaterial ShieldKinetic_Specular
         {
             get
             {
-                if (_shieldKineticSpecular == null)
+                if (_shieldKinetic_Specular == null)
                 {
-                    _shieldKineticSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0A63333")), 70d);
+                    _shieldKinetic_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0A63333")), 70d);
                 }
 
-                return _shieldKineticSpecular;
+                return _shieldKinetic_Specular;
             }
         }
 
-        public static Color ShieldTractor
+        public static Color ShieldTractor_Color
         {
             get
             {
                 //NOTE: This color is the same as SensorTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), ShieldBase, .9d);
+                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), ShieldBase_Color, .9d);
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _shieldTractorSpecular;
-        public static SpecularMaterial ShieldTractorSpecular
+        private static SpecularMaterial _shieldTractor_Specular;
+        public static SpecularMaterial ShieldTractor_Specular
         {
             get
             {
-                if (_shieldTractorSpecular == null)
+                if (_shieldTractor_Specular == null)
                 {
-                    _shieldTractorSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0AE75BA")), 50d);
+                    _shieldTractor_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0AE75BA")), 50d);
                 }
 
-                return _shieldTractorSpecular;
+                return _shieldTractor_Specular;
             }
         }
 
         #endregion
         #region SelfRepair
 
-        public static Color SelfRepairBase
+        public static Color SelfRepairBase_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("E8E0C1");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _selfRepairBaseSpecular;
-        public static SpecularMaterial SelfRepairBaseSpecular
+        private static SpecularMaterial _selfRepairBase_Specular;
+        public static SpecularMaterial SelfRepairBase_Specular
         {
             get
             {
-                if (_selfRepairBaseSpecular == null)
+                if (_selfRepairBase_Specular == null)
                 {
-                    _selfRepairBaseSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0707691")), 60d);
+                    _selfRepairBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0707691")), 60d);
                 }
 
-                return _selfRepairBaseSpecular;
+                return _selfRepairBase_Specular;
             }
         }
-        public static Color SelfRepairCross
+
+        public static Color SelfRepairCross_Color
         {
             get
             {
                 return UtilityWPF.ColorFromHex("43B23B");
             }
         }
+
         [ThreadStatic]
-        private static SpecularMaterial _selfRepairCrossSpecular;
-        public static SpecularMaterial SelfRepairCrossSpecular
+        private static SpecularMaterial _selfRepairCross_Specular;
+        public static SpecularMaterial SelfRepairCross_Specular
         {
             get
             {
-                if (_selfRepairCrossSpecular == null)
+                if (_selfRepairCross_Specular == null)
                 {
-                    _selfRepairCrossSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203DB2")), 85d);
+                    _selfRepairCross_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203DB2")), 85d);
                 }
 
-                return _selfRepairCrossSpecular;
+                return _selfRepairCross_Specular;
             }
         }
 

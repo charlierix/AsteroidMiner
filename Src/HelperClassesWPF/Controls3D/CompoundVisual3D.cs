@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     //TODO: this logic here is a bit weird using ScreenSpaceLines3D and recursing in.
     public class CompoundVisual3D : PrimitiveVisual3D

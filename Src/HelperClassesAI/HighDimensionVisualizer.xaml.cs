@@ -217,9 +217,9 @@ namespace Game.HelperClassesAI
                 Select(o =>
                 {
                     Vector3D position = new Vector3D();
-                    if (o.Position.Length >= 1) position.X = o.Position[0];
-                    if (o.Position.Length >= 2) position.Y = o.Position[1];
-                    if (o.Position.Length >= 3) position.Z = o.Position[2];
+                    if (o.Position.Size >= 1) position.X = o.Position[0];
+                    if (o.Position.Size >= 2) position.Y = o.Position[1];
+                    if (o.Position.Size >= 3) position.Z = o.Position[2];
 
                     return Tuple.Create(o, position, position.Length);
                 }).
@@ -709,7 +709,7 @@ namespace Game.HelperClassesAI
 
             foreach (Dot other in otherDots)
             {
-                double distance = MathND.GetDistance(dot.Input.Weights, other.Input.Weights) * mult;
+                double distance = (dot.Input.Weights - other.Input.Weights).Length * mult;
 
                 yield return Tuple.Create(dot, other, distance);
             }

@@ -92,20 +92,20 @@ namespace Game.Newt.v2.GameItems.Controls
             }
 
             // Energy
-            UpdateStandardContainer(ref _energy, _bot.Energy, "energy", WorldColors.EnergyTank);
+            UpdateStandardContainer(ref _energy, _bot.Energy, "energy", WorldColors.EnergyTank_Color);
 
             // Fuel
-            UpdateStandardContainer(ref _fuel, _bot.Fuel, "fuel", WorldColors.FuelTank);
+            UpdateStandardContainer(ref _fuel, _bot.Fuel, "fuel", WorldColors.FuelTank_Color);
 
             // Plasma
-            UpdateStandardContainer(ref _plasma, _bot.Plasma, "plasma", WorldColors.PlasmaTank);
+            UpdateStandardContainer(ref _plasma, _bot.Plasma, "plasma", WorldColors.PlasmaTank_Color);
 
             // Cargo
-            UpdateCargoContainer(ref _cargo, _bot.CargoBays, "cargo", WorldColors.CargoBay);
+            UpdateCargoContainer(ref _cargo, _bot.CargoBays, "cargo", WorldColors.CargoBay_Color);
 
             // Ammo
             //TODO: Break this down by caliber
-            UpdateStandardContainer(ref _ammo, _bot.Ammo, "ammo", WorldColors.AmmoBox);
+            UpdateStandardContainer(ref _ammo, _bot.Ammo, "ammo", WorldColors.AmmoBox_Color);
         }
 
         #endregion

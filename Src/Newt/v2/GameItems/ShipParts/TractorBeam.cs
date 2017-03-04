@@ -200,8 +200,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             GeometryModel3D geometry = new GeometryModel3D();
             MaterialGroup material = new MaterialGroup();
-            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamBase));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamBase));
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamBase_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamBase_Color));
             material.Children.Add(diffuse);
 
             if (!isFinal)
@@ -229,13 +229,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamRod));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamRod));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.TractorBeamRod_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.TractorBeamRod_Color));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = WorldColors.TractorBeamRodSpecular;
+            SpecularMaterial specular = WorldColors.TractorBeamRod_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
-            EmissiveMaterial emissive = WorldColors.TractorBeamRodEmissive;
+            EmissiveMaterial emissive = WorldColors.TractorBeamRod_Emissive;
             this.MaterialBrushes.Add(new MaterialColorProps(emissive));
             material.Children.Add(emissive);
 

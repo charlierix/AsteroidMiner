@@ -220,11 +220,11 @@ namespace Game.Newt.v2.GameItems.Controls
                 throw new ApplicationException("The original image shouldn't be null");
             }
 
-            if (cast.Source.Original.Length == e.TileWidth * e.TileHeight)
+            if (cast.Source.Original.Size == e.TileWidth * e.TileHeight)
             {
                 DrawSOMTile_Gray(e, cast.Source.Original);
             }
-            else if (cast.Source.Original.Length == e.TileWidth * e.TileHeight * 3)
+            else if (cast.Source.Original.Size == e.TileWidth * e.TileHeight * 3)
             {
                 DrawSOMTile_Color(e, cast.Source.Original);
             }
@@ -233,7 +233,7 @@ namespace Game.Newt.v2.GameItems.Controls
                 throw new ApplicationException("The original image isn't the expected size");
             }
         }
-        private static void DrawSOMTile_Color(SelfOrganizingMapsWPF.DrawTileArgs e, double[] source)
+        private static void DrawSOMTile_Color(SelfOrganizingMapsWPF.DrawTileArgs e, VectorND source)
         {
             //NOTE: Copied from UtilityWPF.GetBitmap_RGB
 
@@ -258,7 +258,7 @@ namespace Game.Newt.v2.GameItems.Controls
                 }
             }
         }
-        private static void DrawSOMTile_Gray(SelfOrganizingMapsWPF.DrawTileArgs e, double[] source)
+        private static void DrawSOMTile_Gray(SelfOrganizingMapsWPF.DrawTileArgs e, VectorND source)
         {
             //NOTE: Copied from UtilityWPF.GetBitmap
 

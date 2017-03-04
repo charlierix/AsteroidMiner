@@ -59,7 +59,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                return PartToolItemBase.CATEGORY_EQUIPMENT;
+                return PartToolItemBase.CATEGORY_BRAIN;
             }
         }
 
@@ -187,10 +187,43 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return new BrainToolItem(this.Options);
         }
 
-        #endregion
-        #region Internal Methods
+        public static Model3D CreateShellVisual(bool isFinal, List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, ScaleTransform3D scaleTransform)
+        {
+            GeometryModel3D geometry = new GeometryModel3D();
+            MaterialGroup material = new MaterialGroup();
+            Color shellColor = WorldColors.Brain_Color;
+            if (!isFinal)
+            {
+                shellColor = UtilityWPF.AlphaBlend(shellColor, Colors.Transparent, .75d);
+            }
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(shellColor));
+            materialBrushes.Add(new MaterialColorProps(diffuse, shellColor));
+            material.Children.Add(diffuse);
 
-        internal static Model3D[] CreateInsideVisuals(double radius, List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, ScaleTransform3D scaleTransform)
+            SpecularMaterial specular = WorldColors.Brain_Specular;
+            materialBrushes.Add(new MaterialColorProps(specular));
+            material.Children.Add(specular);
+
+            if (!isFinal)
+            {
+                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
+                material.Children.Add(selectionEmissive);
+                selectionEmissives.Add(selectionEmissive);
+            }
+
+            geometry.Material = material;
+            geometry.BackMaterial = material;
+
+            Transform3DGroup transformGroup = new Transform3DGroup();
+            transformGroup.Children.Add(scaleTransform);
+            transformGroup.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));		// this is just so it's not obvious that the brains are shared visuals
+
+            geometry.Geometry = SharedVisuals.BrainMesh;		// SharedVisuals keeps track of which thread made the request
+            geometry.Transform = transformGroup;
+
+            return geometry;
+        }
+        public static Model3D[] CreateInsideVisuals(double radius, List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, ScaleTransform3D scaleTransform)
         {
             List<Point3D[]> insidePoints = new List<Point3D[]>();
             for (int cntr = 0; cntr < 3; cntr++)
@@ -207,12 +240,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 GeometryModel3D geometry = new GeometryModel3D();
                 MaterialGroup material = new MaterialGroup();
 
-                Color color = WorldColors.BrainInsideStrand;		// storing this, because it's random
+                Color color = WorldColors.BrainInsideStrand_Color;		// storing this, because it's random
                 DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(color));
                 materialBrushes.Add(new MaterialColorProps(diffuse, color));
                 material.Children.Add(diffuse);
 
-                SpecularMaterial specular = WorldColors.BrainInsideStrandSpecular;
+                SpecularMaterial specular = WorldColors.BrainInsideStrand_Specular;
                 materialBrushes.Add(new MaterialColorProps(specular));
                 material.Children.Add(specular);
 
@@ -264,25 +297,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             Model3DGroup retVal = new Model3DGroup();
 
-            GeometryModel3D geometry;
-            MaterialGroup material;
-            DiffuseMaterial diffuse;
-            SpecularMaterial specular;
-
-            Transform3DGroup transformGroup = new Transform3DGroup();
-            transformGroup.Children.Add(scaleTransform);
-
-            #region Insides
-
+            // Insides
             if (!isFinal)
             {
                 Model3D[] insideModels = CreateInsideVisuals(INSIDEPOINTRADIUS, this.MaterialBrushes, base.SelectionEmissives, scaleTransform);
                 retVal.Children.AddRange(insideModels);
             }
 
-            #endregion
-
-            #region Lights
+            #region lights
 
             // Neat effect, but it makes my fan spin up, and won't slow back down.  Need to add an animation property to the options
             // class (and listen for when it toggles)
@@ -320,43 +342,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             #endregion
 
-            #region Outer Shell
-
-            geometry = new GeometryModel3D();
-            material = new MaterialGroup();
-            Color shellColor = WorldColors.Brain;
-            if (!isFinal)
-            {
-                shellColor = UtilityWPF.AlphaBlend(shellColor, Colors.Transparent, .75d);
-            }
-            diffuse = new DiffuseMaterial(new SolidColorBrush(shellColor));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, shellColor));
-            material.Children.Add(diffuse);
-
-            specular = WorldColors.BrainSpecular;
-            this.MaterialBrushes.Add(new MaterialColorProps(specular));
-            material.Children.Add(specular);
-
-            if (!isFinal)
-            {
-                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-                material.Children.Add(selectionEmissive);
-                base.SelectionEmissives.Add(selectionEmissive);
-            }
-
-            geometry.Material = material;
-            geometry.BackMaterial = material;
-
-            transformGroup = new Transform3DGroup();
-            transformGroup.Children.Add(scaleTransform);
-            transformGroup.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation())));		// this is just so it's not obvious that the brains are shared visuals
-
-            geometry.Geometry = SharedVisuals.BrainMesh;		// SharedVisuals keeps track of which thread made the request
-            geometry.Transform = transformGroup;
-
+            // Outer Shell
+            Model3D geometry = CreateShellVisual(isFinal, this.MaterialBrushes, base.SelectionEmissives, scaleTransform);
             retVal.Children.Add(geometry);
-
-            #endregion
 
             // Transform
             retVal.Transform = GetTransformForGeometry(isFinal);

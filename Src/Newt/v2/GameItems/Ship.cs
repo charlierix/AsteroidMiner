@@ -9,7 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
@@ -137,7 +137,7 @@ namespace Game.Newt.v2.GameItems
                 const double LENTHMULT = 16d;		// the length should be 4 when scaled forcelen is one
 
                 // Scale the length of the force
-                double forceLen = force.Length / (strengthRatio * ItemOptions.FORCESTRENGTHMULT);
+                double forceLen = force.Length / (strengthRatio * ItemOptions.THRUSTER_FORCESTRENGTHMULT);
 
                 // Thickness [y=mx+b]
                 double thickness = (THICKMULT * (forceLen - 1d)) + THICKATONE;

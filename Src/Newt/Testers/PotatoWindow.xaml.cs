@@ -16,7 +16,7 @@ using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using System.Text.RegularExpressions;
 using Game.Newt.v2.AsteroidMiner.MapParts;
 using Game.Newt.v2.GameItems.MapParts;

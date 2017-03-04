@@ -46,6 +46,10 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                     image = GetIcon_Equipment(brushPrimary, brushSecondary);
                     break;
 
+                case PartToolItemBase.CATEGORY_BRAIN:
+                    image = GetIcon_Brain(brushPrimary, brushSecondary);
+                    break;
+
                 case PartToolItemBase.CATEGORY_SHIELD:
                     image = GetIcon_Shield(brushPrimary, brushSecondary, true);
                     break;
@@ -477,6 +481,45 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 group.Children.Add(drawing);
             }
+
+            #endregion
+
+            DrawingImage retVal = new DrawingImage();
+            retVal.Drawing = group;
+
+            return retVal;
+        }
+        private static DrawingImage GetIcon_Brain(Brush brushPrimary, Brush brushSecondary)
+        {
+            DrawingGroup group = new DrawingGroup();
+
+            GeometryDrawing drawing = null;
+
+            //TODO: Make some kind of a cloud like icon
+
+            #region circle
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Flat,
+                    EndLineCap = PenLineCap.Flat,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushPrimary,
+                },
+                Geometry = new EllipseGeometry()
+                {
+                    Center = new Point(50, 50),
+                    RadiusX = 40,
+                    RadiusY = 40,
+                },
+            };
+
+            group.Children.Add(drawing);
 
             #endregion
 

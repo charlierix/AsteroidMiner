@@ -152,10 +152,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBay));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBay));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBay_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBay_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.HangarBaySpecular;
+            specular = WorldColors.HangarBay_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -190,10 +190,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 {
                     geometry = new GeometryModel3D();
                     material = new MaterialGroup();
-                    diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim));
-                    this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim));
+                    diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim_Color));
+                    this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim_Color));
                     material.Children.Add(diffuse);
-                    specular = WorldColors.HangarBayTrimSpecular;
+                    specular = WorldColors.HangarBayTrim_Specular;
                     this.MaterialBrushes.Add(new MaterialColorProps(specular));
                     material.Children.Add(specular);
 
@@ -223,10 +223,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     {
                         geometry = new GeometryModel3D();
                         material = new MaterialGroup();
-                        diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim));
-                        this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim));
+                        diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.HangarBayTrim_Color));
+                        this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.HangarBayTrim_Color));
                         material.Children.Add(diffuse);
-                        specular = WorldColors.HangarBayTrimSpecular;
+                        specular = WorldColors.HangarBayTrim_Specular;
                         this.MaterialBrushes.Add(new MaterialColorProps(specular));
                         material.Children.Add(specular);
 

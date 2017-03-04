@@ -1,7 +1,7 @@
 using System.Windows;
 using System.Windows.Media.Media3D;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     public class CubeVisual3D : TessellianVisual3D
     {

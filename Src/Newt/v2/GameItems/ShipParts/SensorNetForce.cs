@@ -149,7 +149,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return SensorGravityDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.SensorBase, WorldColors.SensorBaseSpecular, WorldColors.SensorNetForce, WorldColors.SensorNetForceSpecular,
+                WorldColors.SensorBase_Color, WorldColors.SensorBase_Specular, WorldColors.SensorNetForce_Color, WorldColors.SensorNetForce_Specular,
                 isFinal);
         }
 

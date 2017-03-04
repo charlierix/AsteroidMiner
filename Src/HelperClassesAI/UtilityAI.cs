@@ -905,7 +905,6 @@ namespace Game.HelperClassesAI
                     //string excelDump_Parents = GetExcelDump(parents, _options.ScoreAscendDescend.Length);
 
 
-
                     _generation = Step(parents, _options, _delegates, _predefined, _rand);
 
                     SolutionItem<T> winner = GetWinner(parents, 1);
@@ -926,6 +925,11 @@ namespace Game.HelperClassesAI
                     //    OnFinished(SolutionResultType.Final_ErrorThreshold);
                     //    return false;
                     //}
+
+                    if (_delegates.LogGeneration != null)
+                    {
+                        _delegates.LogGeneration(_generation.Select(o => Tuple.Create(o.Item, o.Score)).ToArray());
+                    }
 
                     return true;
                 }
@@ -1440,7 +1444,7 @@ namespace Game.HelperClassesAI
 
                         for (int inner = 0; inner < allowed.Length; inner++)
                         {
-                            if(isAscending[inner])
+                            if (isAscending[inner])
                             {
                                 if (group.Items[outer].Score[inner] < allowed[inner])        // ascend means bigger score is better (approaching infinity)
                                 {
@@ -1896,6 +1900,15 @@ namespace Game.HelperClassesAI
         /// https://codesachin.wordpress.com/2015/12/26/fuzzy-speciation-in-genetic-algorithms-using-k-d-trees/
         /// </remarks>
         public Func<T[], double[]> GetSpeciesPosition = null;
+
+        /// <summary>
+        /// This is for debugging.  Each generation is returned here
+        /// </summary>
+        /// <remarks>
+        /// Item1 - a solution
+        /// Item2 - its score
+        /// </remarks>
+        public Action<Tuple<T[], double[]>[]> LogGeneration = null;
 
         /// <summary>
         /// The caller can set this if they want to stop early

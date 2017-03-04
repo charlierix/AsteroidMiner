@@ -4,7 +4,7 @@ using System.Text;
 using System.Windows.Media.Media3D;
 using System.Windows;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     //TODO: a plane is not a Tessellian
     public class PlaneVisual3D : TessellianVisual3D

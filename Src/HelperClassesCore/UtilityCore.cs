@@ -214,6 +214,45 @@ namespace Game.HelperClassesCore
             }
         }
 
+        /// <summary>
+        /// This will try to get the output, and retry a few times if invalid
+        /// </summary>
+        /// <typeparam name="Tinput"></typeparam>
+        /// <typeparam name="Toutput"></typeparam>
+        /// <param name="retryCount"></param>
+        /// <param name="adjustInput">
+        /// For certain types of operations, adjusting the input could be how to fix the output (finding hulls, voronoi, etc).  If the
+        /// failure is a DB or web call, then just retry without changing inputs
+        /// </param>
+        /// <returns>
+        /// Either a valid output, or null if the retry count was exceeded
+        /// </returns>
+        public static Toutput RetryWrapper<Tinput, Toutput>(Tinput input, int retryCount, Func<Tinput, Toutput> getOutput, Func<Toutput, bool> isValid, Func<Tinput, Tinput> adjustInput = null) where Toutput : class
+        {
+            Tinput inputActual = input;
+
+            for (int cntr = 0; cntr <= retryCount; cntr++)      // saying ==, because the 0 iteration is the first (so even if they say 0 retries, the loop will still run once)
+            {
+                if (cntr > 0 && adjustInput != null)
+                {
+                    inputActual = adjustInput(inputActual);
+                }
+
+                try
+                {
+                    Toutput retVal = getOutput(inputActual);
+
+                    if (isValid(retVal))
+                    {
+                        return retVal;
+                    }
+                }
+                catch { }
+            }
+
+            return null;
+        }
+
         #endregion
 
         #region Enums

@@ -169,7 +169,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return ConverterMatterToFuelDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.ConverterBase, WorldColors.ConverterBaseSpecular, WorldColors.ConverterEnergy, WorldColors.ConverterEnergySpecular,
+                WorldColors.ConverterBase_Color, WorldColors.ConverterBase_Specular, WorldColors.ConverterEnergy_Color, WorldColors.ConverterEnergy_Specular,
                 isFinal);
         }
 

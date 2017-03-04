@@ -1104,6 +1104,50 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
+        #region CameraHardCoded
+
+        private volatile object _cameraHardCoded_NeuronDensity = 32d;
+        /// <summary>
+        /// This is how many neurons to place inside of a cone
+        /// </summary>
+        public double CameraHardCoded_NeuronDensity
+        {
+            get
+            {
+                return (double)_cameraHardCoded_NeuronDensity;
+            }
+            set
+            {
+                _cameraHardCoded_NeuronDensity = value;
+            }
+        }
+
+        private volatile object _cameraHardCoded_WorldMax = 50d;
+        /// <summary>
+        /// This is how far the camera sees
+        /// </summary>
+        public double CameraHardCoded_WorldMax
+        {
+            get
+            {
+                return (double)_cameraHardCoded_WorldMax;
+            }
+            set
+            {
+                _cameraHardCoded_WorldMax = value;
+            }
+        }
+
+        /// <summary>
+        /// This gives a chance for custom classification logic.
+        /// See CameraHardCoded.ClassifyObject() for insparation
+        /// </summary>
+        /// <remarks>
+        /// TODO: May want to pass in the bot's token.  Currently, parts don't have access to that, so would need some kind of event, or a property to be set after construction
+        /// </remarks>
+        public volatile Func<MapObjectInfo, double[]> CameraHardCoded_ClassifyObject = null;
+
+        #endregion
 
         #region Brain
 
@@ -1316,6 +1360,30 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
+        #region DirectionController
+
+        private volatile object _directionController_Density = 900d;
+        public double DirectionController_Density
+        {
+            get
+            {
+                return (double)_directionController_Density;
+            }
+            set
+            {
+                _directionController_Density = value;
+            }
+        }
+
+        public readonly DamageProps DirectionController_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
 
         // Propulsion
         #region Thruster (Fuel -> Force)
@@ -1350,7 +1418,7 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        public const double FORCESTRENGTHMULT = 1000d;
+        public const double THRUSTER_FORCESTRENGTHMULT = 1000d;
         private volatile object _thruster_StrengthRatio = 30d; //30000d;		// thruster takes times FORCESTRENGTHMULT
         /// <summary>
         /// This is the amount of force that the thruster is able to generate (this is taken times the volume of the
@@ -1371,17 +1439,17 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        public const double FUELTOTHRUSTMULT = .000001d;
-        private volatile object _fuelToThrustRatio = 1d; //.000001;		// thruster takes this times FUELTOTHRUSTMULT
-        public double FuelToThrustRatio
+        public const double THRUSTER_FUELTOTHRUSTMULT = .000001d;
+        private volatile object _thruster_FuelToThrustRatio = 1d; //.000001;		// thruster takes this times FUELTOTHRUSTMULT
+        public double Thruster_FuelToThrustRatio
         {
             get
             {
-                return (double)_fuelToThrustRatio;
+                return (double)_thruster_FuelToThrustRatio;
             }
             set
             {
-                _fuelToThrustRatio = value;
+                _thruster_FuelToThrustRatio = value;
             }
         }
 
@@ -1442,6 +1510,97 @@ namespace Game.Newt.v2.GameItems
         }
 
         public readonly DamageProps TractorBeam_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region ImpulseEngine (Plasma -> Force)
+
+        private volatile object _impulseEngine_Density = 1800d;
+        public double ImpulseEngine_Density
+        {
+            get
+            {
+                return (double)_impulseEngine_Density;
+            }
+            set
+            {
+                _impulseEngine_Density = value;
+            }
+        }
+
+        public const double IMPULSEENGINE_FORCESTRENGTHMULT = 1000d;
+
+        private volatile object _impuseEngine_LinearStrengthRatio = 100d; //30000d;		// impulse takes times FORCESTRENGTHMULT
+        /// <summary>
+        /// This is the amount of force that the impulse engine is able to generate (this is taken times the volume)
+        /// </summary>
+        /// <remarks>
+        /// NOTE: This value is taken times 1000 by the impulse engine.  This is so that the number exposed to the user isn't so large
+        /// </remarks>
+        public double Impulse_LinearStrengthRatio
+        {
+            get
+            {
+                return (double)_impuseEngine_LinearStrengthRatio;
+            }
+            set
+            {
+                _impuseEngine_LinearStrengthRatio = value;
+            }
+        }
+
+        private volatile object _impuseEngine_RotationStrengthRatio = 35d; //30000d;		// impulse takes times FORCESTRENGTHMULT
+        public double Impulse_RotationStrengthRatio
+        {
+            get
+            {
+                return (double)_impuseEngine_RotationStrengthRatio;
+            }
+            set
+            {
+                _impuseEngine_RotationStrengthRatio = value;
+            }
+        }
+
+        public const double IMPULSEENGINE_PLASMATOTHRUSTMULT = .00000001d;
+        private volatile object _impulseEngine_PlasmaToThrustRatio = 2d;        // impulse takes this times PLASMATOTHRUSTMULT
+        public double ImpulseEngine_PlasmaToThrustRatio
+        {
+            get
+            {
+                return (double)_impulseEngine_PlasmaToThrustRatio;
+            }
+            set
+            {
+                _impulseEngine_PlasmaToThrustRatio = value;
+            }
+        }
+
+        private volatile object _impulseEngine_NeuronDensity_Half = 30d;
+        /// <summary>
+        /// This is how many neurons to place on a sphere shell
+        /// </summary>
+        /// <remarks>
+        /// There is one shell for linear, one for rotation
+        /// </remarks>
+        public double ImpulseEngine_NeuronDensity_Half
+        {
+            get
+            {
+                return (double)_impulseEngine_NeuronDensity_Half;
+            }
+            set
+            {
+                _impulseEngine_NeuronDensity_Half = value;
+            }
+        }
+
+        public readonly DamageProps ImpulseEngine_Damage = new DamageProps(
             HITPOINTMIN,
             HITPOINTSLOPE,
             DAMAGE_VELOCITYTHRESHOLD,

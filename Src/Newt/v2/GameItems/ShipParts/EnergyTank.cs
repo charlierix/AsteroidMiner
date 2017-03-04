@@ -187,13 +187,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private GeometryModel3D CreateGeometry(bool isFinal)
         {
             MaterialGroup material = new MaterialGroup();
-            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.EnergyTank));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.EnergyTank));
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.EnergyTank_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.EnergyTank_Color));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = WorldColors.EnergyTankSpecular;
+            SpecularMaterial specular = WorldColors.EnergyTank_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
-            EmissiveMaterial emissive = WorldColors.EnergyTankEmissive;
+            EmissiveMaterial emissive = WorldColors.EnergyTank_Emissive;
             this.MaterialBrushes.Add(new MaterialColorProps(emissive));
             material.Children.Add(emissive);
 

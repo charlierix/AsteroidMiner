@@ -79,8 +79,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 0, 1) }, "elbow"));
                 _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 1, 0), new Vector3D(0, 0, 1) }, "elbow 3D"));
                 _partToolItems.Add(new TractorBeamToolItem(editor1.Options));
+                _partToolItems.Add(new ImpulseEngineToolItem(editor1.Options));
                 _partToolItems.Add(new BrainToolItem(editor1.Options));
                 _partToolItems.Add(new BrainRGBRecognizerToolItem(editor1.Options));
+                _partToolItems.Add(new DirectionControllerRingToolItem(editor1.Options));
+                _partToolItems.Add(new DirectionControllerSphereToolItem(editor1.Options));
                 //_partToolItems.Add(new EyeToolItem(editor1.Options));
                 _partToolItems.Add(new CameraColorRGBToolItem(editor1.Options));
                 _partToolItems.Add(new SensorGravityToolItem(editor1.Options));

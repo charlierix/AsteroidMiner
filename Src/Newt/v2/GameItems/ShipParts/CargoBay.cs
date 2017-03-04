@@ -167,10 +167,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private GeometryModel3D CreateGeometry(bool isFinal)
         {
             MaterialGroup material = new MaterialGroup();
-            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.CargoBay));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CargoBay));
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.CargoBay_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CargoBay_Color));
             material.Children.Add(diffuse);
-            SpecularMaterial specular = WorldColors.CargoBaySpecular;
+            SpecularMaterial specular = WorldColors.CargoBay_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 

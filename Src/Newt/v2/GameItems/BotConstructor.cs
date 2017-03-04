@@ -67,7 +67,7 @@ namespace Game.Newt.v2.GameItems
             {
                 #region recurse
 
-                foreach(CollisionHull hull in dna_hulls.Item2)
+                foreach (CollisionHull hull in dna_hulls.Item2)
                 {
                     hull.Dispose();
                 }
@@ -228,12 +228,24 @@ namespace Game.Newt.v2.GameItems
                     retVal = new TractorBeamDesign(options, isFinalModel);
                     break;
 
+                case ImpulseEngine.PARTTYPE:
+                    retVal = new ImpulseEngineDesign(options, isFinalModel);
+                    break;
+
                 case Brain.PARTTYPE:
                     retVal = new BrainDesign(options, isFinalModel);
                     break;
 
                 case BrainRGBRecognizer.PARTTYPE:
                     retVal = new BrainRGBRecognizerDesign(options, isFinalModel);
+                    break;
+
+                case DirectionControllerRing.PARTTYPE:
+                    retVal = new DirectionControllerRingDesign(options, isFinalModel);
+                    break;
+
+                case DirectionControllerSphere.PARTTYPE:
+                    retVal = new DirectionControllerSphereDesign(options, isFinalModel);
                     break;
 
                 case SensorGravity.PARTTYPE:
@@ -596,6 +608,11 @@ namespace Game.Newt.v2.GameItems
                             dna, standard, building.AllParts);
                         break;
 
+                    case ImpulseEngine.PARTTYPE:
+                        AddPart(new ImpulseEngine(options, itemOptions, dna, containers.PlasmaGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
                     case Brain.PARTTYPE:
                         AddPart(new Brain(options, itemOptions, dna, containers.EnergyGroup),
                             dna, standard, building.AllParts);
@@ -603,6 +620,16 @@ namespace Game.Newt.v2.GameItems
 
                     case BrainRGBRecognizer.PARTTYPE:
                         AddPart(new BrainRGBRecognizer(options, itemOptions, (BrainRGBRecognizerDNA)dna, containers.EnergyGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case DirectionControllerRing.PARTTYPE:
+                        AddPart(new DirectionControllerRing(options, itemOptions, dna, containers.EnergyGroup),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case DirectionControllerSphere.PARTTYPE:
+                        AddPart(new DirectionControllerSphere(options, itemOptions, dna, containers.EnergyGroup),
                             dna, standard, building.AllParts);
                         break;
 

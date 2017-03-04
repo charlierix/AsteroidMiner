@@ -15,7 +15,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
@@ -1735,7 +1735,7 @@ namespace Game.Newt.Testers
         {
             ModelVisual3D visual = new ModelVisual3D();
 
-            visual.Content = new Game.HelperClassesWPF.Primitives3D.BillboardLine3D()
+            visual.Content = new Game.HelperClassesWPF.Controls3D.BillboardLine3D()
             {
                 Color = color,
                 IsReflectiveColor = false,

@@ -94,6 +94,7 @@ namespace Game.Newt.v2.GameItems
 
             _parts = construction.PartConstruction;
             _thrusters = construction.PartConstruction.GetStandardParts<Thruster>(Thruster.PARTTYPE).ToArray();
+            _impulseEngines = construction.PartConstruction.GetStandardParts<ImpulseEngine>(ImpulseEngine.PARTTYPE).ToArray();
             _projectileGuns = construction.PartConstruction.GetStandardParts<ProjectileGun>(ProjectileGun.PARTTYPE).ToArray();
             _updatableParts_MainThread = construction.UpdatableParts_MainThread;
             _updatableParts_AnyThread = construction.UpdatableParts_AnyThread;
@@ -606,6 +607,15 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        private readonly ImpulseEngine[] _impulseEngines;
+        public ImpulseEngine[] ImpulseEngines
+        {
+            get
+            {
+                return _impulseEngines;
+            }
+        }
+
         private readonly ProjectileGun[] _projectileGuns;
         public ProjectileGun[] ProjectileGuns
         {
@@ -889,6 +899,33 @@ namespace Game.Newt.v2.GameItems
                         Point3D bodyPoint = e.Body.PositionToWorld(thruster.Position);
                         e.Body.AddForceAtPoint(bodyForce, bodyPoint);
                     }
+                }
+            }
+
+            #endregion
+
+            #region Impulse Engines
+
+            foreach (ImpulseEngine impulse in _impulseEngines)
+            {
+                // Look at the thrusts from the last firing
+                Tuple<Vector3D?, Vector3D?> thrust_torque = impulse.ThrustsTorquesLastUpdate;
+                if (thrust_torque == null)
+                {
+                    continue;
+                }
+
+                // Apply force
+                if (thrust_torque.Item1 != null)
+                {
+                    //NOTE: Not looking at the part's orientation.  The impulse engine is a bit of a cheat part, and just works regardless of position/orientation
+                    e.Body.AddForce(e.Body.DirectionToWorld(thrust_torque.Item1.Value));
+                }
+
+                // Apply torque
+                if (thrust_torque.Item2 != null)
+                {
+                    e.Body.AddTorque(e.Body.DirectionToWorld(thrust_torque.Item2.Value));
                 }
             }
 

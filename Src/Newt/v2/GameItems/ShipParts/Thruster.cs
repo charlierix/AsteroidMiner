@@ -13,6 +13,8 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
+    //TODO: Currently, the thrust lines are drawn in Ship.VisualEffects.  Add to the interface so parts can draw/update their own visuals
+
     #region Class: ThrusterToolItem
 
     //TODO: Support custom thrusters
@@ -467,14 +469,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Front Material
             MaterialGroup frontMaterial = new MaterialGroup();
-            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.Thruster));
+            DiffuseMaterial diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.Thruster_Color));
             if (shouldCommitWPF)
             {
-                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.Thruster));
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.Thruster_Color));
             }
             frontMaterial.Children.Add(diffuse);
 
-            SpecularMaterial specular = WorldColors.ThrusterSpecular;
+            SpecularMaterial specular = WorldColors.Thruster_Specular;
             if (shouldCommitWPF)
             {
                 this.MaterialBrushes.Add(new MaterialColorProps(specular));
@@ -483,10 +485,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Back Material
             MaterialGroup backMaterial = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.ThrusterBack));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.ThrusterBack_Color));
             if (shouldCommitWPF)
             {
-                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.ThrusterBack));
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.ThrusterBack_Color));
             }
             backMaterial.Children.Add(diffuse);
 
@@ -955,7 +957,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             Vector3D[] thrustDirections = ((ThrusterDesign)this.Design).ThrusterDirections;
             _mass = GetMass(itemOptions, thrustDirections.Length, cylinderVolume);
-            _forceAtMax = cylinderVolume * itemOptions.Thruster_StrengthRatio * ItemOptions.FORCESTRENGTHMULT;		//ThrusterStrengthRatio is stored as a lower value so that the user doesn't see such a huge number
+            _forceAtMax = cylinderVolume * itemOptions.Thruster_StrengthRatio * ItemOptions.THRUSTER_FORCESTRENGTHMULT;		//ThrusterStrengthRatio is stored as a lower value so that the user doesn't see such a huge number
 
             RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(dna.Orientation));
             this.ThrusterDirectionsShip = thrustDirections.Select(o => transform.Transform(o)).ToArray();		//NOTE: It is expected that Design.ThrusterDirections are unit vectors
@@ -1028,6 +1030,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public void Update_MainThread(double elapsedTime)
         {
+            //TODO: Thruster should draw its own flames
+
         }
         public void Update_AnyThread(double elapsedTime)
         {
@@ -1223,14 +1227,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     actualForce = _forceAtMax * percentMax;
 
                     // See how much fuel that will take
-                    double fuelToUse = actualForce * elapsedTime * _itemOptions.FuelToThrustRatio * ItemOptions.FUELTOTHRUSTMULT;		// FuelToThrustRatio is stored as a larger value so the user can work with it easier
+                    double fuelToUse = actualForce * elapsedTime * _itemOptions.Thruster_FuelToThrustRatio * ItemOptions.THRUSTER_FUELTOTHRUSTMULT;		// FuelToThrustRatio is stored as a larger value so the user can work with it easier
 
                     // Try to burn that much fuel
                     double fuelUnused = _fuelTanks.RemoveQuantity(fuelToUse, false);
                     if (fuelUnused > 0d)
                     {
                         // Not enough fuel, reduce the amount of force
-                        actualForce -= fuelUnused / (elapsedTime * _itemOptions.FuelToThrustRatio * ItemOptions.FUELTOTHRUSTMULT);
+                        actualForce -= fuelUnused / (elapsedTime * _itemOptions.Thruster_FuelToThrustRatio * ItemOptions.THRUSTER_FUELTOTHRUSTMULT);
                         percentMax *= (fuelToUse - fuelUnused) / fuelToUse;		// multiply by the ratio that was actually used
                     }
                 }

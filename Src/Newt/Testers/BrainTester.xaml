@@ -67,6 +67,7 @@
             <Border Grid.Row="0" Background="#8C8677" Padding="4,4,1,4" Style="{StaticResource controlsPanel}">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
                     <StackPanel>
+                        
                         <!-- Gravity Sensor -->
                         <Expander IsExpanded="False" Header="Gravity Sensor">
                             <Border Style="{StaticResource controlsPanelInExpander}">
@@ -333,7 +334,6 @@
                     </Grid>
                 </StackPanel>
             </Border>
-
         </Grid>
 
         <!-- Viewports -->

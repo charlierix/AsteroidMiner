@@ -8,7 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
@@ -195,11 +195,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
 
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SwarmBay));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SwarmBay));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.SwarmBay_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.SwarmBay_Color));
             material.Children.Add(diffuse);
 
-            specular = WorldColors.SwarmBaySpecular;
+            specular = WorldColors.SwarmBay_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 
@@ -226,7 +226,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             #region Line
 
             BillboardLine3D line = new BillboardLine3D();
-            line.Color = WorldColors.SwarmBay;
+            line.Color = WorldColors.SwarmBay_Color;
             line.Thickness = .05 * SCALE;
             line.IsReflectiveColor = false;
             line.FromPoint = new Point3D(0, 0, 0);

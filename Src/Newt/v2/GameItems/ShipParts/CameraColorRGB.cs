@@ -126,6 +126,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
+        public static Vector3D CameraDirection { get { return new Vector3D(0, 0, 1); } }
+
         #endregion
 
         #region Public Methods
@@ -184,7 +186,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.CameraBase, WorldColors.CameraBaseSpecular, WorldColors.CameraLens, WorldColors.CameraLensSpecular,
+                WorldColors.CameraBase_Color, WorldColors.CameraBase_Specular, WorldColors.CameraLens_Color, WorldColors.CameraLens_Specular,
                 isFinal);
         }
 
@@ -203,7 +205,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             SpecularMaterial specular;
 
             Transform3DGroup transformGroup = new Transform3DGroup();
-            transformGroup.Children.Add(new TranslateTransform3D(0, 0, (HEIGHT / 2d) - .15d));
+            transformGroup.Children.Add(new TranslateTransform3D(CameraDirection * ((HEIGHT / 2d) - .15d)));
             transformGroup.Children.Add(scaleTransformLocal);
 
             #region Spotlight

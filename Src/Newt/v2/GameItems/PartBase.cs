@@ -34,12 +34,12 @@ namespace Game.Newt.v2.GameItems
         //TODO: The other part types don't allow intersection, but structural can (if a bar goes through a container, it is assumed that
         //it's actually 2 bars that are welded to the outside of the container (no bar running through the inside)
 
-        //TODO: Come up with icons for these
         public const string CATEGORY_CONTAINER = "Containers";		// Cargo, Fuel, Energy Tank, Ammo
         public const string CATEGORY_PROPULSION = "Propulsion";		// Thruster, Tractor Beam, Grapple Gun/Spider Web
         public const string CATEGORY_SENSOR = "Sensors";		// Brain, Eyes (camera), Eyes (range), Fluid Flow, Gravity
         public const string CATEGORY_WEAPON = "Weapons";		// Projectile Gun, Energy Gun, Spike
         public const string CATEGORY_CONVERTERS = "Converters";		// Radiation-Energy, Cargo-Energy, Cargo-Fuel
+        public const string CATEGORY_BRAIN = "Brain";		// this is for brains and other ai parts
         public const string CATEGORY_EQUIPMENT = "Equipment";		// this is sort of a misc category
         public const string CATEGORY_SHIELD = "Shields";		// this is sort of a misc category
         public const string CATEGORY_STRUCTURAL = "Structural";		// Hulls, Armor Shards, Spars, Wings
@@ -1479,48 +1479,6 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        #endregion
-        #region Protected Methods
-
-        protected virtual void OnMassChanged()
-        {
-            if (this.MassChanged != null)
-            {
-                this.MassChanged(this, new EventArgs());
-            }
-        }
-
-        //TODO: Have another graphic option in Design for informational.  It would be the same color set used for all parts (health: Green-Yellow-Red | unused parts: White-Red | etc)
-        protected virtual void OnDestroyed()
-        {
-            if (!_initialized)
-            {
-                return;
-            }
-
-            EnsureCorrectGraphics_StandardDestroyed();
-
-            if (this.Destroyed != null)
-            {
-                this.Destroyed(this, new EventArgs());
-            }
-        }
-        protected virtual void OnResurrected()
-        {
-            //NOTE: This gets called when hitpoints are first assigned (before the part's derived constructor has created the design)
-            if (!_initialized)
-            {
-                return;
-            }
-
-            EnsureCorrectGraphics_StandardDestroyed();
-
-            if (this.Resurrected != null)
-            {
-                this.Resurrected(this, new EventArgs());
-            }
-        }
-
         public void EnsureCorrectGraphics_StandardDestroyed()
         {
             if (this.IsDestroyed)
@@ -1531,12 +1489,12 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (material.Diffuse != null)
                     {
-                        material.Diffuse.Brush = WorldColors.DestroyedBrush;
+                        material.Diffuse.Brush = WorldColors.Destroyed_Brush;
                     }
                     else if (material.Specular != null)
                     {
-                        material.Specular.Brush = WorldColors.DestroyedSpecularBrush;
-                        material.Specular.SpecularPower = WorldColors.DestroyedSpecularPower;
+                        material.Specular.Brush = WorldColors.Destroyed_SpecularBrush;
+                        material.Specular.SpecularPower = WorldColors.Destroyed_SpecularPower;
                     }
                     else if (material.Emissive != null)
                     {
@@ -1576,6 +1534,48 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 #endregion
+            }
+        }
+
+        #endregion
+        #region Protected Methods
+
+        protected virtual void OnMassChanged()
+        {
+            if (this.MassChanged != null)
+            {
+                this.MassChanged(this, new EventArgs());
+            }
+        }
+
+        //TODO: Have another graphic option in Design for informational.  It would be the same color set used for all parts (health: Green-Yellow-Red | unused parts: White-Red | etc)
+        protected virtual void OnDestroyed()
+        {
+            if (!_initialized)
+            {
+                return;
+            }
+
+            EnsureCorrectGraphics_StandardDestroyed();
+
+            if (this.Destroyed != null)
+            {
+                this.Destroyed(this, new EventArgs());
+            }
+        }
+        protected virtual void OnResurrected()
+        {
+            //NOTE: This gets called when hitpoints are first assigned (before the part's derived constructor has created the design)
+            if (!_initialized)
+            {
+                return;
+            }
+
+            EnsureCorrectGraphics_StandardDestroyed();
+
+            if (this.Resurrected != null)
+            {
+                this.Resurrected(this, new EventArgs());
             }
         }
 
@@ -2201,11 +2201,14 @@ namespace Game.Newt.v2.GameItems
         Converter_EnergyToAmmo,
         Converter_RadiationToEnergy,		// this is a solar cell
 
-        // Equipment
-        ThrustController,		// thrusters expose a neuron that will directly control that particular thruster.  This should expose a spherical shell of input neurons that represents a desired vector.  This will translate that vector into the set of thrusters needed to make the ship go in that direction without introducing spin
+        // Motion
         Thruster,
         TractorBeam,
         GrappleGun,
+        ImpulseEngine,      // this would be a cheat.  Input would be a linear vector and rotation vector.  It would directly apply forces to the body (not force at point for linear motion, but just direct force)
+
+        // Equipment
+        ThrustController,		// thrusters expose a neuron that will directly control that particular thruster.  This should expose a spherical shell of input neurons that represents a desired vector.  This will translate that vector into the set of thrusters needed to make the ship go in that direction without introducing spin
         ProjectileGun,		// fires projectiles (could be simple slugs, or missiles, or drones).  It will need an ammo tank that only it can use
         BeamGun,		// probably keep this short range, more like a laser sword, or flame thrower
         Spike,		// good for ramming
@@ -2240,6 +2243,10 @@ namespace Game.Newt.v2.GameItems
         ReactionForceSensor,		// outputs how much force is felt from the various ship's parts (thrusters, tractors, grapple, gun recoil, etc)
         SpinSensor,		// outputs how fast the ship is spinning around its center of mass
         CollisionSensor,		// this should report any collision on the whole ship (instead of only reporting when the sensor itself is whacked)
+
+        // Display
+        EmotionLights,      // emulate a few LEDs.  Different colors could represent different internal desires (red for attack, etc)
+        Tail,       // have a tail that emulates a dog's tail  http://spectrum.ieee.org/automaton/robotics/home-robots/wagging-tails-help-robots-communicate
 
         // Multi World
         // Each world runs independent of the others (with its own clock).  These worlds may be on the same machine, or spread across machines

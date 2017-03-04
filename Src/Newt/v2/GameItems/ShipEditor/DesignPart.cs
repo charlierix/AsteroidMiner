@@ -7,7 +7,7 @@ using System.Windows.Media.Media3D;
 
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
@@ -82,7 +82,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             DesignPart retVal = new DesignPart(_options);
             retVal.Part2D = this.Part2D;		// this shouldn't be cloned, it's just a link to the source
 
-            if(this.Part2D == null)
+            if (this.Part2D == null)
             {
                 retVal.Part3D = BotConstructor.GetPartDesign(this.Part3D.GetDNA(), _options, this.Part3D.IsFinalModel);
             }
@@ -118,67 +118,73 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             if (this.Part3D is AmmoBoxDesign)
             {
-                color = WorldColors.AmmoBox;
+                color = WorldColors.AmmoBox_Color;
             }
             else if (this.Part3D is BeamGunDesign || this.Part3D is GrappleGunDesign || this.Part3D is ProjectileGunDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.GunBarrel, .125d);		// shift it white, because it's too dark
+                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.GunBarrel_Color, .125d);		// shift it white, because it's too dark
             }
-            else if (this.Part3D is BrainDesign || this.Part3D is BrainRGBRecognizerDesign)
+            else if (this.Part3D is BrainDesign || this.Part3D is BrainRGBRecognizerDesign || this.Part3D is DirectionControllerRingDesign || this.Part3D is DirectionControllerSphereDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.Brain, .25d);
+                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.Brain_Color, .25d);
             }
             else if (this.Part3D is CargoBayDesign)
             {
-                color = WorldColors.CargoBay;
+                color = WorldColors.CargoBay_Color;
             }
             else if (this.Part3D is ConverterEnergyToAmmoDesign || this.Part3D is ConverterEnergyToFuelDesign || this.Part3D is ConverterEnergyToPlasmaDesign || this.Part3D is ConverterFuelToEnergyDesign || this.Part3D is ConverterMatterToAmmoDesign || this.Part3D is ConverterMatterToEnergyDesign || this.Part3D is ConverterMatterToFuelDesign || this.Part3D is ConverterRadiationToEnergyDesign || this.Part3D is ConverterMatterToPlasmaDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.ConverterBase, .125d);
+                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.ConverterBase_Color, .125d);
             }
             else if (this.Part3D is EnergyTankDesign)
             {
-                color = WorldColors.EnergyTank;
+                color = WorldColors.EnergyTank_Color;
             }
             else if (this.Part3D is EyeDesign || this.Part3D is CameraColorRGBDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.CameraBase, .15d);
+                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.CameraBase_Color, .15d);
             }
             else if (this.Part3D is SensorCollisionDesign || this.Part3D is SensorFluidDesign || this.Part3D is SensorGravityDesign || this.Part3D is SensorInternalForceDesign || this.Part3D is SensorNetForceDesign || this.Part3D is SensorRadiationDesign || this.Part3D is SensorSpinDesign || this.Part3D is SensorTractorDesign || this.Part3D is SensorVelocityDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.SensorBase, .125d);
+                color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.SensorBase_Color, .125d);
             }
             else if (this.Part3D is FuelTankDesign)
             {
-                color = WorldColors.FuelTank;
+                color = WorldColors.FuelTank_Color;
             }
             else if (this.Part3D is HangarBayDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.HangarBay, .25d);
+                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.HangarBay_Color, .25d);
             }
             else if (this.Part3D is SelfRepairDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.SelfRepairBase, .25d);
+                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.SelfRepairBase_Color, .25d);
             }
             else if (this.Part3D is ShieldEnergyDesign || this.Part3D is ShieldKineticDesign || this.Part3D is ShieldTractorDesign)
             {
-                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.ShieldBase, .125d);
+                color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.ShieldBase_Color, .125d);
             }
             else if (this.Part3D is ThrusterDesign)
             {
-                color = WorldColors.Thruster;
+                color = WorldColors.Thruster_Color;
             }
             else if (this.Part3D is TractorBeamDesign)
             {
-                color = WorldColors.TractorBeamBase;
+                color = WorldColors.TractorBeamBase_Color;
+            }
+            else if (this.Part3D is ImpulseEngineDesign)
+            {
+                color = UtilityWPF.AlphaBlend(Colors.White,
+                    UtilityWPF.AlphaBlend(WorldColors.ImpulseEngineGlowball_Color, WorldColors.ImpulseEngine_Color, .25d),
+                    .125d);
             }
             else if (this.Part3D is PlasmaTankDesign)
             {
-                color = WorldColors.PlasmaTank;
+                color = WorldColors.PlasmaTank_Color;
             }
-            else if(this.Part3D is SwarmBayDesign)
+            else if (this.Part3D is SwarmBayDesign)
             {
-                color = WorldColors.SwarmBay;
+                color = WorldColors.SwarmBay_Color;
             }
             else
             {

@@ -184,9 +184,9 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.EvenDistributionSphere().Show();
         }
-        private void EvenDistributeCube_MouseUp(object sender, MouseButtonEventArgs e)
+        private void EvenDistributeOther_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.Testers.EvenDistributionCube().Show();
+            new Game.Newt.Testers.EvenDistributionOther().Show();
         }
         private void ClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -316,6 +316,10 @@ namespace Game.GameTester
         private void BrainTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.BrainTester().Show();
+        }
+        private void BrainTester2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.BrainTester2().Show();
         }
         private void BrainLinks_MouseUp(object sender, MouseButtonEventArgs e)
         {

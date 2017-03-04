@@ -16,7 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.AsteroidMiner.MapParts;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
@@ -166,7 +166,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 _itemOptions = new ItemOptions();
                 _itemOptions.Thruster_StrengthRatio *= 4.5;
-                _itemOptions.FuelToThrustRatio *= .03;
+                _itemOptions.Thruster_FuelToThrustRatio *= .03;
                 _itemOptions.Projectile_Color = UtilityWPF.ColorFromHex("FFE330");        // using bee/wasp colors, because white looks too much like the stars
 
                 _progressBars = new ShipProgressBarManager(pnlProgressBars);

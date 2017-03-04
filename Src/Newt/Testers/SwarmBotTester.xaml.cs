@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.NewtonDynamics;

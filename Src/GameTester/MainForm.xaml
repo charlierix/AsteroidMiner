@@ -118,7 +118,7 @@
                     <ListBoxItem Content="Potatoes" MouseUp="Potatoes_MouseUp"/>
                     <ListBoxItem Content="Mad Shatter" MouseUp="MadShatter_MouseUp"/>
                     <ListBoxItem Content="Evenly distribute sphere" MouseUp="EvenDistributeSphere_MouseUp"/>
-                    <ListBoxItem Content="Evenly distribute cube" MouseUp="EvenDistributeCube_MouseUp"/>
+                    <ListBoxItem Content="Evenly distribute other" MouseUp="EvenDistributeOther_MouseUp"/>
                     <ListBoxItem Content="Clustered Points" MouseUp="ClusteredPoints_MouseUp"/>
                     <ListBoxItem Content="Shadows" MouseUp="Shadows_MouseUp"/>
                     <ListBoxItem Content="Curves" MouseUp="Curves_MouseUp"/>
@@ -179,6 +179,7 @@
                 <ListBox>
                     <ListBoxItem Content="Ship Editor" Style="{StaticResource boldItem}" MouseUp="ShipEditor_MouseUp"/>
                     <ListBoxItem Content="Brain Tester" MouseUp="BrainTester_MouseUp"/>
+                    <ListBoxItem Content="Brain Tester 2" MouseUp="BrainTester2_MouseUp"/>
                     <ListBoxItem Content="Brain Links" MouseUp="BrainLinks_MouseUp"/>
                     <ListBoxItem Content="Flying Beans" Style="{StaticResource boldItem}" MouseUp="FlyingBeans_MouseUp"/>
                     <ListBoxItem Content="Ship Camera Tester" MouseUp="ShipCameraTester_MouseUp"/>

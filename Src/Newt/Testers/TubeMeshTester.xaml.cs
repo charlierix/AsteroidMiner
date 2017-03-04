@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.Newt.Testers
 {

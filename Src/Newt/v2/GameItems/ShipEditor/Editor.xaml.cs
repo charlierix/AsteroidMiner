@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Threading;

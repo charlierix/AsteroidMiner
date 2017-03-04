@@ -15,6 +15,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
@@ -62,6 +63,10 @@ namespace Game.Newt.Testers.Controllers
 
         private CancellationTokenSource _cancelCurrentBalancer = null;
 
+        private readonly DispatcherTimer _graphTimer;
+        private volatile Tuple<ThrusterMap, double[]>[] _generation = null;
+        private List<double[]> _maxErrors = new List<double[]>();
+
         private bool _initialized = false;
 
         #endregion
@@ -88,6 +93,13 @@ namespace Game.Newt.Testers.Controllers
                 cboThrusterTypes.Items.Add(value);
             }
             cboThrusterTypes.SelectedItem = ThrusterTypeValues.Random;
+
+            _graphTimer = new DispatcherTimer()
+            {
+                Interval = TimeSpan.FromMilliseconds(150),
+                IsEnabled = false,
+            };
+            _graphTimer.Tick += GraphTimer_Tick;
 
             _initialized = true;
         }
@@ -207,6 +219,90 @@ namespace Game.Newt.Testers.Controllers
             }
         }
 
+        private void GraphTimer_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (debugOverlay == null)
+                {
+                    return;
+                }
+
+                Tuple<ThrusterMap, double[]>[] generation = _generation;
+
+                if (!chkShowErrorGraph.IsChecked.Value || generation == null || generation.Length == 0)
+                {
+                    debugOverlay.Content = null;
+                    return;
+                }
+
+                double width = debugOverlay.ActualWidth;
+                double height = debugOverlay.ActualHeight;
+
+                if (width <= 0 || height <= 0)
+                {
+                    debugOverlay.Content = null;
+                    return;
+                }
+
+                int numLayers = generation[0].Item2.Length;
+
+                double xStep = width / generation.Length;
+                //double yMin = generation.Min(o => o.Item2[0]);
+                double yMin = 0;
+                double[] yMax = Enumerable.Range(0, numLayers).
+                    Select(o => generation.Max(p => p.Item2[o])).
+                    ToArray();
+
+                _maxErrors.Add(yMax);
+
+                //if (_maxErrors[_maxErrors.Count - 1].Any(o => Math1D.IsInvalid(o)))       // there was a bug in the solution finder.  Unit vectors were NaN because the length was zero
+                //{
+                //}
+
+                Canvas canvas = new Canvas();
+                StackPanel panel = new StackPanel();
+
+                for (int cntr = 0; cntr < numLayers; cntr++)
+                {
+                    #region line
+
+                    Polyline line = new Polyline()
+                    {
+                        Stroke = new SolidColorBrush(UtilityWPF.GetColorEGA(cntr)),
+                        StrokeThickness = 3,
+                    };
+
+                    int index = 0;
+                    foreach (var item in generation.OrderBy(o => o.Item2[cntr]))
+                    {
+                        double y = UtilityCore.GetScaledValue(0, height, yMin, yMax[cntr], item.Item2[cntr]);
+                        y = height - y;
+
+                        line.Points.Add(new Point(xStep * index, y));
+
+                        index++;
+                    }
+
+                    canvas.Children.Add(line);
+
+                    #endregion
+
+                    panel.Children.Add(new TextBlock() { Text = yMax[cntr].ToString("N0"), Foreground = new SolidColorBrush(UtilityWPF.GetColorEGA(cntr)) });
+                }
+
+                Canvas.SetTop(panel, 20);
+                Canvas.SetLeft(panel, 20);
+                canvas.Children.Add(panel);
+
+                debugOverlay.Content = canvas;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         private void Map_ItemAdded(object sender, MapItemArgs e)
         {
             try
@@ -296,7 +392,7 @@ namespace Game.Newt.Testers.Controllers
 
                 parts.Add(new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Orientation = Quaternion.Identity, Position = new Point3D(0, 0, 0.57985483357727), Scale = new Vector3D(1, 1, 1) });
 
-                parts.AddRange(GetRandomThrusters(numThrusters, chkRandRotateThrusters.IsChecked.Value, (ThrusterTypeValues)cboThrusterTypes.SelectedItem));
+                parts.AddRange(GetRandomThrusters(numThrusters, chkRandRotateThrusters.IsChecked.Value, (ThrusterTypeValues)cboThrusterTypes.SelectedItem, chkSomeDestroyed.IsChecked.Value));
 
                 ShipDNA dna = ShipDNA.Create(parts);
                 dna.ShipLineage = Guid.NewGuid().ToString();
@@ -445,6 +541,9 @@ namespace Game.Newt.Testers.Controllers
 
         private void RemoveBot()
         {
+            // Timer
+            _graphTimer.Stop();
+
             // Thrust balancer
             if (_cancelCurrentBalancer != null)
             {
@@ -476,6 +575,9 @@ namespace Game.Newt.Testers.Controllers
 
             bot.PhysicsBody.BodyMoved += PhysicsBody_BodyMoved;
             PhysicsBody_BodyMoved(this, new EventArgs());
+
+            // Timer
+            _graphTimer.Start();
         }
 
         private void BalanceBot_Forward(ControlledThrustBot bot)
@@ -497,8 +599,9 @@ namespace Game.Newt.Testers.Controllers
             _cancelCurrentBalancer = new CancellationTokenSource();
 
             var newBestFound = new Action<ThrusterMap>(o => bot.ForwardMap = o);
+            var logGeneration = new Action<Tuple<ThrusterMap, double[]>[]>(o => _generation = o);
 
-            ThrustControlUtil.DiscoverSolutionAsync2(bot, ideal, null, _cancelCurrentBalancer.Token, null, newBestFound);
+            ThrustControlUtil.DiscoverSolutionAsync2(bot, ideal, null, _cancelCurrentBalancer.Token, newBestFound: newBestFound, logGeneration: logGeneration);
         }
         private void BalanceBot_Spin(ControlledThrustBot bot)
         {
@@ -547,7 +650,7 @@ namespace Game.Newt.Testers.Controllers
             bot.ShouldLearnFromLifeEvents = true;
         }
 
-        private static ShipPartDNA[] GetRandomThrusters(int count, bool randomOrientations, ThrusterTypeValues thrustType)
+        private static ShipPartDNA[] GetRandomThrusters(int count, bool randomOrientations, ThrusterTypeValues thrustType, bool someDestroyed)
         {
             const double MINRADIUS = 1.5;
             const double MAXRADIUS = 3;
@@ -611,7 +714,21 @@ namespace Game.Newt.Testers.Controllers
                         throw new ApplicationException("Unknown ThrusterTypeValues: " + thrustType.ToString());
                 }
 
-                retVal.Add(new ThrusterDNA() { PartType = Thruster.PARTTYPE, Orientation = orientation, Position = position.ToPoint(), Scale = new Vector3D(size, size, size), ThrusterType = type });
+                double percentDamaged = 0d;
+                if (someDestroyed && rand.NextDouble() < .15)
+                {
+                    percentDamaged = 1d;
+                }
+
+                retVal.Add(new ThrusterDNA()
+                {
+                    PartType = Thruster.PARTTYPE,
+                    Orientation = orientation,
+                    Position = position.ToPoint(),
+                    Scale = new Vector3D(size, size, size),
+                    ThrusterType = type,
+                    PercentDamaged = percentDamaged,
+                });
             }
 
             return retVal.ToArray();

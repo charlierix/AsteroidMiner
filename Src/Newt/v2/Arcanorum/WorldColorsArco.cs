@@ -17,7 +17,7 @@ namespace Game.Newt.v2.Arcanorum
         public static ThreadLocal<SpecularMaterial> SensorVision_Any_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")), 3));
 
         public static Color MotionController_Linear_Color = UtilityWPF.ColorFromHex("4851B5");
-        public static ThreadLocal<DiffuseMaterial> MotionController_Linear_Diffuse = new ThreadLocal<DiffuseMaterial>(() => new DiffuseMaterial(new SolidColorBrush(SensorVision_Any_Color)));
+        public static ThreadLocal<DiffuseMaterial> MotionController_Linear_Diffuse = new ThreadLocal<DiffuseMaterial>(() => new DiffuseMaterial(new SolidColorBrush(MotionController_Linear_Color)));
         public static ThreadLocal<SpecularMaterial> MotionController_Linear_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0D3E0A3")), 40));
     }
 }

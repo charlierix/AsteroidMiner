@@ -195,7 +195,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 eyeBrush.GradientStops.Add(new GradientStop(UtilityWPF.ColorFromHex("#FF000000"), 1d));
 
                 diffuse = new DiffuseMaterial(eyeBrush);
-                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CameraLens));		// using the final's lens color, because it's a solid color
+                this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CameraLens_Color));		// using the final's lens color, because it's a solid color
                 material.Children.Add(diffuse);
 
                 //if (!isFinal)
@@ -222,8 +222,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             if (isFinal)
             {
-                material.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.CameraLens)));		// no need to add these to this.MaterialBrushes (those are only for editing)
-                material.Children.Add(WorldColors.CameraLensSpecular);
+                material.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.CameraLens_Color)));		// no need to add these to this.MaterialBrushes (those are only for editing)
+                material.Children.Add(WorldColors.CameraLens_Specular);
             }
             else
             {
@@ -289,10 +289,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             geometry = new GeometryModel3D();
             material = new MaterialGroup();
-            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.CameraBase));
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CameraBase));
+            diffuse = new DiffuseMaterial(new SolidColorBrush(WorldColors.CameraBase_Color));
+            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColors.CameraBase_Color));
             material.Children.Add(diffuse);
-            specular = WorldColors.CameraBaseSpecular;
+            specular = WorldColors.CameraBase_Specular;
             this.MaterialBrushes.Add(new MaterialColorProps(specular));
             material.Children.Add(specular);
 

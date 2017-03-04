@@ -10,7 +10,7 @@ using System.Windows.Threading;
 
 using Game.HelperClassesCore;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     #region Class: BillboardLine3D
 

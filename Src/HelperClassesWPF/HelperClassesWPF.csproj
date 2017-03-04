@@ -83,6 +83,7 @@
     <Reference Include="System.IdentityModel" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnimateRotation.cs" />
     <Compile Include="AutoScrollEmulator.cs" />
     <Compile Include="Bezier.cs" />
     <Compile Include="BindingHelper.cs" />
@@ -99,15 +100,13 @@
     <Compile Include="Controls2D\UndoRedo.xaml.cs">
       <DependentUpon>UndoRedo.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls3D\Debug3DWindow.xaml.cs">
+      <DependentUpon>Debug3DWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Convolutions.cs" />
     <Compile Include="DoubleVector.cs" />
     <Compile Include="DragHitShape.cs" />
     <Compile Include="Extenders.cs" />
-    <Compile Include="Gizmos3D\Arrow.xaml.cs">
-      <DependentUpon>Arrow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Gizmos3D\VisualToVisualLine3D.cs" />
-    <Compile Include="Gizmos3D\VisualToVisualLine3D.Properties.cs" />
     <Compile Include="Math2D.cs" />
     <Compile Include="MathND.cs" />
     <Compile Include="MIConvexHull\ConvexHull\Collections.cs" />
@@ -124,20 +123,20 @@
     <Compile Include="MIConvexHull\Triangulation\TriangulationCell.cs" />
     <Compile Include="MIConvexHull\Triangulation\VoronoiEdge.cs" />
     <Compile Include="MIConvexHull\Triangulation\VoronoiMesh.cs" />
-    <Compile Include="Primitives3D\ArcScreenSpaceLines3D.cs" />
-    <Compile Include="Primitives3D\BillboardLine3D.cs" />
-    <Compile Include="Primitives3D\CompoundVisual3D.cs" />
+    <Compile Include="Controls3D\ArcScreenSpaceLines3D.cs" />
+    <Compile Include="Controls3D\BillboardLine3D.cs" />
+    <Compile Include="Controls3D\CompoundVisual3D.cs" />
     <Compile Include="Math3D.cs" />
     <Compile Include="MathUtils.cs" />
     <Compile Include="Matrix3DStack.cs" />
-    <Compile Include="Primitives3D\ConeVisual3D.cs" />
-    <Compile Include="Primitives3D\CubeVisual3D.cs" />
-    <Compile Include="Primitives3D\CylinderVisual3D.cs" />
-    <Compile Include="Primitives3D\PlaneVisual3D.cs" />
-    <Compile Include="Primitives3D\PrimitiveVisual3D.cs" />
-    <Compile Include="Primitives3D\ScreenSpaceLines3D.cs" />
-    <Compile Include="Primitives3D\SphereVisual3D.cs" />
-    <Compile Include="Primitives3D\TessellianVisual3D.cs" />
+    <Compile Include="Controls3D\ConeVisual3D.cs" />
+    <Compile Include="Controls3D\CubeVisual3D.cs" />
+    <Compile Include="Controls3D\CylinderVisual3D.cs" />
+    <Compile Include="Controls3D\PlaneVisual3D.cs" />
+    <Compile Include="Controls3D\PrimitiveVisual3D.cs" />
+    <Compile Include="Controls3D\ScreenSpaceLines3D.cs" />
+    <Compile Include="Controls3D\SphereVisual3D.cs" />
+    <Compile Include="Controls3D\TessellianVisual3D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -158,7 +157,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Primitives3D\ScreenSpaceLines3DHelper.cs" />
+    <Compile Include="Controls3D\ScreenSpaceLines3DHelper.cs" />
     <Compile Include="Rectangle3DIndexed.cs" />
     <Compile Include="SoundPool.cs" />
     <Compile Include="StaticRandomWPF.cs" />
@@ -191,11 +190,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Gizmos3D\Arrow.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <Page Include="Controls3D\Debug3DWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

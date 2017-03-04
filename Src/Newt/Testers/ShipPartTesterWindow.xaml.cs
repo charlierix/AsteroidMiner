@@ -18,7 +18,7 @@ using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.HelperClassesWPF;
 using System.Xaml;
 
@@ -2013,7 +2013,7 @@ namespace Game.Newt.Testers
 
                 var illegalCombos = GetIllegalCombos(_contributions);
 
-                double fuelToThrust = _itemOptions.FuelToThrustRatio;
+                double fuelToThrust = _itemOptions.Thruster_FuelToThrustRatio;
 
                 //var test = AllCombosEnumerator(_contributions.Length, illegalCombos).ToList();
 
@@ -4416,7 +4416,7 @@ namespace Game.Newt.Testers
             InitializeComponent();
 
             _itemOptions.Thruster_StrengthRatio /= 3d;
-            _itemOptions.FuelToThrustRatio /= 3d;
+            _itemOptions.Thruster_FuelToThrustRatio /= 3d;
 
             _isInitialized = true;
 

@@ -69,6 +69,11 @@ namespace Game.HelperClassesWPF
             return new Vector3D(vector.X, vector.Y, z);
         }
 
+        public static VectorND ToVectorND(this Vector vector)
+        {
+            return new VectorND(new[] { vector.X, vector.Y });
+        }
+
         public static string ToString(this Vector vector, bool extensionsVersion)
         {
             return vector.X.ToString() + ", " + vector.Y.ToString();
@@ -132,6 +137,11 @@ namespace Game.HelperClassesWPF
             return new Point3D(point.X, point.Y, z);
         }
 
+        public static VectorND ToVectorND(this Point point)
+        {
+            return new VectorND(new[] { point.X, point.Y });
+        }
+
         public static string ToString(this Point point, bool extensionsVersion)
         {
             return point.X.ToString() + ", " + point.Y.ToString();
@@ -180,6 +190,11 @@ namespace Game.HelperClassesWPF
         public static Size3D ToSize(this Vector3D vector)
         {
             return new Size3D(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));
+        }
+
+        public static VectorND ToVectorND(this Vector3D vector)
+        {
+            return new VectorND(new[] { vector.X, vector.Y, vector.Z });
         }
 
         public static double[] ToArray(this Vector3D vector)
@@ -324,6 +339,11 @@ namespace Game.HelperClassesWPF
         public static Vector ToVector2D(this Point3D point)
         {
             return new Vector(point.X, point.Y);
+        }
+
+        public static VectorND ToVectorND(this Point3D point)
+        {
+            return new VectorND(new[] { point.X, point.Y, point.Z });
         }
 
         public static double[] ToArray(this Point3D point)
@@ -821,6 +841,77 @@ namespace Game.HelperClassesWPF
             }
 
             return retVal;
+        }
+
+        #endregion
+
+        #region double[]
+
+        public static Vector ToVector(this double[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
+            else if (values.Length != 2)
+            {
+                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
+            }
+
+            return new Vector(values[0], values[1]);
+        }
+        public static Vector3D ToVector3D(this double[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
+            else if (values.Length != 3)
+            {
+                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
+            }
+
+            return new Vector3D(values[0], values[1], values[2]);
+        }
+        public static VectorND ToVectorND(this double[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
+            else if (values.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException("values", "This method requires the double array to be greater than length 0");
+            }
+
+            return new VectorND(values);
+        }
+
+        public static Point ToPoint(this double[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
+            else if (values.Length != 2)
+            {
+                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
+            }
+
+            return new Point(values[0], values[1]);
+        }
+        public static Point3D ToPoint3D(this double[] values)
+        {
+            if (values == null)
+            {
+                throw new ArgumentNullException("values");
+            }
+            else if (values.Length != 3)
+            {
+                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
+            }
+
+            return new Point3D(values[0], values[1], values[2]);
         }
 
         #endregion

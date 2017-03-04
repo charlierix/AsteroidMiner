@@ -9,30 +9,26 @@ using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.NewtonDynamics;
 
-namespace Game.Newt.v2.GenePool.MapParts
+namespace Game.Newt.v2.GameItems.MapParts
 {
     /// <summary>
-    /// This is used to represent a newborn ship.  If you need more properties, than this base class provides, create a derived class
+    /// This is an egg that would contain a newborn.  T would probably be some kind of dna
     /// </summary>
-    public class Egg : IMapObject
+    public class Egg<T> : IMapObject
     {
         #region Constructor
 
-        public Egg(Point3D position, World world, int materialID, ItemOptions itemOptions, ShipDNA dna)
+        public Egg(Point3D position, double radius, World world, int materialID, ItemOptions itemOptions, T contents)
         {
-            // The radius should be 20% the size of the adult ship
-            this.Radius = dna.PartsByLayer.SelectMany(o => o.Value).
-                Max(o => o.Position.ToVector().Length + Math1D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z))
-                * .2d;
-
+            this.Radius = radius;
             Vector3D scale = new Vector3D(.75d, .75d, 1d);
 
             #region WPF Model
 
             // Material
             MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.EggColor)));
-            materials.Children.Add(WorldColors.EggSpecular);
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.Egg_Color)));
+            materials.Children.Add(WorldColors.Egg_Specular);
 
             // Geometry Model
             GeometryModel3D geometry = new GeometryModel3D();
@@ -167,7 +163,7 @@ namespace Game.Newt.v2.GenePool.MapParts
 
         #region Public Properties
 
-        public ShipDNA DNA
+        public T Contents
         {
             get;
             private set;

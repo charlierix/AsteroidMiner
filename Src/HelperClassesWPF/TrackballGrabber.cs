@@ -10,7 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media.Media3D;
 using System.Windows.Media;
 
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.HelperClassesWPF
 {

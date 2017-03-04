@@ -1,0 +1,330 @@
+﻿<Window x:Class="Game.Newt.Testers.BrainTester2"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Game.Newt.Testers"
+        Title="Brain Tester 2" ResizeMode="CanResizeWithGrip" Width="980" Height="817" Loaded="Window_Loaded" Closed="Window_Closed">
+    <Window.Resources>
+        <DataTemplate x:Key="expanderHeader">
+            <TextBlock Text="{Binding}" FontSize="16" FontWeight="bold" Foreground="#D9D3C3"/>
+        </DataTemplate>
+        <Style TargetType="Expander">
+            <Setter Property="HeaderTemplate" Value="{StaticResource expanderHeader}"/>
+            <!--<Setter Property="ContentTemplate" Value="{StaticResource expanderContent}"/>-->
+        </Style>
+
+        <Style x:Key="controlsPanel" TargetType="Border">
+            <Setter Property="Background" Value="#ADA693"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#3D352D"/>
+            <Setter Property="CornerRadius" Value="5"/>
+        </Style>
+
+        <Style x:Key="controlsPanelInExpander" TargetType="Border" BasedOn="{StaticResource controlsPanel}">
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <Style x:Key="controlPanelLabel" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Top"/>
+            <Setter Property="Margin" Value="4,4,4,0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Foreground" Value="#4C443C"/>
+        </Style>
+
+        <Style x:Key="inlineLabelLeft" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,3,0"/>
+            <Setter Property="Foreground" Value="#4C443C"/>
+        </Style>
+
+        <Style x:Key="inlineLabelRight" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="3,0,0,0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#4C443C"/>
+        </Style>
+
+        <Style x:Key="checkbox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#4C443C"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="#544B4B">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0" Margin="12,12,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Background="#8C8677" Padding="4,4,1,4" Style="{StaticResource controlsPanel}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
+                        <StackPanel>
+
+                            <!-- Camera -->
+                            <Expander IsExpanded="False" Header="Camera">
+                                <Border Style="{StaticResource controlsPanelInExpander}">
+                                    <StackPanel Margin="8">
+
+                                        <UniformGrid Columns="2">
+                                            <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtCameraSize" Text="1"/>
+
+                                            <!-- TODO: Density -->
+
+                                            <TextBlock Text="Count" Style="{StaticResource inlineLabelLeft}"/>
+                                            <!--<TextBox Name="txtCameraCount" Text="3"/>-->
+                                            <TextBox Name="txtCameraCount" Text="1"/>
+                                        </UniformGrid>
+
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- Brain -->
+                            <Expander IsExpanded="False" Header="Brain">
+                                <Border Style="{StaticResource controlsPanelInExpander}">
+                                    <StackPanel Margin="8">
+
+                                        <!-- Old style brain | Other attempts at brains -->
+
+                                        <!-- Options for visualizing throughts -->
+
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- Direction Controller -->
+                            <Expander IsExpanded="False" Header="Dir Controller">
+                                <Border Style="{StaticResource controlsPanelInExpander}">
+                                    <StackPanel Margin="8">
+
+                                        <UniformGrid Columns="2">
+                                            <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtControllerSize" Text="1"/>
+
+                                            <TextBlock Text="Rings" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtDirControllerRingCount" ToolTip="2D Movement" Text="1"/>
+
+                                            <TextBlock Text="Spheres" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtDirControllerSphereCount" ToolTip="3D Movement" Text="0"/>
+                                        </UniformGrid>
+
+                                        <CheckBox Name="chkDirControllerRandomOrientation" Content="Random orientation" Margin="0,6,0,0"/>
+
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- Motor -->
+                            <Expander IsExpanded="False" Header="Motor">
+                                <Border Style="{StaticResource controlsPanelInExpander}">
+                                    <StackPanel Margin="8">
+
+                                        <UniformGrid Columns="2">
+                                            <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtMotorSize" Text="1"/>
+
+                                            <TextBlock Text="Impulse" ToolTip="Impulse Engine" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtImpulseCount" ToolTip="2D Movement" Text="1"/>
+
+                                            <!-- TODO: Thrusters, Tractor -->
+
+                                        </UniformGrid>
+
+                                        <CheckBox Name="chkMotorRandomOrientation" Content="Random orientation" Margin="0,6,0,0"/>
+
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                            <!-- Map Objects -->
+                            <Expander IsExpanded="False" Header="Map Objects">
+                                <Border Style="{StaticResource controlsPanelInExpander}">
+                                    <StackPanel Margin="8">
+
+                                        <UniformGrid Columns="2">
+                                            <TextBlock Text="Food" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtFoodCount" ToolTip="Bot should go touch it" Text="0"/>
+
+                                            <TextBlock Text="Poison" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtPoisonCount" ToolTip="Bot should avoid it" Text="0"/>
+
+                                            <TextBlock Text="Ice" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtIceCount" ToolTip="Neutral object" Text="0"/>
+
+                                            <TextBlock Text="Asteroid" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtAsteroidCount" ToolTip="Bot should attack it" Text="0"/>
+
+                                            <TextBlock Text="Egg" Style="{StaticResource inlineLabelLeft}"/>
+                                            <TextBox Name="txtEggCount" ToolTip="Bot should stay near it" Text="0"/>
+
+                                        </UniformGrid>
+
+                                        <!-- Options for initial placement: Grid | Random | 2D | 3D -->
+
+                                    </StackPanel>
+                                </Border>
+                            </Expander>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- Debug -->
+                    <Expander Grid.Row="1" IsExpanded="False" Header="Debug">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="8">
+                                    <!-- This should create a new window.  Draw dots in world coords, and spheres or lines to show radius -->
+                                    <!-- Also draw lines to show world boundry -->
+                                    <Button Click="DebugCameraWorld1_Click">
+                                        <Button.Content>
+                                            <TextBlock>Show camera world<LineBreak/>points/radii 1</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Click="DebugCameraWorld2_Click">
+                                        <Button.Content>
+                                            <TextBlock>Show camera world<LineBreak/>points/radii 2</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Click="DebugCameraWorld3_Click">
+                                        <Button.Content>
+                                            <TextBlock>Show camera world<LineBreak/>points/radii 3</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+
+                                    <Button Content="non linear distance" ToolTip="Converting linear model coords to non linear world coords" Margin="0,6,0,0" Click="ConeNonLinearDistance_Click"/>
+
+                                    <Button Content="pack neurons" Margin="0,6,0,0" Click="PackCube_Click"/>
+
+                                    <Button Margin="0,6,0,0" Click="ControllerVisual2D3D_Click">
+                                        <Button.Content>
+                                            <TextBlock>direction controller<LineBreak/>visual 2D/3D</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button Click="ControllerVisualTorus_Click">
+                                        <Button.Content>
+                                            <TextBlock>direction controller<LineBreak/>torus</TextBlock>
+                                        </Button.Content>
+                                    </Button>
+
+                                    <Button Content="Impulse Engine" Margin="0,6,0,0" Click="ImpulseEngineDesign_Click"/>
+
+                                    <Button Content="Set Impulse Neurons" Margin="0,6,0,0" Click="SetImpulseNeurons_Click"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Expander>
+
+                </Grid>
+            </Border>
+
+            <!-- Buttons -->
+            <Border Grid.Row="1" Style="{StaticResource controlsPanel}" VerticalAlignment="Bottom" Padding="6" Margin="0,12,0,0">
+                <StackPanel>
+                    <Button Content="Create Cameras" Click="CreateCameras_Click"/>
+                    <Button Content="Create Brains" Margin="0,4,0,0"/>
+                    <Button Content="Create Dir Controllers" Margin="0,4,0,0" Click="CreateDirectionControllers_Click"/>
+                    <Button Content="Create Motor" Margin="0,4,0,0" Click="CreateMotor_Click"/>
+                    <Button Content="Place map objects" Margin="0,4,0,0" Click="CreateMapObjects_Click"/>
+                    <Button Content="Clear" Margin="0,4,0,0" Click="Clear_Click"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Viewports -->
+        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" BorderThickness="2" BorderBrush="#3D352D" CornerRadius="3" Margin="9,12,12,12">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                    <LinearGradientBrush.GradientStops>
+                        <GradientStop Offset="0" Color="#E8E1CF"/>
+                        <GradientStop Offset=".6" Color="#DBD3BF"/>
+                        <GradientStop Offset="1" Color="#D6CCB0"/>
+                    </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width=".5*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2.5*"/>
+                    <RowDefinition Height=".5*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Neural Viewport (shows neurons, debug visuals) -->
+                <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="2" Name="pnlViewportNeural" Background="Transparent">
+                    <Viewport3D Name="_viewportNeural" IsHitTestVisible="False">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_cameraNeural" Position="0,0,7" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                    <DirectionalLight Color="#C0C0C0" Direction="-1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+                </Border>
+
+                <!-- Bot Viewport (what it would look like in the editor) -->
+                <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" Grid.RowSpan="2" Name="pnlViewportBot" Background="Transparent">
+                    <Viewport3D Name="_viewportBot" IsHitTestVisible="False">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_cameraBot" Position="0,0,7.5" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                    <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+                </Border>
+
+                <!-- World Viewport (the bot in the world with other objects placed around it) -->
+                <Border Grid.Column="0" Grid.Row="2" Name="pnlViewportWorld" Background="Transparent">
+                    <Viewport3D Name="_viewportWorld" IsHitTestVisible="False">
+                        <Viewport3D.Camera>
+                            <PerspectiveCamera x:Name="_cameraWorld" Position="0,0,30" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                        </Viewport3D.Camera>
+                        <ModelVisual3D>
+                            <ModelVisual3D.Content>
+                                <Model3DGroup>
+                                    <AmbientLight Color="DimGray" />
+                                    <DirectionalLight Color="White" Direction="1,-1,-1" />
+                                    <DirectionalLight Color="#303030" Direction="-1,1,1" />
+                                </Model3DGroup>
+                            </ModelVisual3D.Content>
+                        </ModelVisual3D>
+                    </Viewport3D>
+                </Border>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

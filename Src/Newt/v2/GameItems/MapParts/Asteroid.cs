@@ -1520,8 +1520,8 @@ namespace Game.Newt.v2.GameItems.MapParts
             {
                 // Material
                 MaterialGroup materials = new MaterialGroup();
-                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.AsteroidColor)));
-                materials.Children.Add(WorldColors.AsteroidSpecular);
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(WorldColors.Asteroid_Color)));
+                materials.Children.Add(WorldColors.Asteroid_Specular);
 
                 // Geometry Model
                 GeometryModel3D geometry = new GeometryModel3D();

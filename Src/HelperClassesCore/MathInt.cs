@@ -52,9 +52,47 @@ namespace Game.HelperClassesCore
         #endregion
         #region IEquatable<VectorInt> Members
 
-        public bool Equals(VectorInt other)
+        public static bool Equals(VectorInt vector1, VectorInt vector2)
         {
-            return _x == other.X && _y == other.Y;
+
+            // struct doesn't need a null check
+
+            // If both are null, or both are same instance, return true.
+            //if (System.Object.ReferenceEquals(vector1, vector2))      
+            //{
+            //    return true;
+            //}
+
+            //if (vector1 == null && vector2 == null)       // this == calls VectorInt's == operator overload, which comes back here...stack overflow
+            //if ((object)vector1 == null && (object)vector2 == null)
+            //{
+            //    return true;
+            //}
+            //else if ((object)vector1 == null || (object)vector2 == null)
+            //{
+            //    return false;
+            //}
+
+
+            return vector1.X == vector2.X && vector1.Y == vector2.Y;
+        }
+        public bool Equals(VectorInt vector)
+        {
+            return VectorInt.Equals(this, vector);
+        }
+        public override bool Equals(object obj)
+        {
+            if(!(obj is VectorInt))
+            {
+                return false;
+            }
+
+            return VectorInt.Equals(this, (VectorInt)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return Tuple.Create(_x, _y).GetHashCode();
         }
 
         #endregion

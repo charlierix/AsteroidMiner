@@ -2000,7 +2000,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             }
 
             SOMInput<SwarmBot1a>[] inputs = bots.
-                Select(o => new SOMInput<SwarmBot1a>() { Source = o, Weights = o.PositionWorld.ToArray() }).
+                Select(o => new SOMInput<SwarmBot1a>() { Source = o, Weights = o.PositionWorld.ToVectorND() }).
                 ToArray();
 
             SOMRules rules = SOMRules.GetRandomRules();

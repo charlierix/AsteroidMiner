@@ -160,7 +160,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return ShieldEnergyDesign.CreateGeometry(this.MaterialBrushes, this.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.ShieldBase, WorldColors.ShieldBaseSpecular, WorldColors.ShieldBaseEmissive, WorldColors.ShieldTractor, WorldColors.ShieldTractorSpecular,
+                WorldColors.ShieldBase_Color, WorldColors.ShieldBase_Specular, WorldColors.ShieldBase_Emissive, WorldColors.ShieldTractor_Color, WorldColors.ShieldTractor_Specular,
                 isFinal);
         }
 

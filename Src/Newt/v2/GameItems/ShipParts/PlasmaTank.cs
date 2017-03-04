@@ -152,7 +152,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             return FuelTankDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
                 GetTransformForGeometry(isFinal),
-                WorldColors.PlasmaTank, WorldColors.PlasmaTankSpecular,
+                WorldColors.PlasmaTank_Color, WorldColors.PlasmaTank_Specular,
                 isFinal);
         }
 

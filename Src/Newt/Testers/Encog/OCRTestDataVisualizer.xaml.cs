@@ -626,10 +626,10 @@ namespace Game.Newt.Testers.Encog
 
             foreach (Dot other in _dots.Dots.Where(o => o.Token != dot.Token && o.NNInput != null && o.NNOutput != null))       // when the network gets reset, it sets all the dots' NNInput/Output to null.  Then goes through each dot and reconstructs.  So if I/O is null, it just hasn't been reconstructed yet
             {
-                double distance = MathND.GetDistance(dot.NNInput, other.NNInput) * _networkInputs.DistanceMult;
+                double distance = (dot.NNInput.ToVectorND() - other.NNInput.ToVectorND()).Length * _networkInputs.DistanceMult;
                 inputs.Add(Tuple.Create(dot, other, distance));
 
-                distance = MathND.GetDistance(dot.NNOutput, other.NNOutput) * _networkOutputs.DistanceMult;
+                distance = (dot.NNOutput.ToVectorND() - other.NNOutput.ToVectorND()).Length * _networkOutputs.DistanceMult;
                 outputs.Add(Tuple.Create(dot, other, distance));
             }
 

@@ -37,8 +37,8 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
             Model3DGroup models = new Model3DGroup();
 
             // These are random, so pull them once
-            Color hullColor = WorldColors.SpaceStationHull;
-            SpecularMaterial hullSpecular = WorldColors.SpaceStationHullSpecular;
+            Color hullColor = WorldColors.SpaceStationHull_Color;
+            SpecularMaterial hullSpecular = WorldColors.SpaceStationHull_Specular;
 
             double radius = 8;
             this.Radius = radius * 1.25;		// this is the extremes of the force field
@@ -161,15 +161,15 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
 
             // Material
             //NOTE:  There is an issue with drawing objects inside a semitransparent object - they have to be added in order (so stuff added after a semitransparent won't be visible behind it)
-            Brush skinBrush = new SolidColorBrush(WorldColors.SpaceStationGlass);  // the skin is semitransparent, so you can see the components inside
+            Brush skinBrush = new SolidColorBrush(WorldColors.SpaceStationGlass_Color);  // the skin is semitransparent, so you can see the components inside
 
             material = new MaterialGroup();
             material.Children.Add(new DiffuseMaterial(skinBrush));
-            material.Children.Add(WorldColors.SpaceStationGlassSpecular_Front);     // more reflective (and white light)
+            material.Children.Add(WorldColors.SpaceStationGlass_Specular_Front);     // more reflective (and white light)
 
             MaterialGroup backMaterial = new MaterialGroup();
             backMaterial.Children.Add(new DiffuseMaterial(skinBrush));
-            backMaterial.Children.Add(WorldColors.SpaceStationGlassSpecular_Back);       // dark light, and not very reflective
+            backMaterial.Children.Add(WorldColors.SpaceStationGlass_Specular_Back);       // dark light, and not very reflective
 
             // Geometry Model
             geometry = new GeometryModel3D();
@@ -405,9 +405,9 @@ namespace Game.Newt.v2.AsteroidMiner.MapParts
                 #region Still Active
 
                 // Set the colors
-                _forceField_DiffuseMaterial.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceField, Colors.Transparent, _forceFieldOpacity));
-                _forceField_EmissiveFront.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceFieldEmissive_Front, Colors.Transparent, _forceFieldOpacity));
-                _forceField_EmissiveRear.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceFieldEmissive_Back, Colors.Transparent, _forceFieldOpacity));
+                _forceField_DiffuseMaterial.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceField_Color, Colors.Transparent, _forceFieldOpacity));
+                _forceField_EmissiveFront.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceField_Emissive_Front, Colors.Transparent, _forceFieldOpacity));
+                _forceField_EmissiveRear.Brush = new SolidColorBrush(UtilityWPF.AlphaBlend(WorldColors.SpaceStationForceField_Emissive_Back, Colors.Transparent, _forceFieldOpacity));
 
                 // Diminish the opacity for the next tick
                 if (_timer.Interval.TotalMilliseconds > FIELDDURATION)

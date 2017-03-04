@@ -1,7 +1,7 @@
-﻿<Window x:Class="Game.Newt.Testers.EvenDistributionCube"
+﻿<Window x:Class="Game.Newt.Testers.EvenDistributionOther"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Even Distribution Cube" ResizeMode="CanResizeWithGrip" Background="#404040" Width="773" Height="609" Loaded="Window_Loaded">
+        Title="Even Distribution Other" ResizeMode="CanResizeWithGrip" Background="#404040" Width="773" Height="609" Loaded="Window_Loaded">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="boolToVis"/>
 
@@ -28,8 +28,9 @@
                 <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
                     <StackPanel Grid.IsSharedSizeScope="True">
 
-                        <!-- Add Dots -->
-                        <Grid>
+                        <ComboBox Name="cboShape" SelectionChanged="cboShape_SelectionChanged"/>
+
+                        <Grid Margin="0,6,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="auto" SharedSizeGroup="labelSize"/>
                                 <ColumnDefinition Width="6"/>
@@ -42,25 +43,42 @@
                                 <RowDefinition Height="auto"/>
                                 <RowDefinition Height="auto"/>
                                 <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Column="0" Grid.Row="0" Text="Size X" Style="{StaticResource label}"/>
+                            <!-- Cube Props -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Name="lblSizeX" Text="Size X" Style="{StaticResource label}"/>
                             <TextBox Grid.Column="2" Grid.Row="0" Name="txtSizeX" Text="10" TextChanged="Double_TextChanged"/>
 
-                            <TextBlock Grid.Column="0" Grid.Row="1" Text="Size Y" Style="{StaticResource label}"/>
+                            <TextBlock Grid.Column="0" Grid.Row="1" Name="lblSizeY" Text="Size Y" Style="{StaticResource label}"/>
                             <TextBox Grid.Column="2" Grid.Row="1" Name="txtSizeY" Text="10" TextChanged="Double_TextChanged"/>
 
-                            <TextBlock Grid.Column="0" Grid.Row="2" Text="Size Z" Style="{StaticResource label}"/>
+                            <TextBlock Grid.Column="0" Grid.Row="2" Name="lblSizeZ" Text="Size Z" Style="{StaticResource label}"/>
                             <TextBox Grid.Column="2" Grid.Row="2" Name="txtSizeZ" Text="10" TextChanged="Double_TextChanged"/>
 
-                            <TextBlock Grid.Column="0" Grid.Row="3" Text="#" Style="{StaticResource label}"/>
-                            <TextBox Grid.Column="2" Grid.Row="3" Name="txtNumDots" Text="10" TextChanged="Int_TextChanged"/>
+                            <!-- Cone Props -->
+                            <TextBlock Grid.Column="0" Grid.Row="0" Name="lblHeightMin" Text="Height min" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtHeightMin" Text="0" TextChanged="Double_TextChanged"/>
 
-                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Name="chkRandomWeights" Content="Random" ToolTip="Random Weights"/>
-                            <TextBlock Grid.Column="0" Grid.Row="5" Text="Weight" Style="{StaticResource label}"/>
-                            <TextBox Grid.Column="2" Grid.Row="5" Name="txtWeight" Text="1" TextChanged="Double_TextChanged"/>
+                            <TextBlock Grid.Column="0" Grid.Row="1" Name="lblHeightMax" Text="Height max" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="1" Name="txtHeightMax" Text="10" TextChanged="Double_TextChanged"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="2" Name="lblAngle" Text="Angle" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="2" Name="txtAngle" Text="90" TextChanged="Double_TextChanged"/>
+
+                            <!-- Common Props -->
+                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6" Name="chkRandomWeights" Content="Random" ToolTip="Random Weights"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="7" Text="#" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="7" Name="txtNumDots" Text="10" TextChanged="Int_TextChanged"/>
+
+                            <TextBlock Grid.Column="0" Grid.Row="8" Text="Weight" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="8" Name="txtWeight" Text="1" TextChanged="Double_TextChanged"/>
                         </Grid>
 
+                        <!-- Add Dots -->
                         <Button Content="Add Dots" Margin="0,6,0,0" Click="AddDots_Click"/>
                         <Button Content="Add Static Dots" Margin="0,2,0,0" Click="AddStaticDots_Click"/>
 

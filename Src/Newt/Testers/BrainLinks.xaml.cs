@@ -18,7 +18,7 @@ using System.Windows.Shapes;
 using System.Xaml;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.Testers

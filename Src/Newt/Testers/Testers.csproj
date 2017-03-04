@@ -96,6 +96,9 @@
     <Compile Include="BrainLinks.xaml.cs">
       <DependentUpon>BrainLinks.xaml</DependentUpon>
     </Compile>
+    <Compile Include="BrainTester2.xaml.cs">
+      <DependentUpon>BrainTester2.xaml</DependentUpon>
+    </Compile>
     <Compile Include="CameraTester.xaml.cs">
       <DependentUpon>CameraTester.xaml</DependentUpon>
     </Compile>
@@ -176,8 +179,8 @@
     <Compile Include="Encog\OCRTestDataVisualizer.xaml.cs">
       <DependentUpon>OCRTestDataVisualizer.xaml</DependentUpon>
     </Compile>
-    <Compile Include="EvenDistributionCube.xaml.cs">
-      <DependentUpon>EvenDistributionCube.xaml</DependentUpon>
+    <Compile Include="EvenDistributionOther.xaml.cs">
+      <DependentUpon>EvenDistributionOther.xaml</DependentUpon>
     </Compile>
     <Compile Include="HopfieldNetwork.xaml.cs">
       <DependentUpon>HopfieldNetwork.xaml</DependentUpon>
@@ -332,6 +335,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="BrainTester2.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CameraTester.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -442,7 +449,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="EvenDistributionCube.xaml">
+    <Page Include="EvenDistributionOther.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

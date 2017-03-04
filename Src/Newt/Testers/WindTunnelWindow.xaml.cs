@@ -13,7 +13,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Primitives3D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.NewtonDynamics;
 using Game.HelperClassesCore;
 

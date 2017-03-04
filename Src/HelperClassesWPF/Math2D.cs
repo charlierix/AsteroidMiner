@@ -720,7 +720,7 @@ namespace Game.HelperClassesWPF
                 /// <summary>
                 /// Interprete the vector as a double-array
                 /// </summary>
-                public static explicit operator double[](Vector_ex A)
+                public static explicit operator double[] (Vector_ex A)
                 {
                     return A.data;
                 }
@@ -3155,7 +3155,7 @@ namespace Game.HelperClassesWPF
 
                 int nv = n;
                 int count = 2 * nv;
-                for (int m = 0, v = nv - 1; nv > 2; )
+                for (int m = 0, v = nv - 1; nv > 2;)
                 {
                     if ((count--) <= 0)
                     {
@@ -4864,11 +4864,11 @@ namespace Game.HelperClassesWPF
 
         public static Point[] ApplyBallOfSprings(Point[] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
         {
-            double[][] pos = positions.
-                Select(o => new[] { o.X, o.Y }).
+            VectorND[] pos = positions.
+                Select(o => new VectorND(new[] { o.X, o.Y })).
                 ToArray();
 
-            double[][] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
+            VectorND[] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
 
             return retVal.
                 Select(o => new Point(o[0], o[1])).
@@ -6011,7 +6011,7 @@ namespace Game.HelperClassesWPF
 
                     return edge.Direction.Value;
 
-                    #endregion
+                #endregion
 
                 case EdgeType.Segment:
                     #region Segment
@@ -6029,7 +6029,7 @@ namespace Game.HelperClassesWPF
                         throw new ArgumentException("The index passed in doesn't belong to this edge");
                     }
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("Unknown EdgeType: " + edge.EdgeType.ToString());

@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media.Media3D;
 
-namespace Game.HelperClassesWPF.Primitives3D
+namespace Game.HelperClassesWPF.Controls3D
 {
     public abstract class TessellianVisual3D : PrimitiveVisual3D, ISupportInitialize
     {

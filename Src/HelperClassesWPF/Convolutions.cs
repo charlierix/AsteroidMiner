@@ -556,14 +556,9 @@ namespace Game.HelperClassesWPF
 
         public static Convolution2D Normalize(Convolution2D conv, double scale = 1d)
         {
-            double[] values = MathND.Normalize(conv.Values);
-
-            if(!scale.IsNearValue(1d))
-            {
-                values = values.
-                    Select(o => o * scale).
-                    ToArray();
-            }
+            VectorND values = conv.Values.ToVectorND();
+            values.ScaledCap();
+            values *= scale;
 
             string description = "";
             if (!string.IsNullOrEmpty(conv.Description))
@@ -571,7 +566,7 @@ namespace Game.HelperClassesWPF
                 description = string.Format("Normalize({0})", description);
             }
 
-            return new Convolution2D(values, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder, description);
+            return new Convolution2D(values.VectorArray, conv.Width, conv.Height, conv.IsNegPos, conv.Gain, conv.Iterations, conv.ExpandBorder, description);
         }
 
         #endregion
@@ -2193,7 +2188,7 @@ namespace Game.HelperClassesWPF
                 //TODO: This is pretty crude.  If there are large gaps, this won't distribute evenly
                 //ex: enlarging from 2 to 9, you would get 0,1,1,1,1,1,1,1,1
                 //But maxpool shouldn't be used for big enlarges, so I don't want to take the expense of figuring out how to distribute more evenly
-                if(retVal[cntr].Item2 < retVal[cntr].Item1)
+                if (retVal[cntr].Item2 < retVal[cntr].Item1)
                 {
                     retVal[cntr] = Tuple.Create(retVal[cntr].Item1, retVal[cntr].Item1);
                 }

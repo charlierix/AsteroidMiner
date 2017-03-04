@@ -58,14 +58,14 @@ namespace Game.Newt.v2.GameItems.Collections
 
         public class SOMItem : ISOMInput
         {
-            public SOMItem(double[] original, double[] vector)
+            public SOMItem(VectorND original, VectorND vector)
             {
                 this.Original = original;
                 this.Weights = vector;
             }
 
-            public readonly double[] Original;
-            public double[] Weights { get; private set; }
+            public readonly VectorND Original;
+            public VectorND Weights { get; private set; }
         }
 
         #endregion
@@ -133,7 +133,7 @@ namespace Game.Newt.v2.GameItems.Collections
 
         #region Public Methods
 
-        public void Add(double[] item)
+        public void Add(VectorND item)
         {
             //TODO: Probably want something that ignores images if this is too soon from a previous call
 
@@ -176,19 +176,19 @@ namespace Game.Newt.v2.GameItems.Collections
             if (newItemBatch != null)
             {
                 Task.Run(() => { _result = ProcessNewItemBatch(newItemBatch, _discardDupes, _dupeDistSquared, _result); }).
-                    ContinueWith(t => { lock (_lock)  _isProcessingBatch = false; });
+                    ContinueWith(t => { lock (_lock) _isProcessingBatch = false; });
             }
 
             #endregion
         }
 
-        public double[][] GetSimilarItems(double[] item, int count)
+        public VectorND[] GetSimilarItems(VectorND item, int count)
         {
-            return new double[0][];
+            return new VectorND[0];
         }
-        public double[][] GetDissimilarItems(IEnumerable<double> items, int count)
+        public VectorND[] GetDissimilarItems(IEnumerable<VectorND> items, int count)
         {
-            return new double[0][];
+            return new VectorND[0];
         }
 
         #endregion
@@ -289,7 +289,7 @@ namespace Game.Newt.v2.GameItems.Collections
                 rand.NextDouble(.05, .15));
         }
 
-        private static SOMItem GetSOMItem(double[] item, ToVectorInstructions instr)
+        private static SOMItem GetSOMItem(VectorND item, ToVectorInstructions instr)
         {
             switch (instr.FromSizes.Length)
             {
@@ -305,7 +305,7 @@ namespace Game.Newt.v2.GameItems.Collections
             }
         }
 
-        private static SOMItem GetSOMItem_1D(double[] item, ToVectorInstructions instr)
+        private static SOMItem GetSOMItem_1D(VectorND item, ToVectorInstructions instr)
         {
             if (instr.FromSizes[0] == instr.ToSize)
             {
@@ -319,14 +319,15 @@ namespace Game.Newt.v2.GameItems.Collections
 
             BezierSegment3D[] bezier = BezierUtil.GetBezierSegments(points);
 
-            double[] resized = BezierUtil.GetPath(instr.ToSize, bezier).
+            VectorND resized = BezierUtil.GetPath(instr.ToSize, bezier).
                 Select(o => o.X).
-                ToArray();
+                ToArray().
+                ToVectorND();
 
             return new SOMItem(item, resized);
         }
 
-        private static SOMItem GetSOMItem_2D_Color(double[] item, ToVectorInstructions instr)
+        private static SOMItem GetSOMItem_2D_Color(VectorND item, ToVectorInstructions instr)
         {
             int width = instr.FromSizes[0];
             int height = instr.FromSizes[1];
@@ -375,15 +376,15 @@ namespace Game.Newt.v2.GameItems.Collections
 
             #endregion
 
-            return new SOMItem(item, merged);
+            return new SOMItem(item, merged.ToVectorND());
         }
-        private static SOMItem GetSOMItem_2D_Gray(double[] item, ToVectorInstructions instr)
+        private static SOMItem GetSOMItem_2D_Gray(VectorND item, ToVectorInstructions instr)
         {
-            Convolution2D conv = new Convolution2D(item, instr.FromSizes[0], instr.FromSizes[1], false);
+            Convolution2D conv = new Convolution2D(item.VectorArray, instr.FromSizes[0], instr.FromSizes[1], false);
 
             conv = Convolute(conv, instr);
 
-            return new SOMItem(item, conv.Values);
+            return new SOMItem(item, conv.Values.ToVectorND());
         }
 
         private static Convolution2D Convolute(Convolution2D conv, ToVectorInstructions instr)
@@ -461,7 +462,7 @@ namespace Game.Newt.v2.GameItems.Collections
         {
             foreach (ISOMInput other in others)
             {
-                double distSqr = MathND.GetDistanceSquared(item.Weights, other.Weights);
+                double distSqr = (item.Weights - other.Weights).LengthSquared;
 
                 if (distSqr < dupeDistSquared)
                 {

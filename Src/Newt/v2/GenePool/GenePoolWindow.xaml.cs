@@ -19,7 +19,6 @@ using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
-using Game.Newt.v2.GenePool.MapParts;
 
 namespace Game.Newt.v2.GenePool
 {
@@ -223,7 +222,7 @@ namespace Game.Newt.v2.GenePool
 
                 _selectionLogic.SelectableTypes.Add(typeof(Bot));
                 _selectionLogic.SelectableTypes.Add(typeof(Mineral));
-                _selectionLogic.SelectableTypes.Add(typeof(Egg));
+                _selectionLogic.SelectableTypes.Add(typeof(Egg<ShipDNA>));
 
                 _selectionLogic.ItemSelected += new EventHandler<ItemSelectedArgs>(SelectionLogic_ItemSelected);
 
@@ -575,7 +574,13 @@ namespace Game.Newt.v2.GenePool
 
                 Point3D position = bot.PositionWorld + Math3D.GetRandomVector_Spherical_Shell(bot.Radius * 1.5d);
 
-                Egg egg = new Egg(position, _world, _material_Egg, _itemOptions, bot.GetNewDNA());
+                // The radius should be 20% the size of the adult ship
+                ShipDNA dna = bot.GetNewDNA();
+                double radius = dna.PartsByLayer.SelectMany(o => o.Value).
+                    Max(o => o.Position.ToVector().Length + Math1D.Max(o.Scale.X, o.Scale.Y, o.Scale.Z))
+                    * .2d;
+
+                Egg<ShipDNA> egg = new Egg<ShipDNA>(position, radius, _world, _material_Egg, _itemOptions, dna);
 
                 egg.PhysicsBody.AngularVelocity = bot.PhysicsBody.AngularVelocity;
                 egg.PhysicsBody.Velocity = bot.PhysicsBody.Velocity;

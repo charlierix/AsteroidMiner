@@ -565,7 +565,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: Neuron_PositionSensor
+    #region Class: Neuron_SensorPosition
 
     /// <summary>
     /// This is a readonly neuron that is meant to be used by sensors.  There are extra properties for position length, and the value
