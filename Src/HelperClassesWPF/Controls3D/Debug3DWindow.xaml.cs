@@ -23,6 +23,10 @@ namespace Game.HelperClassesWPF.Controls3D
     {
         #region Declaration Section
 
+        public const string AXISCOLOR_X = "FF6060";
+        public const string AXISCOLOR_Y = "00C000";
+        public const string AXISCOLOR_Z = "6060FF";
+
         private TrackBallRoam _trackball = null;
 
         private bool _wasSetCameraCalled = false;
@@ -85,21 +89,28 @@ namespace Game.HelperClassesWPF.Controls3D
 
         #region Public Methods
 
-        public void AddDot(Point3D position, double radius, Color color, bool isShiny = true)
+        public void AddAxisLines(double length, double thickness)
+        {
+            AddLine(new Point3D(0, 0, 0), new Point3D(length, 0, 0), thickness, UtilityWPF.ColorFromHex(AXISCOLOR_X));
+            AddLine(new Point3D(0, 0, 0), new Point3D(0, length, 0), thickness, UtilityWPF.ColorFromHex(AXISCOLOR_Y));
+            AddLine(new Point3D(0, 0, 0), new Point3D(0, 0, length), thickness, UtilityWPF.ColorFromHex(AXISCOLOR_Z));
+        }
+
+        public void AddDot(Point3D position, double radius, Color color, bool isShiny = true, bool isHiRes = false)
         {
             Material material = GetMaterial(isShiny, color);
 
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = material;
             geometry.BackMaterial = material;
-            geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, radius);
+            geometry.Geometry = UtilityWPF.GetSphere_Ico(radius, isHiRes ? 3 : 1, true);
             geometry.Transform = new TranslateTransform3D(position.ToVector());
 
             ModelVisual3D visual = new ModelVisual3D();
             visual.Content = geometry;
             this.Visuals3D.Add(visual);
         }
-        public void AddDots(IEnumerable<Point3D> positions, double radius, Color color, bool isShiny = true)
+        public void AddDots(IEnumerable<Point3D> positions, double radius, Color color, bool isShiny = true, bool isHiRes = false)
         {
             Model3DGroup geometries = new Model3DGroup();
 
@@ -110,7 +121,7 @@ namespace Game.HelperClassesWPF.Controls3D
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = material;
                 geometry.BackMaterial = material;
-                geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, radius);
+                geometry.Geometry = UtilityWPF.GetSphere_Ico(radius, isHiRes ? 3 : 1, true);
                 geometry.Transform = new TranslateTransform3D(pos.ToVector());
 
                 geometries.Children.Add(geometry);
@@ -120,7 +131,7 @@ namespace Game.HelperClassesWPF.Controls3D
             visual.Content = geometries;
             this.Visuals3D.Add(visual);
         }
-        public void AddDots(IEnumerable<Tuple<Point3D, double, Color, bool>> definitions)
+        public void AddDots(IEnumerable<Tuple<Point3D, double, Color, bool, bool>> definitions)
         {
             Model3DGroup geometries = new Model3DGroup();
 
@@ -131,7 +142,7 @@ namespace Game.HelperClassesWPF.Controls3D
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = material;
                 geometry.BackMaterial = material;
-                geometry.Geometry = UtilityWPF.GetSphere_LatLon(2, def.Item2);
+                geometry.Geometry = UtilityWPF.GetSphere_Ico(def.Item2, def.Item5 ? 3 : 1, true);
                 geometry.Transform = new TranslateTransform3D(def.Item1.ToVector());
 
                 geometries.Children.Add(geometry);
@@ -139,6 +150,26 @@ namespace Game.HelperClassesWPF.Controls3D
 
             ModelVisual3D visual = new ModelVisual3D();
             visual.Content = geometries;
+            this.Visuals3D.Add(visual);
+        }
+
+        public void AddEllipse(Point3D position, Vector3D radius, Color color, bool isShiny = true, bool isHiRes = false)
+        {
+            Material material = GetMaterial(isShiny, color);
+
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = material;
+            geometry.BackMaterial = material;
+            geometry.Geometry = UtilityWPF.GetSphere_Ico(1, isHiRes ? 3 : 1, true);
+
+            Transform3DGroup transform = new Transform3DGroup();
+            transform.Children.Add(new ScaleTransform3D(radius));
+            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
+
+            geometry.Transform = transform;
+
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = geometry;
             this.Visuals3D.Add(visual);
         }
 
@@ -170,12 +201,149 @@ namespace Game.HelperClassesWPF.Controls3D
             this.Visuals3D.Add(visual);
         }
 
-        public void AddMessage(string text, bool isBottom = true, string color = "FFFFFF")
+        public void AddPlane(ITriangle plane, double size, Color color, Color? reflectiveColor = null, int numCells = 12, Point3D? center = null)
         {
+            this.Visuals3D.Add(new ModelVisual3D()
+            {
+                Content = UtilityWPF.GetPlane(plane, size, color, reflectiveColor, numCells, center),
+            });
+        }
+
+        public void AddCircle(Point3D center, double radius, double thickness, Color color, ITriangle plane = null, bool isShiny = true)
+        {
+            Material material = GetMaterial(isShiny, color);
+
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = material;
+            geometry.BackMaterial = material;
+
+            geometry.Geometry = UtilityWPF.GetTorus(30, 7, thickness / 2, radius);
+
+            Transform3DGroup transform = new Transform3DGroup();
+
+            if (plane == null)
+            {
+                transform.Children.Add(new TranslateTransform3D(center.ToVector()));
+            }
+            else
+            {
+                var transform2D = Math2D.GetTransformTo2D(plane);
+
+                // Transform the center point down to 2D
+                Point3D center2D = transform2D.Item1.Transform(center);
+
+                // Add a translate along the 2D plane
+                transform.Children.Add(new TranslateTransform3D(center2D.ToVector()));
+
+                // Now that it's positioned correctly in 2D, transform the whole thing into 3D (to line up with the 3D plane that was passed in)
+                transform.Children.Add(transform2D.Item2);
+            }
+
+            geometry.Transform = transform;
+
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = geometry;
+            this.Visuals3D.Add(visual);
+        }
+
+        public void AddHull(TriangleIndexed[] hull, Color? faceColor = null, Color? edgeColor = null, double? edgeThickness = null, bool isShinyFaces = true, bool isIndependentFaces = true)
+        {
+            // Lines
+            if (edgeColor != null && edgeThickness != null)
+            {
+                var hullLines = TriangleIndexed.GetUniqueLines(hull);
+                var hullLinePoints = hullLines.
+                    Select(o => Tuple.Create(hull[0].AllPoints[o.Item1], hull[0].AllPoints[o.Item2]));
+
+                AddLines(hullLinePoints, edgeThickness.Value, edgeColor.Value);
+            }
+
+            // Hull
+            if (faceColor != null)
+            {
+                var material = GetMaterial(isShinyFaces, faceColor.Value);
+
+                GeometryModel3D geometry = new GeometryModel3D();
+                geometry.Material = material;
+                geometry.BackMaterial = material;
+
+                if (isIndependentFaces)
+                {
+                    geometry.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(hull);
+                }
+                else
+                {
+                    geometry.Geometry = UtilityWPF.GetMeshFromTriangles(hull);
+                }
+
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = geometry;
+                this.Visuals3D.Add(visual);
+            }
+        }
+
+        public void AddMesh(MeshGeometry3D mesh, Color color, bool isShinyFaces = true)
+        {
+            var material = GetMaterial(isShinyFaces, color);
+
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = material;
+            geometry.BackMaterial = material;
+
+            geometry.Geometry = mesh;
+
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = geometry;
+            this.Visuals3D.Add(visual);
+        }
+
+        /// <summary>
+        /// This is the same as AddMessage.  I constantly find myself trying to type AddText, but the properties are
+        /// called Message
+        /// </summary>
+        public void AddText(string text, bool isBottom = true, string color = null)
+        {
+            AddMessage(text, isBottom, color);
+        }
+        public void AddMessage(string text, bool isBottom = true, string color = null)
+        {
+            #region fore color
+
+            Color foreColor;
+
+            if (color == null)
+            {
+                if (this.Background is SolidColorBrush)
+                {
+                    Color backColor = ((SolidColorBrush)this.Background).Color;
+                    ColorHSV oppositeColor = UtilityWPF.OppositeColor(backColor).ToHSV();
+
+                    // Ignore color portion, just go black or white
+                    if (oppositeColor.V > 50)
+                    {
+                        foreColor = Colors.White;
+                    }
+                    else
+                    {
+                        foreColor = Colors.Black;
+                    }
+                }
+                else
+                {
+                    foreColor = Colors.Black;
+                }
+            }
+            else
+            {
+                foreColor = UtilityWPF.ColorFromHex(color);
+            }
+
+            #endregion
+
             TextBlock textBlock = new TextBlock()
             {
                 Text = text,
-                Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex(color)),
+                Foreground = new SolidColorBrush(foreColor),
             };
 
             if (isBottom)
@@ -195,6 +363,24 @@ namespace Game.HelperClassesWPF.Controls3D
             _camera.Position = position;
             _camera.LookDirection = lookDirection;
             _camera.UpDirection = upDirection;
+        }
+
+        public static Material GetMaterial(bool isShiny, Color color)
+        {
+            // This was copied from BillboardLine3D (then modified a bit)
+
+            if (isShiny)
+            {
+                MaterialGroup retVal = new MaterialGroup();
+                retVal.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+                retVal.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40989898")), 2));
+
+                return retVal;
+            }
+            else
+            {
+                return UtilityWPF.GetUnlitMaterial(color);
+            }
         }
 
         #endregion
@@ -217,6 +403,24 @@ namespace Game.HelperClassesWPF.Controls3D
                 if (!_wasSetCameraCalled && this.Visuals3D.Count > 0)
                 {
                     AutoSetCamera();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CloseAll_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                foreach (Window window in Application.Current.Windows)
+                {
+                    if (window is Debug3DWindow)
+                    {
+                        window.Close();
+                    }
                 }
             }
             catch (Exception ex)
@@ -421,24 +625,6 @@ namespace Game.HelperClassesWPF.Controls3D
 
             // Set camera to look at center, at a distance of X times average
             return Tuple.Create(new Point3D(center.X, center.Y, center.Z + cameraDist), new Vector3D(0, 0, -1), new Vector3D(0, 1, 0));
-        }
-
-        private static Material GetMaterial(bool isShiny, Color color)
-        {
-            // This was copied from BillboardLine3D (then modified a bit)
-
-            if (isShiny)
-            {
-                MaterialGroup retVal = new MaterialGroup();
-                retVal.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-                retVal.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40989898")), 2));
-
-                return retVal;
-            }
-            else
-            {
-                return UtilityWPF.GetUnlitMaterial(color);
-            }
         }
 
         private static Point3D[] TryGetVisualPoints(IEnumerable<Visual3D> visuals)

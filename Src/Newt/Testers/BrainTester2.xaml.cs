@@ -419,11 +419,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 600,
-                    Height = 600,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 window.AddDot(new Point3D(0, 0, 0), .75, Colors.Yellow);
 
@@ -531,11 +527,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 600,
-                    Height = 600,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 window.AddDot(new Point3D(0, 0, 0), .75, Colors.Yellow);
 
@@ -596,11 +588,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 600,
-                    Height = 600,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 window.AddDot(new Point3D(0, 0, 0), .75, Colors.Yellow);
 
@@ -634,7 +622,7 @@ namespace Game.Newt.Testers
                     //}),
                     //.05, Colors.White);
 
-                    window.AddDots(neurons.Select(o => Tuple.Create(transform.Transform(o.Item2), o.Item3, UtilityWPF.ColorFromHex("20FFFFFF"), false)));
+                    window.AddDots(neurons.Select(o => Tuple.Create(transform.Transform(o.Item2), o.Item3, UtilityWPF.ColorFromHex("20FFFFFF"), false, false)));
                 }
 
                 window.Show();
@@ -689,11 +677,7 @@ namespace Game.Newt.Testers
 
                 #region draw
 
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 600,
-                    Height = 600,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 window.AddDot(new Point3D(0, 0, 0), .75, Colors.Yellow);
 
@@ -717,11 +701,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 800,
-                    Height = 800,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 window.AddDot(new Point3D(-.5, -.5, -.5), .015, UtilityWPF.ColorFromHex("A0A0A0"));
                 window.AddDot(new Point3D(.5, .5, .5), .015, UtilityWPF.ColorFromHex("A0A0A0"));
@@ -776,11 +756,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 800,
-                    Height = 800,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 var lines = GetCubeLines(1);
                 window.AddLines(lines, .002, Colors.Silver);
@@ -901,8 +877,6 @@ namespace Game.Newt.Testers
             {
                 Debug3DWindow window = new Debug3DWindow()
                 {
-                    Width = 800,
-                    Height = 800,
                     Background = new SolidColorBrush(UtilityWPF.ColorFromHex("999")),
                 };
 
@@ -1028,11 +1002,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                Debug3DWindow window = new Debug3DWindow()
-                {
-                    Width = 800,
-                    Height = 800,
-                };
+                Debug3DWindow window = new Debug3DWindow();
 
                 double OUTERSCALE = 1;
                 double SCALE = .7;
@@ -1866,13 +1836,13 @@ namespace Game.Newt.Testers
                 INeuronContainer neuralPart;
                 if (isRing)
                 {
-                    controllers[cntr].Ring = new DirectionControllerRing(_editorOptions, _itemOptions, dna[cntr], _containers == null ? null : _containers.Energy);
+                    controllers[cntr].Ring = new DirectionControllerRing(_editorOptions, _itemOptions, dna[cntr], _containers == null ? null : _containers.Energy, null, null);     // motors could be created later, and this tester isn't concerned with that level of functionality
                     part = controllers[cntr].Ring;
                     neuralPart = controllers[cntr].Ring;
                 }
                 else
                 {
-                    controllers[cntr].Sphere = new DirectionControllerSphere(_editorOptions, _itemOptions, dna[cntr], _containers == null ? null : _containers.Energy);
+                    controllers[cntr].Sphere = new DirectionControllerSphere(_editorOptions, _itemOptions, dna[cntr], _containers == null ? null : _containers.Energy, null, null);
                     part = controllers[cntr].Sphere;
                     neuralPart = controllers[cntr].Sphere;
                 }

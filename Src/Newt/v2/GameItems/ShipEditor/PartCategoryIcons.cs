@@ -9,6 +9,8 @@ using System.Windows.Media;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
+    // Used XDraw to make these (copied the export into c#)
+    // https://xdraw.codeplex.com/
     public static class PartCategoryIcons
     {
         public static UIElement GetIcon(string tabName, string category, Brush brushPrimary, Brush brushSecondary, double size = 24)
@@ -495,9 +497,29 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             GeometryDrawing drawing = null;
 
-            //TODO: Make some kind of a cloud like icon
+            #region left lobe
 
-            #region circle
+            drawing = new GeometryDrawing()
+            {
+                //Brush = brushSecondary,
+
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushPrimary,
+                },
+                Geometry = Geometry.Parse("M 51,85 L 51,15 Q 39,8 32,22 Q 13,32 22,50 Q 16,67 29,74 Q 30,86 41,87 Q 47,90 51,85"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
 
             drawing = new GeometryDrawing()
             {
@@ -505,18 +527,136 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 {
                     Thickness = 5,
                     DashCap = PenLineCap.Flat,
-                    StartLineCap = PenLineCap.Flat,
-                    EndLineCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
                     LineJoin = PenLineJoin.Miter,
                     MiterLimit = 10,
                     Brush = brushPrimary,
                 },
-                Geometry = new EllipseGeometry()
+                Geometry = Geometry.Parse("M 22,50 Q 26,37 37,41"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
                 {
-                    Center = new Point(50, 50),
-                    RadiusX = 40,
-                    RadiusY = 40,
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushSecondary,
                 },
+                Geometry = Geometry.Parse("M 31,59 Q 41,56 43,69"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushSecondary,
+                },
+                Geometry = Geometry.Parse("M 33,31 Q 42,32 42,25"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+
+            #region right lobe
+
+            drawing = new GeometryDrawing()
+            {
+                //Brush = brushSecondary,
+
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushPrimary,
+                },
+                Geometry = Geometry.Parse("M 51,85 L 51,15 Q 59,7 70,20 Q 83,25 83,45 Q 86,60 79,65 Q 79,80 67,82 Q 55,93 51,85"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushPrimary,
+                },
+                Geometry = Geometry.Parse("M 83,45 Q 76,58 67,53"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushSecondary,
+                },
+                Geometry = Geometry.Parse("M 69,44 Q 58,40 61,30"),
+            };
+
+            group.Children.Add(drawing);
+
+            #endregion
+            #region arc
+
+            drawing = new GeometryDrawing()
+            {
+                Pen = new Pen()
+                {
+                    Thickness = 5,
+                    DashCap = PenLineCap.Flat,
+                    StartLineCap = PenLineCap.Round,
+                    EndLineCap = PenLineCap.Round,
+                    LineJoin = PenLineJoin.Miter,
+                    MiterLimit = 10,
+                    Brush = brushSecondary,
+                },
+                Geometry = Geometry.Parse("M 61,69 Q 67,71 70,65"),
             };
 
             group.Children.Add(drawing);

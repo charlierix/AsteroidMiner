@@ -9,6 +9,15 @@ using System.Threading.Tasks.Schedulers;
 
 namespace Game.HelperClassesCore.Threads
 {
+
+
+    //TODO: Add some kind of Priority property to IRoundRobinWorker.  If the worker is used to train lots of independent
+    //things, then as each individual task's score improves, it could lower its priority.  This will give the round robin scheduler
+    //a hint to give more steps to the high priority tasks (the ones that aren't as far along in their training)
+
+
+
+
     /// <summary>
     /// This is meant for workers that need to do many steps before they are finished.  The workers share a single thread, and
     /// are called round robin

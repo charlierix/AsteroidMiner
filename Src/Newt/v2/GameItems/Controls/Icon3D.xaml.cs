@@ -344,17 +344,17 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #region Private Methods
 
-        private async Task FinishLoadingShipAsync(NewtonDynamics.World world)
+        private void FinishLoadingShipAsync(NewtonDynamics.World world)
         {
             // Show the ship
-            await RenderShipAsync(world);
+            RenderShipAsync(world);
 
             // Lights
             InitializeLight();
         }
 
         //TODO: Make a static method off of Ship, and don't rely on world: public static Visual3D CreateVisual(ShipDNA dna, bool isDesign)
-        private async Task RenderShipAsync(NewtonDynamics.World world)
+        private void RenderShipAsync(NewtonDynamics.World world)
         {
             ShipExtraArgs args = new ShipExtraArgs()
             {

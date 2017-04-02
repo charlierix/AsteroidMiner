@@ -24,6 +24,14 @@ namespace Game.HelperClassesCore
             return Convert.ToDouble(value);
         }
 
+        public static byte ToByte(this int value)
+        {
+            if (value < 0) value = 0;
+            else if (value > 255) value = 255;
+
+            return Convert.ToByte(value);
+        }
+
         #endregion
 
         #region double

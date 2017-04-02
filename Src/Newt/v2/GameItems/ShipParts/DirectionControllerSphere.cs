@@ -206,7 +206,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly IContainer _energyTanks;
 
+        private readonly DirectionControllerRing.NeuronShell _neuronsLinear;
+        private readonly DirectionControllerRing.NeuronShell _neuronsRotation;
         private readonly Neuron_SensorPosition[] _neurons;
+
+        private readonly Thruster[] _thrusters;
+        private readonly ImpulseEngine[] _impulseEngines;
 
         private readonly double _volume;        // this is used to calculate energy draw
 
@@ -214,11 +219,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Constructor
 
-        public DirectionControllerSphere(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks)
+        public DirectionControllerSphere(EditorOptions options, ItemOptions itemOptions, ShipPartDNA dna, IContainer energyTanks, Thruster[] thrusters, ImpulseEngine[] impulseEngines)
             : base(options, dna, itemOptions.DirectionController_Damage.HitpointMin, itemOptions.DirectionController_Damage.HitpointSlope, itemOptions.DirectionController_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
+            _thrusters = thrusters;
+            _impulseEngines = impulseEngines;
 
             this.Design = new DirectionControllerSphereDesign(options, true);
             this.Design.SetDNA(dna);
@@ -227,8 +234,24 @@ namespace Game.Newt.v2.GameItems.ShipParts
             DirectionControllerRing.GetMass(out _mass, out _volume, out radius, out _scaleActual, dna, itemOptions, false);
             this.Radius = radius;
 
-            //TODO: Neurons
-            _neurons = new[] { new Neuron_SensorPosition(new Point3D(), true) };
+            #region neurons
+
+            double area = Math.Pow(radius, itemOptions.DirectionController_Sphere_NeuronGrowthExponent);
+
+            int neuronCount = Convert.ToInt32(Math.Ceiling(itemOptions.DirectionController_Sphere_NeuronDensity_Half * area));
+            if (neuronCount == 0)
+            {
+                neuronCount = 1;
+            }
+
+            _neuronsLinear = DirectionControllerRing.CreateNeuronShell_Sphere(1, neuronCount);
+            _neuronsRotation = DirectionControllerRing.CreateNeuronShell_Sphere(.4, neuronCount);
+
+            _neurons = _neuronsLinear.Neurons.
+                Concat(_neuronsRotation.Neurons).
+                ToArray();
+
+            #endregion
         }
 
         #endregion
@@ -296,6 +319,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
+            var forceTorquePercent = new Tuple<Vector3D?, Vector3D?>(_neuronsLinear.GetVector(), _neuronsRotation.GetVector());
+
+            if (_impulseEngines != null && _impulseEngines.Length > 0)
+            {
+                var impulseInstruction = new[] { forceTorquePercent };
+                foreach (ImpulseEngine impulse in _impulseEngines)
+                {
+                    impulse.SetDesiredDirection(impulseInstruction);
+                }
+            }
+
+            //TODO: Thrusters -- use the controller logic from Game.Newt.v2.AsteroidMiner.AstMin2D.ShipPlayer
         }
 
         public int? IntervalSkips_MainThread

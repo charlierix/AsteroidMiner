@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.DoubleVectorWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="Rotate Double Vector" SizeToContent="Height" Width="800" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Closed="Window_Closed">
+    Title="Rotate Double Vector" SizeToContent="Height" Width="800" Background="#F1F1E4" ResizeMode="CanResizeWithGrip" Loaded="Window_Loaded" Closed="Window_Closed">
 
     <!-- Color theme (novapaletta by llaurant) -->
     <!-- http://kuler.adobe.com/#themeID/1704508 -->
@@ -28,71 +28,91 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="#F1F1E4">
+    <Grid Margin="12">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="12"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
 
-        <StackPanel Margin="12,12,0,12">
-            <!-- From Orientation -->
-            <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}">
-                <Grid>
-                    <TextBlock Text="From Orientation" Style="{StaticResource controlPanelLabel}"/>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="6"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            
+            <StackPanel Grid.Row="0">
+                <!-- From Orientation -->
+                <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}">
+                    <Grid>
+                        <TextBlock Text="From Orientation" Style="{StaticResource controlPanelLabel}"/>
 
-                    <Grid Name="grdFrom" Background="Transparent" Margin="8,28,8,8" MinWidth="200" MinHeight="200" MouseUp="grdFrom_MouseUp">
-                        <Viewport3D Name="_viewportFrom" IsHitTestVisible="False">
-                            <Viewport3D.Camera>
-                                <PerspectiveCamera x:Name="_cameraFrom" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
-                            </Viewport3D.Camera>
-                            <ModelVisual3D>
-                                <ModelVisual3D.Content>
-                                    <Model3DGroup>
-                                        <AmbientLight Color="DimGray" />
-                                        <DirectionalLight x:Name="_cameraFromRotateLight" Color="White" Direction="1,-1,-1" />
-                                    </Model3DGroup>
-                                </ModelVisual3D.Content>
-                            </ModelVisual3D>
-                        </Viewport3D>
+                        <Grid Name="grdFrom" Background="Transparent" Margin="8,28,8,8" MinWidth="200" MinHeight="200" MouseUp="grdFrom_MouseUp">
+                            <Viewport3D Name="_viewportFrom" IsHitTestVisible="False">
+                                <Viewport3D.Camera>
+                                    <PerspectiveCamera x:Name="_cameraFrom" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                                </Viewport3D.Camera>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <Model3DGroup>
+                                            <AmbientLight Color="DimGray" />
+                                            <DirectionalLight x:Name="_cameraFromRotateLight" Color="White" Direction="1,-1,-1" />
+                                        </Model3DGroup>
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                            </Viewport3D>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Border>
+                </Border>
 
-            <!-- To Orientation -->
-            <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}" Margin="0,12,0,0">
-                <Grid>
-                    <TextBlock Text="To Orientation" Style="{StaticResource controlPanelLabel}"/>
+                <!-- To Orientation -->
+                <Border VerticalAlignment="Stretch" Style="{StaticResource controlsPanel}" Margin="0,12,0,0">
+                    <Grid>
+                        <TextBlock Text="To Orientation" Style="{StaticResource controlPanelLabel}"/>
 
-                    <Grid Name="grdTo" Background="Transparent" Margin="8,28,8,8" MinWidth="200" MinHeight="200" MouseUp="grdTo_MouseUp">
-                        <Viewport3D Name="_viewportTo" IsHitTestVisible="False">
-                            <Viewport3D.Camera>
-                                <PerspectiveCamera x:Name="_cameraTo" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
-                            </Viewport3D.Camera>
-                            <ModelVisual3D>
-                                <ModelVisual3D.Content>
-                                    <Model3DGroup>
-                                        <AmbientLight Color="DimGray" />
-                                        <DirectionalLight x:Name="_cameraToLight" Color="White" Direction="1,-1,-1" />
-                                    </Model3DGroup>
-                                </ModelVisual3D.Content>
-                            </ModelVisual3D>
-                        </Viewport3D>
+                        <Grid Name="grdTo" Background="Transparent" Margin="8,28,8,8" MinWidth="200" MinHeight="200" MouseUp="grdTo_MouseUp">
+                            <Viewport3D Name="_viewportTo" IsHitTestVisible="False">
+                                <Viewport3D.Camera>
+                                    <PerspectiveCamera x:Name="_cameraTo" Position="0,0,3" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                                </Viewport3D.Camera>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <Model3DGroup>
+                                            <AmbientLight Color="DimGray" />
+                                            <DirectionalLight x:Name="_cameraToLight" Color="White" Direction="1,-1,-1" />
+                                        </Model3DGroup>
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                            </Viewport3D>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Border>
+                </Border>
 
-            <CheckBox Visibility="Collapsed" Checked="chkSnap45Degrees_Checked" Unchecked="chkSnap45Degrees_Checked" Name="chkSnap45Degrees" Content="Snap to 45 degrees" Margin="0,12,0,0"/>
-
-            <StackPanel Margin="0,12,0,0" HorizontalAlignment="Left">
-                <Button Name="btnTestIt" Content="DoubleVector.GetAngleAroundAxis" Click="btnTestIt_Click"/>
-                <Button Name="btnGetRotationDblVect" Content="Math3D.GetRotation (dbl vect)" Click="btnGetRotationDblVect_Click"/>
-                <Button Visibility="Collapsed" Name="btnGetRotationPlanes" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes_Click"/>
-                <Button Name="btnGetRotationPlanes2" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes2_Click"/>
+                <CheckBox Visibility="Collapsed" Checked="chkSnap45Degrees_Checked" Unchecked="chkSnap45Degrees_Checked" Name="chkSnap45Degrees" Content="Snap to 45 degrees" Margin="0,12,0,0"/>
             </StackPanel>
-        </StackPanel>
+
+            <Expander Grid.Row="2" Header="Misc">
+                <StackPanel Margin="4">
+                    <StackPanel.Resources>
+                        <Style TargetType="Button">
+                            <Setter Property="Margin" Value="2"/>
+                        </Style>
+                    </StackPanel.Resources>
+                    
+                    <Button Name="btnTestIt" Content="DoubleVector.GetAngleAroundAxis" Click="btnTestIt_Click"/>
+                    <Button Name="btnGetRotationDblVect" Content="Math3D.GetRotation (dbl vect)" Click="btnGetRotationDblVect_Click"/>
+                    <Button Visibility="Collapsed" Name="btnGetRotationPlanes" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes_Click"/>
+                    <Button Name="btnGetRotationPlanes2" Content="Math3D.GetRotation (planes)" Click="btnGetRotationPlanes2_Click"/>
+                    <Button Content="Transform to 2D - bad" Margin="2,6,2,2" Click="Transform2D_bad_Click"/>
+                    <Button Content="Transform to 2D - better" Click="Transform2D_better_Click"/>
+                    <Button Content="Rotate test case" Click="RotateTestCase_Click"/>
+                </StackPanel>
+            </Expander>
+        </Grid>
 
         <!-- Viewport -->
-        <Border Grid.Column="1" Grid.Row="0" Name="grdViewPort" BorderThickness="1" BorderBrush="#8B8C84" Background="#FBFCF2" CornerRadius="3" Margin="12">
+        <Border Grid.Column="2" Grid.Row="0" Name="grdViewPort" BorderThickness="1" BorderBrush="#8B8C84" Background="#FBFCF2" CornerRadius="3">
             <Viewport3D Name="_viewport" IsHitTestVisible="False">
                 <!-- Camera -->
                 <Viewport3D.Camera>

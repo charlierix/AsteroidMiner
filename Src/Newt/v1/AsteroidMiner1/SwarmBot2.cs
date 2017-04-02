@@ -449,7 +449,7 @@ namespace Game.Newt.v1.AsteroidMiner1
             // When attacking, other bot avoidence should go down, chase point goes up, use velocityaware1 instead of 2 for chase point
 
 
-            if (!commonVelocityDirection.IsZero())		// when you normalize a zero vector, it becomes NaN
+            if (!commonVelocityDirection.IsNearZero())		// when you normalize a zero vector, it becomes NaN
             {
                 commonVelocityDirection.Normalize();
                 commonVelocityDirection /= 2;
@@ -511,12 +511,10 @@ namespace Game.Newt.v1.AsteroidMiner1
         private void AimThruster(Vector3D directionToGo)
         {
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, this.OrigThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(this.OrigThrustDirection, directionToGo);
 
             // Thrust Direction
-            this.ThrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            this.ThrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength (I'll set this with a standard algorithm.  The caller can always set it however they want)
             double maxStrength = PERCENTSTANDARD;

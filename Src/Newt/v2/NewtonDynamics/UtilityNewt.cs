@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.Newt.v2.NewtonDynamics
 {
@@ -130,9 +132,6 @@ namespace Game.Newt.v2.NewtonDynamics
 
             #region Private Methods
 
-            /// <summary>
-            /// This isn't meant to be used in production, just copy/paste
-            /// </summary>
             public int GetIndex(int x, int y, int z)
             {
                 //int zOffset = z * this.XLength * this.YLength;
@@ -287,6 +286,16 @@ namespace Game.Newt.v2.NewtonDynamics
 
         #endregion
 
+        #region Class: AxisInfo_Sphere
+
+        private class AxisInfo_Sphere
+        {
+            public Tuple<int, int, int>[] Indices { get; set; }
+            public Tuple<Point3D, Point3D>[] Cells { get; set; }
+        }
+
+        #endregion
+
         /// <summary>
         /// This divides an object up into cells, and tells the mass of each cell.  This is used to help calculate the mass matrix
         /// NOTE: The sum of the mass of the cells will always be 1
@@ -317,11 +326,11 @@ namespace Game.Newt.v2.NewtonDynamics
 
                     if (lengths.Item1 == 1 || lengths.Item2 == 1 || lengths.Item3 == 1)
                     {
-                        masses = GetMassBreakdownSprtBox2D(args);
+                        masses = GetMassBreakdown_Box2D(args);
                     }
                     else
                     {
-                        masses = GetMassBreakdownSprtBox3D(args);
+                        masses = GetMassBreakdown_Box3D(args);
                     }
 
                     #endregion
@@ -332,7 +341,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
                     centerMass = new Point3D(0, 0, 0);		// for a cylinder, the center of mass is the same as center of position
 
-                    masses = GetMassBreakdownSprtCylinder(args);
+                    masses = GetMassBreakdown_Cylinder(args);
 
                     #endregion
                     break;
@@ -340,18 +349,20 @@ namespace Game.Newt.v2.NewtonDynamics
                 case ObjectBreakdownType.Sphere:
                     #region Sphere
 
-                    if (size.X != size.Y || size.X != size.Z)
-                    {
-                        throw new ApplicationException("finish this - ellipse");
-                    }
-
                     centerMass = new Point3D(0, 0, 0);		// for a sphere, the center of mass is the same as center of position
 
-                    //NOTE: There is no need to break down a perfect sphere.  The parallel axis theorem works just fine with a single one.  So always return a single cell
-                    masses = new double[] { 1d };
+                    if (size.X != size.Y || size.X != size.Z)
+                    {
+                        masses = GetMassBreakdown_Ellipsoid(args);
+                    }
+                    else
+                    {
+                        //NOTE: There is no need to break down a perfect sphere.  The parallel axis theorem works just fine with a single one.  So always return a single cell
+                        masses = new double[] { 1d };
 
-                    cellSize = size.X;
-                    CalculateReturnSize(out lengths, out aabb, size, cellSize);
+                        cellSize = size.X;
+                        CalculateReturnSize(out lengths, out aabb, size, cellSize);
+                    }
 
                     #endregion
                     break;
@@ -481,9 +492,1362 @@ namespace Game.Newt.v2.NewtonDynamics
             return Tuple.Create(matrix, center);
         }
 
+        #region Private Methods - cylinder
+
+        private static double[] GetMassBreakdown_Cylinder(ObjectMassBreakdown e)
+        {
+            double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
+
+            #region Pre calculations
+
+            double halfSize = e.CellSize * .5d;
+            Vector3D halfObjSize = new Vector3D(e.ObjectSize.X * .5d, e.ObjectSize.Y * .5d, e.ObjectSize.Z * .5d);
+            double wholeVolume = e.CellSize * e.CellSize * e.CellSize;
+
+            // The cylinder's axis is along x
+            // Only go through the quadrant with positive values.  Then copy the results to the other three quadrants (and then other 4 quadrants in the -x)
+
+            bool isYEven = true;
+            int yStart = e.YLength / 2;
+            if (e.YLength % 2 == 1)
+            {
+                yStart++;
+                isYEven = false;
+            }
+
+            bool isZEven = true;
+            int zStart = e.ZLength / 2;
+            if (e.ZLength % 2 == 1)
+            {
+                zStart++;
+                isZEven = false;
+            }
+
+            // These tell how to convert the ellipse into a circle
+            double objectSizeHalfY = e.ObjectSize.Y * .5d;
+            double objectSizeHalfZ = e.ObjectSize.Z * .5d;
+            double maxRadius = Math.Max(objectSizeHalfY, objectSizeHalfZ);
+            double ratioY = maxRadius / objectSizeHalfY;
+            double ratioZ = maxRadius / objectSizeHalfZ;
+
+            #endregion
+
+            #region Y,Z axis tiles
+
+            if (!isYEven)
+            {
+                GetMassBreakdown_Cylinder_YZero(retVal, yStart - 1, zStart, isZEven, ratioZ, ratioZ, halfObjSize, maxRadius, e);
+            }
+
+            if (!isZEven)
+            {
+                GetMassBreakdown_Cylinder_ZZero(retVal, yStart, zStart - 1, isYEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
+            }
+
+            if (!isYEven && !isZEven)
+            {
+                GetMassBreakdown_Cylinder_YZZero(retVal, yStart - 1, zStart - 1, ratioY, ratioZ, halfObjSize, maxRadius, e);
+            }
+
+            #endregion
+
+            // Quadrant tiles
+            GetMassBreakdown_Cylinder_Quadrant(retVal, yStart, zStart, isYEven, isZEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
+
+            // Exit Function
+            return retVal;
+        }
+        private static void GetMassBreakdown_Cylinder_YZero(double[] masses, int y, int zStart, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+        {
+            for (int z = zStart; z < e.ZLength; z++)
+            {
+                int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
+
+                #region Area of Y,Z tile
+
+                // Figure out how much of the circle is inside this square (just 2D for now)
+                Vector3D min = new Vector3D(0, e.CellSize * .5d * ratioY, (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);		//NOTE: min has positive y as well as max.  This just makes some of the calculations easier
+                Vector3D max = new Vector3D(0, min.Y, (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
+
+                double mass = 0d;
+
+                double maxLength = max.Length;
+                if (maxLength < maxRadius)
+                {
+                    // This tile is completely inside the circle
+                    mass = e.CellSize * e.CellSize;		// just the 2D mass
+                }
+                else if (min.Z < maxRadius)		// the bottom edge should never be greater than the circle, but just making sure
+                {
+                    #region Intersect Circle
+
+                    List<double> lengths = new List<double>();
+                    double percent;
+                    bool isTriangle = false;
+
+                    #region Y
+
+                    double minLength = min.Length;
+                    if (minLength < maxRadius)
+                    {
+                        // Circle intersects the line from min.Z,Y to max.Z,Y
+                        lengths.Add(e.CellSize);		// add one for the bottom segment
+
+                        // Add one for the y intercept
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
+                        lengths.Add(e.CellSize * percent);
+                        lengths.Add(e.CellSize * percent);
+                    }
+                    else
+                    {
+                        //TODO: Test this, execution has never gotten here
+
+                        // Circle never goes as far as min/max.Y, find the intersect along the min z line
+                        //NOTE: There are 2 intersects, so define min z as 0
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, min.Y, min.Z), maxRadius);		// min.Y is positive
+                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
+                    }
+
+                    #endregion
+                    #region Z
+
+                    if (max.Z >= maxRadius)
+                    {
+                        // The circle doesn't go all the way to the right edge, so assume a triangle
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, 0d, max.Z), maxRadius);
+                        lengths.Add(e.CellSize * percent);
+                        isTriangle = true;
+                    }
+                    else
+                    {
+                        //TODO: Test this, execution has never gotten here
+
+                        // Find the intersect along the max z line
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, 0d, max.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
+                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
+                    }
+
+                    #endregion
+
+                    // Calculate the area (just assuming the circle portion is a straight line)
+                    switch (lengths.Count)
+                    {
+                        case 2:
+                            //TODO: Test this, execution has never gotten here
+
+                            if (isTriangle)
+                            {
+                                // Triangle (1/2 * base * height)
+                                mass = lengths[0] * lengths[1] * .5d;
+                            }
+                            else
+                            {
+                                // Trapazoid (.5 * (b1 + b2) * h)
+                                mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
+                            }
+                            break;
+
+                        case 4:
+                            // This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
+                            mass = lengths[0] * lengths[1];
+
+                            if (isTriangle)
+                            {
+                                // Rect + Triangle
+                                mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
+                            }
+                            else
+                            {
+                                //TODO: Test this, execution has never gotten here
+
+                                // Rect + Trapazoid
+                                mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
+                            }
+                            break;
+
+                        default:
+                            throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                #region Set mass
+
+                // The end caps get partial height along x
+                double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+                double volume = mass * (halfObjSize.X - xMin);
+                masses[e.GetIndex(0, y, z)] = volume;
+                masses[e.GetIndex(0, y, altZ)] = volume;
+
+                masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+                masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
+
+                // Everything inside gets the full height
+                volume = mass * e.CellSize;
+                for (int x = 1; x < e.XLength - 1; x++)
+                {
+                    masses[e.GetIndex(x, y, z)] = volume;
+                    masses[e.GetIndex(x, y, altZ)] = volume;
+                }
+
+                #endregion
+            }
+        }
+        private static void GetMassBreakdown_Cylinder_ZZero(double[] masses, int yStart, int z, bool isYEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+        {
+            for (int y = yStart; y < e.YLength; y++)
+            {
+                int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
+
+                #region Area of Y,Z tile
+
+                // Figure out how much of the circle is inside this square (just 2D for now)
+                Vector3D min = new Vector3D(0, (e.AABBMin.Y + (y * e.CellSize)) * ratioY, e.CellSize * .5d * ratioZ);		//NOTE: min has positive z as well as max.  This just makes some of the calculations easier
+                Vector3D max = new Vector3D(0, (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY, min.Z);
+
+                double mass = 0d;
+
+                double maxLength = max.Length;
+                if (maxLength < maxRadius)
+                {
+                    // This tile is completely inside the circle
+                    mass = e.CellSize * e.CellSize;		// just the 2D mass
+                }
+                else if (min.Y < maxRadius)		// the left edge should never be greater than the circle, but just making sure
+                {
+                    #region Intersect Circle
+
+                    List<double> lengths = new List<double>();
+                    double percent;
+                    bool isTriangle = false;
+
+                    #region Z
+
+                    double minLength = min.Length;
+                    if (minLength < maxRadius)
+                    {
+                        // Circle intersects the line from min.Y,Z to max.Y,Z
+                        lengths.Add(e.CellSize);		// add one for the left segment
+
+                        // Add one for the z intercept
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
+                        lengths.Add(e.CellSize * percent);
+                        lengths.Add(e.CellSize * percent);
+                    }
+                    else
+                    {
+                        // Circle never goes as far as min/max.Z, find the intersect along the min y line
+                        //NOTE: There are 2 intersects, so define min z as 0
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, min.Y, min.Z), maxRadius);		// min.Z is positive
+                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
+                    }
+
+                    #endregion
+                    #region Y
+
+                    if (max.Y >= maxRadius)
+                    {
+                        // The circle doesn't go all the way to the right edge, so assume a triangle
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, max.Y, 0), maxRadius);
+                        lengths.Add(e.CellSize * percent);
+                        isTriangle = true;
+                    }
+                    else
+                    {
+                        //TODO: Test this, execution has never gotten here
+
+                        // Find the intersect along the max y line
+                        percent = GetMassBreakdown_Cylinder_IntersectPercent(new Vector3D(0d, max.Y, 0d), new Vector3D(0d, max.Y, max.Z), maxRadius);
+                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
+                    }
+
+                    #endregion
+
+                    // Calculate the area (just assuming the circle portion is a straight line)
+                    switch (lengths.Count)
+                    {
+                        case 2:
+                            if (isTriangle)
+                            {
+                                // Triangle (1/2 * base * height)
+                                mass = lengths[0] * lengths[1] * .5d;
+                            }
+                            else
+                            {
+                                // Trapazoid (.5 * (b1 + b2) * h)
+                                mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
+                            }
+                            break;
+
+                        case 4:
+                            // This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
+                            mass = lengths[0] * lengths[1];
+
+                            if (isTriangle)
+                            {
+                                // Rect + Triangle
+                                mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
+                            }
+                            else
+                            {
+                                //TODO: Test this, execution has never gotten here
+
+                                // Rect + Trapazoid
+                                mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
+                            }
+                            break;
+
+                        default:
+                            throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+
+                #region Set mass
+
+                // The end caps get partial height along x
+                double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+                double volume = mass * (halfObjSize.X - xMin);
+                masses[e.GetIndex(0, y, z)] = volume;
+                masses[e.GetIndex(0, altY, z)] = volume;
+
+                masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+                masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
+
+                // Everything inside gets the full height
+                volume = mass * e.CellSize;
+                for (int x = 1; x < e.XLength - 1; x++)
+                {
+                    masses[e.GetIndex(x, y, z)] = volume;
+                    masses[e.GetIndex(x, altY, z)] = volume;
+                }
+
+                #endregion
+            }
+        }
+        private static void GetMassBreakdown_Cylinder_YZZero(double[] masses, int y, int z, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+        {
+            #region Area of Y,Z tile
+
+            // Figure out how much of the circle is inside this square (just 2D for now)
+            Vector3D max = new Vector3D(0, e.CellSize * .5d * ratioY, e.CellSize * .5d * ratioZ);
+
+            double mass = 0d;
+
+            double maxLength = max.Length;
+            if (maxLength < maxRadius)
+            {
+                // This tile is completely inside the circle
+                mass = e.CellSize * e.CellSize;		// just the 2D mass
+            }
+            else
+            {
+                //double percent = maxRadius / maxLength;		// radius is half of the cell, and max is also half of the cell, so no need to multiply anything by 2
+                double percent = maxRadius / (e.CellSize * .5d);		// the previous line is wrong, max.length goes to the corner of the cell, but maxRadius is calculated with the length to the side of the cell
+
+                percent *= e.CellSize * .5d;		// reuse percent as the scaled radius
+
+                // A = pi r^2
+                mass = Math.PI * percent * percent;
+            }
+
+            #endregion
+
+            #region Set mass
+
+            // The end caps get partial height along x
+            double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+            double volume = mass * (halfObjSize.X - xMin);
+            masses[e.GetIndex(0, y, z)] = volume;
+            masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+
+            // Everything inside gets the full height
+            volume = mass * e.CellSize;
+            for (int x = 1; x < e.XLength - 1; x++)
+            {
+                masses[e.GetIndex(x, y, z)] = volume;
+            }
+
+            #endregion
+        }
+        private static void GetMassBreakdown_Cylinder_Quadrant(double[] masses, int yStart, int zStart, bool isYEven, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
+        {
+            // Loop through the y,z tiles in only one quadrant, then just copy the result to the other 3 quadrants
+            for (int z = zStart; z < e.ZLength; z++)
+            {
+                for (int y = yStart; y < e.YLength; y++)
+                {
+                    // Figure out what the coords are in the other quadrants (when the length of the axis odd, start needs to be skipped over)
+                    int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
+                    int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
+
+                    #region Area of Y,Z tile
+
+                    // Figure out how much of the circle is inside this square (just 2D for now)
+                    Vector3D min = new Vector3D(
+                        0,
+                        (e.AABBMin.Y + (y * e.CellSize)) * ratioY,
+                        (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);
+
+                    Vector3D max = new Vector3D(0,
+                        (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY,
+                        (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
+
+                    double mass = 0d;
+
+                    double maxLength = max.Length;
+                    if (maxLength < maxRadius)
+                    {
+                        // This tile is completely inside the circle
+                        mass = e.CellSize * e.CellSize;		// just the 2D mass
+                    }
+                    else
+                    {
+                        double minLength = min.Length;
+                        if (minLength > maxRadius)
+                        {
+                            // This tile is completely outside the circle
+                            mass = 0d;
+                        }
+                        else
+                        {
+                            #region Intersect Circle
+
+                            // This tile is clipped by the circle.  Figure out which edges the circle is intersecting
+                            Vector3D minPlusY = new Vector3D(0, max.Y, min.Z);
+                            Vector3D minPlusZ = new Vector3D(0, min.Y, max.Z);
+
+                            // When calculating the area, it will either be a triangle, trapazoid or diamond
+                            List<double> lengths = new List<double>();
+
+                            double percent;
+
+                            if (minPlusY.Length > maxRadius)
+                            {
+                                // The intercept is along the line from min to min+Y
+                                percent = GetMassBreakdown_Cylinder_IntersectPercent(min, minPlusY, maxRadius);
+                                lengths.Add(e.CellSize * percent);
+                            }
+                            else
+                            {
+                                // The intercept is along the line from min+Y to max
+                                lengths.Add(e.CellSize);
+                                percent = GetMassBreakdown_Cylinder_IntersectPercent(minPlusY, max, maxRadius);
+                                lengths.Add(e.CellSize * percent);
+                            }
+
+                            if (minPlusZ.Length > maxRadius)
+                            {
+                                // The intercept is along the line from min to min+Z
+                                percent = GetMassBreakdown_Cylinder_IntersectPercent(min, minPlusZ, maxRadius);
+                                lengths.Add(e.CellSize * percent);
+                            }
+                            else
+                            {
+                                // The intercept is along the line from min+Z to max
+                                lengths.Add(e.CellSize);
+                                percent = GetMassBreakdown_Cylinder_IntersectPercent(minPlusZ, max, maxRadius);
+                                lengths.Add(e.CellSize * percent);
+                            }
+
+                            // Calculate the area (just assuming the circle portion is a straight line)
+                            switch (lengths.Count)
+                            {
+                                case 2:
+                                    // Triangle (1/2 * base * height)
+                                    mass = lengths[0] * lengths[1] * .5d;
+                                    break;
+
+                                case 3:
+                                    // Trapazoid
+                                    lengths.Sort();
+                                    mass = lengths[0] * lengths[2];		// get the area of the shortest side x base
+                                    mass += lengths[2] * (lengths[1] - lengths[0]) * .5d;		// tack on the area of the triangle above that rectangle
+                                    break;
+
+                                case 4:
+                                    // Diamond
+                                    lengths.Sort();
+                                    mass = lengths[3] * lengths[1];		// get the area of the "horizontal" rectangle
+                                    mass += (lengths[2] - lengths[1]) * lengths[0];		// add the area of the "vertical" rectangle
+                                    mass += (lengths[3] - lengths[0]) * (lengths[2] - lengths[1]) * .5d;
+                                    break;
+
+                                default:
+                                    throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
+                            }
+
+                            #endregion
+                        }
+                    }
+
+                    #endregion
+
+                    #region Set mass
+
+                    // The end caps get partial height along x
+                    double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
+
+                    double volume = mass * (halfObjSize.X - xMin);
+                    masses[e.GetIndex(0, y, z)] = volume;
+                    masses[e.GetIndex(0, altY, z)] = volume;
+                    masses[e.GetIndex(0, y, altZ)] = volume;
+                    masses[e.GetIndex(0, altY, altZ)] = volume;
+
+                    masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
+                    masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
+                    masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
+                    masses[e.GetIndex(e.XLength - 1, altY, altZ)] = volume;
+
+                    // Everything inside gets the full height
+                    volume = mass * e.CellSize;
+                    for (int x = 1; x < e.XLength - 1; x++)
+                    {
+                        masses[e.GetIndex(x, y, z)] = volume;
+                        masses[e.GetIndex(x, altY, z)] = volume;
+                        masses[e.GetIndex(x, y, altZ)] = volume;
+                        masses[e.GetIndex(x, altY, altZ)] = volume;
+                    }
+
+                    #endregion
+                }
+            }
+        }
+        private static double GetMassBreakdown_Cylinder_IntersectPercent(Vector3D lineStart, Vector3D lineStop, double radius)
+        {
+            Point start2D = new Point(lineStart.Y, lineStart.Z);
+            Point stop2D = new Point(lineStop.Y, lineStop.Z);
+
+            double? retVal = Math2D.GetIntersection_LineSegment_Circle_percent(start2D, stop2D, new Point(0, 0), radius);
+            if (retVal == null)
+            {
+                throw new ApplicationException("Shouldn't get null");
+            }
+
+            return retVal.Value;
+        }
+
+        #endregion
+        #region Private Methods - ellipsoid
+
+        private static double[] GetMassBreakdown_Ellipsoid(ObjectMassBreakdown e)
+        {
+            double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
+
+            #region pre calculations
+
+            // Only go through the octant with positive values.  Then copy the results to the other 7 octants
+
+            bool isXEven = true;
+            int xStart = e.XLength / 2;
+            if (e.XLength % 2 == 1)
+            {
+                xStart++;
+                isXEven = false;
+            }
+
+            bool isYEven = true;
+            int yStart = e.YLength / 2;
+            if (e.YLength % 2 == 1)
+            {
+                yStart++;
+                isYEven = false;
+            }
+
+            bool isZEven = true;
+            int zStart = e.ZLength / 2;
+            if (e.ZLength % 2 == 1)
+            {
+                zStart++;
+                isZEven = false;
+            }
+
+            // These tell how to convert the ellipse into a circle
+            double objectSizeHalfX = e.ObjectSize.X / 2;
+            double objectSizeHalfY = e.ObjectSize.Y / 2;
+            double objectSizeHalfZ = e.ObjectSize.Z / 2;
+            double maxRadius = Math1D.Max(objectSizeHalfX, objectSizeHalfY, objectSizeHalfZ);
+            double ratioX = maxRadius / objectSizeHalfX;
+            double ratioY = maxRadius / objectSizeHalfY;
+            double ratioZ = maxRadius / objectSizeHalfZ;
+
+            #endregion
+
+            // This method handles cells that staddle the axiis (when isEven is false)
+            GetMassBreakdown_Ellipsoid_Axis(retVal, xStart, yStart, zStart, isXEven, isYEven, isZEven, ratioX, ratioY, ratioZ, maxRadius, e);
+
+            // This handles all the cells that are fully in the first octant, then copies that result to the other 7
+            GetMassBreakdown_Ellipsoid_Octant(retVal, xStart, yStart, zStart, isXEven, isYEven, isZEven, ratioX, ratioY, ratioZ, maxRadius, e);
+
+            return retVal;
+        }
+        private static void GetMassBreakdown_Ellipsoid_Octant(double[] masses, int xStart, int yStart, int zStart, bool isXEven, bool isYEven, bool isZEven, double ratioX, double ratioY, double ratioZ, double maxRadius, ObjectMassBreakdown e)
+        {
+            #region visualize
+
+            //const double LINETHICK = .005;
+            //const double DOTRAD = .02;
+
+            //Debug3DWindow window1 = new Debug3DWindow()
+            //{
+            //    Title = "GetMassBreakdown_Ellipsoid 1",
+            //};
+
+            //Debug3DWindow window2 = new Debug3DWindow()
+            //{
+            //    Title = "GetMassBreakdown_Ellipsoid 2",
+            //};
+
+            //window1.AddAxisLines(maxRadius * 1.25, LINETHICK);
+            //window2.AddAxisLines(maxRadius * 1.25, LINETHICK);
+
+            ////for (int x = 0; x < e.XLength; x++)
+            ////{
+            ////    window.AddDot(new Point3D(x * e.CellSize, 0, 0), DOTRAD, UtilityWPF.ColorFromHex("866"));
+            ////}
+
+            ////for (int y = 0; y < e.YLength; y++)
+            ////{
+            ////    window.AddDot(new Point3D(0, y * e.CellSize, 0), DOTRAD, UtilityWPF.ColorFromHex("686"));
+            ////}
+
+            ////for (int z = 0; z < e.ZLength; z++)
+            ////{
+            ////    window.AddDot(new Point3D(0, 0, z * e.CellSize), DOTRAD, UtilityWPF.ColorFromHex("668"));
+            ////}
+
+            //window1.AddDot(new Point3D(0, 0, 0), maxRadius, UtilityWPF.ColorFromHex("80808080"), isHiRes: true);
+
+
+
+            //var material = Debug3DWindow.GetMaterial(true, UtilityWPF.ColorFromHex("80808080"));
+
+            //GeometryModel3D geometry = new GeometryModel3D();
+            //geometry.Material = material;
+            //geometry.BackMaterial = material;
+
+            //geometry.Geometry = UtilityWPF.GetSphere_Ico(maxRadius, 3, true);
+
+            //geometry.Transform = new ScaleTransform3D(1 / ratioX, 1 / ratioY, 1 / ratioZ);
+
+            //ModelVisual3D visual = new ModelVisual3D();
+            //visual.Content = geometry;
+            //window2.Visuals3D.Add(visual);
+
+            #endregion
+
+            int[] xyzStart = new[] { xStart, yStart, zStart };
+            bool[] isXYZEven = new[] { isXEven, isYEven, isZEven };
+
+            // Loop through the x,y,z cells in only one octant, then just copy the result to the other 7 octants
+            for (int z = zStart; z < e.ZLength; z++)
+            {
+                for (int y = yStart; y < e.YLength; y++)
+                {
+                    for (int x = xStart; x < e.XLength; x++)
+                    {
+                        // Figure out how much of the sphere is inside this cube
+                        Vector3D cellMin = new Vector3D(
+                            (e.AABBMin.X + (x * e.CellSize)) * ratioX,
+                            (e.AABBMin.Y + (y * e.CellSize)) * ratioY,
+                            (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);
+
+                        Vector3D cellMax = new Vector3D(
+                            (e.AABBMin.X + ((x + 1) * e.CellSize)) * ratioX,
+                            (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY,
+                            (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
+
+                        ProcessCell_Sphere(masses, x, y, z, xyzStart, isXYZEven, cellMin, cellMax, maxRadius, e);
+
+                        #region visualize
+
+                        ////window.AddDot(new Point3D(0, 0, 0), maxRadius, UtilityWPF.ColorFromHex("80FFFFFF"), isHiRes: true);
+
+                        //Color color = UtilityWPF.GetRandomColor(32, 0, 255);
+
+                        //window1.AddMesh(
+                        //    UtilityWPF.GetCube_IndependentFaces(min.ToPoint(), max.ToPoint()),
+                        //    color);
+
+                        //window2.AddMesh(
+                        //    UtilityWPF.GetCube_IndependentFaces(new Point3D(min.X / ratioX, min.Y / ratioY, min.Z / ratioZ), new Point3D(max.X / ratioX, max.Y / ratioY, max.Z / ratioZ)),
+                        //    color);
+
+                        #endregion
+                    }
+                }
+            }
+
+            #region visualize
+
+            //window1.Show();
+            //window2.Show();
+
+            #endregion
+        }
+
+        private static void GetMassBreakdown_Ellipsoid_Axis(double[] masses, int xStart, int yStart, int zStart, bool isXEven, bool isYEven, bool isZEven, double ratioX, double ratioY, double ratioZ, double maxRadius, ObjectMassBreakdown e)
+        {
+            if (isXEven && isYEven && isZEven)
+            {
+                return;
+            }
+
+            double offsetX = isXEven ? e.CellSize : e.CellSize / 2;
+            double offsetY = isYEven ? e.CellSize : e.CellSize / 2;
+            double offsetZ = isZEven ? e.CellSize : e.CellSize / 2;
+
+            // The logic below needs to work with a standard sphere.  So stretch the cube into a rectangle.  Now it's a standard
+            // sphere with a stretched cube instead of a standard cube with a stretched sphere
+            //Point3D cellMin = new Point3D(0, 0, 0);
+            Point3D cellMax = new Point3D(ratioX * offsetX, ratioY * offsetY, ratioZ * offsetZ);
+
+            int[] xyzStart = new[] { xStart, yStart, zStart };
+            int[] xyzLength = new[] { e.XLength, e.YLength, e.ZLength };
+            VectorND xyzRatios = new VectorND(new[] { ratioX, ratioY, ratioZ });
+            bool[] isEven = new[] { isXEven, isYEven, isZEven };
+
+            // Origin
+            AxisInfo_Sphere origin = new AxisInfo_Sphere()
+            {
+                Indices = new[] { Tuple.Create((isXEven ? xStart : xStart - 1), (isYEven ? yStart : yStart - 1), (isZEven ? zStart : zStart - 1)) },
+                Cells = new[] { Tuple.Create(new Point3D(0, 0, 0), cellMax) },
+            };
+
+            int[] originIndex = new[]
+            {
+                origin.Indices[0].Item1,
+                origin.Indices[0].Item2,
+                origin.Indices[0].Item3,
+            };
+
+            // If an axis is odd, the other two need to be populated
+            var axiis = new List<Tuple<Axis, AxisInfo_Sphere>>();
+            var planes = new List<Tuple<Axis, Axis, AxisInfo_Sphere>>();
+
+            if (!isXEven)
+            {
+                GetMassBreakdown_Ellipsoid_Axis_Add(Axis.Y, Axis.Z, cellMax, originIndex, xyzLength, xyzRatios, e.CellSize, isEven, axiis, planes);
+            }
+
+            if (!isYEven)
+            {
+                GetMassBreakdown_Ellipsoid_Axis_Add(Axis.X, Axis.Z, cellMax, originIndex, xyzLength, xyzRatios, e.CellSize, isEven, axiis, planes);
+            }
+
+            if (!isZEven)
+            {
+                GetMassBreakdown_Ellipsoid_Axis_Add(Axis.X, Axis.Y, cellMax, originIndex, xyzLength, xyzRatios, e.CellSize, isEven, axiis, planes);
+            }
+
+            #region visualize
+
+            //const double AXISLEN = 3;
+            //const double LINETHICK = .005;
+            //const double DOTRAD = .02;
+
+            //Debug3DWindow window = new Debug3DWindow()
+            //{
+            //    Title = "GetMassBreakdown_Ellipsoid_Axis_fillaxiis",
+            //};
+
+            //window.AddAxisLines(AXISLEN, LINETHICK);
+
+            //window.AddDot(new Point3D(e.CellSize * ratioX, 0, 0), DOTRAD, UtilityWPF.ColorFromHex("844"));
+            //window.AddDot(new Point3D(0, e.CellSize * ratioY, 0), DOTRAD, UtilityWPF.ColorFromHex("484"));
+            //window.AddDot(new Point3D(0, 0, e.CellSize * ratioZ), DOTRAD, UtilityWPF.ColorFromHex("448"));
+
+            //window.AddText(string.Format("isEven: {0}, {1}, {2}", isXEven, isYEven, isZEven));
+
+
+            //// Show cubes
+            //window.AddMesh(UtilityWPF.GetCube_IndependentFaces(origin.Cells[0].Item1, origin.Cells[0].Item2), UtilityWPF.ColorFromHex("60444444"));
+
+            //window.AddText(string.Format("xyzStart {0}, {1}, {2}", xStart, yStart, zStart));
+
+            //window.AddText(string.Format("Origin Index = {0}", origin.Indices[0].ToString()));
+
+            //var getColor = new Func<Axis, Color>(a =>
+            //{
+            //    switch (a)
+            //    {
+            //        case Axis.X: return UtilityWPF.ColorFromHex("60804040");
+            //        case Axis.Y: return UtilityWPF.ColorFromHex("60408040");
+            //        case Axis.Z: return UtilityWPF.ColorFromHex("60404080");
+
+            //        default:
+            //            throw new ApplicationException("Unknown Axis: " + a.ToString());
+            //    }
+            //});
+
+            //foreach (var axis in axiis.OrderBy(o => o.Item1))
+            //{
+            //    Color color = getColor(axis.Item1);
+
+            //    foreach (var cell in axis.Item2.Cells)
+            //    {
+            //        window.AddMesh(UtilityWPF.GetCube_IndependentFaces(cell.Item1, cell.Item2), UtilityWPF.GetRandomColor(color.A, color.R, color.G, color.B, 8));
+            //    }
+
+            //    window.AddText(string.Format("Axis {0} indices {1}", axis.Item1, axis.Item2.Indices.Select(o => o.ToString()).ToJoin(" | ")));
+            //}
+
+            //foreach (var plane in planes.OrderBy(o => o.Item1).ThenBy(o => o.Item2))
+            //{
+            //    byte[] color = new byte[] { 64, 64, 64 };
+            //    color[GetAxisIndex(plane.Item1)] = 128;
+            //    color[GetAxisIndex(plane.Item2)] = 128;
+
+            //    foreach (var cell in plane.Item3.Cells)
+            //    {
+            //        window.AddMesh(UtilityWPF.GetCube_IndependentFaces(cell.Item1, cell.Item2), UtilityWPF.GetRandomColor(96, color[0], color[1], color[2], 8));
+            //    }
+
+            //    window.AddText(string.Format("Axis {0}, {1} indices {2}", plane.Item1, plane.Item2, plane.Item3.Indices.Select(o => o.ToString()).ToJoin(" | ")));
+            //}
+
+            //window.AddDot(new Point3D(0, 0, 0), maxRadius, UtilityWPF.ColorFromHex("08808080"), isHiRes: true);
+
+            //window.Show();
+
+            #endregion
+
+            var iterateCells = UtilityCore.Iterate<AxisInfo_Sphere>(origin, axiis.Select(o => o.Item2), planes.Select(o => o.Item3)).
+                SelectMany(o => Enumerable.Range(0, o.Cells.Length).Select(p => new
+                {
+                    X = o.Indices[p].Item1,
+                    Y = o.Indices[p].Item2,
+                    Z = o.Indices[p].Item3,
+                    CellMin = o.Cells[p].Item1.ToVector(),
+                    CellMax = o.Cells[p].Item2.ToVector(),
+                }));
+
+            foreach (var axisCell in iterateCells)
+            {
+                ProcessCell_Sphere(masses, axisCell.X, axisCell.Y, axisCell.Z, xyzStart, isEven, axisCell.CellMin, axisCell.CellMax, /*axisCell.VolumeMultiplier,*/ maxRadius, e);
+            }
+        }
+        private static void GetMassBreakdown_Ellipsoid_Axis_Add(Axis axis1, Axis axis2, Point3D cellMax, int[] originIndex, int[] xyzLength, VectorND xyzRatios, double cellSize, bool[] isEven, List<Tuple<Axis, AxisInfo_Sphere>> axiis, List<Tuple<Axis, Axis, AxisInfo_Sphere>> planes)
+        {
+            #region axiis
+
+            foreach (Axis axis in new[] { axis1, axis2 })
+            {
+                if (!axiis.Any(o => o.Item1 == axis))
+                {
+                    int index = GetAxisIndex(axis);
+
+                    IEnumerable<int> rangeIterator = Enumerable.Range(originIndex[index], xyzLength[index] - originIndex[index] - 1);
+
+                    axiis.Add(new Tuple<Axis, AxisInfo_Sphere>(axis,
+                        new AxisInfo_Sphere()
+                        {
+                            Cells = rangeIterator.
+                                Select(o =>
+                                {
+                                    VectorND cellPosMin = new VectorND(3);
+                                    VectorND cellPosMax = cellMax.ToVectorND();
+
+                                    AdjustSpherePosition(cellPosMin, cellPosMax, axis, o, cellSize, xyzRatios, cellMax, originIndex);
+
+                                    return Tuple.Create(cellPosMin.ToPoint3D(), cellPosMax.ToPoint3D());
+                                }).
+                                ToArray(),
+
+                            Indices = rangeIterator.
+                                Select(o =>
+                                {
+                                    int[] cellIndex = originIndex.ToArray();
+
+                                    cellIndex[index] = o + 1;
+
+                                    return Tuple.Create(cellIndex[0], cellIndex[1], cellIndex[2]);
+                                }).
+                                ToArray(),
+                        }));
+                }
+            }
+
+            #endregion
+
+            #region plane
+
+            int index1 = GetAxisIndex(axis1);
+            int index2 = GetAxisIndex(axis2);
+
+            var iteratator = UtilityCore.Collate(
+                Enumerable.Range(originIndex[index1], xyzLength[index1] - originIndex[index1] - 1),
+                Enumerable.Range(originIndex[index2], xyzLength[index2] - originIndex[index2] - 1));
+
+            planes.Add(new Tuple<Axis, Axis, AxisInfo_Sphere>(axis1, axis2,
+                new AxisInfo_Sphere()
+                {
+                    Cells = iteratator.
+                        Select(o =>
+                        {
+                            VectorND cellPosMin = new VectorND(3);
+                            VectorND cellPosMax = cellMax.ToVectorND();
+
+                            AdjustSpherePosition(cellPosMin, cellPosMax, axis1, o.Item1, cellSize, xyzRatios, cellMax, originIndex);
+                            AdjustSpherePosition(cellPosMin, cellPosMax, axis2, o.Item2, cellSize, xyzRatios, cellMax, originIndex);
+
+                            return Tuple.Create(cellPosMin.ToPoint3D(), cellPosMax.ToPoint3D());
+                        }).
+                        ToArray(),
+
+                    Indices = iteratator.
+                        Select(o =>
+                        {
+                            int[] cellIndex = originIndex.ToArray();
+
+                            cellIndex[index1] = o.Item1 + 1;
+                            cellIndex[index2] = o.Item2 + 1;
+
+                            return Tuple.Create(cellIndex[0], cellIndex[1], cellIndex[2]);
+                        }).
+                        ToArray(),
+                }));
+
+            #endregion
+        }
+
+        private static int GetAxisIndex(Axis axis)
+        {
+            switch (axis)
+            {
+                case Axis.X: return 0;
+                case Axis.Y: return 1;
+                case Axis.Z: return 2;
+
+                default:
+                    throw new ApplicationException("Unknown Axis: " + axis.ToString());
+            }
+        }
+
+        private static void AdjustSpherePosition(VectorND cellPosMin, VectorND cellPosMax, Axis axis, int iteration, double cellSize, VectorND xyzRatios, Point3D cellMax, int[] xyzStart)
+        {
+            int index = GetAxisIndex(axis);
+
+            double minSubtract = (cellSize * xyzRatios[index]) - cellPosMax[index];
+
+            double offset = (iteration - xyzStart[index] + 1) * (cellSize * xyzRatios[index]);
+
+            cellPosMin[index] += offset - minSubtract;        // the max is fine, but min needs to be subtracted by half if it's odd along that axis
+            cellPosMax[index] += offset;
+        }
+
+        private static void ProcessCell_Sphere(double[] masses, int x, int y, int z, int[] xyzStart, bool[] isXYZEven, Vector3D cellMin, Vector3D cellMax, double maxRadius, ObjectMassBreakdown e)
+        {
+            if (cellMin.LengthSquared > maxRadius * maxRadius)
+            {
+                // This cell is completely outside the sphere.  Leave the mass as zero
+                return;
+            }
+
+            double volume = e.CellSize * e.CellSize * e.CellSize;
+
+            if (cellMax.LengthSquared > maxRadius * maxRadius)
+            {
+                // This cell is clipped by the sphere.  Figure out which faces the sphere is intersecting
+                double? volumePercent = GetVolumePercentIntersectedCube(cellMin.ToPoint(), cellMax.ToPoint(), maxRadius);
+                volume *= volumePercent ?? 0d;
+            }
+
+            // Figure out what the coords are in the other quadrants (when the length of the axis odd, start needs to be skipped over)
+            //NOTE: If x y or z are on the axis, then alt will also be that axis.  The same cell will be populated multiple times with the same value,
+            //but it saves on a bunch of if statements
+            int altX = x;
+            if (x >= xyzStart[0])
+                altX = xyzStart[0] - (x + (isXYZEven[0] ? 1 : 2) - xyzStart[0]);
+
+            int altY = y;
+            if (y >= xyzStart[1])
+                altY = xyzStart[1] - (y + (isXYZEven[1] ? 1 : 2) - xyzStart[1]);
+
+            int altZ = z;
+            if (z >= xyzStart[2])
+                altZ = xyzStart[2] - (z + (isXYZEven[2] ? 1 : 2) - xyzStart[2]);
+
+            masses[e.GetIndex(x, y, z)] = volume;
+            masses[e.GetIndex(x, altY, z)] = volume;
+            masses[e.GetIndex(x, y, altZ)] = volume;
+            masses[e.GetIndex(x, altY, altZ)] = volume;
+
+            masses[e.GetIndex(altX, y, z)] = volume;
+            masses[e.GetIndex(altX, altY, z)] = volume;
+            masses[e.GetIndex(altX, y, altZ)] = volume;
+            masses[e.GetIndex(altX, altY, altZ)] = volume;
+        }
+
+        private static double? GetVolumePercentIntersectedCube(Point3D cellMin, Point3D cellMax, double maxRadius)
+        {
+            if (cellMin.ToVector().LengthSquared > maxRadius * maxRadius)
+            {
+                return null;
+            }
+
+            #region cube faces
+
+            // Convert the cube into 6 faces (using the transformed points)
+
+            Point3D[] cellPoints = new[]
+            {
+                new Point3D(cellMin.X, cellMin.Y, cellMin.Z),     // 0
+
+                new Point3D(cellMax.X, cellMin.Y, cellMin.Z),     // 1
+                new Point3D(cellMin.X, cellMax.Y, cellMin.Z),     // 2
+                new Point3D(cellMin.X, cellMin.Y, cellMax.Z),     // 3
+
+                new Point3D(cellMin.X, cellMax.Y, cellMax.Z),     // 4
+                new Point3D(cellMax.X, cellMin.Y, cellMax.Z),     // 5
+                new Point3D(cellMax.X, cellMax.Y, cellMin.Z),     // 6
+
+                new Point3D(cellMax.X, cellMax.Y, cellMax.Z),     // 7
+            };
+
+            Edge3D[] scaledCubeEdges = new[]
+            {
+                new Edge3D(0, 1, cellPoints),     // 0
+                new Edge3D(1, 5, cellPoints),     // 1
+                new Edge3D(3, 5 ,cellPoints),     // 2
+                new Edge3D(0, 3, cellPoints),     // 3
+
+                new Edge3D(2, 6, cellPoints),     // 4
+                new Edge3D(6, 7, cellPoints),     // 5
+                new Edge3D(4, 7, cellPoints),     // 6
+                new Edge3D(2, 4, cellPoints),     // 7
+
+                new Edge3D(0, 2, cellPoints),     // 8
+                new Edge3D(3, 4, cellPoints),     // 9
+                new Edge3D(5, 7, cellPoints),     // 10
+                new Edge3D(1, 6, cellPoints),     // 11
+            };
+
+            Face3D[] cellFaces = new[]
+            {
+                new Face3D(new[] { 0, 8, 4, 11 }, scaledCubeEdges),       // 0
+                new Face3D(new[] { 0, 1, 2, 3 }, scaledCubeEdges),       // 1
+                new Face3D(new[] { 3, 9, 7, 8 }, scaledCubeEdges),       // 2
+                new Face3D(new[] { 5, 10, 1, 11 }, scaledCubeEdges),       // 3
+                new Face3D(new[] { 4, 7, 6, 5 }, scaledCubeEdges),       // 4
+                new Face3D(new[] { 6, 9, 2, 10 }, scaledCubeEdges),       // 5
+            };
+
+            #endregion
+
+            #region visualize
+
+            //foreach (Face3D face in scaledCubeFaces)
+            //{
+            //    VisualizeFaceCircleIntercept_rotation(face, new Point3D(0, 0, 0), maxRadius);
+            //}
+
+            #endregion
+
+            Point3D[][] polys = cellFaces.
+                Select(o => Math3D.GetIntersection_Face_Sphere(o, new Point3D(0, 0, 0), maxRadius)).
+                ToArray();
+
+            var hull = Math3D.GetConvexHull(polys.SelectMany(o => o).ToArray());
+            if (hull == null)
+            {
+                #region visualize
+
+                //Point3D[] polyPoints = polys.
+                //    SelectMany(o => o).
+                //    ToArray();
+
+                //if (polyPoints.Length > 1)
+                //{
+                //    Debug3DWindow window = new Debug3DWindow()
+                //    {
+                //        Title = "Couldn't generate hull",
+                //        Background = new SolidColorBrush(UtilityWPF.ColorFromHex("A77")),
+                //    };
+
+                //    window.AddDots(polyPoints, .02, Colors.Red);
+
+                //    window.Show();
+                //}
+
+                #endregion
+                return null;        // this should never happen
+            }
+
+            double volumeFull = (cellMax.X - cellMin.X) * (cellMax.Y - cellMin.Y) * (cellMax.Z - cellMin.Z);
+            double volume = Math3D.GetVolume_ConvexHull(hull);
+            if (volume > volumeFull)
+            {
+                volume = .5;     // this should never happen
+            }
+
+            #region visualize
+
+            //VisualizeSphereCubeRatios(scaledCubeFaces, maxRadius, ratioX, ratioY, ratioZ);
+
+            //VisualizeSphereCubeIntersect(scaledCubeFaces, maxRadius, polys);
+            //VisualizeIntersectedHull(polys, hull, volumeScaled, fullVolumeScaled);
+
+            #endregion
+
+            return volume / volumeFull;
+        }
+
+        private static void VisualizeFaceCircleIntercept_rotation(Face3D face, Point3D sphereCenter, double sphereRadius)
+        {
+            const double AXISLEN = 3;
+            const double LINETHICK = .01;
+            const double DOTRAD = .05;
+
+            var window = new Debug3DWindow();
+
+            window.AddAxisLines(AXISLEN, LINETHICK);
+
+            #region orig plane
+
+            ITriangle plane = face.GetPlane();
+
+            Point3D[] polyPoints = face.GetPolygonPoints();
+
+            // Orig
+            window.AddDots(plane.PointArray, DOTRAD * 1.1, UtilityWPF.ColorFromHex("FF0000"));
+            window.AddPlane(plane, AXISLEN, UtilityWPF.ColorFromHex("FF0000"));
+
+            #endregion
+            #region transformed 2D
+
+            // Transformed (I think this is failing because the vectors are along the x,y,z planes)
+            var transform2D = Math2D.GetTransformTo2D(plane);
+
+            var transformed = polyPoints.
+                Select(o => transform2D.Item1.Transform(o).ToPoint2D().ToPoint3D()).
+                //Select(o => transform2D.Item1.Transform(o)).
+                ToArray();
+
+            ITriangle transformedPlane = new Triangle(transformed[0], transformed[1], transformed[2]);
+
+            window.AddDots(transformed, DOTRAD, UtilityWPF.ColorFromHex("FF7070"));
+            window.AddPlane(transformedPlane, AXISLEN, UtilityWPF.ColorFromHex("FF4040"), UtilityWPF.ColorFromHex("FFC0C0"));
+
+            #endregion
+            #region transformed back 3D
+
+            // Transformed back
+            var transformedBack = transformed.
+                Select(o => transform2D.Item2.Transform(o)).
+                ToArray();
+
+            window.AddDots(transformedBack, DOTRAD, UtilityWPF.ColorFromHex("FFC0C0"));
+            window.AddPlane(new Triangle(transformedBack[0], transformedBack[1], transformedBack[2]), AXISLEN, UtilityWPF.ColorFromHex("FFC0C0"));
+
+            #endregion
+            #region transformed back 3D from actual 2D
+
+            var transformedBack2 = transformed.
+                Select(o => o.ToPoint2D().ToPoint3D()).
+                Select(o => transform2D.Item2.Transform(o)).
+                ToArray();
+
+            window.AddDots(transformedBack2, DOTRAD, UtilityWPF.ColorFromHex("EEE"));
+            window.AddPlane(new Triangle(transformedBack2[0], transformedBack2[1], transformedBack2[2]), AXISLEN, UtilityWPF.ColorFromHex("EEE"));
+
+            #endregion
+
+            #region analyze transform
+
+            //Vector3D line1 = plane.Point1 - plane.Point0;
+            //Vector3D randomOrth = Math3D.GetOrthogonal(line1, plane.Point2 - plane.Point0);
+
+            //window.AddLine(new Point3D(0, 0, 0), line1.ToPoint(), LINETHICK * 2, UtilityWPF.ColorFromHex("B0B0FF"));
+            //window.AddLine(new Point3D(0, 0, 0), randomOrth.ToPoint(), LINETHICK * 2, UtilityWPF.ColorFromHex("5050FF"));
+
+
+            //DoubleVector from = new DoubleVector(line1, randomOrth);
+            //DoubleVector to = new DoubleVector(new Vector3D(1, 0, 0), new Vector3D(0, 1, 0));
+
+            ////Quaternion rotation = from.GetRotation(to);
+            //Quaternion rotation = GetRotation_custom(window, from.Standard, from.Orth, to.Standard, to.Orth);
+
+            #endregion
+
+            #region window background
+
+            if (Math.Abs(Vector3D.DotProduct(transformedPlane.NormalUnit, new Vector3D(0, 0, 1))).IsNearValue(1d))
+            {
+                if (Enumerable.Range(0, polyPoints.Length).All(o => polyPoints[o].IsNearValue(transformedBack[o]) && polyPoints[o].IsNearValue(transformedBack2[o])))
+                {
+                    window.Background = new SolidColorBrush(UtilityWPF.ColorFromHex("788878"));
+                }
+                else
+                {
+                    window.Background = new SolidColorBrush(UtilityWPF.ColorFromHex("787888"));
+
+                    string planeDump = plane.PointArray.
+                        Select(o => o.ToString()).
+                        ToJoin("\r\n");
+
+                    string polyDump = polyPoints.
+                        Select(o => o.ToString()).
+                        ToJoin("\r\n");
+
+                    window.Messages_Bottom.Add(new System.Windows.Controls.TextBox()
+                    {
+                        AcceptsReturn = true,
+                        Background = Brushes.Transparent,
+                        Foreground = Brushes.White,
+                        Text = string.Format("plane:\r\n{0}\r\n\r\npoly:\r\n{1}", planeDump, polyDump),
+                    });
+                }
+            }
+            else
+            {
+                window.Background = new SolidColorBrush(UtilityWPF.ColorFromHex("887878"));
+            }
+
+            #endregion
+
+            window.Show();
+        }
+        private static void VisualizeSphereCubeIntersect(Face3D[] scaledCubeFaces, double sphereRadius, Point3D[][] polys)
+        {
+            const double AXISLEN = 3;
+            const double LINETHICK = .005;
+            const double DOTRAD = .02;
+
+            var window = new Debug3DWindow();
+
+            window.AddAxisLines(AXISLEN, LINETHICK);
+
+            Point3D[] facePoints = scaledCubeFaces.
+                SelectMany(o => o.GetPolygonPoints()).
+                ToArray();
+
+            Point3D[] polyPoints = Math3D.GetUnique(polys.SelectMany(o => o));
+
+            var edges = Edge3D.GetUniqueLines(scaledCubeFaces.SelectMany(o => o.Edges).ToArray());
+
+            window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
+            window.AddDots(polyPoints, DOTRAD, UtilityWPF.ColorFromHex("FFF"));
+
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+
+            window.AddDot(new Point3D(0, 0, 0), sphereRadius, UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
+
+            window.Show();
+        }
+        private static void VisualizeSphereCubeRatios(Face3D[] scaledCubeFaces, double sphereRadius, double ratioX, double ratioY, double ratioZ)
+        {
+            const double AXISLEN = 3;
+            const double LINETHICK = .005;
+            const double DOTRAD = .02;
+
+            string id = Guid.NewGuid().ToString();
+
+            #region sphere
+
+            var window = new Debug3DWindow()
+            {
+                Title = id,
+                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("BAA")),
+            };
+
+            window.AddAxisLines(AXISLEN, LINETHICK);
+
+            Point3D[] facePoints = scaledCubeFaces.
+                SelectMany(o => o.GetPolygonPoints()).
+                ToArray();
+
+            var edges = Edge3D.GetUniqueLines(scaledCubeFaces.SelectMany(o => o.Edges).ToArray());
+
+            window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
+
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+
+            window.AddDot(new Point3D(0, 0, 0), sphereRadius, UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
+
+            window.Show();
+
+            #endregion
+            #region ellipsoid
+
+            Transform3D unscaleTransform = new ScaleTransform3D(1 / ratioX, 1 / ratioY, 1 / ratioZ);
+
+            Point3D[] unscaledPoints = scaledCubeFaces[0].AllEdges[0].AllEdgePoints.
+                Select(o => unscaleTransform.Transform(o)).
+                ToArray();
+
+            Edge3D[] unscaledEdges = scaledCubeFaces[0].AllEdges.
+                Select(o => new Edge3D(o.Index0, o.Index1.Value, unscaledPoints)).
+                ToArray();
+
+            Face3D[] unscaledCubeFaces = scaledCubeFaces.
+                Select(o => new Face3D(o.EdgeIndices, unscaledEdges)).
+                ToArray();
+
+            window = new Debug3DWindow()
+            {
+                Title = id,
+                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("AAB")),
+            };
+
+            window.AddAxisLines(AXISLEN, LINETHICK);
+
+            facePoints = unscaledCubeFaces.
+                SelectMany(o => o.GetPolygonPoints()).
+                ToArray();
+
+            edges = Edge3D.GetUniqueLines(unscaledCubeFaces.SelectMany(o => o.Edges).ToArray());
+
+            window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
+
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+
+            window.AddEllipse(new Point3D(0, 0, 0), new Vector3D(sphereRadius / ratioX, sphereRadius / ratioY, sphereRadius / ratioZ), UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
+
+            window.Show();
+
+            #endregion
+        }
+        private static void VisualizeIntersectedHull(Point3D[][] polys, TriangleIndexed[] hull, double polyVolume, double cellVolume)
+        {
+            const double AXISLEN = 3;
+            const double LINETHICK = .005;
+            const double DOTRAD = .02;
+
+            var window = new Debug3DWindow()
+            {
+                Background = new SolidColorBrush(UtilityWPF.ColorFromHex("D4B9A7")),
+            };
+
+            window.AddAxisLines(AXISLEN, LINETHICK);
+
+            Point3D[] points = Math3D.GetUnique(polys.SelectMany(o => o));
+
+            window.AddDots(points, DOTRAD, UtilityWPF.ColorFromHex("FFF"));
+
+            //window.AddHull(hull, UtilityWPF.ColorFromHex("40FF9775"), UtilityWPF.ColorFromHex("FFE2D9"), LINETHICK);      // the lines are distracting
+            window.AddHull(hull, UtilityWPF.ColorFromHex("40FF9775"));
+
+            window.AddMessage(string.Format("poly\t{0}", polyVolume));
+            window.AddMessage(string.Format("cell\t{0}", cellVolume));
+            window.AddMessage(string.Format("percent\t{0}", polyVolume / cellVolume));
+
+            window.Show();
+        }
+
+        #endregion
         #region Private Methods
 
-        private static double[] GetMassBreakdownSprtBox2D(ObjectMassBreakdown e)
+        private static double[] GetMassBreakdown_Box2D(ObjectMassBreakdown e)
         {
             double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
 
@@ -507,9 +1871,9 @@ namespace Game.Newt.v2.NewtonDynamics
 
                         // If the the cell is completly inside the object, then give it a mass of one.  Otherwise some percent of that
 
-                        double xAmt = GetMassBreakdownSprtBox2DSprtAxis(Math.Abs(min.X), Math.Abs(max.X), e.ObjectSize.X, halfObjSize.X, e.CellSize);
-                        double yAmt = GetMassBreakdownSprtBox2DSprtAxis(Math.Abs(min.Y), Math.Abs(max.Y), e.ObjectSize.Y, halfObjSize.Y, e.CellSize);
-                        double zAmt = GetMassBreakdownSprtBox2DSprtAxis(Math.Abs(min.Z), Math.Abs(max.Z), e.ObjectSize.Z, halfObjSize.Z, e.CellSize);
+                        double xAmt = GetMassBreakdown_Box2D_Axis(Math.Abs(min.X), Math.Abs(max.X), e.ObjectSize.X, halfObjSize.X, e.CellSize);
+                        double yAmt = GetMassBreakdown_Box2D_Axis(Math.Abs(min.Y), Math.Abs(max.Y), e.ObjectSize.Y, halfObjSize.Y, e.CellSize);
+                        double zAmt = GetMassBreakdown_Box2D_Axis(Math.Abs(min.Z), Math.Abs(max.Z), e.ObjectSize.Z, halfObjSize.Z, e.CellSize);
 
                         double subVolume = xAmt * yAmt * zAmt;
                         double percent = subVolume / wholeVolume;
@@ -526,7 +1890,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             return retVal;
         }
-        private static double GetMassBreakdownSprtBox2DSprtAxis(double absMin, double absMax, double size, double halfSize, double cellSize)
+        private static double GetMassBreakdown_Box2D_Axis(double absMin, double absMax, double size, double halfSize, double cellSize)
         {
             double min = absMin;
             double max = absMax;
@@ -555,7 +1919,7 @@ namespace Game.Newt.v2.NewtonDynamics
             }
         }
 
-        private static double[] GetMassBreakdownSprtBox3D(ObjectMassBreakdown e)
+        private static double[] GetMassBreakdown_Box3D(ObjectMassBreakdown e)
         {
             double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
 
@@ -730,534 +2094,7 @@ namespace Game.Newt.v2.NewtonDynamics
             return retVal;
         }
 
-        private static double[] GetMassBreakdownSprtCylinder(ObjectMassBreakdown e)
-        {
-            double[] retVal = new double[e.ZLength * e.YLength * e.XLength];
-
-            #region Pre calculations
-
-            double halfSize = e.CellSize * .5d;
-            Vector3D halfObjSize = new Vector3D(e.ObjectSize.X * .5d, e.ObjectSize.Y * .5d, e.ObjectSize.Z * .5d);
-            double wholeVolume = e.CellSize * e.CellSize * e.CellSize;
-
-            // The cylinder's axis is along x
-            // Only go through the quadrant with positive values.  Then copy the results to the other three quadrants
-
-            bool isYEven = true;
-            int yStart = e.YLength / 2;
-            if (e.YLength % 2 == 1)
-            {
-                yStart++;
-                isYEven = false;
-            }
-
-            bool isZEven = true;
-            int zStart = e.ZLength / 2;
-            if (e.ZLength % 2 == 1)
-            {
-                zStart++;
-                isZEven = false;
-            }
-
-            // These tell how to convert the ellipse into a circle
-            double objectSizeHalfY = e.ObjectSize.Y * .5d;
-            double objectSizeHalfZ = e.ObjectSize.Z * .5d;
-            double maxRadius = Math.Max(objectSizeHalfY, objectSizeHalfZ);
-            double ratioY = maxRadius / objectSizeHalfY;
-            double ratioZ = maxRadius / objectSizeHalfZ;
-
-            #endregion
-
-            #region Y,Z axis tiles
-
-            if (!isYEven)
-            {
-                GetMassBreakdownSprtCylinderSprtYZero(retVal, yStart - 1, zStart, isZEven, ratioZ, ratioZ, halfObjSize, maxRadius, e);
-            }
-
-            if (!isZEven)
-            {
-                GetMassBreakdownSprtCylinderSprtZZero(retVal, yStart, zStart - 1, isYEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
-            }
-
-            if (!isYEven && !isZEven)
-            {
-                GetMassBreakdownSprtCylinderSprtYZZero(retVal, yStart - 1, zStart - 1, ratioY, ratioZ, halfObjSize, maxRadius, e);
-            }
-
-            #endregion
-
-            // Quadrant tiles
-            GetMassBreakdownSprtCylinderSprtQuadrant(retVal, yStart, zStart, isYEven, isZEven, ratioY, ratioZ, halfObjSize, maxRadius, e);
-
-            // Exit Function
-            return retVal;
-        }
-        private static void GetMassBreakdownSprtCylinderSprtYZero(double[] masses, int y, int zStart, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
-        {
-            for (int z = zStart; z < e.ZLength; z++)
-            {
-                int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
-
-                #region Area of Y,Z tile
-
-                // Figure out how much of the circle is inside this square (just 2D for now)
-                Vector3D min = new Vector3D(0, e.CellSize * .5d * ratioY, (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);		//NOTE: min has positive y as well as max.  This just makes some of the calculations easier
-                Vector3D max = new Vector3D(0, min.Y, (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
-
-                double mass = 0d;
-
-                double maxLength = max.Length;
-                if (maxLength < maxRadius)
-                {
-                    // This tile is completely inside the circle
-                    mass = e.CellSize * e.CellSize;		// just the 2D mass
-                }
-                else if (min.Z < maxRadius)		// the bottom edge should never be greater than the circle, but just making sure
-                {
-                    #region Intersect Circle
-
-                    List<double> lengths = new List<double>();
-                    double percent;
-                    bool isTriangle = false;
-
-                    #region Y
-
-                    double minLength = min.Length;
-                    if (minLength < maxRadius)
-                    {
-                        // Circle intersects the line from min.Z,Y to max.Z,Y
-                        lengths.Add(e.CellSize);		// add one for the bottom segment
-
-                        // Add one for the y intercept
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
-                        lengths.Add(e.CellSize * percent);
-                        lengths.Add(e.CellSize * percent);
-                    }
-                    else
-                    {
-                        //TODO: Test this, execution has never gotten here
-
-                        // Circle never goes as far as min/max.Y, find the intersect along the min z line
-                        //NOTE: There are 2 intersects, so define min z as 0
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, min.Y, min.Z), maxRadius);		// min.Y is positive
-                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
-                    }
-
-                    #endregion
-                    #region Z
-
-                    if (max.Z >= maxRadius)
-                    {
-                        // The circle doesn't go all the way to the right edge, so assume a triangle
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, min.Z), new Vector3D(0d, 0d, max.Z), maxRadius);
-                        lengths.Add(e.CellSize * percent);
-                        isTriangle = true;
-                    }
-                    else
-                    {
-                        //TODO: Test this, execution has never gotten here
-
-                        // Find the intersect along the max z line
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, 0d, max.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
-                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Y, so double it to get -Y to Y
-                    }
-
-                    #endregion
-
-                    // Calculate the area (just assuming the circle portion is a straight line)
-                    switch (lengths.Count)
-                    {
-                        case 2:
-                            //TODO: Test this, execution has never gotten here
-
-                            if (isTriangle)
-                            {
-                                // Triangle (1/2 * base * height)
-                                mass = lengths[0] * lengths[1] * .5d;
-                            }
-                            else
-                            {
-                                // Trapazoid (.5 * (b1 + b2) * h)
-                                mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
-                            }
-                            break;
-
-                        case 4:
-                            // This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
-                            mass = lengths[0] * lengths[1];
-
-                            if (isTriangle)
-                            {
-                                // Rect + Triangle
-                                mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
-                            }
-                            else
-                            {
-                                //TODO: Test this, execution has never gotten here
-
-                                // Rect + Trapazoid
-                                mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
-                            }
-                            break;
-
-                        default:
-                            throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Set mass
-
-                // The end caps get partial height along x
-                double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
-
-                double volume = mass * (halfObjSize.X - xMin);
-                masses[e.GetIndex(0, y, z)] = volume;
-                masses[e.GetIndex(0, y, altZ)] = volume;
-
-                masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
-                masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
-
-                // Everything inside gets the full height
-                volume = mass * e.CellSize;
-                for (int x = 1; x < e.XLength - 1; x++)
-                {
-                    masses[e.GetIndex(x, y, z)] = volume;
-                    masses[e.GetIndex(x, y, altZ)] = volume;
-                }
-
-                #endregion
-            }
-        }
-        private static void GetMassBreakdownSprtCylinderSprtZZero(double[] masses, int yStart, int z, bool isYEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
-        {
-            for (int y = yStart; y < e.YLength; y++)
-            {
-                int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
-
-                #region Area of Y,Z tile
-
-                // Figure out how much of the circle is inside this square (just 2D for now)
-                Vector3D min = new Vector3D(0, (e.AABBMin.Y + (y * e.CellSize)) * ratioY, e.CellSize * .5d * ratioZ);		//NOTE: min has positive z as well as max.  This just makes some of the calculations easier
-                Vector3D max = new Vector3D(0, (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY, min.Z);
-
-                double mass = 0d;
-
-                double maxLength = max.Length;
-                if (maxLength < maxRadius)
-                {
-                    // This tile is completely inside the circle
-                    mass = e.CellSize * e.CellSize;		// just the 2D mass
-                }
-                else if (min.Y < maxRadius)		// the left edge should never be greater than the circle, but just making sure
-                {
-                    #region Intersect Circle
-
-                    List<double> lengths = new List<double>();
-                    double percent;
-                    bool isTriangle = false;
-
-                    #region Z
-
-                    double minLength = min.Length;
-                    if (minLength < maxRadius)
-                    {
-                        // Circle intersects the line from min.Y,Z to max.Y,Z
-                        lengths.Add(e.CellSize);		// add one for the left segment
-
-                        // Add one for the z intercept
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, min.Z), new Vector3D(0d, max.Y, max.Z), maxRadius);
-                        lengths.Add(e.CellSize * percent);
-                        lengths.Add(e.CellSize * percent);
-                    }
-                    else
-                    {
-                        // Circle never goes as far as min/max.Z, find the intersect along the min y line
-                        //NOTE: There are 2 intersects, so define min z as 0
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, min.Y, min.Z), maxRadius);		// min.Z is positive
-                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
-                    }
-
-                    #endregion
-                    #region Y
-
-                    if (max.Y >= maxRadius)
-                    {
-                        // The circle doesn't go all the way to the right edge, so assume a triangle
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, min.Y, 0d), new Vector3D(0d, max.Y, 0), maxRadius);
-                        lengths.Add(e.CellSize * percent);
-                        isTriangle = true;
-                    }
-                    else
-                    {
-                        //TODO: Test this, execution has never gotten here
-
-                        // Find the intersect along the max y line
-                        percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(new Vector3D(0d, max.Y, 0d), new Vector3D(0d, max.Y, max.Z), maxRadius);
-                        lengths.Add(e.CellSize * percent * 2d);		// percent is from 0 to Z, so double it to get -Z to Z
-                    }
-
-                    #endregion
-
-                    // Calculate the area (just assuming the circle portion is a straight line)
-                    switch (lengths.Count)
-                    {
-                        case 2:
-                            if (isTriangle)
-                            {
-                                // Triangle (1/2 * base * height)
-                                mass = lengths[0] * lengths[1] * .5d;
-                            }
-                            else
-                            {
-                                // Trapazoid (.5 * (b1 + b2) * h)
-                                mass = (lengths[0] + lengths[1]) * e.CellSize * .5d;
-                            }
-                            break;
-
-                        case 4:
-                            // This is a rectangle + (triangle or trapazoid).  Either way, calculate the rectangle portion
-                            mass = lengths[0] * lengths[1];
-
-                            if (isTriangle)
-                            {
-                                // Rect + Triangle
-                                mass += lengths[0] * (lengths[3] - lengths[1]) * .5d;
-                            }
-                            else
-                            {
-                                //TODO: Test this, execution has never gotten here
-
-                                // Rect + Trapazoid
-                                mass += (lengths[0] + lengths[3]) * (e.CellSize - lengths[1]) * .5d;
-                            }
-                            break;
-
-                        default:
-                            throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
-                    }
-
-                    #endregion
-                }
-
-                #endregion
-
-                #region Set mass
-
-                // The end caps get partial height along x
-                double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
-
-                double volume = mass * (halfObjSize.X - xMin);
-                masses[e.GetIndex(0, y, z)] = volume;
-                masses[e.GetIndex(0, altY, z)] = volume;
-
-                masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
-                masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
-
-                // Everything inside gets the full height
-                volume = mass * e.CellSize;
-                for (int x = 1; x < e.XLength - 1; x++)
-                {
-                    masses[e.GetIndex(x, y, z)] = volume;
-                    masses[e.GetIndex(x, altY, z)] = volume;
-                }
-
-                #endregion
-            }
-        }
-        private static void GetMassBreakdownSprtCylinderSprtYZZero(double[] masses, int y, int z, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
-        {
-            #region Area of Y,Z tile
-
-            // Figure out how much of the circle is inside this square (just 2D for now)
-            Vector3D max = new Vector3D(0, e.CellSize * .5d * ratioY, e.CellSize * .5d * ratioZ);
-
-            double mass = 0d;
-
-            double maxLength = max.Length;
-            if (maxLength < maxRadius)
-            {
-                // This tile is completely inside the circle
-                mass = e.CellSize * e.CellSize;		// just the 2D mass
-            }
-            else
-            {
-                //double percent = maxRadius / maxLength;		// radius is half of the cell, and max is also half of the cell, so no need to multiply anything by 2
-                double percent = maxRadius / (e.CellSize * .5d);		// the previous line is wrong, max.length goes to the corner of the cell, but maxRadius is calculated with the length to the side of the cell
-
-                percent *= e.CellSize * .5d;		// reuse percent as the scaled radius
-
-                // A = pi r^2
-                mass = Math.PI * percent * percent;
-            }
-
-            #endregion
-
-            #region Set mass
-
-            // The end caps get partial height along x
-            double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
-
-            double volume = mass * (halfObjSize.X - xMin);
-            masses[e.GetIndex(0, y, z)] = volume;
-            masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
-
-            // Everything inside gets the full height
-            volume = mass * e.CellSize;
-            for (int x = 1; x < e.XLength - 1; x++)
-            {
-                masses[e.GetIndex(x, y, z)] = volume;
-            }
-
-            #endregion
-        }
-        private static void GetMassBreakdownSprtCylinderSprtQuadrant(double[] masses, int yStart, int zStart, bool isYEven, bool isZEven, double ratioY, double ratioZ, Vector3D halfObjSize, double maxRadius, ObjectMassBreakdown e)
-        {
-            // Loop through the y,z tiles in only one quadrant, then just copy the result to the other 3 quadrants
-            for (int z = zStart; z < e.ZLength; z++)
-            {
-                int zOffset = z * e.XLength * e.YLength;
-
-                for (int y = yStart; y < e.YLength; y++)
-                {
-                    int yOffset = y * e.XLength;
-
-                    // Figure out what the coords are in the other quadrants (when the length of the axis odd, start needs to be skipped over)
-                    int altY = yStart - (y + (isYEven ? 1 : 2) - yStart);
-                    int altZ = zStart - (z + (isZEven ? 1 : 2) - zStart);
-
-                    #region Area of Y,Z tile
-
-                    // Figure out how much of the circle is inside this square (just 2D for now)
-                    Vector3D min = new Vector3D(0, (e.AABBMin.Y + (y * e.CellSize)) * ratioY, (e.AABBMin.Z + (z * e.CellSize)) * ratioZ);
-                    Vector3D max = new Vector3D(0, (e.AABBMin.Y + ((y + 1) * e.CellSize)) * ratioY, (e.AABBMin.Z + ((z + 1) * e.CellSize)) * ratioZ);
-
-                    double mass = 0d;
-
-                    double maxLength = max.Length;
-                    if (maxLength < maxRadius)
-                    {
-                        // This tile is completely inside the circle
-                        mass = e.CellSize * e.CellSize;		// just the 2D mass
-                    }
-                    else
-                    {
-                        double minLength = min.Length;
-                        if (minLength > maxRadius)
-                        {
-                            // This tile is completely outside the circle
-                            mass = 0d;
-                        }
-                        else
-                        {
-                            #region Intersect Circle
-
-                            // This tile is clipped by the circle.  Figure out which edges the circle is intersecting
-                            Vector3D minPlusY = new Vector3D(0, min.Y + (e.CellSize * ratioY), min.Z);
-                            Vector3D minPlusZ = new Vector3D(0, min.Y, min.Z + (e.CellSize * ratioZ));
-
-                            // When calculating the area, it will either be a triangle, trapazoid or diamond
-                            List<double> lengths = new List<double>();
-
-                            double percent;
-
-                            if (minPlusY.Length > maxRadius)
-                            {
-                                // The intercept is along the line from min to min+Y
-                                percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(min, minPlusY, maxRadius);
-                                lengths.Add(e.CellSize * percent);
-                            }
-                            else
-                            {
-                                // The intercept is along the line from min+Y to max
-                                lengths.Add(e.CellSize);
-                                percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(minPlusY, max, maxRadius);
-                                lengths.Add(e.CellSize * percent);
-                            }
-
-                            if (minPlusZ.Length > maxRadius)
-                            {
-                                // The intercept is along the line from min to min+Z
-                                percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(min, minPlusZ, maxRadius);
-                                lengths.Add(e.CellSize * percent);
-                            }
-                            else
-                            {
-                                // The intercept is along the line from min+Z to max
-                                lengths.Add(e.CellSize);
-                                percent = GetMassBreakdownSprtCylinderSprtIntersectPercent(minPlusZ, max, maxRadius);
-                                lengths.Add(e.CellSize * percent);
-                            }
-
-                            // Calculate the area (just assuming the circle portion is a straight line)
-                            switch (lengths.Count)
-                            {
-                                case 2:
-                                    // Triangle (1/2 * base * height)
-                                    mass = lengths[0] * lengths[1] * .5d;
-                                    break;
-
-                                case 3:
-                                    // Trapazoid
-                                    lengths.Sort();
-                                    mass = lengths[0] * lengths[2];		// get the area of the shortest side x base
-                                    mass += lengths[2] * (lengths[1] - lengths[0]) * .5d;		// tack on the area of the triangle above that rectangle
-                                    break;
-
-                                case 4:
-                                    // Diamond
-                                    lengths.Sort();
-                                    mass = lengths[3] * lengths[1];		// get the area of the "horizontal" rectangle
-                                    mass += (lengths[2] - lengths[1]) * lengths[0];		// add the area of the "vertical" rectangle
-                                    mass += (lengths[3] - lengths[0]) * (lengths[2] - lengths[1]) * .5d;
-                                    break;
-
-                                default:
-                                    throw new ApplicationException("Unexpected number of segments: " + lengths.Count.ToString());
-                            }
-
-                            #endregion
-                        }
-                    }
-
-                    #endregion
-
-                    #region Set mass
-
-                    // The end caps get partial height along x
-                    double xMin = e.AABBMin.X + ((e.XLength - 1) * e.CellSize);
-
-                    double volume = mass * (halfObjSize.X - xMin);
-                    masses[e.GetIndex(0, y, z)] = volume;
-                    masses[e.GetIndex(0, altY, z)] = volume;
-                    masses[e.GetIndex(0, y, altZ)] = volume;
-                    masses[e.GetIndex(0, altY, altZ)] = volume;
-
-                    masses[e.GetIndex(e.XLength - 1, y, z)] = volume;
-                    masses[e.GetIndex(e.XLength - 1, altY, z)] = volume;
-                    masses[e.GetIndex(e.XLength - 1, y, altZ)] = volume;
-                    masses[e.GetIndex(e.XLength - 1, altY, altZ)] = volume;
-
-                    // Everything inside gets the full height
-                    volume = mass * e.CellSize;
-                    for (int x = 1; x < e.XLength - 1; x++)
-                    {
-                        masses[e.GetIndex(x, y, z)] = volume;
-                        masses[e.GetIndex(x, altY, z)] = volume;
-                        masses[e.GetIndex(x, y, altZ)] = volume;
-                        masses[e.GetIndex(x, altY, altZ)] = volume;
-                    }
-
-                    #endregion
-                }
-            }
-        }
-
-        private static void GetMassBreakdownSprtTemplate(out Point3D centerMass, out Point3D[] centers, out double[] masses, ObjectMassBreakdown e)
+        private static void GetMassBreakdown_Template(out Point3D centerMass, out Point3D[] centers, out double[] masses, ObjectMassBreakdown e)
         {
             centerMass = new Point3D(0, 0, 0);
             centers = new Point3D[e.ZLength * e.YLength * e.XLength];
@@ -1290,104 +2127,6 @@ namespace Game.Newt.v2.NewtonDynamics
                     }
                 }
             }
-        }
-
-        private static double GetMassBreakdownSprtCylinderSprtIntersectPercent(Vector3D lineStart, Vector3D lineStop, double radius)
-        {
-            Point start2D = new Point(lineStart.Y, lineStart.Z);
-            Point stop2D = new Point(lineStop.Y, lineStop.Z);
-
-            double? retVal = GetLineCircleIntersectPercent(start2D, stop2D - start2D, new Point(0, 0), radius);
-            if (retVal == null)
-            {
-                throw new ApplicationException("Shouldn't get null");
-            }
-
-            return retVal.Value;
-        }
-
-        //private static double GetLineCircleIntersectPercent(Point lineStart, Point lineStop, Point circleCenter, double radius)
-        //{
-        //    Vector direction = lineStop - lineStart;
-
-        //    Point intersect = GetLineCircleIntersect(lineStart, direction, circleCenter, radius);
-
-        //    double intersectLen = (intersect - lineStart).Length;
-        //    return intersectLen / direction.Length;
-        //}
-        /// <summary>
-        /// Got this here:
-        /// http://stackoverflow.com/questions/1073336/circle-line-collision-detection
-        /// </summary>
-        private static double? GetLineCircleIntersectPercent(Point lineStart, Vector lineDir, Point circleCenter, double radius)
-        {
-            Point C = circleCenter;
-            double r = radius;
-            Point E = lineStart;
-            Vector d = lineDir;
-            Vector f = E - C;
-
-            Vector3D d3D = new Vector3D(d.X, d.Y, 0);
-            Vector3D f3D = new Vector3D(f.X, f.Y, 0);
-
-            double a = Vector3D.DotProduct(d3D, d3D);
-            double b = 2d * Vector3D.DotProduct(f3D, d3D);
-            double c = Vector3D.DotProduct(f3D, f3D) - (r * r);
-
-            double discriminant = (b * b) - (4 * a * c);
-            if (discriminant < 0d)
-            {
-                // no intersection
-                return null;
-            }
-            else
-            {
-                // ray didn't totally miss circle, so there is a solution to the equation.
-                discriminant = Math.Sqrt(discriminant);
-
-                // either solution may be on or off the ray so need to test both
-                double t1 = (-b + discriminant) / (2d * a);
-                double t2 = (-b - discriminant) / (2d * a);
-
-                if (t1 >= 0d && t1 <= 1d)
-                {
-                    // t1 solution on is ON THE RAY.
-                    return t1;
-                }
-                else if (Math1D.IsNearZero(t1))
-                {
-                    return 0d;
-                }
-                else if (Math1D.IsNearValue(t1, 1d))
-                {
-                    return 1d;
-                }
-                else
-                {
-                    // t1 solution "out of range" of ray
-                    //return null;
-                }
-
-                if (t2 >= 0d && t2 <= 1d)
-                {
-                    // t2 solution on is ON THE RAY.
-                    return t2;
-                }
-                else if (Math1D.IsNearZero(t2))
-                {
-                    return 0d;
-                }
-                else if (Math1D.IsNearValue(t2, 1d))
-                {
-                    return 1d;
-                }
-                else
-                {
-                    // t2 solution "out of range" of ray
-                }
-            }
-
-            return null;
         }
 
         private static Point3D[] GetCenters(ObjectMassBreakdown e)
@@ -1430,7 +2169,7 @@ namespace Game.Newt.v2.NewtonDynamics
             int zLen = Convert.ToInt32(Math.Ceiling(size.Z / cellSize));
 
             Point3D aabbMax = new Point3D((cellSize * xLen) / 2d, (cellSize * yLen) / 2d, (cellSize * zLen) / 2d);
-            Point3D aabbMin = new Point3D(-aabbMax.X, -aabbMax.Y, -aabbMax.Z);		// it's centered at zero, so min is just max negated
+            Point3D aabbMin = new Point3D(-aabbMax.X, -aabbMax.Y, -aabbMax.Z);      // it's centered at zero, so min is just max negated
 
             // Build the returns
             lengths = new Tuple<int, int, int>(xLen, yLen, zLen);
@@ -1448,7 +2187,7 @@ namespace Game.Newt.v2.NewtonDynamics
                 return;
             }
 
-            double mult = 1d / total;		// multiplication is cheaper than division, so just do the division once
+            double mult = 1d / total;
 
             for (int cntr = 0; cntr < masses.Length; cntr++)
             {
@@ -1470,7 +2209,7 @@ namespace Game.Newt.v2.NewtonDynamics
                 return retVal.ToArray();
             }
 
-            double mult = 1d / total;		// multiplication is cheaper than division, so just do the division once
+            double mult = 1d / total;       // multiplication is cheaper than division, so just do the division once
 
             foreach (var item in items)
             {

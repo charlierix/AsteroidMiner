@@ -9,7 +9,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-
+using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v1.NewtonDynamics1.Api;
 
@@ -895,7 +895,7 @@ namespace Game.Newt.v1.NewtonDynamics1
             if (bodyHandles != null)
             {
                 // This artificial method gets called from within NewtonWorld.WorldRayCast
-                preFilterHandler = delegate(object sender, CWorldRayPreFilterEventArgs preFilterArgs)
+                preFilterHandler = delegate (object sender, CWorldRayPreFilterEventArgs preFilterArgs)
                 {
                     switch (filterType)
                     {
@@ -915,7 +915,7 @@ namespace Game.Newt.v1.NewtonDynamics1
 
             // Ask newton to do the hit test (it will invoke the filter delegate, whose implementation is above)
             this.NewtonWorld.WorldRayCast(posAsVector, posAsVector + (direction * rayLength),
-                delegate(object sender, CWorldRayFilterEventArgs filterArgs)
+                delegate (object sender, CWorldRayFilterEventArgs filterArgs)
                 {
                     hitTestResults.Add(filterArgs);
                 },
@@ -1478,9 +1478,9 @@ namespace Game.Newt.v1.NewtonDynamics1
 
                     Vector3D fromVect = new Vector3D(1, 0, 0);
                     Vector3D toVect = body.DirectionToWorld(fromVect);
-                    Vector3D axis;
-                    double radians;
-                    Math3D.GetRotation(out axis, out radians, fromVect, toVect);
+                    Quaternion rotation = Math3D.GetRotation(fromVect, toVect);
+                    Vector3D axis = rotation.Axis;
+                    double radians = Math1D.DegreesToRadians(rotation.Angle);
 
                     if ((axis.Y > 0 && radians > 0) || (axis.Y < 0 && radians < 0))
                     {
@@ -1511,7 +1511,10 @@ namespace Game.Newt.v1.NewtonDynamics1
 
                     fromVect = new Vector3D(0, 1, 0);
                     toVect = body.DirectionToWorld(fromVect);
-                    Math3D.GetRotation(out axis, out radians, fromVect, toVect);
+                    rotation = Math3D.GetRotation(fromVect, toVect);
+                    axis = rotation.Axis;
+                    radians = Math1D.DegreesToRadians(rotation.Angle);
+
 
                     if ((axis.X > 0 && radians > 0) || (axis.X < 0 && radians < 0))
                     {

@@ -4457,19 +4457,26 @@ namespace Game.HelperClassesWPF
         /// </summary>
         public static Tuple<Transform3D, Transform3D> GetTransformTo2D(ITriangle triangle)
         {
-            Vector3D line1 = triangle.Point1 - triangle.Point0;
+            Vector3D zUp = new Vector3D(0, 0, 1);
 
-            DoubleVector from = new DoubleVector(line1, Math3D.GetOrthogonal(line1, triangle.Point2 - triangle.Point0));
-            DoubleVector to = new DoubleVector(new Vector3D(1, 0, 0), new Vector3D(0, 1, 0));
+            if (Math.Abs(Vector3D.DotProduct(triangle.NormalUnit, zUp)).IsNearValue(1))
+            {
+                // It's already 2D
+                return new Tuple<Transform3D, Transform3D>(new TranslateTransform3D(0, 0, -triangle.Point0.Z), new TranslateTransform3D(0, 0, triangle.Point0.Z));
+            }
 
-            Quaternion rotation = from.GetRotation(to);
+            // Don't bother with a double vector, just rotate the normal
+            Quaternion rotation = Math3D.GetRotation(triangle.NormalUnit, zUp);
 
             Transform3DGroup transformTo2D = new Transform3DGroup();
             transformTo2D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
-            transformTo2D.Children.Add(new TranslateTransform3D(0, 0, -triangle.Point0.Z));
+
+            // Need to rotate the point so that it's parallel to the XY plane, then subtract off it's Z
+            Point3D rotatedXYPlane = transformTo2D.Transform(triangle[0]);
+            transformTo2D.Children.Add(new TranslateTransform3D(0, 0, -rotatedXYPlane.Z));
 
             Transform3DGroup transformTo3D = new Transform3DGroup();
-            transformTo3D.Children.Add(new TranslateTransform3D(0, 0, triangle.Point0.Z));
+            transformTo3D.Children.Add(new TranslateTransform3D(0, 0, rotatedXYPlane.Z));
             transformTo3D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation.ToReverse())));
 
             return new Tuple<Transform3D, Transform3D>(transformTo2D, transformTo3D);
@@ -5173,6 +5180,95 @@ namespace Game.HelperClassesWPF
             RotateTransform3D rotateTo3D = new RotateTransform3D(new QuaternionRotation3D(rotation.ToReverse()));
 
             return retVal.Select(o => rotateTo3D.Transform(o.ToPoint3D(clipRotated[0].Z))).ToArray();
+        }
+
+        public static Point? GetIntersection_LineSegment_Circle(Point lineStart, Point lineEnd, Point circleCenter, double radius)
+        {
+            double? percent = GetIntersection_LineSegment_Circle_percent(lineStart, lineEnd, circleCenter, radius);
+            if (percent == null)
+            {
+                return null;
+            }
+            else
+            {
+                return lineStart + ((lineEnd - lineStart) * percent.Value);
+            }
+        }
+        /// <summary>
+        /// Got this here:
+        /// http://stackoverflow.com/questions/1073336/circle-line-collision-detection
+        /// </summary>
+        public static double? GetIntersection_LineSegment_Circle_percent(Point lineStart, Point lineEnd, Point circleCenter, double radius)
+        {
+            Vector lineDir = lineEnd - lineStart;
+
+            Point C = circleCenter;
+            double r = radius;
+            Point E = lineStart;
+            Vector d = lineDir;
+            Vector f = E - C;
+
+            Vector3D d3D = new Vector3D(d.X, d.Y, 0);
+            Vector3D f3D = new Vector3D(f.X, f.Y, 0);
+
+            double a = Vector3D.DotProduct(d3D, d3D);
+            double b = 2d * Vector3D.DotProduct(f3D, d3D);
+            double c = Vector3D.DotProduct(f3D, f3D) - (r * r);
+
+            double discriminant = (b * b) - (4 * a * c);
+            if (discriminant < 0d)
+            {
+                // no intersection
+                return null;
+            }
+            else
+            {
+                // ray didn't totally miss circle, so there is a solution to the equation.
+                discriminant = Math.Sqrt(discriminant);
+
+                // either solution may be on or off the ray so need to test both
+                double t1 = (-b + discriminant) / (2d * a);
+                double t2 = (-b - discriminant) / (2d * a);
+
+                if (t1 >= 0d && t1 <= 1d)
+                {
+                    // t1 solution on is ON THE RAY.
+                    return t1;
+                }
+                else if (Math1D.IsNearZero(t1))
+                {
+                    return 0d;
+                }
+                else if (Math1D.IsNearValue(t1, 1d))
+                {
+                    return 1d;
+                }
+                else
+                {
+                    // t1 solution "out of range" of ray
+                    //return null;
+                }
+
+                if (t2 >= 0d && t2 <= 1d)
+                {
+                    // t2 solution on is ON THE RAY.
+                    return t2;
+                }
+                else if (Math1D.IsNearZero(t2))
+                {
+                    return 0d;
+                }
+                else if (Math1D.IsNearValue(t2, 1d))
+                {
+                    return 1d;
+                }
+                else
+                {
+                    // t2 solution "out of range" of ray
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

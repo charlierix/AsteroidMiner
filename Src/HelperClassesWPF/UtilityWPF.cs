@@ -1789,6 +1789,16 @@ namespace Game.HelperClassesWPF
             Random rand = StaticRandom.GetRandomForThread();
             return Color.FromArgb(alpha, Convert.ToByte(rand.Next(minRed, maxRed + 1)), Convert.ToByte(rand.Next(minGreen, maxGreen + 1)), Convert.ToByte(rand.Next(minBlue, maxBlue + 1)));
         }
+        public static Color GetRandomColor(byte alpha, byte baseR, byte baseG, byte baseB, int drift)
+        {
+            Random rand = StaticRandom.GetRandomForThread();
+
+            int newR = rand.Next(baseR - drift, baseR + drift + 1);
+            int newG = rand.Next(baseG - drift, baseG + drift + 1);
+            int newB = rand.Next(baseB - drift, baseB + drift + 1);
+
+            return Color.FromArgb(alpha, newR.ToByte(), newG.ToByte(), newB.ToByte());
+        }
 
         /// <summary>
         /// This returns random colors that are as far from each other as possible
@@ -3040,6 +3050,7 @@ namespace Game.HelperClassesWPF
             //retVal.Freeze();
             return retVal;
         }
+
         public static MeshGeometry3D GetCube(double size)
         {
             double halfSize = size / 2d;
@@ -8426,22 +8437,22 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
-        /// This will set one of the output x,y,z to index2D based on this.Axis
+        /// This will set one of the output x,y,z to index3D based on this.Axis
         /// </summary>
-        public void Set3DIndex(ref int x, ref int y, ref int z, int index2D)
+        public void Set3DIndex(ref int x, ref int y, ref int z, int index3D)
         {
             switch (this.Axis)
             {
                 case Axis.X:
-                    x = index2D;
+                    x = index3D;
                     break;
 
                 case Axis.Y:
-                    y = index2D;
+                    y = index3D;
                     break;
 
                 case Axis.Z:
-                    z = index2D;
+                    z = index3D;
                     break;
 
                 default:

@@ -48,10 +48,9 @@ namespace Game.Newt.v2.GameItems
 
             IEnumerable<ShipPartDNA> untouchedParts = InstantiateParts_Containers(validatedParts.Item1, parts, core, extra, events.InstantiateUnknownPart_Container, events.InstantiateUnknownPart_ContainerGroups);
 
-            //TODO: May want an extra pass between containers and standard (parts that use containers, but need to be handed to child parts)
-            //or if that gets out of hand, have a way to know dependencies --- maybe the get of all parts of type will ensure that all parts of that type are instantiated first
+            untouchedParts = InstantiateParts_Standard(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard);
 
-            InstantiateParts_Standard(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard);
+            InstantiateParts_Post(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard);
 
             //TODO: The discarded parts should still be part of the bot, just not active.  Make a special part that is an inactive lump,
             //and will hold the dna (future generations may mutate the dna enough to make it valid again)
@@ -540,8 +539,13 @@ namespace Game.Newt.v2.GameItems
 
             return untouchedParts;
         }
-        private static void InstantiateParts_Standard(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> instantiateUnknown)
+        /// <summary>
+        /// Standard parts should be the majority of the parts.  They only rely on containers
+        /// </summary>
+        private static IEnumerable<ShipPartDNA> InstantiateParts_Standard(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> instantiateUnknown)
         {
+            List<ShipPartDNA> untouchedParts = new List<ShipPartDNA>();
+
             EditorOptions options = extra.Options;
             ItemOptions itemOptions = extra.ItemOptions;
             BotConstruction_Containers containers = building.Containers;
@@ -623,16 +627,6 @@ namespace Game.Newt.v2.GameItems
                             dna, standard, building.AllParts);
                         break;
 
-                    case DirectionControllerRing.PARTTYPE:
-                        AddPart(new DirectionControllerRing(options, itemOptions, dna, containers.EnergyGroup),
-                            dna, standard, building.AllParts);
-                        break;
-
-                    case DirectionControllerSphere.PARTTYPE:
-                        AddPart(new DirectionControllerSphere(options, itemOptions, dna, containers.EnergyGroup),
-                            dna, standard, building.AllParts);
-                        break;
-
                     case SensorGravity.PARTTYPE:
                         AddPart(new SensorGravity(options, itemOptions, dna, containers.EnergyGroup, extra.Gravity),
                             dna, standard, building.AllParts);
@@ -697,6 +691,54 @@ namespace Game.Newt.v2.GameItems
                         }
                         else
                         {
+                            untouchedParts.Add(dna);
+                        }
+                        break;
+                }
+            }
+
+            return untouchedParts;
+        }
+        /// <summary>
+        /// This is for parts that need access to some of the standard parts
+        /// NOTE: These parts get added to the standard list
+        /// </summary>
+        private static void InstantiateParts_Post(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> instantiateUnknown)
+        {
+            EditorOptions options = extra.Options;
+            ItemOptions itemOptions = extra.ItemOptions;
+            BotConstruction_Containers containers = building.Containers;
+
+            var standard = building.StandardParts;
+
+            foreach (ShipPartDNA dna in parts)
+            {
+                switch (dna.PartType)
+                {
+                    case DirectionControllerRing.PARTTYPE:
+                        AddPart(new DirectionControllerRing(options, itemOptions, dna, containers.EnergyGroup, FindParts<Thruster>(standard), FindParts<ImpulseEngine>(standard)),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    case DirectionControllerSphere.PARTTYPE:
+                        AddPart(new DirectionControllerSphere(options, itemOptions, dna, containers.EnergyGroup, FindParts<Thruster>(standard), FindParts<ImpulseEngine>(standard)),
+                            dna, standard, building.AllParts);
+                        break;
+
+                    default:
+                        PartBase customPart = null;
+                        if (instantiateUnknown != null)
+                        {
+                            // Call a delegate
+                            customPart = instantiateUnknown(dna, core, extra, containers);
+                        }
+
+                        if (customPart != null)
+                        {
+                            AddPart(customPart, dna, standard, building.AllParts);
+                        }
+                        else
+                        {
                             //TODO: Make an unknown part that is a small dense sphere.  This way a bot could still be used in environments
                             //that don't know about the custom parts
                             throw new ApplicationException("Unknown dna.PartType: " + dna.PartType);
@@ -707,6 +749,16 @@ namespace Game.Newt.v2.GameItems
         }
         private static void InstantiateParts_Discarded(ShipPartDNA[] parts)
         {
+        }
+
+        private static T[] FindParts<T>(SortedList<string, List<PartBase>> parts) where T : PartBase
+        {
+            //NOTE: The sorted list has the desired type grouped up, but they would have to pass PARTTYPE as well.  This method isn't called very often, so just brute force it
+            return parts.
+                SelectMany(o => o.Value).
+                Where(o => o is T).
+                Select(o => o as T).
+                ToArray();
         }
 
         private static void AddPart<T>(T item, ShipPartDNA dna, List<T> specificList, List<Tuple<PartBase, ShipPartDNA>> combinedList) where T : PartBase

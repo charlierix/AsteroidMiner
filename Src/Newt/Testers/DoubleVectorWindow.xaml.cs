@@ -390,8 +390,312 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void Transform2D_bad_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //bad
+                ITriangle plane = new Triangle(new Point3D(1.63269152179486, 2.53001877553981, 0), new Point3D(0.544230507264952, 2.53001877553981, 0), new Point3D(0.544230507264952, 2.53001877553981, 4.56340608087975));
+
+                Point3D[] polyPoints = new[]
+                {
+                    new Point3D(0.544230507264952,2.53001877553981,0),
+                    new Point3D(0.544230507264952,2.53001877553981,4.56340608087975),
+                    new Point3D(1.63269152179486,2.53001877553981,4.56340608087975),
+                    new Point3D(1.63269152179486,2.53001877553981,0),
+                };
+
+                VisualizeTranform2D_overall(plane, polyPoints);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Transform2D_better_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //better
+                ITriangle plane = new Triangle(new Point3D(1.63269152179486, 2.53001877553981, 0), new Point3D(1.63269152179486, 2.53001877553981, 4.56340608087975), new Point3D(1.63269152179486, 0, 4.56340608087975));
+
+                Point3D[] polyPoints = new[]
+                {
+                    new Point3D(1.63269152179486,2.53001877553981,4.56340608087975),
+                    new Point3D(1.63269152179486,0,4.56340608087975),
+                    new Point3D(1.63269152179486,0,0),
+                    new Point3D(1.63269152179486,2.53001877553981,0),
+                };
+
+                VisualizeTranform2D_overall(plane, polyPoints);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void RotateTestCase_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                const double AXISLEN = 3;
+                const double LINETHICK = .01;
+                const double DOTRAD = .05;
+
+                Color colorFrom1 = UtilityWPF.ColorFromHex("666");
+                Color colorFrom2 = UtilityWPF.ColorFromHex("000");
+                Color colorTo1 = UtilityWPF.ColorFromHex("FFF");
+                Color colorTo2 = UtilityWPF.ColorFromHex("CCC");
+
+                #region initial conditions
+
+                //Vector3D from1 = new Vector3D(-1.08846101452991, 0, 0);
+                //Vector3D from2 = new Vector3D(0, 0, 5.4064833988896);
+                Vector3D from1 = new Vector3D(-1, 0, 0);
+                Vector3D from2 = new Vector3D(0, 0, 1);
+                Vector3D to1 = new Vector3D(1, 0, 0);
+                Vector3D to2 = new Vector3D(0, 1, 0);
+
+                #region RANDOM ROTATE
+
+                // This rotation doesn't matter.  It seems to be the perfect 90 then perfect 180
+                //Transform3D randRot = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRandomRotation()));
+                //from1 = randRot.Transform(from1);
+                //from2 = randRot.Transform(from2);
+                //to1 = randRot.Transform(to1);
+                //to2 = randRot.Transform(to2);
+
+                #endregion
+                #region SLIGHT ADJUST
+
+                //double maxAngle = .1;
+                //from1 = Math3D.GetRandomVector_Cone(from1, maxAngle);
+                //from2 = Math3D.GetRandomVector_Cone(from2, maxAngle);
+                //to1 = Math3D.GetRandomVector_Cone(to1, maxAngle);
+                //to2 = Math3D.GetRandomVector_Cone(to2, maxAngle);
+
+                #endregion
+
+                var window = new HelperClassesWPF.Controls3D.Debug3DWindow()
+                {
+                    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("AAA")),
+                };
+
+                window.AddLine(new Point3D(0, 0, 0), from1.ToPoint(), LINETHICK, colorFrom1);
+                window.AddLine(new Point3D(0, 0, 0), from2.ToPoint(), LINETHICK, colorFrom2);
+
+                window.AddLine(new Point3D(0, 0, 0), to1.ToPoint(), LINETHICK, colorTo1);
+                window.AddLine(new Point3D(0, 0, 0), to2.ToPoint(), LINETHICK, colorTo2);
+
+                window.Show();
+
+                #endregion
+
+                #region quat multiply
+
+                window = new HelperClassesWPF.Controls3D.Debug3DWindow()
+                {
+                    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("777")),
+                };
+
+                window.AddAxisLines(AXISLEN, LINETHICK * .5);
+
+                Quaternion rotation_mult = Math3D.GetRotation(from1, from2, to1, to2);
+                //Quaternion rotation_mult = GetRotation_fixed(window, from1, from2, to1, to2);
+
+                ITriangle planeInit = new Triangle(new Point3D(-1, 0, 0), new Point3D(0, 0, 0), new Point3D(0, 0, 1));
+
+                Point3D[] planeRotatedPoints = planeInit.PointArray.ToArray();
+                rotation_mult.GetRotatedVector(planeRotatedPoints);
+
+                ITriangle planeRotated = new Triangle(planeRotatedPoints[0], planeRotatedPoints[1], planeRotatedPoints[2]);
+
+                window.AddLine(new Point3D(0, 0, 0), (planeInit[1] - planeInit[0]).ToPoint(), LINETHICK, colorFrom1);
+                window.AddLine(new Point3D(0, 0, 0), (planeInit[2] - planeInit[0]).ToPoint(), LINETHICK, colorFrom2);
+                window.AddLine(new Point3D(0, 0, 0), (planeRotated[1] - planeRotated[0]).ToPoint(), LINETHICK, colorTo1);
+                window.AddLine(new Point3D(0, 0, 0), (planeRotated[2] - planeRotated[0]).ToPoint(), LINETHICK, colorTo2);
+
+                window.AddPlane(planeInit, AXISLEN, UtilityWPF.ColorFromHex("00FF00"), UtilityWPF.ColorFromHex("A0FFA0"));
+                window.AddPlane(planeRotated, AXISLEN, UtilityWPF.ColorFromHex("FF0000"), UtilityWPF.ColorFromHex("FFA0A0"));
+
+                window.Show();
+
+                #endregion
+
+                #region tranform group
+
+                //---------------
+                // The transform group with two rotate transforms had the same issue as quaternion.multiply
+                // A perfect 180 degree quaternion caused random failure
+                //---------------
+
+                //window = new HelperClassesWPF.Controls3D.Debug3DWindow();
+
+                //window.AddAxisLines(AXISLEN, LINETHICK * .5);
+
+                //Transform3D transform = GetRotation_transform(window, from1, from2, to1, to2);
+
+                //planeRotatedPoints = planeInit.PointArray.
+                //    Select(o => transform.Transform(o)).
+                //    ToArray();
+
+                //planeRotated = new Triangle(planeRotatedPoints[0], planeRotatedPoints[1], planeRotatedPoints[2]);
+
+                //window.AddLine(new Point3D(0, 0, 0), (planeInit[1] - planeInit[0]).ToPoint(), LINETHICK, colorFrom1);
+                //window.AddLine(new Point3D(0, 0, 0), (planeInit[2] - planeInit[0]).ToPoint(), LINETHICK, colorFrom2);
+                //window.AddLine(new Point3D(0, 0, 0), (planeRotated[1] - planeRotated[0]).ToPoint(), LINETHICK, colorTo1);
+                //window.AddLine(new Point3D(0, 0, 0), (planeRotated[2] - planeRotated[0]).ToPoint(), LINETHICK, colorTo2);
+
+                //window.AddPlane(planeInit, AXISLEN, UtilityWPF.ColorFromHex("8F8"), UtilityWPF.ColorFromHex("A0FFA0"));
+                //window.AddPlane(planeRotated, AXISLEN, UtilityWPF.ColorFromHex("F88"), UtilityWPF.ColorFromHex("FFA0A0"));
+
+                //window.Show();
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
+        #region Private Methods - transform 2D
+
+        private static void VisualizeTranform2D_overall(ITriangle plane, Point3D[] polyPoints)
+        {
+            const double AXISLEN = 3;
+            const double LINETHICK = .01;
+            const double DOTRAD = .05;
+
+            var window = new HelperClassesWPF.Controls3D.Debug3DWindow();
+
+            window.AddAxisLines(AXISLEN, LINETHICK * .5);
+
+            #region plane
+
+            window.AddDots(plane.PointArray, DOTRAD * 1.1, UtilityWPF.ColorFromHex("FF0000"));
+            window.AddPlane(plane, AXISLEN, UtilityWPF.ColorFromHex("FF0000"));
+
+            window.AddLine(plane[0], plane[1], LINETHICK, Colors.White);
+            window.AddLine(plane[0], plane[2], LINETHICK, Colors.Black);
+
+            #endregion
+
+            //var transform2D = GetTransformTo2D_custom_CLEAN(window, plane);
+            var transform2D = GetTransformTo2D_custom_USES_DBLVECT(window, plane);
+
+            #region transformed 2D - natural
+
+            var transformed_natural = polyPoints.
+                //Select(o => transform2D.Item1.Transform(o).ToPoint2D().ToPoint3D()).
+                Select(o => transform2D.Item1.Transform(o)).
+                ToArray();
+
+            ITriangle transformedPlane_natural = new Triangle(transformed_natural[0], transformed_natural[1], transformed_natural[2]);
+
+            window.AddDots(transformed_natural, DOTRAD, UtilityWPF.ColorFromHex("70FF70"));
+            window.AddPlane(transformedPlane_natural, AXISLEN, UtilityWPF.ColorFromHex("40FF40"), UtilityWPF.ColorFromHex("C0FFC0"));
+
+            #endregion
+            #region transformed 2D - forced
+
+            var transformed_forced = polyPoints.
+                Select(o => transform2D.Item1.Transform(o).ToPoint2D().ToPoint3D()).
+                //Select(o => transform2D.Item1.Transform(o)).
+                ToArray();
+
+            ITriangle transformedPlane_forced = new Triangle(transformed_forced[0], transformed_forced[1], transformed_forced[2]);
+
+            window.AddDots(transformed_forced, DOTRAD, UtilityWPF.ColorFromHex("FF7070"));
+            window.AddPlane(transformedPlane_forced, AXISLEN, UtilityWPF.ColorFromHex("FF4040"), UtilityWPF.ColorFromHex("FFC0C0"));
+
+            #endregion
+
+            #region transformed back 3D - natural
+
+            var transformedBack_natural = transformed_natural.
+                Select(o => transform2D.Item2.Transform(o)).
+                ToArray();
+
+            window.AddDots(transformedBack_natural, DOTRAD, UtilityWPF.ColorFromHex("C0FFC0"));
+            window.AddPlane(new Triangle(transformedBack_natural[0], transformedBack_natural[1], transformedBack_natural[2]), AXISLEN, UtilityWPF.ColorFromHex("C0FFC0"));
+
+            #endregion
+            #region transformed back 3D - forced
+
+            var transformedBack_forced = transformed_forced.
+                Select(o => transform2D.Item2.Transform(o)).
+                ToArray();
+
+            window.AddDots(transformedBack_forced, DOTRAD, UtilityWPF.ColorFromHex("FFC0C0"));
+            window.AddPlane(new Triangle(transformedBack_forced[0], transformedBack_forced[1], transformedBack_forced[2]), AXISLEN, UtilityWPF.ColorFromHex("FFC0C0"));
+
+            #endregion
+
+            window.Show();
+        }
+
+        public static Tuple<Transform3D, Transform3D> GetTransformTo2D_custom_USES_DBLVECT(HelperClassesWPF.Controls3D.Debug3DWindow window, ITriangle triangle)
+        {
+            if (Math.Abs(Vector3D.DotProduct(triangle.NormalUnit, new Vector3D(0, 0, 1))).IsNearValue(1))
+            {
+                // It's already 2D
+                window.AddMessage("already 2D");
+                return new Tuple<Transform3D, Transform3D>(new TranslateTransform3D(0, 0, -triangle.Point0.Z), new TranslateTransform3D(0, 0, triangle.Point0.Z));
+            }
+
+            Vector3D line1 = triangle.Point1 - triangle.Point0;
+            Vector3D randomOrth = Math3D.GetOrthogonal(line1, triangle.Point2 - triangle.Point0);
+
+            DoubleVector from = new DoubleVector(line1, randomOrth);
+            DoubleVector to = new DoubleVector(new Vector3D(1, 0, 0), new Vector3D(0, 1, 0));
+
+            Quaternion rotation = from.GetRotation(to);
+
+            Transform3DGroup transformTo2D = new Transform3DGroup();
+            transformTo2D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+
+            // Need to rotate the point so that it's parallel to the XY plane, then subtract off it's Z
+            Point3D rotatedXYPlane = transformTo2D.Transform(triangle[0]);
+            transformTo2D.Children.Add(new TranslateTransform3D(0, 0, -rotatedXYPlane.Z));
+
+            Transform3DGroup transformTo3D = new Transform3DGroup();
+            transformTo3D.Children.Add(new TranslateTransform3D(0, 0, rotatedXYPlane.Z));
+            transformTo3D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation.ToReverse())));
+
+            return new Tuple<Transform3D, Transform3D>(transformTo2D, transformTo3D);
+        }
+        public static Tuple<Transform3D, Transform3D> GetTransformTo2D_custom_CLEAN(HelperClassesWPF.Controls3D.Debug3DWindow window, ITriangle triangle)
+        {
+            Vector3D zUp = new Vector3D(0, 0, 1);
+
+            if (Math.Abs(Vector3D.DotProduct(triangle.NormalUnit, zUp)).IsNearValue(1))
+            {
+                // It's already 2D
+                window.AddMessage("already 2D");
+                return new Tuple<Transform3D, Transform3D>(new TranslateTransform3D(0, 0, -triangle.Point0.Z), new TranslateTransform3D(0, 0, triangle.Point0.Z));
+            }
+
+            // Don't bother with a double vector, just rotate the normal
+            Quaternion rotation = Math3D.GetRotation(triangle.NormalUnit, zUp);
+
+            Transform3DGroup transformTo2D = new Transform3DGroup();
+            transformTo2D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
+
+            // Need to rotate the point so that it's parallel to the XY plane, then subtract off it's Z
+            Point3D rotatedXYPlane = transformTo2D.Transform(triangle[0]);
+            transformTo2D.Children.Add(new TranslateTransform3D(0, 0, -rotatedXYPlane.Z));
+
+            Transform3DGroup transformTo3D = new Transform3DGroup();
+            transformTo3D.Children.Add(new TranslateTransform3D(0, 0, rotatedXYPlane.Z));
+            transformTo3D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation.ToReverse())));
+
+            return new Tuple<Transform3D, Transform3D>(transformTo2D, transformTo3D);
+        }
+
+        #endregion
         #region Private Methods
 
         private static void EnsureSnapped45(TrackballGrabber trackball)

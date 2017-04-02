@@ -4407,6 +4407,8 @@ namespace Game.Newt.Testers
         /// </summary>
         private DoubleVector _defaultDirectionFacing = new DoubleVector(1, 0, 0, 0, 0, 1);
 
+        private Tuple<Vector3D, double> _prevSphereBreakdown = null;
+
         #endregion
 
         #region Constructor
@@ -6808,6 +6810,95 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        private void btnSphereBreakdown_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ClearCurrent();
+                Random rand = StaticRandom.GetRandomForThread();
+
+                // Break it down
+                Vector3D size = new Vector3D(1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2), 1 + (rand.NextDouble() * 2));
+                double cellSize = .1 + (rand.NextDouble() * 1.2);
+
+                _prevSphereBreakdown = Tuple.Create(size, cellSize);
+
+                var sphere = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+
+                DrawMassBreakdown(sphere, cellSize);
+
+                #region Draw Sphere
+
+                // Material
+                MaterialGroup materials = new MaterialGroup();
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("402A4A52"))));
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("602C8564")), .25d));
+
+                // Geometry Model
+                GeometryModel3D geometry = new GeometryModel3D();
+                geometry.Material = materials;
+                geometry.BackMaterial = materials;
+
+                geometry.Geometry = UtilityWPF.GetSphere_Ico(.5, 3, true);
+
+                geometry.Transform = new ScaleTransform3D(size);
+
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = geometry;
+                _viewport.Children.Add(visual);
+                _currentVisuals.Add(visual);
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void RedrawSphereBreakdown_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_prevSphereBreakdown == null)
+                {
+                    MessageBox.Show("There is no sphere stored", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                ClearCurrent();
+
+                var sphere = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, _prevSphereBreakdown.Item1, _prevSphereBreakdown.Item2);
+
+                DrawMassBreakdown(sphere, _prevSphereBreakdown.Item2);
+
+                #region Draw Sphere
+
+                // Material
+                MaterialGroup materials = new MaterialGroup();
+                materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("402A4A52"))));
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("602C8564")), .25d));
+
+                // Geometry Model
+                GeometryModel3D geometry = new GeometryModel3D();
+                geometry.Material = materials;
+                geometry.BackMaterial = materials;
+
+                geometry.Geometry = UtilityWPF.GetSphere_Ico(.5, 3, true);
+
+                geometry.Transform = new ScaleTransform3D(_prevSphereBreakdown.Item1);
+
+                ModelVisual3D visual = new ModelVisual3D();
+                visual.Content = geometry;
+                _viewport.Children.Add(visual);
+                _currentVisuals.Add(visual);
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         private void btnCapsuleBreakdown_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -7497,9 +7588,9 @@ namespace Game.Newt.Testers
 
         private void DrawMassBreakdown(UtilityNewt.IObjectMassBreakdown breakdown, double cellSize)
         {
-            #region Draw masses as cubes
+            #region masses as cubes
 
-            double radMult = (cellSize * .75d) / breakdown.Max(o => o.Item2);
+            double radMult = (cellSize * .95d) / breakdown.Max(o => o.Item2);
             DoubleVector dirFacing = new DoubleVector(1, 0, 0, 0, 1, 0);
 
             Model3DGroup geometries = new Model3DGroup();
@@ -7508,8 +7599,11 @@ namespace Game.Newt.Testers
             {
                 double radius = pointMass.Item2 * radMult;
 
+                Color boxColor = UtilityWPF.GetRandomColor(255, _colors.MassBall.R, _colors.MassBall.G, _colors.MassBall.B, 15);
+                Color reflectColor = UtilityWPF.GetRandomColor(255, _colors.MassBallReflect.R, _colors.MassBallReflect.G, _colors.MassBallReflect.B, 15);
+
                 CollisionHull dummy1; Transform3DGroup dummy2; Quaternion dummy3; DiffuseMaterial dummy4;
-                geometries.Children.Add(GetWPFGeometry(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, _colors.MassBall, _colors.MassBallReflect, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), pointMass.Item1, dirFacing, false));
+                geometries.Children.Add(GetWPFGeometry(out dummy1, out dummy2, out dummy3, out dummy4, CollisionShapeType.Box, boxColor, reflectColor, _colors.MassBallReflectIntensity, new Vector3D(radius, radius, radius), pointMass.Item1, dirFacing, false));
             }
 
             ModelVisual3D visual = new ModelVisual3D();
@@ -7518,24 +7612,111 @@ namespace Game.Newt.Testers
             _currentVisuals.Add(visual);
 
             #endregion
-            #region Draw Axiis
+            #region cube lines
+
+            if (breakdown.Count() < 1000)       // it takes forever for larger numbers, and that many gridlines kills the framerate
+            {
+                List<Edge3D> gridLines = new List<Edge3D>();
+
+                double halfSize = cellSize / 2;
+
+                foreach (var pointMass in breakdown)
+                {
+                    // bottom
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize)));
+
+                    // top
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize)));
+
+                    // connecting
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y - halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X + halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize)));
+
+                    gridLines.Add(new Edge3D(
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z - halfSize),
+                        new Point3D(pointMass.Item1.X - halfSize, pointMass.Item1.Y + halfSize, pointMass.Item1.Z + halfSize)));
+                }
+
+                BillboardLine3DSet lines = new BillboardLine3DSet()
+                {
+                    Color = UtilityWPF.ColorFromHex("20808080"),
+                };
+
+                lines.BeginAddingLines();
+
+                //TriangleIndexed.Clone_CondensePoints
+                Edge3D[] gridLinesCondensed = Edge3D.Clone_DedupePoints(gridLines.ToArray());
+
+                foreach (Edge3D gridLine in Edge3D.GetUniqueLines(gridLinesCondensed))
+                {
+                    lines.AddLine(gridLine.Point0, gridLine.Point1.Value, .005);
+                }
+
+                lines.EndAddingLines();
+
+                _viewport.Children.Add(lines);
+                _currentVisuals.Add(lines);
+            }
+
+            #endregion
+            #region axiis
 
             ScreenSpaceLines3D line = new ScreenSpaceLines3D();
-            line.Color = Colors.DimGray;
+            //line.Color = Colors.DimGray;
+            line.Color = UtilityWPF.ColorFromHex(Debug3DWindow.AXISCOLOR_X);
             line.Thickness = 2d;
             line.AddLine(new Point3D(0, 0, 0), new Point3D(10, 0, 0));
             _viewport.Children.Add(line);
             _currentVisuals.Add(line);
 
             line = new ScreenSpaceLines3D();
-            line.Color = Colors.Silver;
+            //line.Color = Colors.Silver;
+            line.Color = UtilityWPF.ColorFromHex(Debug3DWindow.AXISCOLOR_Y);
             line.Thickness = 2d;
             line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 10, 0));
             _viewport.Children.Add(line);
             _currentVisuals.Add(line);
 
             line = new ScreenSpaceLines3D();
-            line.Color = Colors.White;
+            //line.Color = Colors.White;
+            line.Color = UtilityWPF.ColorFromHex(Debug3DWindow.AXISCOLOR_Z);
             line.Thickness = 2d;
             line.AddLine(new Point3D(0, 0, 0), new Point3D(0, 0, 10));
             _viewport.Children.Add(line);

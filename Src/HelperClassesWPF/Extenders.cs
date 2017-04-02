@@ -155,11 +155,6 @@ namespace Game.HelperClassesWPF
 
         #region Vector3D
 
-        public static bool IsZero(this Vector3D vector)
-        {
-            return vector.X == 0d && vector.Y == 0d && vector.Z == 0d;
-        }
-
         public static bool IsNearZero(this Vector3D vector)
         {
             return vector.X.IsNearZero() &&

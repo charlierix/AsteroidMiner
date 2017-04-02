@@ -478,19 +478,15 @@ namespace Game.Newt.v1.AsteroidMiner1
             retVal.Children.Add(new ScaleTransform3D(vectorWorld.Length * lengthMultiplier, 1d, 1d));
 
             // Rotation
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, new Vector3D(1, 0, 0), vectorWorld);		// the original mesh is a length of 1 along the x axis
-
-            if (radians != 0d)
+            Quaternion rotation = Math3D.GetRotation(new Vector3D(1, 0, 0), vectorWorld);		// the original mesh is a length of 1 along the x axis
+            if (!rotation.IsIdentity)
             {
-                retVal.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians))));
+                retVal.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation)));
             }
 
             // Translation
             retVal.Children.Add(new TranslateTransform3D(positionWorld.ToVector()));
 
-            // Exit Function
             return retVal;
         }
 

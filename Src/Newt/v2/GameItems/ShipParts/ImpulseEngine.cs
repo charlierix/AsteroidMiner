@@ -424,7 +424,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             #region neurons
 
-            int neuronCount = Convert.ToInt32(Math.Ceiling(itemOptions.ImpulseEngine_NeuronDensity_Half * volume));
+            double area = Math.Pow(radius, itemOptions.ImpulseEngine_NeuronGrowthExponent);
+
+            int neuronCount = Convert.ToInt32(Math.Ceiling(itemOptions.ImpulseEngine_NeuronDensity_Half * area));
             if (neuronCount == 0)
             {
                 neuronCount = 1;

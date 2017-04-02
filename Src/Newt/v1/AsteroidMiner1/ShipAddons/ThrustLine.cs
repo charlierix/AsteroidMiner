@@ -74,17 +74,15 @@ namespace Game.Newt.v1.AsteroidMiner1.ShipAddons
             Vector3D flameLine = forceDirection;
             flameLine.Negate();
 
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, new Vector3D(1, 0, 0), flameLine);
+            Quaternion rotation = Math3D.GetRotation(new Vector3D(1, 0, 0), flameLine);
 
-            if (radians == 0d)
+            if (rotation.IsIdentity)
             {
                 _initialRotate = null;
             }
             else
             {
-                _initialRotate = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+                _initialRotate = new RotateTransform3D(new QuaternionRotation3D(rotation));
             }
 
             //// Transform

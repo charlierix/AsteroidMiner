@@ -67,7 +67,7 @@
                     </Expander>
 
                     <!-- Ships -->
-                    <Expander IsExpanded="True" Header="Ship Tests">
+                    <Expander IsExpanded="False" Header="Ship Tests">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Label Content="Fly with arrow keys" FontStyle="Italic" Foreground="#686868"/>
@@ -135,13 +135,25 @@
                         </Border>
                     </Expander>
 
-                    <!-- Misc -->
-                    <Expander IsExpanded="False" Header="Misc">
+                    <!-- Mass Breakdown -->
+                    <Expander IsExpanded="False" Header="Mass Breakdown">
                         <Border>
                             <StackPanel Margin="8,6">
                                 <Button Click="btnBoxBreakdown_Click" Name="btnBoxBreakdown" Content="Box Breakdown"/>
                                 <Button Click="btnCylinderBreakdown_Click" Name="btnCylinderBreakdown" Content="Cylinder Breakdown"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Click="btnSphereBreakdown_Click" Name="btnSphereBreakdown" Content="Sphere Breakdown"/>
+                                    <Button Content="redraw" Click="RedrawSphereBreakdown_Click"/>
+                                </StackPanel>
                                 <Button Click="btnCapsuleBreakdown_Click" Name="btnCapsuleBreakdown" Content="Capsule Breakdown"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
+                    <!-- Misc -->
+                    <Expander IsExpanded="False" Header="Misc">
+                        <Border>
+                            <StackPanel Margin="8,6">
                                 <Button Click="btnMassMatrix_Click" Name="btnMassMatrix" Content="Mass Matrix"/>
                                 <Button Click="btnCoplanarTo2D_Click" Content="Coplanar points to xy plane" Name="btnCoplanarTo2D"/>
                             </StackPanel>

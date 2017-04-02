@@ -153,7 +153,6 @@ namespace Game.HelperClassesWPF
 
             return null;
         }
-
         public static FindResult<T> Find<T>(Viewport3D viewport)
              where T : DependencyObject
         {
@@ -166,7 +165,6 @@ namespace Game.HelperClassesWPF
 
             return null;
         }
-
         private static FindResult<T> Find<T>(Visual3D visual, IList<FindResult<T>> results)
              where T : DependencyObject
         {
@@ -203,7 +201,6 @@ namespace Game.HelperClassesWPF
 
             return null;
         }
-
         public static FindResult<T> Find<T>(Visual3D visual)
              where T : DependencyObject
         {
@@ -217,7 +214,6 @@ namespace Game.HelperClassesWPF
             Find<T>(visual, results);
             return results;
         }
-
         public static IList<FindResult<T>> FindAll<T>(Viewport3DVisual viewport)
             where T : DependencyObject
         {
@@ -230,7 +226,6 @@ namespace Game.HelperClassesWPF
 
             return result;
         }
-
         public static IList<FindResult<T>> FindAll<T>(Viewport3D viewport)
             where T : DependencyObject
         {

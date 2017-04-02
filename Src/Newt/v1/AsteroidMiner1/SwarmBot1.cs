@@ -443,12 +443,10 @@ namespace Game.Newt.v1.AsteroidMiner1
             Vector3D directionToGo = StraightToTargetWorker(_chasePoint);
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -493,12 +491,10 @@ namespace Game.Newt.v1.AsteroidMiner1
             Vector3D directionToGo = StraightToTarget_VelocityAware1Worker(_chasePoint);
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -529,18 +525,18 @@ namespace Game.Newt.v1.AsteroidMiner1
             {
                 currentVelocity = this.PhysicsBody.DirectionFromWorld(currentVelocity);
 
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                Quaternion rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
 
                 // If it's greater than 90 degrees, then just use the original direction (because it will pull the velocity in line
                 // eventually)  I don't multiply by .5, because when it is very close to 90 degrees, the bot will thrash a bit
-                if (Math.Abs(radians) < Math.PI * .4d)
+                if (Math.Abs(Math1D.DegreesToRadians(rotation.Angle)) < Math.PI * .4d)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = rotation.GetRotatedVector(directionToGo);
                 }
             }
 
@@ -564,8 +560,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 
             Vector3D directionToGo = chasePoint.ToVector() - position.ToVector();
 
-            Vector3D axis;
-            double radians;
+            Quaternion rotation;
 
             #region Adjust for current velocity attempt1a
 
@@ -575,28 +570,28 @@ namespace Game.Newt.v1.AsteroidMiner1
             {
                 currentVelocity = this.PhysicsBody.DirectionFromWorld(currentVelocity);
 
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
 
                 // If it's greater than 90 degrees, then just use the original direction (because it will pull the velocity in line
                 // eventually)  I don't multiply by .5, because when it is very close to 90 degrees, the bot will thrash a bit
-                if (Math.Abs(radians) < Math.PI * .4d)
+                if (Math.Abs(Math1D.DegreesToRadians(rotation.Angle)) < Math.PI * .4d)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = rotation.GetRotatedVector(directionToGo);
                 }
             }
 
             #endregion
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -633,12 +628,10 @@ namespace Game.Newt.v1.AsteroidMiner1
 
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, flockCenterDirection);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, flockCenterDirection);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -695,12 +688,10 @@ namespace Game.Newt.v1.AsteroidMiner1
 
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -795,12 +786,10 @@ namespace Game.Newt.v1.AsteroidMiner1
 
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)
@@ -881,12 +870,10 @@ namespace Game.Newt.v1.AsteroidMiner1
 
 
             // Now that I know where to go, rotate the original thruster direction (0,1,0) to line up with the desired direction
-            Vector3D axis;
-            double radians;
-            Math3D.GetRotation(out axis, out radians, _origThrustDirection, directionToGo);
+            Quaternion rotation = Math3D.GetRotation(_origThrustDirection, directionToGo);
 
             // Thrust Direction
-            _thrustTransform = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+            _thrustTransform = new RotateTransform3D(new QuaternionRotation3D(rotation));
 
             // Thrust Strength
             if (_isAttacking)

@@ -1375,6 +1375,88 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        private volatile object _directionController_Sphere_NeuronGrowthExponent = .8d;
+        /// <summary>
+        /// If densitiy is multiplied by volume of a sphere, then the number of neurons explodes for radius greater than 1, and
+        /// shrinks quickly for smaller values.
+        /// 
+        /// So instead the volume is calculated as Math.Pow(radius, this.NeuronGrowthExponent)
+        /// </summary>
+        /// <remarks>
+        /// If you want spherical growth, just set this to 3
+        /// </remarks>
+        public double DirectionController_Sphere_NeuronGrowthExponent
+        {
+            get
+            {
+                return (double)_directionController_Sphere_NeuronGrowthExponent;
+            }
+            set
+            {
+                _directionController_Sphere_NeuronGrowthExponent = value;
+            }
+        }
+
+        private volatile object _directionController_Sphere_NeuronDensity_Half = 30d;
+        /// <summary>
+        /// This is how many neurons to place on a sphere shell
+        /// </summary>
+        /// <remarks>
+        /// There is one shell for linear, one for rotation
+        /// </remarks>
+        public double DirectionController_Sphere_NeuronDensity_Half
+        {
+            get
+            {
+                return (double)_directionController_Sphere_NeuronDensity_Half;
+            }
+            set
+            {
+                _directionController_Sphere_NeuronDensity_Half = value;
+            }
+        }
+
+        private volatile object _directionController_Ring_NeuronGrowthExponent = .8d;
+        /// <summary>
+        /// If densitiy is multiplied by volume of a sphere, then the number of neurons explodes for radius greater than 1, and
+        /// shrinks quickly for smaller values.
+        /// 
+        /// So instead the volume is calculated as Math.Pow(radius, this.NeuronGrowthExponent)
+        /// </summary>
+        /// <remarks>
+        /// If you want spherical growth, just set this to 3
+        /// </remarks>
+        public double DirectionController_Ring_NeuronGrowthExponent
+        {
+            get
+            {
+                return (double)_directionController_Ring_NeuronGrowthExponent;
+            }
+            set
+            {
+                _directionController_Ring_NeuronGrowthExponent = value;
+            }
+        }
+
+        private volatile object _directionController_Ring_NeuronDensity_Half = 30d;
+        /// <summary>
+        /// This is how many neurons to place on a sphere shell
+        /// </summary>
+        /// <remarks>
+        /// There is one shell for linear, one for rotation
+        /// </remarks>
+        public double DirectionController_Ring_NeuronDensity_Half
+        {
+            get
+            {
+                return (double)_directionController_Ring_NeuronDensity_Half;
+            }
+            set
+            {
+                _directionController_Ring_NeuronDensity_Half = value;
+            }
+        }
+
         public readonly DamageProps DirectionController_Damage = new DamageProps(
             HITPOINTMIN,
             HITPOINTSLOPE,
@@ -1578,6 +1660,28 @@ namespace Game.Newt.v2.GameItems
             set
             {
                 _impulseEngine_PlasmaToThrustRatio = value;
+            }
+        }
+
+        private volatile object _impulseEngine_NeuronGrowthExponent = .8d;
+        /// <summary>
+        /// If densitiy is multiplied by volume of a sphere, then the number of neurons explodes for radius greater than 1, and
+        /// shrinks quickly for smaller values.
+        /// 
+        /// So instead the volume is calculated as Math.Pow(radius, this.NeuronGrowthExponent)
+        /// </summary>
+        /// <remarks>
+        /// If you want spherical growth, just set this to 3
+        /// </remarks>
+        public double ImpulseEngine_NeuronGrowthExponent
+        {
+            get
+            {
+                return (double)_impulseEngine_NeuronGrowthExponent;
+            }
+            set
+            {
+                _impulseEngine_NeuronGrowthExponent = value;
             }
         }
 

@@ -645,22 +645,23 @@ namespace Game.Newt.v1.AsteroidMiner1
             {
                 currentVelocity = _physicsBody.DirectionFromWorld(currentVelocity);
 
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                Quaternion rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
+                double angle = rotation.Angle;
 
-                if (Math1D.IsNearZero(radians) || Math1D.IsNearValue(radians, PI_DIV_TWO))
+                if (rotation.IsIdentity || angle.IsNearZero() || angle.IsNearValue(90))
                 {
                     // No modification needed
                 }
-                else if (Math.Abs(radians) < PI_DIV_TWO)
+                else if (Math.Abs(angle) < 90)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, angle);
                 }
-                else if (Math.Abs(radians) >= PI_DIV_TWO)
+                else if (Math.Abs(angle) >= 90)
                 {
                     // The velocity is more than 90 degrees from where I want to go.  By applying a force exactly opposite of the current
                     // velocity, I will negate the velocity that orthogonal to the desired direction, as well as slow down the bot
@@ -767,18 +768,17 @@ namespace Game.Newt.v1.AsteroidMiner1
             }
             else
             {
-                #region Accelrate toward target (negating tangent speed)
+                #region Accelerate toward target (negating tangent speed)
 
                 // Figure out how fast I could safely be going toward the target
                 // If I accelerate full force, will I exceed that?  (who cares, speed up, and let the next frame handle that)
 
-                Vector3D axis;
-                double radians;
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                Quaternion rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
+                double radians = Math1D.DegreesToRadians(rotation.Angle);
 
                 //if (Math3D.IsNearZero(radians) || Math3D.IsNearValue(radians, PI_DIV_TWO) || Math3D.IsNearValue(radians, Math.PI))
                 //{
@@ -793,7 +793,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)		// PI_DIV_TWO is waiting too long, PI_DIV_FOUR is capping off too early
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(radians));
                 }
                 //else if (Math.Abs(radians) >= PI_DIV_TWO)
                 //{
@@ -812,7 +812,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
                 // Don't jitter back and forth at full throttle when at the boundry
@@ -991,13 +991,12 @@ namespace Game.Newt.v1.AsteroidMiner1
                 // Figure out how fast I could safely be going toward the target
                 // If I accelerate full force, will I exceed that?  (who cares, speed up, and let the next frame handle that)
 
-                Vector3D axis;
-                double radians;
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                Quaternion rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
+                double radians = Math1D.DegreesToRadians(rotation.Angle);
 
                 //if (Math3D.IsNearZero(radians) || Math3D.IsNearValue(radians, PI_DIV_TWO) || Math3D.IsNearValue(radians, Math.PI))
                 //{
@@ -1014,13 +1013,13 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(radians));
                 }
                 else
                 {
                     if (_shouldShowDebugVisuals)
                     {
-                        Vector3D vectTryTurn = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                        Vector3D vectTryTurn = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(radians));
                         vectTryTurn.Normalize();
                         _pointVisualizer_VelAware2.Update(7, positionWorld, _physicsBody.DirectionToWorld(vectTryTurn));
                     }
@@ -1032,7 +1031,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
 
@@ -1227,13 +1226,12 @@ namespace Game.Newt.v1.AsteroidMiner1
                 // Figure out how fast I could safely be going toward the target
                 // If I accelerate full force, will I exceed that?  (who cares, speed up, and let the next frame handle that)
 
-                Vector3D axis;
-                double radians;
-                Math3D.GetRotation(out axis, out radians, directionToGo, currentVelocity);
+                Quaternion rotation = Math3D.GetRotation(directionToGo, currentVelocity);
 
                 // This is how much to rotate direction to align with current velocity, I want to go against the current velocity (if aligned,
                 // the angle will be zero, so negating won't make a difference)
-                radians *= -1;
+                rotation = rotation.ToReverse();
+                double radians = Math1D.DegreesToRadians(rotation.Angle);
 
                 //if (Math3D.IsNearZero(radians) || Math3D.IsNearValue(radians, PI_DIV_TWO) || Math3D.IsNearValue(radians, Math.PI))
                 //{
@@ -1248,7 +1246,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                 else if (Math.Abs(radians) < RADIANS_60DEG)		// PI_DIV_TWO is waiting too long, PI_DIV_FOUR is capping off too early
                 {
                     // Change the direction by the angle
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(radians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(radians));
                 }
                 //else if (Math.Abs(radians) >= PI_DIV_TWO)
                 //{
@@ -1267,7 +1265,7 @@ namespace Game.Newt.v1.AsteroidMiner1
                         actualRadians *= -1d;
                     }
 
-                    directionToGo = directionToGo.GetRotatedVector(axis, Math1D.RadiansToDegrees(actualRadians));
+                    directionToGo = directionToGo.GetRotatedVector(rotation.Axis, Math1D.RadiansToDegrees(actualRadians));
                 }
 
                 // Don't jitter back and forth at full throttle when at the boundry

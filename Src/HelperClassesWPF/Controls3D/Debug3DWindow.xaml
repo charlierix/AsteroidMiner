@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Game.HelperClassesWPF.Controls3D"
         mc:Ignorable="d"
-        Title="Debug3D" Background="Gray" ResizeMode="CanResizeWithGrip" Width="500" Height="500" Loaded="Window_Loaded">
+        Title="Debug3D" Background="#C0C0C0" ResizeMode="CanResizeWithGrip" Width="800" Height="800" Loaded="Window_Loaded">
     <Grid Name="grdViewPort" Background="Transparent">
 
         <Viewport3D Name="_viewport" IsHitTestVisible="False">
@@ -30,5 +30,7 @@
         <StackPanel VerticalAlignment="Bottom" Margin="6">
             <ItemsControl ItemsSource="{Binding Path=Messages_Bottom}"/>
         </StackPanel>
+
+        <Button Content="close all" ToolTip="Close all debug 3D windows" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseAll_Click"/>
     </Grid>
 </Window>

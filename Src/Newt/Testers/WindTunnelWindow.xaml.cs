@@ -98,11 +98,7 @@ namespace Game.Newt.Testers
                 set
                 {
                     _worldFlow = value;
-
-                    Vector3D axis;
-                    double radians;
-                    Math3D.GetRotation(out axis, out radians, new Vector3D(-1, 0, 0), _worldFlow);
-                    _worldFlowRotation = new RotateTransform3D(new AxisAngleRotation3D(axis, Math1D.RadiansToDegrees(radians)));
+                    _worldFlowRotation = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(new Vector3D(-1, 0, 0), _worldFlow)));
                 }
             }
 
@@ -1394,10 +1390,7 @@ namespace Game.Newt.Testers
                 transform = new Transform3DGroup();		// rotate needs to be added before translate
                 //Quaternion rotation = _defaultDirectionFacing.GetAngleAroundAxis(dirDbl);
 
-                Vector3D axisStandard;
-                double radiansStandard;
-                Math3D.GetRotation(out axisStandard, out radiansStandard, _defaultDirectionFacing.Standard, dirDbl.Standard);
-                Quaternion rotationStandard = new Quaternion(axisStandard, Math1D.RadiansToDegrees(radiansStandard));
+                Quaternion rotationStandard = Math3D.GetRotation(_defaultDirectionFacing.Standard, dirDbl.Standard);
 
                 //Vector3D axisOrth;
                 //double radiansOrth;
