@@ -830,7 +830,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public static void AssignAmmoBoxes(IEnumerable<ProjectileGun> guns, IEnumerable<AmmoBox> boxes)
         {
-            //var gunCombos = GetPossibleGroupings(guns);
             var gunCombos = GetPossibleGroupings(guns);
 
             var gunAmmoGroupings = GetAmmoGroupings(gunCombos, boxes);
@@ -1267,7 +1266,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 // Find the gun that most needs this box
                 var bestMatch = retVal.
-                    Where(o => o.Gun.DemandPerGun <= boxVolume && o.Gun.Caliber <= boxMinDimension).       // only look at guns that could use this box
+                    //Where(o => o.Gun.DemandPerGun <= boxVolume && o.Gun.Caliber <= boxMinDimension).       // only look at guns that could use this box
+                    Where(o => o.Gun.DemandTotal <= boxVolume && o.Gun.Caliber <= boxMinDimension).       // only look at guns that could use this box
                     Select(o =>
                     {
                         var capacityFirings = Get_Capacity_Firings(o.Boxes, o.Gun);
@@ -1286,10 +1286,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     //TODO: Figure out how to come up with a scoring system that takes distance into account
                     OrderBy(o => o.Firings).       // order by guns with the smallest amount of available shots
                     ThenByDescending(o => o.Item.Gun.DemandTotal).       // if there's a tie, choose the greediest gun
-                    First();
+                    FirstOrDefault();
 
-                // Give this box to the chosen set of guns
-                bestMatch.Item.Boxes.Add(boxesDescending[cntr]);
+                if(bestMatch == null)
+                {
+
+                }
+
+                if(bestMatch != null)
+                {
+                    // Give this box to the chosen set of guns
+                    bestMatch.Item.Boxes.Add(boxesDescending[cntr]);
+                }
             }
 
             return retVal.

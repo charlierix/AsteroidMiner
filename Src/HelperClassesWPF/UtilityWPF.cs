@@ -1938,6 +1938,22 @@ namespace Game.HelperClassesWPF
             // Leave saturation alone
             return HSVtoRGB(hue, hsv.S, value);
         }
+        /// <summary>
+        /// This returns either black or white
+        /// </summary>
+        public static Color OppositeColor_BW(Color color)
+        {
+            ColorHSV oppositeColor = UtilityWPF.OppositeColor(color).ToHSV();
+
+            if (oppositeColor.V > 50)
+            {
+                return Colors.White;
+            }
+            else
+            {
+                return Colors.Black;
+            }
+        }
 
         /// <summary>
         /// This is just a wrapper to the color converter (why can't they have a method off the color class with all
@@ -7020,6 +7036,8 @@ namespace Game.HelperClassesWPF
                 {
                     embeddedBrush = materialCast3.Brush;
                 }
+
+                newBrush = new DrawingBrush(new GeometryDrawing(embeddedBrush, null, textGeometry));
 
                 return new EmissiveMaterial(newBrush);
 

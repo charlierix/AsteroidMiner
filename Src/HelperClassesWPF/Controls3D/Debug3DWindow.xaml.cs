@@ -261,7 +261,7 @@ namespace Game.HelperClassesWPF.Controls3D
             // Hull
             if (faceColor != null)
             {
-                var material = GetMaterial(isShinyFaces, faceColor.Value);
+                Material material = GetMaterial(isShinyFaces, faceColor.Value);
 
                 GeometryModel3D geometry = new GeometryModel3D();
                 geometry.Material = material;
@@ -284,7 +284,7 @@ namespace Game.HelperClassesWPF.Controls3D
 
         public void AddMesh(MeshGeometry3D mesh, Color color, bool isShinyFaces = true)
         {
-            var material = GetMaterial(isShinyFaces, color);
+            Material material = GetMaterial(isShinyFaces, color);
 
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = material;
@@ -294,6 +294,53 @@ namespace Game.HelperClassesWPF.Controls3D
 
             ModelVisual3D visual = new ModelVisual3D();
             visual.Content = geometry;
+            this.Visuals3D.Add(visual);
+        }
+
+        /// <summary>
+        /// This adds text into the 3D scene
+        /// NOTE: This is affected by WPF's "feature" of semi transparent visuals only showing visuals that were added before
+        /// </summary>
+        /// <remarks>
+        /// Think of the text sitting in a 2D rectangle. position=center, normal=vector sticking out of rect, textDirection=vector along x
+        /// </remarks>
+        /// <param name="position">The center point of the text</param>
+        /// <param name="normal">The direction of the vector that points straight out of the plane of the text (default is 0,0,1)</param>
+        /// <param name="textDirection">The direction of the vector that points along the text (default is 1,0,0)</param>
+        public void AddText3D(string text, Point3D position, Vector3D normal, double height, Color color, bool isShiny, Vector3D? textDirection = null, double? depth = null, FontFamily font = null, FontStyle? style = null, FontWeight? weight = null, FontStretch? stretch = null)
+        {
+            Material faceMaterial = GetMaterial(isShiny, color);
+            Material edgeMaterial = GetMaterial(false, UtilityWPF.AlphaBlend(color, UtilityWPF.OppositeColor_BW(color), .75));
+
+            ModelVisual3D visual = new ModelVisual3D();
+
+            visual.Content = UtilityWPF.GetText3D(
+                text,
+                font ?? this.FontFamily,
+                faceMaterial,
+                edgeMaterial,
+                height,
+                depth ?? height / 15d,
+                style,
+                weight,
+                stretch);
+
+            Transform3DGroup transform = new Transform3DGroup();
+
+            Quaternion quat;
+            if (textDirection == null)
+            {
+                quat = Math3D.GetRotation(new Vector3D(0, 0, 1), normal);
+            }
+            else
+            {
+                quat = Math3D.GetRotation(new DoubleVector(new Vector3D(0, 0, 1), new Vector3D(1, 0, 0)), new DoubleVector(normal, textDirection.Value));
+            }
+            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(quat)));
+
+            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
+            visual.Transform = transform;
+
             this.Visuals3D.Add(visual);
         }
 
@@ -315,18 +362,8 @@ namespace Game.HelperClassesWPF.Controls3D
             {
                 if (this.Background is SolidColorBrush)
                 {
-                    Color backColor = ((SolidColorBrush)this.Background).Color;
-                    ColorHSV oppositeColor = UtilityWPF.OppositeColor(backColor).ToHSV();
-
                     // Ignore color portion, just go black or white
-                    if (oppositeColor.V > 50)
-                    {
-                        foreColor = Colors.White;
-                    }
-                    else
-                    {
-                        foreColor = Colors.Black;
-                    }
+                    foreColor = UtilityWPF.OppositeColor_BW(((SolidColorBrush)this.Background).Color);
                 }
                 else
                 {

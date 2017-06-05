@@ -46,6 +46,11 @@ namespace Game.HelperClassesWPF
                         vector.Y.IsNearValue(compare.Y);
         }
 
+        public static bool IsInvalid(this Vector vector)
+        {
+            return Math2D.IsInvalid(vector);
+        }
+
         public static Point ToPoint(this Vector vector)
         {
             return new Point(vector.X, vector.Y);
@@ -114,6 +119,11 @@ namespace Game.HelperClassesWPF
                         point.Y.IsNearValue(compare.Y);
         }
 
+        public static bool IsInvalid(this Point point)
+        {
+            return Math2D.IsInvalid(point);
+        }
+
         public static Vector ToVector(this Point point)
         {
             return new Vector(point.X, point.Y);
@@ -166,6 +176,11 @@ namespace Game.HelperClassesWPF
             return vector.X.IsNearValue(compare.X) &&
                         vector.Y.IsNearValue(compare.Y) &&
                         vector.Z.IsNearValue(compare.Z);
+        }
+
+        public static bool IsInvalid(this Vector3D vector)
+        {
+            return Math3D.IsInvalid(vector);
         }
 
         public static Point3D ToPoint(this Vector3D vector)
@@ -307,6 +322,11 @@ namespace Game.HelperClassesWPF
         public static Point3D DivideBy(this Point3D point, double scalar)
         {
             return new Point3D(point.X / scalar, point.Y / scalar, point.Z / scalar);
+        }
+
+        public static bool IsInvalid(this Point3D point)
+        {
+            return Math3D.IsInvalid(point);
         }
 
         public static bool IsNearZero(this Point3D point)

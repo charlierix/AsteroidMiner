@@ -13,7 +13,22 @@ using Game.Newt.v2.NewtonDynamics;
 namespace Game.Newt.v2.GameItems.MapParts
 {
     //TODO: This really needs an active controller that enforces properties
+
     //TODO: Put a weak attractor on the current mouse position (stronger than toward ship, but not too strong)
+
+    //TODO: If a more cordinated swarm is needed, let some of the bots specialize into leaders and see each other as well as
+    // the nearest X neighbors.  The non specialized bots will still only just see their nearest X neighbors, but also their designated
+    //leader bot.  This slight hierarchy should allow for finer control of the swarm
+    //
+    //This specialization could be automated by bots selecting neighbors by size:
+    //  Follow X nearest neighbors that are similar to my size
+    //  If I am the largest, find another bot nearby that is not in my local group but is very similar to my size
+
+    //TODO: Instead of coming up with a bunch of hardcoded rules, figure out how to encode that into a simple neural net.
+    //As long as every bot in the swarm has the same or similar NN, it should behave as a flock
+    //  Have a baseline behavior NN
+    //  Have other specialized NNs for special situations (predator/prey/etc)
+    //  Or the swarmbay could maintain individual NNs, and give a single merged one to swarmbot instances
     public class SwarmBot1b : IDisposable, IMapObject, IPartUpdatable
     {
         #region Class: ForceSettings_Initial

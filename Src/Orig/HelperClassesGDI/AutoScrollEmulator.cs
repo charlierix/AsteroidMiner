@@ -27,7 +27,7 @@ namespace Game.Orig.HelperClassesGDI
         #region Events
 
         /// <summary>
-        /// This is raised when the control needs to scroll (similiar in concept to a scrollbar's scroll event, or the mousewheel event)
+        /// This is raised when the control needs to scroll (similar in concept to a scrollbar's scroll event, or the mousewheel event)
         /// </summary>
         public event AutoScrollHandler AutoScroll = null;
 

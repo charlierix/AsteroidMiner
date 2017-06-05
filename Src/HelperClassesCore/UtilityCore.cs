@@ -49,6 +49,11 @@ namespace Game.HelperClassesCore
         /// </summary>
         public static double GetScaledValue_Capped(double minReturn, double maxReturn, double minRange, double maxRange, double valueRange)
         {
+            if (minRange.IsNearValue(maxRange))
+            {
+                return minReturn;
+            }
+
             // Get the percent of value within the range
             double percent = (valueRange - minRange) / (maxRange - minRange);
 
@@ -65,7 +70,6 @@ namespace Game.HelperClassesCore
                 retVal = maxReturn;
             }
 
-            // Exit Function
             return retVal;
         }
 
@@ -217,9 +221,6 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// This will try to get the output, and retry a few times if invalid
         /// </summary>
-        /// <typeparam name="Tinput"></typeparam>
-        /// <typeparam name="Toutput"></typeparam>
-        /// <param name="retryCount"></param>
         /// <param name="adjustInput">
         /// For certain types of operations, adjusting the input could be how to fix the output (finding hulls, voronoi, etc).  If the
         /// failure is a DB or web call, then just retry without changing inputs
@@ -251,6 +252,59 @@ namespace Game.HelperClassesCore
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// This compares two arrays.  If they are the same size, and each element equals, then this returns true
+        /// </summary>
+        public static bool IsArrayEqual<T>(T[] arr1, T[] arr2)
+        {
+            if (arr1 == null && arr2 == null)
+            {
+                return true;
+            }
+            else if (arr1 == null || arr2 == null)
+            {
+                return false;
+            }
+            else if (arr1.Length != arr2.Length)
+            {
+                return false;
+            }
+
+            for (int cntr = 0; cntr < arr1.Length; cntr++)
+            {
+                if (!arr1[cntr].Equals(arr2[cntr]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Converts a base 10 number to base 2
+        /// </summary>
+        public static bool[] ConvertToBase2(long value, int vectorSize)
+        {
+            if(value < 0)
+            {
+                throw new ArgumentOutOfRangeException("This method can't handle negative numbers: " + value.ToString());
+            }
+
+            return Convert.ToString(value, 2).       // convert the base10 cntr to base2
+                PadLeft(vectorSize, '0').     // force constant width
+                Select(o => o == '1').      // convert to bool
+                ToArray();
+        }
+        /// <summary>
+        /// Converts a base 2 number to base 10
+        /// </summary>
+        public static long ConvertToBase10(bool[] bits)
+        {
+            string text = new string(bits.Select(o => o ? '1' : '0').ToArray());
+            return Convert.ToInt64(text, 2);
         }
 
         #endregion
@@ -442,7 +496,6 @@ namespace Game.HelperClassesCore
 
         /// <summary>
         /// This acts like Enumerable.Range, but the values returned are in a random order
-        /// NOTE: The return list is not sorted
         /// </summary>
         public static IEnumerable<int> RandomRange(int start, int count)
         {
@@ -468,7 +521,6 @@ namespace Game.HelperClassesCore
         }
         /// <summary>
         /// This overload wont iterate over all the values, just some of them
-        /// NOTE: The return list is not sorted
         /// </summary>
         /// <param name="rangeCount">When returning a subset of a big list, rangeCount is the size of the big list</param>
         /// <param name="iterateCount">When returning a subset of a big list, iterateCount is the size of the subset</param>
@@ -539,7 +591,6 @@ namespace Game.HelperClassesCore
         }
         /// <summary>
         /// This overload lets the user pass in their own random function -- ex: rand.NextPow(2)
-        /// NOTE: The return list is not sorted
         /// </summary>
         /// <param name="rand">
         /// int1 = min value
@@ -711,7 +762,7 @@ namespace Game.HelperClassesCore
             }
         }
         /// <summary>
-        /// This lets T's and IEnumerable(T)'s to intermixed
+        /// This lets T's and IEnumerable(T)'s be intermixed
         /// </summary>
         public static IEnumerable<T> Iterate<T>(params object[] items)
         {
@@ -1063,6 +1114,113 @@ namespace Game.HelperClassesCore
             return jagged.
                 Select(o => o.Select(p => (T)p).ToArray()).
                 ToArray();
+        }
+
+        /// <summary>
+        /// This is a helper method that wraps objects to be passed to SeparateUnlinkedSets()
+        /// </summary>
+        public static Tuple<LinkedItemWrapper<Titem>[], LinkWrapper<Titem, Tlink>[]> GetWrappers<Titem, Tlink>(Titem[] items, Tuple<int, int, Tlink>[] links)
+        {
+            // Items
+            var itemWrappers = items.
+                Select((o, i) => new LinkedItemWrapper<Titem>()
+                {
+                    Item = o,
+                    Index = i,
+                }).
+                ToArray();
+
+            for (int cntr = 0; cntr < itemWrappers.Length; cntr++)
+            {
+                itemWrappers[cntr].Links = links.
+                    Select(o =>
+                    {
+                        if (o.Item1 == cntr)
+                        {
+                            return itemWrappers[o.Item2];
+                        }
+                        else if (o.Item2 == cntr)
+                        {
+                            return itemWrappers[o.Item1];
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }).
+                    Where(o => o != null).
+                    ToArray();
+            }
+
+            // Links
+            var linkWrappers = links.
+                Select(o => new LinkWrapper<Titem, Tlink>()
+                {
+                    Link = o.Item3,
+                    Item1 = itemWrappers[o.Item1],
+                    Item2 = itemWrappers[o.Item2],
+                }).
+                ToArray();
+
+            return Tuple.Create(itemWrappers, linkWrappers);
+        }
+        /// <summary>
+        /// This separates unique islands of sets
+        /// </summary>
+        /// <remarks>
+        /// The items and links could be anything: tables and constraints, social media friends, etc
+        /// 
+        /// This method identifies independent sets of items, and puts them in their own slot in the return array
+        /// 
+        /// Example:
+        /// Input:
+        ///     A, B, C, D, E
+        ///     A-B
+        ///     B-E
+        ///     C-D
+        /// 
+        /// Output:
+        ///     A,B,E | A-B, B-E
+        ///     C,D | C-D
+        /// </remarks>
+        /// <typeparam name="Titem">This is just along for the ride, could be null</typeparam>
+        /// <typeparam name="Tlink">This is just along for the ride, could be null</typeparam>
+        /// <param name="consolidateSetLengths">
+        /// If these sets are passed to a visual clustering algorithm, or some other report, you may want sets of 2 or 3 to be bundled into the
+        /// same set.  This is the max length of the small sets (if you want every set up to 3 together, then pass in 3)
+        /// </param>
+        public static Tuple<LinkedItemWrapper<Titem>[], LinkWrapper<Titem, Tlink>[]>[] SeparateUnlinkedSets<Titem, Tlink>(LinkedItemWrapper<Titem>[] items, LinkWrapper<Titem, Tlink>[] links, int? consolidateSetLengths = null)
+        {
+            var retVal = new List<Tuple<LinkedItemWrapper<Titem>[], LinkWrapper<Titem, Tlink>[]>>();
+
+            var unlinked = items.
+                Where(o => o.Links == null || o.Links.Length == 0).
+                ToArray();
+
+            if (unlinked.Length > 0)
+            {
+                retVal.Add(Tuple.Create(unlinked, new LinkWrapper<Titem, Tlink>[0]));
+
+                items = items.
+                    Where(o => o.Links != null && o.Links.Length > 0).
+                    ToArray();
+            }
+
+            var remainingItems = new List<LinkedItemWrapper<Titem>>(items);
+            var remainingLinks = new List<LinkWrapper<Titem, Tlink>>(links);
+
+            while (remainingItems.Count > 0)
+            {
+                retVal.Add(SeparateUnlinkedSets_Set(remainingItems, remainingLinks));
+            }
+
+            // There tends to be lots of 2s and 3s, so make a single set of them
+            if (consolidateSetLengths != null)
+            {
+                SeparateUnlinkedSets_Consolidate(retVal, consolidateSetLengths.Value);
+            }
+
+            return retVal.ToArray();
         }
 
         #endregion
@@ -1676,6 +1834,102 @@ namespace Game.HelperClassesCore
             return raw.Distinct().Count() == raw.Length;
         }
 
+        private static Tuple<LinkedItemWrapper<Titem>[], LinkWrapper<Titem, Tlink>[]> SeparateUnlinkedSets_Set<Titem, Tlink>(List<LinkedItemWrapper<Titem>> remainingItems, List<LinkWrapper<Titem, Tlink>> remainingLinks)
+        {
+            var returnItems = new List<LinkedItemWrapper<Titem>>();
+            var returnLinks = new List<LinkWrapper<Titem, Tlink>>();
+
+            var toAddItems = new List<LinkedItemWrapper<Titem>>();
+
+            toAddItems.Add(remainingItems[0]);
+            remainingItems.RemoveAt(0);
+
+            while (toAddItems.Count > 0)
+            {
+                var current = toAddItems[0];
+                toAddItems.RemoveAt(0);
+
+                returnItems.Add(current);
+
+                var removedLinks = RemoveLinks(remainingLinks, current.Index);
+                returnLinks.AddRange(removedLinks);
+
+                if (removedLinks.Length > 0)
+                {
+                    toAddItems.AddRange(RemoveItems(remainingItems, removedLinks));
+                }
+            }
+
+            return Tuple.Create(returnItems.ToArray(), returnLinks.ToArray());
+        }
+        private static void SeparateUnlinkedSets_Consolidate<Titem, Tlink>(List<Tuple<LinkedItemWrapper<Titem>[], LinkWrapper<Titem, Tlink>[]>> sets, int maxLength)
+        {
+            var items = new List<LinkedItemWrapper<Titem>>();
+            var links = new List<LinkWrapper<Titem, Tlink>>();
+
+            int index = 0;
+            while (index < sets.Count)
+            {
+                int len = sets[index].Item1.Length;
+                if (len > 1 && len <= maxLength)
+                {
+                    items.AddRange(sets[index].Item1);
+                    links.AddRange(sets[index].Item2);
+                    sets.RemoveAt(index);
+                }
+                else
+                {
+                    index++;
+                }
+            }
+
+            if (items.Count > 0)
+            {
+                sets.Add(Tuple.Create(items.ToArray(), links.ToArray()));
+            }
+        }
+
+        private static LinkWrapper<Titem, Tlink>[] RemoveLinks<Titem, Tlink>(List<LinkWrapper<Titem, Tlink>> links, int itemIndex)
+        {
+            var retVal = new List<LinkWrapper<Titem, Tlink>>();
+
+            int index = 0;
+            while (index < links.Count)
+            {
+                if (links[index].Item1.Index == itemIndex || links[index].Item2.Index == itemIndex)
+                {
+                    retVal.Add(links[index]);
+                    links.RemoveAt(index);
+                }
+                else
+                {
+                    index++;
+                }
+            }
+
+            return retVal.ToArray();
+        }
+        private static LinkedItemWrapper<Titem>[] RemoveItems<Titem, Tlink>(List<LinkedItemWrapper<Titem>> items, LinkWrapper<Titem, Tlink>[] links)
+        {
+            var retVal = new List<LinkedItemWrapper<Titem>>();
+
+            int index = 0;
+            while (index < items.Count)
+            {
+                if (links.Any(o => items[index].Index == o.Item1.Index || items[index].Index == o.Item2.Index))
+                {
+                    retVal.Add(items[index]);
+                    items.RemoveAt(index);
+                }
+                else
+                {
+                    index++;
+                }
+            }
+
+            return retVal.ToArray();
+        }
+
         #endregion
     }
 
@@ -1745,6 +1999,27 @@ namespace Game.HelperClassesCore
         ///     Just using obj.GetType().ToString(), so there's a chance of invalid characters
         /// </remarks>
         JSON_TypeInFileName,
+    }
+
+    #endregion
+
+    #region Class: LinkedItemWrapper
+
+    public class LinkedItemWrapper<T>
+    {
+        public T Item { get; set; }
+        public int Index { get; set; }
+        public LinkedItemWrapper<T>[] Links { get; set; }
+    }
+
+    #endregion
+    #region Class: LinkWrapper
+
+    public class LinkWrapper<Titem, Tlink>
+    {
+        public Tlink Link { get; set; }
+        public LinkedItemWrapper<Titem> Item1 { get; set; }
+        public LinkedItemWrapper<Titem> Item2 { get; set; }
     }
 
     #endregion

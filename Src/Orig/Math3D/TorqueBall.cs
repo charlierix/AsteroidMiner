@@ -303,7 +303,7 @@ namespace Game.Orig.Math3D
             base.TimerFinish();
 
             // Rotate the external torque and add to the internal torque (I should probably do this against saved rotation, because that's
-            // the orientation that the forces were applied to, but the base doesn't know that I've played with the rotation, and it has similiar
+            // the orientation that the forces were applied to, but the base doesn't know that I've played with the rotation, and it has similar
             // logic.  So I will do what the base does)
             if (!_externalTorque.IsZero)
             {

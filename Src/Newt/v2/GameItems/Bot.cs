@@ -24,6 +24,15 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public class Bot : IDisposable, IMapObject, IPartUpdatable, ITakesDamage
     {
+        #region Events
+
+        /// <summary>
+        /// NOTE: This can be raised from any thread
+        /// </summary>
+        public event EventHandler MassChanged = null;
+
+        #endregion
+
         #region Declaration Section
 
         private readonly object _lockRecalculateMass = new object();        //NOTE: Currently, this is the only lock in the class.  If there is need for more in the future, consider having a larger global lock, or make very sure they don't conflict
@@ -869,6 +878,10 @@ namespace Game.Newt.v2.GameItems
         /// </summary>
         protected virtual void OnMassRecalculated()
         {
+            if (this.MassChanged != null)
+            {
+                this.MassChanged(this, new EventArgs());
+            }
         }
 
         #endregion

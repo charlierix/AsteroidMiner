@@ -13,7 +13,7 @@ using Game.Orig.Math3D;
 namespace Game.Orig.TestersGDI.PhysicsPainter
 {
     /// <summary>
-    /// Since there are so many classes that need to draw similiar things, this class will do the actual
+    /// Since there are so many classes that need to draw similar things, this class will do the actual
     /// drawing in order to keep a consistent look.
     /// </summary>
     /// <remarks>

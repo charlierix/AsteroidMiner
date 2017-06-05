@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Schedulers;
 using System.Windows;
 using System.Windows.Media.Media3D;
+using Game.HelperClassesCore.Threads;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
@@ -215,6 +217,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly double _volume;        // this is used to calculate energy draw
 
+        private readonly object _lockThrustWorker = new object();
+        private bool _isThrustWorkerInitialized = false;
+        private ThrustSolutionSolver _thrustWorker = null;
+        private Bot _bot = null;
+
+        //TODO: This should be passed in, or make a static manager: SolverThreadPool
+        private readonly RoundRobinManager _thrustWorkerThread = new RoundRobinManager(new StaTaskScheduler(1));
+
         #endregion
 
         #region Constructor
@@ -330,7 +340,15 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 }
             }
 
-            //TODO: Thrusters -- use the controller logic from Game.Newt.v2.AsteroidMiner.AstMin2D.ShipPlayer
+            if (_thrusters != null && _thrusters.Length > 0)        //TODO: Will also need to consider tractor beams.  But they are harder, because their force is dependent on the object they're interacting with
+            {
+                lock (_lockThrustWorker)
+                {
+                    EnsureThrustMapInitialized();
+
+                    //TODO: Thrusters -- use the controller logic from Game.Newt.v2.AsteroidMiner.AstMin2D.ShipPlayer
+                }
+            }
         }
 
         public int? IntervalSkips_MainThread
@@ -375,6 +393,52 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 return _scaleActual;
             }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        public ThrusterSetting[] FindSolution_DEBUG(Vector3D? linear, Vector3D? rotation)
+        {
+            if (_thrustWorker == null)
+            {
+                return new ThrusterSetting[0];
+            }
+            else
+            {
+                return _thrustWorker.FindSolution(linear, rotation);
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void EnsureThrustMapInitialized()
+        {
+            if (_isThrustWorkerInitialized)
+            {
+                return;
+            }
+            else if (_thrusters == null)
+            {
+                // No thrusters, so there's nothing to do
+                _isThrustWorkerInitialized = true;
+                return;
+            }
+
+            _bot = GetParent() as Bot;
+            if (_bot == null)
+            {
+                // This part isn't being run from a bot
+                _isThrustWorkerInitialized = true;
+                return;
+            }
+
+            _thrustWorker = new ThrustSolutionSolver(_bot, _thrusters, _thrustWorkerThread, false);
+
+            _isThrustWorkerInitialized = true;
         }
 
         #endregion

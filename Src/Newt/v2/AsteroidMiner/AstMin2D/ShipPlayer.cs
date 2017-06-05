@@ -66,27 +66,6 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region Class: ThrusterSolutionMap
-
-        /// <summary>
-        /// This holds a map and the resulting acceleration
-        /// </summary>
-        private class ThrusterSolutionMap
-        {
-            public ThrusterSolutionMap(ThrusterMap map, double linearAccel, double rotateAccel)
-            {
-                this.Map = map;
-                this.LinearAccel = linearAccel;
-                this.RotateAccel = rotateAccel;
-            }
-
-            public readonly ThrusterMap Map;
-
-            public readonly double LinearAccel;
-            public readonly double RotateAccel;
-        }
-
-        #endregion
 
         #region Declaration Section
 
@@ -247,6 +226,23 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         public void KeyDown(Key key)
         {
+            if (key == Key.Y)        // why y? why not?
+            {
+                DirectionControllerRing ring = this.Parts.FirstOrDefault(o => o is DirectionControllerRing) as DirectionControllerRing;
+                if (ring != null)
+                {
+                    var test = ring.FindSolution_DEBUG(Math3D.GetRandomVector_Circular_Shell(1), null);
+                }
+
+                DirectionControllerSphere ball = this.Parts.FirstOrDefault(o => o is DirectionControllerSphere) as DirectionControllerSphere;
+                if (ball != null)
+                {
+                    var test = ball.FindSolution_DEBUG(Math3D.GetRandomVector_Spherical_Shell(1), null);
+                }
+            }
+
+
+
             if (key == Key.LeftShift || key == Key.RightShift)
             {
                 #region Thrust boost

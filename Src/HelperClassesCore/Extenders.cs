@@ -48,6 +48,11 @@ namespace Game.HelperClassesCore
             return item >= compare - UtilityCore.NEARZERO && item <= compare + UtilityCore.NEARZERO;
         }
 
+        public static bool IsInvalid(this double item)
+        {
+            return Math1D.IsInvalid(item);
+        }
+
         /// <summary>
         /// This is useful for displaying a double value in a textbox when you don't know the range (could be
         /// 1000001 or .1000001 or 10000.5 etc)
@@ -284,14 +289,14 @@ namespace Game.HelperClassesCore
         //NOTE: AsEnumerable doesn't exist for IList, but when I put it here, it was ambiguous with other collections.  So this is spelled with an i
         public static IEnumerable<object> AsEnumerabIe(this IList list)
         {
-            foreach(object item in list)
+            foreach (object item in list)
             {
                 yield return item;
             }
         }
         public static IEnumerable<T> AsEnumerabIe<T>(this IList<T> list)
         {
-            foreach(T item in list)
+            foreach (T item in list)
             {
                 yield return item;
             }
@@ -390,6 +395,9 @@ namespace Game.HelperClassesCore
             }
         }
 
+        /// <summary>
+        /// NOTE: This removes from the list.  The returned items are what was removed
+        /// </summary>
         public static IEnumerable<T> RemoveWhere<T>(this IList<T> list, Func<T, bool> constraint)
         {
             List<T> removed = new List<T>();

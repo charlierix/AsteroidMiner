@@ -46,6 +46,7 @@
                                 <RowDefinition Height="auto"/>
                                 <RowDefinition Height="auto"/>
                                 <RowDefinition Height="auto"/>
+                                <RowDefinition Height="auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- Cube Props -->
@@ -58,6 +59,16 @@
                             <TextBlock Grid.Column="0" Grid.Row="2" Name="lblSizeZ" Text="Size Z" Style="{StaticResource label}"/>
                             <TextBox Grid.Column="2" Grid.Row="2" Name="txtSizeZ" Text="10" TextChanged="Double_TextChanged"/>
 
+                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3" IsChecked="True" Name="chkSeparateLinkSets" Content="Separate link sets">
+                                <CheckBox.ToolTip>
+                                    <TextBlock>Checked: Each independent set of links is processed in its own cube (unlinked are ignored)<LineBreak/>Unchecked: Everything goes in the same cube</TextBlock>
+                                </CheckBox.ToolTip>
+                            </CheckBox>
+
+                            <!-- Open Props (includes all of cube props) -->
+                            <TextBlock Grid.Column="0" Grid.Row="4" Name="lblLinkScale" Text="Link Scale" Style="{StaticResource label}"/>
+                            <Slider Grid.Column="2" Grid.Row="4" Name="trkLinkScale" Minimum="1" Maximum="5" Value="1"/>
+
                             <!-- Cone Props -->
                             <TextBlock Grid.Column="0" Grid.Row="0" Name="lblHeightMin" Text="Height min" Style="{StaticResource label}"/>
                             <TextBox Grid.Column="2" Grid.Row="0" Name="txtHeightMin" Text="0" TextChanged="Double_TextChanged"/>
@@ -69,39 +80,28 @@
                             <TextBox Grid.Column="2" Grid.Row="2" Name="txtAngle" Text="90" TextChanged="Double_TextChanged"/>
 
                             <!-- Common Props -->
-                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="6" Name="chkRandomWeights" Content="Random" ToolTip="Random Weights"/>
+                            <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="7" Name="chkRandomWeights" Content="Random" ToolTip="Random Weights"/>
 
-                            <TextBlock Grid.Column="0" Grid.Row="7" Text="#" Style="{StaticResource label}"/>
-                            <TextBox Grid.Column="2" Grid.Row="7" Name="txtNumDots" Text="10" TextChanged="Int_TextChanged"/>
+                            <TextBlock Grid.Column="0" Grid.Row="8" Text="#" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="8" Name="txtNumDots" Text="10" TextChanged="Int_TextChanged"/>
 
-                            <TextBlock Grid.Column="0" Grid.Row="8" Text="Weight" Style="{StaticResource label}"/>
-                            <TextBox Grid.Column="2" Grid.Row="8" Name="txtWeight" Text="1" TextChanged="Double_TextChanged"/>
+                            <TextBlock Grid.Column="0" Grid.Row="9" Text="Weight" Style="{StaticResource label}"/>
+                            <TextBox Grid.Column="2" Grid.Row="9" Name="txtWeight" Text="1" TextChanged="Double_TextChanged"/>
                         </Grid>
 
                         <!-- Add Dots -->
                         <Button Content="Add Dots" Margin="0,6,0,0" Click="AddDots_Click"/>
                         <Button Content="Add Static Dots" Margin="0,2,0,0" Click="AddStaticDots_Click"/>
+                        <Button Content="Add Links" Margin="0,2,0,0" Click="AddLinks_Click"/>
 
-                        <!-- Move -->
-                        <Grid Margin="0,12,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" SharedSizeGroup="labelSize"/>
-                                <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="1*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Column="0" Grid.Row="0" Text="%" Style="{StaticResource label}"/>
-                            <TextBox Grid.Column="2" Grid.Row="0" Name="txtMovePercent" Text="10" TextChanged="Double_TextChanged"/>
-                        </Grid>
-
-                        <Button Content="Next Step" Margin="0,6,0,0" Click="NextStep_Click"/>
+                        <Button Content="Next Step" Margin="0,12,0,0" Click="NextStep_Click"/>
                         <CheckBox Name="chkContinuous" Content="Continuous" Margin="0,6,0,0" Checked="chkContinuous_Checked" Unchecked="chkContinuous_Checked"/>
 
                         <Button Content="Rand Movable" ToolTip="Give movable points random positions" Margin="0,12,0,0" Click="RandomizeMovable_Click"/>
                         <Button Content="Batch Move" ToolTip="Calls MathND.GetRandomVectors_Cube_EventDist()" Margin="0,2,0,0" Click="BatchMove_Click"/>
+                        
+                        <!-- Test Cases -->
+                        <Button Visibility="Collapsed" Content="RMS test" Margin="0,20,0,0" Click="RMSTest_Click"/>
                     </StackPanel>
                 </ScrollViewer>
 
