@@ -18,7 +18,7 @@ namespace Game.Newt.v1.NewtonDynamics1
     [ContentProperty("Content")]
     public class World : FrameworkElement, IAddChild, IDisposable
     {
-        #region Enum: BodyFilterType
+        #region enum: BodyFilterType
 
         public enum BodyFilterType
         {

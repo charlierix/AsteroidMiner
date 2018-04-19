@@ -15,7 +15,7 @@ namespace Game.Orig.TestersGDI
 {
     public partial class CollisionTester : Form
     {
-        #region Enum: MouseDownOn
+        #region enum: MouseDownOn
 
         private enum MouseDownOn
         {
@@ -32,11 +32,11 @@ namespace Game.Orig.TestersGDI
 
         #endregion
 
-        #region Class: TriangleTest
+        #region class: TriangleTest
 
         private class TriangleTest : Sphere
         {
-            #region Enum: MouseDownOnTriangle
+            #region enum: MouseDownOnTriangle
 
             private enum MouseDownOnTriangle
             {
@@ -296,12 +296,12 @@ namespace Game.Orig.TestersGDI
         }
 
         #endregion
-        #region Class: PolygonTest
+        #region class: PolygonTest
 
         private class PolygonTest : SpherePolygon
         {
 
-            #region Enum: MouseDownOnPolygon
+            #region enum: MouseDownOnPolygon
 
             private enum MouseDownOnPolygon
             {
@@ -313,7 +313,7 @@ namespace Game.Orig.TestersGDI
             }
 
             #endregion
-            #region Enum: RotateHandle
+            #region enum: RotateHandle
 
             private enum RotateHandle
             {

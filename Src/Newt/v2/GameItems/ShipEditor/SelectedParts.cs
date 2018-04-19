@@ -17,7 +17,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     /// </summary>
     public class SelectedParts
     {
-        #region Enum: DraggingModifier
+        #region enum: DraggingModifier
 
         private enum DraggingModifier
         {

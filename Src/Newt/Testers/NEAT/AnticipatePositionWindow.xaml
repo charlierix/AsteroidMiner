@@ -1,0 +1,315 @@
+﻿<Window x:Class="Game.Newt.Testers.NEAT.AnticipatePositionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Game.Newt.Testers.NEAT"
+        xmlns:wpf="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
+        xmlns:ai="clr-namespace:Game.HelperClassesAI;assembly=Game.HelperClassesAI"
+        Title="Anticipate Position" ResizeMode="CanResizeWithGrip" Width="1200" Height="750" Loaded="Window_Loaded" Closing="Window_Closing">
+    <Window.Resources>
+        <Style x:Key="valuePrompt" TargetType="Label">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="valueText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="500"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="checkboxSelection" TargetType="CheckBox">
+            <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="wpf:SliderShowValues">
+            <Setter Property="Margin" Value="0,2"/>
+            <!--<Setter Property="MinWidth" Value="175"/>-->
+            <!-- NOTE: Without this being set, the mouseover trigger only works intermittantly, and leaves multiple sliders visible at a time -->
+            <Setter Property="Background" Value="Transparent"/>
+
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="False">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type wpf:SliderShowValues}">
+                                <TextBlock Text="{TemplateBinding ValueDisplay}" MinWidth="60" Margin="3,0,0,0" Background="Transparent" HorizontalAlignment="Stretch" Style="{StaticResource valueText}"/>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="MinWidth" Value="120"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="panelLabel" TargetType="Label">
+            <Setter Property="Foreground" Value="#606060"/>
+            <Setter Property="FontSize" Value="15"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <Expander Header="Harness">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Column="0" Grid.Row="0" Content="Map Size" ToolTip="Width,Height of total map" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkMapSize" Minimum="1" Maximum="200" Value="35"/>
+
+                        <Label Grid.Column="0" Grid.Row="1" Content="Vision Size (input)" ToolTip="Width,Height of vision square (#pixels input)" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="1" Name="trkVisionSize" Minimum="1" Maximum="100" Value="35"/>
+
+                        <Label Grid.Column="0" Grid.Row="2" Content="Output Size" ToolTip="Width,Height of output's range (#pixels output)" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkOutputSize" Minimum="1" Maximum="200" Value="35"/>
+
+                        <Label Visibility="Collapsed" Grid.Column="0" Grid.Row="3" Content="Input Density" ToolTip="#neurons per unit" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Visibility="Collapsed" Grid.Column="2" Grid.Row="3" Name="trkInputDensity" Minimum=".01" Maximum="2" Value=".2"/>
+
+                        <Label Grid.Column="0" Grid.Row="3" Content="Input Size XY" ToolTip="#neurons = this squared" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="3" Name="trkInputPixels" Minimum="1" Maximum="12" Value="4" IsInteger="True"/>
+
+                        <Label Visibility="Collapsed" Grid.Column="0" Grid.Row="4" Content="Output Density" ToolTip="#neurons per unit" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Visibility="Collapsed" Grid.Column="2" Grid.Row="4" Name="trkOutputDensity" Minimum=".01" Maximum="1" Value=".075"/>
+
+                        <Label Grid.Column="0" Grid.Row="4" Content="Output Size XY" ToolTip="#neurons = this squared" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="4" Name="trkOutputPixels" Minimum="1" Maximum="10" Value="4" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="5" Content="Tracked item type" Style="{StaticResource valuePrompt}"/>
+                        <ComboBox Grid.Column="2" Grid.Row="5" Name="cboTrackedItemType"/>
+
+                        <Label Grid.Column="0" Grid.Row="6" Content="Delay between instances" ToolTip="seconds to wait before starting a new tracked item" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkDelayBetweenInstances" Minimum="0" Maximum="1.5" Value=".5"/>
+                    </Grid>
+                </Expander>
+                <Expander Header="Evaluator">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Column="0" Grid.Row="0" Visibility="Collapsed" Content="Ticks neural : world" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="0" Visibility="Collapsed" Minimum="1" Maximum="100" Value="10" IsInteger="True" ToolTip="How many times the brain ticks relative to the world's ticks"/>
+
+                        <Label Grid.Column="0" Grid.Row="1" Content="Delay (seconds)" ToolTip="Seconds between previous and current (how long into the future to train the predictor)" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="1" Name="trkDelay" Minimum=".01" Maximum="2" Value=".3"/>
+
+                        <Label Grid.Column="0" Grid.Row="2" Content="Bounce off walls" Style="{StaticResource valuePrompt}"/>
+                        <CheckBox Grid.Column="2" Grid.Row="2" Name="chkBounceOffWalls" Style="{StaticResource checkboxSelection}"/>
+
+                        <Label Grid.Column="0" Grid.Row="3" Content="Max Speed" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="3" Name="trkMaxSpeed" Minimum="5" Maximum="30" Value="10"/>
+
+                        <Label Grid.Column="0" Grid.Row="4" Content="Random start conditions" Style="{StaticResource valuePrompt}"/>
+                        <CheckBox Grid.Column="2" Grid.Row="4" Name="chkRandomStartingConditions" Style="{StaticResource checkboxSelection}">
+                            <CheckBox.ToolTip>
+                                <TextBlock>
+                                    True: Each new item will start with a random position and velocity
+                                    <LineBreak/>
+                                    False: Item will always have the same starting position/velocity
+                                </TextBlock>
+                            </CheckBox.ToolTip>
+                        </CheckBox>
+
+                        <Label Grid.Column="0" Grid.Row="5" Content="New Item Duration" ToolTip="Roughly how many ticks after an item is created before the error should settle down to standard" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="5" Name="trkNewItemDuration" Minimum="0" Maximum="10" Value="4"/>
+
+                        <Label Grid.Column="0" Grid.Row="6" Content="New Item Error Mult" ToolTip="Roughly how many ticks after an item is created before the error should settle down to standard" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="6" Name="trkNewItemErrorMultiplier" Minimum="1" Maximum="10" Value="5"/>
+
+                        <Label Grid.Column="0" Grid.Row="7" Content="# Iterations" ToolTip="How many samples to take before calculating a final score" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="7" Name="trkEvalIterations" Minimum="100" Maximum="500" Value="200" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="8" Content="Elapsed Time" ToolTip="How much time to report each tick" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="8" Name="trkEvalElapsedTime" Minimum=".01" Maximum=".5" Value=".09"/>
+
+                        <Label Grid.Column="0" Grid.Row="9" Content="Error Bias" Style="{StaticResource valuePrompt}"/>
+                        <ComboBox Grid.Column="2" Grid.Row="9" Name="cboErrorBias"/>
+                    </Grid>
+                </Expander>
+                <Expander Header="Neural">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto"/>
+                            <ColumnDefinition Width="1"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                            <RowDefinition Height="auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Column="0" Grid.Row="0" Content="Population Size" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="0" Name="trkPopulationSize" Minimum="20" Maximum="400" Value="150" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="1" Content="Species Count" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="1" Name="trkSpeciesCount" Minimum="1" Maximum="20" Value="10" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="2" Content="Timesteps per activation" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="2" Name="trkTimestepsPerActivation" Minimum="1" Maximum="4" Value="2" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="3" Content="Complexity Threshold" Style="{StaticResource valuePrompt}"/>
+                        <wpf:SliderShowValues Grid.Column="2" Grid.Row="3" Name="trkComplexityThreshold" Minimum="10" Maximum="1000" Value="150" IsInteger="True"/>
+
+                        <Label Grid.Column="0" Grid.Row="4" Content="Hyper NEAT" Style="{StaticResource valuePrompt}"/>
+                        <CheckBox Grid.Column="2" Grid.Row="4" IsChecked="True" Name="chkHyperNEAT" Style="{StaticResource checkboxSelection}"/>
+                    </Grid>
+                </Expander>
+
+                <!-- TODO: Have a way to put up barriers that the items bounce off of - don't worry about that for this tester.  The next tester should be against recordings of real world observation, not these synthetic balls -->
+
+                <!-- Scenario 1: New ones start at random location/velocity -->
+                <!-- Scenario 2: Always use the same run - it will be trained to memorize that particular run -->
+                <!-- Scenario 3: Have multiple sharpneat instances, each with their own fixed animation to learn.  Have another instance that draws from those singles and creates a composite -->
+                <!-- Scenario 4: HyperNEAT - start training a low resolution, then increase resolution once thresholds are met -->
+
+                <!-- This is an attempt to be hyperneat aware -->
+                <Button Content="Reset" Margin="0,4,0,0" Click="Reset2_Click"/>
+
+                <Button Content="brain neat part" Margin="0,30,0,0" Click="BrainNEAT_Click"/>
+                <!--<Button Visibility="Collapsed" Content="test hyperneat" Margin="0,30,0,0" Click="TestHyperNEAT_Click"/>-->
+            </StackPanel>
+
+            <!-- Stats -->
+            <ai:NeatEAStats Grid.Row="2" x:Name="eaStats"/>
+        </Grid>
+
+        <!-- TODO: Instead of just showing the best genome, show the winner of each species -->
+        <Border Grid.Column="2" Background="#40FFFFFF" BorderBrush="#20000000" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <!--<ColumnDefinition Width="1*"/>-->
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="3*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Column="0" ClipToBounds="True">
+                    <Canvas Name="canvasMain"/>
+                </Grid>
+                <Label Grid.Column="0" Content="Actual" Style="{StaticResource panelLabel}"/>
+
+                <WindowsFormsHost Grid.Column="1" Name="nnViewerHost"/>
+                <Label Grid.Column="1" Content="Winning Neural Net" Style="{StaticResource panelLabel}"/>
+
+                <!--<WindowsFormsHost Grid.Column="2" Name="nnViewerHost2"/>
+                <Label Grid.Column="2" Content="Winning Neural Net" Style="{StaticResource panelLabel}"/>-->
+
+                <WindowsFormsHost Grid.Column="0" Grid.ColumnSpan="7" Grid.Row="1" Name="nnViewerHost2"/>
+                <Label Grid.Column="0" Grid.ColumnSpan="7" Grid.Row="1" Content="Winning Neural Net (from cppn)" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="3" Name="imageInput" Stretch="Fill"/>
+                <Label Grid.Column="3" Content="Input" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="4" Name="imageExpectedOutput" Stretch="Fill"/>
+                <Label Grid.Column="4" Content="Expected Output" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="5" Name="imageNNOutput" Stretch="Fill"/>
+                <Label Grid.Column="5" Content="Neural Net Output" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="6" Name="imageError" Stretch="Fill"/>
+                <Label Grid.Column="6" Content="Error (NN - Expected)" Style="{StaticResource panelLabel}"/>
+            </Grid>
+        </Border>
+
+
+
+
+
+
+
+        <!--<Border Grid.Column="2" Background="#40FFFFFF" BorderBrush="#20000000" BorderThickness="1" CornerRadius="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Column="0" Grid.Row="0" ClipToBounds="True">
+                    <Canvas Name="canvasMain"/>
+                </Grid>
+                <Label Grid.Column="0" Grid.Row="0" Content="Actual" Style="{StaticResource panelLabel}"/>
+
+                <WindowsFormsHost Grid.Column="1" Grid.Row="0" Name="nnViewerHost"/>
+                <Label Grid.Column="1" Grid.Row="0" Content="Winning Neural Net" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="0" Grid.Row="1" Name="imageInput" Stretch="Fill"/>
+                <Label Grid.Column="0" Grid.Row="1" Content="Input" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="1" Grid.Row="1" Name="imageExpectedOutput" Stretch="Fill"/>
+                <Label Grid.Column="1" Grid.Row="1" Content="Expected Output" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="2" Grid.Row="1" Name="imageNNOutput" Stretch="Fill"/>
+                <Label Grid.Column="2" Grid.Row="1" Content="Neural Net Output" Style="{StaticResource panelLabel}"/>
+
+                <Image Grid.Column="2" Grid.Row="0" Name="imageError" Stretch="Fill"/>
+                <Label Grid.Column="2" Grid.Row="0" Content="Error (NN - Expected)" Style="{StaticResource panelLabel}"/>
+            </Grid>
+        </Border>-->
+    </Grid>
+</Window>

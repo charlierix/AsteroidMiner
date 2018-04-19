@@ -21,7 +21,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class SpaceStation2D : SpaceStation
     {
-        #region Interface: IItemChance
+        #region interface: IItemChance
 
         private interface IItemChance
         {
@@ -30,7 +30,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region Class: PartCreateChance
+        #region class: PartCreateChance
 
         private class PartCreateChance : IItemChance
         {
@@ -40,7 +40,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region Class: ShipCreateChance
+        #region class: ShipCreateChance
 
         private class ShipCreateChance : IItemChance
         {
@@ -705,7 +705,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         #endregion
     }
 
-    #region Class: SpaceStation2DDNA
+    #region class: SpaceStation2DDNA
 
     /// <summary>
     /// This gets serialized to file

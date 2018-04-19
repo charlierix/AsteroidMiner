@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: SensorRadiationToolItem
+    #region class: SensorRadiationToolItem
 
     public class SensorCollisionToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: SensorCollisionDesign
+    #region class: SensorCollisionDesign
 
     public class SensorCollisionDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -157,11 +157,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: SensorCollision
+    #region class: SensorCollision
 
     public class SensorCollision
     {
-        public const string PARTTYPE = "SensorCollision";
+        public const string PARTTYPE = nameof(SensorCollision);
     }
 
     #endregion

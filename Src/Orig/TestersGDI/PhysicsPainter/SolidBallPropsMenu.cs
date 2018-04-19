@@ -16,7 +16,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 {
     public partial class SolidBallPropsMenu : Game.Orig.HelperClassesGDI.Controls.PiePanelTop
     {
-        #region Enum: WhichButton
+        #region enum: WhichButton
 
         private enum WhichButton
         {

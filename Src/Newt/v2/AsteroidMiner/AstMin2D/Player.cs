@@ -96,7 +96,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         #endregion
     }
 
-    #region Class: ShipChangedArgs
+    #region class: ShipChangedArgs
 
     public class ShipChangedArgs : EventArgs
     {
@@ -112,7 +112,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
     #endregion
 
-    #region Class: PlayerDNA
+    #region class: PlayerDNA
 
     /// <summary>
     /// This is what gets serialized to file

@@ -36,7 +36,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Interface: IGravityField
+    #region interface: IGravityField
 
     public interface IGravityField
     {
@@ -44,7 +44,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: GravityFieldSpace
+    #region class: GravityFieldSpace
 
     //TODO: This started as just gravity, but tacked on swirl and boundry.  I don't like the name ForceField, but come up with something more generic than gravity
 
@@ -65,7 +65,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class GravityFieldSpace : IGravityField
     {
-        #region Class: GravityCell
+        #region class: GravityCell
 
         public class GravityCell
         {
@@ -87,7 +87,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: BoundryField
+        #region class: BoundryField
 
         /// <summary>
         /// This will be an inward pointing force near the boundry of the map.  It is a way to slow things down before
@@ -223,7 +223,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: SwirlField
+        #region class: SwirlField
 
         public class SwirlField
         {
@@ -900,7 +900,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: GravityFieldUniform
+    #region class: GravityFieldUniform
 
     /// <summary>
     /// This has the same gravity regardless of location
@@ -938,7 +938,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Class: RadiationField
+    #region class: RadiationField
 
     /// <summary>
     /// This represents radiation.  It's useful for things like solar panels, and parts that get damaged or work inefficiently in the
@@ -1009,7 +1009,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Class: FieldOctree
+    #region class: FieldOctree
 
     //TODO: Clean up the comments
     //TODO: Make this Tparent, Tleaf so that info can be stored in each parent

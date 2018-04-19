@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: CameraHardCodedToolItem
+    #region class: CameraHardCodedToolItem
 
     public class CameraHardCodedToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: CameraHardCodedDesign
+    #region class: CameraHardCodedDesign
 
     public class CameraHardCodedDesign : PartDesignBase
     {
@@ -85,7 +85,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -182,11 +182,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: CameraHardCoded
+    #region class: CameraHardCoded
 
     public class CameraHardCoded : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region Class: SamplePoint
+        #region class: SamplePoint
 
         private class SamplePoint
         {
@@ -213,7 +213,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "CameraHardCoded";
+        public const string PARTTYPE = nameof(CameraHardCoded);
 
         private readonly object _lock = new object();
 
@@ -267,43 +267,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => _neurons;
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => _neurons;
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Sensor;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
 
         public double Radius
         {
@@ -312,13 +282,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn
-        {
-            get
-            {
-                return _isOn;
-            }
-        }
+        public bool IsOn => _isOn;
 
         #endregion
         #region IPartUpdatable Members
@@ -408,49 +372,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 
@@ -646,7 +580,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Class: CameraHardCodedDNA
+    #region class: CameraHardCodedDNA
 
     public class CameraHardCodedDNA : ShipPartDNA
     {

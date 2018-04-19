@@ -7,7 +7,7 @@ using Game.HelperClassesCore;
 
 namespace Game.Orig.Math3D
 {
-    #region Class: DoubleVector
+    #region class: DoubleVector
 
     /// <summary>
     /// This is useful for holding pairs of vectors (a vector, and some orthoganal to that vector).  There is nothing in this class
@@ -121,7 +121,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region Class: Triangle
+    #region class: Triangle
 
     /// <summary>
     /// The basic building block of polygons.  Use the right hand rule.

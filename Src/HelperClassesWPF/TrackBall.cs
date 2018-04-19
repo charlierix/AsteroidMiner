@@ -1182,7 +1182,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region Class: GetOrbitRadiusArgs
+    #region class: GetOrbitRadiusArgs
 
     public class GetOrbitRadiusArgs : EventArgs
     {
@@ -1231,7 +1231,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: UserMovedCameraArgs
+    #region class: UserMovedCameraArgs
 
     public class UserMovedCameraArgs : EventArgs
     {
@@ -1296,7 +1296,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Enum: CameraMovement
+    #region enum: CameraMovement
 
     /// <summary>
     /// NOTE:  These are ordered for TrackBallMapping.GetReport()
@@ -1332,11 +1332,11 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: TrackBallMapping
+    #region class: TrackBallMapping
 
     public class TrackBallMapping
     {
-        #region Enum: PrebuiltMapping
+        #region enum: PrebuiltMapping
 
         public enum PrebuiltMapping
         {

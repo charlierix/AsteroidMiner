@@ -20,7 +20,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
     /// </remarks>
     public class BallAdder
     {
-        #region Enum:  AddingMode
+        #region enum:  AddingMode
 
         public enum AddingMode
         {

@@ -17,6 +17,47 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public class UpdateManager : IDisposable
     {
+        #region class: RealtimeClock
+
+        // This was copied from World, then made threadsafe
+        public class RealtimeClock
+        {
+            private readonly object _lock = new object();
+
+            private bool _isFirstCall = true;
+            private DateTime _lastUpdate;
+
+            /// <summary>
+            /// This returns how many seconds have elapsed since the last time this was called
+            /// </summary>
+            public double Update()
+            {
+                lock (_lock)
+                {
+                    double retVal = 0d;
+
+                    DateTime time = DateTime.UtcNow;
+
+                    // Figure out how much time has elapsed
+                    if (_isFirstCall)
+                    {
+                        _isFirstCall = false;
+                    }
+                    else
+                    {
+                        retVal = (time - _lastUpdate).TotalSeconds;
+                    }
+
+                    // Remember when this was called
+                    _lastUpdate = time;
+
+                    return retVal;
+                }
+            }
+        }
+
+        #endregion
+
         #region Declaration Section
 
         private readonly Map _map;
@@ -32,7 +73,8 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// This is only used by the zero param overload of Update_MainThread
         /// </summary>
-        private DateTime _lastMainUpdate = DateTime.UtcNow;
+        //private DateTime _lastMainUpdate = DateTime.UtcNow;
+        private RealtimeClock _clockMainThread = new RealtimeClock();
 
         private long _updateCount_Main = -1;      // starting at -1 so that the first increment will bring it to 0 (skips use mod, so zero mod anything is zero, so everything will fire on the first tick)
 
@@ -48,6 +90,12 @@ namespace Game.Newt.v2.GameItems
         private volatile object _lastAnyUpdate = DateTime.UtcNow;
 
         private long _updateCount_Any = -1;       // this is incremented through Interlocked, so doesn't need to be volatile
+
+        /// <summary>
+        /// This remembers how much time has elapsed between timer ticks
+        /// NOTE: This is only used if _timerAnyThread is null
+        /// </summary>
+        private RealtimeClock _clockAnyThread = null;
 
         // --------------------- variables for updatable items that aren't in the map
 
@@ -65,9 +113,9 @@ namespace Game.Newt.v2.GameItems
         //When that happens, ask map to include derived, and only store the base most type that implements IPartUpdatable
         /// <param name="types_main">Types to call update on the main thread (can add the same type to both main and any)</param>
         /// <param name="types_any">Types to call update on any thread (can add the same type to both main and any)</param>
-        public UpdateManager(Type[] types_main, Type[] types_any, Map map, int interval = 50)
+        public UpdateManager(Type[] types_main, Type[] types_any, Map map, int interval = 50, bool useTimer = true)
         {
-            #region Validate
+            #region validate
 
             Type updateableType = typeof(IPartUpdatable);
             Type nonImplement = UtilityCore.Iterate(types_main, types_any).
@@ -86,11 +134,18 @@ namespace Game.Newt.v2.GameItems
 
             _map = map;
 
-            _timerAnyThread = new System.Timers.Timer();
-            _timerAnyThread.Interval = 50;
-            _timerAnyThread.AutoReset = false;       // makes sure only one tick is firing at a time
-            _timerAnyThread.Elapsed += TimerAnyThread_Elapsed;
-            _timerAnyThread.Start();
+            if (useTimer)
+            {
+                _timerAnyThread = new System.Timers.Timer();
+                _timerAnyThread.Interval = 50;
+                _timerAnyThread.AutoReset = false;       // makes sure only one tick is firing at a time
+                _timerAnyThread.Elapsed += TimerAnyThread_Elapsed;
+                _timerAnyThread.Start();
+            }
+            else
+            {
+                _clockAnyThread = new RealtimeClock();
+            }
         }
 
         #endregion
@@ -107,31 +162,34 @@ namespace Game.Newt.v2.GameItems
         {
             if (disposing)
             {
-                _timerAnyThread.Stop();
+                if(_timerAnyThread != null)
+                {
+                    _timerAnyThread.Stop();
+                }
+
                 _isDisposed = true;
 
                 // Don't want to exit right away.  Block this main thread, and give the any thread timer a chance to finish
                 _disposeWait.Reset();
-                _disposeWait.WaitOne(Convert.ToInt32(_timerAnyThread.Interval * 2));
+
+                int waitTime = _timerAnyThread == null ?
+                    250 :
+                    Convert.ToInt32(_timerAnyThread.Interval * 2);
+
+                _disposeWait.WaitOne(waitTime);
             }
         }
 
         #endregion
 
-        public void Update_MainThread()
-        {
-            DateTime time = DateTime.UtcNow;
-            double elapsedTime = (time - _lastMainUpdate).TotalSeconds;
-            _lastMainUpdate = time;
-
-            Update_MainThread(elapsedTime);
-        }
-        public void Update_MainThread(double elapsedTime)
+        public void Update_MainThread(double? elapsedTime = null)
         {
             if (_isDisposed)
             {
                 return;
             }
+
+            double elapsedActual = elapsedTime ?? _clockMainThread.Update();
 
             if (_typesMainUnchecked != null)
             {
@@ -159,7 +217,7 @@ namespace Game.Newt.v2.GameItems
                     continue;
                 }
 
-                item.Item2.Update_MainThread(elapsedTime + (elapsedTime * item.Item1));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                item.Item2.Update_MainThread(elapsedActual + (elapsedActual * item.Item1));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
             }
 
             #endregion
@@ -177,7 +235,7 @@ namespace Game.Newt.v2.GameItems
                     // Update all the live instances
                     foreach (IPartUpdatable item in _map.GetItems(type.Item1, false))      // Not bothering to call these in random order, because main thread should just be graphics
                     {
-                        item.Update_MainThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                        item.Update_MainThread(elapsedActual + (elapsedActual * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
                     }
                 }
             }
@@ -185,7 +243,26 @@ namespace Game.Newt.v2.GameItems
             #endregion
         }
 
-        private void TimerAnyThread_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        public void Update_AnyThread(double? elapsedTime = null)
+        {
+            if(_timerAnyThread != null)
+            {
+                throw new InvalidOperationException("Can't explicitly call Update_AnyThread when the constructor was told to use a timer");
+            }
+
+            // Figure out how much time has elapsed since the last update
+            //NOTE: Calling this update every time so if this method is sometimes called with a null and sometimes non null, the elapsed time will be somewhat accurate
+            double elapsedActual = _clockAnyThread.Update(); 
+
+            if(elapsedTime != null)
+            {
+                elapsedActual = elapsedTime.Value;
+            }
+
+            Update_AnyThread_private(elapsedActual);
+        }
+
+        private void TimerAnyThread_Elapsed_ORIG(object sender, System.Timers.ElapsedEventArgs e)
         {
             if (_isDisposed)
             {
@@ -226,9 +303,9 @@ namespace Game.Newt.v2.GameItems
 
             var nonmapItems = _nonmapItemsAny;
 
-            if(nonmapItems != null)
+            if (nonmapItems != null)
             {
-                foreach(var item in nonmapItems)
+                foreach (var item in nonmapItems)
                 {
                     if (count % (item.Item1 + 1) != 0)
                     {
@@ -265,6 +342,92 @@ namespace Game.Newt.v2.GameItems
             _disposeWait.Set();     // Dispose will hang the main thread to make sure this tick has finished
 
             _timerAnyThread.Start();        // it doesn't matter if this class is disposed, the bool is checked at the beginning of this method (no need to take the expense of checking again)
+        }
+        private void TimerAnyThread_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            double elapsedTime = (e.SignalTime - (DateTime)_lastAnyUpdate).TotalSeconds;
+            _lastAnyUpdate = e.SignalTime;
+
+            Update_AnyThread_private(elapsedTime);
+
+            _timerAnyThread.Start();        // it doesn't matter if this class is disposed, the bool is checked at the beginning of this method (no need to take the expense of checking again)
+        }
+
+        private void Update_AnyThread_private(double elapsedTime)
+        {
+            if (_isDisposed)
+            {
+                return;
+            }
+
+            Type[] typesUnchecked = _typesAnyUnchecked;
+            if (typesUnchecked != null)
+            {
+                #region Get intervals for types
+
+                Tuple<Type, int>[] checkedTypes = GetTypeIntervals(typesUnchecked, _map, false);
+                if (checkedTypes != null)
+                {
+                    lock (_lockTypesAny)
+                    {
+                        // Do it again with the volatile to be safe
+                        checkedTypes = GetTypeIntervals(_typesAnyUnchecked, _map, false);
+                        if (checkedTypes != null)
+                        {
+                            var transfer = TransferTypes(_typesAnyUnchecked, _typesAny, checkedTypes);
+                            _typesAnyUnchecked = transfer.Item1;
+                            _typesAny = transfer.Item2;
+                        }
+                    }
+                }
+
+                #endregion
+            }
+
+            Tuple<Type, int>[] typesAny = _typesAny;
+            long count = Interlocked.Increment(ref _updateCount_Any);
+
+            #region non map items
+
+            var nonmapItems = _nonmapItemsAny;
+
+            if (nonmapItems != null)
+            {
+                foreach (var item in nonmapItems)
+                {
+                    if (count % (item.Item1 + 1) != 0)
+                    {
+                        continue;
+                    }
+
+                    item.Item2.Update_AnyThread(elapsedTime + (elapsedTime * item.Item1));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                }
+            }
+
+            #endregion
+            #region items in map
+
+            if (typesAny != null)
+            {
+                foreach (var type in typesAny)
+                {
+                    if (type.Item2 > 0 && count % (type.Item2 + 1) != 0)
+                    {
+                        continue;
+                    }
+
+                    // Update all the live instances in a random order
+                    IMapObject[] items = _map.GetItems(type.Item1, false).ToArray();
+                    foreach (int index in UtilityCore.RandomRange(0, items.Length))
+                    {
+                        ((IPartUpdatable)items[index]).Update_AnyThread(elapsedTime + (elapsedTime * type.Item2));        // if skips is greater than zero, then approximate how much time elapsed based on this tick's elapsed time
+                    }
+                }
+            }
+
+            #endregion
+
+            _disposeWait.Set();     // Dispose will hang the main thread to make sure this tick has finished
         }
 
         /// <summary>

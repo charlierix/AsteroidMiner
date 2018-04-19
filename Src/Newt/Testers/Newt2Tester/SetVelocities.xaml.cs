@@ -126,7 +126,7 @@ namespace Game.Newt.Testers.Newt2Tester
 		#endregion
 	}
 
-	#region Enum: SetVelocityDirection
+	#region enum: SetVelocityDirection
 
 	public enum SetVelocityDirection
 	{
@@ -137,7 +137,7 @@ namespace Game.Newt.Testers.Newt2Tester
 
 	#endregion
 
-	#region Class: SetVelocityArgs
+	#region class: SetVelocityArgs
 
 	public class SetVelocityArgs : EventArgs
 	{

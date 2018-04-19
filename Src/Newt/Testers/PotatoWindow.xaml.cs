@@ -26,7 +26,7 @@ namespace Game.Newt.Testers
 {
     public partial class PotatoWindow : Window
     {
-        #region Class: TrianglesInPlane
+        #region class: TrianglesInPlane
 
         private class TrianglesInPlane
         {
@@ -125,7 +125,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {
@@ -243,7 +243,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: AsteroidShatter
+        #region class: AsteroidShatter
 
         private class AsteroidShatter
         {
@@ -285,7 +285,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: SmoothHullDebug
+        #region class: SmoothHullDebug
 
         private static class SmoothHullDebug
         {
@@ -717,11 +717,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: HullVoronoiIntersect
+        #region class: HullVoronoiIntersect
 
         private static class HullVoronoiIntersect
         {
-            #region Class: TriangleIntersection 1,2,3
+            #region class: TriangleIntersection 1,2,3
 
             private class TriInt_I
             {
@@ -770,7 +770,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region Class: PolyFragIntermediate
+            #region class: PolyFragIntermediate
 
             private class PolyFragIntermediate
             {
@@ -798,7 +798,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            #region Class: FaceTriangulation
+            #region class: FaceTriangulation
 
             public class FaceTriangulation
             {
@@ -832,7 +832,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            #region Class: TestFaceResult
+            #region class: TestFaceResult
 
             public class TestFaceResult
             {
@@ -853,7 +853,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            #region Class: Fragment Results
+            #region class: Fragment Results
 
             public class PatchFragment
             {
@@ -1439,7 +1439,7 @@ namespace Game.Newt.Testers
                 return retVal;
             }
 
-            #region Class: Segment_Face
+            #region class: Segment_Face
 
             public class Segment_Face
             {
@@ -2087,7 +2087,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ChainAttempt1
+        #region class: ChainAttempt1
 
         //TODO: Put in UtilityCore
         private static class ChainAttempt1
@@ -2343,7 +2343,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ChainAttempt2
+        #region class: ChainAttempt2
 
         private static class ChainAttempt2
         {
@@ -2880,11 +2880,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: GetChains2D_1
+        #region class: GetChains2D_1
 
         private static class GetChains2D_1
         {
-            #region Class: EventPoint
+            #region class: EventPoint
 
             private class EventPoint
             {
@@ -3079,11 +3079,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: GetChains2D_2
+        #region class: GetChains2D_2
 
         private static class GetChains2D_2
         {
-            #region Class: SweepPoly
+            #region class: SweepPoly
 
             private class SweepPoly
             {
@@ -3460,7 +3460,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: GetChains2D_3
+        #region class: GetChains2D_3
 
         private static class GetChains2D_3
         {
@@ -3520,7 +3520,7 @@ namespace Game.Newt.Testers
 
 
 
-            #region Class: Chain
+            #region class: Chain
 
             private class Chain
             {
@@ -3550,7 +3550,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region Class: Junction
+            #region class: Junction
 
             private class Junction
             {
@@ -4020,7 +4020,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnPointCloudDisk_Click(object sender, RoutedEventArgs e)
+        private void PointCloudDisk_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4036,7 +4036,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointCloudRingThick_Click(object sender, RoutedEventArgs e)
+        private void PointCloudRingThick_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4052,7 +4052,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointCloudRing_Click(object sender, RoutedEventArgs e)
+        private void PointCloudRing_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4069,7 +4069,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnPointCloudSphere_Click(object sender, RoutedEventArgs e)
+        private void PointCloudSphere_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4085,7 +4085,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointCloudSphereShellThick_Click(object sender, RoutedEventArgs e)
+        private void PointCloudSphereShellThick_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4101,7 +4101,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointCloudSphereShell_Click(object sender, RoutedEventArgs e)
+        private void PointCloudSphereShell_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4118,7 +4118,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnHullCircle2D_Click(object sender, RoutedEventArgs e)
+        private void HullCircle2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4236,7 +4236,7 @@ namespace Game.Newt.Testers
 
             #endregion
         }
-        private void btnHullSphere3D_Click(object sender, RoutedEventArgs e)
+        private void HullSphere3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4297,7 +4297,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnPointsOnHullTriangle_Click(object sender, RoutedEventArgs e)
+        private void PointsOnHullTriangle_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4326,7 +4326,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointsOnHullSeveralTriangles_Click(object sender, RoutedEventArgs e)
+        private void PointsOnHullSeveralTriangles_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4369,7 +4369,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPointsOnHullRandom_Click(object sender, RoutedEventArgs e)
+        private void PointsOnHullRandom_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4395,7 +4395,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnHPHOrigAttempt_Click(object sender, RoutedEventArgs e)
+        private void HPHOrigAttempt_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4450,7 +4450,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnHPHPreprocessPoints_Click(object sender, RoutedEventArgs e)
+        private void HPHPreprocessPoints_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4520,7 +4520,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnHPHDetectCoplanar_Click(object sender, RoutedEventArgs e)
+        private void HPHDetectCoplanar_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4561,7 +4561,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnHPHPreprocessPoints2_Click(object sender, RoutedEventArgs e)
+        private void HPHPreprocessPoints2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4665,7 +4665,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnIcosahedron_Click(object sender, RoutedEventArgs e)
+        private void Icosahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4722,7 +4722,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnIcoSpike1_Click(object sender, RoutedEventArgs e)
+        private void IcoSpike1_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4790,7 +4790,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnIcoSpike2_Click(object sender, RoutedEventArgs e)
+        private void IcoSpike2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4844,7 +4844,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnIcoSpike3_Click(object sender, RoutedEventArgs e)
+        private void IcoSpike3_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4908,7 +4908,42 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnRhombicuboctahedron_Click(object sender, RoutedEventArgs e)
+        private void Tetrahedron_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //https://en.wikipedia.org/wiki/Tetrahedron
+
+                RemoveCurrentBody();
+
+                Tetrahedron tetra = UtilityWPF.GetTetrahedron(MAXRADIUS);
+
+                if (chkDrawDots.IsChecked.Value || chkPolyLabelPoints.IsChecked.Value)
+                {
+                    foreach (Point3D point in tetra.AllPoints)
+                    {
+                        AddDot(point, DOTRADIUS, _colors.MedSlate);
+                    }
+
+                    if (chkPolyLabelPoints.IsChecked.Value)
+                    {
+                        AddPointLabels(tetra.AllPoints);
+                    }
+                }
+
+                if (chkPolyMajorLines.IsChecked.Value)
+                {
+                    AddLines(tetra.EdgeArray.Select(o => (o.Item1, o.Item2)), tetra.AllPoints);
+                }
+
+                AddHull(tetra.FaceArray, true, chkDrawLines.IsChecked.Value && !chkPolyMajorLines.IsChecked.Value, chkDrawNormals.IsChecked.Value, false, chkNearlyTransparent.IsChecked.Value, chkSoftFaces.IsChecked.Value);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Rhombicuboctahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4951,7 +4986,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnIcosidodecahedron_Click(object sender, RoutedEventArgs e)
+        private void Icosidodecahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4992,7 +5027,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnTruncatedIcosidodecahedron_Click(object sender, RoutedEventArgs e)
+        private void TruncatedIcosidodecahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5033,7 +5068,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnDodecahedron_Click(object sender, RoutedEventArgs e)
+        private void Dodecahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5074,7 +5109,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPentakisDodecahedron_Click(object sender, RoutedEventArgs e)
+        private void PentakisDodecahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5110,7 +5145,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnTruncatedIcosahedron_Click(object sender, RoutedEventArgs e)
+        private void TruncatedIcosahedron_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5152,7 +5187,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnNewAsteroid_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroid_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5166,7 +5201,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterTriangle_Click(object sender, RoutedEventArgs e)
+        private void ShatterTriangle_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5185,7 +5220,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterTest_Click(object sender, RoutedEventArgs e)
+        private void ShatterTest_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5263,7 +5298,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterTest2_Click(object sender, RoutedEventArgs e)
+        private void ShatterTest2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5380,7 +5415,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidDivided1_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidDivided1_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5403,7 +5438,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidDivided2Debug_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidDivided2Debug_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5487,7 +5522,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidDivided2_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidDivided2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5516,7 +5551,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidRemoveSkinny3_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidRemoveSkinny3_Click(object sender, RoutedEventArgs e)
         {
             const double RATIO = .93;
 
@@ -5541,7 +5576,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidRemoveSkinnyJ_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidRemoveSkinnyJ_Click(object sender, RoutedEventArgs e)
         {
             const double RATIO = .93;
 
@@ -5573,7 +5608,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidRemoveAddRemove_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidRemoveAddRemove_Click(object sender, RoutedEventArgs e)
         {
             const double RATIO = .93;
 
@@ -5602,7 +5637,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnNewAsteroidFinal_Click(object sender, RoutedEventArgs e)
+        private void NewAsteroidFinal_Click(object sender, RoutedEventArgs e)
         {
             const double RATIO = .93;
 
@@ -5638,7 +5673,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterRedraw_Click(object sender, RoutedEventArgs e)
+        private void ShatterRedraw_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5657,7 +5692,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterRandVoronoi_Click(object sender, RoutedEventArgs e)
+        private void ShatterRandVoronoi_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5699,7 +5734,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterRandVoronoiFar_Click(object sender, RoutedEventArgs e)
+        private void ShatterRandVoronoiFar_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5741,7 +5776,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterChains_Click(object sender, RoutedEventArgs e)
+        private void ShatterChains_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -5861,7 +5896,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnShatterChains2_Click(object sender, RoutedEventArgs e)
+        private void ShatterChains2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6029,11 +6064,11 @@ namespace Game.Newt.Testers
 
                 // Turn into polygons
                 var solved = tests.Select(o => new
-                    {
-                        Points = o.Points,
-                        Segments = o.Segments,
-                        Polygons = GetChains2D_3.GetSubPolygons(o.Segments, o.Points),
-                    }).
+                {
+                    Points = o.Points,
+                    Segments = o.Segments,
+                    Polygons = GetChains2D_3.GetSubPolygons(o.Segments, o.Points),
+                }).
                     ToArray();
 
 
@@ -6088,7 +6123,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnVariousNormals_Click(object sender, RoutedEventArgs e)
+        private void VariousNormals_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6114,7 +6149,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnOutsideSet_Click(object sender, RoutedEventArgs e)
+        private void OutsideSet_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6170,7 +6205,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnStart3D_Click(object sender, RoutedEventArgs e)
+        private void Start3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6221,7 +6256,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnFail3D_Click(object sender, RoutedEventArgs e)
+        private void Fail3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6287,7 +6322,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DAttempt6_Click(object sender, RoutedEventArgs e)
+        private void ThreeDAttempt6_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6332,7 +6367,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DAttempt6FromFile_Click(object sender, RoutedEventArgs e)
+        private void ThreeDAttempt6FromFile_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6396,7 +6431,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnHullCoplanar3D_Click(object sender, RoutedEventArgs e)
+        private void HullCoplanar3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -6648,7 +6683,7 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
             _visuals.Add(lineVisual);
         }
-        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points)
+        private void AddLines(IEnumerable<(int, int)> lines, Point3D[] points)
         {
             // Draw the lines
             ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
@@ -6663,7 +6698,7 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
             _visuals.Add(lineVisual);
         }
-        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points, double thickness, Color color)
+        private void AddLines(IEnumerable<(int, int)> lines, Point3D[] points, double thickness, Color color)
         {
             // Draw the lines
             ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
@@ -7298,7 +7333,7 @@ namespace Game.Newt.Testers
                     foreach (var subShatter in fullShatter)
                     {
                         var set = trisByCtrl.FirstOrDefault(o => o.Item1 == subShatter.Item1);
-                        if(set == null)
+                        if (set == null)
                         {
                             set = Tuple.Create(subShatter.Item1, (ITriangleIndexed[])subShatter.Item2, UtilityWPF.GetRandomColor(0, 255), (HullVoronoiIntersect.PatchFragment)null);
                         }
@@ -7430,12 +7465,12 @@ namespace Game.Newt.Testers
                         {
                             Triangle = o,
                             Edges = Triangle.Edges.Select(p => new
-                                {
-                                    Edge = p,
-                                    Neighbor = o.GetNeighbor(p),
-                                    Point1 = o.GetPoint(p, true),
-                                    Point2 = o.GetPoint(p, false)
-                                }).Where(p => p.Neighbor == null).ToArray()
+                            {
+                                Edge = p,
+                                Neighbor = o.GetNeighbor(p),
+                                Point1 = o.GetPoint(p, true),
+                                Point2 = o.GetPoint(p, false)
+                            }).Where(p => p.Neighbor == null).ToArray()
                         }).
                         Where(o => o.Edges.Length > 0).
                         ToArray();
@@ -7448,7 +7483,7 @@ namespace Game.Newt.Testers
                             ToArray();
 
                         var lines = Enumerable.Range(0, points.Length / 2).
-                            Select(o => Tuple.Create(o * 2, (o * 2) + 1));
+                            Select(o => (o * 2, (o * 2) + 1));
 
                         AddLines(lines, points, LINETHICKNESS * 3, Colors.Red);
                     }
@@ -7565,16 +7600,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-
-        private void btnTruncatedOctahedron_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("finish this");
-        }
     }
 
     #region quickhull attempts
 
-    #region Class: QuickHull1
+    #region class: QuickHull1
 
     //PseudoCode
     //Locate leftmost, rightmost, lowest, and highest points
@@ -7686,7 +7716,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull2
+    #region class: QuickHull2
 
     /// <remarks>
     /// Got this here (ported it from java):
@@ -7884,7 +7914,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull2a
+    #region class: QuickHull2a
 
     /// <remarks>
     /// Got this here (ported it from java):
@@ -8079,7 +8109,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull3
+    #region class: QuickHull3
 
     //   //This came from:
     //   //http://www.cs.ubc.ca/~lloyd/java/quickhull3d.html
@@ -9467,11 +9497,11 @@ namespace Game.Newt.Testers
      * @author John E. Lloyd, Fall 2004 */
 
     #endregion
-    #region Class: QuickHull4
+    #region class: QuickHull4
 
     public static class QuickHull4
     {
-        #region Class: TriangleWithPoints
+        #region class: TriangleWithPoints
 
         /// <summary>
         /// This links a triangle with a set of points that sit "outside" the triangle
@@ -9835,13 +9865,13 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull5
+    #region class: QuickHull5
 
     //TODO:  Make overloads in Math3D so I don't have so many calls to ToVector()
 
     public static class QuickHull5
     {
-        #region Class: TriangleWithPoints
+        #region class: TriangleWithPoints
 
         /// <summary>
         /// This links a triangle with a set of points that sit "outside" the triangle
@@ -10605,11 +10635,11 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull6
+    #region class: QuickHull6
 
     public static class QuickHull6
     {
-        #region Class: TriangleWithPoints
+        #region class: TriangleWithPoints
 
         /// <summary>
         /// This links a triangle with a set of points that sit "outside" the triangle
@@ -11190,7 +11220,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull7
+    #region class: QuickHull7
 
     //TODO:  This still fails with lots of coplanar points.  Triangles overlap, not all resulting triangles have neighbors.
     //I think a preprocess is nessassary
@@ -11199,7 +11229,7 @@ namespace Game.Newt.Testers
 
     public static class QuickHull7
     {
-        #region Class: TriangleWithPoints
+        #region class: TriangleWithPoints
 
         /// <summary>
         /// This links a triangle with a set of points that sit "outside" the triangle
@@ -11913,13 +11943,13 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region Class: QuickHull8
+    #region class: QuickHull8
 
     //TODO: May want to make a custom IsNearZero that is more strict than Math3D
 
     public static class QuickHull8
     {
-        #region Class: TriangleWithPoints
+        #region class: TriangleWithPoints
 
         /// <summary>
         /// This links a triangle with a set of points that sit "outside" the triangle

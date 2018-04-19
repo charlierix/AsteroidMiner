@@ -267,7 +267,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Enum: PortalVisualType
+    #region enum: PortalVisualType
 
     public enum PortalVisualType
     {
@@ -280,7 +280,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Class: Shop
+    #region class: Shop
 
     public class Shop
     {

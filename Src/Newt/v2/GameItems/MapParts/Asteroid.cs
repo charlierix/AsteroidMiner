@@ -19,14 +19,14 @@ namespace Game.Newt.v2.GameItems.MapParts
 {
     public class Asteroid : IMapObject, IPartUpdatable
     {
-        #region Class: HitTracker1
+        #region class: HitTracker1
 
         /// <summary>
         /// This simply adds up the lengths of the collisions, and splits the asteroid when the sum exceeds the radius
         /// </summary>
         private class HitTracker1
         {
-            #region Class: AsteroidOrMineralDefinition
+            #region class: AsteroidOrMineralDefinition
 
             private class AsteroidOrMineralDefinition
             {
@@ -471,14 +471,14 @@ namespace Game.Newt.v2.GameItems.MapParts
         }
 
         #endregion
-        #region Class: HitTracker2
+        #region class: HitTracker2
 
         /// <summary>
         /// This simply adds up the lengths of the collisions, and splits the asteroid when the sum exceeds the radius
         /// </summary>
         private class HitTracker2
         {
-            #region Class: AsteroidOrMineralDefinition
+            #region class: AsteroidOrMineralDefinition
 
             private class AsteroidOrMineralDefinition
             {
@@ -1420,7 +1420,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         }
 
         #endregion
-        #region Class: MineralDefinition
+        #region class: MineralDefinition
 
         //public class MineralDefinition
         //{
@@ -1467,7 +1467,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "Asteroid";
+        public const string PARTTYPE = nameof(Asteroid);
 
         private readonly Map _map;
         private readonly HitTracker2 _hitTracker;
@@ -1926,7 +1926,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         #endregion
     }
 
-    #region Class: AsteroidExtra
+    #region class: AsteroidExtra
 
     public class AsteroidExtra
     {
@@ -1956,7 +1956,7 @@ namespace Game.Newt.v2.GameItems.MapParts
     }
 
     #endregion
-    #region Class: AsteroidDNA
+    #region class: AsteroidDNA
 
     public class AsteroidDNA : MapPartDNA
     {

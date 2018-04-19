@@ -37,7 +37,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     //TODO: Snap to other parts (toggle: None | Ortho | Radial) (sensitivity)
     public partial class Editor : UserControl
     {
-        #region Enum: DragHitShapeType
+        #region enum: DragHitShapeType
 
         private enum DragHitShapeType
         {

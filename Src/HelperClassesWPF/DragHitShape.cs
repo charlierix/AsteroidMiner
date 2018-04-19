@@ -18,7 +18,7 @@ namespace Game.HelperClassesWPF
     /// </remarks>
     public class DragHitShape
     {
-        #region Enum: ShapeType
+        #region enum: ShapeType
 
         private enum ShapeType
         {
@@ -36,7 +36,7 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
-        #region Class: CircleDefinition
+        #region class: CircleDefinition
 
         public class CircleDefinition
         {
@@ -663,12 +663,13 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         public Vector3D? GetNormal(Point3D point)
         {
-            // This should handle most cases
-            Point3D? pointOnShape = CastRay(point);
-            if (pointOnShape != null && !Math3D.IsNearValue(point, pointOnShape.Value))
-            {
-                return point - pointOnShape.Value;
-            }
+            // Can't do this, because if the point goes under the plane, the normal gets reversed
+            //// This should handle most cases
+            //Point3D? pointOnShape = CastRay(point);
+            //if (pointOnShape != null && !Math3D.IsNearValue(point, pointOnShape.Value))
+            //{
+            //    return point - pointOnShape.Value;
+            //}
 
             Vector3D? retVal = null;
 

@@ -330,7 +330,7 @@ namespace Game.Orig.Math3D
         #endregion
     }
 
-    #region Class: PointMass
+    #region class: PointMass
 
     /// <summary>
     /// This class is meant to tie in with RigidBody.  Whenever any property gets changed, an event needs to be raised

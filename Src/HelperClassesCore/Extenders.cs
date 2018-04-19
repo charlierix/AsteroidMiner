@@ -555,7 +555,13 @@ namespace Game.HelperClassesCore
             }
         }
 
-        public static bool NextBool(this Random rand)
+        /// <summary>
+        /// This returns true or false
+        /// </summary>
+        /// <param name="oneInX">
+        /// For 50/50 odds, pass in 2 (1 in 2 times will be true).  If you want a lower chance of true, then pass in a larger value
+        /// </param>
+        public static bool NextBool(this Random rand, int oneInX = 2)
         {
             return rand.Next(2) == 0;
         }

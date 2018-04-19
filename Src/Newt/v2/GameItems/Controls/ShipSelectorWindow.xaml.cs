@@ -14,7 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Xaml;
-
+using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.v2.GameItems.Controls
@@ -239,7 +239,7 @@ namespace Game.Newt.v2.GameItems.Controls
                     try
                     {
                         // Try to deserialize this file as shipdna
-                        ShipDNA dna = (ShipDNA)XamlServices.Load(filename);
+                        ShipDNA dna = UtilityCore.DeserializeFromFile<ShipDNA>(filename);
 
                         // Success, add it
                         retVal.Add(Tuple.Create(filename, dna));

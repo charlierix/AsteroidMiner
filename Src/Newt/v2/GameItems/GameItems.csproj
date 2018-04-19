@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Game.Newt.v2.GameItems</RootNamespace>
     <AssemblyName>Game.Newt.v2.GameItems</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -129,6 +130,7 @@
     <Compile Include="ShipParts\AmmoBox.cs" />
     <Compile Include="ShipParts\BeamGun.cs" />
     <Compile Include="ShipParts\Brain.cs" />
+    <Compile Include="ShipParts\BrainNEAT.cs" />
     <Compile Include="ShipParts\BrainRGBRecognizer.cs" />
     <Compile Include="ShipParts\CameraColorRGB.cs" />
     <Compile Include="ShipParts\CameraHardCoded.cs" />
@@ -156,6 +158,7 @@
     <Compile Include="ShipParts\SensorCollision.cs" />
     <Compile Include="ShipParts\SensorFluid.cs" />
     <Compile Include="ShipParts\SensorGravity.cs" />
+    <Compile Include="ShipParts\SensorHoming.cs" />
     <Compile Include="ShipParts\SensorInternalForce.cs" />
     <Compile Include="ShipParts\SensorNetForce.cs" />
     <Compile Include="ShipParts\SensorRadiation.cs" />
@@ -186,6 +189,10 @@
     <ProjectReference Include="..\..\..\HelperClassesWPF\HelperClassesWPF.csproj">
       <Project>{0f6b42d4-c2c8-499a-897d-76d4ce6d0db6}</Project>
       <Name>HelperClassesWPF</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ref\SharpNeatLib\SharpNeatLib.csproj">
+      <Project>{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}</Project>
+      <Name>SharpNeatLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\NewtonDynamics\NewtonDynamics.csproj">
       <Project>{6c91684b-de51-4cbb-920d-f5b267709799}</Project>

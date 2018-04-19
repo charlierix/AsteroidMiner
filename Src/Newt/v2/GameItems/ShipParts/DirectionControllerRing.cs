@@ -17,7 +17,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: DirectionControllerRingToolItem
+    #region class: DirectionControllerRingToolItem
 
     public class DirectionControllerRingToolItem : PartToolItemBase
     {
@@ -78,7 +78,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: DirectionControllerRingDesign
+    #region class: DirectionControllerRingDesign
 
     public class DirectionControllerRingDesign : PartDesignBase
     {
@@ -89,7 +89,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -148,10 +148,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -160,10 +160,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -197,9 +196,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             foreach (var torusAngle in ringRotations)
             {
-                GeometryModel3D geometry = new GeometryModel3D();
-                geometry.Material = material;
-                geometry.BackMaterial = material;
+                GeometryModel3D geometry = new GeometryModel3D
+                {
+                    Material = material,
+                    BackMaterial = material
+                };
 
                 Transform3DGroup transformGroup = new Transform3DGroup();
                 foreach (var individualAngle in torusAngle)
@@ -265,11 +266,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: DirectionControllerRing
+    #region class: DirectionControllerRing
 
     public class DirectionControllerRing : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region Class: NeuronShell
+        #region class: NeuronShell
 
         /// <summary>
         /// This could hold a spherical shell, circular ring, or endpoints of a line
@@ -307,7 +308,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "DirectionControllerRing";
+        public const string PARTTYPE = nameof(DirectionControllerRing);
 
         private readonly ItemOptions _itemOptions;
 
@@ -342,12 +343,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _thrusters = thrusters;
             _impulseEngines = impulseEngines;
 
-            this.Design = new DirectionControllerRingDesign(options, true);
-            this.Design.SetDNA(dna);
+            Design = new DirectionControllerRingDesign(options, true);
+            Design.SetDNA(dna);
 
-            double radius;
-            GetMass(out _mass, out _volume, out radius, out _scaleActual, dna, itemOptions, true);
-            this.Radius = radius;
+            GetMass(out _mass, out _volume, out double radius, out _scaleActual, dna, itemOptions, true);
+            Radius = radius;
 
             #region neurons
 
@@ -373,43 +373,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => _neurons;
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => _neurons;
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Manipulator;     // this controller has intelligence, but from the perspective of the other INeurals, it's a destination
-            }
-        }
+        // This controller has intelligence, but from the perspective of the other INeurals, it's a destination
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Manipulator;
 
         public double Radius
         {
@@ -418,13 +389,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn
-        {
-            get
-            {
-                return _isOn;
-            }
-        }
+        public bool IsOn => _isOn;
 
         #endregion
         #region IPartUpdatable Members
@@ -434,11 +399,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public void Update_AnyThread(double elapsedTime)
         {
-            var forceTorquePercent = new Tuple<Vector3D?, Vector3D?>(_neuronsLinear.GetVector(), _neuronsRotation.GetVector());
-
             if (_impulseEngines != null && _impulseEngines.Length > 0)
             {
+                (Vector3D?, Vector3D?) forceTorquePercent = (_neuronsLinear.GetVector(), _neuronsRotation.GetVector());
                 var impulseInstruction = new[] { forceTorquePercent };
+
                 foreach (ImpulseEngine impulse in _impulseEngines)
                 {
                     impulse.SetDesiredDirection(impulseInstruction);
@@ -456,20 +421,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 

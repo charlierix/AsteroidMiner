@@ -22,7 +22,7 @@ namespace Game.Newt.v2.GameItems
     //TODO: PartBase needs to support hit points
     //TODO: PartToolItemBase and PartDesignBase need to support single instance (with dna).  This will represent salvaged parts
 
-    #region Class: PartToolItemBase
+    #region class: PartToolItemBase
 
     /// <summary>
     /// This is used to represent the tool in the toolbox
@@ -152,34 +152,6 @@ namespace Game.Newt.v2.GameItems
 
         public abstract PartDesignBase GetNewDesignPart();
 
-        protected static UIElement GetVisual2D_OLD(string text, string description, EditorColors editorColors)
-        {
-            //TODO:  Use icons with tooltips
-
-            Border retVal = new Border()
-            {
-                Background = Brushes.Transparent,       // this is needed for drag/drop to work
-                BorderBrush = new SolidColorBrush(editorColors.PartVisual_BorderColor),
-                BorderThickness = new Thickness(1d),
-                CornerRadius = new CornerRadius(3d),
-                Margin = new Thickness(2d),
-            };
-
-            TextBlock textblock = new TextBlock()
-            {
-                Text = text,
-                ToolTip = description,
-                Foreground = new SolidColorBrush(editorColors.PartVisual_TextColor),
-                FontSize = 10d,
-                Margin = new Thickness(3d, 1d, 3d, 1d),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-
-            retVal.Child = textblock;
-
-            return retVal;
-        }
         protected static UIElement GetVisual2D(string text, string description, EditorOptions options, PartToolItemBase partBase)
         {
             Brush standardBack = new SolidColorBrush(options.EditorColors.PartVisual_BackgroundColor);
@@ -249,7 +221,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartDesignBase
+    #region class: PartDesignBase
 
     /// <summary>
     /// This is used to represent the part on the 3D surface
@@ -263,7 +235,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public abstract class PartDesignBase
     {
-        #region Class: MaterialColorProps
+        #region class: MaterialColorProps
 
         public class MaterialColorProps
         {
@@ -950,7 +922,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartBase
+    #region class: PartBase
 
     public abstract class PartBase : IDisposable, ITakesDamage
     {
@@ -1319,7 +1291,9 @@ namespace Game.Newt.v2.GameItems
             {
                 //NOTE: So this takes care of most scenarios.  If AltNeurons are used, or other odd scenarios, then override this method (see Brain)
                 //NOTE: The design class doesn't hold neurons, since it's only used by the editor, so fill out the rest of the dna here
-                retVal.Neurons = thisCast.Neruons_All.Select(o => o.Position).ToArray();
+                retVal.Neurons = thisCast.Neruons_All.
+                    Select(o => o.Position).
+                    ToArray();
 
                 //NOTE: I decided not to store the links within the part classes themselves.  The parts don't directly use the links, so it would
                 //be cumbersome.  Instead, the owner of the parts (the ship) should be responsible for populating the returned dna class with
@@ -1647,7 +1621,7 @@ namespace Game.Newt.v2.GameItems
     #endregion
 
 
-    #region Class: ShipPartDNA
+    #region class: ShipPartDNA
 
     /// <summary>
     /// This holds properties of a part
@@ -1805,21 +1779,10 @@ namespace Game.Newt.v2.GameItems
 
             return true;
         }
-
-        public static ShipPartDNA Clone(ShipPartDNA dna)
-        {
-            // PartDNA could be a derived type, but since these are designed to be serializable, serialize it to do a deep clone
-            using (MemoryStream stream = new MemoryStream())
-            {
-                XamlServices.Save(stream, dna);
-                stream.Position = 0;
-                return XamlServices.Load(stream) as ShipPartDNA;
-            }
-        }
     }
 
     #endregion
-    #region Class: MapPartDNA
+    #region class: MapPartDNA
 
     /// <summary>
     /// This has some reuse with ShipPartDNA.  I could make a base class to hold the common items, but ship parts
@@ -1865,7 +1828,28 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Interface: IPartUpdate
+    #region class: MassBreakdownCache
+
+    /// <summary>
+    /// Every design part needs to calculate a mass breakdown, then remember it in case the same request comes in
+    /// </summary>
+    public class MassBreakdownCache
+    {
+        public MassBreakdownCache(UtilityNewt.IObjectMassBreakdown breakdown, Vector3D scale, double cellSize)
+        {
+            Breakdown = breakdown;
+            Scale = scale;
+            CellSize = cellSize;
+        }
+
+        public readonly UtilityNewt.IObjectMassBreakdown Breakdown;
+        public readonly Vector3D Scale;
+        public readonly double CellSize;
+    }
+
+    #endregion
+
+    #region interface: IPartUpdate
 
     /// <summary>
     /// This is for parts that need to be regularly updated (like sensors)
@@ -1893,7 +1877,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartRequestWorldLocationArgs
+    #region class: PartRequestWorldLocationArgs
 
     public class PartRequestWorldLocationArgs : EventArgs
     {
@@ -1902,7 +1886,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartRequestWorldSpeedArgs
+    #region class: PartRequestWorldSpeedArgs
 
     public class PartRequestWorldSpeedArgs : EventArgs
     {
@@ -1917,7 +1901,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartRequestParentArgs
+    #region class: PartRequestParentArgs
 
     public class PartRequestParentArgs : EventArgs
     {
@@ -1925,7 +1909,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: PartAllowedScale
+    #region class: PartAllowedScale
 
     /// <summary>
     /// This is a singleton made to look like a static class.  It returns PartDesignAllowedScale enum from PartDesign classes (using reflection)
@@ -2107,7 +2091,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Enum: PartDesignAllowedScale
+    #region enum: PartDesignAllowedScale
 
     public enum PartDesignAllowedScale
     {
@@ -2130,7 +2114,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Enum: PartDesignAllowedRotation
+    #region enum: PartDesignAllowedRotation
 
     public enum PartDesignAllowedRotation
     {
@@ -2154,7 +2138,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Enum: ShipPartType
+    #region enum: ShipPartType
 
     /// <summary>
     /// This will likely never be used as an enum, just use the derived part classes.  This is just a place to organize some thoughts
@@ -2279,7 +2263,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Enum: MapPartType
+    #region enum: MapPartType
 
     /// <summary>
     /// These would be a bunch of parts that could be dropped into a map editor (same control as the ship editor, just different parts given to it)

@@ -14,7 +14,7 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public class LifeEventWatcher : IPartUpdatable
     {
-        #region Class: ContainerTracker
+        #region class: ContainerTracker
 
         private class ContainerTracker
         {
@@ -303,7 +303,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region Class: LifeEventArgs
+    #region class: LifeEventArgs
 
     public class LifeEventArgs
     {
@@ -327,7 +327,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: LifeEventVectorArgs
+    #region class: LifeEventVectorArgs
 
     public class LifeEventVectorArgs
     {
@@ -355,7 +355,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Enum: LifeEventType
+    #region enum: LifeEventType
 
     public enum LifeEventType
     {

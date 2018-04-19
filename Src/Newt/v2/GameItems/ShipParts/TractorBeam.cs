@@ -14,7 +14,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 {
     //TODO:  Draw small visual whenever activated
 
-    #region Class: TractorBeamToolItem
+    #region class: TractorBeamToolItem
 
     public class TractorBeamToolItem : PartToolItemBase
     {
@@ -75,7 +75,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: TractorBeamDesign
+    #region class: TractorBeamDesign
 
     public class TractorBeamDesign : PartDesignBase
     {
@@ -86,7 +86,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -149,10 +149,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
@@ -170,10 +170,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 new Transform3D[] { transform });
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(combined, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -271,13 +270,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: TractorBeam
+    #region class: TractorBeam
 
     public class TractorBeam : PartBase
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "TractorBeam";
+        public const string PARTTYPE = nameof(TractorBeam);
 
         private readonly ItemOptions _itemOptions;
 
@@ -308,29 +307,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 

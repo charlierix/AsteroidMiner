@@ -140,14 +140,11 @@ namespace Game.Newt.v2.FlyingBeans
                 {
                     try
                     {
-                        using (FileStream stream = new FileStream(sessionFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                        {
-                            FlyingBeanSession session = (FlyingBeanSession)XamlServices.Load(stream);		// it's a tiny file, it's cheap to deserialize here
+                        FlyingBeanSession session = UtilityCore.DeserializeFromFile<FlyingBeanSession>(sessionFilename);
 
-                            if (Directory.Exists(session.SessionFolder))		// it may have been deleted
-                            {
-                                sessionFolderName = session.SessionFolder;
-                            }
+                        if (Directory.Exists(session.SessionFolder))        // it may have been deleted
+                        {
+                            sessionFolderName = session.SessionFolder;
                         }
                     }
                     catch (Exception) { }
@@ -358,10 +355,7 @@ namespace Game.Newt.v2.FlyingBeans
                     filename = System.IO.Path.Combine(foldername, filename);
 
                     // Write it
-                    using (FileStream stream = new FileStream(filename, FileMode.CreateNew))
-                    {
-                        XamlServices.Save(stream, bean.Item2);
-                    }
+                    UtilityCore.SerializeToFile(filename, bean.Item2);
                 }
             }
             catch (Exception ex)

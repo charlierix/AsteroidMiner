@@ -14,7 +14,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 {
     public class GravMouse
     {
-        #region Enum: MouseButtonDown
+        #region enum: MouseButtonDown
 
         private enum MouseButtonDown
         {

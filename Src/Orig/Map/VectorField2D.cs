@@ -523,7 +523,7 @@ namespace Game.Orig.Map
         #endregion
     }
 
-    #region Enum: VectorField2DMode
+    #region enum: VectorField2DMode
 
     public enum VectorField2DMode
     {

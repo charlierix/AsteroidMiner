@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.SOM
 {
     public partial class SelfOrganizingMapsWindow : Window
     {
-        #region Enum: SimpleColorScheme
+        #region enum: SimpleColorScheme
 
         private enum SimpleColorScheme
         {
@@ -33,7 +33,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: SimpleColorComponent
+        #region enum: SimpleColorComponent
 
         private enum SimpleColorComponent
         {
@@ -46,7 +46,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NodeWeightColor
+        #region enum: NodeWeightColor
 
         private enum NodeWeightColor
         {
@@ -55,7 +55,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NodeDisplayLayout
+        #region enum: NodeDisplayLayout
 
         private enum NodeDisplayLayout
         {
@@ -67,7 +67,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: ImageFilterType
+        #region enum: ImageFilterType
 
         private enum ImageFilterType
         {
@@ -80,7 +80,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NormalizationType
+        #region enum: NormalizationType
 
         private enum NormalizationType
         {
@@ -91,7 +91,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: ImageInput
+        #region class: ImageInput
 
         private class ImageInput : ISOMInput
         {
@@ -112,7 +112,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: OverlayPolygonStats
+        #region class: OverlayPolygonStats
 
         private class OverlayPolygonStats
         {
@@ -136,7 +136,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: SOMNodeVoronoiSet
+        #region class: SOMNodeVoronoiSet
 
         private class SOMNodeVoronoiSet
         {
@@ -153,7 +153,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: SOMNodeVoronoiCell
+        #region class: SOMNodeVoronoiCell
 
         private class SOMNodeVoronoiCell
         {
@@ -183,7 +183,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: VoronoiStats
+        #region class: VoronoiStats
 
         private class VoronoiStats
         {
@@ -193,7 +193,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: VoronoiStats_Node
+        #region class: VoronoiStats_Node
 
         private class VoronoiStats_Node
         {
@@ -1652,7 +1652,7 @@ namespace Game.Newt.Testers.SOM
         #endregion
     }
 
-    #region Class: SelfOrganizingMapsOptions
+    #region class: SelfOrganizingMapsOptions
 
     /// <summary>
     /// This gets serialized to file

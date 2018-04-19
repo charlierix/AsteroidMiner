@@ -13,6 +13,10 @@ using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using Game.HelperClassesWPF.Controls3D;
+using System.Xaml;
+using System.Windows;
+using Game.Newt.v2.Arcanorum.Parts;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -55,7 +59,7 @@ namespace Game.Newt.v2.Arcanorum
     /// </remarks>
     public class ArcBot : IMapObject, IPartUpdatable, IGivesDamage, ITakesDamage, IDisposable
     {
-        #region Enum: ItemToFrom
+        #region enum: ItemToFrom
 
         public enum ItemToFrom
         {
@@ -65,18 +69,18 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         #endregion
-        #region Class: PartContainerBuilding
+        #region class: PartContainerBuilding
 
         protected class PartContainerBuilding
         {
             public List<SensorHoming> Homing = new List<SensorHoming>();
             public List<SensorVision> Vision = new List<SensorVision>();
             public List<Brain> Brain = new List<Brain>();
-            public List<MotionController_Linear> MotionController_Linear = new List<MotionController_Linear>();
+            public List<MotionController2> MotionController = new List<MotionController2>();
         }
 
         #endregion
-        #region Class: PartContainer
+        #region class: PartContainer
 
         protected class PartContainer
         {
@@ -85,7 +89,7 @@ namespace Game.Newt.v2.Arcanorum
                 this.Homing = parts.Homing.ToArray();
                 this.Vision = parts.Vision.ToArray();
                 this.Brain = parts.Brain.ToArray();
-                this.MotionController_Linear = parts.MotionController_Linear.ToArray();
+                this.MotionController = parts.MotionController.ToArray();
 
                 this.AllParts = allParts;
 
@@ -99,7 +103,7 @@ namespace Game.Newt.v2.Arcanorum
             public readonly SensorHoming[] Homing;
             public readonly SensorVision[] Vision;
             public readonly Brain[] Brain;
-            public readonly MotionController_Linear[] MotionController_Linear;
+            public readonly MotionController2[] MotionController;
 
             // --------------- Part Groups
             public readonly PartBase[] AllParts;
@@ -179,31 +183,34 @@ namespace Game.Newt.v2.Arcanorum
             _gravity = gravity;
             _dragPlane = dragPlane;
             _itemOptions = itemOptions;
+            _homingPoint = homingPoint;
 
-            this.Inventory = new Inventory();
+            Inventory = new Inventory();
 
-            this.DNAPartial = GetFinalDNA(dna);        // this needs to be done before parts are created, because when the async comes back, it will add the part dna to it
+            DNAPartial = GetFinalDNA(dna);        // this needs to be done before parts are created, because when the async comes back, it will add the part dna to it
 
             // Ram
-            this.Ram = new RamWeapon(this.DNAPartial.Ram, this, viewport);
+            Ram = new RamWeapon(DNAPartial.Ram, this, viewport);
 
             #region WPF Model
 
-            _graphic = new SpriteGraphic_Shells(level, this.DNAPartial.ShellColors);
+            _graphic = new SpriteGraphic_Shells(level, DNAPartial.ShellColors, _itemOptions);
 
-            this.Model = _graphic.Model;
+            Model = _graphic.Model;
 
-            // Model Visual
-            _visual = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
-            _visual.Content = this.Model;
+            // Model Visual (this is the expensive one, so as few of these should be made as possible)
+            _visual = new ModelVisual3D
+            {
+                Content = Model
+            };
 
             #endregion
 
-            this.HitPoints = new Container() { QuantityMax = 1000000000, QuantityCurrent = 1000000000 };        // the current/max will get set by the level change.  Making it very large so when it gets reduced, current is still full
+            HitPoints = new Container() { QuantityMax = 1000000000, QuantityCurrent = 1000000000 };        // the current/max will get set by the level change.  Making it very large so when it gets reduced, current is still full
 
-            this.Level = level;     // the property set will set radius, build the physics body, update graphic
+            Level = level;     // the property set will set radius, build the physics body, update graphic
 
-            this.PhysicsBody.Position = position;
+            PhysicsBody.Position = position;
 
             #region Parts
 
@@ -211,15 +218,15 @@ namespace Game.Newt.v2.Arcanorum
 
             if (dna != null && dna.Parts != null)
             {
-                _partsTask = BuildParts(dna.Parts, runNeural, repairPartPositions, _world, editorOptions, itemOptions, _gravity, _map, _dragPlane, this.Radius, this.Token, homingPoint, homingRadius);
+                _partsTask = BuildParts(dna.Parts, runNeural, repairPartPositions, _world, editorOptions, itemOptions, _gravity, _map, _dragPlane, Radius, Token, homingPoint, homingRadius, this);
 
                 _partsTask.ContinueWith(t =>
                 {
                     if (t.Result != null)
                     {
                         _parts = t.Result.Item1;
-                        this.DNAPartial.Parts = t.Result.Item2;        //NOTE: Parts were already cloned from the dna passed into the constructor.  This replaces with the final (throws out parts that are too small, fills in links, makes sure parts aren't intersecting)
-                        this.DNAFinal = this.DNAPartial;
+                        DNAPartial.Parts = t.Result.Item2;        //NOTE: Parts were already cloned from the dna passed into the constructor.  This replaces with the final (throws out parts that are too small, fills in links, makes sure parts aren't intersecting)
+                        DNAFinal = DNAPartial;
                         _aiMousePlate = t.Result.Item4;
 
                         //Ship creates its collision hull as a composite of these part hulls, but bot is just a sphere.  These hulls still need to be disposed though
@@ -231,10 +238,10 @@ namespace Game.Newt.v2.Arcanorum
                             }
                         }
 
-                        foreach (var part in this._parts.AllParts)
+                        // The homing point may have changed
+                        foreach (SensorHoming homing in _parts.Homing)
                         {
-                            part.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(Part_RequestWorldLocation);
-                            part.RequestWorldSpeed += new EventHandler<PartRequestWorldSpeedArgs>(Part_RequestWorldSpeed);
+                            homing.HomePoint = _homingPoint;
                         }
                     }
                 }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -243,9 +250,9 @@ namespace Game.Newt.v2.Arcanorum
             #endregion
 
             //TODO: Calculate these based on dna
-            this.ReceiveDamageMultipliers = new WeaponDamage();
+            ReceiveDamageMultipliers = new WeaponDamage();
 
-            this.CreationTime = DateTime.UtcNow;
+            CreationTime = DateTime.UtcNow;
         }
 
         #endregion
@@ -474,7 +481,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
         #region ITakesDamage Members
 
-        public Tuple<bool, WeaponDamage> Damage(WeaponDamage damage, Weapon weapon = null)
+        public (bool isDead, WeaponDamage actualDamage)? Damage(WeaponDamage damage, Weapon weapon = null)
         {
             const double ELAPSED = 1;
 
@@ -518,11 +525,31 @@ namespace Game.Newt.v2.Arcanorum
             }
             set
             {
+                int newValue = value;
+                if (newValue < 1)
+                {
+                    newValue = 1;
+                }
+                else if (newValue > ItemOptionsArco.MAXLEVEL)
+                {
+                    newValue = ItemOptionsArco.MAXLEVEL;
+                }
+
+                //if(newValue == _graphic.Level)
+                //{
+                //    return;
+                //}
+
                 _graphic.Level = value;
 
                 LevelChanged();
             }
         }
+
+        /// <summary>
+        /// This resets to zero whenever the level changes
+        /// </summary>
+        public double Experience { get; private set; }
 
         //TODO: Weapon attaching can currently only be done on the main thread.  Make it thread safe
 
@@ -547,6 +574,30 @@ namespace Game.Newt.v2.Arcanorum
         {
             get;
             private set;
+        }
+
+        // Don't expose this because it's null then set async
+        //public IEnumerable<PartBase> Parts => _parts.AllParts;
+
+        private Point3D _homingPoint;
+        public Point3D HomingPoint
+        {
+            get
+            {
+                return _homingPoint;
+            }
+            set
+            {
+                _homingPoint = value;
+
+                if (_parts != null)
+                {
+                    foreach (SensorHoming homing in _parts.Homing)
+                    {
+                        homing.HomePoint = _homingPoint;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -627,10 +678,10 @@ namespace Game.Newt.v2.Arcanorum
             AttachWeapon_HookupNew(newWeapon);
 
             // In order for semitransparency to work, this bot's visuals must be added to the viewport last
-            if (newWeapon != null && _viewport != null && this.Visuals3D != null)
+            if (newWeapon != null && _viewport != null && Visuals3D != null)
             {
-                _viewport.Children.RemoveAll(this.Visuals3D);
-                _viewport.Children.AddRange(this.Visuals3D);
+                _viewport.Children.RemoveAll(Visuals3D);
+                _viewport.Children.AddRange(Visuals3D);
             }
 
             // Resume the world
@@ -678,7 +729,6 @@ namespace Game.Newt.v2.Arcanorum
                     if (SHOULDKEEP2D) _keepItems2D.Remove(newWeapon);
                     _map.RemoveItem(newWeapon, true);     // the map also removes from the viewport
                     //_viewport.Children.RemoveAll(newWeapon.Visuals3D);
-                    newWeapon.Dispose();
 
                     nonPhysics.ShowAttachPoint = true;
 
@@ -718,7 +768,11 @@ namespace Game.Newt.v2.Arcanorum
 
                         SetDropOffset(physicsWeapon);
 
-                        if (SHOULDKEEP2D) _keepItems2D.Add(physicsWeapon, false);
+                        if (SHOULDKEEP2D)
+                        {
+                            _keepItems2D.Add(physicsWeapon, false);
+                        }
+
                         _map.AddItem(physicsWeapon);
                     }
                     break;
@@ -728,29 +782,58 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
-        internal static void GetSettingsForLevel(out int numLayers, out double radius, out double mass, out double innerShellAlphaMult, out double outerShellAlphaMult, out double hitPoints, int level)
+        internal static void GetSettingsForLevel(out int numLayers, out double radius, out double mass, out double innerShellAlphaMult, out double outerShellAlphaMult, out double hitPoints, int level, ItemOptionsArco itemOptions)
         {
-            const int MAXLEVEL = 40;
-
             if (level <= 0)
             {
                 throw new ArgumentException("level must be a positive number: " + level.ToString());
             }
+            else if (level > ItemOptionsArco.MAXLEVEL)
+            {
+                throw new ArgumentException(string.Format("level can't exceed {0} ({1})", ItemOptionsArco.MAXLEVEL, level));
+            }
 
-            //TODO: Add some props to dna to drift some of these values.  Or have a separate class that stores how they've levelled up
+            //NOTE: There is a chance that these arrays could be null or not large enough for MAXLEVEL, but that's the fault of whoever changed the options
+            radius = itemOptions.RadiusAtLevel[level];
+            mass = itemOptions.MassAtLevel[level];
+            hitPoints = itemOptions.HitPointsAtLevel[level];
 
-            double numLayersReal = UtilityCore.GetScaledValue(1, 7, 1, MAXLEVEL, level);
+            double numLayersReal = UtilityCore.GetScaledValue(1, 7, 1, ItemOptionsArco.MAXLEVEL, level);
             numLayers = Convert.ToInt32(Math.Floor(numLayersReal));
-
-            radius = UtilityCore.GetScaledValue(.25, .8, 1, MAXLEVEL, level);
-
-            mass = UtilityCore.GetScaledValue(2, 800, 1, MAXLEVEL, level);
 
             double fraction = numLayersReal - numLayers;        // the closer it is to making a new layer, the darker it should get
             innerShellAlphaMult = UtilityCore.GetScaledValue_Capped(.5, 1, 0, 1, fraction);
             outerShellAlphaMult = UtilityCore.GetScaledValue_Capped(.2, .8, 0, 1, fraction);
+        }
 
-            hitPoints = UtilityCore.GetScaledValue(20, 2000, 1, MAXLEVEL, level);
+        public void AddExperience(double xp)
+        {
+            double[] levelUps = _itemOptions.XPForNexLevel;
+
+            // Just do the null check once up front (this should never happen, but if it does, let the xp keep growing)
+            if (levelUps == null || Level >= levelUps.Length - 1 || Level >= ItemOptionsArco.MAXLEVEL)
+            {
+                Experience += xp;
+                return;
+            }
+
+            while (true)
+            {
+                if (Experience + xp >= levelUps[Level])
+                {
+                    // Store the remainder (if the experience was already greater, then xp will get larger than what was passed in, but future iterations of this loop will use it up)
+                    xp = (Experience + xp) - levelUps[Level];
+
+                    // The property set does quite a bit when leveling (also resets Experience)
+                    Level++;
+                }
+                else
+                {
+                    // Not enough to cause a level change
+                    Experience += xp;
+                    break;
+                }
+            }
         }
 
         #endregion
@@ -786,13 +869,23 @@ namespace Game.Newt.v2.Arcanorum
         {
             //NOTE: this.DraggingPlayer is handling the force toward the mouse
 
+            double inventoryMass = Inventory.Mass;
+            if (inventoryMass > 0 && _gravity != null)
+            {
+                //TODO: Allow the bot to have weight reduction multiplier perks (level up and spend perk points to not be so burdened by inventory)
+                Vector3D force = _gravity.GetForce(PositionWorld);
+                force *= inventoryMass * _itemOptions.InventoryWeightPercent;
+
+                e.Body.AddForce(force);
+            }
+
 
             //TODO: Make a class that does this
-            Vector3D angularVelocity = this.PhysicsBody.AngularVelocity;
+            Vector3D angularVelocity = PhysicsBody.AngularVelocity;
 
             if (angularVelocity.LengthSquared > 1)
             {
-                this.PhysicsBody.AngularVelocity = angularVelocity * .9d;
+                PhysicsBody.AngularVelocity = angularVelocity * .9d;
             }
         }
 
@@ -832,7 +925,7 @@ namespace Game.Newt.v2.Arcanorum
 
         //NOTE: This is sort of a copy of Ship.BuildParts.  The main difference is that this does everything here.  Ship does some in BuildParts, then a bit more in a task off the constructor.
         //Ship requires a factory method that builds a ship async.  Bot kicks this off async from the constructor, so bot will run awhile before _parts gets populated.
-        private async static Task<Tuple<PartContainer, ShipPartDNA[], CollisionHull[], AIMousePlate>> BuildParts(ShipPartDNA[] dna, bool runNeural, bool repairPartPositions, World world, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
+        private async static Task<Tuple<PartContainer, ShipPartDNA[], CollisionHull[], AIMousePlate>> BuildParts(ShipPartDNA[] dna, bool runNeural, bool repairPartPositions, World world, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius, ArcBot thisBot)
         {
             if (dna == null)
             {
@@ -851,9 +944,16 @@ namespace Game.Newt.v2.Arcanorum
             PartContainerBuilding containerBuilding = new PartContainerBuilding();
 
             // Create the parts based on dna
-            var combined = BuildPartsSprtCreate(ref mousePlate, containerBuilding, usableParts, editorOptions, itemOptions, gravity, map, dragPlane, botRadius, botToken, homingPoint, homingRadius);
+            var combined = BuildParts_Create(ref mousePlate, containerBuilding, usableParts, editorOptions, itemOptions, gravity, map, dragPlane, botRadius, botToken, homingPoint, homingRadius);
 
             Ship.BuildPartsResults results = await Ship.BuildParts_Finish(combined, usableParts, runNeural, repairPartPositions, itemOptions, world);
+
+            //NOTE: This must be done before adding to the neural pool (SensorHoming is crashing because it can't get world position)
+            foreach (var part in results.AllParts)
+            {
+                part.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(thisBot.Part_RequestWorldLocation);
+                part.RequestWorldSpeed += new EventHandler<PartRequestWorldSpeedArgs>(thisBot.Part_RequestWorldSpeed);
+            }
 
             // Link bucket
             //NOTE: Ship.AddToNeuralPool is designed funny, because the ship lets the task run while it's going.  This bot will wait for it to finish before returning
@@ -867,7 +967,7 @@ namespace Game.Newt.v2.Arcanorum
 
             return Tuple.Create(container, results.DNA, results.Hulls, mousePlate);
         }
-        private static List<Tuple<PartBase, ShipPartDNA>> BuildPartsSprtCreate(ref AIMousePlate mousePlate, PartContainerBuilding container, ShipPartDNA[] parts, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
+        private static List<Tuple<PartBase, ShipPartDNA>> BuildParts_Create(ref AIMousePlate mousePlate, PartContainerBuilding container, ShipPartDNA[] parts, EditorOptions editorOptions, ItemOptionsArco itemOptions, IGravityField gravity, Map map, DragHitShape dragPlane, double botRadius, long botToken, Point3D homingPoint, double homingRadius)
         {
             //TODO: Figure these out based on this.Radius
             const double SEARCHRADIUS = 10;
@@ -881,9 +981,9 @@ namespace Game.Newt.v2.Arcanorum
                 switch (dna.PartType)
                 {
                     case SensorHoming.PARTTYPE:
-                        SensorHoming sensorHoming = new SensorHoming(editorOptions, itemOptions, dna, map, homingPoint, homingRadius);
+                        SensorHoming sensorHoming = new SensorHoming(editorOptions, itemOptions, dna, map, new ContainerInfinite(), homingPoint, homingRadius);
 
-                        BuildPartsSprtAdd(sensorHoming,
+                        BuildParts_Add(sensorHoming,
                             dna, container.Homing, retVal);
                         break;
 
@@ -893,17 +993,17 @@ namespace Game.Newt.v2.Arcanorum
                         SensorVision sensorVision = new SensorVision(editorOptions, itemOptions, dna, map, SEARCHRADIUS, null);
                         sensorVision.BotToken = botToken;
 
-                        BuildPartsSprtAdd(sensorVision,
+                        BuildParts_Add(sensorVision,
                             dna, container.Vision, retVal);
                         break;
 
                     case Brain.PARTTYPE:
-                        BuildPartsSprtAdd(new Brain(editorOptions, itemOptions, dna, null),// container.EnergyGroup),
+                        BuildParts_Add(new Brain(editorOptions, itemOptions, dna, null),// container.EnergyGroup),
                             dna, container.Brain, retVal);
                         break;
 
-                    case MotionController_Linear.PARTTYPE:
-                        if (container.MotionController_Linear.Count > 0)
+                    case MotionController2.PARTTYPE:
+                        if (container.MotionController.Count > 0)
                         {
                             throw new ApplicationException("There can be only one plate writer in a bot");
                         }
@@ -912,8 +1012,8 @@ namespace Game.Newt.v2.Arcanorum
                         mousePlate.MaxXY = botRadius * 20;
                         mousePlate.Scale = 1;
 
-                        BuildPartsSprtAdd(new MotionController_Linear(editorOptions, itemOptions, dna, mousePlate),// container.EnergyGroup),
-                            dna, container.MotionController_Linear, retVal);
+                        BuildParts_Add(new MotionController2(editorOptions, itemOptions, dna, mousePlate),// container.EnergyGroup),
+                            dna, container.MotionController, retVal);
                         break;
 
                     default:
@@ -923,7 +1023,7 @@ namespace Game.Newt.v2.Arcanorum
 
             return retVal;
         }
-        private static void BuildPartsSprtAdd<T>(T item, ShipPartDNA dna, List<T> specificList, List<Tuple<PartBase, ShipPartDNA>> combinedList) where T : PartBase
+        private static void BuildParts_Add<T>(T item, ShipPartDNA dna, List<T> specificList, List<Tuple<PartBase, ShipPartDNA>> combinedList) where T : PartBase
         {
             // This is just a helper method so one call adds to two lists
             specificList.Add(item);
@@ -933,36 +1033,36 @@ namespace Game.Newt.v2.Arcanorum
         private void LevelChanged()
         {
             // Get values
-            int numLayers;
-            double radius, mass, innerShellAlphaMult, outerShellAlphaMult, hitPoints;
-            GetSettingsForLevel(out numLayers, out radius, out mass, out innerShellAlphaMult, out outerShellAlphaMult, out hitPoints, this.Level);
+            GetSettingsForLevel(out _, out double radius, out double mass, out _, out _, out double hitPoints, Level, _itemOptions);
 
             // Store new values
-            this.Radius = radius;
+            Radius = radius;
 
-            this.HitPoints.QuantityMax = hitPoints;
+            HitPoints.QuantityMax = hitPoints;
             if (_itemOptions.ShouldRechargeOnLevel)
             {
-                this.HitPoints.QuantityCurrent = hitPoints;
+                HitPoints.QuantityCurrent = hitPoints;
             }
+
+            Experience = 0;
 
             // Whenever radius changes, the body needs to be swapped out
             Weapon weapon = _weapon;
-            Body oldBody = this.PhysicsBody;
+            Body oldBody = PhysicsBody;
 
-            if (this.PhysicsBody != null)
+            if (PhysicsBody != null)
             {
                 AttachWeapon(null);
             }
 
-            if (this.DraggingBot != null)
+            if (DraggingBot != null)
             {
-                this.DraggingBot.Dispose();
+                DraggingBot.Dispose();
             }
 
-            this.PhysicsBody = GetPhysicsBody(this.Radius, mass, this.PhysicsBody, _world, _visual, _materialIDs.Bot);
+            PhysicsBody = GetPhysicsBody(Radius, mass, PhysicsBody, _world, _visual, _materialIDs.Bot);
 
-            OnBodySwapped(oldBody, this.PhysicsBody);
+            OnBodySwapped(oldBody, PhysicsBody);
 
             if (oldBody != null)
             {
@@ -1016,10 +1116,10 @@ namespace Game.Newt.v2.Arcanorum
             }
 
             //TODO: See if there are other items that this item may collide with
-            Vector3D offset = Math3D.GetRandomVector_Spherical_Shell((this.Radius * 3d) + item.Radius);
+            Vector3D offset = Math3D.GetRandomVector_Circular_Shell((Radius * 3d) + (item.Radius * 2));
 
-            item.PhysicsBody.Position = this.PositionWorld + offset;
-            item.PhysicsBody.Velocity = this.VelocityWorld + (offset.ToUnit(false) * (this.VelocityWorld.Length * .25d));     // don't perfectly mirror this bot's velocity, push it away as well (otherwise it's too easy to run into and pick back up)
+            item.PhysicsBody.Position = PositionWorld + offset;
+            item.PhysicsBody.Velocity = VelocityWorld + (offset.ToUnit(false) * (VelocityWorld.Length * .25d));     // don't perfectly mirror this bot's velocity, push it away as well (otherwise it's too easy to run into and pick back up)
         }
 
         private void AttachWeapon_UnhookPrevious()
@@ -1104,52 +1204,54 @@ namespace Game.Newt.v2.Arcanorum
         }
         private void AttachWeapon_TakeNewWeapon(ref Weapon newWeapon, ItemToFrom newFrom)
         {
-            if (newWeapon != null)
+            if (newWeapon == null)
             {
-                newWeapon.ShowAttachPoint = false;
+                return;
+            }
 
-                switch (newFrom)
-                {
-                    case ItemToFrom.Nowhere:
+            newWeapon.ShowAttachPoint = false;
+
+            switch (newFrom)
+            {
+                case ItemToFrom.Nowhere:
+                    if (SHOULDKEEP2D) _keepItems2D.Add(newWeapon, true);
+                    if (_viewport != null && newWeapon.Visuals3D != null)
+                    {
+                        _viewport.Children.AddRange(newWeapon.Visuals3D);
+                    }
+                    break;
+
+                case ItemToFrom.Map:
+                    _map.RemoveItem(newWeapon, true, false);     // this also removes from the viewport
+                    if (_viewport != null && newWeapon.Visuals3D != null)
+                    {
+                        _viewport.Children.AddRange(newWeapon.Visuals3D);       // put the visuals back
+                    }
+                    break;
+
+                case ItemToFrom.Inventory:
+                    // Make sure it's in the inventory
+                    if (this.Inventory.Weapons.Remove(newWeapon))
+                    {
+                        // Convert from graphics only to a physics weapon
+                        Weapon physicsWeapon = new Weapon(newWeapon.DNA, new Point3D(), _world, _materialIDs.Weapon);
+
+                        // Swap them
+                        newWeapon.Dispose();
+                        newWeapon = physicsWeapon;
+
+                        newWeapon.ShowAttachPoint = false;
+
                         if (SHOULDKEEP2D) _keepItems2D.Add(newWeapon, true);
                         if (_viewport != null && newWeapon.Visuals3D != null)
                         {
                             _viewport.Children.AddRange(newWeapon.Visuals3D);
                         }
-                        break;
+                    }
+                    break;
 
-                    case ItemToFrom.Map:
-                        _map.RemoveItem(newWeapon, true);     // this also removes from the viewport
-                        if (_viewport != null && newWeapon.Visuals3D != null)
-                        {
-                            _viewport.Children.AddRange(newWeapon.Visuals3D);       // put the visuals back
-                        }
-                        break;
-
-                    case ItemToFrom.Inventory:
-                        // Make sure it's in the inventory
-                        if (this.Inventory.Weapons.Remove(newWeapon))
-                        {
-                            // Convert from graphics only to a physics weapon
-                            Weapon physicsWeapon = new Weapon(newWeapon.DNA, new Point3D(), _world, _materialIDs.Weapon);
-
-                            // Swap them
-                            newWeapon.Dispose();
-                            newWeapon = physicsWeapon;
-
-                            newWeapon.ShowAttachPoint = false;
-
-                            if (SHOULDKEEP2D) _keepItems2D.Add(newWeapon, true);
-                            if (_viewport != null && newWeapon.Visuals3D != null)
-                            {
-                                _viewport.Children.AddRange(newWeapon.Visuals3D);
-                            }
-                        }
-                        break;
-
-                    default:
-                        throw new ApplicationException("Unknown ItemToFrom: " + newFrom.ToString());
-                }
+                default:
+                    throw new ApplicationException("Unknown ItemToFrom: " + newFrom.ToString());
             }
         }
 
@@ -1191,7 +1293,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Class: SpriteGraphic_Shells
+    #region class: SpriteGraphic_Shells
 
     public class SpriteGraphic_Shells
     {
@@ -1199,6 +1301,7 @@ namespace Game.Newt.v2.Arcanorum
 
         private readonly bool _isBot;
         private readonly BotShellColorsDNA _colors;
+        private readonly ItemOptionsArco _itemOptions;
 
         private AnimateRotation[] _rotations = null;
 
@@ -1209,10 +1312,11 @@ namespace Game.Newt.v2.Arcanorum
         /// <summary>
         /// This graphic is for a bot
         /// </summary>
-        public SpriteGraphic_Shells(int level, BotShellColorsDNA colors)
+        public SpriteGraphic_Shells(int level, BotShellColorsDNA colors, ItemOptionsArco itemOptions)
         {
             _isBot = true;
             _colors = colors;
+            _itemOptions = itemOptions;
 
             this.Model = new Model3DGroup();
 
@@ -1222,10 +1326,11 @@ namespace Game.Newt.v2.Arcanorum
         /// <summary>
         /// This graphic is for the backdrop panel
         /// </summary>
-        public SpriteGraphic_Shells(BotShellColorsDNA colors, int numLayers, double radius)
+        public SpriteGraphic_Shells(BotShellColorsDNA colors, int numLayers, double radius, ItemOptionsArco itemOptions)
         {
             _isBot = false;
             _colors = colors;
+            _itemOptions = itemOptions;
 
             this.Model = new Model3DGroup();
 
@@ -1254,9 +1359,7 @@ namespace Game.Newt.v2.Arcanorum
 
                 _level = value;
 
-                int numLayers;
-                double radius, mass, innerShellAlphaMult, outerShellAlphaMult, hitPoints;
-                ArcBot.GetSettingsForLevel(out numLayers, out radius, out mass, out innerShellAlphaMult, out outerShellAlphaMult, out hitPoints, _level);
+                ArcBot.GetSettingsForLevel(out int numLayers, out double radius, out _, out double innerShellAlphaMult, out double outerShellAlphaMult, out _, _level, _itemOptions);
 
                 RebuildGraphic(numLayers, radius, innerShellAlphaMult, outerShellAlphaMult);
             }
@@ -1509,7 +1612,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Class: BotDNA
+    #region class: BotDNA
 
     public class BotDNA
     {
@@ -1592,7 +1695,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Class: BotShellColorsDNA
+    #region class: BotShellColorsDNA
 
     public class BotShellColorsDNA
     {
@@ -1617,7 +1720,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Class: BotLevelDNA
+    #region class: BotLevelDNA
 
     //TODO: Finish this.  This holds how they've leveled up - which aspects get boosted
     public class BotLevelDNA

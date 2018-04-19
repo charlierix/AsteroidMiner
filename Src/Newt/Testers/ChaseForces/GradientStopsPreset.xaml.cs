@@ -16,12 +16,13 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.Testers.ChaseForces
 {
     public partial class GradientStopsPreset : UserControl
     {
-        #region Enum: Preset
+        #region enum: Preset
 
         private enum Preset
         {
@@ -137,7 +138,7 @@ namespace Game.Newt.Testers.ChaseForces
 
         #region Public Methods
 
-        public Tuple<double, double>[] GetSelection()
+        public GradientEntry[] GetSelection()
         {
             if (!_wasOKPressed)
             {
@@ -145,65 +146,60 @@ namespace Game.Newt.Testers.ChaseForces
                 return null;
             }
 
-            #region Cast values
+            #region cast values
 
-            int count;
-            if (!int.TryParse(txtCount.Text, out count))
+            if (!int.TryParse(txtCount.Text, out int count))
             {
                 MessageBox.Show("Couldn't parse count as an integer", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
-            double fromDist;
-            if (!double.TryParse(txtFromDistance.Text, out fromDist))
+            if (!double.TryParse(txtFromDistance.Text, out double fromDist))
             {
                 MessageBox.Show("Couldn't parse from distance as a floating point number", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
-            double toDist;
-            if (!double.TryParse(txtToDistance.Text, out toDist))
+            if (!double.TryParse(txtToDistance.Text, out double toDist))
             {
                 MessageBox.Show("Couldn't parse to distance as a floating point number", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
-            double fromPerc;
-            if (!double.TryParse(txtFromPercent.Text, out fromPerc))
+            if (!double.TryParse(txtFromPercent.Text, out double fromPerc))
             {
                 MessageBox.Show("Couldn't parse from percent as a floating point number", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
-            double toPerc;
-            if (!double.TryParse(txtToPercent.Text, out toPerc))
+            if (!double.TryParse(txtToPercent.Text, out double toPerc))
             {
                 MessageBox.Show("Couldn't parse to percent as a floating point number", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
-            // Preset
-            Tuple<Preset, bool> preset = GetPresetType();
-
             #endregion
 
+            // Preset
+            var preset = GetPresetType();
+
             // Make sure that from/to % matches whether the graph is going up or down
-            if (preset.Item2 && toPerc < fromPerc)
+            if (preset.isGraphUp && toPerc < fromPerc)
             {
                 MessageBox.Show("To percent must be greater than from percent for this graph type", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
-            else if (!preset.Item2 && toPerc > fromPerc)
+            else if (!preset.isGraphUp && toPerc > fromPerc)
             {
                 MessageBox.Show("To percent must be less than from percent for this graph type", TITLE, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return null;
             }
 
             // Get the preset with values from 0 to 1
-            var unit = GetPreset(preset.Item1, count);
+            var unit = GetPreset(preset.preset, count);
 
             // Now stretch the values
-            return TransformValues(unit, fromDist, toDist, fromPerc, toPerc, preset.Item2);
+            return TransformValues(unit, fromDist, toDist, fromPerc, toPerc, preset.isGraphUp);
         }
 
         #endregion
@@ -290,7 +286,7 @@ namespace Game.Newt.Testers.ChaseForces
         /// Item1=Enum value
         /// Item2=Is graph going up
         /// </returns>
-        private Tuple<Preset, bool> GetPresetType()
+        private (Preset preset, bool isGraphUp) GetPresetType()
         {
             // Enum
             Preset? preset = null;
@@ -320,10 +316,10 @@ namespace Game.Newt.Testers.ChaseForces
                     break;
             }
 
-            return Tuple.Create(preset.Value, isGraphUp);
+            return (preset.Value, isGraphUp);
         }
 
-        private static Tuple<double, double>[] GetPreset(Preset preset, int count)
+        private static GradientEntry[] GetPreset(Preset preset, int count)
         {
             switch (preset)
             {
@@ -331,86 +327,86 @@ namespace Game.Newt.Testers.ChaseForces
                     #region Simple_Up
 
                     return GetXs(count).
-                        Select(o => Tuple.Create(o, o)).
+                        Select(o => new GradientEntry(o, o)).
                         ToArray();
 
-                    #endregion
+                #endregion
                 case Preset.Simple_Down:
                     #region Simple_Down
 
                     return ReverseY(GetPreset(Preset.Simple_Up, count));
 
-                    #endregion
+                #endregion
 
                 case Preset.Cube_Up:
                     #region Cube
 
                     return GetXs(count).
-                        Select(o => Tuple.Create(o, o * o * o)).
+                        Select(o => new GradientEntry(o, o * o * o)).
                         ToArray();
 
-                    #endregion
+                #endregion
                 case Preset.Cube_Down:
                     #region Cube_Down
 
                     return ReverseX(GetPreset(Preset.Cube_Up, count));
 
-                    #endregion
+                #endregion
 
                 case Preset.CubeRoot_Up:
                     #region CubeRoot
 
                     return ReverseX(GetPreset(Preset.CubeRoot_Down, count));
 
-                    #endregion
+                #endregion
                 case Preset.CubeRoot_Down:
                     #region CubeRoot_Down
 
                     return ReverseY(GetPreset(Preset.Cube_Up, count));
 
-                    #endregion
+                #endregion
 
                 case Preset.S_Curve_Up:
                     #region S_Curve_Up
 
                     return GetXs(count).
-                        Select(o => Tuple.Create(o, (-Math.Cos(o * Math.PI) * .5) + .5)).
+                        Select(o => new GradientEntry(o, (-Math.Cos(o * Math.PI) * .5) + .5)).
                         ToArray();
 
-                    #endregion
+                #endregion
                 case Preset.S_Curve_Down:
                     #region S_Curve_Down
 
                     return ReverseY(GetPreset(Preset.S_Curve_Up, count));
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("Unknown Preset: " + preset.ToString());
             }
         }
 
-        private static Tuple<double, double>[] ReverseX(Tuple<double, double>[] orig)
+        private static GradientEntry[] ReverseX(GradientEntry[] orig)
         {
-            var retVal = new Tuple<double, double>[orig.Length];
+            var retVal = new GradientEntry[orig.Length];
 
             int down = orig.Length - 1;
             for (int up = 0; up < orig.Length; up++)
             {
-                retVal[up] = Tuple.Create(orig[up].Item1, orig[down].Item2);
+                retVal[up] = new GradientEntry(orig[up].Distance, orig[down].Percent);
                 down--;
             }
 
             return retVal;
         }
-        private static Tuple<double, double>[] ReverseY(Tuple<double, double>[] orig)
+        private static GradientEntry[] ReverseY(GradientEntry[] orig)
         {
             return orig.
-                Select(o => Tuple.Create(o.Item1, 1d - o.Item2)).
+                Select(o => new GradientEntry(o.Distance, 1d - o.Percent)).
                 ToArray();
         }
 
-        private static Tuple<double, double>[] TransformValues(Tuple<double, double>[] orig, double fromDist, double toDist, double fromPerc, double toPerc, bool isUpGraph)
+        private static GradientEntry[] TransformValues(GradientEntry[] orig, double fromDist, double toDist, double fromPerc, double toPerc, bool isUpGraph)
         {
             double percentMinRange = 0;
             double percentMaxRange = 1;
@@ -421,10 +417,12 @@ namespace Game.Newt.Testers.ChaseForces
                 percentMaxRange = 0;
             }
 
-            return orig.Select(o => Tuple.Create(
-                UtilityCore.GetScaledValue(fromDist, toDist, 0, 1, o.Item1),
-                UtilityCore.GetScaledValue(fromPerc, toPerc, percentMinRange, percentMaxRange, o.Item2)
-                )).ToArray();
+            return orig.Select(o => new GradientEntry
+            (
+                UtilityCore.GetScaledValue(fromDist, toDist, 0, 1, o.Distance),
+                UtilityCore.GetScaledValue(fromPerc, toPerc, percentMinRange, percentMaxRange, o.Percent)
+            )).
+            ToArray();
         }
 
         private static IEnumerable<double> GetXs(int count)

@@ -21,6 +21,7 @@ using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.NewtonDynamics;
 using Game.Newt.v2.GameItems.ShipParts;
+using Game.HelperClassesAI;
 
 namespace Game.Newt.Testers
 {
@@ -39,7 +40,7 @@ namespace Game.Newt.Testers
 
     public partial class BrainTester : Window
     {
-        #region Class: ItemColors
+        #region class: ItemColors
 
         internal class ItemColors
         {
@@ -64,11 +65,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: LinkTestUtil
+        #region class: LinkTestUtil
 
         private class LinkTestUtil
         {
-            #region Class: LinkResult1
+            #region class: LinkResult1
 
             public class LinkResult1
             {
@@ -85,7 +86,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region Class: LinkResult2
+            #region class: LinkResult2
 
             public class LinkResult2
             {
@@ -102,7 +103,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region Class: LinkResult3
+            #region class: LinkResult3
 
             public class LinkResult3
             {
@@ -454,7 +455,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: GravSensorStuff
+        #region class: GravSensorStuff
 
         private class GravSensorStuff
         {
@@ -468,7 +469,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: BrainStuff
+        #region class: BrainStuff
 
         private class BrainStuff
         {
@@ -483,7 +484,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ThrusterStuff
+        #region class: ThrusterStuff
 
         private class ThrusterStuff
         {
@@ -497,7 +498,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ContainerStuff
+        #region class: ContainerStuff
 
         private class ContainerStuff
         {
@@ -511,7 +512,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: LinkStuff
+        #region class: LinkStuff
 
         private class LinkStuff
         {
@@ -522,7 +523,7 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region Declaration Section
+        #region Declaration section
 
         private ItemColors _colors = new ItemColors();
         private EditorOptions _editorOptions = new EditorOptions();
@@ -604,8 +605,7 @@ namespace Game.Newt.Testers
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 // Don't bother with the boundry lines.  It looks funny with a partial viewport
                 //// Draw the lines
@@ -689,7 +689,7 @@ namespace Game.Newt.Testers
         {
             try
             {
-                // Copied from btnClear_Click
+                // Copied from Clear_Click
                 ClearDebugVisuals();
                 ClearLinks();
                 ClearGravSensors();
@@ -981,7 +981,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAdvanceBrainOne_Click(object sender, RoutedEventArgs e)
+        private void AdvanceBrainOne_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1001,7 +1001,592 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnMutate100ManyTimes_Click(object sender, RoutedEventArgs e)
+        private void GravitySensor_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                double size;
+                if (!double.TryParse(txtGravitySensorSize.Text, out size))
+                {
+                    MessageBox.Show("Couldn't parse sensor size", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int numSensors;
+                if (!int.TryParse(txtGravitySensorCount.Text, out numSensors))
+                {
+                    MessageBox.Show("Couldn't parse number of sensors", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (numSensors < 1)
+                {
+                    MessageBox.Show("The number of sensors must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Wipe Existing
+                ClearGravSensors();
+
+                if (_containers == null)
+                {
+                    CreateContainers();
+                }
+
+                // Build DNA
+                ShipPartDNA dna = new ShipPartDNA();
+                dna.PartType = SensorGravity.PARTTYPE;
+                dna.Position = new Point3D(-1.5, 0, 0);
+                dna.Orientation = Quaternion.Identity;
+                dna.Scale = new Vector3D(size, size, size);
+
+                ShipPartDNA[] gravDNA = new ShipPartDNA[numSensors];
+
+                for (int cntr = 0; cntr < numSensors; cntr++)
+                {
+                    if (numSensors == 1)
+                    {
+                        gravDNA[cntr] = dna;
+                    }
+                    else
+                    {
+                        ShipPartDNA dnaCopy = UtilityCore.Clone(dna);
+                        double angle = 360d / Convert.ToDouble(numSensors);
+                        dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
+
+                        gravDNA[cntr] = dnaCopy;
+                    }
+                }
+
+                // Build/show sensors
+                CreateGravSensors(gravDNA);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Brain_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                double size;
+                if (!double.TryParse(txtBrainSize.Text, out size))
+                {
+                    MessageBox.Show("Couldn't parse brain size", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                int numBrains;
+                if (!int.TryParse(txtBrainCount.Text, out numBrains))
+                {
+                    MessageBox.Show("Couldn't parse number of brains", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (numBrains < 1)
+                {
+                    MessageBox.Show("The number of brains must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Wipe Existing
+                ClearBrains();
+
+                if (_containers == null)
+                {
+                    CreateContainers();
+                }
+
+                // Build DNA
+                ShipPartDNA dna = new ShipPartDNA();
+                dna.PartType = Brain.PARTTYPE;
+                dna.Position = new Point3D(0, 0, 0);
+                dna.Orientation = Quaternion.Identity;
+                dna.Scale = new Vector3D(size, size, size);
+                dna.Neurons = null;
+                dna.AltNeurons = null;
+                dna.InternalLinks = null;
+                dna.ExternalLinks = null;
+
+                ShipPartDNA[] brainDNA = new ShipPartDNA[numBrains];
+                for (int cntr = 0; cntr < numBrains; cntr++)
+                {
+                    if (numBrains == 1)
+                    {
+                        brainDNA[cntr] = dna;
+                    }
+                    else
+                    {
+                        ShipPartDNA dnaCopy = UtilityCore.Clone(dna);
+                        double angle = 360d / Convert.ToDouble(numBrains);
+                        dnaCopy.Position += new Vector3D(0, 1, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
+
+                        brainDNA[cntr] = dnaCopy;
+                    }
+                }
+
+                // Build/Show brains
+                CreateBrains(brainDNA);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Thrusters_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int numThrusters;
+                if (!int.TryParse(txtThrusterCount.Text, out numThrusters))
+                {
+                    MessageBox.Show("Couldn't parse number of thrusters", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (numThrusters < 1)
+                {
+                    MessageBox.Show("The number of thrusters must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // Wipe Existing
+                ClearThrusters();
+
+                if (_containers == null)
+                {
+                    CreateContainers();
+                }
+
+                // Build DNA
+                ThrusterDNA dna = new ThrusterDNA();
+                dna.PartType = Thruster.PARTTYPE;
+                dna.Position = new Point3D(2, 0, 0);
+                dna.Orientation = new Quaternion(new Vector3D(0, 1, 0), -90);
+                dna.Scale = new Vector3D(.5, .5, .5);
+                dna.ThrusterType = ThrusterType.One;
+                //dna.ThrusterType = ThrusterType.Custom;
+                dna.ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One);
+
+                ThrusterDNA[] dnaThrust = new ThrusterDNA[numThrusters];
+
+                for (int cntr = 0; cntr < numThrusters; cntr++)
+                {
+                    if (numThrusters == 1)
+                    {
+                        dnaThrust[cntr] = dna;
+                    }
+                    else
+                    {
+                        ThrusterDNA dnaCopy = UtilityCore.Clone(dna);
+                        double angle = 360d / Convert.ToDouble(numThrusters);
+                        dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
+
+                        dnaThrust[cntr] = dnaCopy;
+                    }
+                }
+
+                // Create/Show fuel,thrusters
+                CreateThrusters(dnaThrust);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Links1_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //Wipe Existing
+                ClearLinks();
+
+                // Wipe out all the dna links so that it creates random links
+                if (_brains != null)
+                {
+                    foreach (BrainStuff brain in _brains)
+                    {
+                        brain.DNAInternalLinks = null;
+                        brain.DNAExternalLinks = null;
+                    }
+                }
+
+                if (_thrusters != null)
+                {
+                    foreach (var thrust in _thrusters)
+                    {
+                        thrust.DNAExternalLinks = null;
+                    }
+                }
+
+                // Build new
+                CreateLinks();
+
+                #region OLD
+                //#region Build up input args
+
+                //List<NeuralUtility.ContainerInput> inputs = new List<NeuralUtility.ContainerInput>();
+                //if (_gravSensors != null)
+                //{
+                //    foreach (GravSensorStuff sensor in _gravSensors)
+                //    {
+                //        // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
+                //        // neuron containers can hook to it
+                //        inputs.Add(new NeuralUtility.ContainerInput(sensor.Sensor, NeuralUtility.NeuronContainerType.Sensor, sensor.Sensor.Position, sensor.Sensor.Orientation, null, null, 0, null, null));
+                //    }
+                //}
+
+                //if (_brains != null)
+                //{
+                //    foreach (BrainStuff brain in _brains)
+                //    {
+                //        //TODO: Consider existing links
+                //        inputs.Add(new NeuralUtility.ContainerInput(
+                //            brain.Brain, NeuralUtility.NeuronContainerType.Brain,
+                //            brain.Brain.Position, brain.Brain.Orientation,
+                //            _itemOptions.BrainLinksPerNeuron_Internal,
+                //            new Tuple<NeuralUtility.NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
+                //            {
+                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromSensor),
+                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.BrainLinksPerNeuron_External_FromBrain),
+                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromManipulator)
+                //            },
+                //            Convert.ToInt32(Math.Round(brain.Brain.BrainChemicalCount * 1.33d, 0)),		// increasing so that there is a higher chance of listeners
+                //            null, null));
+                //    }
+                //}
+
+                //if (_thrusters != null)
+                //{
+                //    foreach (var thrust in _thrusters)
+                //    {
+                //        //TODO: Consider existing links
+                //        //NOTE: This won't be fed by other manipulators
+                //        inputs.Add(new NeuralUtility.ContainerInput(
+                //            thrust.Thrust, NeuralUtility.NeuronContainerType.Manipulator,
+                //            thrust.Thrust.Position, thrust.Thrust.Orientation,
+                //            null,
+                //            new Tuple<NeuralUtility.NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
+                //            {
+                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Sensor),
+                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Brain),
+                //            },
+                //            0,
+                //            null, null));
+                //    }
+                //}
+
+                //#endregion
+
+                //// Create links
+                //NeuralUtility.ContainerOutput[] outputs = null;
+                //if (inputs.Count > 0)
+                //{
+                //    outputs = NeuralUtility.LinkNeurons(inputs.ToArray(), _itemOptions.NeuralLinkMaxWeight);
+                //}
+
+
+
+
+                //#region Show new links
+
+                //if (outputs != null)
+                //{
+                //    _links = new LinkStuff();
+                //    _links.Outputs = outputs;
+                //    _links.Visuals = new List<Visual3D>();
+
+                //    Model3DGroup posLines = null, negLines = null;
+                //    DiffuseMaterial posDiffuse = null, negDiffuse = null;
+
+                //    Dictionary<INeuronContainer, Transform3D> containerTransforms = new Dictionary<INeuronContainer, Transform3D>();
+
+                //    foreach (var output in outputs)
+                //    {
+                //        Transform3D toTransform = GetContainerTransform(containerTransforms, output.Container);
+
+                //        foreach (var link in UtilityHelper.Iterate(output.InternalLinks, output.ExternalLinks))
+                //        {
+                //            Transform3D fromTransform = GetContainerTransform(containerTransforms, link.FromContainer);
+
+                //            BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, fromTransform.Transform(link.From.Position), toTransform.Transform(link.To.Position), link.Weight, link.BrainChemicalModifiers, _colors);
+                //        }
+                //    }
+
+                //    if (posLines != null)
+                //    {
+                //        ModelVisual3D model = new ModelVisual3D();
+                //        model.Content = posLines;
+                //        _links.Visuals.Add(model);
+                //        _viewportNeural.Children.Add(model);
+                //    }
+
+                //    if (negLines != null)
+                //    {
+                //        ModelVisual3D model = new ModelVisual3D();
+                //        model.Content = negLines;
+                //        _links.Visuals.Add(model);
+                //        _viewportNeural.Children.Add(model);
+                //    }
+                //}
+
+                //#endregion
+
+                //UpdateCountReport();
+
+                //if (chkBrainRunning.IsChecked.Value)
+                //{
+                //    StartBrainOperation();
+                //}
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Links2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //Wipe Existing
+                ClearLinks();
+
+                // Wipe out all the dna links so that it creates random links
+                if (_brains != null)
+                {
+                    foreach (BrainStuff brain in _brains)
+                    {
+                        brain.DNAInternalLinks = null;
+                        brain.DNAExternalLinks = null;
+                    }
+                }
+
+                if (_thrusters != null)
+                {
+                    foreach (var thrust in _thrusters)
+                    {
+                        thrust.DNAExternalLinks = null;
+                    }
+                }
+
+                // Build new
+                CreateLinks2();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Mutate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                #region Extract dna
+
+                ShipPartDNA[] gravDNA1 = null;
+                if (_gravSensors != null)
+                {
+                    gravDNA1 = _gravSensors.Select(o => o.Sensor.GetNewDNA()).ToArray();		// no need to call NeuralUtility.PopulateDNALinks, only the neurons are stored
+                }
+
+                ShipPartDNA[] brainDNA1 = null;
+                if (_brains != null)
+                {
+                    brainDNA1 = _brains.Select(o =>
+                    {
+                        ShipPartDNA dna = o.Brain.GetNewDNA();
+                        if (_links != null)
+                        {
+                            NeuralUtility.PopulateDNALinks(dna, o.Brain, _links.Outputs);
+                        }
+                        return dna;
+                    }).ToArray();
+                }
+
+                ThrusterDNA[] thrustDNA1 = null;
+                if (_thrusters != null)
+                {
+                    thrustDNA1 = _thrusters.Select(o =>
+                    {
+                        ThrusterDNA dna = (ThrusterDNA)o.Thrust.GetNewDNA();
+                        if (_links != null)
+                        {
+                            NeuralUtility.PopulateDNALinks(dna, o.Thrust, _links.Outputs);
+                        }
+                        return dna;
+                    }).ToArray();
+                }
+
+                ShipPartDNA energyDNA1 = null;
+                ShipPartDNA fuelDNA1 = null;
+                if (_containers != null)
+                {
+                    energyDNA1 = _containers.Energy.GetNewDNA();
+                    fuelDNA1 = _containers.Fuel.GetNewDNA();
+                }
+
+                // Combine the lists
+                List<ShipPartDNA> allParts1 = UtilityCore.Iterate<ShipPartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
+                if (allParts1.Count == 0)
+                {
+                    // There is nothing to do
+                    return;
+                }
+
+                if (energyDNA1 != null)
+                {
+                    allParts1.Add(energyDNA1);
+                }
+
+                if (fuelDNA1 != null)
+                {
+                    allParts1.Add(fuelDNA1);
+                }
+
+                #endregion
+
+                bool hadLinks = _links != null;
+
+                // Clear existing
+                ClearLinks();
+                ClearGravSensors();
+                ClearBrains();
+                ClearThrusters();
+
+                #region Fill in mutate args
+
+                //TODO: Store these args in ShipDNA itself.  That way, mutation rates are a property of ship
+                //TODO: Fill in the params from ItemOptions
+                //NOTE: These mutate factors are pretty large.  Good for a unit tester, but not a real simulation
+
+                var mutate_Vector3D = Tuple.Create(PropsByPercent.DataType.Vector3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .08d));
+                var mutate_Point3D = Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .04d));		// positions need to drift around freely.  percent doesn't make much sense
+                var mutate_Quaternion = Tuple.Create(PropsByPercent.DataType.Quaternion, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .08d));
+
+                MutateUtility.ShipPartAddRemoveArgs addRemoveArgs = null;
+                if (chkMutateAddRemoveParts.IsChecked.Value)
+                {
+                    //addRemoveArgs = new MutateUtility.ShipPartAddRemoveArgs();
+                }
+
+                MutateUtility.MuateArgs partChangeArgs = null;
+                if (chkMutateChangeParts.IsChecked.Value)
+                {
+                    //NOTE: The mutate class has special logic for Scale and ThrusterDirections
+                    partChangeArgs = new MutateUtility.MuateArgs(true, 1d,
+                        null,
+                        new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
+                        {
+                            mutate_Vector3D,
+                            mutate_Point3D,
+                            mutate_Quaternion,
+                        },
+                        new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .1d));
+                }
+
+                MutateUtility.NeuronMutateArgs neuralArgs = null;
+                if (chkMutateChangeNeural.IsChecked.Value)
+                {
+                    MutateUtility.MuateArgs neuronMovement = new MutateUtility.MuateArgs(false, .05d, null, null, mutate_Point3D.Item2);		// neurons are all point3D
+
+                    MutateUtility.MuateArgs linkMovement = new MutateUtility.MuateArgs(false, .05d,
+                        null,
+                        new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
+                        {
+                            Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .1d)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
+							Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .2d)),		// using a larger value for the links
+							mutate_Quaternion,
+                        },
+                        null);
+
+                    neuralArgs = new MutateUtility.NeuronMutateArgs(neuronMovement, null, linkMovement, null);
+                }
+
+                MutateUtility.ShipMutateArgs shipArgs = new MutateUtility.ShipMutateArgs(addRemoveArgs, partChangeArgs, neuralArgs);
+
+                #endregion
+
+                // Mutate
+                ShipDNA oldDNA = ShipDNA.Create(allParts1);
+                ShipDNA newDNA = MutateUtility.Mutate(oldDNA, shipArgs);
+
+                if (chkMutateWriteToFile.IsChecked.Value)
+                {
+                    #region Write to file
+
+                    string foldername = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                    string timestamp = DateTime.Now.ToString("yyyyMMdd HHmmssfff");
+
+                    string oldFilename = System.IO.Path.Combine(foldername, timestamp + " Old DNA.xml");
+                    string newFilename = System.IO.Path.Combine(foldername, timestamp + " New DNA.xml");
+
+                    UtilityCore.SerializeToFile(oldFilename, oldDNA);
+                    UtilityCore.SerializeToFile(newFilename, newDNA);
+
+                    #endregion
+                }
+
+                #region Rebuild Parts
+
+                ShipPartDNA[] allParts2 = newDNA.PartsByLayer.SelectMany(o => o.Value).ToArray();
+
+                ShipPartDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).ToArray();
+                if (gravDNA2.Length > 0)
+                {
+                    CreateGravSensors(gravDNA2);
+                }
+
+                ShipPartDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).ToArray();
+                if (brainDNA2.Length > 0)
+                {
+                    CreateBrains(brainDNA2);
+                }
+
+                ShipPartDNA fuelDNA2 = allParts2.Where(o => o.PartType == FuelTank.PARTTYPE).FirstOrDefault();		//NOTE: This is too simplistic if part remove/add is allowed in the mutator
+                ThrusterDNA[] thrustDNA2 = allParts2.Where(o => o.PartType == Thruster.PARTTYPE).Select(o => (ThrusterDNA)o).ToArray();
+                if (thrustDNA2.Length > 0)
+                {
+                    CreateThrusters(thrustDNA2);
+                }
+
+                #endregion
+
+                // Relink
+                if (hadLinks)
+                {
+                    CreateLinks();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ClearDebugVisuals();
+                ClearLinks();
+                ClearGravSensors();
+                ClearBrains();
+                ClearThrusters();
+                ClearContainers();
+
+                UpdateCountReport();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+        #region Event Listeners - misc
+
+        private void Mutate100ManyTimes_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1036,7 +1621,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnRandRange_Click(object sender, RoutedEventArgs e)
+        private void RandRange_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1063,7 +1648,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnMutateItemOptions_Click(object sender, RoutedEventArgs e)
+        private void MutateItemOptions_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1154,7 +1739,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        private void btnFuzzyLinkTest_Click(object sender, RoutedEventArgs e)
+        private void FuzzyLinkTest_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1165,7 +1750,7 @@ namespace Game.Newt.Testers
                     return;
                 }
 
-                btnClear_Click(this, new RoutedEventArgs());
+                Clear_Click(this, new RoutedEventArgs());
 
                 #region Create Neurons
 
@@ -1229,7 +1814,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnFuzzyLinkTest2_Click(object sender, RoutedEventArgs e)
+        private void FuzzyLinkTest2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1265,7 +1850,7 @@ namespace Game.Newt.Testers
 
                 #endregion
 
-                btnClear_Click(this, new RoutedEventArgs());
+                Clear_Click(this, new RoutedEventArgs());
 
                 #region Create Neurons
 
@@ -1352,35 +1937,32 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnFuzzyLinkTest2New_Click(object sender, RoutedEventArgs e)
+        private void FuzzyLinkTest2New_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+
                 #region Parse Gui
 
-                int numFrom;
-                if (!int.TryParse(txtFuzzyLinkTest2FromCount.Text, out numFrom))
+                if (!int.TryParse(txtFuzzyLinkTest2FromCount.Text, out int numFrom))
                 {
                     MessageBox.Show("Couldn't parse the from count as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int numTo;
-                if (!int.TryParse(txtFuzzyLinkTest2ToCount.Text, out numTo))
+                if (!int.TryParse(txtFuzzyLinkTest2ToCount.Text, out int numTo))
                 {
                     MessageBox.Show("Couldn't parse the to count as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int maxIntermediate;
-                if (!int.TryParse(txtFuzzyLinkTest2MaxIntermediate.Text, out maxIntermediate))
+                if (!int.TryParse(txtFuzzyLinkTest2MaxIntermediate.Text, out int maxIntermediate))
                 {
                     MessageBox.Show("Couldn't parse the max intermediate as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int maxFinal;
-                if (!int.TryParse(txtFuzzyLinkTest2MaxFinal.Text, out maxFinal))
+                if (!int.TryParse(txtFuzzyLinkTest2MaxFinal.Text, out int maxFinal))
                 {
                     MessageBox.Show("Couldn't parse the max final as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -1388,7 +1970,7 @@ namespace Game.Newt.Testers
 
                 #endregion
 
-                btnClear_Click(this, new RoutedEventArgs());
+                Clear_Click(this, new RoutedEventArgs());
 
                 #region Create Neurons
 
@@ -1470,35 +2052,32 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnFuzzyLinkTest3_Click(object sender, RoutedEventArgs e)
+        private void FuzzyLinkTest3_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+
                 #region parse gui
 
-                int numPoints;
-                if (!int.TryParse(txtFuzzyLinkTest3Points.Text, out numPoints))
+                if (!int.TryParse(txtFuzzyLinkTest3Points.Text, out int numPoints))
                 {
                     MessageBox.Show("Couldn't parse the number of points as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int initialLinkCount;
-                if (!int.TryParse(txtFuzzyLinkTest3Links.Text, out initialLinkCount))
+                if (!int.TryParse(txtFuzzyLinkTest3Links.Text, out int initialLinkCount))
                 {
                     MessageBox.Show("Couldn't parse initial links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int maxIntermediateLinkCount;
-                if (!int.TryParse(txtFuzzyLinkTest3MaxIntermediate.Text, out maxIntermediateLinkCount))
+                if (!int.TryParse(txtFuzzyLinkTest3MaxIntermediate.Text, out int maxIntermediateLinkCount))
                 {
                     MessageBox.Show("Couldn't parse max intermediate links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int maxFinalLinkCount;
-                if (!int.TryParse(txtFuzzyLinkTest3MaxFinal.Text, out maxFinalLinkCount))
+                if (!int.TryParse(txtFuzzyLinkTest3MaxFinal.Text, out int maxFinalLinkCount))
                 {
                     MessageBox.Show("Couldn't parse max final links as an integer", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -1506,7 +2085,7 @@ namespace Game.Newt.Testers
 
                 #endregion
 
-                btnClear_Click(this, new RoutedEventArgs());
+                Clear_Click(this, new RoutedEventArgs());
 
                 #region create a cloud of points
 
@@ -1637,7 +2216,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        private void btnPropsByPercent1_Click(object sender, RoutedEventArgs e)
+        private void PropsByPercent1_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1760,7 +2339,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPropsByPercent2_Click(object sender, RoutedEventArgs e)
+        private void PropsByPercent2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1920,537 +2499,19 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-        private void btnGravitySensor_Click(object sender, RoutedEventArgs e)
+        private void Iterators_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                double size;
-                if (!double.TryParse(txtGravitySensorSize.Text, out size))
+                var setsForCount = new List<(int count, (int, int)[][] sets)>();
+
+                for (int cntr = 2; cntr <= 6; cntr++)
                 {
-                    MessageBox.Show("Couldn't parse sensor size", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                int numSensors;
-                if (!int.TryParse(txtGravitySensorCount.Text, out numSensors))
-                {
-                    MessageBox.Show("Couldn't parse number of sensors", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (numSensors < 1)
-                {
-                    MessageBox.Show("The number of sensors must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Wipe Existing
-                ClearGravSensors();
-
-                if (_containers == null)
-                {
-                    CreateContainers();
-                }
-
-                // Build DNA
-                ShipPartDNA dna = new ShipPartDNA();
-                dna.PartType = SensorGravity.PARTTYPE;
-                dna.Position = new Point3D(-1.5, 0, 0);
-                dna.Orientation = Quaternion.Identity;
-                dna.Scale = new Vector3D(size, size, size);
-
-                ShipPartDNA[] gravDNA = new ShipPartDNA[numSensors];
-
-                for (int cntr = 0; cntr < numSensors; cntr++)
-                {
-                    if (numSensors == 1)
-                    {
-                        gravDNA[cntr] = dna;
-                    }
-                    else
-                    {
-                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
-                        double angle = 360d / Convert.ToDouble(numSensors);
-                        dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
-
-                        gravDNA[cntr] = dnaCopy;
-                    }
-                }
-
-                // Build/show sensors
-                CreateGravSensors(gravDNA);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void btnBrain_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                double size;
-                if (!double.TryParse(txtBrainSize.Text, out size))
-                {
-                    MessageBox.Show("Couldn't parse brain size", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                int numBrains;
-                if (!int.TryParse(txtBrainCount.Text, out numBrains))
-                {
-                    MessageBox.Show("Couldn't parse number of brains", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (numBrains < 1)
-                {
-                    MessageBox.Show("The number of brains must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Wipe Existing
-                ClearBrains();
-
-                if (_containers == null)
-                {
-                    CreateContainers();
-                }
-
-                // Build DNA
-                ShipPartDNA dna = new ShipPartDNA();
-                dna.PartType = Brain.PARTTYPE;
-                dna.Position = new Point3D(0, 0, 0);
-                dna.Orientation = Quaternion.Identity;
-                dna.Scale = new Vector3D(size, size, size);
-                dna.Neurons = null;
-                dna.AltNeurons = null;
-                dna.InternalLinks = null;
-                dna.ExternalLinks = null;
-
-                ShipPartDNA[] brainDNA = new ShipPartDNA[numBrains];
-                for (int cntr = 0; cntr < numBrains; cntr++)
-                {
-                    if (numBrains == 1)
-                    {
-                        brainDNA[cntr] = dna;
-                    }
-                    else
-                    {
-                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
-                        double angle = 360d / Convert.ToDouble(numBrains);
-                        dnaCopy.Position += new Vector3D(0, 1, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
-
-                        brainDNA[cntr] = dnaCopy;
-                    }
-                }
-
-                // Build/Show brains
-                CreateBrains(brainDNA);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void btnThrusters_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                int numThrusters;
-                if (!int.TryParse(txtThrusterCount.Text, out numThrusters))
-                {
-                    MessageBox.Show("Couldn't parse number of thrusters", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (numThrusters < 1)
-                {
-                    MessageBox.Show("The number of thrusters must be greater than zero", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Wipe Existing
-                ClearThrusters();
-
-                if (_containers == null)
-                {
-                    CreateContainers();
-                }
-
-                // Build DNA
-                ThrusterDNA dna = new ThrusterDNA();
-                dna.PartType = Thruster.PARTTYPE;
-                dna.Position = new Point3D(2, 0, 0);
-                dna.Orientation = new Quaternion(new Vector3D(0, 1, 0), -90);
-                dna.Scale = new Vector3D(.5, .5, .5);
-                dna.ThrusterType = ThrusterType.One;
-                //dna.ThrusterType = ThrusterType.Custom;
-                dna.ThrusterDirections = ThrusterDesign.GetThrusterDirections(ThrusterType.One);
-
-                ThrusterDNA[] dnaThrust = new ThrusterDNA[numThrusters];
-
-                for (int cntr = 0; cntr < numThrusters; cntr++)
-                {
-                    if (numThrusters == 1)
-                    {
-                        dnaThrust[cntr] = dna;
-                    }
-                    else
-                    {
-                        ThrusterDNA dnaCopy = (ThrusterDNA)ShipPartDNA.Clone(dna);
-                        double angle = 360d / Convert.ToDouble(numThrusters);
-                        dnaCopy.Position += new Vector3D(0, .75, 0).GetRotatedVector(new Vector3D(1, 0, 0), angle * cntr);
-
-                        dnaThrust[cntr] = dnaCopy;
-                    }
-                }
-
-                // Create/Show fuel,thrusters
-                CreateThrusters(dnaThrust);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void btnLinks_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //Wipe Existing
-                ClearLinks();
-
-                // Wipe out all the dna links so that it creates random links
-                if (_brains != null)
-                {
-                    foreach (BrainStuff brain in _brains)
-                    {
-                        brain.DNAInternalLinks = null;
-                        brain.DNAExternalLinks = null;
-                    }
-                }
-
-                if (_thrusters != null)
-                {
-                    foreach (var thrust in _thrusters)
-                    {
-                        thrust.DNAExternalLinks = null;
-                    }
-                }
-
-                // Build new
-                CreateLinks();
-
-                #region OLD
-                //#region Build up input args
-
-                //List<NeuralUtility.ContainerInput> inputs = new List<NeuralUtility.ContainerInput>();
-                //if (_gravSensors != null)
-                //{
-                //    foreach (GravSensorStuff sensor in _gravSensors)
-                //    {
-                //        // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
-                //        // neuron containers can hook to it
-                //        inputs.Add(new NeuralUtility.ContainerInput(sensor.Sensor, NeuralUtility.NeuronContainerType.Sensor, sensor.Sensor.Position, sensor.Sensor.Orientation, null, null, 0, null, null));
-                //    }
-                //}
-
-                //if (_brains != null)
-                //{
-                //    foreach (BrainStuff brain in _brains)
-                //    {
-                //        //TODO: Consider existing links
-                //        inputs.Add(new NeuralUtility.ContainerInput(
-                //            brain.Brain, NeuralUtility.NeuronContainerType.Brain,
-                //            brain.Brain.Position, brain.Brain.Orientation,
-                //            _itemOptions.BrainLinksPerNeuron_Internal,
-                //            new Tuple<NeuralUtility.NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-                //            {
-                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromSensor),
-                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.BrainLinksPerNeuron_External_FromBrain),
-                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.BrainLinksPerNeuron_External_FromManipulator)
-                //            },
-                //            Convert.ToInt32(Math.Round(brain.Brain.BrainChemicalCount * 1.33d, 0)),		// increasing so that there is a higher chance of listeners
-                //            null, null));
-                //    }
-                //}
-
-                //if (_thrusters != null)
-                //{
-                //    foreach (var thrust in _thrusters)
-                //    {
-                //        //TODO: Consider existing links
-                //        //NOTE: This won't be fed by other manipulators
-                //        inputs.Add(new NeuralUtility.ContainerInput(
-                //            thrust.Thrust, NeuralUtility.NeuronContainerType.Manipulator,
-                //            thrust.Thrust.Position, thrust.Thrust.Orientation,
-                //            null,
-                //            new Tuple<NeuralUtility.NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-                //            {
-                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Sensor),
-                //                new Tuple<NeuralUtility.NeuronContainerType,NeuralUtility.ExternalLinkRatioCalcType,double>(NeuralUtility.NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.ThrusterLinksPerNeuron_Brain),
-                //            },
-                //            0,
-                //            null, null));
-                //    }
-                //}
-
-                //#endregion
-
-                //// Create links
-                //NeuralUtility.ContainerOutput[] outputs = null;
-                //if (inputs.Count > 0)
-                //{
-                //    outputs = NeuralUtility.LinkNeurons(inputs.ToArray(), _itemOptions.NeuralLinkMaxWeight);
-                //}
-
-
-
-
-                //#region Show new links
-
-                //if (outputs != null)
-                //{
-                //    _links = new LinkStuff();
-                //    _links.Outputs = outputs;
-                //    _links.Visuals = new List<Visual3D>();
-
-                //    Model3DGroup posLines = null, negLines = null;
-                //    DiffuseMaterial posDiffuse = null, negDiffuse = null;
-
-                //    Dictionary<INeuronContainer, Transform3D> containerTransforms = new Dictionary<INeuronContainer, Transform3D>();
-
-                //    foreach (var output in outputs)
-                //    {
-                //        Transform3D toTransform = GetContainerTransform(containerTransforms, output.Container);
-
-                //        foreach (var link in UtilityHelper.Iterate(output.InternalLinks, output.ExternalLinks))
-                //        {
-                //            Transform3D fromTransform = GetContainerTransform(containerTransforms, link.FromContainer);
-
-                //            BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, fromTransform.Transform(link.From.Position), toTransform.Transform(link.To.Position), link.Weight, link.BrainChemicalModifiers, _colors);
-                //        }
-                //    }
-
-                //    if (posLines != null)
-                //    {
-                //        ModelVisual3D model = new ModelVisual3D();
-                //        model.Content = posLines;
-                //        _links.Visuals.Add(model);
-                //        _viewportNeural.Children.Add(model);
-                //    }
-
-                //    if (negLines != null)
-                //    {
-                //        ModelVisual3D model = new ModelVisual3D();
-                //        model.Content = negLines;
-                //        _links.Visuals.Add(model);
-                //        _viewportNeural.Children.Add(model);
-                //    }
-                //}
-
-                //#endregion
-
-                //UpdateCountReport();
-
-                //if (chkBrainRunning.IsChecked.Value)
-                //{
-                //    StartBrainOperation();
-                //}
-                #endregion
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void btnMutate_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                #region Extract dna
-
-                ShipPartDNA[] gravDNA1 = null;
-                if (_gravSensors != null)
-                {
-                    gravDNA1 = _gravSensors.Select(o => o.Sensor.GetNewDNA()).ToArray();		// no need to call NeuralUtility.PopulateDNALinks, only the neurons are stored
-                }
-
-                ShipPartDNA[] brainDNA1 = null;
-                if (_brains != null)
-                {
-                    brainDNA1 = _brains.Select(o =>
-                    {
-                        ShipPartDNA dna = o.Brain.GetNewDNA();
-                        if (_links != null)
-                        {
-                            NeuralUtility.PopulateDNALinks(dna, o.Brain, _links.Outputs);
-                        }
-                        return dna;
-                    }).ToArray();
-                }
-
-                ThrusterDNA[] thrustDNA1 = null;
-                if (_thrusters != null)
-                {
-                    thrustDNA1 = _thrusters.Select(o =>
-                    {
-                        ThrusterDNA dna = (ThrusterDNA)o.Thrust.GetNewDNA();
-                        if (_links != null)
-                        {
-                            NeuralUtility.PopulateDNALinks(dna, o.Thrust, _links.Outputs);
-                        }
-                        return dna;
-                    }).ToArray();
-                }
-
-                ShipPartDNA energyDNA1 = null;
-                ShipPartDNA fuelDNA1 = null;
-                if (_containers != null)
-                {
-                    energyDNA1 = _containers.Energy.GetNewDNA();
-                    fuelDNA1 = _containers.Fuel.GetNewDNA();
-                }
-
-                // Combine the lists
-                List<ShipPartDNA> allParts1 = UtilityCore.Iterate<ShipPartDNA>(gravDNA1, brainDNA1, thrustDNA1).ToList();
-                if (allParts1.Count == 0)
-                {
-                    // There is nothing to do
-                    return;
-                }
-
-                if (energyDNA1 != null)
-                {
-                    allParts1.Add(energyDNA1);
-                }
-
-                if (fuelDNA1 != null)
-                {
-                    allParts1.Add(fuelDNA1);
-                }
-
-                #endregion
-
-                bool hadLinks = _links != null;
-
-                // Clear existing
-                ClearLinks();
-                ClearGravSensors();
-                ClearBrains();
-                ClearThrusters();
-
-                #region Fill in mutate args
-
-                //TODO: Store these args in ShipDNA itself.  That way, mutation rates are a property of ship
-                //TODO: Fill in the params from ItemOptions
-                //NOTE: These mutate factors are pretty large.  Good for a unit tester, but not a real simulation
-
-                var mutate_Vector3D = Tuple.Create(PropsByPercent.DataType.Vector3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .08d));
-                var mutate_Point3D = Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .04d));		// positions need to drift around freely.  percent doesn't make much sense
-                var mutate_Quaternion = Tuple.Create(PropsByPercent.DataType.Quaternion, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .08d));
-
-                MutateUtility.ShipPartAddRemoveArgs addRemoveArgs = null;
-                if (chkMutateAddRemoveParts.IsChecked.Value)
-                {
-                    //addRemoveArgs = new MutateUtility.ShipPartAddRemoveArgs();
-                }
-
-                MutateUtility.MuateArgs partChangeArgs = null;
-                if (chkMutateChangeParts.IsChecked.Value)
-                {
-                    //NOTE: The mutate class has special logic for Scale and ThrusterDirections
-                    partChangeArgs = new MutateUtility.MuateArgs(true, 1d,
-                        null,
-                        new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
-						{
-							mutate_Vector3D,
-							mutate_Point3D,
-							mutate_Quaternion,
-						},
-                        new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, .1d));
-                }
-
-                MutateUtility.NeuronMutateArgs neuralArgs = null;
-                if (chkMutateChangeNeural.IsChecked.Value)
-                {
-                    MutateUtility.MuateArgs neuronMovement = new MutateUtility.MuateArgs(false, .05d, null, null, mutate_Point3D.Item2);		// neurons are all point3D
-
-                    MutateUtility.MuateArgs linkMovement = new MutateUtility.MuateArgs(false, .05d,
-                        null,
-                        new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
-						{
-							Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .1d)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
-							Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, .2d)),		// using a larger value for the links
-							mutate_Quaternion,
-						},
-                        null);
-
-                    neuralArgs = new MutateUtility.NeuronMutateArgs(neuronMovement, null, linkMovement, null);
-                }
-
-                MutateUtility.ShipMutateArgs shipArgs = new MutateUtility.ShipMutateArgs(addRemoveArgs, partChangeArgs, neuralArgs);
-
-                #endregion
-
-                // Mutate
-                ShipDNA oldDNA = ShipDNA.Create(allParts1);
-                ShipDNA newDNA = MutateUtility.Mutate(oldDNA, shipArgs);
-
-                if (chkMutateWriteToFile.IsChecked.Value)
-                {
-                    #region Write to file
-
-                    string foldername = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-                    string timestamp = DateTime.Now.ToString("yyyyMMdd HHmmssfff");
-
-                    string oldFilename = System.IO.Path.Combine(foldername, timestamp + " Old DNA.xml");
-                    string newFilename = System.IO.Path.Combine(foldername, timestamp + " New DNA.xml");
-
-                    using (System.IO.StreamWriter writer = new System.IO.StreamWriter(oldFilename, false))
-                    {
-                        System.Xaml.XamlServices.Save(writer, oldDNA);
-                    }
-
-                    using (System.IO.StreamWriter writer = new System.IO.StreamWriter(newFilename, false))
-                    {
-                        System.Xaml.XamlServices.Save(writer, newDNA);
-                    }
-
-                    #endregion
-                }
-
-                #region Rebuild Parts
-
-                ShipPartDNA[] allParts2 = newDNA.PartsByLayer.SelectMany(o => o.Value).ToArray();
-
-                ShipPartDNA[] gravDNA2 = allParts2.Where(o => o.PartType == SensorGravity.PARTTYPE).ToArray();
-                if (gravDNA2.Length > 0)
-                {
-                    CreateGravSensors(gravDNA2);
-                }
-
-                ShipPartDNA[] brainDNA2 = allParts2.Where(o => o.PartType == Brain.PARTTYPE).ToArray();
-                if (brainDNA2.Length > 0)
-                {
-                    CreateBrains(brainDNA2);
-                }
-
-                ShipPartDNA fuelDNA2 = allParts2.Where(o => o.PartType == FuelTank.PARTTYPE).FirstOrDefault();		//NOTE: This is too simplistic if part remove/add is allowed in the mutator
-                ThrusterDNA[] thrustDNA2 = allParts2.Where(o => o.PartType == Thruster.PARTTYPE).Select(o => (ThrusterDNA)o).ToArray();
-                if (thrustDNA2.Length > 0)
-                {
-                    CreateThrusters(thrustDNA2);
-                }
-
-                #endregion
-
-                // Relink
-                if (hadLinks)
-                {
-                    CreateLinks();
+                    setsForCount.Add(
+                    (
+                        cntr,
+                        TestGetAllSets(cntr)
+                    ));
                 }
             }
             catch (Exception ex)
@@ -2458,18 +2519,74 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnClear_Click(object sender, RoutedEventArgs e)
+        private void LineArrows_Click(object sender, RoutedEventArgs e)
         {
+            const double DOT = .015;
+            const double THICKNESS = .025;
+
             try
             {
-                ClearDebugVisuals();
-                ClearLinks();
-                ClearGravSensors();
-                ClearBrains();
-                ClearThrusters();
-                ClearContainers();
+                Debug3DWindow window = new Debug3DWindow();
 
-                UpdateCountReport();
+
+                window.AddModel(new BillboardLine3D()
+                {
+                    Color = Colors.DarkGoldenrod,
+                    Thickness = THICKNESS,
+                    //IsReflectiveColor = true,
+                    FromPoint = new Point3D(-5, 0, 0),
+                    ToPoint = new Point3D(5, 0, 0),
+                }.Model);
+
+
+                window.AddModel(new BillboardLine3D()
+                {
+                    Color = Colors.Olive,
+                    Thickness = THICKNESS,
+                    //IsReflectiveColor = true,
+                    FromPoint = new Point3D(-5, .2, 0),
+                    ToPoint = new Point3D(5, .2, 0),
+                    ToArrowPercent = 1,
+                }.Model);
+
+                window.AddModel(new BillboardLine3D()
+                {
+                    Color = Colors.SlateBlue,
+                    Thickness = THICKNESS,
+                    //IsReflectiveColor = true,
+                    FromPoint = new Point3D(-5, .4, 0),
+                    ToPoint = new Point3D(5, .4, 0),
+                    FromArrowPercent = 1,
+                }.Model);
+
+                window.AddModel(new BillboardLine3D()
+                {
+                    Color = Colors.Teal,
+                    Thickness = THICKNESS,
+                    //IsReflectiveColor = true,
+                    FromPoint = new Point3D(-5, .6, 0),
+                    ToPoint = new Point3D(5, .6, 0),
+                    FromArrowPercent = 1,
+                    ToArrowPercent = 1,
+                }.Model);
+
+                window.AddModel(new BillboardLine3D()
+                {
+                    Color = Colors.SaddleBrown,
+                    Thickness = THICKNESS,
+                    //IsReflectiveColor = true,
+                    FromPoint = new Point3D(-5, .8, 0),
+                    ToPoint = new Point3D(5, .8, 0),
+                    FromArrowPercent = .75,
+                    ToArrowPercent = .99,
+                }.Model);
+
+
+                //var arrowMesh = GetArrow(new Point3D(0, 0, 0), new Point3D(0, 0, 1), 1);
+                //window.AddMesh(arrowMesh, Colors.OliveDrab, false);
+
+
+                window.Show();
             }
             catch (Exception ex)
             {
@@ -2537,7 +2654,7 @@ namespace Game.Newt.Testers
             model = new ModelVisual3D();
             model.Content = geometries;
             //model.Transform = new TranslateTransform3D(position.ToVector());
-            model.Transform = GetContainerTransform(new Dictionary<INeuronContainer, Transform3D>(), container);
+            model.Transform = GetContainerTransform(container);
         }
         internal static void BuildLinkVisual(ref Model3DGroup posLines, ref DiffuseMaterial posDiffuse, ref Model3DGroup negLines, ref DiffuseMaterial negDiffuse, Point3D from, Point3D to, double weight, double[] brainChemicals, ItemColors colors)
         {
@@ -2677,17 +2794,23 @@ namespace Game.Newt.Testers
             }
         }
 
-        private static Transform3D GetContainerTransform(Dictionary<INeuronContainer, Transform3D> existing, INeuronContainer container)
+        private static Transform3D GetContainerTransform(INeuronContainer container, Dictionary<INeuronContainer, Transform3D> existing = null)
         {
-            if (!existing.ContainsKey(container))
+            if (existing != null && existing.TryGetValue(container, out Transform3D cached))
             {
-                Transform3DGroup transform = new Transform3DGroup();
-                transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(container.Orientation)));
-                transform.Children.Add(new TranslateTransform3D(container.Position.ToVector()));
+                return cached;
+            }
+
+            Transform3DGroup transform = new Transform3DGroup();
+            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(container.Orientation)));
+            transform.Children.Add(new TranslateTransform3D(container.Position.ToVector()));
+
+            if (existing != null)
+            {
                 existing.Add(container, transform);
             }
 
-            return existing[container];
+            return transform;
         }
 
         private void ClearGravSensors()
@@ -3055,11 +3178,11 @@ namespace Game.Newt.Testers
                         brain.Brain.Position, brain.Brain.Orientation,
                         _itemOptions.Brain_LinksPerNeuron_Internal,
                         new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.Brain_LinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
-							},
+                            {
+                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, _itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, _itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
+                            },
                         Convert.ToInt32(Math.Round(brain.Brain.BrainChemicalCount * 1.33d, 0)),		// increasing so that there is a higher chance of listeners
                         brain.DNAInternalLinks, brain.DNAExternalLinks));
                 }
@@ -3069,7 +3192,6 @@ namespace Game.Newt.Testers
             {
                 foreach (var thrust in _thrusters)
                 {
-                    //TODO: Consider existing links
                     //NOTE: This won't be fed by other manipulators
                     inputs.Add(new NeuralUtility.ContainerInput(
                         thrust.Body.Token,
@@ -3077,10 +3199,10 @@ namespace Game.Newt.Testers
                         thrust.Thrust.Position, thrust.Thrust.Orientation,
                         null,
                         new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Brain),
-							},
+                            {
+                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Sensor),
+                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, _itemOptions.Thruster_LinksPerNeuron_Brain),
+                            },
                         0,
                         null, thrust.DNAExternalLinks));
                 }
@@ -3110,11 +3232,11 @@ namespace Game.Newt.Testers
 
                 foreach (var output in outputs)
                 {
-                    Transform3D toTransform = GetContainerTransform(containerTransforms, output.Container);
+                    Transform3D toTransform = GetContainerTransform(output.Container, containerTransforms);
 
                     foreach (var link in UtilityCore.Iterate(output.InternalLinks, output.ExternalLinks))
                     {
-                        Transform3D fromTransform = GetContainerTransform(containerTransforms, link.FromContainer);
+                        Transform3D fromTransform = GetContainerTransform(link.FromContainer, containerTransforms);
 
                         BuildLinkVisual(ref posLines, ref posDiffuse, ref negLines, ref negDiffuse, fromTransform.Transform(link.From.Position), toTransform.Transform(link.To.Position), link.Weight, link.BrainChemicalModifiers, _colors);
                     }
@@ -3144,6 +3266,127 @@ namespace Game.Newt.Testers
             if (chkBrainRunning.IsChecked.Value)
             {
                 StartBrainOperation();
+            }
+        }
+
+        private void CreateLinks2()
+        {
+            const double THICKNESS = .005;
+            const double DOT = .03;
+
+            Color colorInput = UtilityWPF.AlphaBlend(Colors.DarkGreen, Colors.LawnGreen, .2);
+            Color colorOutput = UtilityWPF.AlphaBlend(Colors.Indigo, Colors.DodgerBlue, .2);
+            Color colorBrain = UtilityWPF.AlphaBlend(Colors.Crimson, Colors.HotPink, .2);
+
+            #region input args
+
+            List<NeuralUtility.ContainerInput> inputs = new List<NeuralUtility.ContainerInput>();
+            if (_gravSensors != null)
+            {
+                foreach (GravSensorStuff sensor in _gravSensors)
+                {
+                    // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
+                    // neuron containers can hook to it
+                    inputs.Add(new NeuralUtility.ContainerInput(sensor.Body.Token, sensor.Sensor, NeuronContainerType.Sensor, sensor.Sensor.Position, sensor.Sensor.Orientation, null, null, 0, null, null));
+                }
+            }
+
+            if (_brains != null)
+            {
+                foreach (BrainStuff brain in _brains)
+                {
+                    inputs.Add(new NeuralUtility.ContainerInput(
+                        brain.Body.Token,
+                        brain.Brain, NeuronContainerType.Brain,
+                        brain.Brain.Position, brain.Brain.Orientation,
+                        _itemOptions.Brain_LinksPerNeuron_Internal,
+                        null,
+                        Convert.ToInt32(Math.Round(brain.Brain.BrainChemicalCount * 1.33d, 0)),		// increasing so that there is a higher chance of listeners
+                        brain.DNAInternalLinks, brain.DNAExternalLinks));
+                }
+            }
+
+            if (_thrusters != null)
+            {
+                foreach (var thrust in _thrusters)
+                {
+                    //NOTE: This won't be fed by other manipulators
+                    inputs.Add(new NeuralUtility.ContainerInput(
+                        thrust.Body.Token,
+                        thrust.Thrust, NeuronContainerType.Manipulator,
+                        thrust.Thrust.Position, thrust.Thrust.Orientation,
+                        null,
+                        null,
+                        0,
+                        null, thrust.DNAExternalLinks));
+                }
+            }
+
+            #endregion
+
+            //TODO: See BotConstructor.GetLinkMap
+            //BotConstruction_PartMap partMap = GetLinkMap(null, parts, extra.ItemOptions, extra.PartLink_Overflow, extra.PartLink_Extra);
+            //NeuralUtility.LinkNeurons()
+
+            // For now, just worry about wiring inputs to brains
+
+            var sensors = inputs.
+                Where(o => o.ContainerType == NeuronContainerType.Sensor).
+                ToArray();
+
+            foreach (var brain in inputs.Where(o => o.ContainerType == NeuronContainerType.Brain))
+            {
+                Debug3DWindow window = new Debug3DWindow();
+
+                #region draw input neurons
+
+                foreach (var sensor in sensors)
+                {
+                    window.AddDot(sensor.Position, DOT / 2, UtilityWPF.AlphaBlend(colorInput, Colors.Transparent, .25));
+
+                    Transform3D transform1 = GetContainerTransform(sensor.Container);
+
+                    foreach (var neuron in sensor.ReadableNeurons)
+                    {
+                        window.AddDot(transform1.Transform(neuron.Position), DOT, colorInput);
+                    }
+                }
+
+                #endregion
+                #region draw brain neurons
+
+                window.AddDot(brain.Position, DOT / 2, UtilityWPF.AlphaBlend(colorBrain, Colors.Transparent, .25));
+
+                Transform3D transform2 = GetContainerTransform(brain.Container);
+
+                foreach (var neuron in brain.WritableNeurons)
+                {
+                    window.AddDot(transform2.Transform(neuron.Position), DOT, colorBrain);
+                }
+
+                #endregion
+
+                // Give statistics
+                int inputCount = sensors.Sum(o => o.ReadableNeurons.Count());
+                int brainCount = brain.WritableNeurons.Count();
+                window.AddText(string.Format("Input Neurons: {0}", inputCount));
+                window.AddText(string.Format("Brain Neurons: {0}", brainCount));
+
+                #region links
+
+                NeuralUtility.ContainerOutput links = NewLinker.LinkNeurons(sensors, brain);
+
+                foreach (NeuralLink link in links.ExternalLinks)
+                {
+                    Transform3D transformFrom = GetContainerTransform(link.FromContainer);
+                    Transform3D transformTo = GetContainerTransform(link.ToContainer);
+
+                    window.AddLine(transformFrom.Transform(link.From.Position), transformTo.Transform(link.To.Position), THICKNESS, Colors.White);
+                }
+
+                #endregion
+
+                window.Show();
             }
         }
 
@@ -3288,190 +3531,6 @@ namespace Game.Newt.Testers
             _gravityOrientationTrackball.Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), -90));
         }
 
-        #region OLD
-
-        //private void SetupGravityTrackball()
-        //{
-        //    //NOTE:  When they start with different transforms, the display vectors are screwed up
-        //    RotateTransform3D transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 0d));
-
-        //    //NOTE: grdGravityRotateViewport is a stackpanel with only this control it in.  If other controls were in its subtree, they would steal mouseup events
-        //    SetupTrackballSprtAddIt(ref _gravityOrientationTrackball, _gravityOrientationVisuals, _viewportGravityRotate, grdGravityRotateViewport, _colors, transform, true, false, false);
-        //    _gravityOrientationTrackball.SyncedLights.Add(_lightGravity1);
-        //    _gravityOrientationTrackball.RotationChanged += new EventHandler(GravityOrientationTrackball_RotationChanged);
-
-        //    // The trackball's axis that is showing is X, but I want gravity to start out down
-        //    _gravityOrientationTrackball.Transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), -90));
-        //}
-        //private void SetupTrackballSprtAddIt(ref TrackballGrabber trackball, List<ModelVisual3D> visuals, Viewport3D viewport, FrameworkElement eventSource, ItemColors colors, RotateTransform3D modelTransform, bool showX, bool showY, bool showZ)
-        //{
-        //    MaterialGroup materials = null;
-        //    GeometryModel3D geometry = null;
-        //    Transform3DGroup transform = null;
-        //    ModelVisual3D model = null;
-
-        //    if (showX)
-        //    {
-        //        #region major arrow along x
-
-        //        // Material
-        //        materials = new MaterialGroup();
-        //        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.TrackballAxisX)));
-        //        materials.Children.Add(colors.TrackballAxisSpecular);
-
-        //        // Geometry Model
-        //        geometry = new GeometryModel3D();
-        //        geometry.Material = materials;
-        //        geometry.BackMaterial = materials;
-        //        geometry.Geometry = UtilityWPF.GetCylinder_AlongX(20, .075, 1d);
-
-        //        transform = new Transform3DGroup();		// rotate needs to be added before translate
-        //        transform.Children.Add(new TranslateTransform3D(new Vector3D(.5d, 0, 0)));
-
-        //        geometry.Transform = transform;
-
-        //        // Model Visual
-        //        model = new ModelVisual3D();
-        //        model.Content = geometry;
-
-        //        // Add it
-        //        viewport.Children.Add(model);
-        //        visuals.Add(model);
-
-        //        #endregion
-        //        #region x line cone
-
-        //        // Material
-        //        materials = new MaterialGroup();
-        //        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.TrackballAxisX)));
-        //        materials.Children.Add(colors.TrackballAxisSpecular);
-
-        //        // Geometry Model
-        //        geometry = new GeometryModel3D();
-        //        geometry.Material = materials;
-        //        geometry.BackMaterial = materials;
-        //        geometry.Geometry = UtilityWPF.GetCone_AlongX(10, .15d, .3d);
-
-        //        transform = new Transform3DGroup();		// rotate needs to be added before translate
-        //        transform.Children.Add(new TranslateTransform3D(new Vector3D(1d + .1d, 0, 0)));
-
-        //        geometry.Transform = transform;
-
-        //        // Model Visual
-        //        model = new ModelVisual3D();
-        //        model.Content = geometry;
-
-        //        // Add it
-        //        viewport.Children.Add(model);
-        //        visuals.Add(model);
-
-        //        #endregion
-        //        #region x line cap
-
-        //        // Material
-        //        materials = new MaterialGroup();
-        //        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.TrackballAxisX)));
-        //        materials.Children.Add(colors.TrackballAxisSpecular);
-
-        //        // Geometry Model
-        //        geometry = new GeometryModel3D();
-        //        geometry.Material = materials;
-        //        geometry.BackMaterial = materials;
-        //        geometry.Geometry = UtilityWPF.GetSphere(20, .075d);
-
-        //        // Model Visual
-        //        model = new ModelVisual3D();
-        //        model.Content = geometry;
-
-        //        // Add it
-        //        viewport.Children.Add(model);
-        //        visuals.Add(model);
-
-        //        #endregion
-        //    }
-
-        //    if (showZ)
-        //    {
-        //        #region minor arrow along z
-
-        //        // Material
-        //        materials = new MaterialGroup();
-        //        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.TrackballAxisZ)));
-        //        materials.Children.Add(colors.TrackballAxisSpecular);
-
-        //        // Geometry Model
-        //        geometry = new GeometryModel3D();
-        //        geometry.Material = materials;
-        //        geometry.BackMaterial = materials;
-        //        geometry.Geometry = UtilityWPF.GetCylinder_AlongX(10, .05, .5d);
-
-        //        transform = new Transform3DGroup();		// rotate needs to be added before translate
-        //        transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, -1, 0), 90d)));
-        //        transform.Children.Add(new TranslateTransform3D(new Vector3D(0, 0, .25d)));
-
-        //        geometry.Transform = transform;
-
-        //        // Model Visual
-        //        model = new ModelVisual3D();
-        //        model.Content = geometry;
-
-        //        // Add it
-        //        viewport.Children.Add(model);
-        //        visuals.Add(model);
-
-        //        #endregion
-        //        #region z line cone
-
-        //        // Material
-        //        materials = new MaterialGroup();
-        //        materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(colors.TrackballAxisZ)));
-        //        materials.Children.Add(colors.TrackballAxisSpecular);
-
-        //        // Geometry Model
-        //        geometry = new GeometryModel3D();
-        //        geometry.Material = materials;
-        //        geometry.BackMaterial = materials;
-        //        geometry.Geometry = UtilityWPF.GetCone_AlongX(10, .075d, .2d);
-
-        //        transform = new Transform3DGroup();		// rotate needs to be added before translate
-        //        transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, -1, 0), 90d)));
-        //        transform.Children.Add(new TranslateTransform3D(new Vector3D(0, 0, .5d + .1d)));
-
-        //        geometry.Transform = transform;
-
-        //        // Model Visual
-        //        model = new ModelVisual3D();
-        //        model.Content = geometry;
-
-        //        // Add it
-        //        viewport.Children.Add(model);
-        //        visuals.Add(model);
-
-        //        #endregion
-        //    }
-
-        //    if (showY)
-        //    {
-        //        #region faint line along y
-
-        //        ScreenSpaceLines3D line = new ScreenSpaceLines3D(true);
-        //        line.Thickness = 1d;
-        //        line.Color = colors.TrackballAxisY;
-        //        line.AddLine(new Point3D(0, -.75d, 0), new Point3D(0, .75d, 0));
-
-        //        // Add it
-        //        viewport.Children.Add(line);
-        //        visuals.Add(line);
-
-        //        #endregion
-        //    }
-
-        //    trackball = new TrackballGrabber(eventSource, viewport, 1d, colors.TrackballGrabberHoverLight);
-        //    trackball.Transform = modelTransform;
-        //}
-
-        #endregion
-
         /// <summary>
         /// There's just enough logic here, that I wanted it in a private method.  The isInitialized check is a bit of a hack, that should be done
         /// by the caller, but it reduces total code
@@ -3500,5 +3559,702 @@ namespace Game.Newt.Testers
         }
 
         #endregion
+        #region Private Methods - misc
+
+        private static (int, int)[][] TestGetAllSets(int count)
+        {
+            (int, int)[][] log = UtilityCore.AllUniquePairSets(count).ToArray();
+
+            string reportBasic2 = GetReport_basic(log);
+            string reportHTML = GetReport_html(log);       // paste this directly into excel.  It won't wordwrap that way
+
+            return log.ToArray();
+        }
+
+        private static string GetReport_basic(IEnumerable<(int, int)[]> sets)
+        {
+            int count = sets.First().Length;
+
+            var grouped = sets.
+                ToLookup(o => o[0].Item2).
+                ToArray();
+
+            StringBuilder retVal = new StringBuilder();
+
+            foreach (var group in grouped)
+            {
+                for (int cntr = 0; cntr < count; cntr++)
+                {
+                    retVal.AppendLine(group.
+                        Select(o => string.Format("{0} {1}", o[cntr].Item1, o[cntr].Item2)).
+                        ToJoin("\t"));
+                }
+
+                retVal.AppendLine();
+                retVal.AppendLine();
+            }
+
+            return retVal.ToString();
+        }
+        private static string GetReport_html(IEnumerable<(int, int)[]> sets)
+        {
+            int count = sets.First().Length;
+
+            var grouped = sets.
+                ToLookup(o => o[0].Item2).
+                ToArray();
+
+            StringBuilder retVal = new StringBuilder();
+
+            retVal.AppendLine("<html>");
+            retVal.AppendLine("<head/>");
+            retVal.AppendLine("<body>");
+            retVal.AppendLine("<table>");
+
+            foreach (var group in grouped)
+            {
+                retVal.AppendLine("<tr>");
+
+                for (int cntr = 0; cntr < count; cntr++)
+                {
+                    foreach (var item in group)
+                    {
+                        retVal.Append(GetReport_html_stripe(item, cntr, count));
+                        retVal.AppendLine("<td width=\"10\"/>");
+                    }
+
+                    retVal.AppendLine("</tr>");
+                    retVal.AppendLine("<tr height=\"10\"/>");
+                }
+            }
+
+            retVal.AppendLine("</table>");
+            retVal.AppendLine("</body>");
+            retVal.AppendLine("</html>");
+
+            return retVal.ToString();
+        }
+        private static string GetReport_html_stripe((int, int)[] items, int row, int count)
+        {
+            StringBuilder retVal = new StringBuilder();
+
+            for (int cntr = 0; cntr < count; cntr++)
+            {
+                retVal.Append("<td");
+                if (items.Any(o => o.Item1 == cntr && o.Item2 == row))
+                {
+                    retVal.Append(" style=\"background-color: #666\"");
+                }
+                retVal.Append(">");
+
+                retVal.Append(cntr.ToString());
+                retVal.Append(" ");
+                retVal.Append(row.ToString());
+
+                retVal.AppendLine("</td>");
+            }
+
+            return retVal.ToString();
+        }
+
+        #endregion
+
+        private static MeshGeometry3D GetArrow(Point3D from, Point3D to, double thickness)
+        {
+            double half = thickness / 2d;
+
+            Vector3D line = to - from;
+            if (line.X == 0 && line.Y == 0 && line.Z == 0) line.X = 0.000000001d;
+
+            Vector3D orth1 = Math3D.GetArbitraryOrhonganal(line);
+            orth1 = Math3D.RotateAroundAxis(orth1, line, StaticRandom.NextDouble() * Math.PI * 2d);		// give it a random rotation so that if many lines are created by this method, they won't all be oriented the same
+            orth1 = orth1.ToUnit() * half;
+
+            Vector3D orth2 = Vector3D.CrossProduct(line, orth1);
+            orth2 = orth2.ToUnit() * half;
+
+            // Define 3D mesh object
+            MeshGeometry3D retVal = new MeshGeometry3D();
+
+            // Arrow Base
+            retVal.Positions.Add(from - orth1);     // 0
+            retVal.Positions.Add(from + orth1);     // 1
+            retVal.Positions.Add(from - orth2);     // 2
+            retVal.Positions.Add(from + orth2);     // 3
+
+            // Arrow Tip
+            retVal.Positions.Add(to);       // 4
+
+            // Tip Faces
+            retVal.TriangleIndices.Add(0);
+            retVal.TriangleIndices.Add(3);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(3);
+            retVal.TriangleIndices.Add(1);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(1);
+            retVal.TriangleIndices.Add(2);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(2);
+            retVal.TriangleIndices.Add(0);
+            retVal.TriangleIndices.Add(4);
+
+            // Base Faces
+            retVal.TriangleIndices.Add(0);
+            retVal.TriangleIndices.Add(2);
+            retVal.TriangleIndices.Add(1);
+
+            retVal.TriangleIndices.Add(1);
+            retVal.TriangleIndices.Add(3);
+            retVal.TriangleIndices.Add(0);
+
+            // shouldn't I set normals?
+            //retVal.Normals
+
+            //retVal.Freeze();
+            return retVal;
+        }
+
+        private static class NewLinker
+        {
+            #region class: BrainCluster
+
+            private class BrainCluster
+            {
+                public int DesiredCount { get; set; }
+                public Point3D NodeCenter { get; set; }
+                public List<INeuron> Neurons { get; set; }
+            }
+
+            #endregion
+
+            public static NeuralUtility.ContainerOutput LinkNeurons(NeuralUtility.ContainerInput[] sensors, NeuralUtility.ContainerInput brain)
+            {
+                int brainCount = brain.WritableNeurons.Count();
+                if (brainCount <= sensors.Length)
+                {
+                    // This should be really rare.  Entire sensors will map to individual neurons
+                    return LinkNeurons_AllToOne(sensors, brain);
+                }
+
+                List<NeuralLink> retVal = new List<NeuralLink>();
+
+                Random rand = StaticRandom.GetRandomForThread();
+
+                int[] sensorCounts = sensors.
+                    Select(o => o.ReadableNeurons.Count()).
+                    ToArray();
+
+                int[] useCounts = GetOutputUsageCounts(sensorCounts, brainCount);
+
+                INeuron[][] useNeurons = DivideOutput(sensors, useCounts, brain);
+
+                for (int cntr = 0; cntr < sensors.Length; cntr++)
+                {
+                    retVal.AddRange(Link_InputToSetOfOutputs(sensors[cntr], brain, useNeurons[cntr]));
+                }
+
+                return new NeuralUtility.ContainerOutput(brain.Container, null, retVal.ToArray());
+            }
+
+            #region Private Methods
+
+            private static NeuralUtility.ContainerOutput LinkNeurons_AllToOne(NeuralUtility.ContainerInput[] sensors, NeuralUtility.ContainerInput brain)
+            {
+                List<NeuralLink> retVal = new List<NeuralLink>();
+
+                // There are more sensors than there are brain neurons, so set up an iterator that loops through
+                // all the brain's neurons, then again, again, forever
+                var outputIterator = InfiniteRandomOrder(brain.WritableNeurons.ToArray()).GetEnumerator();
+                outputIterator.MoveNext();
+
+                foreach (NeuralUtility.ContainerInput sensor in sensors)
+                {
+                    // Map all of this sensor's neurons onto one of the brain's neurons
+                    foreach (INeuron input in sensor.ReadableNeurons)
+                    {
+                        retVal.Add(new NeuralLink(sensor.Container, brain.Container, input, outputIterator.Current, 1d, null));
+                    }
+
+                    outputIterator.MoveNext();
+                }
+
+                return new NeuralUtility.ContainerOutput(brain.Container, null, retVal.ToArray());
+            }
+
+            /// <summary>
+            /// This maps all of the input's neurons to the set of output's neurons
+            /// </summary>
+            private static NeuralLink[] Link_InputToSetOfOutputs(NeuralUtility.ContainerInput input, NeuralUtility.ContainerInput output, INeuron[] outputNeurons)
+            {
+                List<NeuralLink> retVal = new List<NeuralLink>();
+
+                // There are more sensors than there are brain neurons, so set up an iterator that loops through
+                // all the brain's neurons, then again, again, forever
+                var outputIterator = InfiniteRandomOrder(outputNeurons).GetEnumerator();
+                outputIterator.MoveNext();
+
+                // Map all of this sensor's neurons onto one of the brain's neurons
+                foreach (INeuron inputNeuron in input.ReadableNeurons)
+                {
+                    retVal.Add(new NeuralLink(input.Container, output.Container, inputNeuron, outputIterator.Current, 1d, null));
+                    outputIterator.MoveNext();
+                }
+
+                return retVal.ToArray();
+            }
+
+            /// <summary>
+            /// This gets called when the sum of input neurons is greater than the output neurons.  It tells how many of the output's neurons
+            /// each input gets
+            /// </summary>
+            /// <returns>
+            /// How many of the output each input gets.  The sum of the return values will equal the outputCount that was passed in
+            /// </returns>
+            private static int[] GetOutputUsageCounts(int[] inputCounts, int outputCount)
+            {
+                int sumInputs = inputCounts.Sum();
+
+                if (sumInputs < outputCount)
+                {
+                    //throw new ArgumentException(string.Format("This method can only be called when there are more inputs than outputs:  inputs={0}, outputs={1}", sumInputs, outputCount));
+                    outputCount = sumInputs;
+                }
+
+                // Calculate the ratio that each input is of the total.  That way larger buckets will get more of the output
+                double[] ratios = inputCounts.
+                    Select(o => o.ToDouble() / sumInputs.ToDouble()).
+                    ToArray();
+
+                // Calculate the initial assignments (taking floor instead of rounding, to make sure too many don't get assigned)
+                int[] retVal = ratios.
+                    Select(o => Math.Max(1, (o * outputCount).ToInt_Floor())).
+                    ToArray();
+
+                int gap = outputCount - retVal.Sum();
+
+                if (gap < 0)
+                {
+                    throw new ApplicationException(string.Format("Over assigned inputs to outputs.  This should never happen: inputs={0}, outputs={1}", inputCounts.Select(o => o.ToString()).ToJoin(", "), outputCount));
+                }
+
+                Random rand = StaticRandom.GetRandomForThread();
+
+                // Since the floor was taken, there are probably some remaining slots to fill.  Randomly assign those remaining
+                //NOTE: Could use the ratios, but the remainder should only be a couple off, so just use even chance
+                while (gap > 0)
+                {
+                    int index = rand.Next(inputCounts.Length);
+
+                    if (inputCounts[index] > retVal[index])
+                    {
+                        retVal[index]++;
+                        gap--;
+                    }
+                }
+
+                return retVal;
+            }
+
+            private static INeuron[][] DivideOutput(NeuralUtility.ContainerInput[] sensors, int[] brainUsedPerSensor, NeuralUtility.ContainerInput brain)
+            {
+                const double DOT = .015;
+                const double THICKNESS = .005;
+
+                // Do an initial kmeans to cluster the brain's neurons
+                SOMInput<INeuron>[] outputNeurons = brain.WritableNeurons.
+                    Select(o => new SOMInput<INeuron>() { Source = o, Weights = o.Position.ToVectorND() }).
+                    ToArray();
+
+                SOMResult kmeans = SelfOrganizingMaps.TrainKMeans(outputNeurons, sensors.Length, true);
+
+                // Find the centers of sensors an kmeans
+                Point3D centerSensors = Math3D.GetCenter(sensors.Select(o => o.Position));
+                Point3D centerNodes = Math3D.GetCenter(kmeans.Nodes.Select(o => o.Weights.ToPoint3D()));
+
+                // Now get offsets from those centers
+                Vector3D[] offsetsSensors = sensors.
+                    Select(o => o.Position - centerSensors).
+                    ToArray();
+
+                Vector3D[] offsetsNodes = kmeans.Nodes.
+                    Select(o => o.Weights.ToPoint3D() - centerNodes).
+                    ToArray();
+
+                // Match sensors to their best clusters (taking dot product between the offsets)
+                var map_sensor_braincluster = GetMostLinedUp(offsetsSensors, offsetsNodes);
+
+                #region draw 1
+
+                //Debug3DWindow window = new Debug3DWindow();
+
+                //Color[] colors = UtilityWPF.GetRandomColors(kmeans.Nodes.Length, 128, 200);
+
+                //for (int cntr = 0; cntr < kmeans.Nodes.Length; cntr++)
+                //{
+                //    foreach (var neuron in kmeans.InputsByNode[cntr])
+                //    {
+                //        window.AddDot(neuron.Weights.ToPoint3D(), DOT, colors[cntr]);
+                //    }
+
+                //    window.AddDot(kmeans.Nodes[cntr].Weights.ToPoint3D(), DOT / 2, UtilityWPF.AlphaBlend(colors[cntr], Colors.Transparent, .25));
+
+                //    window.AddLine(centerSensors, centerSensors + offsetsSensors[cntr], THICKNESS, Colors.Black);
+                //    window.AddLine(centerNodes, centerNodes + offsetsNodes[cntr], THICKNESS, Colors.White);
+
+                //    window.AddText(brainUsedPerSensor[cntr].ToString(), false);
+                //    window.AddText(kmeans.InputsByNode[cntr].Length.ToString(), true);
+                //}
+
+                //window.Show();
+
+                #endregion
+
+                var brainClusters1 = map_sensor_braincluster.
+                    Select(o => new BrainCluster()
+                    {
+                        DesiredCount = brainUsedPerSensor[o.index1],
+                        NodeCenter = kmeans.Nodes[o.index2].Weights.ToPoint3D(),
+                        Neurons = kmeans.InputsByNode[o.index2].
+                            Select(p => ((SOMInput<INeuron>)p).Source).
+                            ToList()
+                    }).
+                    ToArray();
+
+                INeuron[][] brainClusters2 = AdjustNodes(brainClusters1);
+
+                #region draw 2
+
+                //window = new Debug3DWindow()
+                //{
+                //    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("222")),
+                //};
+
+                //for (int cntr = 0; cntr < sensors.Length; cntr++)
+                //{
+                //    foreach (var neuron in brainClusters2[cntr])
+                //    {
+                //        window.AddDot(neuron.Position, DOT, colors[cntr]);
+                //    }
+
+                //    Point3D neuronCenter = Math3D.GetCenter(brainClusters2[cntr].Select(o => o.Position));
+                //    window.AddDot(neuronCenter, DOT / 2, UtilityWPF.AlphaBlend(colors[cntr], Colors.Transparent, .25));
+
+                //    window.AddLine(centerSensors, centerSensors + offsetsSensors[cntr], THICKNESS, colors[cntr]);
+                //    window.AddLine(centerNodes, neuronCenter, THICKNESS, colors[cntr]);
+
+                //    window.AddText(brainUsedPerSensor[cntr].ToString(), false, UtilityWPF.ColorToHex(colors[cntr]));
+                //    window.AddText(brainClusters2[cntr].Length.ToString(), true, UtilityWPF.ColorToHex(colors[cntr]));
+                //}
+
+                //window.Show();
+
+                #endregion
+
+                return brainClusters2;
+            }
+
+            private static (int index1, int index2)[] GetMostLinedUp(Vector3D[] offsets1, Vector3D[] offsets2)
+            {
+                if (offsets1.Length != offsets2.Length)
+                {
+                    throw new ArgumentException(string.Format("The two arrays need to be the same length: offsets1={0}, offsets2={1}", offsets1.Length, offsets2.Length));
+                }
+
+                //Color[] colors1 = UtilityWPF.GetRandomColors(offsets1.Length, 64, 100);
+                //Color[] colors2 = UtilityWPF.GetRandomColors(offsets2.Length, 156, 192);
+
+                // Convert the lines passed in into unit vectors
+                var unit1 = offsets1.
+                    Select((o, i) => (vect: o.ToUnit(false), index: i /*, color: colors1[i] */)).
+                    ToArray();
+
+                var unit2 = offsets2.
+                    Select((o, i) => (vect: o.ToUnit(false), index: i /*, color: colors2[i] */)).
+                    ToArray();
+
+                // Get all possible pairs of lines and get the dot product
+                var dots = UtilityCore.Collate(unit1, unit2).
+                    Select(o => new
+                    {
+                        pair = o,
+                        dot = Vector3D.DotProduct(o.Item1.vect, o.Item2.vect),
+                    }).
+                    ToArray();
+
+                // Now get all possible sets of pairs
+                var combos = UtilityCore.AllUniquePairSets(unit1.Length).
+                    Select(o => o.
+                        Select(p => new
+                        {
+                            index = p,
+                            dot = dots.First(q => q.pair.Item1.index == p.index1 && q.pair.Item2.index == p.index2),
+                        }).
+                        ToArray()).
+                    ToArray();
+
+                #region draw 1
+
+                //const double DOT = .015;
+                //const double THICKNESS = .025;
+
+                //Debug3DWindow window = new Debug3DWindow()
+                //{
+                //    Background = Brushes.Black,
+                //};
+
+                //foreach (var item in unit1)
+                //{
+                //    window.AddLine(new Point3D(0, 0, 0), item.vect.ToPoint(), THICKNESS, item.color);
+                //    window.AddText3D(item.index.ToString(), (item.vect * 1.5).ToPoint(), item.vect, .5, item.color, true);
+                //}
+
+                //foreach (var item in unit2)
+                //{
+                //    window.AddLine(new Point3D(0, 0, 0), item.vect.ToPoint(), THICKNESS, item.color);
+                //    window.AddText3D(item.index.ToString(), (item.vect * 1.5).ToPoint(), item.vect, .5, item.color, true);
+                //}
+
+                //double increment = 1.5;
+                //double offset = 2;
+
+                //foreach (var pair in dots)
+                //{
+                //    offset += increment;
+
+                //    Vector3D offsetVect = new Vector3D(0, 0, offset);
+
+                //    window.AddLine(offsetVect, pair.pair.Item1.vect + offsetVect, THICKNESS, pair.pair.Item1.color);
+                //    window.AddLine(offsetVect, pair.pair.Item2.vect + offsetVect, THICKNESS, pair.pair.Item2.color);
+
+                //    string text = string.Format("{0} - {1}: {2}", pair.pair.Item1.index, pair.pair.Item2.index, pair.dot.ToStringSignificantDigits(2));
+                //    window.AddText3D(text, new Point3D(1.5, 0, offset), new Vector3D(1, 0, 0), increment * .4, Colors.Gray, true, new Vector3D(0, 1, 0));
+                //}
+
+                //window.Show();
+
+                #endregion
+                #region draw 2
+
+                //foreach (var combo in combos)
+                //{
+                //    window = new Debug3DWindow()
+                //    {
+                //        Background = new SolidColorBrush(UtilityWPF.ColorFromHex("303030")),
+                //    };
+
+                //    Color[] colors = UtilityWPF.GetRandomColors(combo.Length, 100, 180);
+
+                //    //foreach (var pair in combo)
+                //    for (int cntr = 0; cntr < combo.Length; cntr++)
+                //    {
+                //        window.AddLine(new Vector3D(0, 0, 0), combo[cntr].dot.pair.Item1.vect, THICKNESS / 2, colors[cntr]);
+                //        window.AddLine(new Vector3D(0, 0, 0), combo[cntr].dot.pair.Item2.vect, THICKNESS / 2, colors[cntr]);
+
+                //        window.AddText(string.Format("{0} - {1}: {2}", combo[cntr].index.index1, combo[cntr].index.index2, combo[cntr].dot.dot.ToStringSignificantDigits(2)), color: UtilityWPF.ColorToHex(colors[cntr]));
+                //    }
+
+                //    window.AddText(string.Format("total: {0}", combo.Sum(o => o.dot.dot).ToStringSignificantDigits(2)));
+
+                //    window.Show();
+                //}
+
+                #endregion
+
+                // Best match could be most number of positive dot products, or maybe the one with the highest dot product, but
+                // I think the best overall would just be the highest sum of dot products
+                var best = combos.
+                    OrderByDescending(o => o.Sum(p => p.dot.dot)).
+                    First();
+
+                return best.
+                    Select(o => o.index).
+                    ToArray();
+            }
+
+            private static INeuron[][] AdjustNodes(BrainCluster[] brainClusters)
+            {
+                #region draw 1
+
+                //const double DOT = .015;
+                //const double THICKNESS = .005;
+
+                //Debug3DWindow window = new Debug3DWindow()
+                //{
+                //    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("333")),
+                //};
+
+                //Color[] colors = UtilityWPF.GetRandomColors(brainClusters.Length, 100, 180);
+
+                //for (int cntr = 0; cntr < brainClusters.Length; cntr++)
+                //{
+                //    foreach (var neuron in brainClusters[cntr].Neurons)
+                //    {
+                //        window.AddDot(neuron.Position, DOT, colors[cntr]);
+                //    }
+
+                //    window.AddDot(brainClusters[cntr].NodeCenter, DOT / 2, UtilityWPF.AlphaBlend(colors[cntr], Colors.Transparent, .25));
+
+                //    window.AddText(string.Format("desired: {0}, actual: {1}", brainClusters[cntr].DesiredCount, brainClusters[cntr].Neurons.Count), color: UtilityWPF.ColorToHex(colors[cntr]));
+                //}
+
+                //window.Show();
+
+                #endregion
+
+                AdjustNodes_TransferHighToLow(brainClusters);
+
+                #region draw 2
+
+                //window = new Debug3DWindow()
+                //{
+                //    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("444")),
+                //};
+
+                //for (int cntr = 0; cntr < brainClusters.Length; cntr++)
+                //{
+                //    foreach (var neuron in brainClusters[cntr].Neurons)
+                //    {
+                //        window.AddDot(neuron.Position, DOT, colors[cntr]);
+                //    }
+
+                //    window.AddDot(brainClusters[cntr].NodeCenter, DOT / 2, UtilityWPF.AlphaBlend(colors[cntr], Colors.Transparent, .25));
+
+                //    window.AddText(string.Format("desired: {0}, actual: {1}", brainClusters[cntr].DesiredCount, brainClusters[cntr].Neurons.Count), color: UtilityWPF.ColorToHex(colors[cntr]));
+                //}
+
+                //window.Show();
+
+                #endregion
+
+                AdjustNodes_RemoveExcess(brainClusters);
+
+                #region draw 3
+
+                //window = new Debug3DWindow()
+                //{
+                //    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("555")),
+                //};
+
+                //for (int cntr = 0; cntr < brainClusters.Length; cntr++)
+                //{
+                //    foreach (var neuron in brainClusters[cntr].Neurons)
+                //    {
+                //        window.AddDot(neuron.Position, DOT, colors[cntr]);
+                //    }
+
+                //    window.AddDot(brainClusters[cntr].NodeCenter, DOT / 2, UtilityWPF.AlphaBlend(colors[cntr], Colors.Transparent, .25));
+
+                //    window.AddText(string.Format("desired: {0}, actual: {1}", brainClusters[cntr].DesiredCount, brainClusters[cntr].Neurons.Count), color: UtilityWPF.ColorToHex(colors[cntr]));
+                //}
+
+                //window.Show();
+
+                #endregion
+
+                return brainClusters.
+                    Select(o => o.Neurons.ToArray()).
+                    ToArray();
+            }
+            private static void AdjustNodes_TransferHighToLow(BrainCluster[] brainClusters)
+            {
+                while (true)
+                {
+                    // Find clusters that need more neurons
+                    var under = brainClusters.
+                        Where(o => o.Neurons.Count < o.DesiredCount).
+                        ToArray();
+
+                    if (under.Length == 0)
+                    {
+                        break;
+                    }
+
+                    // Find clusters that have too many
+                    var over = brainClusters.
+                        Where(o => o.Neurons.Count > o.DesiredCount).
+                        ToArray();
+
+                    // Take the closest neuron
+                    //NOTE: Since this only looks at under/over clusters, ignoring clusters that have the correct amount, this may miss closer neurons.
+                    //But the logic would be more complex and need to keep track of which neurons were traded so they don't get traded back during
+                    //the next step.  So even though this approach doesn't give the tightest possible clusters, it's simple and good enough (this whole
+                    //decision to cluster won't affect the performance of the neural net, it just makes the final links look cleaner)
+                    var best = under.
+                        Select(o => new
+                        {
+                            under = o,
+                            candidate = over.
+                                Select(p => new
+                                {
+                                    cluster = p,
+                                    closestNeuron = p.Neurons.Select((q, i) => new
+                                    {
+                                        neuron = q,
+                                        index = i,
+                                        distanceSqr = (q.Position - o.NodeCenter).LengthSquared,
+                                    }).
+                                    OrderBy(q => q.distanceSqr).
+                                    First(),
+                                }).
+                                OrderBy(p => p.closestNeuron.distanceSqr).
+                                First(),
+                        }).
+                        OrderBy(o => o.candidate.closestNeuron.distanceSqr).
+                        First();
+
+                    // Move the neuron to the new cluster
+                    var pickedUnder = best.under;
+                    var pickedOver = best.candidate.cluster;
+                    var neuronShift = best.candidate.closestNeuron;
+
+                    pickedUnder.Neurons.Add(pickedOver.Neurons[neuronShift.index]);
+                    pickedOver.Neurons.RemoveAt(neuronShift.index);
+
+                    pickedUnder.NodeCenter = Math3D.GetCenter(pickedUnder.Neurons.Select(o => o.Position));
+                    pickedOver.NodeCenter = Math3D.GetCenter(pickedOver.Neurons.Select(o => o.Position));
+                }
+            }
+            private static void AdjustNodes_RemoveExcess(BrainCluster[] brainClusters)
+            {
+                foreach (var cluster in brainClusters)
+                {
+                    while (cluster.Neurons.Count > cluster.DesiredCount)
+                    {
+                        // Find the neuron that is farthest from the center
+                        var farthestNeuron = cluster.Neurons.Select((o, i) => new
+                        {
+                            neuron = o,
+                            index = i,
+                            distanceSqr = (o.Position - cluster.NodeCenter).LengthSquared,
+                        }).
+                        OrderByDescending(q => q.distanceSqr).
+                        First();
+
+                        cluster.Neurons.RemoveAt(farthestNeuron.index);
+                        cluster.NodeCenter = Math3D.GetCenter(cluster.Neurons.Select(o => o.Position));
+                    }
+                }
+            }
+
+            /// <summary>
+            /// This randomly exausts the list, then starts over
+            /// </summary>
+            private static IEnumerable<T> InfiniteRandomOrder<T>(T[] array)
+            {
+                while (true)
+                {
+                    foreach (T item in UtilityCore.RandomOrder(array))
+                    {
+                        yield return item;
+                    }
+                }
+            }
+
+            #endregion
+        }
     }
 }

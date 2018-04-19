@@ -4,39 +4,37 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
-using Game.Newt.v2.GameItems;
 using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
+using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.v2.Arcanorum
 {
+    //NOTE: Game.Newt.v2.AsteroidMiner.AstMin2D made a copy of this class.  Later, the orientation logic was fixed over there, and later still, that orientation logic was copied back over here
+    //The classes are different enough that they need to stay separate.  Maybe when a third one is needed, figure out how much can go into a base class
     public class KeepItems2D : IDisposable
     {
-        #region Class: LockOrientation
+        #region class: TrackedItem
 
-        private class LockOrientation
+        private class TrackedItem
         {
-            public LockOrientation(MapObject_ChaseOrientation_Forces chase, Vector3D rotateAxis, Vector3D modelUp)
+            public TrackedItem(IMapObject mapObject, MapObject_ChasePoint_Forces translate, MapObject_ChaseOrientation_Torques rotate)
             {
-                this.Chase = chase;
-                this.RotateAxis = rotateAxis;
-                this.ModelUp = modelUp;
+                MapObject = mapObject;
+                Translate = translate;
+                Rotate = rotate;
             }
 
-            public readonly MapObject_ChaseOrientation_Forces Chase;
-            public readonly Vector3D RotateAxis;
-            public readonly Vector3D ModelUp;
+            public readonly IMapObject MapObject;
+            public readonly MapObject_ChasePoint_Forces Translate;
+            public readonly MapObject_ChaseOrientation_Torques Rotate;
         }
 
         #endregion
 
         #region Declaration Section
 
-        private List<Tuple<IMapObject, MapObject_ChasePoint_Forces, LockOrientation>> _items = new List<Tuple<IMapObject, MapObject_ChasePoint_Forces, LockOrientation>>();
-
-        // Can't use this, because it will prevent the weapon from swinging (it keeps directly setting the
-        // the weapon's velocity)
-        //private List<Tuple<IMapObject, MapObjectChaseVelocity>> _items = new List<Tuple<IMapObject, MapObjectChaseVelocity>>();
+        //private List<(IMapObject mapObject, MapObject_ChasePoint_Forces force, LockOrientation orientation)> _items = new List<(IMapObject, MapObject_ChasePoint_Forces, LockOrientation)>();
+        private List<TrackedItem> _items = new List<TrackedItem>();
 
         #endregion
 
@@ -62,12 +60,15 @@ namespace Game.Newt.v2.Arcanorum
             {
                 foreach (var item in _items)
                 {
-                    //NOTE: Only disposing the chase class, because that is being managed by this class.  The body its chasing is not managed by this class, so should be disposed elsewhere
-                    item.Item2.Dispose();
-
-                    if (item.Item3 != null)
+                    //NOTE: Only disposing the chase class, because that is being managed by this class.  The body it's chasing is not managed by this class, so should be disposed elsewhere
+                    if (item.Translate != null)
                     {
-                        item.Item3.Chase.Dispose();
+                        item.Translate.Dispose();
+                    }
+
+                    if (item.Rotate != null)
+                    {
+                        item.Rotate.Dispose();
                     }
                 }
 
@@ -91,100 +92,90 @@ namespace Game.Newt.v2.Arcanorum
 
         public void Add(IMapObject item, bool shouldLockOrientation, Vector3D? orientationRotateAxis = null, Vector3D? orientationModelUp = null)
         {
-            if (_items.Any(o => o.Item1.Equals(item)))
+            if (_items.Any(o => o.MapObject.Equals(item)))
             {
                 // It's already added
                 return;
             }
 
-            #region Forces
+            #region forces
 
             List<ChasePoint_Force> forces = new List<ChasePoint_Force>();
 
             // Attraction Force
-            var gradient = new[]
-                {
-                    Tuple.Create(0d, .04d),     // distance, %
-                    Tuple.Create(1d, 1d),
-                };
+            GradientEntry[] gradient = new[]
+            {
+                new GradientEntry(0d, .04d),     // distance, %
+                new GradientEntry(1d, 1d),
+            };
             forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, 500d, gradient: gradient));
 
             // These act like a shock absorber
             forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, 50d));
 
             gradient = new[]
-                {
-                    Tuple.Create(0d, 1d),
-                    Tuple.Create(.75d, .2d),
-                    Tuple.Create(2d, 0d),
-                };
+            {
+                new GradientEntry(0d, 1d),
+                new GradientEntry(.75d, .2d),
+                new GradientEntry(2d, 0d),
+            };
             forces.Add(new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, 100d, gradient: gradient));
 
-
-            MapObject_ChasePoint_Forces chaseForces = new MapObject_ChasePoint_Forces(item, false);
-            if (item.PhysicsBody != null)
+            MapObject_ChasePoint_Forces chaseForces = new MapObject_ChasePoint_Forces(item, false)
             {
-                chaseForces.Offset = item.PhysicsBody.CenterOfMass.ToVector();
-            }
+                Forces = forces.ToArray()
+            };
 
-            chaseForces.Forces = forces.ToArray();
+            #endregion
+            #region torques
 
-            #region ORIG
+            MapObject_ChaseOrientation_Torques chaseTorques = null;
 
-            //// Attraction Force
-            //chaseForces.Forces.Add(new ChasePoint_ForcesGradient<ChasePoint_ForcesAttract>(new[]
-            //        {
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesAttract>(new ChasePoint_Distance(true, 0d), new ChasePoint_ForcesAttract() { BaseAcceleration = 20d, ApplyWhenUnderSpeed = 100d }),
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesAttract>(new ChasePoint_Distance(false, 1d), new ChasePoint_ForcesAttract() { BaseAcceleration = 500d, ApplyWhenUnderSpeed = 100d }),
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesAttract>(new ChasePoint_Distance(true, double.MaxValue), new ChasePoint_ForcesAttract() { BaseAcceleration = 500d, ApplyWhenUnderSpeed = 100d })
-            //        }));
+            List<ChaseOrientation_Torque> torques = new List<ChaseOrientation_Torque>();
 
-            //// These act like a shock absorber
-            //chaseForces.Forces.Add(new ChasePoint_ForcesDrag(ChasePoint_DirectionType.Velocity_AlongIfVelocityAway) { BaseAcceleration = 50d });
+            double mult = 6;
 
-            //chaseForces.Forces.Add(new ChasePoint_ForcesGradient<ChasePoint_ForcesDrag>(new[]
-            //        {
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesDrag>(new ChasePoint_Distance(true, 0d), new ChasePoint_ForcesDrag(ChasePoint_DirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 100d }),
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesDrag>(new ChasePoint_Distance(false, .75d), new ChasePoint_ForcesDrag(ChasePoint_DirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 20d }),
-            //            new ChasePoint_ForcesGradientStop<ChasePoint_ForcesDrag>(new ChasePoint_Distance(false, 2d), new ChasePoint_ForcesDrag(ChasePoint_DirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 0d }),
-            //        }));
+            // Attraction
+            gradient = new[]
+            {
+                new GradientEntry(0d, 0d),     // distance, %
+                new GradientEntry(10d, 1d),
+            };
+            torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Attract_Direction, .4 * mult, gradient: gradient));
+
+            // Drag
+            gradient = new[]        // this gradient is needed, because there needs to be no drag along the desired axis (otherwise, this drag will fight with the user's desire to rotate the ship)
+            {
+                new GradientEntry(0d, 0d),     // distance, %
+                new GradientEntry(5d, 1d),
+            };
+            torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_Orth, .0739 * mult, gradient: gradient));
+
+            torques.Add(new ChaseOrientation_Torque(ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway, .0408 * mult));
+
+            chaseTorques = new MapObject_ChaseOrientation_Torques(item)
+            {
+                Torques = torques.ToArray()
+            };
 
             #endregion
 
-            #endregion
-            //#region Orientation
-
-            LockOrientation chaseOrientation = null;
-
-            //if (shouldLockOrientation)
-            //{
-            //    if (orientationRotateAxis == null)
-            //    {
-            //        throw new ArgumentException("orientationRotateAxis can't be null when told to lock orientation");
-            //    }
-            //    else if (orientationModelUp == null)
-            //    {
-            //        throw new ArgumentException("orientationModelUp can't be null when told to lock orientation");
-            //    }
-
-            //    chaseOrientation = new LockOrientation(new MapObject_ChaseOrientation_Forces(item), orientationRotateAxis.Value, orientationModelUp.Value);
-            //}
-
-            //#endregion
-
-            _items.Add(Tuple.Create(item, chaseForces, chaseOrientation));
+            _items.Add(new TrackedItem(item, chaseForces, chaseTorques));
         }
         public void Remove(IMapObject item)
         {
             for (int cntr = 0; cntr < _items.Count; cntr++)
             {
-                if (_items[cntr].Item1.Equals(item))
+                if (_items[cntr].MapObject.Equals(item))
                 {
-                    _items[cntr].Item2.Dispose();
-
-                    if (_items[cntr].Item3 != null)
+                    if (_items[cntr].Translate != null)
                     {
-                        _items[cntr].Item3.Chase.Dispose();
+                        _items[cntr].Translate.Dispose();
+                    }
+
+                    if (_items[cntr].Rotate != null)
+                    {
+                        _items[cntr].Rotate.Dispose();
                     }
 
                     _items.RemoveAt(cntr);
@@ -194,287 +185,67 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
+        public void Clear()
+        {
+            while (_items.Count > 0)
+            {
+                Remove(_items[0].MapObject);
+            }
+        }
+
         public void Update()
         {
             foreach (var item in _items)
             {
-                Point3D position = item.Item1.PositionWorld;
+                Point3D position = item.MapObject.PositionWorld;
 
                 // Get a ray
-                Point3D? chasePoint = this.SnapShape.CastRay(position);
+                Point3D? chasePoint = SnapShape.CastRay(position);
 
                 // Chase that point
                 if (chasePoint == null || Math3D.IsNearValue(position, chasePoint.Value))
                 {
-                    item.Item2.StopChasing();
+                    item.Translate.StopChasing();
                 }
                 else
                 {
-                    item.Item2.SetPosition(chasePoint.Value);
+                    item.Translate.SetPosition(chasePoint.Value);
                 }
 
                 // Lock orientation
-                if (item.Item3 != null)
+                if (item.Rotate != null)
                 {
-                    if (chasePoint == null)
-                    {
-                        item.Item3.Chase.StopChasing();
-                    }
-                    else
-                    {
-                        Vector3D? normal = this.SnapShape.GetNormal(position);
-                        if (normal == null)
-                        {
-                            item.Item3.Chase.StopChasing();       // this should never happen
-                        }
-                        else
-                        {
-                            Point3D centerMass = item.Item1.PhysicsBody.PositionToWorld(item.Item1.PhysicsBody.CenterOfMass);
-                            Vector3D axis = item.Item1.PhysicsBody.DirectionToWorld(item.Item3.RotateAxis);
+                    // In the future, the snap shape could be a large cylinder, so the normal needs to be calculated relative to where the item is.  It won't matter
+                    // if the item is on the plane or above/below it, the normal will still be the same
+                    Vector3D? normal = SnapShape.GetNormal(position);
 
-                            Vector3D up = Vector3D.CrossProduct(axis, normal.Value);
-
-                            item.Item3.Chase.SetProps(centerMass, axis, up, item.Item3.ModelUp, true);
-                        }
+                    if (normal != null)
+                    {
+                        item.Rotate.SetOrientation(normal.Value);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// The items continue chasing the point from the last call to update.  So make all objects stop chasing, call this
+        /// </summary>
+        public void StopChasing()
+        {
+            foreach (var item in _items)
+            {
+                if (item.Translate != null)
+                {
+                    item.Translate.StopChasing();
+                }
+
+                if (item.Rotate != null)
+                {
+                    item.Rotate.StopChasing();
                 }
             }
         }
 
         #endregion
     }
-
-    //TODO: Put this in MapObjectChase.cs when it's finished
-    public class MapObject_ChaseOrientation_Forces : IDisposable
-    {
-        #region Declaration Section
-
-        private bool _isChasing = false;
-
-        private Point3D _axisThru;
-        private Vector3D _axis;
-
-        private Vector3D _up;
-        private bool _allowUpOrDown;
-
-        private Vector3D _modelUp;
-
-        #endregion
-
-        #region Constructor
-
-        public MapObject_ChaseOrientation_Forces(IMapObject item)
-        {
-            this.Item = item;
-
-            this.Item.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                StopChasing();
-
-                this.Item.PhysicsBody.ApplyForceAndTorque -= new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
-            }
-        }
-
-        #endregion
-
-        #region Public Properties
-
-        public readonly IMapObject Item;
-
-        #endregion
-
-        #region Public Methods
-
-        public void SetProps(Point3D axisThru, Vector3D axis, Vector3D up, Vector3D modelUp, bool allowUpOrDown)
-        {
-            _axisThru = axisThru;
-            _axis = axis;
-            _up = up;
-            _allowUpOrDown = allowUpOrDown;
-            _modelUp = modelUp;
-
-            _isChasing = true;
-        }
-
-        public void StopChasing()
-        {
-            _isChasing = false;
-        }
-
-        #endregion
-
-        #region Event Listeners
-
-        private void PhysicsBody_ApplyForceAndTorque(object sender, BodyApplyForceAndTorqueArgs e)
-        {
-            // See if there is anything to do
-            if (!_isChasing)
-            {
-                return;
-            }
-
-            Vector3D currentUp = e.Body.DirectionToWorld(_modelUp);
-
-
-
-
-
-
-
-
-        }
-
-        #endregion
-    }
-
-    #region ORIG
-
-    //public class KeepItems2D : IDisposable
-    //{
-    //    #region Declaration Section
-
-    //    private List<Tuple<IMapObject, MapObjectChaseForces>> _items = new List<Tuple<IMapObject, MapObjectChaseForces>>();
-
-    //    // Can't use this, because it will prevent the weapon from swinging (it keeps directly setting the
-    //    // the weapon's velocity)
-    //    //private List<Tuple<IMapObject, MapObjectChaseVelocity>> _items = new List<Tuple<IMapObject, MapObjectChaseVelocity>>();
-
-    //    #endregion
-
-    //    #region Constructor
-
-    //    public KeepItems2D()
-    //    {
-    //    }
-
-    //    #endregion
-
-    //    #region IDisposable Members
-
-    //    public void Dispose()
-    //    {
-    //        Dispose(true);
-    //        GC.SuppressFinalize(this);
-    //    }
-
-    //    protected virtual void Dispose(bool disposing)
-    //    {
-    //        if (disposing)
-    //        {
-    //            foreach (var item in _items)
-    //            {
-    //                //NOTE: Only disposing the chase class, because that is being managed by this class.  The body its chasing is not managed by this class, so should be disposed elsewhere
-    //                item.Item2.Dispose();
-    //            }
-
-    //            _items.Clear();
-    //        }
-    //    }
-
-    //    #endregion
-
-    //    #region Public Properties
-
-    //    public DragHitShape SnapShape
-    //    {
-    //        get;
-    //        set;
-    //    }
-
-    //    #endregion
-
-    //    #region Public Methods
-
-    //    public void Add(IMapObject item)
-    //    {
-    //        if (_items.Any(o => o.Item1.Equals(item)))
-    //        {
-    //            // It's already added
-    //            return;
-    //        }
-
-    //        //MapObjectChaseVelocity chase = new MapObjectChaseVelocity(item);
-    //        //chase.MaxVelocity = 10d;
-    //        //chase.Multiplier = 40d;
-
-    //        MapObjectChaseForces chase = new MapObjectChaseForces(item, false);
-    //        if (item.PhysicsBody != null)
-    //        {
-    //            chase.Offset = item.PhysicsBody.CenterOfMass.ToVector();
-    //        }
-
-    //        // Attraction Force
-    //        chase.Forces.Add(new ChaseForcesGradient<ChaseForcesConstant>(new[]
-    //                {
-    //                    new ChaseForcesGradientStop<ChaseForcesConstant>(new ChaseDistance(true, 0d), new ChaseForcesConstant(ChaseDirectionType.Direction) { BaseAcceleration = 20d, ApplyWhenUnderSpeed = 100d }),
-    //                    new ChaseForcesGradientStop<ChaseForcesConstant>(new ChaseDistance(false, 1d), new ChaseForcesConstant(ChaseDirectionType.Direction) { BaseAcceleration = 500d, ApplyWhenUnderSpeed = 100d }),
-    //                    new ChaseForcesGradientStop<ChaseForcesConstant>(new ChaseDistance(true, double.MaxValue), new ChaseForcesConstant(ChaseDirectionType.Direction) { BaseAcceleration = 500d, ApplyWhenUnderSpeed = 100d })
-    //                }));
-
-    //        // These act like a shock absorber
-    //        chase.Forces.Add(new ChaseForcesDrag(ChaseDirectionType.Velocity_AlongIfVelocityAway) { BaseAcceleration = 50d });
-
-    //        chase.Forces.Add(new ChaseForcesGradient<ChaseForcesDrag>(new[]
-    //                {
-    //                    new ChaseForcesGradientStop<ChaseForcesDrag>(new ChaseDistance(true, 0d), new ChaseForcesDrag(ChaseDirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 100d }),
-    //                    new ChaseForcesGradientStop<ChaseForcesDrag>(new ChaseDistance(false, .75d), new ChaseForcesDrag(ChaseDirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 20d }),
-    //                    new ChaseForcesGradientStop<ChaseForcesDrag>(new ChaseDistance(false, 2d), new ChaseForcesDrag(ChaseDirectionType.Velocity_AlongIfVelocityToward) { BaseAcceleration = 0d }),
-    //                }));
-
-    //        _items.Add(Tuple.Create(item, chase));
-    //    }
-    //    public void Remove(IMapObject item)
-    //    {
-    //        for (int cntr = 0; cntr < _items.Count; cntr++)
-    //        {
-    //            if (_items[cntr].Item1.Equals(item))
-    //            {
-    //                _items[cntr].Item2.Dispose();
-    //                _items.RemoveAt(cntr);
-
-    //                return;
-    //            }
-    //        }
-    //    }
-
-    //    public void Update()
-    //    {
-    //        foreach (var item in _items)
-    //        {
-    //            Point3D position = item.Item1.PositionWorld;
-
-    //            // Get a ray
-    //            Point3D? chasePoint = this.SnapShape.CastRay(position);
-
-    //            // Chase that point
-    //            if (chasePoint == null || Math3D.IsNearValue(position, chasePoint.Value))
-    //            {
-    //                item.Item2.StopChasing();
-    //            }
-    //            else
-    //            {
-    //                item.Item2.SetPosition(chasePoint.Value);
-    //            }
-    //        }
-    //    }
-
-    //    #endregion
-    //}
-
-    #endregion
 }

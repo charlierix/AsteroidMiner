@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: PlasmaTankToolItem
+    #region class: PlasmaTankToolItem
 
     public class PlasmaTankToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: PlasmaTankDesign
+    #region class: PlasmaTankDesign
 
     public class PlasmaTankDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XY_Z;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -160,7 +160,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: PlasmaTank
+    #region class: PlasmaTank
 
     /// <summary>
     /// This is used to power high energy equipment (shields, tractor, beam weapon)
@@ -177,7 +177,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "PlasmaTank";
+        public const string PARTTYPE = nameof(PlasmaTank);
 
         private Container _container = null;
 
@@ -344,35 +344,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return new INeuron[] { _neuron };
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => new INeuron[] { _neuron };
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return new INeuron[] { _neuron };
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => new INeuron[] { _neuron };
 
         public double Radius
         {
@@ -380,22 +356,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Sensor;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
 
-        public bool IsOn
-        {
-            get
-            {
-                // This is a basic container that doesn't consume energy, so is always "on"
-                return true;
-            }
-        }
+        // This is a basic container that doesn't consume energy, so is always "on"
+        public bool IsOn => true;
 
         #endregion
         #region IPartUpdatable Members
@@ -409,49 +373,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _neuron.Value = UtilityCore.GetScaledValue_Capped(-1d, 1d, 0d, _container.QuantityMax, _container.QuantityCurrent);
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
         #region Public Properties
 
-        private double _mass = 0d;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        private readonly double _mass;
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
-        private Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        private readonly Vector3D _scaleActual;
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 

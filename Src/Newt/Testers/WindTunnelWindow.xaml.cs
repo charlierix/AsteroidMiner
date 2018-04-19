@@ -23,7 +23,7 @@ namespace Game.Newt.Testers
     // http://kuler.adobe.com
     public partial class WindTunnelWindow : Window
     {
-        #region Class: FluidVisual
+        #region class: FluidVisual
 
         /// <summary>
         /// This is a wrapper to a line that moves through the world at the speed of the fluid
@@ -150,7 +150,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {

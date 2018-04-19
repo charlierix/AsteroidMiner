@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
 {
     public partial class MadShatter : Window
     {
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {
@@ -88,7 +88,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ExplosionForceOptions
+        #region class: ExplosionForceOptions
 
         private class ExplosionForceOptions
         {
@@ -127,7 +127,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ExplosionForceWorker
+        #region class: ExplosionForceWorker
 
         private static class ExplosionForceWorker
         {
@@ -623,7 +623,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ExplosionForceResponse
+        #region class: ExplosionForceResponse
 
         private class ExplosionForceResponse
         {
@@ -639,7 +639,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ExplosionForceShard
+        #region class: ExplosionForceShard
 
         private class ExplosionForceShard
         {
@@ -653,7 +653,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ShotHit
+        #region class: ShotHit
 
         private class ShotHit
         {
@@ -758,8 +758,7 @@ namespace Game.Newt.Testers
                 _world = new World();
                 //_world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 #endregion
                 #region Materials
@@ -1220,7 +1219,7 @@ namespace Game.Newt.Testers
                     ToArray();
 
                 var verticals = Enumerable.Range(0, count).
-                    Select(o => Tuple.Create(o * 2, (o * 2) + 1));
+                    Select(o => (o * 2, (o * 2) + 1));
 
                 #endregion
 
@@ -1228,7 +1227,7 @@ namespace Game.Newt.Testers
 
                 ClearAll();
 
-                AddLines_ScreenSpace(new[] { Tuple.Create(0, 1), Tuple.Create(0, 2) }, new[] { new Point3D(0, 0, 0), new Point3D(MAXRADIUS, 0, 0), new Point3D(0, MAXRADIUS, 0) }, LINETHICKNESS_SCREENSPACE / 2, _colors.GraphAxis);
+                AddLines_ScreenSpace(new[] { (0, 1), (0, 2) }, new[] { new Point3D(0, 0, 0), new Point3D(MAXRADIUS, 0, 0), new Point3D(0, MAXRADIUS, 0) }, LINETHICKNESS_SCREENSPACE / 2, _colors.GraphAxis);
                 AddLines_ScreenSpace(drawPoints_Ideal_Exaggerated, LINETHICKNESS_SCREENSPACE * .5, _colors.PrimaryLine_Med);
 
                 AddLines_ScreenSpace(verticals, drawPoints_Exaggerated, LINETHICKNESS_SCREENSPACE * .25, _colors.PrimaryLine_Dark);
@@ -1244,9 +1243,9 @@ namespace Game.Newt.Testers
                 AddLines_ScreenSpace(
                     new[] 
                     {
-                        Tuple.Create(new Point3D(avg_stdev.Item1, y1a, 0), new Point3D(avg_stdev.Item1, y2a, 0)),
-                        Tuple.Create(new Point3D(avg_stdev.Item1 - avg_stdev.Item2, y1b, 0), new Point3D(avg_stdev.Item1 - avg_stdev.Item2, y2b, 0)),
-                        Tuple.Create(new Point3D(avg_stdev.Item1 + avg_stdev.Item2, y1b, 0), new Point3D(avg_stdev.Item1 + avg_stdev.Item2, y2b, 0)),
+                        (new Point3D(avg_stdev.Item1, y1a, 0), new Point3D(avg_stdev.Item1, y2a, 0)),
+                        (new Point3D(avg_stdev.Item1 - avg_stdev.Item2, y1b, 0), new Point3D(avg_stdev.Item1 - avg_stdev.Item2, y2b, 0)),
+                        (new Point3D(avg_stdev.Item1 + avg_stdev.Item2, y1b, 0), new Point3D(avg_stdev.Item1 + avg_stdev.Item2, y2b, 0)),
                     },
                     LINETHICKNESS_SCREENSPACE,
                     _colors.NormalLine);
@@ -1315,14 +1314,14 @@ namespace Game.Newt.Testers
                     SelectMany(o => new[] { new Point3D(o.Angle, o.Dot * 90, 0), new Point3D(o.Angle, o.Linear * 90, 0) }).
                     ToArray();
 
-                IEnumerable<Tuple<int, int>> indicesGap = test.
-                    Select((o, i) => Tuple.Create(i * 2, (i * 2) + 1));
+                var indicesGap = test.
+                    Select((o, i) => (i * 2, (i * 2) + 1));
 
-                IEnumerable<Tuple<int, int>> indices1 = Enumerable.Range(0, test.Length - 1).
-                    Select(o => Tuple.Create(o * 2, (o + 1) * 2));
+                var indices1 = Enumerable.Range(0, test.Length - 1).
+                    Select(o => (o * 2, (o + 1) * 2));
 
-                IEnumerable<Tuple<int, int>> indices2 = Enumerable.Range(0, test.Length - 1).
-                    Select(o => Tuple.Create((o * 2) + 1, ((o + 1) * 2) + 1));
+                var indices2 = Enumerable.Range(0, test.Length - 1).
+                    Select(o => ((o * 2) + 1, ((o + 1) * 2) + 1));
 
                 double thickness = LINETHICKNESS_SCREENSPACE;
 
@@ -1386,7 +1385,6 @@ namespace Game.Newt.Testers
                 foreach (var asteroid in _asteroidShards)
                 {
                     _map.RemoveItem(asteroid);
-                    asteroid.PhysicsBody.Dispose();
                 }
 
                 _asteroidShards = null;
@@ -1677,7 +1675,7 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
             _visuals.Add(lineVisual);
         }
-        private void AddLines_ScreenSpace(IEnumerable<Tuple<int, int>> lines, Point3D[] points, double thickness, Color color)
+        private void AddLines_ScreenSpace(IEnumerable<(int, int)> lines, Point3D[] points, double thickness, Color color)
         {
             // Draw the lines
             ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
@@ -1692,7 +1690,7 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(lineVisual);
             _visuals.Add(lineVisual);
         }
-        private void AddLines_ScreenSpace(IEnumerable<Tuple<Point3D, Point3D>> lines, double thickness, Color color)
+        private void AddLines_ScreenSpace(IEnumerable<(Point3D, Point3D)> lines, double thickness, Color color)
         {
             // Draw the lines
             ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
@@ -1747,13 +1745,13 @@ namespace Game.Newt.Testers
             _viewport.Children.Add(visual);
             _visuals.Add(visual);
         }
-        private void AddLines_Billboard(IEnumerable<Tuple<int, int>> lines, Point3D[] points, double thickness, Color color)
+        private void AddLines_Billboard(IEnumerable<(int, int)> lines, Point3D[] points, double thickness, Color color)
         {
             BillboardLine3DSet visual = new BillboardLine3DSet();
             visual.Color = color;
             visual.BeginAddingLines();
 
-            foreach (Tuple<int, int> line in lines)
+            foreach ((int, int) line in lines)
             {
                 visual.AddLine(points[line.Item1], points[line.Item2], thickness);
             }

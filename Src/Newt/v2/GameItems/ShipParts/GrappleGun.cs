@@ -11,7 +11,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: GrappleGunToolItem
+    #region class: GrappleGunToolItem
 
     public class GrappleGunToolItem : PartToolItemBase
     {
@@ -72,7 +72,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: GrappleGunDesign
+    #region class: GrappleGunDesign
 
     public class GrappleGunDesign : PartDesignBase
     {
@@ -283,11 +283,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: GrappleGun
+    #region class: GrappleGun
 
     public class GrappleGun
     {
-        public const string PARTTYPE = "GrappleGun";
+        public const string PARTTYPE = nameof(GrappleGun);
     }
 
     #endregion

@@ -489,9 +489,7 @@ namespace Game.HelperClassesAI
 
         private static SOMResult TrainKMeans(int numNodes, ISOMInput[] inputs)
         {
-            SOMNode[] returnNodes;
-            ISOMInput[][] inputsByNode;
-            GetInitialKMeansNodes(out returnNodes, out inputsByNode, numNodes, inputs);
+            GetInitialKMeansNodes(out SOMNode[] returnNodes, out ISOMInput[][] inputsByNode, numNodes, inputs);
 
             while (true)
             {
@@ -840,7 +838,7 @@ namespace Game.HelperClassesAI
         #endregion
     }
 
-    #region Class: SOMRules
+    #region class: SOMRules
 
     public class SOMRules
     {
@@ -895,7 +893,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Enum: SOMAttractionFunction
+    #region enum: SOMAttractionFunction
 
     public enum SOMAttractionFunction
     {
@@ -905,7 +903,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Interface: ISOMInput
+    #region interface: ISOMInput
 
     public interface ISOMInput
     {
@@ -913,7 +911,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Class: SOMInput
+    #region class: SOMInput
 
     /// <summary>
     /// If all you want is a link to the original source, you can use this
@@ -925,7 +923,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Class: SOMNode
+    #region class: SOMNode
 
     //NOTE: The use of a somnode isn't really an input, but a container of inputs.  But it has a Weights property, so could be passed to generic worker methods
     public class SOMNode : ISOMInput
@@ -970,7 +968,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region Class: SOMResult
+    #region class: SOMResult
 
     public class SOMResult
     {

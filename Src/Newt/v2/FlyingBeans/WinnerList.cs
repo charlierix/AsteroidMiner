@@ -10,14 +10,14 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.FlyingBeans
 {
-    #region Class: WinnerList
+    #region class: WinnerList
 
     /// <summary>
     /// This can either track living instances or dna
     /// </summary>
     public class WinnerList
     {
-        #region Class: WinningSet
+        #region class: WinningSet
 
         public class WinningSet
         {
@@ -32,7 +32,7 @@ namespace Game.Newt.v2.FlyingBeans
         }
 
         #endregion
-        #region Class: WinningBean
+        #region class: WinningBean
 
         public class WinningBean
         {
@@ -555,7 +555,7 @@ namespace Game.Newt.v2.FlyingBeans
 
     #endregion
 
-    #region Class: CandidateWinners
+    #region class: CandidateWinners
 
     /// <summary>
     /// This holds a list of ships that need to be tested for final ranking
@@ -648,12 +648,12 @@ namespace Game.Newt.v2.FlyingBeans
 
     #endregion
 
-    #region Class: WinnerManager
+    #region class: WinnerManager
 
     //NOTE: This class is intermixing the words finalist and candidate as basically the same thing
     public class WinnerManager
     {
-        #region Class: TrackingCandidate
+        #region class: TrackingCandidate
 
         /// <summary>
         /// This keeps track of finalist instances.  This is handed dna of a ship that needs to have several instances spawned to prove

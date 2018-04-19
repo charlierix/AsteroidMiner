@@ -38,7 +38,7 @@ namespace Game.Newt.Testers.Encog
 
     public partial class OCRTestDataVisualizer : Window
     {
-        #region Class: Network
+        #region class: Network
 
         private class Network
         {
@@ -53,7 +53,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region Class: NetworkInputs
+        #region class: NetworkInputs
 
         private class NetworkInputs
         {
@@ -90,7 +90,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region Class: NetworkOutputs
+        #region class: NetworkOutputs
 
         private class NetworkOutputs
         {
@@ -188,7 +188,7 @@ namespace Game.Newt.Testers.Encog
 
         #endregion
 
-        #region Class: Dot
+        #region class: Dot
 
         private class Dot
         {
@@ -219,7 +219,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region Class: DotVisuals
+        #region class: DotVisuals
 
         private class DotVisuals
         {

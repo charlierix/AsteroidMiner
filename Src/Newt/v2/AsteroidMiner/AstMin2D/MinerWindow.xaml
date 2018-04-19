@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        Title="Asteroid Miner 2D" WindowState="Maximized" Width="1024" Height="768"
+        Title="Asteroid Miner 2D" WindowState="Maximized" Width="1060" Height="1060"
         Loaded="Window_Loaded" Closing="Window_Closing" Closed="Window_Closed" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp">
 
     <Window.Resources>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
@@ -31,43 +32,13 @@ namespace Game.Newt.v2.GameItems
 
         #region Destroyed
 
-        [ThreadStatic]
-        private static Brush _destroyed_Brush;
-        public static Brush Destroyed_Brush
-        {
-            get
-            {
-                if (_destroyed_Brush == null)
-                {
-                    _destroyed_Brush = new SolidColorBrush(UtilityWPF.ColorFromHex("211A16"));
-                }
+        private static ThreadLocal<Brush> _destroyed_Brush = new ThreadLocal<Brush>(() => new SolidColorBrush(UtilityWPF.ColorFromHex("211A16")));
+        public static Brush Destroyed_Brush => _destroyed_Brush.Value;
 
-                return _destroyed_Brush;
-            }
-        }
+        private static ThreadLocal<Brush> _destroyed_SpecularBrush = new ThreadLocal<Brush>(() => new SolidColorBrush(UtilityWPF.ColorFromHex("30CF750E")));
+        public static Brush Destroyed_SpecularBrush => _destroyed_SpecularBrush.Value;
 
-        [ThreadStatic]
-        private static Brush _destroyed_SpecularBrush;
-        public static Brush Destroyed_SpecularBrush
-        {
-            get
-            {
-                if (_destroyed_SpecularBrush == null)
-                {
-                    _destroyed_SpecularBrush = new SolidColorBrush(UtilityWPF.ColorFromHex("30CF750E"));
-                }
-
-                return _destroyed_SpecularBrush;
-            }
-        }
-
-        public static double Destroyed_SpecularPower
-        {
-            get
-            {
-                return 4;
-            }
-        }
+        public static double Destroyed_SpecularPower => 4;
 
         #endregion
 
@@ -124,132 +95,36 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        [ThreadStatic]
-        private static SpecularMaterial _asteroid_Specular;
-        public static SpecularMaterial Asteroid_Specular
-        {
-            get
-            {
-                if (_asteroid_Specular == null)
-                {
-                    _asteroid_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0404040")), 5d);
-                }
-
-                return _asteroid_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _asteroid_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0404040")), 5d));
+        public static SpecularMaterial Asteroid_Specular => _asteroid_Specular.Value;
 
         #endregion
         #region SpaceStation
 
-        public static Color SpaceStationHull_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(UtilityWPF.GetRandomColor(108, 148), Colors.Gray, .25);
-            }
-        }
+        public static Color SpaceStationHull_Color => UtilityWPF.AlphaBlend(UtilityWPF.GetRandomColor(108, 148), Colors.Gray, .25);
 
-        [ThreadStatic]
-        private static SpecularMaterial _spaceStationHull_Specular;
-        public static SpecularMaterial SpaceStationHull_Specular
-        {
-            get
-            {
-                if (_spaceStationHull_Specular == null)
-                {
-                    _spaceStationHull_Specular = new SpecularMaterial(Brushes.Silver, 75d);
-                }
+        private static ThreadLocal<SpecularMaterial> _spaceStationHull_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(Brushes.Silver, 75d));
+        public static SpecularMaterial SpaceStationHull_Specular => _spaceStationHull_Specular.Value;
 
-                return _spaceStationHull_Specular;
-            }
-        }
+        public static Color SpaceStationGlass_Color => Color.FromArgb(25, 220, 240, 240);       // the skin is semitransparent, so you can see the components inside
 
-        public static Color SpaceStationGlass_Color
-        {
-            get
-            {
-                return Color.FromArgb(25, 220, 240, 240);		// the skin is semitransparent, so you can see the components inside
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _spaceStationGlass_Specular_Front = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(Brushes.White, 85d));
+        public static SpecularMaterial SpaceStationGlass_Specular_Front => _spaceStationGlass_Specular_Front.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _spaceStationGlass_Specular_Front;
-        public static SpecularMaterial SpaceStationGlass_Specular_Front
-        {
-            get
-            {
-                if (_spaceStationGlass_Specular_Front == null)
-                {
-                    _spaceStationGlass_Specular_Front = new SpecularMaterial(Brushes.White, 85d);
-                }
+        private static ThreadLocal<SpecularMaterial> _spaceStationGlass_Specular_Back = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(Color.FromArgb(255, 20, 20, 20)), 10d));
+        public static SpecularMaterial SpaceStationGlass_Specular_Back => _spaceStationGlass_Specular_Back.Value;
 
-                return _spaceStationGlass_Specular_Front;
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _spaceStationGlass_Specular_Back;
-        public static SpecularMaterial SpaceStationGlass_Specular_Back
-        {
-            get
-            {
-                if (_spaceStationGlass_Specular_Back == null)
-                {
-                    _spaceStationGlass_Specular_Back = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(255, 20, 20, 20)), 10d);
-                }
-
-                return _spaceStationGlass_Specular_Back;
-            }
-        }
-
-        public static Color SpaceStationForceField_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("#2086E7FF");
-            }
-        }
-        public static Color SpaceStationForceField_Emissive_Front
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("#0A89BBC7");
-            }
-        }
-        public static Color SpaceStationForceField_Emissive_Back
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("#0AFFC086");
-            }
-        }
+        public static Color SpaceStationForceField_Color => UtilityWPF.ColorFromHex("#2086E7FF");
+        public static Color SpaceStationForceField_Emissive_Front => UtilityWPF.ColorFromHex("#0A89BBC7");
+        public static Color SpaceStationForceField_Emissive_Back => UtilityWPF.ColorFromHex("#0AFFC086");
 
         #endregion
         #region Egg
 
-        public static Color Egg_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("E5E4C7");
-            }
-        }
+        public static Color Egg_Color => UtilityWPF.ColorFromHex("E5E4C7");
 
-        [ThreadStatic]
-        private static SpecularMaterial _egg_Specular;
-        public static SpecularMaterial Egg_Specular
-        {
-            get
-            {
-                if (_egg_Specular == null)
-                {
-                    _egg_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("20B8B69C")), 2d);
-                }
-
-                return _egg_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _egg_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("20B8B69C")), 2d));
+        public static SpecularMaterial Egg_Specular => _egg_Specular.Value;
 
         #endregion
 
@@ -257,956 +132,259 @@ namespace Game.Newt.v2.GameItems
 
         #region CargoBay
 
-        public static Color CargoBay_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("34543B");
-            }
-        }
+        public static Color CargoBay_Color => UtilityWPF.ColorFromHex("34543B");
 
-        [ThreadStatic]
-        private static SpecularMaterial _cargoBay_Specular;
-        public static SpecularMaterial CargoBay_Specular
-        {
-            get
-            {
-                if (_cargoBay_Specular == null)
-                {
-                    _cargoBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("5E5448")), 80d);
-                }
-
-                return _cargoBay_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _cargoBay_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("5E5448")), 80d));
+        public static SpecularMaterial CargoBay_Specular => _cargoBay_Specular.Value;
 
         #endregion
         #region Converters
 
-        public static Color ConverterBase_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("27403B");
-            }
-        }
-        [ThreadStatic]
-        private static SpecularMaterial _converterBase_Specular;
-        public static SpecularMaterial ConverterBase_Specular
-        {
-            get
-            {
-                if (_converterBase_Specular == null)
-                {
-                    _converterBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("1F1F61")), 70d);
-                }
+        public static Color ConverterBase_Color => UtilityWPF.ColorFromHex("27403B");
+        private static ThreadLocal<SpecularMaterial> _converterBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("1F1F61")), 70d));
+        public static SpecularMaterial ConverterBase_Specular => _converterBase_Specular.Value;
 
-                return _converterBase_Specular;
-            }
-        }
+        public static Color ConverterFuel_Color => UtilityWPF.AlphaBlend(FuelTank_Color, ConverterBase_Color, .75d);
+        public static SpecularMaterial ConverterFuel_Specular => ConverterBase_Specular;
 
-        public static Color ConverterFuel_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(FuelTank_Color, ConverterBase_Color, .75d);
-            }
-        }
-        public static SpecularMaterial ConverterFuel_Specular
-        {
-            get
-            {
-                return ConverterBase_Specular;
-            }
-        }
+        public static Color ConverterEnergy_Color => UtilityWPF.AlphaBlend(EnergyTank_Color, ConverterBase_Color, .75d);
+        public static SpecularMaterial ConverterEnergy_Specular => ConverterBase_Specular;
 
-        public static Color ConverterEnergy_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(EnergyTank_Color, ConverterBase_Color, .75d);
-            }
-        }
-        public static SpecularMaterial ConverterEnergy_Specular
-        {
-            get
-            {
-                return ConverterBase_Specular;
-            }
-        }
+        public static Color ConverterPlasma_Color => UtilityWPF.AlphaBlend(PlasmaTank_Color, ConverterBase_Color, .75d);
+        private static ThreadLocal<SpecularMaterial> _converterPlasma_Specular = new ThreadLocal<SpecularMaterial>(() => PlasmaTank_Specular);
+        public static SpecularMaterial ConverterPlasma_Specular => _converterPlasma_Specular.Value;
 
-        public static Color ConverterPlasma_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(PlasmaTank_Color, ConverterBase_Color, .75d);
-            }
-        }
-        [ThreadStatic]
-        private static SpecularMaterial _converterPlasma_Specular;
-        public static SpecularMaterial ConverterPlasma_Specular
-        {
-            get
-            {
-                if (_converterPlasma_Specular == null)
-                {
-                    //Color ammoColor = UtilityWPF.ColorFromHex("D95448");
-                    //Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
-                    //_converterPlasmaSpecular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
+        public static Color ConverterAmmo_Color => UtilityWPF.AlphaBlend(AmmoBox_Color, ConverterBase_Color, .75d);
 
-                    _converterPlasma_Specular = PlasmaTank_Specular;
-                }
-
-                return _converterPlasma_Specular;
-            }
-        }
-
-        public static Color ConverterAmmo_Color
+        private static ThreadLocal<SpecularMaterial> _converterAmmo_Specular = new ThreadLocal<SpecularMaterial>(() =>
         {
-            get
-            {
-                return UtilityWPF.AlphaBlend(AmmoBox_Color, ConverterBase_Color, .75d);
-            }
-        }
-        [ThreadStatic]
-        private static SpecularMaterial _converterAmmo_Specular;
-        public static SpecularMaterial ConverterAmmo_Specular
-        {
-            get
-            {
-                if (_converterAmmo_Specular == null)
-                {
-                    Color ammoColor = UtilityWPF.ColorFromHex("D95448");
-                    Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
-                    _converterAmmo_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
-                }
-
-                return _converterAmmo_Specular;
-            }
-        }
+            Color ammoColor = UtilityWPF.ColorFromHex("D95448");
+            Color baseColor = UtilityWPF.ColorFromHex("1F1F61");
+            return new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(ammoColor, baseColor, .6d)), 70d);
+        });
+        public static SpecularMaterial ConverterAmmo_Specular => _converterAmmo_Specular.Value;
 
         #endregion
         #region Sensors
 
-        public static Color SensorBase_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("4B4B4B");
-            }
-        }
-        [ThreadStatic]
-        private static SpecularMaterial _sensorBase_Specular;
-        public static SpecularMaterial SensorBase_Specular
-        {
-            get
-            {
-                if (_sensorBase_Specular == null)
-                {
-                    _sensorBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")), 35);
-                }
+        public static Color SensorBase_Color => UtilityWPF.ColorFromHex("4B4B4B");
+        private static ThreadLocal<SpecularMaterial> _sensorBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")), 35));
+        public static SpecularMaterial SensorBase_Specular => _sensorBase_Specular.Value;
 
-                return _sensorBase_Specular;
-            }
-        }
+        public static Color SensorGravity_Color => UtilityWPF.ColorFromHex("856E5A");
+        public static SpecularMaterial SensorGravity_Specular => SensorBase_Specular;
 
-        public static Color SensorGravity_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("856E5A");
-            }
-        }
-        public static SpecularMaterial SensorGravity_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        public static Color SensorRadiation_Color => UtilityWPF.AlphaBlend(EnergyTank_Color, SensorBase_Color, .75d);
+        public static SpecularMaterial SensorRadiation_Specular => SensorBase_Specular;
 
-        public static Color SensorRadiation_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(EnergyTank_Color, SensorBase_Color, .75d);
-            }
-        }
-        public static SpecularMaterial SensorRadiation_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        //NOTE: This color is the same as ShieldTractor
+        public static Color SensorTractor_Color => UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), SensorBase_Color, .75d);
+        public static SpecularMaterial SensorTractor_Specular => SensorBase_Specular;
 
-        public static Color SensorTractor_Color
-        {
-            get
-            {
-                //NOTE: This color is the same as ShieldTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), SensorBase_Color, .75d);
-            }
-        }
-        public static SpecularMaterial SensorTractor_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        //NOTE: This color is the same as ShieldKinetic
+        public static Color SensorCollision_Color => UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), SensorBase_Color, .75d);
+        private static ThreadLocal<SpecularMaterial> _sensorCollision_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D12A2A")), 70d));
+        public static SpecularMaterial SensorCollision_Specular => _sensorCollision_Specular.Value;
 
-        public static Color SensorCollision_Color
-        {
-            get
-            {
-                //NOTE: This color is the same as ShieldTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), SensorBase_Color, .75d);
-            }
-        }
-        [ThreadStatic]
-        private static SpecularMaterial _sensorCollision_Specular;
-        public static SpecularMaterial SensorCollision_Specular
-        {
-            get
-            {
-                if (_sensorCollision_Specular == null)
-                {
-                    _sensorCollision_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D12A2A")), 70d);
-                }
+        public static Color SensorFluid_Color => UtilityWPF.ColorFromHex("58756D");
+        public static SpecularMaterial SensorFluid_Specular => SensorBase_Specular;
 
-                return _sensorCollision_Specular;
-            }
-        }
+        public static Color SensorSpin_Color => UtilityWPF.ColorFromHex("818F27");
+        public static SpecularMaterial SensorSpin_Specular => SensorBase_Specular;
 
-        public static Color SensorFluid_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("58756D");
-            }
-        }
-        public static SpecularMaterial SensorFluid_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        public static Color SensorVelocity_Color => UtilityWPF.ColorFromHex("A3691D");
+        public static SpecularMaterial SensorVelocity_Specular => SensorBase_Specular;
 
-        public static Color SensorSpin_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("818F27");
-            }
-        }
-        public static SpecularMaterial SensorSpin_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        public static Color SensorInternalForce_Color => UtilityWPF.ColorFromHex("22272B");
+        public static SpecularMaterial SensorInternalForce_Specular => SensorBase_Specular;
 
-        public static Color SensorVelocity_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("A3691D");
-            }
-        }
-        public static SpecularMaterial SensorVelocity_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        public static Color SensorNetForce_Color => UtilityWPF.ColorFromHex("B0B4B8");
+        public static SpecularMaterial SensorNetForce_Specular => SensorBase_Specular;
 
-        public static Color SensorInternalForce_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("22272B");
-            }
-        }
-        public static SpecularMaterial SensorInternalForce_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
-
-        public static Color SensorNetForce_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("B0B4B8");
-            }
-        }
-        public static SpecularMaterial SensorNetForce_Specular
-        {
-            get
-            {
-                return SensorBase_Specular;
-            }
-        }
+        public static Color SensorHoming_Color => UtilityWPF.ColorFromHex("2531CF");
+        private static ThreadLocal<SpecularMaterial> _sensorHoming_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80D1680D")), 5d));
+        public static SpecularMaterial SensorHoming_Specular => _sensorHoming_Specular.Value;
 
         #endregion
         #region HangarBay
 
-        public static Color HangarBay_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("BDA88E");
-            }
-        }
+        public static Color HangarBay_Color => UtilityWPF.ColorFromHex("BDA88E");
 
-        [ThreadStatic]
-        private static SpecularMaterial _hangarBay_Specular;
-        public static SpecularMaterial HangarBay_Specular
-        {
-            get
-            {
-                if (_hangarBay_Specular == null)
-                {
-                    _hangarBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
-                }
+        private static ThreadLocal<SpecularMaterial> _hangarBay_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d));
+        public static SpecularMaterial HangarBay_Specular => _hangarBay_Specular.Value;
 
-                return _hangarBay_Specular;
-            }
-        }
+        public static Color HangarBayTrim_Color => UtilityWPF.ColorFromHex("968671");
 
-        public static Color HangarBayTrim_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("968671");
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _hangarBayTrim_Specular;
-        public static SpecularMaterial HangarBayTrim_Specular
-        {
-            get
-            {
-                if (_hangarBayTrim_Specular == null)
-                {
-                    _hangarBayTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("704A443D")), 35d);
-                }
-
-                return _hangarBayTrim_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _hangarBayTrim_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("704A443D")), 35d));
+        public static SpecularMaterial HangarBayTrim_Specular => _hangarBayTrim_Specular.Value;
 
         #endregion
         #region SwarmBay
 
-        public static Color SwarmBay_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("BDA88E");
-            }
-        }
+        public static Color SwarmBay_Color => UtilityWPF.ColorFromHex("BDA88E");
 
-        [ThreadStatic]
-        private static SpecularMaterial _swarmBay_Specular;
-        public static SpecularMaterial SwarmBay_Specular
-        {
-            get
-            {
-                if (_swarmBay_Specular == null)
-                {
-                    _swarmBay_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d);
-                }
-
-                return _swarmBay_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _swarmBay_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("70615649")), 35d));
+        public static SpecularMaterial SwarmBay_Specular => _swarmBay_Specular.Value;
 
         #endregion
         #region AmmoBox
 
-        public static Color AmmoBox_Color
-        {
-            get
-            {
-                //return UtilityWPF.ColorFromHex("666E7F");
-                return UtilityWPF.ColorFromHex("4B515E");
-            }
-        }
+        public static Color AmmoBox_Color => UtilityWPF.ColorFromHex("4B515E");     //UtilityWPF.ColorFromHex("666E7F");
 
-        [ThreadStatic]
-        private static SpecularMaterial _ammoBox_Specular;
-        public static SpecularMaterial AmmoBox_Specular
-        {
-            get
-            {
-                if (_ammoBox_Specular == null)
-                {
-                    _ammoBox_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D95448")), 65d);
-                }
+        private static ThreadLocal<SpecularMaterial> _ammoBox_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0D95448")), 65d));
+        public static SpecularMaterial AmmoBox_Specular => _ammoBox_Specular.Value;
 
-                return _ammoBox_Specular;
-            }
-        }
+        public static Color AmmoBoxPlate_Color => UtilityWPF.ColorFromHex("5E3131");
 
-        public static Color AmmoBoxPlate_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("5E3131");
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _ammoBoxPlate_Specular;
-        public static SpecularMaterial AmmoBoxPlate_Specular
-        {
-            get
-            {
-                if (_ammoBoxPlate_Specular == null)
-                {
-                    _ammoBoxPlate_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0DE2C2C")), 65d);
-                }
-
-                return _ammoBoxPlate_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _ammoBoxPlate_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0DE2C2C")), 65d));
+        public static SpecularMaterial AmmoBoxPlate_Specular => _ammoBoxPlate_Specular.Value;
 
         #endregion
         #region Gun
 
-        public static Color GunBase_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("4F5359");		// flatter dark gray
-            }
-        }
+        public static Color GunBase_Color => UtilityWPF.ColorFromHex("4F5359");     // flatter dark gray
 
-        [ThreadStatic]
-        private static SpecularMaterial _gunBase_Specular;
-        public static SpecularMaterial GunBase_Specular
-        {
-            get
-            {
-                if (_gunBase_Specular == null)
-                {
-                    _gunBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("546B6F78")), 35d);
-                }
+        private static ThreadLocal<SpecularMaterial> _gunBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("546B6F78")), 35d));
+        public static SpecularMaterial GunBase_Specular => _gunBase_Specular.Value;
 
-                return _gunBase_Specular;
-            }
-        }
+        public static Color GunBarrel_Color => UtilityWPF.ColorFromHex("3C424C");       // gunmetal
 
-        public static Color GunBarrel_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("3C424C");		// gunmetal
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _gunBarrel_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D023355C")), 75d));
+        public static SpecularMaterial GunBarrel_Specular => _gunBarrel_Specular.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _gunBarrel_Specular;
-        public static SpecularMaterial GunBarrel_Specular
-        {
-            get
-            {
-                if (_gunBarrel_Specular == null)
-                {
-                    _gunBarrel_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D023355C")), 75d);
-                }
+        public static Color GunTrim_Color => UtilityWPF.ColorFromHex("5E6166");     //UtilityWPF.ColorFromHex("4C1A1A");		// dark red     (red would look tacky, use light gray)
 
-                return _gunBarrel_Specular;
-            }
-        }
-
-        public static Color GunTrim_Color
-        {
-            get
-            {
-                // red would look tacky, use light gray
-                //return UtilityWPF.ColorFromHex("4C1A1A");		// dark red
-                return UtilityWPF.ColorFromHex("5E6166");
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _gunTrim_Specular;
-        public static SpecularMaterial GunTrim_Specular
-        {
-            get
-            {
-                if (_gunTrim_Specular == null)
-                {
-                    _gunTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80D12A2A")), 50d);
-                }
-
-                return _gunTrim_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _gunTrim_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80D12A2A")), 50d));
+        public static SpecularMaterial GunTrim_Specular => _gunTrim_Specular.Value;
 
         #endregion
         #region Grapple
 
-        public static Color GrapplePad_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("573A3A");
-            }
-        }
+        public static Color GrapplePad_Color => UtilityWPF.ColorFromHex("573A3A");
 
-        [ThreadStatic]
-        private static SpecularMaterial _grapplePad_Specular;
-        public static SpecularMaterial GrapplePad_Specular
-        {
-            get
-            {
-                if (_grapplePad_Specular == null)
-                {
-                    _grapplePad_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80BF8E8E")), 25d);
-                }
-
-                return _grapplePad_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _grapplePad_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80BF8E8E")), 25d));
+        public static SpecularMaterial GrapplePad_Specular => _grapplePad_Specular.Value;
 
         #endregion
         #region BeamGun
 
-        public static Color BeamGunDish_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("324669");
-            }
-        }
+        public static Color BeamGunDish_Color => UtilityWPF.ColorFromHex("324669");
 
-        [ThreadStatic]
-        private static SpecularMaterial _beamGunDish_Specular;
-        public static SpecularMaterial BeamGunDish_Specular
-        {
-            get
-            {
-                if (_beamGunDish_Specular == null)
-                {
-                    _beamGunDish_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A80F45A3")), 40d);
-                }
+        private static ThreadLocal<SpecularMaterial> _beamGunDish_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A80F45A3")), 40d));
+        public static SpecularMaterial BeamGunDish_Specular => _beamGunDish_Specular.Value;
 
-                return _beamGunDish_Specular;
-            }
-        }
+        public static Color BeamGunCrystal_Color => UtilityWPF.ColorFromHex("3B5B94");
 
-        public static Color BeamGunCrystal_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("3B5B94");
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _beamGunCrystal_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0F45A3")), 90d));
+        public static SpecularMaterial BeamGunCrystal_Specular => _beamGunCrystal_Specular.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _beamGunCrystal_Specular;
-        public static SpecularMaterial BeamGunCrystal_Specular
-        {
-            get
-            {
-                if (_beamGunCrystal_Specular == null)
-                {
-                    _beamGunCrystal_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0F45A3")), 90d);
-                }
+        private static ThreadLocal<EmissiveMaterial> _beamGunCrystal_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30719BE3"))));
+        public static EmissiveMaterial BeamGunCrystal_Emissive => _beamGunCrystal_Emissive.Value;
 
-                return _beamGunCrystal_Specular;
-            }
-        }
+        public static Color BeamGunTrim_Color => UtilityWPF.ColorFromHex("5E6166");
 
-        [ThreadStatic]
-        private static EmissiveMaterial _beamGunCrystal_Emissive;
-        public static EmissiveMaterial BeamGunCrystal_Emissive
-        {
-            get
-            {
-                if (_beamGunCrystal_Emissive == null)
-                {
-                    _beamGunCrystal_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30719BE3")));
-                }
-
-                return _beamGunCrystal_Emissive;
-            }
-        }
-
-        public static Color BeamGunTrim_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("5E6166");
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _beamGunTrim_Specular;
-        public static SpecularMaterial BeamGunTrim_Specular
-        {
-            get
-            {
-                if (_beamGunTrim_Specular == null)
-                {
-                    _beamGunTrim_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("802A67D1")), 50d);
-                }
-
-                return _beamGunTrim_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _beamGunTrim_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("802A67D1")), 50d));
+        public static SpecularMaterial BeamGunTrim_Specular => _beamGunTrim_Specular.Value;
 
         #endregion
         #region FuelTank
 
-        public static Color FuelTank_Color
-        {
-            get
-            {
-                //return UtilityWPF.ColorFromHex("D49820");
-                return UtilityWPF.ColorFromHex("A38521");
-            }
-        }
+        public static Color FuelTank_Color => UtilityWPF.ColorFromHex("A38521");
 
-        [ThreadStatic]
-        private static SpecularMaterial _fuelTank_Specular;
-        public static SpecularMaterial FuelTank_Specular
-        {
-            get
-            {
-                if (_fuelTank_Specular == null)
-                {
-                    _fuelTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80659C9E")), 40d);
-                }
-
-                return _fuelTank_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _fuelTank_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80659C9E")), 40d));
+        public static SpecularMaterial FuelTank_Specular => _fuelTank_Specular.Value;
 
         #endregion
         #region EnergyTank
 
-        public static Color EnergyTank_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("507BC7");
-            }
-        }
+        public static Color EnergyTank_Color => UtilityWPF.ColorFromHex("507BC7");
 
-        [ThreadStatic]
-        private static SpecularMaterial _energyTank_Specular;
-        public static SpecularMaterial EnergyTank_Specular
-        {
-            get
-            {
-                if (_energyTank_Specular == null)
-                {
-                    _energyTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D0551FB8")), 80d);
-                }
+        private static ThreadLocal<SpecularMaterial> _energyTank_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("D0551FB8")), 80d));
+        public static SpecularMaterial EnergyTank_Specular => _energyTank_Specular.Value;
 
-                return _energyTank_Specular;
-            }
-        }
-
-        [ThreadStatic]
-        private static EmissiveMaterial _energyTank_Emissive;
-        public static EmissiveMaterial EnergyTank_Emissive
-        {
-            get
-            {
-                if (_energyTank_Emissive == null)
-                {
-                    _energyTank_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203348D4")));
-                }
-
-                return _energyTank_Emissive;
-            }
-        }
+        private static ThreadLocal<EmissiveMaterial> _energyTank_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203348D4"))));
+        public static EmissiveMaterial EnergyTank_Emissive => _energyTank_Emissive.Value;
 
         #endregion
         #region PlasmaTank
 
-        public static Color PlasmaTank_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("6A66D9");
-            }
-        }
+        public static Color PlasmaTank_Color => UtilityWPF.ColorFromHex("6A66D9");
 
-        [ThreadStatic]
-        private static SpecularMaterial _plasmaTank_Specular;
-        public static SpecularMaterial PlasmaTank_Specular
-        {
-            get
-            {
-                if (_plasmaTank_Specular == null)
-                {
-                    _plasmaTank_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("DE6491")), 90d);
-                }
-
-                return _plasmaTank_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _plasmaTank_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("DE6491")), 90d));
+        public static SpecularMaterial PlasmaTank_Specular => _plasmaTank_Specular.Value;
 
         #endregion
         #region Thruster
 
-        public static Color Thruster_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("754F42");
-            }
-        }
+        public static Color Thruster_Color => UtilityWPF.ColorFromHex("754F42");
 
-        [ThreadStatic]
-        private static SpecularMaterial _thruster_Specular;
-        public static SpecularMaterial Thruster_Specular
-        {
-            get
-            {
-                if (_thruster_Specular == null)
-                {
-                    _thruster_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("906B7D5A")), 20d);
-                }
+        private static ThreadLocal<SpecularMaterial> _thruster_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("906B7D5A")), 20d));
+        public static SpecularMaterial Thruster_Specular => _thruster_Specular.Value;
 
-                return _thruster_Specular;
-            }
-        }
-
-        public static Color ThrusterBack_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("4F403A");
-            }
-        }
+        public static Color ThrusterBack_Color => UtilityWPF.ColorFromHex("4F403A");
 
         #endregion
         #region TractorBeam
 
-        public static Color TractorBeamBase_Color
-        {
-            get
-            {
-                //return UtilityWPF.ColorFromHex("6599A3");
-                return UtilityWPF.ColorFromHex("6F8185");
-            }
-        }
+        public static Color TractorBeamBase_Color => UtilityWPF.ColorFromHex("6F8185");
 
-        [ThreadStatic]
-        private static SpecularMaterial _tractorBeamBase_Specular;
-        public static SpecularMaterial TractorBeamBase_Specular
-        {
-            get
-            {
-                if (_tractorBeamBase_Specular == null)
-                {
-                    _tractorBeamBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF6599A3")), 60);
-                }
+        private static ThreadLocal<SpecularMaterial> _tractorBeamBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF6599A3")), 60));
+        public static SpecularMaterial TractorBeamBase_Specular => _tractorBeamBase_Specular.Value;
 
-                return _tractorBeamBase_Specular;
-            }
-        }
+        public static Color TractorBeamRod_Color => UtilityWPF.ColorFromHex("8A788F");
 
-        public static Color TractorBeamRod_Color
-        {
-            get
-            {
-                //return UtilityWPF.ColorFromHex("8F7978");
-                return UtilityWPF.ColorFromHex("8A788F");
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _tractorBeamRod_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("8A30A1")), 100));
+        public static SpecularMaterial TractorBeamRod_Specular => _tractorBeamRod_Specular.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _tractorBeamRod_Specular;
-        public static SpecularMaterial TractorBeamRod_Specular
-        {
-            get
-            {
-                if (_tractorBeamRod_Specular == null)
-                {
-                    _tractorBeamRod_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("8A30A1")), 100);
-                }
-
-                return _tractorBeamRod_Specular;
-            }
-        }
-
-        [ThreadStatic]
-        private static EmissiveMaterial _tractorBeamRod_Emissive;
-        public static EmissiveMaterial TractorBeamRod_Emissive
-        {
-            get
-            {
-                if (_tractorBeamRod_Emissive == null)
-                {
-                    _tractorBeamRod_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40AE75BA")));
-                }
-
-                return _tractorBeamRod_Emissive;
-            }
-        }
+        private static ThreadLocal<EmissiveMaterial> _tractorBeamRod_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40AE75BA"))));
+        public static EmissiveMaterial TractorBeamRod_Emissive => _tractorBeamRod_Emissive.Value;
 
         #endregion
         #region ImpulseEngine
 
-        public static Color ImpulseEngine_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("2B271D");
-            }
-        }
+        public static Color ImpulseEngine_Color => UtilityWPF.ColorFromHex("2B271D");
 
-        [ThreadStatic]
-        private static SpecularMaterial _impulseEngine_Specular;
-        public static SpecularMaterial ImpulseEngine_Specular
-        {
-            get
-            {
-                if (_impulseEngine_Specular == null)
-                {
-                    _impulseEngine_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("885B74AB")), 25);
-                }
+        private static ThreadLocal<SpecularMaterial> _impulseEngine_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("885B74AB")), 25));
+        public static SpecularMaterial ImpulseEngine_Specular => _impulseEngine_Specular.Value;
 
-                return _impulseEngine_Specular;
-            }
-        }
+        public static Color ImpulseEngineGlowball_Color => UtilityWPF.ColorFromHex("AB49F2");
 
-        public static Color ImpulseEngineGlowball_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("AB49F2");
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _impulseEngineGlowball_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30C94AFF")), 3));
+        public static SpecularMaterial ImpulseEngineGlowball_Specular => _impulseEngineGlowball_Specular.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _impulseEngineGlowball_Specular;
-        public static SpecularMaterial ImpulseEngineGlowball_Specular
-        {
-            get
-            {
-                if (_impulseEngineGlowball_Specular == null)
-                {
-                    _impulseEngineGlowball_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30C94AFF")), 3);
-                }
+        private static ThreadLocal<EmissiveMaterial> _impulseEngineGlowball_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("504F2B69"))));
+        public static EmissiveMaterial ImpulseEngineGlowball_Emissive => _impulseEngineGlowball_Emissive.Value;
 
-                return _impulseEngineGlowball_Specular;
-            }
-        }
+        public static Color ImpulseEngine_Icon_Color => UtilityWPF.ColorFromHex("5B74AB");
 
-        [ThreadStatic]
-        private static EmissiveMaterial _impulseEngineGlowball_Emissive;
-        public static EmissiveMaterial ImpulseEngineGlowball_Emissive
-        {
-            get
-            {
-                if (_impulseEngineGlowball_Emissive == null)
-                {
-                    _impulseEngineGlowball_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("504F2B69")));
-                }
+        private static ThreadLocal<SpecularMaterial> _impulseEngine_Icon_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("404C4533")), 10));
+        public static SpecularMaterial ImpulseEngine_Icon_Specular => _impulseEngine_Icon_Specular.Value;
 
-                return _impulseEngineGlowball_Emissive;
-            }
-        }
+        private static ThreadLocal<EmissiveMaterial> _impulseEngine_Icon_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("24495D8A"))));
+        public static EmissiveMaterial ImpulseEngine_Icon_Emissive => _impulseEngine_Icon_Emissive.Value;
 
         #endregion
         #region Camera
 
-        public static Color CameraBase_Color
-        {
-            get
-            {
-                return Color.FromRgb(75, 75, 75);
-            }
-        }
+        public static Color CameraBase_Color => Color.FromRgb(75, 75, 75);
 
-        [ThreadStatic]
-        private static SpecularMaterial _cameraBase_Specular;
-        public static SpecularMaterial CameraBase_Specular
-        {
-            get
-            {
-                if (_cameraBase_Specular == null)
-                {
-                    _cameraBase_Specular = new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), 35d);
-                }
+        private static ThreadLocal<SpecularMaterial> _cameraBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), 35d));
+        public static SpecularMaterial CameraBase_Specular => _cameraBase_Specular.Value;
 
-                return _cameraBase_Specular;
-            }
-        }
+        public static Color CameraLens_Color => UtilityWPF.ColorFromHex("49211B");
 
-        public static Color CameraLens_Color
-        {
-            get
-            {
-                //return UtilityWPF.ColorFromHex("3D1B16");
-                return UtilityWPF.ColorFromHex("49211B");
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _cameraLens_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80A00000")), 75d));
+        public static SpecularMaterial CameraLens_Specular => _cameraLens_Specular.Value;
 
-        [ThreadStatic]
-        private static SpecularMaterial _cameraLens_Specular;
-        public static SpecularMaterial CameraLens_Specular
-        {
-            get
-            {
-                if (_cameraLens_Specular == null)
-                {
-                    _cameraLens_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("80A00000")), 75d);
-                }
-
-                return _cameraLens_Specular;
-            }
-        }
-
-        public static Color CameraHardCodedLens_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(Brain_Color, CameraLens_Color, .75);
-            }
-        }
+        public static Color CameraHardCodedLens_Color => UtilityWPF.AlphaBlend(Brain_Color, CameraLens_Color, .75);
 
         #endregion
         #region Brain
 
-        public static Color Brain_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("FFE32078");
-            }
-        }
+        public static Color Brain_Color => UtilityWPF.ColorFromHex("FFE32078");
 
-        [ThreadStatic]
-        private static SpecularMaterial _brain_Specular;
-        public static SpecularMaterial Brain_Specular
-        {
-            get
-            {
-                if (_brain_Specular == null)
-                {
-                    _brain_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0ED8EB9")), 35d);
-                }
-
-                return _brain_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _brain_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0ED8EB9")), 35d));
+        public static SpecularMaterial Brain_Specular => _brain_Specular.Value;
 
         public static Color BrainInsideStrand_Color
         {
@@ -1219,198 +397,54 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
-        [ThreadStatic]
-        private static SpecularMaterial _brainInsideStrand_Specular;
-        public static SpecularMaterial BrainInsideStrand_Specular
-        {
-            get
-            {
-                if (_brainInsideStrand_Specular == null)
-                {
-                    _brainInsideStrand_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0073")), 100d);
-                }
-
-                return _brainInsideStrand_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _brainInsideStrand_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("FF0073")), 100d));
+        public static SpecularMaterial BrainInsideStrand_Specular => _brainInsideStrand_Specular.Value;
 
         #endregion
         #region DirectionController
 
-        public static Color DirectionControllerRing_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(WorldColors.Brain_Color, WorldColors.SensorBase_Color, .15);
-            }
-        }
+        public static Color DirectionControllerRing_Color => UtilityWPF.AlphaBlend(WorldColors.Brain_Color, WorldColors.SensorBase_Color, .15);
 
-        [ThreadStatic]
-        private static SpecularMaterial _directionControllerRing_Specular;
-        public static SpecularMaterial DirectionControllerRing_Specular
-        {
-            get
-            {
-                if (_directionControllerRing_Specular == null)
-                {
-                    _directionControllerRing_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30FFFFFF")), 18d);
-                }
-
-                return _directionControllerRing_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _directionControllerRing_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("30FFFFFF")), 18d));
+        public static SpecularMaterial DirectionControllerRing_Specular => _directionControllerRing_Specular.Value;
 
         #endregion
         #region Shields
 
-        public static Color ShieldBase_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("1D8F8D");
-            }
-        }
+        public static Color ShieldBase_Color => UtilityWPF.ColorFromHex("1D8F8D");
 
-        [ThreadStatic]
-        private static SpecularMaterial _shieldBase_Specular;
-        public static SpecularMaterial ShieldBase_Specular
-        {
-            get
-            {
-                if (_shieldBase_Specular == null)
-                {
-                    _shieldBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("503FB2")), 100d);
-                }
+        private static ThreadLocal<SpecularMaterial> _shieldBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("503FB2")), 100d));
+        public static SpecularMaterial ShieldBase_Specular => _shieldBase_Specular.Value;
 
-                return _shieldBase_Specular;
-            }
-        }
+        private static ThreadLocal<EmissiveMaterial> _shieldBase_Emissive = new ThreadLocal<EmissiveMaterial>(() => new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("205FD4CE"))));
+        public static EmissiveMaterial ShieldBase_Emissive => _shieldBase_Emissive.Value;
 
-        [ThreadStatic]
-        private static EmissiveMaterial _shieldBase_Emissive;
-        public static EmissiveMaterial ShieldBase_Emissive
-        {
-            get
-            {
-                if (_shieldBase_Emissive == null)
-                {
-                    _shieldBase_Emissive = new EmissiveMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("205FD4CE")));
-                }
+        public static Color ShieldEnergy_Color => UtilityWPF.AlphaBlend(EnergyTank_Color, ShieldBase_Color, .65d);
+        public static SpecularMaterial ShieldEnergy_Specular => ShieldBase_Specular;
 
-                return _shieldBase_Emissive;
-            }
-        }
+        public static Color ShieldKinetic_Color => UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), ShieldBase_Color, .9d);
 
-        public static Color ShieldEnergy_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(EnergyTank_Color, ShieldBase_Color, .65d);
-            }
-        }
-        public static SpecularMaterial ShieldEnergy_Specular
-        {
-            get
-            {
-                return ShieldBase_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _shieldKinetic_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0A63333")), 70d));
+        public static SpecularMaterial ShieldKinetic_Specular => _shieldKinetic_Specular.Value;
 
-        public static Color ShieldKinetic_Color
-        {
-            get
-            {
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("505663"), ShieldBase_Color, .9d);
-            }
-        }
+        //NOTE: This color is the same as SensorTractor
+        public static Color ShieldTractor_Color => UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), ShieldBase_Color, .9d);
 
-        [ThreadStatic]
-        private static SpecularMaterial _shieldKinetic_Specular;
-        public static SpecularMaterial ShieldKinetic_Specular
-        {
-            get
-            {
-                if (_shieldKinetic_Specular == null)
-                {
-                    _shieldKinetic_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0A63333")), 70d);
-                }
-
-                return _shieldKinetic_Specular;
-            }
-        }
-
-        public static Color ShieldTractor_Color
-        {
-            get
-            {
-                //NOTE: This color is the same as SensorTractor
-                return UtilityWPF.AlphaBlend(UtilityWPF.ColorFromHex("956CA1"), ShieldBase_Color, .9d);
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _shieldTractor_Specular;
-        public static SpecularMaterial ShieldTractor_Specular
-        {
-            get
-            {
-                if (_shieldTractor_Specular == null)
-                {
-                    _shieldTractor_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0AE75BA")), 50d);
-                }
-
-                return _shieldTractor_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _shieldTractor_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0AE75BA")), 50d));
+        public static SpecularMaterial ShieldTractor_Specular => _shieldTractor_Specular.Value;
 
         #endregion
         #region SelfRepair
 
-        public static Color SelfRepairBase_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("E8E0C1");
-            }
-        }
+        public static Color SelfRepairBase_Color => UtilityWPF.ColorFromHex("E8E0C1");
 
-        [ThreadStatic]
-        private static SpecularMaterial _selfRepairBase_Specular;
-        public static SpecularMaterial SelfRepairBase_Specular
-        {
-            get
-            {
-                if (_selfRepairBase_Specular == null)
-                {
-                    _selfRepairBase_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0707691")), 60d);
-                }
+        private static ThreadLocal<SpecularMaterial> _selfRepairBase_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("C0707691")), 60d));
+        public static SpecularMaterial SelfRepairBase_Specular => _selfRepairBase_Specular.Value;
 
-                return _selfRepairBase_Specular;
-            }
-        }
+        public static Color SelfRepairCross_Color => UtilityWPF.ColorFromHex("43B23B");
 
-        public static Color SelfRepairCross_Color
-        {
-            get
-            {
-                return UtilityWPF.ColorFromHex("43B23B");
-            }
-        }
-
-        [ThreadStatic]
-        private static SpecularMaterial _selfRepairCross_Specular;
-        public static SpecularMaterial SelfRepairCross_Specular
-        {
-            get
-            {
-                if (_selfRepairCross_Specular == null)
-                {
-                    _selfRepairCross_Specular = new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203DB2")), 85d);
-                }
-
-                return _selfRepairCross_Specular;
-            }
-        }
+        private static ThreadLocal<SpecularMaterial> _selfRepairCross_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("203DB2")), 85d));
+        public static SpecularMaterial SelfRepairCross_Specular => _selfRepairCross_Specular.Value;
 
         #endregion
 

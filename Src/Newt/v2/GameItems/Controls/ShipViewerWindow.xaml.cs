@@ -22,7 +22,7 @@ namespace Game.Newt.v2.GameItems.Controls
     //NOTE: Some of this code was copied from the BrainTester window
     public partial class ShipViewerWindow : Window
     {
-        #region Class: NeuralContainerVisual
+        #region class: NeuralContainerVisual
 
         private class NeuralContainerVisual
         {
@@ -32,7 +32,7 @@ namespace Game.Newt.v2.GameItems.Controls
         }
 
         #endregion
-        #region Class: NeuralVisuals
+        #region class: NeuralVisuals
 
         private class NeuralVisuals
         {
@@ -45,7 +45,7 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #endregion
 
-        #region Class: PartVisuals
+        #region class: PartVisuals
 
         private class PartVisuals
         {
@@ -55,7 +55,7 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #endregion
 
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {

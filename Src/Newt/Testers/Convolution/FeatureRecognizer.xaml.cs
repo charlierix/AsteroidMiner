@@ -36,7 +36,7 @@ namespace Game.Newt.Testers.Convolution
 
     public partial class FeatureRecognizer : Window
     {
-        #region Class: ReducedExtract
+        #region class: ReducedExtract
 
         private class ReducedExtract
         {
@@ -48,7 +48,7 @@ namespace Game.Newt.Testers.Convolution
         }
 
         #endregion
-        #region Class: ApplyResult
+        #region class: ApplyResult
 
         private class ApplyResult
         {
@@ -70,7 +70,7 @@ namespace Game.Newt.Testers.Convolution
         }
 
         #endregion
-        #region Class: ApplyResult_Match
+        #region class: ApplyResult_Match
 
         private class ApplyResult_Match
         {
@@ -92,7 +92,7 @@ namespace Game.Newt.Testers.Convolution
 
         #endregion
 
-        #region Enum: PrefilterType
+        #region enum: PrefilterType
 
         private enum PrefilterType
         {
@@ -1780,7 +1780,7 @@ namespace Game.Newt.Testers.Convolution
         #endregion
     }
 
-    #region Class: FeatureRecognizer_Session
+    #region class: FeatureRecognizer_Session
 
     public class FeatureRecognizer_Session
     {
@@ -1797,7 +1797,7 @@ namespace Game.Newt.Testers.Convolution
     }
 
     #endregion
-    #region Class: FeatureRecognizer_Image
+    #region class: FeatureRecognizer_Image
 
     public class FeatureRecognizer_Image
     {
@@ -1821,7 +1821,7 @@ namespace Game.Newt.Testers.Convolution
     }
 
     #endregion
-    #region Class: FeatureRecognizer_Extract
+    #region class: FeatureRecognizer_Extract
 
     public class FeatureRecognizer_Extract
     {
@@ -1851,7 +1851,7 @@ namespace Game.Newt.Testers.Convolution
     }
 
     #endregion
-    #region Class: FeatureRecognizer_Extract_Sub
+    #region class: FeatureRecognizer_Extract_Sub
 
     public class FeatureRecognizer_Extract_Sub
     {
@@ -1867,7 +1867,7 @@ namespace Game.Newt.Testers.Convolution
     }
 
     #endregion
-    #region Class: FeatureRecognizer_Extract_Result
+    #region class: FeatureRecognizer_Extract_Result
 
     /// <summary>
     /// After an image is run through the prefilter, then run through the extract, find the brightest pixel, and compare the rectangle around that

@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
 {
     public partial class BrainLinks : Window
     {
-        #region Enum: AddItemLocation
+        #region enum: AddItemLocation
 
         private enum AddItemLocation
         {
@@ -40,7 +40,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Enum: ClearWhich
+        #region enum: ClearWhich
 
         private enum ClearWhich
         {
@@ -51,7 +51,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Item2D
+        #region class: Item2D
 
         private class Item2D
         {
@@ -77,7 +77,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Item3D
+        #region class: Item3D
 
         private class Item3D
         {
@@ -120,7 +120,7 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region Class: Set2D
+        #region class: Set2D
 
         private class Set2D
         {
@@ -156,7 +156,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: LinkBrain2D
+        #region class: LinkBrain2D
 
         private class LinkBrain2D
         {
@@ -183,7 +183,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: LinkIO
+        #region class: LinkIO
 
         private class LinkIO
         {
@@ -216,7 +216,7 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region Class: Worker2D_Simple
+        #region class: Worker2D_Simple
 
         private static class Worker2D_Simple
         {
@@ -258,7 +258,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Worker2D_Voronoi
+        #region class: Worker2D_Voronoi
 
         /// <summary>
         /// This class:
@@ -273,7 +273,7 @@ namespace Game.Newt.Testers
         /// </remarks>
         private static class Worker2D_Voronoi
         {
-            #region Class: BrainBurden
+            #region class: BrainBurden
 
             private class BrainBurden
             {
@@ -903,11 +903,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Worker2D_Distance
+        #region class: Worker2D_Distance
 
         private static class Worker2D_Distance
         {
-            #region Enum: IOLinkupPriority
+            #region enum: IOLinkupPriority
 
             public enum IOLinkupPriority
             {
@@ -917,7 +917,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region Class: BrainBurden
+            #region class: BrainBurden
 
             private class BrainBurden
             {
@@ -1459,7 +1459,7 @@ namespace Game.Newt.Testers
         }
 
         //------- 2D Links
-        private void btn2DAddInput_Click(object sender, RoutedEventArgs e)
+        private void AddInput2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1477,7 +1477,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn2DAddOutput_Click(object sender, RoutedEventArgs e)
+        private void AddOutput2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1495,7 +1495,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn2DAddBrain_Click(object sender, RoutedEventArgs e)
+        private void AddBrain2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1514,7 +1514,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn2DClear_Click(object sender, RoutedEventArgs e)
+        private void Clear2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1557,7 +1557,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn2DVoronoiBrains_Click(object sender, RoutedEventArgs e)
+        private void VoronoiBrains2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1578,7 +1578,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn2DCreateLinksSimple_Click(object sender, RoutedEventArgs e)
+        private void CreateLinksSimple2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1638,7 +1638,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn2DCreateLinksVoronoi_Click(object sender, RoutedEventArgs e)
+        private void CreateLinksVoronoi2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1722,7 +1722,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn2DCreateLinksDistance_Click(object sender, RoutedEventArgs e)
+        private void CreateLinksDistance2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1803,7 +1803,7 @@ namespace Game.Newt.Testers
         }
 
         //------- 3D Links
-        private void btn3DAddInput_Click(object sender, RoutedEventArgs e)
+        private void AddInput3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1821,7 +1821,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DAddOutput_Click(object sender, RoutedEventArgs e)
+        private void AddOutput3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1839,7 +1839,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DAddBrain_Click(object sender, RoutedEventArgs e)
+        private void AddBrain3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1858,7 +1858,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn3DClear_Click(object sender, RoutedEventArgs e)
+        private void Clear3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1901,7 +1901,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn3DCreateLinksSimple_Click(object sender, RoutedEventArgs e)
+        private void CreateLinksSimple3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1975,7 +1975,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn3DLinksBrainBrain_Click(object sender, RoutedEventArgs e)
+        private void LinksBrainBrain3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2034,7 +2034,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DLinksBrainIO_Click(object sender, RoutedEventArgs e)
+        private void LinksBrainIO3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2076,7 +2076,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DLinksBrainInput_Click(object sender, RoutedEventArgs e)
+        private void LinksBrainInput3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2108,7 +2108,7 @@ namespace Game.Newt.Testers
         }
 
         //------- 3D Voronoi
-        private void btn3DRandomSquare_Click(object sender, RoutedEventArgs e)
+        private void RandomSquare3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2135,7 +2135,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DRandomSphere_Click(object sender, RoutedEventArgs e)
+        private void RandomSphere3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2162,7 +2162,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DEvenSphere_Click(object sender, RoutedEventArgs e)
+        private void EvenSphere3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2189,7 +2189,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DEvenSphereShell_Click(object sender, RoutedEventArgs e)
+        private void EvenSphereShell3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2216,7 +2216,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DRandomCircle_Click(object sender, RoutedEventArgs e)
+        private void RandomCircle3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2243,7 +2243,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DPerturb_Click(object sender, RoutedEventArgs e)
+        private void Perturb3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2308,7 +2308,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DClearDelVor_Click(object sender, RoutedEventArgs e)
+        private void ClearDelVor3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2343,7 +2343,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn3DDelaunay_Click(object sender, RoutedEventArgs e)
+        private void Delaunay3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2361,7 +2361,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DDelaunayPolys_Click(object sender, RoutedEventArgs e)
+        private void DelaunayPolys3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2419,7 +2419,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btn3DVoronoi_Click(object sender, RoutedEventArgs e)
+        private void Voronoi3D_Click(object sender, RoutedEventArgs e)
         {
             //const double DELAUNAYRADIUS = .008;
             const double VORONOIRADIUS = .015;
@@ -2491,7 +2491,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DVoronoiDelaunay_Click(object sender, RoutedEventArgs e)
+        private void VoronoiDelaunay3D_Click(object sender, RoutedEventArgs e)
         {
             const double DELAUNAYRADIUS = .008;
             const double VORONOIRADIUS = .015;
@@ -2565,7 +2565,7 @@ namespace Game.Newt.Testers
         }
 
         //------- Misc
-        private void btnPlaneTiles2D_Click(object sender, RoutedEventArgs e)
+        private void PlaneTiles2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2622,7 +2622,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPlaneTiles3D_Click(object sender, RoutedEventArgs e)
+        private void PlaneTiles3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2646,7 +2646,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnCircumcenterTetra_Click(object sender, RoutedEventArgs e)
+        private void CircumcenterTetra_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -2677,7 +2677,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btn3DText_Click(object sender, RoutedEventArgs e)
+        private void Text3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4927,7 +4927,7 @@ freedom to the galaxy….";
 
         #region PRIVATES
 
-        //#region Class: Cell
+        //#region class: Cell
 
         //public class Cell : Game.HelperClassesWPF.MIConvexHull.TriangulationCell<Vertex, Cell>
         //{
@@ -5125,7 +5125,7 @@ freedom to the galaxy….";
         //#endregion
 
         ////TODO: Move this to Math3D
-        //#region Class: Vertex
+        //#region class: Vertex
 
         //public class Vertex : Game.HelperClassesWPF.MIConvexHull.IVertex
         //{
@@ -5200,7 +5200,7 @@ freedom to the galaxy….";
         #endregion
         #region CLASSES
 
-        //#region Class: Voronoi2NeighborData
+        //#region class: Voronoi2NeighborData
 
         //public class Voronoi2NeighborData
         //{
@@ -5232,7 +5232,7 @@ freedom to the galaxy….";
         //}
 
         //#endregion
-        //#region Class: Voronoi2NeighborDataExtra
+        //#region class: Voronoi2NeighborDataExtra
 
         //public class Voronoi2NeighborDataExtra
         //{
@@ -5873,7 +5873,7 @@ freedom to the galaxy….";
 
         #region OLD
 
-        #region Class: Set3D
+        #region class: Set3D
 
         //private class Set3D
         //{
@@ -5914,7 +5914,7 @@ freedom to the galaxy….";
         //}
 
         #endregion
-        #region Class: LinkSet3D
+        #region class: LinkSet3D
 
         //private class LinkSet3D
         //{
@@ -5942,7 +5942,7 @@ freedom to the galaxy….";
 
         #endregion
 
-        #region Class: CombineItemsArgs
+        #region class: CombineItemsArgs
 
         //private class CombineItemsArgs
         //{
@@ -5953,7 +5953,7 @@ freedom to the galaxy….";
         //}
 
         #endregion
-        #region Class: ItemOverflowArgs
+        #region class: ItemOverflowArgs
 
         //private class ItemOverflowArgs
         //{
@@ -5965,7 +5965,7 @@ freedom to the galaxy….";
         //}
 
         #endregion
-        #region Class: ExtraLinkArgs
+        #region class: ExtraLinkArgs
 
         //private class ExtraLinkArgs
         //{
@@ -5995,11 +5995,11 @@ freedom to the galaxy….";
 
         #endregion
 
-        #region Class: Worker3D
+        #region class: Worker3D
 
         //private static class Worker3D
         //{
-        //    #region Class: DistributeDistances
+        //    #region class: DistributeDistances
 
         //    private class DistributeDistances
         //    {
@@ -6024,7 +6024,7 @@ freedom to the galaxy….";
         //    }
 
         //    #endregion
-        //    #region Class: Distances2to1
+        //    #region class: Distances2to1
 
         //    /// <summary>
         //    /// This holds an item2, and distances to all item1s
@@ -6049,7 +6049,7 @@ freedom to the galaxy….";
         //    }
 
         //    #endregion
-        //    #region Class: BrainBurden
+        //    #region class: BrainBurden
 
         //    private class BrainBurden
         //    {

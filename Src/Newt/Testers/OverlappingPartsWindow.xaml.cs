@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
 {
     public partial class OverlappingPartsWindow : Window
     {
-        #region Interface: IPartSolver
+        #region interface: IPartSolver
 
         private interface IPartSolver
         {
@@ -50,7 +50,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: PartSolver1
+        #region class: PartSolver1
 
         /// <summary>
         /// This one only does translation.  No rotations
@@ -352,14 +352,14 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: PartSolver2
+        #region class: PartSolver2
 
         /// <summary>
         /// This one only does translation.  No rotations
         /// </summary>
         private class PartSolver2 : IPartSolver
         {
-            #region Class: DebugPoints
+            #region class: DebugPoints
 
             public class DebugPoints
             {
@@ -387,7 +387,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            #region Class: Intersection
+            #region class: Intersection
 
             private class Intersection
             {
@@ -852,7 +852,7 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {
@@ -1012,8 +1012,7 @@ namespace Game.Newt.Testers
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                var boundryLines = _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 // Draw the lines
                 _boundryLines = new ScreenSpaceLines3D(true);
@@ -1021,9 +1020,9 @@ namespace Game.Newt.Testers
                 _boundryLines.Color = _colors.BoundryLines;
                 _viewport.Children.Add(_boundryLines);
 
-                foreach (Point3D[] line in innerLines)
+                foreach (var line in boundryLines.innerLines)
                 {
-                    _boundryLines.AddLine(line[0], line[1]);
+                    _boundryLines.AddLine(line.from, line.to);
                 }
 
                 #endregion
@@ -1119,12 +1118,12 @@ namespace Game.Newt.Testers
 
                     if (solverCast2.IntersectionLines != null)
                     {
-                        var lineSets = solverCast2.IntersectionLines.Select(o => new Tuple<Point3D, Vector3D>[] { 
-							Tuple.Create(o.Contact, o.Translation1 * 10d),
-							Tuple.Create(o.Contact + (o.Translation1 * 10d), o.Torque1 * 10d),
+                        var lineSets = solverCast2.IntersectionLines.Select(o => new Tuple<Point3D, Vector3D>[] {
+                            Tuple.Create(o.Contact, o.Translation1 * 10d),
+                            Tuple.Create(o.Contact + (o.Translation1 * 10d), o.Torque1 * 10d),
 							//Tuple.Create(o.Contact, o.Offset1 * -1d),
 							Tuple.Create(o.Contact, o.Translation2 * 10d),
-							Tuple.Create(o.Contact + (o.Translation2 * 10d), o.Torque2 * 10d),
+                            Tuple.Create(o.Contact + (o.Translation2 * 10d), o.Torque2 * 10d),
 							//Tuple.Create(o.Contact, o.Offset2 * -1d)
 						}).ToArray();
 
@@ -1654,7 +1653,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
                     return new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
 
-                    #endregion
+                #endregion
 
                 case 1:
                     #region Fuel
@@ -1664,7 +1663,7 @@ namespace Game.Newt.Testers
                     fuel.QuantityCurrent = fuel.QuantityMax;		// without this, the fuel tank gets tossed around because it's so light
                     return fuel;
 
-                    #endregion
+                #endregion
 
                 case 2:
                     #region Energy
@@ -1672,7 +1671,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaEnergy = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new EnergyTank(_editorOptions, _itemOptions, dnaEnergy);
 
-                    #endregion
+                #endregion
 
                 case 3:
                     #region Brain
@@ -1680,7 +1679,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaBrain = new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
                     return new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
-                    #endregion
+                #endregion
 
                 case 4:
                     #region Thruster
@@ -1688,7 +1687,7 @@ namespace Game.Newt.Testers
                     ThrusterDNA dnaThruster1 = new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, height, height), ThrusterType = UtilityCore.GetRandomEnum(ThrusterType.Custom) };
                     return new Thruster(_editorOptions, _itemOptions, dnaThruster1, null);
 
-                    #endregion
+                #endregion
 
                 case 5:
                     #region Solar
@@ -1696,7 +1695,7 @@ namespace Game.Newt.Testers
                     ConverterRadiationToEnergyDNA dnaSolar = new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, 1d + StaticRandom.NextDouble() * 4d, 1d), Shape = UtilityCore.GetRandomEnum<SolarPanelShape>() };
                     return new ConverterRadiationToEnergy(_editorOptions, _itemOptions, dnaSolar, null, _radiation);
 
-                    #endregion
+                #endregion
 
                 case 6:
                     #region Fuel->Energy
@@ -1704,7 +1703,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaBurner = new ShipPartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterFuelToEnergy(_editorOptions, _itemOptions, dnaBurner, null, null);
 
-                    #endregion
+                #endregion
 
                 case 7:
                     #region Energy->Ammo
@@ -1712,7 +1711,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaReplicator = new ShipPartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dnaReplicator, null, null);
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("Unexpected integer");

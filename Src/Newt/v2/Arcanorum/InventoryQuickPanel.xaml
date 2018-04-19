@@ -1,9 +1,0 @@
-﻿<UserControl x:Class="Game.Newt.v2.Arcanorum.InventoryQuickPanel"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:helper="clr-namespace:Game.HelperClassesWPF.Controls2D;assembly=Game.HelperClassesWPF"
-             mc:Ignorable="d">
-    <StackPanel Name="pnlSlots" Orientation="Horizontal"/>
-</UserControl>

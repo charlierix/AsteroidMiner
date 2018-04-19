@@ -87,8 +87,7 @@ namespace Game.Newt.v2.MissileCommand
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 //NOTE: No need to draw a boundry
 
@@ -438,13 +437,11 @@ namespace Game.Newt.v2.MissileCommand
                 foreach (Asteroid asteroid in _map.GetItems<Asteroid>(false))
                 {
                     _map.RemoveItem(asteroid, true);
-                    asteroid.PhysicsBody.Dispose();
                 }
 
                 foreach (Mineral mineral in _map.GetItems<Mineral>(false))
                 {
                     _map.RemoveItem(mineral, true);
-                    mineral.PhysicsBody.Dispose();
                 }
             }
             catch (Exception ex)
@@ -655,8 +652,6 @@ namespace Game.Newt.v2.MissileCommand
             if (_bot != null)
             {
                 _map.RemoveItem(_bot);
-
-                _bot.Dispose();
                 _bot = null;
             }
         }
@@ -849,13 +844,8 @@ namespace Game.Newt.v2.MissileCommand
             var cylinders = GetDelaunayResults_FixedSet(MAXPOINTS, NUMRUNSPER, brainIORatio, () => Math3D.GetRandomVector_Circular(10).ToPoint2D().ToPoint3D(StaticRandom.NextDouble(-5, 5)));
 
             // Cone
-            Vector3D axis = new Vector3D(0, 0, 10);
-            var cones = GetDelaunayResults_FixedSet(MAXPOINTS, NUMRUNSPER, brainIORatio, () =>
-            {
-                Vector3D rotatedAxis = Math3D.GetRandomVector_Cone(axis, 45);
-                rotatedAxis *= StaticRandom.NextDouble();
-                return rotatedAxis.ToPoint();
-            });
+            Vector3D axis = new Vector3D(0, 0, 1);
+            var cones = GetDelaunayResults_FixedSet(MAXPOINTS, NUMRUNSPER, brainIORatio, () => Math3D.GetRandomVector_Cone(axis, 0, 45, 0, 10).ToPoint());
 
             return UtilityCore.Iterate<Task<Tuple<int, int, int>[]>>(cubes, spheres, cylinders, cones).ToArray();
         }
@@ -877,13 +867,8 @@ namespace Game.Newt.v2.MissileCommand
             var cylinders = GetDelaunayResults_FixedSet_Power(MAXPOINTS, NUMRUNSPER, brainIORatio, () => Math3D.GetRandomVector_Circular(10).ToPoint2D().ToPoint3D(StaticRandom.NextDouble(-5, 5)));
 
             // Cone
-            Vector3D axis = new Vector3D(0, 0, 10);
-            var cones = GetDelaunayResults_FixedSet_Power(MAXPOINTS, NUMRUNSPER, brainIORatio, () =>
-            {
-                Vector3D rotatedAxis = Math3D.GetRandomVector_Cone(axis, 45);
-                rotatedAxis *= StaticRandom.NextDouble();
-                return rotatedAxis.ToPoint();
-            });
+            Vector3D axis = new Vector3D(0, 0, 1);
+            var cones = GetDelaunayResults_FixedSet_Power(MAXPOINTS, NUMRUNSPER, brainIORatio, () => Math3D.GetRandomVector_Cone(axis, 0, 45, 0, 10).ToPoint());
 
             return UtilityCore.Iterate<Task<Tuple<int, int, int>[]>>(cubes, spheres, cylinders, cones).ToArray();
         }

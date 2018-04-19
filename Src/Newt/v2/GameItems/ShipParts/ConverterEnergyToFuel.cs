@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: ConverterEnergyToFuelToolItem
+    #region class: ConverterEnergyToFuelToolItem
 
     public class ConverterEnergyToFuelToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ConverterEnergyToFuelDesign
+    #region class: ConverterEnergyToFuelDesign
 
     public class ConverterEnergyToFuelDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -152,19 +152,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             var breakdown = GetMassBreakdown(this.Scale, cellSize);
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         internal static UtilityNewt.IObjectMassBreakdown GetMassBreakdown(Vector3D scale, double cellSize)
@@ -330,13 +329,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ConverterEnergyToFuel
+    #region class: ConverterEnergyToFuel
 
     public class ConverterEnergyToFuel : PartBase, IPartUpdatable
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "ConverterEnergyToFuel";
+        public const string PARTTYPE = nameof(ConverterEnergyToFuel);
 
         private ItemOptions _itemOptions = null;
 
@@ -385,49 +384,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.Transfer(elapsedTime, 1);
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
         #region Public Properties
 
-        private double _mass = 0d;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        private readonly double _mass;
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
-        private Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        private readonly Vector3D _scaleActual;
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 

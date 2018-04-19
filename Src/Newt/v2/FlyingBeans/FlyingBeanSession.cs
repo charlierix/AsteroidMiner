@@ -7,6 +7,7 @@ using System.Xaml;
 
 using Game.Newt.v2.GameItems;
 using System.Text.RegularExpressions;
+using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.FlyingBeans
 {
@@ -46,19 +47,13 @@ namespace Game.Newt.v2.FlyingBeans
         {
             // Session
             //NOTE: This is in the base folder
-            using (FileStream stream = new FileStream(Path.Combine(baseFolder, FILENAME_SESSION), FileMode.Create))
-            {
-                XamlServices.Save(stream, session);
-            }
+            UtilityCore.SerializeToFile(Path.Combine(baseFolder, FILENAME_SESSION), session);
 
             // ItemOptions
-            using (FileStream stream = new FileStream(Path.Combine(saveFolder, FILENAME_ITEMOPTIONS), FileMode.CreateNew))
-            {
-                XamlServices.Save(stream, itemOptions);
-            }
+            UtilityCore.SerializeToFile(Path.Combine(saveFolder, FILENAME_ITEMOPTIONS), itemOptions);
 
             // Options
-            FlyingBeanOptions optionCloned = Clone(options);
+            FlyingBeanOptions optionCloned = UtilityCore.Clone(options);
             optionCloned.DefaultBeanList = null;		// this is programatically generated, no need to save it
             //optionCloned.NewBeanList		//NOTE: These will be serialized with the options file
 
@@ -68,20 +63,14 @@ namespace Game.Newt.v2.FlyingBeans
             optionCloned.WinningScores = maxScores;
 
             // Main class
-            using (FileStream stream = new FileStream(Path.Combine(saveFolder, FILENAME_OPTIONS), FileMode.CreateNew))
-            {
-                XamlServices.Save(stream, optionCloned);
-            }
+            UtilityCore.SerializeToFile(Path.Combine(saveFolder, FILENAME_OPTIONS), optionCloned);
 
             // Winning beans
             if (winningFilenames != null)
             {
                 foreach (string beanFile in winningFilenames.Keys)
                 {
-                    using (FileStream stream = new FileStream(Path.Combine(saveFolder, beanFile), FileMode.CreateNew))
-                    {
-                        XamlServices.Save(stream, winningFilenames[beanFile]);
-                    }
+                    UtilityCore.SerializeToFile(Path.Combine(saveFolder, beanFile), winningFilenames[beanFile]);
                 }
             }
         }
@@ -92,10 +81,7 @@ namespace Game.Newt.v2.FlyingBeans
             string filename = Path.Combine(baseFolder, FILENAME_SESSION);
             if (File.Exists(filename))
             {
-                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    session = (FlyingBeanSession)XamlServices.Load(stream);
-                }
+                session = UtilityCore.DeserializeFromFile<FlyingBeanSession>(filename);
             }
             else
             {
@@ -109,10 +95,7 @@ namespace Game.Newt.v2.FlyingBeans
             filename = Path.Combine(saveFolder, FILENAME_OPTIONS);
             if (File.Exists(filename))
             {
-                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    options = (FlyingBeanOptions)XamlServices.Load(stream);
-                }
+                options = UtilityCore.DeserializeFromFile<FlyingBeanOptions>(filename);
             }
             else
             {
@@ -130,10 +113,7 @@ namespace Game.Newt.v2.FlyingBeans
             filename = Path.Combine(saveFolder, FILENAME_ITEMOPTIONS);
             if (File.Exists(filename))
             {
-                using (FileStream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                {
-                    itemOptions = (ItemOptions)XamlServices.Load(stream);
-                }
+                itemOptions = UtilityCore.DeserializeFromFile<ItemOptions>(filename);
             }
             else
             {
@@ -158,10 +138,7 @@ namespace Game.Newt.v2.FlyingBeans
                 ShipDNA dna = null;
                 try
                 {
-                    using (FileStream stream = new FileStream(filename2, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-                    {
-                        dna = (ShipDNA)XamlServices.Load(stream);
-                    }
+                    dna = UtilityCore.DeserializeFromFile<ShipDNA>(filename2);
                 }
                 catch (Exception)
                 {
@@ -295,19 +272,6 @@ namespace Game.Newt.v2.FlyingBeans
             }
 
             return new WinnerList(false, maxLineages, maxPerLineage, names.ToArray());
-        }
-
-        /// <summary>
-        /// NOTE: This only works if T is serializable (which the classes that this class deals with should be)
-        /// </summary>
-        private static T Clone<T>(T item)
-        {
-            using (MemoryStream stream = new MemoryStream())
-            {
-                XamlServices.Save(stream, item);
-                stream.Position = 0;
-                return (T)XamlServices.Load(stream);
-            }
         }
 
         #endregion

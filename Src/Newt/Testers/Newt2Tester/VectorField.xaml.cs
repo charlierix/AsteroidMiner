@@ -138,7 +138,7 @@ namespace Game.Newt.Testers.Newt2Tester
         #endregion
     }
 
-    #region Enum: VectorFieldType
+    #region enum: VectorFieldType
 
     public enum VectorFieldType
     {
@@ -153,7 +153,7 @@ namespace Game.Newt.Testers.Newt2Tester
 
     #endregion
 
-    #region Class: ApplyVectorFieldArgs
+    #region class: ApplyVectorFieldArgs
 
     public class ApplyVectorFieldArgs : EventArgs
     {

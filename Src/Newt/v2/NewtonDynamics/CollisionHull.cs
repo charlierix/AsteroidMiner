@@ -9,7 +9,7 @@ using Game.Newt.v2.NewtonDynamics.Import;
 
 namespace Game.Newt.v2.NewtonDynamics
 {
-    #region Class: CollisionHull
+    #region class: CollisionHull
 
     /// <summary>
     /// NOTE:  This is not a collision between two objects, it defines an object that can be collided
@@ -36,7 +36,7 @@ namespace Game.Newt.v2.NewtonDynamics
     /// </remarks>
     public class CollisionHull : IDisposable
     {
-        #region Struct: IntersectionPoint
+        #region struct: IntersectionPoint
 
         public struct IntersectionPoint
         {
@@ -763,7 +763,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region Class: CollisionHullTree
+    #region class: CollisionHullTree
 
     /// <summary>
     /// I think the tree is an arbitrary mesh (not forced to be convex)
@@ -809,7 +809,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region Enum: CollisionShapeType
+    #region enum: CollisionShapeType
 
     /// <summary>
     /// This enum isn't passed to the newton dll, it's just a helper for convenience

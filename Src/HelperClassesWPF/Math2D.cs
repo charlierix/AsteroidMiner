@@ -13,7 +13,7 @@ namespace Game.HelperClassesWPF
 {
     public static class Math2D
     {
-        #region Class: SutherlandHodgman
+        #region class: SutherlandHodgman
 
         /// <remarks>
         /// Put this here:
@@ -130,7 +130,7 @@ namespace Game.HelperClassesWPF
 
             #region OLD
 
-            #region Class: Edge
+            #region class: Edge
 
             ///// <summary>
             ///// This represents a line segment
@@ -212,7 +212,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: Voronoi2D
+        #region class: Voronoi2D
 
         /// <remarks>
         /// Good high level description:
@@ -229,7 +229,7 @@ namespace Game.HelperClassesWPF
         {
             #region Public Classes
 
-            #region Class: VoronoiGraph
+            #region class: VoronoiGraph
 
             public class VoronoiGraph
             {
@@ -238,7 +238,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VoronoiEdge
+            #region class: VoronoiEdge
 
             public class VoronoiEdge
             {
@@ -309,7 +309,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region Class: HashSet
+            #region class: HashSet
 
             /// <summary>
             /// Set für effizienten Zugriff auf Objekte. Objete werden als Key abgelegt, value ist nur ein dummy-Objekt.
@@ -430,7 +430,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region Class: Vector_ex
+            #region class: Vector_ex
 
             /// <summary>
             /// A vector class, implementing all interesting features of vectors
@@ -783,7 +783,7 @@ namespace Game.HelperClassesWPF
             #endregion
             #region Private Classes
 
-            #region Class: VNode
+            #region class: VNode
 
             private abstract class VNode
             {
@@ -1086,7 +1086,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VDataNode
+            #region class: VDataNode
 
             private class VDataNode : VNode
             {
@@ -1098,7 +1098,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VEdgeNode
+            #region class: VEdgeNode
 
             private class VEdgeNode : VNode
             {
@@ -1119,7 +1119,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region Class: VEvent
+            #region class: VEvent
 
             private abstract class VEvent : IComparable
             {
@@ -1144,7 +1144,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VDataEvent
+            #region class: VDataEvent
 
             private class VDataEvent : VEvent
             {
@@ -1170,7 +1170,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VCircleEvent
+            #region class: VCircleEvent
 
             private class VCircleEvent : VEvent
             {
@@ -1197,7 +1197,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region Interface: IPriorityQueue
+            #region interface: IPriorityQueue
 
             private interface IPriorityQueue : ICollection, ICloneable, IList
             {
@@ -1208,7 +1208,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: BinaryPriorityQueue
+            #region class: BinaryPriorityQueue
 
             private class BinaryPriorityQueue : IPriorityQueue, ICollection, ICloneable, IList
             {
@@ -1477,7 +1477,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region Class: MathTools
+            #region class: MathTools
 
             private static class MathTools
             {
@@ -1829,11 +1829,11 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: VoronoiUtil
+        #region class: VoronoiUtil
 
         private static class VoronoiUtil
         {
-            #region Class: ControlPointStats
+            #region class: ControlPointStats
 
             private class ControlPointStats
             {
@@ -1862,7 +1862,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: NewCell
+            #region class: NewCell
 
             private class NewCell
             {
@@ -1877,7 +1877,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: VarBucket
+            #region class: VarBucket
 
             /// <summary>
             /// There are a lot of loose variables to pass to RebuildCell, so putting them into a class
@@ -2782,7 +2782,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: QuickHull2D
+        #region class: QuickHull2D
 
         /// <remarks>
         /// Got this here (ported it from java):
@@ -3029,7 +3029,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: PointsSingleton
+        #region class: PointsSingleton
 
         private class PointsSingleton
         {
@@ -3121,7 +3121,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: TriangulateConcave
+        #region class: TriangulateConcave
 
         // Got this here:
         // http://wiki.unity3d.com/index.php?title=Triangulator
@@ -3296,7 +3296,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: AveragePlane
+        #region class: AveragePlane
 
         private static class AveragePlane
         {
@@ -3593,7 +3593,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: Delaunay
+        #region class: Delaunay
 
         private static class Delaunay
         {
@@ -4882,6 +4882,143 @@ namespace Game.HelperClassesWPF
                 ToArray();
         }
 
+        /// <summary>
+        /// This returns grid cells
+        /// </summary>
+        /// <param name="size">The width and height of the total square</param>
+        /// <param name="numCellsXY">The number of horizontal and vertical cells (2 would be a 2x2, 3 would be 3x3, etc)</param>
+        public static (Rect rect, Point center)[] GetCells_WithinSquare(double totalSize, int numCellsXY, double margin = 0, Point? center = null, bool invertY = false)
+        {
+            if (numCellsXY <= 0)
+            {
+                return new(Rect, Point)[0];
+            }
+
+            double cellSize = (totalSize - (margin * (numCellsXY - 1))) / numCellsXY;
+
+            if (invertY)
+            {
+                return GetCells_InvertY(cellSize, numCellsXY, numCellsXY, margin, center);
+            }
+            else
+            {
+                return GetCells(cellSize, numCellsXY, numCellsXY, margin, center);
+            }
+        }
+        /// <summary>
+        /// This overload handles MxN cells.  Instead of taking in the final desired size, it takes in the size of a cell
+        /// and multiplies to get the final size
+        /// </summary>
+        public static (Rect rect, Point center)[] GetCells(double cellSize, int numCellsX, int numCellsY, double margin = 0, Point? center = null)
+        {
+            if (numCellsX <= 0 || numCellsY <= 0)
+            {
+                return new(Rect, Point)[0];
+            }
+
+            (Rect, Point)[] retVal = new(Rect, Point)[numCellsX * numCellsY];
+
+            double offsetX = (cellSize * numCellsX) / -2;
+            double offsetY = (cellSize * numCellsY) / -2;
+
+            offsetX += (margin * (numCellsX - 1)) / -2;
+            offsetY += (margin * (numCellsY - 1)) / -2;
+
+            if (center != null)
+            {
+                offsetX += center.Value.X;
+                offsetY += center.Value.Y;
+            }
+
+            double halfCellSize = cellSize / 2;
+
+            for (int y = 0; y < numCellsY; y++)
+            {
+                int yIndex = y * numCellsX;
+
+                for (int x = 0; x < numCellsX; x++)
+                {
+                    Point cellTopLeft = new Point(
+                        offsetX + (cellSize * x) + (margin * x),
+                        offsetY + (cellSize * y) + (margin * y));
+
+                    Point cellCenter = new Point(cellTopLeft.X + halfCellSize, cellTopLeft.Y + halfCellSize);
+
+                    retVal[yIndex + x] =
+                    (
+                        new Rect(cellTopLeft.X, cellTopLeft.Y, cellSize, cellSize),
+                        cellCenter
+                    );
+                }
+            }
+
+            return retVal;
+        }
+        /// <summary>
+        /// This overload makes the Y values go down instead of up
+        /// </summary>
+        /// <remarks>
+        /// Standard 2D graphics have 0,0 at the top left and then x and y go out from there (the screen is in the fourth quadrant)
+        /// 
+        /// But 3D scenes have +Y go up instead of down.  So if you want to put these tiles into 3D, it would be easier to use this
+        /// inverted overload (because in this overload, Y starts high and then goes negative)
+        /// 
+        /// Standard shown in 3D:
+        /// 8   9   A   B
+        /// 4   5   6   7
+        /// 0   1   2   3
+        /// 
+        /// InvertY shown in 3D:
+        /// 0   1   2   3
+        /// 4   5   6   7
+        /// 8   9   A   B
+        /// </remarks>
+        public static (Rect rect, Point center)[] GetCells_InvertY(double cellSize, int numCellsX, int numCellsY, double margin = 0, Point? center = null)
+        {
+            if (numCellsX <= 0 || numCellsY <= 0)
+            {
+                return new(Rect, Point)[0];
+            }
+
+            (Rect, Point)[] retVal = new(Rect, Point)[numCellsX * numCellsY];
+
+            double offsetX = (cellSize * numCellsX) / -2;
+            double offsetY = (cellSize * numCellsY) / 2;
+
+            offsetX += (margin * (numCellsX - 1)) / -2;
+            offsetY += (margin * (numCellsY - 1)) / 2;
+
+            if (center != null)
+            {
+                offsetX += center.Value.X;
+                offsetY += center.Value.Y;
+            }
+
+            double halfCellSize = cellSize / 2;
+
+            for (int y = 0; y < numCellsY; y++)
+            {
+                int yIndex = y * numCellsX;
+
+                for (int x = 0; x < numCellsX; x++)
+                {
+                    Point cellTopLeft = new Point(
+                        offsetX + (cellSize * x) + (margin * x),
+                        offsetY - (cellSize * y) - (margin * y) - cellSize);
+
+                    Point cellCenter = new Point(cellTopLeft.X + halfCellSize, cellTopLeft.Y + halfCellSize);
+
+                    retVal[yIndex + x] =
+                    (
+                        new Rect(cellTopLeft.X, cellTopLeft.Y, cellSize, cellSize),
+                        cellCenter
+                    );
+                }
+            }
+
+            return retVal;
+        }
+
         #endregion
 
         #region Hulls/Graphs/Triangulation
@@ -5660,7 +5797,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region Class: QuickHull2DResult
+    #region class: QuickHull2DResult
 
     public class QuickHull2DResult
     {
@@ -5726,7 +5863,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: VoronoiResult2D
+    #region class: VoronoiResult2D
 
     public class VoronoiResult2D
     {
@@ -5837,7 +5974,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: Edge2D
+    #region class: Edge2D
 
     /// <summary>
     /// This represents a line in 2D (either a line segment, ray, or infinite line)
@@ -6355,7 +6492,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: EdgeType
+    #region enum: EdgeType
 
     public enum EdgeType
     {
@@ -6366,7 +6503,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Enum: PolygonNormalLength
+    #region enum: PolygonNormalLength
 
     public enum PolygonNormalLength
     {
@@ -6377,7 +6514,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: Polygon2D
+    #region class: Polygon2D
 
     public class Polygon2D
     {

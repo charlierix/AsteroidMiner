@@ -20,7 +20,7 @@ namespace Game.Newt.Testers
 {
     public partial class ColorVisualizer : Window
     {
-        #region Class: VisualTracker
+        #region class: VisualTracker
 
         private class VisualTracker
         {

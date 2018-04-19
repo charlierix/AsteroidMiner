@@ -29,7 +29,7 @@ namespace Game.Newt.Testers
 {
     public partial class ShipCameraTester : Window
     {
-        #region Class: ViewportOffline
+        #region class: ViewportOffline
 
         private class ViewportOffline
         {
@@ -72,11 +72,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: TriangleTileOverlay
+        #region class: TriangleTileOverlay
 
         private static class TriangleTileOverlay
         {
-            #region Class: OverlayResult
+            #region class: OverlayResult
 
             public class OverlayResult
             {

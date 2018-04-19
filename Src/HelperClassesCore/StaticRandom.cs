@@ -17,7 +17,7 @@ namespace Game.HelperClassesCore
     /// </remarks>
     public static class StaticRandom
     {
-        #region Class: RandomWrapper
+        #region class: RandomWrapper
 
         private class RandomWrapper
         {

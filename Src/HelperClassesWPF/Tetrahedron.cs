@@ -72,6 +72,11 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
+        public Tetrahedron(int index0, int index1, int index2, int index3, Point3D[] allPoints)
+            : this(index0, index1, index2, index3, allPoints, new SortedList<Tuple<int, int, int>, TriangleIndexedLinked>())
+        {
+        }
+
         /// <param name="buildingTriangles">
         /// When creating a set of tetrahedrons, instantiate an empty sorted list, and let this constructor fill it up to guarantee that only one
         /// instance of each triangle face is used across tetrahedrons (none of the neighbors get set, but the user could if they needed to)
@@ -1174,7 +1179,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region Enum: TetrahedronEdge
+    #region enum: TetrahedronEdge
 
     public enum TetrahedronEdge
     {
@@ -1187,7 +1192,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: TetrahedronFace
+    #region enum: TetrahedronFace
 
     public enum TetrahedronFace
     {

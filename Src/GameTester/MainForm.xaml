@@ -152,6 +152,8 @@
                     <ListBoxItem Content="Self Organizing Maps DB" MouseUp="SelfOrganizingMapsDB_MouseUp"/>
                     <ListBoxItem Visibility="Collapsed" Content="Mineral Identifier" MouseUp="MineralIdentifier_MouseUp"/>
                     <ListBoxItem Content="Hopfield Network" MouseUp="HopfieldNetwork_MouseUp"/>
+                    <ListBoxItem Content="Pick A Number" MouseUp="PickANumber_MouseUp"/>
+                    <ListBoxItem Content="Anticipate Position" MouseUp="AnticipatePosition_MouseUp"/>
                 </ListBox>
 
                 <!-- Newton 2.36 -->
@@ -163,8 +165,6 @@
                     <ListBoxItem Content="Multi Worlds (own threads)" MouseUp="MultithreadWorlds_MouseUp"/>
                     <ListBoxItem Content="Chase Forces" MouseUp="ChaseForces_MouseUp"/>
                     <ListBoxItem Content="Arcanorum" Style="{StaticResource boldItem}" MouseUp="Arcanorum_MouseUp"/>
-                    <ListBoxItem Content="Ship Part Tester" MouseUp="ShipPartTester_MouseUp"/>
-                    <ListBoxItem Content="Overlapping Parts" MouseUp="OverlappingPartsTester_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>
@@ -177,6 +177,8 @@
                     <Label Content="(continued)" Style="{StaticResource subHeaderLabelExtra}"/>
                 </StackPanel>
                 <ListBox>
+                    <ListBoxItem Content="Ship Part Tester" MouseUp="ShipPartTester_MouseUp"/>
+                    <ListBoxItem Content="Overlapping Parts" MouseUp="OverlappingPartsTester_MouseUp"/>
                     <ListBoxItem Content="Ship Editor" Style="{StaticResource boldItem}" MouseUp="ShipEditor_MouseUp"/>
                     <ListBoxItem Content="Brain Tester" MouseUp="BrainTester_MouseUp"/>
                     <ListBoxItem Content="Brain Tester 2" MouseUp="BrainTester2_MouseUp"/>
@@ -191,6 +193,7 @@
                     <ListBoxItem Content="Missile Command 0D" MouseUp="MissileCommand0D_MouseUp"/>
                     <ListBoxItem Content="Swarm Bots" MouseUp="SwarmBots2_MouseUp"/>
                     <ListBoxItem Content="Thrust Controller" MouseUp="ThrustController_MouseUp"/>
+                    <ListBoxItem Content="ArcArena" MouseUp="ArcArena_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

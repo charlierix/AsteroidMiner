@@ -79,12 +79,16 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 0, 1) }, "elbow"));
                 _partToolItems.Add(new ThrusterToolItem(editor1.Options, new[] { new Vector3D(1, 0, 0), new Vector3D(0, 1, 0), new Vector3D(0, 0, 1) }, "elbow 3D"));
                 _partToolItems.Add(new TractorBeamToolItem(editor1.Options));
-                _partToolItems.Add(new ImpulseEngineToolItem(editor1.Options));
+                _partToolItems.Add(new ImpulseEngineToolItem(editor1.Options, ImpulseEngineType.Both));
+                _partToolItems.Add(new ImpulseEngineToolItem(editor1.Options, ImpulseEngineType.Translate));
+                _partToolItems.Add(new ImpulseEngineToolItem(editor1.Options, ImpulseEngineType.Rotate));
                 _partToolItems.Add(new BrainToolItem(editor1.Options));
+                _partToolItems.Add(new BrainNEATToolItem(editor1.Options));
                 _partToolItems.Add(new BrainRGBRecognizerToolItem(editor1.Options));
                 _partToolItems.Add(new DirectionControllerRingToolItem(editor1.Options));
                 _partToolItems.Add(new DirectionControllerSphereToolItem(editor1.Options));
                 //_partToolItems.Add(new EyeToolItem(editor1.Options));
+                _partToolItems.Add(new CameraHardCodedToolItem(editor1.Options));
                 _partToolItems.Add(new CameraColorRGBToolItem(editor1.Options));
                 _partToolItems.Add(new SensorGravityToolItem(editor1.Options));
                 _partToolItems.Add(new SensorRadiationToolItem(editor1.Options));
@@ -95,6 +99,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
                 _partToolItems.Add(new SensorVelocityToolItem(editor1.Options));
                 _partToolItems.Add(new SensorInternalForceToolItem(editor1.Options));
                 _partToolItems.Add(new SensorNetForceToolItem(editor1.Options));
+                _partToolItems.Add(new SensorHomingToolItem(editor1.Options));
                 _partToolItems.Add(new ShieldEnergyToolItem(editor1.Options));
                 _partToolItems.Add(new ShieldKineticToolItem(editor1.Options));
                 _partToolItems.Add(new ShieldTractorToolItem(editor1.Options));
@@ -197,18 +202,12 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         public static void SaveShip(ShipDNA ship)
         {
-            //TODO: Store these in a database (RavenDB), fail over to storing on file if can't connect to DB
-
-
             // Make sure the folder exists
             string foldername = System.IO.Path.Combine(UtilityCore.GetOptionsFolder(), SHIPFOLDER);
             if (!Directory.Exists(foldername))
             {
                 Directory.CreateDirectory(foldername);
             }
-
-            //string xamlText = XamlWriter.Save(ship);		// this is the old one, it doesn't like generic lists
-            string xamlText = XamlServices.Save(ship);
 
             int infiniteLoopDetector = 0;
             while (true)
@@ -220,11 +219,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
                 try
                 {
-                    using (StreamWriter writer = new StreamWriter(new FileStream(filename, FileMode.CreateNew)))
-                    {
-                        writer.Write(xamlText);
-                        break;
-                    }
+                    UtilityCore.SerializeToFile(filename, ship);
+                    break;
                 }
                 catch (IOException ex)
                 {
@@ -260,14 +256,19 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             }
 
             // Load the file
-            object deserialized = null;
-            using (FileStream file = new FileStream(dialog.FileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                //deserialized = XamlReader.Load(file);		// this is the old way, it doesn't like generic lists
-                deserialized = XamlServices.Load(file);
-            }
-
+            object deserialized = UtilityCore.DeserializeFromFile<ShipDNA>(dialog.FileName);
             ShipDNA retVal = deserialized as ShipDNA;
+            if (retVal == null && deserialized != null)
+            {
+                if (deserialized == null)
+                {
+                    errMsg = "Couldn't deserialize file";
+                }
+                else
+                {
+                    errMsg = string.Format("File is not a ShipDNA ({0})", deserialized.GetType().ToString());
+                }
+            }
 
             // Exit Function
             errMsg = "";

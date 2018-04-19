@@ -8,7 +8,7 @@ using System.Windows.Markup;
 
 namespace Game.HelperClassesCore
 {
-    #region Class: DblArrTypeConverter
+    #region class: DblArrTypeConverter
 
     /// <summary>
     /// XamlServices.Save is really inefficient about storing double arrays.  This stores as a pipe delimited string
@@ -78,7 +78,7 @@ namespace Game.HelperClassesCore
     }
 
     #endregion
-    #region Class: DblArrExtension
+    #region class: DblArrExtension
 
     /// <summary>
     /// XamlServices.Save won't just go between double[] and string.  It needs to go through something that inherits MarkupExtension.

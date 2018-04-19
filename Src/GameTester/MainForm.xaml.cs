@@ -272,6 +272,14 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.HopfieldNetwork().Show();
         }
+        private void PickANumber_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NEAT.PickANumberWindow().Show();
+        }
+        private void AnticipatePosition_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NEAT.AnticipatePositionWindow().Show();
+        }
 
         #endregion
         #region Newton 2.36
@@ -298,7 +306,7 @@ namespace Game.GameTester
         }
         private void Arcanorum_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            new Game.Newt.v2.Arcanorum.ArcanorumWindow().Show();
+            new Game.Newt.v2.Arcanorum.Views.ArcanorumWindow().Show();
         }
         private void ShipPartTester_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -308,7 +316,6 @@ namespace Game.GameTester
         {
             new Game.Newt.Testers.OverlappingPartsWindow().Show();
         }
-
         private void ShipEditor_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.GameItems.ShipEditor.ShipEditorWindow().Show();
@@ -391,6 +398,10 @@ namespace Game.GameTester
         private void ThrustController_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.Controllers.ThrustControllerWindow().Show();
+        }
+        private void ArcArena_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.Arcanorum.ArenaTester.ArcArenaTester().Show();
         }
 
         #endregion
@@ -495,7 +506,7 @@ namespace Game.GameTester
         #endregion
     }
 
-    #region Class: MainFormOptions
+    #region class: MainFormOptions
 
     /// <summary>
     /// This class gets saved to xaml in their appdata folder

@@ -659,7 +659,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Class: WeaponSpikeBallDNA
+    #region class: WeaponSpikeBallDNA
 
     public class WeaponSpikeBallDNA : WeaponPartDNA
     {
@@ -806,7 +806,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Enum: WeaponSpikeBallMaterial
+    #region enum: WeaponSpikeBallMaterial
 
     public enum WeaponSpikeBallMaterial
     {

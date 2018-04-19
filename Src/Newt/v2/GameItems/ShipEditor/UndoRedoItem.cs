@@ -6,7 +6,7 @@ using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
-    #region Class: UndoRedoAddRemove
+    #region class: UndoRedoAddRemove
 
     public class UndoRedoAddRemove : UndoRedoBase
     {
@@ -40,7 +40,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region Class: UndoRedoTransformChange
+    #region class: UndoRedoTransformChange
 
     public class UndoRedoTransformChange : UndoRedoBase
     {
@@ -66,7 +66,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region Class: UndoRedoLockUnlock
+    #region class: UndoRedoLockUnlock
 
     public class UndoRedoLockUnlock : UndoRedoBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region Class: UndoRedoLayerAddRemove
+    #region class: UndoRedoLayerAddRemove
 
     public class UndoRedoLayerAddRemove : UndoRedoBase
     {
@@ -110,7 +110,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
     #endregion
 
-    #region Class: UndoRedoBase
+    #region class: UndoRedoBase
 
     public class UndoRedoBase
     {

@@ -17,7 +17,7 @@ namespace Game.HelperClassesWPF
         }
     }
 
-    #region Class: RandomBellArgs
+    #region class: RandomBellArgs
 
     public class RandomBellArgs
     {

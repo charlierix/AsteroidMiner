@@ -24,7 +24,7 @@ namespace Game.Newt.v2.GenePool
 {
     public partial class GenePoolWindow : Window
     {
-        #region Class: ExplodingBot
+        #region class: ExplodingBot
 
         public class ExplodingBot : ExplosionWithVisual
         {
@@ -112,8 +112,7 @@ namespace Game.Newt.v2.GenePool
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 //TODO: Only draw the boundry lines if options say to
 
@@ -430,7 +429,7 @@ namespace Game.Newt.v2.GenePool
             }
         }
 
-        private void btnAddFood_Click(object sender, RoutedEventArgs e)
+        private void AddFood_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -450,7 +449,7 @@ namespace Game.Newt.v2.GenePool
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAddPoison_Click(object sender, RoutedEventArgs e)
+        private void AddPoison_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -470,7 +469,7 @@ namespace Game.Newt.v2.GenePool
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAddBot_Click(object sender, RoutedEventArgs e)
+        private void AddBot_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -560,7 +559,7 @@ namespace Game.Newt.v2.GenePool
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAddEgg_Click(object sender, RoutedEventArgs e)
+        private void AddEgg_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -594,7 +593,7 @@ namespace Game.Newt.v2.GenePool
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnClear_Click(object sender, RoutedEventArgs e)
+        private void Clear_Click(object sender, RoutedEventArgs e)
         {
             try
             {

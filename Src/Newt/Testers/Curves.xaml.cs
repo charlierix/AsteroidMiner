@@ -20,7 +20,7 @@ namespace Game.Newt.Testers
 {
     public partial class Curves : Window
     {
-        #region Class: AxeSimple1
+        #region class: AxeSimple1
 
         private class AxeSimple1
         {
@@ -116,7 +116,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: AveragePlaneTests
+        #region class: AveragePlaneTests
 
         private class AveragePlaneTests
         {
@@ -2220,7 +2220,7 @@ namespace Game.Newt.Testers
 
             #endregion
 
-            #region Class: Eigen
+            #region class: Eigen
 
             //template <class Type> class Eigen
             //{
@@ -4913,7 +4913,7 @@ namespace Game.Newt.Testers
         #endregion
     }
 
-    #region Class: AxeSimple2
+    #region class: AxeSimple2
 
     public class Curves_AxeSimple2     // UtilityCore.Clone can't work with nested classes
     {

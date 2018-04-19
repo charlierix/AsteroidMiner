@@ -22,7 +22,7 @@ namespace Game.Newt.Testers.FluidFields
 {
     public partial class FluidPainter2D : Window
     {
-        #region Enum: RandColorType
+        #region enum: RandColorType
 
         //TODO: Make a few more, don't go nuts
         //TODO: Let them create a custom pallete
@@ -43,7 +43,7 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         #endregion
-        #region Class: SliderSettings
+        #region class: SliderSettings
 
         public class SliderSettings
         {
@@ -127,7 +127,6 @@ namespace Game.Newt.Testers.FluidFields
         {
             try
             {
-
                 // Field
                 _field = new FluidField2D(200, 200, 3);
                 _field.UseCheapDiffusion = !chkUseStandardDiffusion.IsChecked.Value;

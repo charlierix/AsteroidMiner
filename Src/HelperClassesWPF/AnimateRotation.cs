@@ -18,7 +18,7 @@ namespace Game.HelperClassesWPF
     /// </remarks>
     public class AnimateRotation
     {
-        #region Interface: IAnimateRotationWorker
+        #region interface: IAnimateRotationWorker
 
         private interface IAnimateRotationWorker
         {
@@ -26,7 +26,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: FixedWorker
+        #region class: FixedWorker
 
         private class FixedWorker : IAnimateRotationWorker
         {
@@ -64,7 +64,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: AnyQuatWorker
+        #region class: AnyQuatWorker
 
         private class AnyQuatWorker : IAnimateRotationWorker
         {
@@ -97,7 +97,7 @@ namespace Game.HelperClassesWPF
                     }
                     else
                     {
-                        Vector3D newAxis = Math3D.GetRandomVector_Cone(_transform.Quaternion.Axis, _maxTransitionAngle.Value);
+                        Vector3D newAxis = Math3D.GetRandomVector_Cone(_transform.Quaternion.Axis, 0, _maxTransitionAngle.Value, 1, 1);
                         //NOTE: Once going in one direction, never change, because that would look abrupt (that's why this overload was
                         //used).  Don't want to use random, want to stay under 180, but the larger the angle, the longer it will take to get there, and will be more smooth
                         double newAngle = _transform.Quaternion.Angle + 178;
@@ -119,7 +119,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: ConeQuatWorker
+        #region class: ConeQuatWorker
 
         private class ConeQuatWorker : IAnimateRotationWorker
         {
@@ -149,7 +149,7 @@ namespace Game.HelperClassesWPF
                     // Come up with a new destination
                     //Quaternion rotateTo = Math3D.GetRandomRotation(_centerAxis, _maxConeAngle);
 
-                    Vector3D newAxis = Math3D.GetRandomVector_Cone(_centerAxis, _maxConeAngle);
+                    Vector3D newAxis = Math3D.GetRandomVector_Cone(_centerAxis, 0, _maxConeAngle, 1, 1);
                     //NOTE: Once going in one direction, never change, because that would look abrupt (that's why this overload was
                     //used).  Don't want to use random, want to stay under 180, but the larger the angle, the longer it will take to get there, and will be more smooth
                     double newAngle = _transform.Quaternion.Angle + 178;
@@ -170,7 +170,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: AnyQuatConeWorker
+        #region class: AnyQuatConeWorker
 
         private class AnyQuatConeWorker : IAnimateRotationWorker
         {
@@ -200,7 +200,7 @@ namespace Game.HelperClassesWPF
                 if (_currentPercent >= _destinationPercent)
                 {
                     _from = _transform.Quaternion;
-                    _to = new Quaternion(Math3D.GetRandomVector_Cone(_from.Axis, _maxTransitionConeAngle), _from.Angle + NEWANGLE);
+                    _to = new Quaternion(Math3D.GetRandomVector_Cone(_from.Axis, 0, _maxTransitionConeAngle, 1, 1), _from.Angle + NEWANGLE);
 
                     _currentPercent = 0d;
                 }

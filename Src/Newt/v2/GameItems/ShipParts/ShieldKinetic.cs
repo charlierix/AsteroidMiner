@@ -11,7 +11,7 @@ using Game.Newt.v2.NewtonDynamics;
 namespace Game.Newt.v2.GameItems.ShipParts
 {
     //TODO: Add an extended description
-    #region Class: ShieldKineticToolItem
+    #region class: ShieldKineticToolItem
 
     public class ShieldKineticToolItem : PartToolItemBase
     {
@@ -72,7 +72,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ShieldKineticDesign
+    #region class: ShieldKineticDesign
 
     public class ShieldKineticDesign : PartDesignBase
     {
@@ -80,7 +80,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -132,19 +132,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             var breakdown = ShieldEnergyDesign.GetMassBreakdown(this.Scale, cellSize);
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -168,13 +167,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ShieldKinetic
+    #region class: ShieldKinetic
 
     public class ShieldKinetic : PartBase
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "ShieldKinetic";
+        public const string PARTTYPE = nameof(ShieldKinetic);
 
         private readonly ItemOptions _itemOptions;
 
@@ -205,29 +204,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
     }

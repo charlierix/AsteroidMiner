@@ -42,7 +42,7 @@ namespace Game.Newt.Testers.ChaseForces
         private readonly bool _isLinear;
 
         private GradientStops _gradientPopupChild = null;
-        private Tuple<double, double>[] _gradient = null;
+        private GradientEntry[] _gradient = null;
 
         private bool _initialized = false;
 
@@ -205,7 +205,7 @@ namespace Game.Newt.Testers.ChaseForces
         /// <summary>
         /// This is a helper method that builds an entry with the desired settings
         /// </summary>
-        public static ForceEntry GetNewEntry_Linear(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, bool isDistanceRadius = true, Tuple<double, double>[] gradient = null)
+        public static ForceEntry GetNewEntry_Linear(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, bool isDistanceRadius = true, GradientEntry[] gradient = null)
         {
             ForceEntry retVal = new ForceEntry(true);
 
@@ -222,7 +222,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             return retVal;
         }
-        public static ForceEntry GetNewEntry_Orientation(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, Tuple<double, double>[] gradient = null)
+        public static ForceEntry GetNewEntry_Orientation(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, GradientEntry[] gradient = null)
         {
             ForceEntry retVal = new ForceEntry(false);
 
@@ -242,7 +242,7 @@ namespace Game.Newt.Testers.ChaseForces
         /// <summary>
         /// This returns a visual of a graph that can be added to a canvas
         /// </summary>
-        public static IEnumerable<UIElement> GetGradientGraph(double width, double height, Tuple<double, double>[] gradient, Color fill, Color stroke)
+        public static IEnumerable<UIElement> GetGradientGraph(double width, double height, GradientEntry[] gradient, Color fill, Color stroke)
         {
             if (gradient == null || gradient.Length <= 1)       // need at least two for a gradient
             {
@@ -255,7 +255,7 @@ namespace Game.Newt.Testers.ChaseForces
 
             List<UIElement> retVal = new List<UIElement>();
 
-            double maxPercent = gradient.Max(o => o.Item2);
+            double maxPercent = gradient.Max(o => o.Percent);
 
             if (maxPercent > 1)
             {
@@ -288,7 +288,7 @@ namespace Game.Newt.Testers.ChaseForces
                 maxPercent = 1;
             }
 
-            double lastGradX = gradient[gradient.Length - 1].Item1;
+            double lastGradX = gradient[gradient.Length - 1].Distance;
             if (!Math1D.IsNearZero(lastGradX) && lastGradX > 0)
             {
                 Polyline polyLine = new Polyline();
@@ -304,8 +304,8 @@ namespace Game.Newt.Testers.ChaseForces
 
                 for (int cntr = 0; cntr < gradient.Length; cntr++)
                 {
-                    double x = gradient[cntr].Item1 * xScale;
-                    double y = ((maxPercent - gradient[cntr].Item2) / maxPercent) * height;
+                    double x = gradient[cntr].Distance * xScale;
+                    double y = ((maxPercent - gradient[cntr].Percent) / maxPercent) * height;
 
                     polyLine.Points.Add(new Point(x, y));
                     polyFill.Points.Add(new Point(x, y));
@@ -559,7 +559,7 @@ namespace Game.Newt.Testers.ChaseForces
             }
         }
 
-        private void StoreGradient(Tuple<double, double>[] gradient)
+        private void StoreGradient(GradientEntry[] gradient)
         {
             if (_gradientPopupChild == null)
             {

@@ -15,7 +15,7 @@ namespace Game.Newt.v2.GameItems
     //TODO:  The explosion class is only pushing on the center of mass.  It needs to account for the geometry of what it's hitting - make this a generic helper, I also want to the
     // helper to calculate fluid friction along arbitrary directions (to model fish and airplanes) - the explosion is like a point light source, and fluid is more of a directional light
 
-    #region Class: ExplosionWithVisual
+    #region class: ExplosionWithVisual
 
     public class ExplosionWithVisual : Explosion, IDisposable
     {
@@ -222,7 +222,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: Explosion
+    #region class: Explosion
 
     /// <summary>
     /// This models an explosion over time

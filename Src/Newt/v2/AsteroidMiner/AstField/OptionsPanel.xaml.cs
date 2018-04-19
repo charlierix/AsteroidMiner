@@ -234,7 +234,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
         #endregion
     }
 
-    #region Enum: NumberOfStartingObjects
+    #region enum: NumberOfStartingObjects
 
     public enum NumberOfStartingObjects
     {
@@ -245,7 +245,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
     }
 
     #endregion
-    #region Class: AsteroidFieldOptions
+    #region class: AsteroidFieldOptions
 
     /// <summary>
     /// This class gets saved to xaml in their appdata folder

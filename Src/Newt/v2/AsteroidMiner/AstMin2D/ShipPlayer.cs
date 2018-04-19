@@ -21,7 +21,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class ShipPlayer : Bot
     {
-        #region Class: KeyThrustRequest
+        #region class: KeyThrustRequest
 
         private class KeyThrustRequest
         {
@@ -36,7 +36,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region Class: ThrusterSolution
+        #region class: ThrusterSolution
 
         private class ThrusterSolution
         {
@@ -386,7 +386,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             Point3D position = mineral.PositionWorld;
 
             // Try to pop this out of the map
-            if (!_map.RemoveItem(mineral, true))
+            if (!_map.RemoveItem(mineral, true, false))
             {
                 // It's already gone
                 return;
@@ -446,9 +446,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 // Finish removing it from the real world
                 _map.RemoveItem(mineral, true);
-                mineral.PhysicsBody.Dispose();
 
-                this.ShouldRecalcMass_Large = true;
+                ShouldRecalcMass_Large = true;
             }
         }
 
@@ -462,17 +461,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
             // Reset the thrusters
             //TODO: It's ineficient to do this every tick
-            if (this.Thrusters != null)
+            if (Thrusters != null)
             {
-                foreach (Thruster thruster in this.Thrusters)
+                foreach (Thruster thruster in Thrusters)
                 {
                     thruster.Percents = new double[thruster.ThrusterDirectionsModel.Length];
                 }
             }
 
-            if (this.ImpulseEngines != null)
+            if (ImpulseEngines != null)
             {
-                foreach (ImpulseEngine impulse in this.ImpulseEngines)
+                foreach (ImpulseEngine impulse in ImpulseEngines)
                 {
                     impulse.SetDesiredDirection(null);      // can't call clear, because then it will listen to its neurons
                 }
@@ -484,7 +483,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             {
                 EnsureThrustKeysBuilt_YISUP();
 
-                List<Tuple<Vector3D?, Vector3D?>> impulseEngineCommand = new List<Tuple<Vector3D?, Vector3D?>>();
+                List<(Vector3D?, Vector3D?)> impulseEngineCommand = new List<(Vector3D?, Vector3D?)>();
 
                 foreach (var key in _downKeys)
                 {
@@ -524,62 +523,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                     #endregion
 
-                    #region impulse engines - WRONG
-
-                    // This converts to acceleration, then force.  It ignored the size of the engine
-                    // But I changed the impulse engines to take percents, and they can output force based on their scale
-
-                    //if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0)
-                    //{
-                    //    // Figure out what vector (linear and/or torque) is associated with this key
-                    //    var match = _keyThrustRequests.
-                    //        Where(o => o.Key == key.Item1).
-                    //        Select(o => new
-                    //        {
-                    //            Request = o,
-                    //            Score = o.Shift == null || key.Item2 == null ? 1 :      // shift press is null, this is the middle score
-                    //                o.Shift.Value == key.Item2.Value ? 0 :      // shift presses match, this is the best score
-                    //                2,      // shift presses don't match, this is the worst score
-                    //        }).
-                    //        OrderBy(o => o.Score).
-                    //        Select(o => o.Request).
-                    //        FirstOrDefault();
-
-                    //    if (match != null)
-                    //    {
-                    //        double magnitude;
-                    //        Vector3D? force = null;
-                    //        if (match.Linear != null)
-                    //        {
-                    //            magnitude = match.MaxLinear ?? this.MaxAcceleration_Linear;
-                    //            double mass = PhysicsBody.Mass;
-                    //            force = match.Linear.Value * magnitude * mass;        //NOTE: The request force is expected to be a unit vector
-                    //        }
-
-                    //        Vector3D? torque = null;
-                    //        if (match.Rotate != null)
-                    //        {
-                    //            magnitude = match.MaxRotate ?? this.MaxAcceleration_Rotate;
-
-                    //            MassMatrix massMatrix = PhysicsBody.MassMatrix;
-                    //            //double massMult = Vector3D.DotProduct(massMatrix.Inertia.ToUnit(false), match.Rotate.Value.ToUnit(false));
-                    //            //massMult = Math.Abs(massMult);
-                    //            //massMult *= massMatrix.Mass;
-                    //            double massMult = Vector3D.DotProduct(massMatrix.Inertia, match.Rotate.Value.ToUnit(false));
-                    //            massMult = Math.Abs(massMult);
-                    //            //massMult *= massMatrix.Mass;
-
-                    //            torque = match.Rotate.Value * magnitude * massMult;
-                    //        }
-
-                    //        impulseEngineCommand.Add(Tuple.Create(force, torque));
-                    //    }
-                    //}
-
-                    #endregion
                     #region impulse engines
 
-                    if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0)
+                    if (ImpulseEngines != null && ImpulseEngines.Length > 0)
                     {
                         // Figure out what vector (linear and/or torque) is associated with this key
                         var match = _keyThrustRequests.
@@ -598,7 +544,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                         if (match != null)
                         {
                             // Impulse engine wants the vectors to be percents (length up to 1)
-                            impulseEngineCommand.Add(Tuple.Create(match.Linear, match.Rotate));
+                            impulseEngineCommand.Add((match.Linear, match.Rotate));
                         }
                     }
 
@@ -607,7 +553,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
                 #region impulse engines
 
-                if (this.ImpulseEngines != null && this.ImpulseEngines.Length > 0 && impulseEngineCommand.Count > 0)
+                if (ImpulseEngines != null && ImpulseEngines.Length > 0 && impulseEngineCommand.Count > 0)
                 {
                     var impulseCommand = impulseEngineCommand.ToArray();
 

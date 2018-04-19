@@ -73,7 +73,7 @@ namespace Game.Orig.HelperClassesOrig
         }
 
         #endregion
-        #region Class: FiringMode
+        #region class: FiringMode
 
         /// <summary>
         /// This defines a rate of fire mode.  Keep in mind that if these rates are smaller than the elapsed time of the timer, then
@@ -105,7 +105,7 @@ namespace Game.Orig.HelperClassesOrig
         }
 
         #endregion
-        #region Class: Barrel
+        #region class: Barrel
 
         /// <summary>
         /// This tells me if there is a direction offset, or if I should just use my normal direction facing
