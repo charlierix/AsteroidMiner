@@ -10,7 +10,6 @@ using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
-using Game.Newt.v2.Arcanorum.Parts;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -21,7 +20,7 @@ namespace Game.Newt.v2.Arcanorum
     //  AddCamera/RemoveCamera
     public class EvolutionDreamer : IDisposable
     {
-        #region class: TrackedBot
+        #region Class: TrackedBot
 
         private class TrackedBot
         {
@@ -90,7 +89,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #endregion
 
-        #region enum: BotState
+        #region Enum: BotState
 
         private enum BotState
         {
@@ -286,9 +285,9 @@ namespace Game.Newt.v2.Arcanorum
                 parts.Add(new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
             }
 
-            // MotionController - always exactly one of these
+            // MotionController_Linear - always exactly one of these
             partSize = rand.NextPercent(1, .5);
-            parts.Add(new ShipPartDNA() { PartType = MotionController2.PARTTYPE, Position = new Point3D(0, 0, -1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+            parts.Add(new ShipPartDNA() { PartType = MotionController_Linear.PARTTYPE, Position = new Point3D(0, 0, -1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
 
             // Store it
             bot.Parts = parts.ToArray();
@@ -480,7 +479,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region class: WinnerList
+    #region Class: WinnerList
 
     public class WinnerList
     {

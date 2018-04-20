@@ -14,7 +14,6 @@ using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.MapParts;
@@ -83,7 +82,7 @@ namespace Game.Newt.v2.GameItems.Controls
             InitializeComponent();
 
             // Need to set position to zero, or the image won't be centered (part's model considers position/orientation)
-            dna = UtilityCore.Clone(dna);
+            dna = ShipPartDNA.Clone(dna);
             dna.Position = new Point3D();
             dna.Orientation = Quaternion.Identity;
 

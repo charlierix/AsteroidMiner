@@ -12,7 +12,7 @@ namespace Game.HelperClassesAI
     //TODO: Move a bunch of the methods from MutateUtility
     public static class UtilityAI
     {
-        #region class: CrossoverWorker
+        #region Class: CrossoverWorker
 
         private static class CrossoverWorker
         {
@@ -194,11 +194,11 @@ namespace Game.HelperClassesAI
         }
 
         #endregion
-        #region class: Discoverer
+        #region Class: Discoverer
 
         private static class Discoverer
         {
-            #region class: SolutionItem<T>
+            #region Class: SolutionItem<T>
 
             private class SolutionItem<T>
             {
@@ -213,7 +213,7 @@ namespace Game.HelperClassesAI
             }
 
             #endregion
-            #region class: Parents<T>
+            #region Class: Parents<T>
 
             private class Parents<T>
             {
@@ -241,7 +241,7 @@ namespace Game.HelperClassesAI
             }
 
             #endregion
-            #region class: SolutionWorker<T>
+            #region Class: SolutionWorker<T>
 
             private class SolutionWorker<T> : IRoundRobinWorker
             {
@@ -277,7 +277,7 @@ namespace Game.HelperClassesAI
 
                 #region IRoundRobinWorker Members
 
-                public bool Step1()
+                public bool Step()
                 {
                     if (_rand == null)
                     {
@@ -686,7 +686,7 @@ namespace Game.HelperClassesAI
 
                 if (options.ThreadShare == null)
                 {
-                    while (worker.Step1()) { }
+                    while (worker.Step()) { }
                 }
                 else
                 {
@@ -696,11 +696,11 @@ namespace Game.HelperClassesAI
         }
 
         #endregion
-        #region class: Discoverer2
+        #region Class: Discoverer2
 
         private static class Discoverer2
         {
-            #region class: SolutionItem<T>
+            #region Class: SolutionItem<T>
 
             private class SolutionItem<T>
             {
@@ -715,7 +715,7 @@ namespace Game.HelperClassesAI
             }
 
             #endregion
-            #region class: Parents<T>
+            #region Class: Parents<T>
 
             private class Parents<T>
             {
@@ -748,7 +748,7 @@ namespace Game.HelperClassesAI
             }
 
             #endregion
-            #region class: ParentGroup<T>
+            #region Class: ParentGroup<T>
 
             private class ParentGroup<T>
             {
@@ -824,7 +824,7 @@ namespace Game.HelperClassesAI
 
             #endregion
 
-            #region class: SolutionWorker<T>
+            #region Class: SolutionWorker<T>
 
             private class SolutionWorker<T> : IRoundRobinWorker
             {
@@ -860,7 +860,7 @@ namespace Game.HelperClassesAI
 
                 #region IRoundRobinWorker Members
 
-                public bool Step1()
+                public bool Step()
                 {
                     if (_rand == null)
                     {
@@ -1641,7 +1641,7 @@ namespace Game.HelperClassesAI
 
                 if (options.ThreadShare == null)
                 {
-                    while (worker.Step1()) { }
+                    while (worker.Step()) { }
                 }
                 else
                 {
@@ -1676,7 +1676,7 @@ namespace Game.HelperClassesAI
         }
     }
 
-    #region class: DiscoverSolutionOptions
+    #region Class: DiscoverSolutionOptions
 
     public class DiscoverSolutionOptions<T>
     {
@@ -1736,7 +1736,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region class: DiscoverSolutionOptions2
+    #region Class: DiscoverSolutionOptions2
 
     public class DiscoverSolutionOptions2<T>
     {
@@ -1808,7 +1808,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region class: DiscoverSolutionDelegates<T>
+    #region Class: DiscoverSolutionDelegates<T>
 
     public class DiscoverSolutionDelegates<T>
     {
@@ -1853,7 +1853,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region class: DiscoverSolutionDelegates2<T>
+    #region Class: DiscoverSolutionDelegates2<T>
 
     public class DiscoverSolutionDelegates2<T>
     {
@@ -1918,7 +1918,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region class: SolutionError
+    #region Class: SolutionError
 
     //NOTE: Went with the arrays (
     public class SolutionError
@@ -1964,7 +1964,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region class: SolutionResult<T>
+    #region Class: SolutionResult<T>
 
     public class SolutionResult<T>
     {
@@ -1991,7 +1991,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region class: SolutionResult2<T>
+    #region Class: SolutionResult2<T>
 
     public class SolutionResult2<T>
     {
@@ -2019,7 +2019,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region enum: SolutionResultType
+    #region Enum: SolutionResultType
 
     public enum SolutionResultType
     {

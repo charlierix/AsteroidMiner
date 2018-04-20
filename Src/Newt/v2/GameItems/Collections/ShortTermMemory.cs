@@ -222,7 +222,7 @@ namespace Game.Newt.v2.GameItems.Collections
     }
 
     //TODO: Put this in its own file
-    #region class: MemoryFragment
+    #region Class: MemoryFragment
 
     /// <summary>
     /// This allows bots to share training data with each other

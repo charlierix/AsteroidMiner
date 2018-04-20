@@ -11,7 +11,7 @@ using Game.Newt.v2.NewtonDynamics;
 // The objects in this file chase an orientation
 namespace Game.Newt.v2.GameItems
 {
-    #region class: MapObject_ChaseOrientation_Velocity
+    #region Class: MapObject_ChaseOrientation_Velocity
 
     /// <summary>
     /// This chases an orientation
@@ -146,7 +146,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: MapObject_ChaseOrientation_Torques
+    #region Class: MapObject_ChaseOrientation_Torques
 
     /// <summary>
     /// This chases an orientation
@@ -328,31 +328,31 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ChaseOrientation_Torque
+    #region Class: ChaseOrientation_Torque
 
     public class ChaseOrientation_Torque
     {
         #region Constructor
 
-        public ChaseOrientation_Torque(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, GradientEntry[] gradient = null)
+        public ChaseOrientation_Torque(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, Tuple<double, double>[] gradient = null)
         {
             if (gradient != null && gradient.Length == 1)
             {
                 throw new ArgumentException("Gradient must have at least two items if it is populated");
             }
 
-            Direction = direction;
-            Value = value;
-            IsAccel = isAccel;
-            IsSpring = isSpring;
+            this.Direction = direction;
+            this.Value = value;
+            this.IsAccel = isAccel;
+            this.IsSpring = isSpring;
 
             if (gradient == null || gradient.Length == 0)
             {
-                Gradient = null;
+                this.Gradient = null;
             }
             else
             {
-                Gradient = gradient;
+                this.Gradient = gradient;
             }
         }
 
@@ -412,7 +412,7 @@ namespace Game.Newt.v2.GameItems
         ///     at 8: 2%
         ///     at 10: 0%
         /// </remarks>
-        public readonly GradientEntry[] Gradient;
+        public readonly Tuple<double, double>[] Gradient;
 
         #endregion
 
@@ -494,7 +494,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ChaseOrientation_GetTorqueArgs
+    #region Class: ChaseOrientation_GetTorqueArgs
 
     public class ChaseOrientation_GetTorqueArgs
     {

@@ -19,7 +19,7 @@ namespace Game.Newt.Testers
 {
     public partial class EvenDistributionSphere : Window
     {
-        #region class: Dot
+        #region Class: Dot
 
         private class Dot
         {

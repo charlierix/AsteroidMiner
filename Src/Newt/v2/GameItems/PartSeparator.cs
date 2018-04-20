@@ -26,7 +26,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public static class PartSeparator
     {
-        #region class: Intersection
+        #region Class: Intersection
 
         private class Intersection
         {
@@ -309,7 +309,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: PartSeparator_Part
+    #region Class: PartSeparator_Part
 
     /// <summary>
     /// Instead of making an interface that various items need to implement, this is a wrapper class meant only for the part separator

@@ -216,7 +216,7 @@ namespace Game.Newt.Testers.Newt2Tester
         #endregion
     }
 
-    #region enum: AddJointType
+    #region Enum: AddJointType
 
     public enum AddJointType
     {
@@ -231,7 +231,7 @@ namespace Game.Newt.Testers.Newt2Tester
     }
 
     #endregion
-    #region enum: AddJointBodyType
+    #region Enum: AddJointBodyType
 
     public enum AddJointBodyType
     {
@@ -247,7 +247,7 @@ namespace Game.Newt.Testers.Newt2Tester
 
     #endregion
 
-    #region class: AddJoinedBodiesArgs
+    #region Class: AddJoinedBodiesArgs
 
     public class AddJoinedBodiesArgs : EventArgs
     {

@@ -48,7 +48,7 @@ namespace Game.Newt.v2.GameItems
         public static RandomBellArgs DAMAGE_RANDOMBELL = new RandomBellArgs(1, -45, 1, -45);      // this is a bell curve centered at x=.5 (see nonlinear random tester for a visual)
 
         #endregion
-        #region class: DamageProps
+        #region Class: DamageProps
 
         public class DamageProps
         {
@@ -1020,51 +1020,6 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Homing Sensor
-
-        private volatile object _homingSensor_NeuronDensity = 20d;
-        /// <summary>
-        /// This is how many neurons to place inside of a homing sensor
-        /// </summary>
-        public double HomingSensor_NeuronDensity
-        {
-            get
-            {
-                return (double)_homingSensor_NeuronDensity;
-            }
-            set
-            {
-                _homingSensor_NeuronDensity = value;
-            }
-        }
-
-        private volatile object _homingSensor_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
-        public double HomingSensor_AmountToDraw
-        {
-            get
-            {
-                return (double)_homingSensor_AmountToDraw;
-            }
-            set
-            {
-                _homingSensor_AmountToDraw = value;
-            }
-        }
-
-        private volatile object _homingSensor_HomeRadiusPercentOfRadius = 10d;
-        public double HomingSensor_HomeRadiusPercentOfRadius
-        {
-            get
-            {
-                return (double)_homingSensor_HomeRadiusPercentOfRadius;
-            }
-            set
-            {
-                _homingSensor_HomeRadiusPercentOfRadius = value;
-            }
-        }
-
-        #endregion
         #region Camera - all
 
         private volatile object _camera_Density = 1100d;
@@ -1224,7 +1179,7 @@ namespace Game.Newt.v2.GameItems
 
         private volatile object _brain_NeuronGrowthExponent = .8d;
         /// <summary>
-        /// If you calculate volume as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
+        /// If I calculate volume as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
         /// quickly for smaller values.
         /// 
         /// So instead the volume is calculated as Math.Pow(radius, this.BrainNeuronGrowthExponent)
@@ -1403,41 +1358,6 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_ENERGYTHESHOLD,
             DAMAGE_ENERGYTOHITPOINTMULT,
             DAMAGE_RANDOMMAX);
-
-        #endregion
-        #region BrainNEAT
-
-        private volatile object _brainNEAT_NeuronDensity_Input = 85d;
-        /// <summary>
-        /// This is how many neurons to place on the shell of a brain
-        /// </summary>
-        public double BrainNEAT_NeuronDensity_Input
-        {
-            get
-            {
-                return (double)_brainNEAT_NeuronDensity_Input;
-            }
-            set
-            {
-                _brainNEAT_NeuronDensity_Input = value;
-            }
-        }
-
-        private volatile object _brainNEAT_NeuronDensity_Output = 25d;
-        /// <summary>
-        /// This is how many neurons to place on the shell of a brain
-        /// </summary>
-        public double BrainNEAT_NeuronDensity_Output
-        {
-            get
-            {
-                return (double)_brainNEAT_NeuronDensity_Output;
-            }
-            set
-            {
-                _brainNEAT_NeuronDensity_Output = value;
-            }
-        }
 
         #endregion
         #region DirectionController

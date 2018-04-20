@@ -515,7 +515,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
     }
 
-    #region enum: DefaultShipType
+    #region Enum: DefaultShipType
 
     public enum DefaultShipType
     {

@@ -4,11 +4,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
@@ -230,16 +228,11 @@ namespace Game.Newt.v2.GameItems
                     break;
 
                 case ImpulseEngine.PARTTYPE:
-                    ImpulseEngineDNA dnaImpulse = (ImpulseEngineDNA)dna;
-                    retVal = new ImpulseEngineDesign(options, isFinalModel, dnaImpulse.ImpulseEngineType);
+                    retVal = new ImpulseEngineDesign(options, isFinalModel);
                     break;
 
                 case Brain.PARTTYPE:
                     retVal = new BrainDesign(options, isFinalModel);
-                    break;
-
-                case BrainNEAT.PARTTYPE:
-                    retVal = new BrainNEATDesign(options, isFinalModel);
                     break;
 
                 case BrainRGBRecognizer.PARTTYPE:
@@ -288,14 +281,6 @@ namespace Game.Newt.v2.GameItems
 
                 case SensorNetForce.PARTTYPE:
                     retVal = new SensorNetForceDesign(options, isFinalModel);
-                    break;
-
-                case SensorHoming.PARTTYPE:
-                    retVal = new SensorHomingDesign(options, isFinalModel);
-                    break;
-
-                case CameraHardCoded.PARTTYPE:
-                    retVal = new CameraHardCodedDesign(options, isFinalModel);
                     break;
 
                 case CameraColorRGB.PARTTYPE:
@@ -628,17 +613,12 @@ namespace Game.Newt.v2.GameItems
                         break;
 
                     case ImpulseEngine.PARTTYPE:
-                        AddPart(new ImpulseEngine(options, itemOptions, (ImpulseEngineDNA)dna, containers.PlasmaGroup),
+                        AddPart(new ImpulseEngine(options, itemOptions, dna, containers.PlasmaGroup),
                             dna, standard, building.AllParts);
                         break;
 
                     case Brain.PARTTYPE:
                         AddPart(new Brain(options, itemOptions, dna, containers.EnergyGroup),
-                            dna, standard, building.AllParts);
-                        break;
-
-                    case BrainNEAT.PARTTYPE:
-                        AddPart(new BrainNEAT(options, itemOptions, (BrainNEATDNA)dna, containers.EnergyGroup),
                             dna, standard, building.AllParts);
                         break;
 
@@ -662,18 +642,8 @@ namespace Game.Newt.v2.GameItems
                             dna, standard, building.AllParts);
                         break;
 
-                    case SensorHoming.PARTTYPE:
-                        AddPart(new SensorHoming(options, itemOptions, dna, core.Map, containers.EnergyGroup),
-                            dna, standard, building.AllParts);
-                        break;
-
                     case CameraColorRGB.PARTTYPE:
                         AddPart(new CameraColorRGB(options, itemOptions, dna, containers.EnergyGroup, extra.CameraPool),
-                            dna, standard, building.AllParts);
-                        break;
-
-                    case CameraHardCoded.PARTTYPE:
-                        AddPart(new CameraHardCoded(options, itemOptions, dna, containers.EnergyGroup, core.Map),
                             dna, standard, building.AllParts);
                         break;
 
@@ -863,46 +833,6 @@ namespace Game.Newt.v2.GameItems
             //prune links --- that was the original intent, but I don't want to fully implement until needed
             BotConstruction_PartMap partMap = GetLinkMap(null, parts, extra.ItemOptions, extra.PartLink_Overflow, extra.PartLink_Extra);
 
-            #region debug draw
-
-            //const double DOT = .1;
-            //const double THICKNESS = .01;
-
-            //Debug3DWindow window = new Debug3DWindow() { Title = "Part Neural Map" };
-
-            //foreach (var part in parts.AllPartsArray)
-            //{
-            //    Color partColor = Colors.Gray;
-            //    if (part is INeuronContainer neuralPart)
-            //    {
-            //        switch (neuralPart.NeuronContainerType)
-            //        {
-            //            case NeuronContainerType.Sensor:
-            //                partColor = Colors.OliveDrab;
-            //                break;
-
-            //            case NeuronContainerType.Brain:
-            //                partColor = Colors.HotPink;
-            //                break;
-
-            //            case NeuronContainerType.Manipulator:
-            //                partColor = Colors.SteelBlue;
-            //                break;
-            //        }
-            //    }
-
-            //    window.AddDot(part.Position, DOT, partColor);       //TODO: May want to multiply by part's scale
-            //}
-
-            //foreach (var link in partMap.Map_DNA)
-            //{
-            //    window.AddLine(link.From, link.To, THICKNESS * link.Weight, link.Weight > 0 ? UtilityWPF.ColorFromHex("008A2A") : UtilityWPF.ColorFromHex("A61514"));
-            //}
-
-            //window.Show();
-
-            #endregion
-
             NeuralUtility.ContainerInput[] neuralContainers = BuildNeuralContainers(parts, extra.ItemOptions);
 
             NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons(partMap, neuralContainers, extra.ItemOptions.NeuralLink_MaxWeight);
@@ -944,14 +874,13 @@ namespace Game.Newt.v2.GameItems
 
             return new BotConstruction_PartMap()
             {
-                Map_DNA = map.Map_DNA,
-                Map_Actual = map.Map_DNA.
-                    Select(o =>
-                    (
+                Map = map.Map,
+                Actual = map.Map.
+                    Select(o => Tuple.Create(
                         parts.AllPartsArray.First(p => p.Position.IsNearValue(o.From)),
                         parts.AllPartsArray.First(p => p.Position.IsNearValue(o.To)),
                         o.Weight
-                    )).
+                        )).
                     ToArray(),
             };
         }
@@ -1062,7 +991,7 @@ namespace Game.Newt.v2.GameItems
 
             return new BotConstruction_PartMap()
             {
-                Map_DNA = newLinks.
+                Map = newLinks.
                     Select(o => new BotPartMapLinkDNA()
                     {
                         From = partPositions[o.Item1],
@@ -1158,20 +1087,16 @@ namespace Game.Newt.v2.GameItems
                         #region Brain
 
                         int brainChemicalCount = 0;
-                        if (part.Item1 is Brain castBrain)
+                        if (part.Item1 is Brain)
                         {
-                            brainChemicalCount = (castBrain.BrainChemicalCount * 1.33d).ToInt_Round();		// increasing so that there is a higher chance of listeners
+                            brainChemicalCount = Convert.ToInt32(Math.Round(((Brain)part.Item1).BrainChemicalCount * 1.33d, 0));		// increasing so that there is a higher chance of listeners
                         }
 
                         retVal.Add(new NeuralUtility.ContainerInput(
                             part.Item1.Token,
                             container, NeuronContainerType.Brain,
                             container.Position, container.Orientation,
-
-                            // there are other parts that call themselves brains, but their internal firings are custom logic.  So only the Brain class needs internal wiring at this level
-                            //TODO: If more parts need internal wiring in the future, add another enum value Brain_Standard, Brain_Custom (or something) - or this method should call a delegate for each part that can apply custom logic/ratios
-                            part.Item1 is Brain ? itemOptions.Brain_LinksPerNeuron_Internal : (double?)null,
-
+                            itemOptions.Brain_LinksPerNeuron_Internal,
                             new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
                             {
                                 Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
@@ -1640,7 +1565,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: BotConstructor_Events
+    #region Class: BotConstructor_Events
 
     /// <summary>
     /// At various stages of instantiating parts/linking them together, these delegates will get called to give the
@@ -1691,7 +1616,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: BotConstruction_Containers
+    #region Class: BotConstruction_Containers
 
     public class BotConstruction_Containers
     {
@@ -1717,7 +1642,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: BotConstruction_Parts
+    #region Class: BotConstruction_Parts
 
     public class BotConstruction_Parts
     {
@@ -1767,22 +1692,22 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: BotConstruction_PartMap
+    #region Class: BotConstruction_PartMap
 
     public class BotConstruction_PartMap
     {
-        public BotPartMapLinkDNA[] Map_DNA { get; set; }
+        public BotPartMapLinkDNA[] Map { get; set; }
 
         /// <summary>
         /// This is the same as what is in this.Map, but holds links to actual parts
         /// </summary>
-        public (PartBase from, PartBase to, double weight)[] Map_Actual { get; set; }
+        public Tuple<PartBase, PartBase, double>[] Actual { get; set; }
 
         //TODO: Store burdens for the parts?
     }
 
     #endregion
-    #region class: BotPartMapLinkDNA
+    #region Class: BotPartMapLinkDNA
 
     /// <summary>
     /// This stores a high level picture of how the parts should be connected
@@ -1803,7 +1728,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: BotConstruction_Result
+    #region Class: BotConstruction_Result
 
     /// <summary>
     /// This holds instantiated/linked parts

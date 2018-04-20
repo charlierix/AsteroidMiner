@@ -8,7 +8,7 @@ namespace Game.Orig.Map
 {
     public class SimpleMap		// I wanted to call this Map, but everybody would have to reference it as Map.Map (the using statement doesn't help)
     {
-        #region class: CollisionTracker
+        #region Class: CollisionTracker
 
         private class CollisionTracker
         {
@@ -1092,7 +1092,7 @@ namespace Game.Orig.Map
         #endregion
     }
 
-    #region class: Collision
+    #region Class: Collision
 
     public class Collision
     {
@@ -1108,14 +1108,14 @@ namespace Game.Orig.Map
 
     #endregion
 
-    #region delegate: CollisionsDelegate
+    #region Delegate: CollisionsDelegate
 
     // The convention is to name delegates as somethingHandler, but I think this is the less confusing name
     public delegate void CollisionsDelegate(object sender, Collision[] collisions);
 
     #endregion
 
-    #region enum: PullApartType
+    #region Enum: PullApartType
 
     public enum PullApartType
     {

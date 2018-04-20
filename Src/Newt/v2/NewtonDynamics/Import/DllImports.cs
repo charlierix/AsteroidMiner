@@ -14,7 +14,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
     {
         #region Structures
 
-        #region struct: NewtonCollisionInfoRecord
+        #region Struct: NewtonCollisionInfoRecord
 
         //TODO:  Figure out how to import this in c# - it may have already changed in a future version:
         //http://www.newtondynamics.com/forum/viewtopic.php?f=12&t=6654
@@ -142,7 +142,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
         //};
 
         #endregion
-        #region struct: NewtonJointRecord
+        #region Struct: NewtonJointRecord
 
         //typedef struct NewtonJointRecord NewtonJointRecord;
         //typedef struct NewtonHingeSliderUpdateDesc NewtonHingeSliderUpdateDesc;
@@ -168,7 +168,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
 
         #endregion
 
-        #region struct: NewtonUserMeshCollisionCollideDesc
+        #region Struct: NewtonUserMeshCollisionCollideDesc
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NewtonUserMeshCollisionCollideDesc
@@ -188,7 +188,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
         }
 
         #endregion
-        #region struct: NewtonWorldConvexCastReturnInfo
+        #region Struct: NewtonWorldConvexCastReturnInfo
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NewtonWorldConvexCastReturnInfo
@@ -202,7 +202,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
         }
 
         #endregion
-        #region struct: NewtonUserMeshCollisionRayHitDesc
+        #region Struct: NewtonUserMeshCollisionRayHitDesc
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NewtonUserMeshCollisionRayHitDesc
@@ -215,7 +215,7 @@ namespace Game.Newt.v2.NewtonDynamics.Import
         }
 
         #endregion
-        #region struct: NewtonHingeSliderUpdateDesc
+        #region Struct: NewtonHingeSliderUpdateDesc
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct NewtonHingeSliderUpdateDesc

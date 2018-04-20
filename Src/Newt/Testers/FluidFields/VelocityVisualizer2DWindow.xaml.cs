@@ -113,7 +113,7 @@ namespace Game.Newt.Testers.FluidFields
         #endregion
     }
 
-    #region class: VelocityVisualizerVisualHost
+    #region Class: VelocityVisualizerVisualHost
 
     public class VelocityVisualizerVisualHost : FrameworkElement
     {

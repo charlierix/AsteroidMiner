@@ -19,7 +19,7 @@ namespace Game.HelperClassesAI
     //TODO: May want to run outputs through softmax (it's currently commented out in this.CreateNetwork())
     public static class UtilityEncog
     {
-        #region class: TrainingData
+        #region Class: TrainingData
 
         private class TrainingData
         {
@@ -740,7 +740,7 @@ namespace Game.HelperClassesAI
         #endregion
     }
 
-    #region class: EncogTrainingResponse
+    #region Class: EncogTrainingResponse
 
     public class EncogTrainingResponse
     {
@@ -781,7 +781,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region class: EncogDNA
+    #region Class: EncogDNA
 
     public class EncogDNA
     {

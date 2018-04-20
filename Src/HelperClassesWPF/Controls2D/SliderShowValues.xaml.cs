@@ -22,7 +22,7 @@ namespace Game.HelperClassesWPF.Controls2D
     //TODO: derive from RangeBase like slider does
     public partial class SliderShowValues : UserControl
     {
-        #region class: PropSync
+        #region Class: PropSync
 
         /// <summary>
         /// This is a helper class that will keep a slider tied to an options class
@@ -234,11 +234,6 @@ namespace Game.HelperClassesWPF.Controls2D
         /// <summary>
         /// If this is true, then this slider represents a multiplier
         /// </summary>
-        /// <remarks>
-        /// If this is true, then the middle of the slider is 1 (multiply by one to get no change)
-        /// Everything to the right of the middle is from 1 to Max
-        /// Everything to the left of the middle is from Min to 1
-        /// </remarks>
         public bool IsMultiplier
         {
             get { return (bool)GetValue(IsMultiplierProperty); }
@@ -446,11 +441,11 @@ namespace Game.HelperClassesWPF.Controls2D
         #endregion
     }
 
-    #region class: MultiplierValueConverter
+    #region Class: MultiplierValueConverter
 
     public class MultiplierValueConverter : IValueConverter
     {
-        #region class: ConvertProps
+        #region Class: ConvertProps
 
         private class ConvertProps
         {

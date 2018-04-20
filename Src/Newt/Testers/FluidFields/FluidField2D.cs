@@ -31,7 +31,7 @@ namespace Game.Newt.Testers.FluidFields
     /// </remarks>
     public class FluidField2D
     {
-        #region enum: SetBoundsType
+        #region Enum: SetBoundsType
 
         private enum SetBoundsType
         {
@@ -45,7 +45,7 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         #endregion
-        #region struct: IndexLERP
+        #region Struct: IndexLERP
 
         private struct IndexLERP
         {
@@ -1338,7 +1338,7 @@ namespace Game.Newt.Testers.FluidFields
 
         #region OLD blocked cell handling
 
-        //#region struct: Index12D
+        //#region Struct: Index12D
 
         ///// <summary>
         ///// This is just a convenient way to store an index.  Both the 2D version and the 1D version
@@ -1949,7 +1949,7 @@ namespace Game.Newt.Testers.FluidFields
         #endregion
     }
 
-    #region enum: FluidFieldBoundryType2D
+    #region Enum: FluidFieldBoundryType2D
 
     //TODO: May want combinations of these: Bottom is solid, Top is open, Left/Right and Front/Back are wrap around
     public enum FluidFieldBoundryType2D

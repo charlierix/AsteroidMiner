@@ -174,7 +174,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
             if(_age > _maxAge.Value)
             {
-                _map.RemoveItem(this);
+                _map.RemoveItem(this);      //NOTE: it is expected that there is a listener that will dispose this projectile
             }
         }
 

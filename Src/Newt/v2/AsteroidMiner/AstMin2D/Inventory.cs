@@ -97,7 +97,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         #endregion
     }
 
-    #region class: InventoryDNA
+    #region Class: InventoryDNA
 
     public class InventoryDNA
     {

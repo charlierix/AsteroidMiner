@@ -1185,16 +1185,17 @@ namespace Game.Newt.Testers.Newt2Tester
             }
 
             // Tell the world about the collision boundry (it will clean itself up if this is a second call)
-            var boundryLines = _world.SetCollisionBoundry(new Point3D(-100, -100, -100), new Point3D(100, 100, 100));
+            List<Point3D[]> innerLines, outerLines;
+            _world.SetCollisionBoundry(out innerLines, out outerLines, new Point3D(-100, -100, -100), new Point3D(100, 100, 100));
 
             // Draw the lines
             Color lineColor = Color.FromArgb(32, 0, 0, 0);
-            foreach (var line in boundryLines.innerLines)
+            foreach (Point3D[] line in innerLines)
             {
                 ScreenSpaceLines3D lineModel = new ScreenSpaceLines3D(false);
                 lineModel.Thickness = 1d;
                 lineModel.Color = lineColor;
-                lineModel.AddLine(line.from, line.to);
+                lineModel.AddLine(line[0], line[1]);
 
                 _viewport.Children.Add(lineModel);
                 _lines.Add(lineModel);

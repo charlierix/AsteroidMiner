@@ -7,7 +7,7 @@ using Game.Orig.Math3D;
 namespace Game.Orig.Map
 {
 
-    #region enum: RadarBlipQual
+    #region Enum: RadarBlipQual
 
     // It's a little funny for the map component to know what types of objects will use it, but I wanted a centralized enum.
     public enum RadarBlipQual
@@ -106,7 +106,7 @@ namespace Game.Orig.Map
     }
 
     #endregion
-    #region enum: CollisionStyle
+    #region Enum: CollisionStyle
 
     public enum CollisionStyle
     {

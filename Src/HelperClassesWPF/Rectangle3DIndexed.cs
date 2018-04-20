@@ -7,7 +7,7 @@ using System.Windows.Media.Media3D;
 
 namespace Game.HelperClassesWPF
 {
-    #region class: Rectangle3DIndexed
+    #region Class: Rectangle3DIndexed
 
     /// <summary>
     /// This represents a 3D rectangle.  It's a similar idea to TriangleIndexed, but a 3D rectangle instead of a triangle
@@ -287,7 +287,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: Rectangle3DIndexedMapped
+    #region Class: Rectangle3DIndexedMapped
 
     public class Rectangle3DIndexedMapped : Rectangle3DIndexed
     {

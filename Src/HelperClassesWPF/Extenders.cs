@@ -163,15 +163,6 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
-        #region Size
-
-        public static Size3D ToSize3D(this Size size, double z = 0)
-        {
-            return new Size3D(size.Width, size.Height, z);
-        }
-
-        #endregion
-
         #region Vector3D
 
         public static bool IsNearZero(this Vector3D vector)
@@ -412,20 +403,6 @@ namespace Game.HelperClassesWPF
                 default:
                     throw new ApplicationException("Unknown Axis: " + axis.ToString());
             }
-        }
-
-        #endregion
-
-        #region Size3D
-
-        public static Size ToSize2D(this Size3D size)
-        {
-            return new Size(size.X, size.Y);
-        }
-
-        public static Vector3D ToVector(this Size3D size)
-        {
-            return new Vector3D(size.X, size.Y, size.Z);
         }
 
         #endregion
@@ -758,26 +735,6 @@ namespace Game.HelperClassesWPF
             return rect.Y + (rect.Height / 2d);
         }
 
-        /// <summary>
-        /// This returns a rectangle that is the new size, but still centered around the original's center point
-        /// </summary>
-        public static Rect ChangeSize(this Rect rect, double multiplier)
-        {
-            double halfWidth = rect.Width / 2;
-            double halfHeight = rect.Height / 2;
-
-            return new Rect(
-                (rect.X + halfWidth) - (halfWidth * multiplier),
-                (rect.Y + halfHeight) - (halfHeight * multiplier),
-                rect.Width * multiplier,
-                rect.Height * multiplier);
-        }
-
-        public static Rect3D ToRect3D(this Rect rect, double z = 0)
-        {
-            return new Rect3D(rect.Location.ToPoint3D(z), rect.Size.ToSize3D());
-        }
-
         #endregion
 
         #region Rect3D
@@ -803,28 +760,9 @@ namespace Game.HelperClassesWPF
             return thisRect.IntersectsWith(rect) || thisRect.Contains(rect) || rect.Contains(thisRect);
         }
 
-        public static double DiagonalLength(this Rect3D rect)
+        public static double DiagonalLength(this Rect3D thisRect)
         {
-            return new Vector3D(rect.SizeX, rect.SizeY, rect.SizeZ).Length;
-        }
-
-        /// <summary>
-        /// This returns a rectangle that is the new size, but still centered around the original's center point
-        /// </summary>
-        public static Rect3D ChangeSize(this Rect3D rect, double multiplier)
-        {
-            return new Rect3D(
-                rect.X - (rect.SizeX * multiplier / 2),
-                rect.Y - (rect.SizeY * multiplier / 2),
-                rect.Z - (rect.SizeZ * multiplier / 2),
-                rect.SizeX * multiplier,
-                rect.SizeY * multiplier,
-                rect.SizeZ * multiplier);
-        }
-
-        public static Rect ToRect2D(this Rect3D rect)
-        {
-            return new Rect(rect.Location.ToPoint2D(), rect.Size.ToSize2D());
+            return new Vector3D(thisRect.SizeX, thisRect.SizeY, thisRect.SizeZ).Length;
         }
 
         #endregion

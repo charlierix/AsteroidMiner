@@ -22,7 +22,7 @@ namespace Game.Newt.v1.AsteroidMiner1
     /// </remarks>
     public class PointVisualizer
     {
-        #region class: ItemProperties
+        #region Class: ItemProperties
 
         private class ItemProperties
         {

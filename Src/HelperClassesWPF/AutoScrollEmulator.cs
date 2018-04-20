@@ -34,7 +34,7 @@ namespace Game.HelperClassesWPF
     /// </remarks>
     public class AutoScrollEmulator
     {
-        #region class: CenterImage
+        #region Class: CenterImage
 
         private class CenterImage
         {

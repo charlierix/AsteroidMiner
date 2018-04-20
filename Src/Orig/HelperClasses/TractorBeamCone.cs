@@ -16,7 +16,7 @@ namespace Game.Orig.HelperClassesOrig
         //TODO: Put this in the Items.dll
         //TODO: Make a derived class that ties this to a container (need protected hooks in this base class)
 
-        #region enum: BeamMode
+        #region Enum: BeamMode
 
         public enum BeamMode
         {
@@ -25,7 +25,7 @@ namespace Game.Orig.HelperClassesOrig
         }
 
         #endregion
-        #region class: Interaction
+        #region Class: Interaction
 
         private class Interaction
         {
@@ -42,7 +42,7 @@ namespace Game.Orig.HelperClassesOrig
         }
 
         #endregion
-        #region class: AngularVelocityInfo
+        #region Class: AngularVelocityInfo
 
         private class AngularVelocityInfo
         {

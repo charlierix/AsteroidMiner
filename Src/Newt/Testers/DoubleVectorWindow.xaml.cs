@@ -22,7 +22,7 @@ namespace Game.Newt.Testers
     /// </summary>
     public partial class DoubleVectorWindow : Window
     {
-        #region class: ItemColors
+        #region Class: ItemColors
 
         private class ItemColors
         {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Game.HelperClassesCore
 {
-    #region struct: VectorInt
+    #region Struct: VectorInt
 
     public struct VectorInt : IComparable<VectorInt>, IComparable, IEquatable<VectorInt>
     {
@@ -179,7 +179,7 @@ namespace Game.HelperClassesCore
 
     #endregion
 
-    #region struct: RectInt
+    #region Struct: RectInt
 
     public struct RectInt
     {

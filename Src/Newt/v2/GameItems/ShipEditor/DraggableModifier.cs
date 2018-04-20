@@ -11,7 +11,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
-    #region class: DraggableModifierSphere
+    #region Class: DraggableModifierSphere
 
     public class DraggableModifierSphere : DraggableModifierBase
     {
@@ -190,7 +190,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region class: DraggableModifierRing
+    #region Class: DraggableModifierRing
 
     public class DraggableModifierRing : DraggableModifierBase
     {
@@ -381,7 +381,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region class: DraggableModifierArrow
+    #region Class: DraggableModifierArrow
 
     /// <summary>
     /// This is a draggable arrow that modifies a part's scale
@@ -496,11 +496,11 @@ namespace Game.Newt.v2.GameItems.ShipEditor
     }
 
     #endregion
-    #region class: DraggableModifierBase
+    #region Class: DraggableModifierBase
 
     public abstract class DraggableModifierBase
     {
-        #region class: MaterialColorProps
+        #region Class: MaterialColorProps
 
         // This is copied from ShipParts.PartDesignBase (I didn't want cross namespace references)
         protected class MaterialColorProps

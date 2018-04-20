@@ -10,7 +10,6 @@ using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
-using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -62,11 +61,11 @@ namespace Game.Newt.v2.Arcanorum
                 throw new ApplicationException("can't have a weapon head on the right (that's where the attach point is)");
             }
 
-            IsUsable = true;
+            this.IsUsable = true;
 
-            IsGraphicsOnly = world == null;
+            this.IsGraphicsOnly = world == null;
 
-            _handle = new WeaponHandle(Materials, dna.Handle);
+            _handle = new WeaponHandle(this.Materials, dna.Handle);
 
             #region HeadLeft
 
@@ -74,13 +73,13 @@ namespace Game.Newt.v2.Arcanorum
             {
                 _headLeft = null;
             }
-            else if (dna.HeadLeft is WeaponSpikeBallDNA dnaBall)
+            else if (dna.HeadLeft is WeaponSpikeBallDNA)
             {
-                _headLeft = new WeaponSpikeBall(Materials, dnaBall);
+                _headLeft = new WeaponSpikeBall(this.Materials, (WeaponSpikeBallDNA)dna.HeadLeft);
             }
-            else if (dna.HeadLeft is WeaponAxeDNA dnaAxe)
+            else if (dna.HeadLeft is WeaponAxeDNA)
             {
-                _headLeft = new WeaponAxe(Materials, dnaAxe, true);
+                _headLeft = new WeaponAxe(this.Materials, (WeaponAxeDNA)dna.HeadLeft, true);
             }
             else
             {
@@ -94,13 +93,13 @@ namespace Game.Newt.v2.Arcanorum
             {
                 _headRight = null;
             }
-            else if (dna.HeadRight is WeaponSpikeBallDNA dnaBall)
+            else if (dna.HeadRight is WeaponSpikeBallDNA)
             {
-                _headRight = new WeaponSpikeBall(Materials, dnaBall);
+                _headRight = new WeaponSpikeBall(this.Materials, (WeaponSpikeBallDNA)dna.HeadRight);
             }
-            else if (dna.HeadRight is WeaponAxeDNA dnaAxe)
+            else if (dna.HeadRight is WeaponAxeDNA)
             {
-                _headRight = new WeaponAxe(Materials, dnaAxe, false);
+                _headRight = new WeaponAxe(this.Materials, (WeaponAxeDNA)dna.HeadRight, false);
             }
             else
             {
@@ -109,30 +108,30 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
 
-            DNA = new WeaponDNA()
+            this.DNA = new WeaponDNA()
             {
                 UniqueID = dna.UniqueID,
                 Name = dna.Name,
                 Handle = _handle.DNA,
-                HeadLeft = _headLeft?.DNAPart,
-                HeadRight = _headRight?.DNAPart,
+                HeadLeft = _headLeft == null ? null : _headLeft.DNAPart,
+                HeadRight = _headRight == null ? null : _headRight.DNAPart,
             };
 
             #region WPF Model
 
-            _model = GetModel(DNA, _handle.Model, _headLeft?.Model, _headRight?.Model);        // I'll leave the below note alone.  It's good to see progress :)
+            _model = GetModel(this.DNA, _handle.Model, _headLeft == null ? null : _headLeft.Model, _headRight == null ? null : _headRight.Model);
 
             // Apparently, groovy has syntax to do the above like this (just passes null if _headLeft is null.  Here is a cool page that implements that functionality
             // in c#, but the lambdas end up as more syntax that then the iifs
             // http://codepyre.com/2012/08/safe-dereference-inverse-null-coalescing-support-for-c-sharp/
-            //_model = GetModel(DNA, _handle.Model, _headLeft?.Model, _headRight?.Model);      
+            //_model = GetModel(this.DNA, _handle.Model, _headLeft?.Model, _headRight?.Model);      
 
             ModelVisual3D visual = new ModelVisual3D();        // this is the expensive one, so as few of these should be made as possible
-            visual.Content = Model;
+            visual.Content = this.Model;
             _visuals3D = new Visual3D[] { visual };
 
             // Attach Point
-            _attachModel = GetModel_AttachPoint(DNA.Handle);
+            _attachModel = GetModel_AttachPoint(this.DNA.Handle);
 
             if (_showAttachPoint)
             {
@@ -143,38 +142,35 @@ namespace Game.Newt.v2.Arcanorum
 
             #region Physics Body
 
-            if (IsGraphicsOnly)
+            if (this.IsGraphicsOnly)
             {
-                PhysicsBody = null;
-                Token = TokenGenerator.NextToken();
-                _mass = GetMass(dna);
+                this.PhysicsBody = null;
+                this.Token = TokenGenerator.NextToken();
             }
             else
             {
-                var massBreakdown = GetMassMatrix_CenterOfMass(DNA);
+                var massBreakdown = GetMassMatrix_CenterOfMass(this.DNA);
                 _mass = massBreakdown.Item1.Mass;
 
                 Transform3DGroup transform = new Transform3DGroup();
                 transform.Children.Add(new TranslateTransform3D(position.ToVector()));
 
-                using (CollisionHull hull = GetCollisionHull(DNA, world, _partsByCollisionID, _handle, _headLeft, _headRight))
+                using (CollisionHull hull = GetCollisionHull(this.DNA, world, _partsByCollisionID, _handle, _headLeft, _headRight))
                 {
-                    PhysicsBody = new Body(hull, transform.Value, _mass, _visuals3D)
-                    {
-                        MaterialGroupID = materialID,
-                        LinearDamping = .01d,
-                        AngularDamping = new Vector3D(.01d, .01d, .01d),
-                        MassMatrix = massBreakdown.Item1,
-                        CenterOfMass = massBreakdown.Item2,
-                    };
+                    this.PhysicsBody = new Body(hull, transform.Value, _mass, _visuals3D);
+                    this.PhysicsBody.MaterialGroupID = materialID;
+                    this.PhysicsBody.LinearDamping = .01d;
+                    this.PhysicsBody.AngularDamping = new Vector3D(.01d, .01d, .01d);
+                    this.PhysicsBody.MassMatrix = massBreakdown.Item1;
+                    this.PhysicsBody.CenterOfMass = massBreakdown.Item2;
 
-                    PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
+                    this.PhysicsBody.ApplyForceAndTorque += new EventHandler<BodyApplyForceAndTorqueArgs>(PhysicsBody_ApplyForceAndTorque);
                 }
 
-                Token = PhysicsBody.Token;
+                this.Token = this.PhysicsBody.Token;
 
                 // Rotate it so new ones will spawn pointing down
-                if (DNA.Handle.AttachPointPercent < .5d)
+                if (this.DNA.Handle.AttachPointPercent < .5d)
                 {
                     _initialRotation = new Quaternion(new Vector3D(0, 0, 1), 90);
                 }
@@ -184,19 +180,19 @@ namespace Game.Newt.v2.Arcanorum
                 }
 
                 //TODO: Figure out how to set this here, and not screw stuff up when attaching to the bot
-                //PhysicsBody.Rotation = _initialRotation;
+                //this.PhysicsBody.Rotation = _initialRotation;
             }
 
             #endregion
 
-            Radius = DNA.Handle.Length / 2d;
+            this.Radius = this.DNA.Handle.Length / 2d;
 
             #region Attach Point
 
-            AttachPoint = new Point3D(-(DNA.Handle.Length / 2d) + (DNA.Handle.Length * DNA.Handle.AttachPointPercent), 0, 0);
-            //AttachPoint = new Point3D((DNA.Handle.Length / 2d) - (DNA.Handle.Length * DNA.Handle.AttachPointPercent), 0, 0);
+            this.AttachPoint = new Point3D(-(this.DNA.Handle.Length / 2d) + (this.DNA.Handle.Length * this.DNA.Handle.AttachPointPercent), 0, 0);
+            //this.AttachPoint = new Point3D((this.DNA.Handle.Length / 2d) - (this.DNA.Handle.Length * this.DNA.Handle.AttachPointPercent), 0, 0);
 
-            if (Math1D.IsNearZero(DNA.Handle.AttachPointPercent) || Math1D.IsNearValue(DNA.Handle.AttachPointPercent, 1d))
+            if (Math1D.IsNearZero(this.DNA.Handle.AttachPointPercent) || Math1D.IsNearValue(this.DNA.Handle.AttachPointPercent, 1d))
             {
                 _isAttachInMiddle = false;
                 _massLeft = _mass;      // these masses shouldn't be used anyway
@@ -206,13 +202,13 @@ namespace Game.Newt.v2.Arcanorum
             {
                 _isAttachInMiddle = true;
                 //TODO: Take the heads into account
-                _massLeft = _mass * DNA.Handle.AttachPointPercent;
-                _massRight = _mass * (1d - DNA.Handle.AttachPointPercent);
+                _massLeft = _mass * this.DNA.Handle.AttachPointPercent;
+                _massRight = _mass * (1d - this.DNA.Handle.AttachPointPercent);
             }
 
             #endregion
 
-            CreationTime = DateTime.UtcNow;
+            this.CreationTime = DateTime.UtcNow;
         }
 
         #endregion
@@ -513,11 +509,6 @@ namespace Game.Newt.v2.Arcanorum
         /// </summary>
         public readonly WeaponDNA DNA;
 
-        /// <summary>
-        /// PhysicsBody could be null (look at IsGraphicsOnly), so mass is exposed explicitly
-        /// </summary>
-        public double Mass => _mass;
-
         //public bool IsExtended
         //{
         //    get
@@ -534,9 +525,9 @@ namespace Game.Newt.v2.Arcanorum
         /// <summary>
         /// This places the weapon's attach point at the requested location
         /// </summary>
-        public void MoveToAttachPoint(Point3D point)
+        public void MoveToAttachPoint_ORIG(Point3D point)
         {
-            #region validate
+            #region Validate
 #if DEBUG
             if (this.IsGraphicsOnly)
             {
@@ -545,7 +536,52 @@ namespace Game.Newt.v2.Arcanorum
 #endif
             #endregion
 
-            PhysicsBody.Position = point - PhysicsBody.DirectionToWorld(AttachPoint.ToVector());
+            Quaternion prevRotation = this.PhysicsBody.Rotation;
+
+            this.PhysicsBody.Rotation = Quaternion.Identity;
+            //this.PhysicsBody.Rotation = _initialRotation;     
+
+            this.PhysicsBody.Position = new Point3D(0, 0, 0);
+
+            // Convert to model coords
+            Point3D destinationModel = this.PhysicsBody.PositionFromWorld(point);
+
+            Vector3D attachRotated = prevRotation.GetRotatedVector((this.AttachPoint.ToVector()) * -1d);
+
+            destinationModel = point + attachRotated;
+
+            this.PhysicsBody.Position = this.PhysicsBody.PositionToWorld(destinationModel);
+            this.PhysicsBody.Rotation = prevRotation;
+            //this.PhysicsBody.Rotation = _initialRotation;
+        }
+        public void MoveToAttachPoint(Point3D point)
+        {
+            #region Validate
+#if DEBUG
+            if (this.IsGraphicsOnly)
+            {
+                throw new InvalidOperationException("MoveToAttachPoint can't be called when this class is graphics only");
+            }
+#endif
+            #endregion
+
+            Quaternion prevRotation = this.PhysicsBody.Rotation;
+
+            this.PhysicsBody.Rotation = Quaternion.Identity;
+            //this.PhysicsBody.Rotation = _initialRotation;     
+
+            this.PhysicsBody.Position = new Point3D(0, 0, 0);
+
+            // Convert to model coords
+            Point3D destinationModel = this.PhysicsBody.PositionFromWorld(point);
+
+            Vector3D attachRotated = prevRotation.GetRotatedVector((this.AttachPoint.ToVector()) * -1d);
+
+            destinationModel = point + attachRotated;
+
+            this.PhysicsBody.Position = this.PhysicsBody.PositionToWorld(destinationModel);
+            //this.PhysicsBody.Rotation = prevRotation;
+            //this.PhysicsBody.Rotation = _initialRotation;
         }
 
         //public void Extend()
@@ -810,13 +846,13 @@ namespace Game.Newt.v2.Arcanorum
             // Left Ball
             if (dna.HeadLeft != null)
             {
-                if (dna.HeadLeft is WeaponSpikeBallDNA dnaBall)
+                if (dna.HeadLeft is WeaponSpikeBallDNA)
                 {
-                    hulls.Add(GetCollisionHull_SpikeBall(dnaBall, world, nextCollisionID, headTranslate));
+                    hulls.Add(GetCollisionHull_SpikeBall((WeaponSpikeBallDNA)dna.HeadLeft, world, nextCollisionID, headTranslate));
                 }
-                else if (dna.HeadLeft is WeaponAxeDNA dnaAxe)
+                else if (dna.HeadLeft is WeaponAxeDNA)
                 {
-                    hulls.Add(GetCollisionHull_Axe(dnaAxe, world, nextCollisionID, headTranslate, (WeaponAxe)headLeft));
+                    hulls.Add(GetCollisionHull_Axe((WeaponAxeDNA)dna.HeadLeft, world, nextCollisionID, headTranslate, (WeaponAxe)headLeft));
                 }
                 else
                 {
@@ -830,13 +866,13 @@ namespace Game.Newt.v2.Arcanorum
             // Right Ball
             if (dna.HeadRight != null)
             {
-                if (dna.HeadRight is WeaponSpikeBallDNA dnaBall)
+                if (dna.HeadRight is WeaponSpikeBallDNA)
                 {
-                    hulls.Add(GetCollisionHull_SpikeBall(dnaBall, world, nextCollisionID, -headTranslate));
+                    hulls.Add(GetCollisionHull_SpikeBall((WeaponSpikeBallDNA)dna.HeadRight, world, nextCollisionID, -headTranslate));
                 }
-                else if (dna.HeadRight is WeaponAxeDNA dnaAxe)
+                else if (dna.HeadRight is WeaponAxeDNA)
                 {
-                    hulls.Add(GetCollisionHull_Axe(dnaAxe, world, nextCollisionID, -headTranslate, (WeaponAxe)headRight));
+                    hulls.Add(GetCollisionHull_Axe((WeaponAxeDNA)dna.HeadRight, world, nextCollisionID, -headTranslate, (WeaponAxe)headRight));
                 }
                 else
                 {
@@ -894,9 +930,11 @@ namespace Game.Newt.v2.Arcanorum
             UtilityNewt.IObjectMassBreakdown breakdown;
             double mass;
 
-            #region handle
+            #region Handle
 
-            mass = GetMass(dna.Handle);
+            double radiusExaggerated = dna.Handle.Radius * 2d;
+            double volume = Math.PI * radiusExaggerated * radiusExaggerated * dna.Handle.Length;
+            mass = GetDensity(dna.Handle.HandleMaterial) * volume;
 
             breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, new Vector3D(dna.Handle.Length, dna.Handle.Radius * 2, dna.Handle.Radius * 2), cellSize);
 
@@ -908,13 +946,20 @@ namespace Game.Newt.v2.Arcanorum
             {
                 if (head.Item1 != null)
                 {
-                    if (head.Item1 is WeaponSpikeBallDNA ballDNA)
+                    if (head.Item1 is WeaponSpikeBallDNA)
                     {
-                        #region spike ball
+                        #region Spike ball
 
-                        mass = GetMass(ballDNA);
+                        WeaponSpikeBallDNA ball = (WeaponSpikeBallDNA)head.Item1;
 
-                        double radius = ballDNA.Radius;
+                        double radius = ball.Radius;
+
+                        //radiusExaggerated = radius * 2d;
+                        radiusExaggerated = radius * 1d;
+
+                        volume = 4d / 3d * Math.PI * radiusExaggerated * radiusExaggerated * radiusExaggerated;
+                        mass = GetDensity(ball.Material) * volume;
+                        mass *= 3;
 
                         Point3D position = new Point3D(head.Item2, 0, 0);
 
@@ -924,19 +969,34 @@ namespace Game.Newt.v2.Arcanorum
 
                         #endregion
                     }
-                    else if (head.Item1 is WeaponAxeDNA axeDNA)
+                    else if (head.Item1 is WeaponAxeDNA)
                     {
-                        #region axe
+                        #region Axe
 
-                        mass = GetMass(axeDNA);
+                        WeaponAxeDNA axeDNA = (WeaponAxeDNA)head.Item1;
 
-                        Vector3D size = GetAxeSize(axeDNA);
-
+                        Vector3D size = new Vector3D();
                         double yOffset = 0d;
-                        if(axeDNA.Sides == WeaponAxeSides.Single_BackFlat || axeDNA.Sides == WeaponAxeSides.Single_BackSpike)
+
+                        switch (axeDNA.Sides)
                         {
-                            yOffset = axeDNA.SizeSingle * .5;      // CreateBox centers size, this will push the blade to the right (leaving some for the back
+                            case WeaponAxeSides.Single_BackFlat:
+                            case WeaponAxeSides.Single_BackSpike:
+                                size = new Vector3D(axeDNA.SizeSingle * 1.1, axeDNA.SizeSingle, axeDNA.SizeSingle * .05);
+                                yOffset = axeDNA.SizeSingle * .5;      // CreateBox centers size, this will push the blade to the right (leaving some for the back
+                                break;
+
+                            case WeaponAxeSides.Double:
+                                size = new Vector3D(axeDNA.SizeSingle * 2, axeDNA.SizeSingle, axeDNA.SizeSingle * .05);
+                                break;
+
+                            default:
+                                throw new ApplicationException("Unknown WeaponAxeSides: " + axeDNA.Sides.ToString());
                         }
+
+                        volume = size.X * size.Y * size.Z;
+                        mass = GetDensity(WeaponSpikeBallMaterial.Iron_Steel) * volume;
+                        mass *= 3;
 
                         Point3D position = new Point3D(head.Item2, yOffset, 0);
 
@@ -956,79 +1016,10 @@ namespace Game.Newt.v2.Arcanorum
             return UtilityNewt.GetMassMatrix_CenterOfMass(parts.ToArray(), cellSize, inertiaMultiplier);
         }
 
-        private static double GetMass(WeaponDNA dna)
-        {
-            double mass = GetMass(dna.Handle);
-
-            foreach (var head in new[] { dna.HeadLeft, dna.HeadRight })
-            {
-                if (head != null)
-                {
-                    if (head is WeaponSpikeBallDNA ballDNA)
-                    {
-                        mass += GetMass(ballDNA);
-                    }
-                    else if (head is WeaponAxeDNA axeDNA)
-                    {
-                        mass += GetMass(axeDNA);
-                    }
-                    else
-                    {
-                        throw new ApplicationException("Unknown weapon part type: " + head.GetType().ToString());
-                    }
-                }
-            }
-
-            return mass;
-        }
-        private static double GetMass(WeaponHandleDNA dna)
-        {
-            double radiusExaggerated = dna.Radius * 2d;
-            double volume = Math.PI * radiusExaggerated * radiusExaggerated * dna.Length;
-            return GetDensity(dna.HandleMaterial) * volume;
-        }
-        private static double GetMass(WeaponSpikeBallDNA dna)
-        {
-            //radiusExaggerated = dna.Radius * 2d;
-            double radiusExaggerated = dna.Radius * 1d;
-
-            double volume = 4d / 3d * Math.PI * radiusExaggerated * radiusExaggerated * radiusExaggerated;
-            double mass = GetDensity(dna.Material) * volume;
-            mass *= 3;
-
-            return mass;
-        }
-        private static double GetMass(WeaponAxeDNA dna)
-        {
-            Vector3D size = GetAxeSize(dna);
-
-            double volume = size.X * size.Y * size.Z;
-            double mass = GetDensity(WeaponSpikeBallMaterial.Iron_Steel) * volume;
-            mass *= 3;
-
-            return mass;
-        }
-
-        private static Vector3D GetAxeSize(WeaponAxeDNA dna)
-        {
-            switch (dna.Sides)
-            {
-                case WeaponAxeSides.Single_BackFlat:
-                case WeaponAxeSides.Single_BackSpike:
-                    return new Vector3D(dna.SizeSingle * 1.1, dna.SizeSingle, dna.SizeSingle * .05);
-
-                case WeaponAxeSides.Double:
-                    return new Vector3D(dna.SizeSingle * 2, dna.SizeSingle, dna.SizeSingle * .05);
-
-                default:
-                    throw new ApplicationException("Unknown WeaponAxeSides: " + dna.Sides.ToString());
-            }
-        }
-
         #endregion
     }
 
-    #region class: WeaponDNA
+    #region Class: WeaponDNA
 
     public class WeaponDNA
     {
@@ -1062,14 +1053,12 @@ namespace Game.Newt.v2.Arcanorum
         //TODO: Take in a bool to see if it is required to be useable
         public static WeaponDNA GetRandomDNA()
         {
-            Random rand = StaticRandom.GetRandomForThread();
-
             WeaponHandleDNA handle = WeaponHandleDNA.GetRandomDNA();
 
             WeaponPartDNA leftHead = null;
-            if (!Math1D.IsNearZero(handle.AttachPointPercent) && rand.NextDouble() < .25)
+            if (!Math1D.IsNearZero(handle.AttachPointPercent) && StaticRandom.NextDouble() < .25)
             {
-                if (rand.NextBool())
+                if (StaticRandom.NextBool())
                 {
                     leftHead = WeaponSpikeBallDNA.GetRandomDNA(handle);
                 }
@@ -1077,14 +1066,12 @@ namespace Game.Newt.v2.Arcanorum
                 {
                     leftHead = WeaponAxeDNA.GetRandomDNA();
                 }
-
-                leftHead.IsBackward = rand.NextBool();
             }
 
             WeaponPartDNA rightHead = null;
-            if (!Math1D.IsNearValue(handle.AttachPointPercent, 1d) && rand.NextDouble() < .25)
+            if (!Math1D.IsNearValue(handle.AttachPointPercent, 1d) && StaticRandom.NextDouble() < .25)
             {
-                if (rand.NextBool())
+                if (StaticRandom.NextBool())
                 {
                     rightHead = WeaponSpikeBallDNA.GetRandomDNA(handle);
                 }
@@ -1092,17 +1079,15 @@ namespace Game.Newt.v2.Arcanorum
                 {
                     rightHead = WeaponAxeDNA.GetRandomDNA();
                 }
-
-                rightHead.IsBackward = rand.NextBool();
             }
 
             return new WeaponDNA()
-            {
-                UniqueID = Guid.NewGuid(),
-                Handle = handle,
-                HeadLeft = leftHead,
-                HeadRight = rightHead
-            };
+                {
+                    UniqueID = Guid.NewGuid(),
+                    Handle = handle,
+                    HeadLeft = leftHead,
+                    HeadRight = rightHead
+                };
         }
 
         /// <summary>
@@ -1184,20 +1169,18 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region class: WeaponPartDNA
+    #region Class: WeaponPartDNA
 
     public class WeaponPartDNA
     {
         // These these store custom settings
         public SortedList<string, double> KeyValues { get; set; }
         public MaterialDefinition[] MaterialsForCustomizable { get; set; }
-
-        public bool IsBackward { get; set; }
     }
 
     #endregion
 
-    #region class: WeaponPart
+    #region Class: WeaponPart
 
     public abstract class WeaponPart
     {
@@ -1217,7 +1200,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region class: WeaponDamage
+    #region Class: WeaponDamage
 
     public class WeaponDamage
     {
@@ -1303,17 +1286,17 @@ namespace Game.Newt.v2.Arcanorum
             return new WeaponDamage(this.Position, kinetic, pierce, slash);
         }
 
-        public static (bool isDead, WeaponDamage actualDamage) DoDamage(ITakesDamage item, WeaponDamage damage)
+        public static Tuple<bool, WeaponDamage> DoDamage(ITakesDamage item, WeaponDamage damage)
         {
             if (damage == null)
             {
-                return (false, damage);
+                return Tuple.Create(false, damage);
             }
 
             WeaponDamage damageActual = damage.GetDamage(item.ReceiveDamageMultipliers);
 
             // Remove the damage.  If something was returned, that means hitpoints are zero
-            return (item.HitPoints.RemoveQuantity(damageActual.GetDamage(), false) > 0, damageActual);
+            return Tuple.Create(item.HitPoints.RemoveQuantity(damageActual.GetDamage(), false) > 0, damageActual);
         }
 
         public static WeaponDamage GetMerged(IEnumerable<WeaponDamage> damages)
@@ -1375,7 +1358,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region interface: ITakesDamage
+    #region Interface: ITakesDamage
 
     public interface ITakesDamage
     {
@@ -1383,11 +1366,10 @@ namespace Game.Newt.v2.Arcanorum
         /// Takes damage, returns true when destroyed
         /// </summary>
         /// <returns>
-        /// null=no damage taken
         /// Item1=true if it got destroyed
         /// Item2=how much damage was inflicted
         /// </returns>
-        (bool isDead, WeaponDamage actualDamage)? Damage(WeaponDamage damage, Weapon weapon = null);
+        Tuple<bool, WeaponDamage> Damage(WeaponDamage damage, Weapon weapon = null);
 
         WeaponDamage ReceiveDamageMultipliers { get; }
 
@@ -1395,7 +1377,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region interface: IGivesDamage
+    #region Interface: IGivesDamage
 
     public interface IGivesDamage
     {
@@ -1404,7 +1386,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region class: WeaponMaterialCache
+    #region Class: WeaponMaterialCache
 
     public class WeaponMaterialCache
     {

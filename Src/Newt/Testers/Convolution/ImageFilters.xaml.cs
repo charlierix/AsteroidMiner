@@ -23,7 +23,7 @@ namespace Game.Newt.Testers.Convolution
 {
     public partial class ImageFilters : Window
     {
-        #region class: DragDataObject
+        #region Class: DragDataObject
 
         internal class DragDataObject
         {

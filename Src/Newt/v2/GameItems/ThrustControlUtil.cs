@@ -662,7 +662,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: ThrustContributionModel
+    #region Class: ThrustContributionModel
 
     public class ThrustContributionModel
     {
@@ -729,7 +729,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ThrustContribution
+    #region Class: ThrustContribution
 
     public class ThrustContribution
     {
@@ -782,7 +782,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ThrusterMap
+    #region Class: ThrusterMap
 
     public class ThrusterMap
     {
@@ -849,7 +849,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ThrusterSetting
+    #region Class: ThrusterSetting
 
     public class ThrusterSetting
     {
@@ -869,7 +869,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ThrusterSolutionMap
+    #region Class: ThrusterSolutionMap
 
     /// <summary>
     /// This holds a map and the resulting acceleration
@@ -891,7 +891,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ThrustSolutionSolver
+    #region Class: ThrustSolutionSolver
 
     /// <summary>
     /// This still needs quite a bit of work
@@ -930,7 +930,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class ThrustSolutionSolver
     {
-        #region class: ThrustRequest
+        #region Class: ThrustRequest
 
         private class ThrustRequest
         {
@@ -939,7 +939,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: ThrusterSolution
+        #region Class: ThrusterSolution
 
         private class ThrusterSolution
         {
@@ -966,7 +966,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: CurrentModel
+        #region Class: CurrentModel
 
         private class CurrentModel
         {

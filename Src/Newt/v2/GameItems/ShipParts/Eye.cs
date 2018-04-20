@@ -14,7 +14,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     //TODO: There will be a camera eye, and rangefinder eye (and more, look in PartBase.ShipParts enum)
     //TODO: Use color options class
 
-    #region class: EyeToolItem
+    #region Class: EyeToolItem
 
     public class EyeToolItem : PartToolItemBase
     {
@@ -75,7 +75,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: EyeDesign
+    #region Class: EyeDesign
 
     public class EyeDesign : PartDesignBase
     {
@@ -331,11 +331,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: Eye
+    #region Class: Eye
 
     public class Eye
     {
-        public const string PARTTYPE = nameof(Eye);
+        public const string PARTTYPE = "Eye";
     }
 
     #endregion

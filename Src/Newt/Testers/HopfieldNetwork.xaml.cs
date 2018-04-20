@@ -489,7 +489,7 @@ namespace Game.Newt.Testers
         #endregion
     }
 
-    #region interface: INNPatternStorage
+    #region Interface: INNPatternStorage
 
     public interface INNPatternStorage
     {
@@ -507,7 +507,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region class: RandomPatternStorage
+    #region Class: RandomPatternStorage
 
     public class RandomPatternStorage : INNPatternStorage
     {
@@ -539,7 +539,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region class: Hopfield
+    #region Class: Hopfield
 
     //http://web.cs.ucla.edu/~rosen/161/notes/hopfield.html
     public class Hopfield : INNPatternStorage
@@ -798,7 +798,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region class: RestrictedBoltzmann
+    #region Class: RestrictedBoltzmann
 
     public class RestrictedBoltzmann : INNPatternStorage
     {
@@ -823,7 +823,7 @@ namespace Game.Newt.Testers
     }
 
     #endregion
-    #region class: HopfieldNetworkOptions
+    #region Class: HopfieldNetworkOptions
 
     /// <summary>
     /// This gets serialized to file

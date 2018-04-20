@@ -19,7 +19,7 @@ namespace Game.Newt.Testers
 {
     public partial class ShipCameraTesterSnapshot : Window
     {
-        #region class: TriangleOverlay
+        #region Class: TriangleOverlay
 
         public class TriangleOverlay
         {
@@ -38,7 +38,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: PolygonOverlay
+        #region Class: PolygonOverlay
 
         public class PolygonOverlay
         {

@@ -27,7 +27,7 @@ namespace Game.Newt.Testers.Controllers
 {
     public partial class ThrustControllerWindow : Window
     {
-        #region enum: ThrusterTypeValues
+        #region Enum: ThrusterTypeValues
 
         private enum ThrusterTypeValues
         {
@@ -120,7 +120,8 @@ namespace Game.Newt.Testers.Controllers
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
+                List<Point3D[]> innerLines, outerLines;
+                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
                 //TODO: Only draw the boundry lines if options say to
 
@@ -146,8 +147,8 @@ namespace Game.Newt.Testers.Controllers
                 _map.ShouldBuildSnapshots = false;
                 _map.ShouldShowSnapshotLines = false;
                 _map.ShouldSnapshotCentersDrift = true;
-                //_map.ItemAdded += Map_ItemAdded;
-                //_map.ItemRemoved += Map_ItemRemoved;
+                _map.ItemAdded += Map_ItemAdded;
+                _map.ItemRemoved += Map_ItemRemoved;
 
                 #endregion
                 #region Update Manager
@@ -295,6 +296,44 @@ namespace Game.Newt.Testers.Controllers
                 canvas.Children.Add(panel);
 
                 debugOverlay.Content = canvas;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void Map_ItemAdded(object sender, MapItemArgs e)
+        {
+            try
+            {
+                //if (e.Item.PhysicsBody != null)
+                //{
+                //    e.Item.PhysicsBody.ApplyForceAndTorque += PhysicsBody_ApplyForceAndTorque;
+                //}
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Map_ItemRemoved(object sender, MapItemArgs e)
+        {
+            try
+            {
+                //if (e.Item.PhysicsBody != null)
+                //{
+                //    e.Item.PhysicsBody.ApplyForceAndTorque -= PhysicsBody_ApplyForceAndTorque;
+                //}
+
+                if (e.Item is IDisposable)
+                {
+                    ((IDisposable)e.Item).Dispose();
+                }
+                else if (e.Item.PhysicsBody != null)
+                {
+                    e.Item.PhysicsBody.Dispose();
+                }
             }
             catch (Exception ex)
             {
@@ -516,7 +555,10 @@ namespace Game.Newt.Testers.Controllers
             if (_bot != null)
             {
                 _bot.PhysicsBody.BodyMoved -= PhysicsBody_BodyMoved;
+
                 _map.RemoveItem(_bot);
+
+                //_bot.Dispose();       // Map_ItemRemoved event listener already disposed it
                 _bot = null;
             }
         }
@@ -645,7 +687,7 @@ namespace Game.Newt.Testers.Controllers
                 if (randomOrientations)
                 {
                     Vector3D standardVect = new Vector3D(0, 0, 1);
-                    Vector3D rotatedVect = Math3D.GetRandomVector_Cone(axis, 0, 90, 1, 1);
+                    Vector3D rotatedVect = Math3D.GetRandomVector_Cone(axis, 90);
                     orientation = Math3D.GetRotation(standardVect, rotatedVect);
                 }
 

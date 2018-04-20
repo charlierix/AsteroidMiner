@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.ChaseForces
 {
     public partial class ChaseForcesWindow : Window
     {
-        #region enum: ChaseType
+        #region Enum: ChaseType
 
         private enum ChaseType
         {
@@ -120,7 +120,8 @@ namespace Game.Newt.Testers.ChaseForces
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
+                List<Point3D[]> innerLines, outerLines;
+                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
                 #endregion
                 #region Materials

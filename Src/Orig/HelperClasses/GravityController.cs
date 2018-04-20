@@ -167,7 +167,7 @@ namespace Game.Orig.HelperClassesOrig
         #endregion
     }
 
-    #region enum: GravityMode
+    #region Enum: GravityMode
 
     public enum GravityMode
     {

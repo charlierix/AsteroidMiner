@@ -51,7 +51,7 @@ namespace Game.Newt.Testers.Newt2Tester
 		#endregion
 	}
 
-	#region class: FluidEmulation
+	#region Class: FluidEmulation
 
 	public class FluidEmulationArgs : EventArgs
 	{

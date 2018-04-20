@@ -15,7 +15,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 {
     public class Selector
     {
-        #region enum: SelectionMode
+        #region Enum: SelectionMode
 
         private enum SelectionMode
         {
@@ -25,7 +25,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
 
         #endregion
-        #region enum: MouseButtonDown
+        #region Enum: MouseButtonDown
 
         private enum MouseButtonDown
         {
@@ -36,7 +36,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
 
         #endregion
 
-        #region class: MousePosition
+        #region Class: MousePosition
 
         private class MousePosition
         {

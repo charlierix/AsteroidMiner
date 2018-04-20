@@ -223,11 +223,11 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         #endregion
     }
 
-    #region class: BallProps
+    #region Class: BallProps
 
     public class BallProps
     {
-        #region enum: SizeModes
+        #region Enum: SizeModes
 
         public enum SizeModes
         {
@@ -237,7 +237,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
 
         #endregion
-        #region enum: AngularVelocityModes
+        #region Enum: AngularVelocityModes
 
         public enum AngularVelocityModes
         {

@@ -967,7 +967,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: ItemSelectedArgs
+    #region Class: ItemSelectedArgs
 
     public class ItemSelectedArgs : EventArgs
     {

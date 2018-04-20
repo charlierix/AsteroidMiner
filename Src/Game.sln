@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.12
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Newt", "Newt", "{AF64F442-6C64-420F-9319-EB0A14A25C1B}"
 EndProject
@@ -60,14 +60,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HelperClassesAI", "HelperClassesAI\HelperClassesAI.csproj", "{BD763BB3-B9AB-4252-8265-CCB718B4519A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MissileCommand", "Newt\v2\MissileCommand\MissileCommand.csproj", "{23D67714-0E29-442E-88B5-577E6B56A04B}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "referenced projects", "referenced projects", "{BD0F359F-F72F-45E2-BC14-70ED2814309D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpNeatLib", "ref\SharpNeatLib\SharpNeatLib.csproj", "{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpNeatViewLib", "ref\SharpNeatViewLib\SharpNeatViewLib.csproj", "{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpNeatDomains", "ref\SharpNeatDomains\SharpNeatDomains.csproj", "{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,18 +151,6 @@ Global
 		{23D67714-0E29-442E-88B5-577E6B56A04B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23D67714-0E29-442E-88B5-577E6B56A04B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23D67714-0E29-442E-88B5-577E6B56A04B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -195,8 +175,5 @@ Global
 		{ECC151BE-22FF-4D6D-9A13-27CED43257C2} = {6D791675-FAEF-40A6-A6E3-C341C98B840C}
 		{65B4CECD-3124-4C42-8B02-A4B09F3C8DE7} = {6D791675-FAEF-40A6-A6E3-C341C98B840C}
 		{23D67714-0E29-442E-88B5-577E6B56A04B} = {6D791675-FAEF-40A6-A6E3-C341C98B840C}
-		{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15} = {BD0F359F-F72F-45E2-BC14-70ED2814309D}
-		{4EA80D7B-B680-4AB8-BC4A-B51AF33A3FDE} = {BD0F359F-F72F-45E2-BC14-70ED2814309D}
-		{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78} = {BD0F359F-F72F-45E2-BC14-70ED2814309D}
 	EndGlobalSection
 EndGlobal

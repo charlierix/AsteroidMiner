@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SensorNetForceToolItem
+    #region Class: SensorNetForceToolItem
 
     public class SensorNetForceToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorNetForceDesign
+    #region Class: SensorNetForceDesign
 
     public class SensorNetForceDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -157,11 +157,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorNetForce
+    #region Class: SensorNetForce
 
     public class SensorNetForce
     {
-        public const string PARTTYPE = nameof(SensorNetForce);
+        public const string PARTTYPE = "SensorNetForce";
     }
 
     #endregion

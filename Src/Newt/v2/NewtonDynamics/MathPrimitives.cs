@@ -7,7 +7,7 @@ using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.NewtonDynamics
 {
-    #region class: NewtonVector3
+    #region Class: NewtonVector3
 
     public class NewtonVector3
     {
@@ -63,7 +63,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: NewtonVector4
+    #region Class: NewtonVector4
 
     public class NewtonVector4
     {
@@ -98,7 +98,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: NewtonQuaternion
+    #region Class: NewtonQuaternion
 
     public class NewtonQuaternion
     {
@@ -147,11 +147,11 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: NewtonMatrix
+    #region Class: NewtonMatrix
 
     public class NewtonMatrix
     {
-        #region class: NewtonJacobian
+        #region Class: NewtonJacobian
 
         public class NewtonJacobian
         {
@@ -247,7 +247,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region struct: InertialMatrix
+    #region Struct: InertialMatrix
 
     public struct InertialMatrix
     {

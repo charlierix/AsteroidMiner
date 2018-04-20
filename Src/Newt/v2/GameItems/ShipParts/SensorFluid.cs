@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SensorFluidToolItem
+    #region Class: SensorFluidToolItem
 
     public class SensorFluidToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorFluidDesign
+    #region Class: SensorFluidDesign
 
     public class SensorFluidDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -157,11 +157,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorFluid
+    #region Class: SensorFluid
 
     public class SensorFluid
     {
-        public const string PARTTYPE = nameof(SensorFluid);
+        public const string PARTTYPE = "SensorFluid";
     }
 
     #endregion

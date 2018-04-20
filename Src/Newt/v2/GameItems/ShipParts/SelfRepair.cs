@@ -11,7 +11,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SelfRepairToolItem
+    #region Class: SelfRepairToolItem
 
     public class SelfRepairToolItem : PartToolItemBase
     {
@@ -72,7 +72,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SelfRepairDesign
+    #region Class: SelfRepairDesign
 
     public class SelfRepairDesign : PartDesignBase
     {
@@ -223,11 +223,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SelfRepair
+    #region Class: SelfRepair
 
     public class SelfRepair
     {
-        public const string PARTTYPE = nameof(SelfRepair);
+        public const string PARTTYPE = "SelfRepair";
     }
 
     #endregion

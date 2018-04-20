@@ -59,11 +59,11 @@ namespace Game.Newt.Testers.ChaseForces
             }
             else
             {
-                ForceEntry entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Attract_Direction, .1, gradient: new[] { new GradientEntry(0d, 0d), new GradientEntry(10d, 1d) });        // toward .1, gradient {0,0} {10,1}
+                ForceEntry entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Attract_Direction, .1, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(10d, 1d) });        // toward .1, gradient {0,0} {10,1}
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
 
-                entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Drag_Velocity_Any, .03, gradient: new[] { new GradientEntry(0d, 0d), new GradientEntry(5d, 1d) });        // drag .03
+                entry = ForceEntry.GetNewEntry_Orientation(ChaseDirectionType.Drag_Velocity_Any, .03, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(5d, 1d) });        // drag .03
                 entry.ValueChanged += new EventHandler(Entry_ValueChanged);
                 pnlForces.Children.Add(entry);
 

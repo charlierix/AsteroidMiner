@@ -211,7 +211,7 @@ namespace Game.Newt.Testers.Newt2Tester
 		#endregion
 	}
 
-	#region enum: BodyAttractionType
+	#region Enum: BodyAttractionType
 
 	public enum BodyAttractionType
 	{
@@ -226,7 +226,7 @@ namespace Game.Newt.Testers.Newt2Tester
 
 	#endregion
 
-	#region class: BodyAttractionArgs
+	#region Class: BodyAttractionArgs
 
 	public class BodyAttractionArgs : EventArgs
 	{

@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: FuelTankToolItem
+    #region Class: FuelTankToolItem
 
     public class FuelTankToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: FuelTankDesign
+    #region Class: FuelTankDesign
 
     public class FuelTankDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XY_Z;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -163,12 +163,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return CollisionHull.CreateCapsule(world, 0, radius, height, transform.Value);
             }
         }
-        internal static UtilityNewt.IObjectMassBreakdown GetTankMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
+        internal static UtilityNewt.IObjectMassBreakdown GetTankMassBreakdown(ref Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> existing, Vector3D scale, double cellSize)
         {
-            if (existing != null && existing.Scale == scale && existing.CellSize == cellSize)
+            if (existing != null && existing.Item2 == scale && existing.Item3 == cellSize)
             {
                 // This has already been built for this size
-                return existing.Breakdown;
+                return existing.Item1;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
@@ -195,9 +195,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var combined = UtilityNewt.Combine(objects);
 
             // Store this
-            existing = new MassBreakdownCache(combined, scale, cellSize);
+            existing = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, scale, cellSize);
 
-            return existing.Breakdown;
+            // Exit Function
+            return existing.Item1;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -255,13 +256,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: FuelTank
+    #region Class: FuelTank
 
     public class FuelTank : PartBase, IContainer, INeuronContainer, IPartUpdatable
     {
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(FuelTank);
+        public const string PARTTYPE = "FuelTank";
 
         private readonly object _lock = new object();
 
@@ -462,11 +463,35 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly => new INeuron[] { _neuron };
-        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
-        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Readonly
+        {
+            get
+            {
+                return new INeuron[] { _neuron };
+            }
+        }
+        public IEnumerable<INeuron> Neruons_ReadWrite
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
+        public IEnumerable<INeuron> Neruons_Writeonly
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
 
-        public IEnumerable<INeuron> Neruons_All => new INeuron[] { _neuron };
+        public IEnumerable<INeuron> Neruons_All
+        {
+            get
+            {
+                return new INeuron[] { _neuron };
+            }
+        }
 
         public double Radius
         {
@@ -474,10 +499,22 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
+        public NeuronContainerType NeuronContainerType
+        {
+            get
+            {
+                return NeuronContainerType.Sensor;
+            }
+        }
 
-        // This is a basic container that doesn't consume energy, so is always "on"
-        public bool IsOn => true;
+        public bool IsOn
+        {
+            get
+            {
+                // This is a basic container that doesn't consume energy, so is always "on"
+                return true;
+            }
+        }
 
         #endregion
         #region IPartUpdatable Members
@@ -491,8 +528,20 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _neuron.Value = UtilityCore.GetScaledValue_Capped(-1d, 1d, 0d, _container.QuantityMax, _container.QuantityCurrent);       // no need for a lock, max never changes
         }
 
-        public int? IntervalSkips_MainThread => null;
-        public int? IntervalSkips_AnyThread => 0;
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
+        }
 
         #endregion
 
@@ -515,7 +564,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual => _scaleActual;
+        public override Vector3D ScaleActual
+        {
+            get
+            {
+                return _scaleActual;
+            }
+        }
 
         #endregion
 

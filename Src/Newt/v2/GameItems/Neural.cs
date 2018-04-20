@@ -23,7 +23,7 @@ namespace Game.Newt.v2.GameItems
     //TODO: Prove: Neurons/Links are stored in 2D or 3D.  What are the advantages of 3D over 2D?  More chances for groups to be near each other?  If
     //there's a clear advantage, what about 4D, 5D, etc?  Does there need to be a certain number/density of neurons before it makes sense to add a dimension?
 
-    #region enum: NeuronContainerType
+    #region Enum: NeuronContainerType
 
     /// <summary>
     /// This allows more granular control of how many neural links to allow between types of containers
@@ -51,7 +51,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region interface: INeuron
+    #region Interface: INeuron
 
     /// <summary>
     /// This represents a single neuron.  It could be the output of a sensor made to look like a neuron, it could be the input
@@ -112,41 +112,25 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region interface: INeuronContainer
+    #region Interface: INeuronContainer
 
     public interface INeuronContainer
     {
-        /// <summary>
-        /// Other parts can only read these neuron values.  Trying to set the values will have no effect on this part
-        /// </summary>
-        /// <remarks>
-        /// This would be used for a sensor's output, or a traditional feed forward NN's output
-        /// </remarks>
+        // Exposing as three separate lists to make it easier for brains to wire in
         IEnumerable<INeuron> Neruons_Readonly
         {
             get;
         }
-        /// <summary>
-        /// These serve as input and output.  External parts can set values and this part will also change these values
-        /// </summary>
         IEnumerable<INeuron> Neruons_ReadWrite
         {
             get;
         }
-        /// <summary>
-        /// Other parts can only write to these neurons.  (you could read the values, but this part doesn't change those values)
-        /// </summary>
-        /// <remarks>
-        /// This would be used for a manipulator's inputs, or a feed forward NN's input
-        /// </remarks>
         IEnumerable<INeuron> Neruons_Writeonly
         {
             get;
         }
 
-        /// <summary>
-        /// This needs to always be the combination of the three specialized lists (no extras or omissions)
-        /// </summary>
+        // This needs to always be the combination of the three specialized lists
         IEnumerable<INeuron> Neruons_All
         {
             get;
@@ -182,7 +166,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: Neuron_ZeroPos
+    #region Class: Neuron_ZeroPos
 
     /// <summary>
     /// This class is hardcoded to constrain the output from 0 to 1 (along an S curve)
@@ -298,7 +282,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: Neuron_NegPos
+    #region Class: Neuron_NegPos
 
     /// <summary>
     /// This class is hardcoded to constrain the output from -1 to 1 (along an S curve)
@@ -402,7 +386,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: Neuron_Spike
+    #region Class: Neuron_Spike
 
     /// <summary>
     /// This is an attempt to better simulate the way real neurons work.  It will only let this.Value be nonzero for a brief time after
@@ -581,7 +565,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: Neuron_SensorPosition
+    #region Class: Neuron_SensorPosition
 
     /// <summary>
     /// This is a readonly neuron that is meant to be used by sensors.  There are extra properties for position length, and the value
@@ -685,7 +669,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: Neuron_Fade
+    #region Class: Neuron_Fade
 
     /// <summary>
     /// This is meant to be used as a brain sensor.  It takes a bit of time to get the value high, then the value slowly fades back to
@@ -866,7 +850,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: NeuralLinkDNA
+    #region Class: NeuralLinkDNA
 
     /// <summary>
     /// This holds a link between two neurons
@@ -921,7 +905,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: NeuralLinkExternalDNA
+    #region Class: NeuralLinkExternalDNA
 
     /// <summary>
     /// This is used to store external links
@@ -948,7 +932,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: NeuralLink
+    #region Class: NeuralLink
 
     public class NeuralLink
     {
@@ -980,7 +964,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: NeuralBucket
+    #region Class: NeuralBucket
 
     /// <summary>
     /// This will process an arbitrary set of links
@@ -1000,7 +984,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class NeuralBucket
     {
-        #region class: NeuronBackPointer
+        #region Class: NeuronBackPointer
 
         /// <summary>
         /// This holds a reference to a neuron, and all the neurons that feed it
@@ -1049,7 +1033,7 @@ namespace Game.Newt.v2.GameItems
         {
             // Group the links up by the output neuron, and feeder neurons
             _neurons = links
-                .ToLookup(o => o.To)
+                .GroupBy(o => o.To)
                 .Select(o => new NeuronBackPointer(o.Key, o.First().ToContainer, o.ToArray()))
                 .ToArray();
 
@@ -1070,7 +1054,7 @@ namespace Game.Newt.v2.GameItems
 
         #region Public Methods
 
-        public void Tick_ORIG()
+        public void Tick()
         {
             // Reset the indices
             for (int cntr = 0; cntr < _neurons.Length; cntr++)
@@ -1130,63 +1114,16 @@ namespace Game.Newt.v2.GameItems
                 _neurons[index2].Neuron.SetValue(weight);
             }
         }
-        public void Tick()
-        {
-            foreach (NeuronBackPointer neuron in UtilityCore.RandomOrder(_neurons))
-            {
-                // Check if the container is switched off
-                if (!neuron.Container.IsOn)
-                {
-                    neuron.Neuron.SetValue(0d);
-                    continue;
-                }
-
-                double weight = 0;
-
-                // Add up the input neuron weights
-                foreach (var link in neuron.Links)
-                {
-                    if (!link.FromContainer.IsOn)
-                    {
-                        continue;
-                    }
-
-                    #region Add up brain chemicals
-
-                    //TODO: Fix this.  Starting at one means that it takes more negative modifiers to bring the multiplier negative.
-                    //But starting at zero means that if there are no brain chemicals, the multiplier will be zero, and this link will be dead
-
-                    double brainChemicalMultiplier = 1d;		// defaulting to 1 so that if there are no brain chemicals, it multiplies by one
-
-                    if (link.BrainChemicalModifiers != null && link.FromContainer is Brain)		// for now, the only way to be in the presence of brain chemicals is if the from neuron is inside a brain
-                    {
-                        Brain brain = (Brain)link.FromContainer;
-
-                        // Add up the brain chemicals
-                        for (int i = 0; i < link.BrainChemicalModifiers.Length; i++)
-                        {
-                            brainChemicalMultiplier += link.BrainChemicalModifiers[i] * brain.GetBrainChemicalValue(i);		// brain just returns zero for chemicals it doesn't have
-                        }
-                    }
-
-                    #endregion
-
-                    weight += link.From.Value * link.Weight * brainChemicalMultiplier;
-                }
-
-                neuron.Neuron.SetValue(weight);
-            }
-        }
 
         #endregion
     }
 
     #endregion
-    #region class: NeuralPool
+    #region Class: NeuralPool
 
     public class NeuralPool
     {
-        #region class: TaskWrapper
+        #region Class: TaskWrapper
 
         /// <summary>
         /// This is a single thread
@@ -1311,7 +1248,7 @@ namespace Game.Newt.v2.GameItems
 
                         #region Process buckets
 
-                        foreach (NeuralBucket bucket2 in UtilityCore.RandomOrder(buckets))
+                        foreach (NeuralBucket bucket2 in buckets)
                         {
                             bucket2.Tick();
                         }
@@ -1552,12 +1489,9 @@ namespace Game.Newt.v2.GameItems
         }
         private void RemovePrivate(NeuralBucket bucket)
         {
-            System.Diagnostics.Debug.WriteLine($"Removing Neural Bucket: {bucket.Token}");
-
             if (!_itemsByToken.ContainsKey(bucket.Token))
             {
-                //throw new ArgumentException("This bucket was never added");
-                return;
+                throw new ArgumentException("This bucket was never added");
             }
 
             TaskWrapper wrapper = _itemsByToken[bucket.Token].Item2;
@@ -1573,62 +1507,12 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: NeuralPool_ManualTick
 
-    /// <summary>
-    /// The neural pool works well for items running in real time.  But for worlds running in background threads,
-    /// the neural pool appears to not be able to keep up.  So this class gives direct control of the neurons firing
-    /// </summary>
-    /// <remarks>
-    /// It's funny how much simpler this class is when everything is running on the same thread :)
-    /// </remarks>
-    public class NeuralPool_ManualTick
-    {
-        #region Declaration Section
-
-        private List<NeuralBucket> _buckets = new List<NeuralBucket>();
-
-        #endregion
-
-        #region Public Properties
-
-        public int NumBuckets => _buckets.Count;
-        public int NumLinks => _buckets.Sum(o => o.Count);
-
-        #endregion
-
-        #region Public Methods
-
-        public void Add(NeuralBucket bucket)
-        {
-            _buckets.Add(bucket);
-        }
-        public void Remove(NeuralBucket bucket)
-        {
-            _buckets.Remove(bucket);
-        }
-
-        /// <summary>
-        /// Each call does one pass through all the neurons
-        /// </summary>
-        public void Tick()
-        {
-            foreach (NeuralBucket bucket in UtilityCore.RandomOrder(_buckets))
-            {
-                bucket.Tick();
-            }
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region class: NeuralUtility
+    #region Class: NeuralUtility
 
     public static class NeuralUtility
     {
-        #region enum: ExternalLinkRatioCalcType
+        #region Enum: ExternalLinkRatioCalcType
 
         /// <summary>
         /// When calculating how many links to build between neuron containers, this tells what values to look at
@@ -1659,7 +1543,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: ContainerInput
+        #region Class: ContainerInput
 
         public class ContainerInput
         {
@@ -1714,14 +1598,10 @@ namespace Game.Newt.v2.GameItems
             //NOTE: It's ok if either of these two are null.  These are just treated as suggestions
             public readonly NeuralLinkDNA[] InternalLinks;
             public readonly NeuralLinkExternalDNA[] ExternalLinks;
-
-            // These are helper properties so the caller doesn't have a complex statement just to get at neurons
-            public IEnumerable<INeuron> ReadableNeurons => Container.Neruons_ReadWrite.Concat(Container.Neruons_Readonly);
-            public IEnumerable<INeuron> WritableNeurons => Container.Neruons_ReadWrite.Concat(Container.Neruons_Writeonly);
         }
 
         #endregion
-        #region class: ContainerOutput
+        #region Class: ContainerOutput
 
         public class ContainerOutput
         {
@@ -1740,7 +1620,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region class: LinkIndexed
+        #region Class: LinkIndexed
 
         public class LinkIndexed
         {
@@ -1759,7 +1639,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: ContainerPoints
+        #region Class: ContainerPoints
 
         private class ContainerPoints
         {
@@ -1793,7 +1673,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: ClosestExistingResult
+        #region Class: ClosestExistingResult
 
         private class ClosestExistingResult
         {
@@ -1810,7 +1690,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: HighestPercentResult
+        #region Class: HighestPercentResult
 
         private class HighestPercentResult
         {
@@ -1923,12 +1803,12 @@ namespace Game.Newt.v2.GameItems
             if (output.InternalLinks != null)
             {
                 dna.InternalLinks = output.InternalLinks.Select(o => new NeuralLinkDNA()
-                {
-                    From = o.From.Position,
-                    To = o.To.Position,
-                    Weight = o.Weight,
-                    BrainChemicalModifiers = o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.ToArray()       // using ToArray to make a copy
-                }).ToArray();
+                    {
+                        From = o.From.Position,
+                        To = o.To.Position,
+                        Weight = o.Weight,
+                        BrainChemicalModifiers = o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.ToArray()		// using ToArray to make a copy
+                    }).ToArray();
             }
 
             // External
@@ -1936,14 +1816,14 @@ namespace Game.Newt.v2.GameItems
             if (output.ExternalLinks != null)
             {
                 dna.ExternalLinks = output.ExternalLinks.Select(o => new NeuralLinkExternalDNA()
-                {
-                    FromContainerPosition = o.FromContainer.Position,
-                    FromContainerOrientation = o.FromContainer.Orientation,
-                    From = o.From.Position,
-                    To = o.To.Position,
-                    Weight = o.Weight,
-                    BrainChemicalModifiers = o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.ToArray()       // using ToArray to make a copy
-                }).ToArray();
+                    {
+                        FromContainerPosition = o.FromContainer.Position,
+                        FromContainerOrientation = o.FromContainer.Orientation,
+                        From = o.From.Position,
+                        To = o.To.Position,
+                        Weight = o.Weight,
+                        BrainChemicalModifiers = o.BrainChemicalModifiers == null ? null : o.BrainChemicalModifiers.ToArray()		// using ToArray to make a copy
+                    }).ToArray();
             }
         }
 
@@ -1970,10 +1850,12 @@ namespace Game.Newt.v2.GameItems
                 #region Separate into buckets
 
                 // Separate into readable and writeable buckets
-                List<INeuron> readable = new List<INeuron>(container.Container.Neruons_Readonly);
+                List<INeuron> readable = new List<INeuron>();
+                readable.AddRange(container.Container.Neruons_Readonly);
                 int[] readonlyIndices = Enumerable.Range(0, readable.Count).ToArray();
 
-                List<INeuron> writeable = new List<INeuron>(container.Container.Neruons_Writeonly);
+                List<INeuron> writeable = new List<INeuron>();
+                writeable.AddRange(container.Container.Neruons_Writeonly);
                 int[] writeonlyIndices = Enumerable.Range(0, writeable.Count).ToArray();
 
                 SortedList<int, int> readwritePairs = new SortedList<int, int>();		// storing illegal pairs so that neurons can't link to themselves (I don't know if they can in real life.  That's a tough term to search for, google gave far too generic answers)
@@ -2287,12 +2169,12 @@ namespace Game.Newt.v2.GameItems
                 }
 
                 double? weight = null;
-                foreach (var mapped in partMap.Map_Actual)
+                foreach (var mapped in partMap.Actual)
                 {
-                    if ((mapped.from.Token == containers[currentIndex].Token && mapped.to.Token == containers[cntr].Token) ||
-                        (mapped.to.Token == containers[currentIndex].Token && mapped.from.Token == containers[cntr].Token))
+                    if ((mapped.Item1.Token == containers[currentIndex].Token && mapped.Item2.Token == containers[cntr].Token) ||
+                        (mapped.Item2.Token == containers[currentIndex].Token && mapped.Item1.Token == containers[cntr].Token))
                     {
-                        weight = mapped.weight;
+                        weight = mapped.Item3;
                         break;
                     }
                 }
@@ -2371,7 +2253,9 @@ namespace Game.Newt.v2.GameItems
         private static List<INeuron>[] BuildExternalLinksRandom_FindReadable(ContainerInput[] containers)
         {
             return containers.
-                Select(o => o.ReadableNeurons.ToList()).
+                Select(o => o.Container.Neruons_Readonly.
+                    Concat(o.Container.Neruons_ReadWrite).
+                    ToList()).
                 ToArray();
         }
 

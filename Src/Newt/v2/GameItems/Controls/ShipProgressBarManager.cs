@@ -125,18 +125,16 @@ namespace Game.Newt.v2.GameItems.Controls
 
         protected ProgressBarGame CreateProgressBar(double quantityCurrent, double quantityMax, double damagePercent, string name, Color color)
         {
-            ProgressBarGame retVal = new ProgressBarGame
-            {
-                RightLabelVisibility = Visibility.Visible,
-                RightLabelText = name,
-                Foreground = this.Foreground,
-                ProgressColor = color,
+            ProgressBarGame retVal = new ProgressBarGame();
+            retVal.RightLabelVisibility = Visibility.Visible;
+            retVal.RightLabelText = name;
+            retVal.Foreground = this.Foreground;
+            retVal.ProgressColor = color;
 
-                Minimum = 0,
-                Maximum = quantityMax,
-                Value = quantityCurrent,
-                DamagedPercent = damagePercent
-            };
+            retVal.Minimum = 0;
+            retVal.Maximum = quantityMax;
+            retVal.Value = quantityCurrent;
+            retVal.DamagedPercent = damagePercent;
 
             _panel.Children.Add(retVal);
 

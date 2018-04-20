@@ -29,7 +29,7 @@ namespace Game.Newt.Testers
 {
     public partial class ShipPartTesterWindow : Window
     {
-        #region class: TempBody
+        #region Class: TempBody
 
         /// <summary>
         /// This is a body that shouldn't stay around forever
@@ -99,7 +99,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: ItemColors
+        #region Class: ItemColors
 
         private class ItemColors
         {
@@ -125,7 +125,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region enum: BalanceTestType
+        #region Enum: BalanceTestType
 
         private enum BalanceTestType
         {
@@ -136,11 +136,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: BalanceVisualizer
+        #region Class: BalanceVisualizer
 
         private class BalanceVisualizer : IDisposable
         {
-            #region enum: IsInsideResult
+            #region Enum: IsInsideResult
 
             private enum IsInsideResult
             {
@@ -150,7 +150,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: HullLineResult
+            #region Class: HullLineResult
 
             private class HullLineResult
             {
@@ -1307,14 +1307,14 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: ThrustController
+        #region Class: ThrustController
 
         /// <summary>
         /// This is a proof of concept class.  The final version will be owned by the ship
         /// </summary>
         private class ThrustController : IDisposable
         {
-            #region class: ThrustContribution
+            #region Class: ThrustContribution
 
             private class ThrustContribution
             {
@@ -1344,7 +1344,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: ThrustSetting
+            #region Class: ThrustSetting
 
             private class ThrustSetting
             {
@@ -1389,7 +1389,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: ThrustSet
+            #region Class: ThrustSet
 
             private class ThrustSet
             {
@@ -1428,7 +1428,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: FiringAttempt
+            #region Class: FiringAttempt
 
             /// <summary>
             /// This holds percents, and what torque those produce.  It's used as an intermediate to hold a history of best performing attempts (I was just
@@ -4050,7 +4050,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: EnsurePartsNotIntersecting
+        #region Class: EnsurePartsNotIntersecting
 
         private static class EnsurePartsNotIntersecting
         {
@@ -4300,7 +4300,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: DestructibleContainer
+        #region Class: DestructibleContainer
 
         private class DestructibleContainer : Container, ITakesDamage
         {
@@ -5332,11 +5332,9 @@ namespace Game.Newt.Testers
                 {
                     PartType = ConverterRadiationToEnergy.PARTTYPE,
                     Shape = UtilityCore.GetRandomEnum<SolarPanelShape>(),
-                    //Shape = SolarPanelShape.Trapazoid,
                     Position = new Point3D(0, 0, 0),
                     Orientation = Quaternion.Identity,
-                    Scale = new Vector3D(1, 1, 1),
-                    //Scale = new Vector3D(2.77620825035, 1, 1),
+                    Scale = new Vector3D(1, 1, 1)
                 };
                 ModifyDNA(dna, chkStandaloneRandSize.IsChecked.Value, chkStandaloneRandOrientation.IsChecked.Value);
 
@@ -6114,8 +6112,7 @@ namespace Game.Newt.Testers
                 ClearCurrent();
 
                 //TODO: Let the user choose a file
-                ShipDNA shipDNA = UtilityCore.DeserializeFromFile<ShipDNA>(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Ships\Beans\2013-05-17 13.50.46.937 - boston - 137.7.xml");
-
+                ShipDNA shipDNA = (ShipDNA)XamlServices.Load(@"C:\Users\charlie.rix\AppData\Roaming\Asteroid Miner\Ships\Beans\2013-05-17 13.50.46.937 - boston - 137.7.xml");
 
                 DateTime startTime = DateTime.UtcNow;
 
@@ -7185,6 +7182,7 @@ namespace Game.Newt.Testers
             if (_bot != null)
             {
                 _map.RemoveItem(_bot, true);
+                _bot.Dispose();
                 _bot = null;
             }
 
@@ -7214,7 +7212,8 @@ namespace Game.Newt.Testers
             _world = new World();
             _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-            var boundryLines = _world.SetCollisionBoundry(_boundryMin, _boundryMax);
+            List<Point3D[]> innerLines, outerLines;
+            _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
             // Draw the lines
             _boundryLines = new ScreenSpaceLines3D(true);
@@ -7222,9 +7221,9 @@ namespace Game.Newt.Testers
             _boundryLines.Color = _colors.BoundryLines;
             _viewport.Children.Add(_boundryLines);
 
-            foreach (var line in boundryLines.innerLines)
+            foreach (Point3D[] line in innerLines)
             {
-                _boundryLines.AddLine(line.from, line.to);
+                _boundryLines.AddLine(line[0], line[1]);
             }
 
             #endregion

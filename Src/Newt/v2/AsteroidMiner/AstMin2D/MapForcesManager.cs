@@ -49,8 +49,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             // This will keep objects on the XY plane using forces (not velocities)
             _keep2D = new KeepItems2D();
 
-            _map.ItemAdded += Map_ItemAdded;
-            _map.ItemRemoved += Map_ItemRemoved;
+            _map.ItemAdded += new EventHandler<MapItemArgs>(Map_ItemAdded);
+            _map.ItemRemoved += new EventHandler<MapItemArgs>(Map_ItemRemoved);
 
             // Just using one property from boundry (assumes the boundry is square, and max is positive)
             _boundryForceEnd = _boundryMax.X;

@@ -45,7 +45,7 @@ namespace Game.Newt.v2.GameItems
         DateTime CreationTime { get; }
     }
 
-    #region class: MapObjectUtil
+    #region Class: MapObjectUtil
 
     public static class MapObjectUtil
     {

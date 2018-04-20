@@ -24,7 +24,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     //It will decide which actual brains to create based on the parts nearby -- so if there's a camera nearby, it would instantiate a specialized vison brain,
     //and wire that to the camera.  If there's a thruster nearby, it may instantiate a controller, etc
 
-    #region class: BrainToolItem
+    #region Class: BrainToolItem
 
     public class BrainToolItem : PartToolItemBase
     {
@@ -85,7 +85,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: BrainDesign
+    #region Class: BrainDesign
 
     public class BrainDesign : PartDesignBase
     {
@@ -96,7 +96,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -164,10 +164,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Breakdown;
+                return _massBreakdown.Item1;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -176,9 +176,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
+            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
 
-            return _massBreakdown.Breakdown;
+            // Exit Function
+            return _massBreakdown.Item1;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -395,13 +396,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: Brain
+    #region Class: Brain
 
     public class Brain : PartBase, INeuronContainer, IPartUpdatable
     {
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(Brain);
+        public const string PARTTYPE = "Brain";
 
         private readonly ItemOptions _itemOptions;
 
@@ -429,29 +430,62 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            Design = new BrainDesign(options, true);
-            Design.SetDNA(dna);
+            this.Design = new BrainDesign(options, true);
+            this.Design.SetDNA(dna);
 
             // Build the neurons (not doing the links yet - or maybe do the internal links?)
             _brainChemicals = CreateBrainChemicals(dna, itemOptions);
             _neurons = CreateNeurons(dna, itemOptions, _brainChemicals.Select(o => o.Position).ToArray());
             //_design.NeuronLocations = _neurons.Select(o => o.Position).ToArray();
 
-            GetMass(out _mass, out _volume, out double radius, out _scaleActual, dna, itemOptions);
-            Radius = radius;
+            double radius;
+            GetMass(out _mass, out _volume, out radius, dna, itemOptions);
+
+            this.Radius = radius;
+            _scaleActual = new Vector3D(radius * 2d, radius * 2d, radius * 2d);
         }
 
         #endregion
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly => Enumerable.Empty<INeuron>();
-        public IEnumerable<INeuron> Neruons_ReadWrite => _neurons;
-        public IEnumerable<INeuron> Neruons_Writeonly => _brainChemicals;
+        public IEnumerable<INeuron> Neruons_Readonly
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
+        public IEnumerable<INeuron> Neruons_ReadWrite
+        {
+            get
+            {
+                return _neurons;
+            }
+        }
+        public IEnumerable<INeuron> Neruons_Writeonly
+        {
+            get
+            {
+                return _brainChemicals;
+            }
+        }
 
-        public IEnumerable<INeuron> Neruons_All => UtilityCore.Iterate<INeuron>(_neurons, _brainChemicals);
+        public IEnumerable<INeuron> Neruons_All
+        {
+            get
+            {
+                return UtilityCore.Iterate<INeuron>(_neurons, _brainChemicals);
+            }
+        }
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Brain;
+        public NeuronContainerType NeuronContainerType
+        {
+            get
+            {
+                return NeuronContainerType.Brain;
+            }
+        }
 
         public double Radius
         {
@@ -460,7 +494,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn => _isOn;
+        public bool IsOn
+        {
+            get
+            {
+                return _isOn;
+            }
+        }
 
         #endregion
         #region IPartUpdatable Members
@@ -475,9 +515,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //a separate thread, and doesn't deal with energy draw, so this.IsOn is a loose compromise.  That tick could fire several times for each
             //one of this.Update, or the other way around.  But in the long run, they should be fairly synced.
 
-            if (IsDestroyed ||
-                _energyTanks == null ||
-                _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
+            if (this.IsDestroyed || _energyTanks == null || _energyTanks.RemoveQuantity(elapsedTime * _volume * _itemOptions.Brain_AmountToDraw * ItemOptions.ENERGYDRAWMULT, true) > 0d)
             {
                 // The energy tank didn't have enough
                 //NOTE: To be clean, I should set the neuron outputs to zero, but anything pulling from them should be checking this anyway.  So
@@ -603,6 +641,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 existingStaticPoints: staticPoints,
                 staticRepulseMultipliers: staticRepulseMult);
 
+            // Exit Function
             return retVal;
         }
 
@@ -657,7 +696,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public static Vector3D[] GetNeuronPositions_Ring2D(Point3D[] dnaPositions, int count, double radius, double z = 0)
         {
             // Get the points passed in, or random points (capped to count)
-            Vector3D[] retVal = GetNeuronPositionsInitial(out Vector3D[] staticPoints, out double[] staticRepulseMult, dnaPositions, null, 1, count, radius, o => Math3D.GetRandomVector_Circular_Shell(o));
+            Vector3D[] staticPoints;
+            double[] staticRepulseMult;
+            Vector3D[] retVal = GetNeuronPositionsInitial(out staticPoints, out staticRepulseMult, dnaPositions, null, 1, count, radius, o => Math3D.GetRandomVector_Circular_Shell(o));
 
             // Convert the 3D points to 2D
             Vector[] retVal2D = retVal.Select(o => o.ToVector2D()).ToArray();
@@ -669,7 +710,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             // Space them out evenly
             retVal2D = Math3D.GetRandomVectors_CircularRing_EvenDist(retVal2D, radius,
-                stopRadiusPercent: .001,
                 existingStaticPoints: staticPoints2D,
                 staticRepulseMultipliers: staticRepulseMult);
 
@@ -701,15 +741,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D scaleActual, ShipPartDNA dna, ItemOptions itemOptions)
+        private static void GetMass(out double mass, out double volume, out double radius, ShipPartDNA dna, ItemOptions itemOptions)
         {
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// they should be identical anyway
             radius *= BrainDesign.SCALE;		// scale it
 
             volume = 4d / 3d * Math.PI * radius * radius * radius;
             mass = volume * itemOptions.Brain_Density;
-
-            scaleActual = new Vector3D(radius * 2d, radius * 2d, radius * 2d);
         }
 
         private static Neuron_Fade[] CreateBrainChemicals(ShipPartDNA dna, ItemOptions itemOptions)
@@ -751,7 +789,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private static Neuron_NegPos[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, Point3D[] brainChemicalPositions)
         {
             // Figure out how many to make
-            GetNeuronVolume(out double radius, out double volume, dna, itemOptions);
+            double radius, volume;
+            GetNeuronVolume(out radius, out volume, dna, itemOptions);
 
             int count = Convert.ToInt32(Math.Round(itemOptions.Brain_NeuronDensity * volume));
             if (count == 0)
@@ -762,9 +801,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Figure out the positions
             Vector3D[] positions = GetNeuronPositions_Cluster(dna.Neurons, brainChemicalPositions, 3d, count, radius, itemOptions.Brain_NeuronMinClusterDistPercent);
 
-            return positions.
-                Select(o => new Neuron_NegPos(o.ToPoint())).
-                ToArray();
+            // Exit Function
+            return positions.Select(o => new Neuron_NegPos(o.ToPoint())).ToArray();
         }
 
         private static void GetNeuronVolume(out double radius, out double volume, ShipPartDNA dna, ItemOptions itemOptions)

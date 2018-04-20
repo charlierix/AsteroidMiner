@@ -17,7 +17,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class ShipPlayerORIG : Bot
     {
-        #region class: ThrustContribution
+        #region Class: ThrustContribution
 
         private class ThrustContribution
         {
@@ -48,7 +48,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region class: ThrusterSetting
+        #region Class: ThrusterSetting
 
         private class ThrusterSetting
         {
@@ -335,7 +335,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
 
             // Try to pop this out of the map
-            if (!_map.RemoveItem(mineral, true, false))
+            if (!_map.RemoveItem(mineral, true))
             {
                 // It's already gone
                 return;

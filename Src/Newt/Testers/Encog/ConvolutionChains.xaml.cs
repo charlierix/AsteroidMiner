@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.Encog
 {
     public partial class ConvolutionChains : Window
     {
-        #region class: InstructionsPrimitive
+        #region Class: InstructionsPrimitive
 
         private class InstructionsPrimitive
         {
@@ -37,7 +37,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region class: InstructionsExtract
+        #region Class: InstructionsExtract
 
         private class InstructionsExtract
         {
@@ -156,7 +156,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region class: InstructionsSOM
+        #region Class: InstructionsSOM
 
         private class InstructionsSOM
         {
@@ -179,7 +179,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region class: InstructionsNN
+        #region Class: InstructionsNN
 
         private class InstructionsNN
         {
@@ -225,7 +225,7 @@ namespace Game.Newt.Testers.Encog
 
         #endregion
 
-        #region class: ImageConvsBySize
+        #region Class: ImageConvsBySize
 
         private class ImageConvsBySize
         {
@@ -240,7 +240,7 @@ namespace Game.Newt.Testers.Encog
         }
 
         #endregion
-        #region class: ChainOutput
+        #region Class: ChainOutput
 
         private class ChainOutput
         {
@@ -264,7 +264,7 @@ namespace Game.Newt.Testers.Encog
 
         #endregion
 
-        #region class: TestResults
+        #region Class: TestResults
 
         private class TestResults
         {
@@ -279,7 +279,7 @@ namespace Game.Newt.Testers.Encog
 
         #endregion
 
-        #region enum: LastShown
+        #region Enum: LastShown
 
         private enum LastShown
         {
@@ -3311,7 +3311,7 @@ namespace Game.Newt.Testers.Encog
             return new ThreadIDLog<ChainOutput[]>(resultPairs.Select(o => o.Output).ToArray(), resultPairs.SelectMany(o => o.IDs));
         }
 
-        #region class: ThreadIDLog
+        #region Class: ThreadIDLog
 
         private class ThreadIDLog<T>
         {
@@ -3551,7 +3551,7 @@ namespace Game.Newt.Testers.Encog
         #endregion
     }
 
-    #region class: ConvChain_ConvChain
+    #region Class: ConvChain_ConvChain
 
     //TODO: Make properties so that this is serializable
     public class ConvChain_ConvChain
@@ -3673,7 +3673,7 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region class: ConvChain_Step
+    #region Class: ConvChain_Step
 
     public class ConvChain_Step
     {
@@ -3731,7 +3731,7 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region class: ConvChain_NeuralNet
+    #region Class: ConvChain_NeuralNet
 
     //TODO: Make properties so that this is serializable
     public class ConvChain_NeuralNet

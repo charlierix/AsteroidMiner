@@ -6,7 +6,7 @@ using Game.Orig.Math3D;
 
 namespace Game.Orig.Map
 {
-    #region enum: CollisionDepth
+    #region Enum: CollisionDepth
 
     public enum CollisionDepth
     {

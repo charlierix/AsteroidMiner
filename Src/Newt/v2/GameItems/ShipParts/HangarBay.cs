@@ -11,7 +11,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: HangarBayToolItem
+    #region Class: HangarBayToolItem
 
     public class HangarBayToolItem : PartToolItemBase
     {
@@ -72,7 +72,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: HangarBayDesign
+    #region Class: HangarBayDesign
 
     public class HangarBayDesign : PartDesignBase
     {
@@ -262,11 +262,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: HangarBay
+    #region Class: HangarBay
 
     public class HangarBay
     {
-        public const string PARTTYPE = nameof(HangarBay);
+        public const string PARTTYPE = "HangarBay";
     }
 
     #endregion

@@ -14,7 +14,7 @@ using Game.Newt.v2.NewtonDynamics;
 // The objects in this file chase a point (see GameTester\Documentation for a class diagram)
 namespace Game.Newt.v2.GameItems
 {
-    #region class: MapObject_ChasePoint_Direct
+    #region Class: MapObject_ChasePoint_Direct
 
     /// <summary>
     /// This is an item that is currently selected.  It and any derived classes hold selection visuals
@@ -269,7 +269,7 @@ namespace Game.Newt.v2.GameItems
     #endregion
 
     //TODO: Pass in ChasePointVelocity as well
-    #region class: MapObject_ChasePoint_Velocity
+    #region Class: MapObject_ChasePoint_Velocity
 
     /// <summary>
     /// Chases a point, modifies velocity directly.  The only modifier is max velocity
@@ -392,7 +392,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: MapObject_ChasePoint_Forces
+    #region Class: MapObject_ChasePoint_Forces
 
     /// <summary>
     /// This chases a point
@@ -588,32 +588,32 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ChasePoint_Force
+    #region Class: ChasePoint_Force
 
     public class ChasePoint_Force
     {
         #region Constructor
 
-        public ChasePoint_Force(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, bool isDistanceRadius = true, GradientEntry[] gradient = null)
+        public ChasePoint_Force(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, bool isDistanceRadius = true, Tuple<double, double>[] gradient = null)
         {
             if (gradient != null && gradient.Length == 1)
             {
                 throw new ArgumentException("Gradient must have at least two items if it is populated");
             }
 
-            Direction = direction;
-            Value = value;
-            IsAccel = isAccel;
-            IsSpring = isSpring;
-            IsDistanceRadius = isDistanceRadius;
+            this.Direction = direction;
+            this.Value = value;
+            this.IsAccel = isAccel;
+            this.IsSpring = isSpring;
+            this.IsDistanceRadius = isDistanceRadius;
 
             if (gradient == null || gradient.Length == 0)
             {
-                Gradient = null;
+                this.Gradient = null;
             }
             else
             {
-                Gradient = gradient;
+                this.Gradient = gradient;
             }
         }
 
@@ -657,6 +657,8 @@ namespace Game.Newt.v2.GameItems
 
         /// <summary>
         /// This specifies varying percents based on distance to target
+        /// Item1: Distance
+        /// Item2: Percent
         /// </summary>
         /// <remarks>
         /// If a distance is less than what is specified, then the lowest value gradient stop will be used (same with larger distances)
@@ -676,7 +678,7 @@ namespace Game.Newt.v2.GameItems
         ///     at 8: 2%
         ///     at 10: 0%
         /// </remarks>
-        public readonly GradientEntry[] Gradient;
+        public readonly Tuple<double, double>[] Gradient;
 
         #endregion
 
@@ -689,7 +691,9 @@ namespace Game.Newt.v2.GameItems
                 return null;
             }
 
-            GetDesiredVector(out Vector3D unit, out double length, e, this.Direction);
+            Vector3D unit;
+            double length;
+            GetDesiredVector(out unit, out length, e, this.Direction);
             if (Math3D.IsNearZero(unit))
             {
                 return null;
@@ -715,31 +719,31 @@ namespace Game.Newt.v2.GameItems
             // Gradient %
             if (this.Gradient != null)
             {
-                force *= GetGradientPercent(GetDistance(e.DirectionLength, e.Item.Radius), Gradient);
+                force *= GetGradientPercent(GetDistance(e.DirectionLength, e.Item.Radius), this.Gradient);
             }
 
             return unit * force;
         }
 
-        public static double GetGradientPercent(double distance, GradientEntry[] gradient)
+        public static double GetGradientPercent(double distance, Tuple<double, double>[] gradient)
         {
             // See if they are outside the gradient (if so, use that cap's %)
-            if (distance <= gradient[0].Distance)
+            if (distance <= gradient[0].Item1)
             {
-                return gradient[0].Percent;
+                return gradient[0].Item2;
             }
-            else if (distance >= gradient[gradient.Length - 1].Distance)
+            else if (distance >= gradient[gradient.Length - 1].Item1)
             {
-                return gradient[gradient.Length - 1].Percent;
+                return gradient[gradient.Length - 1].Item2;
             }
 
             //  It is inside the gradient.  Find the two stops that are on either side
             for (int cntr = 0; cntr < gradient.Length - 1; cntr++)
             {
-                if (distance > gradient[cntr].Distance && distance <= gradient[cntr + 1].Distance)
+                if (distance > gradient[cntr].Item1 && distance <= gradient[cntr + 1].Item1)
                 {
                     // LERP between the from % and to %
-                    return UtilityCore.GetScaledValue(gradient[cntr].Percent, gradient[cntr + 1].Percent, gradient[cntr].Distance, gradient[cntr + 1].Distance, distance);        //NOTE: Not calling the capped overload, because max could be smaller than min (and capped would fail)
+                    return UtilityCore.GetScaledValue(gradient[cntr].Item2, gradient[cntr + 1].Item2, gradient[cntr].Item1, gradient[cntr + 1].Item1, distance);        //NOTE: Not calling the capped overload, because max could be smaller than min (and capped would fail)
                 }
             }
 
@@ -812,7 +816,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ChasePoint_GetForceArgs
+    #region Class: ChasePoint_GetForceArgs
 
     public class ChasePoint_GetForceArgs
     {
@@ -864,7 +868,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region enum: ChaseDirectionType
+    #region Enum: ChaseDirectionType
 
     public enum ChaseDirectionType
     {
@@ -899,22 +903,6 @@ namespace Game.Newt.v2.GameItems
         /// Drag is only applied along the part of the velocity that is othrogonal to the direction to the chase point
         /// </summary>
         Drag_Velocity_Orth
-    }
-
-    #endregion
-
-    #region class: GradientEntry
-
-    public class GradientEntry
-    {
-        public GradientEntry(double distance, double percent)
-        {
-            Distance = distance;
-            Percent = percent;
-        }
-
-        public readonly double Distance;
-        public readonly double Percent;
     }
 
     #endregion

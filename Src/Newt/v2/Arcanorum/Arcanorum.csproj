@@ -9,9 +9,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Game.Newt.v2.Arcanorum</RootNamespace>
     <AssemblyName>Game.Newt.v2.Arcanorum</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,7 +34,6 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -43,68 +41,54 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
-    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AIMousePlate.cs" />
-    <Compile Include="ArenaTester\ArenaAccessor.cs" />
-    <Compile Include="ArenaTester\ArenaAccessor_FAIL.cs" />
-    <Compile Include="ArenaTester\BotTrackingEntry.cs" />
-    <Compile Include="ArenaTester\Evaluator1_FAIL.cs" />
-    <Compile Include="ArenaTester\Evaluator2.cs" />
-    <Compile Include="ArenaTester\Evaluator3.cs" />
-    <Compile Include="ArenaTester\TrainingRoom.cs" />
-    <Compile Include="ArenaTester\TrainingSession.cs" />
-    <Compile Include="ArenaTester\WorldAccessor.cs" />
-    <Compile Include="Views\ArcanorumWindow.xaml.cs">
+    <Compile Include="ArcanorumWindow.xaml.cs">
       <DependentUpon>ArcanorumWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArenaTester\ArcArenaTester.xaml.cs">
-      <DependentUpon>ArcArenaTester.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\BackdropPanel.xaml.cs">
+    <Compile Include="BackdropPanel.xaml.cs">
       <DependentUpon>BackdropPanel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\BackdropQuick.xaml.cs">
+    <Compile Include="BackdropQuick.xaml.cs">
       <DependentUpon>BackdropQuick.xaml</DependentUpon>
     </Compile>
     <Compile Include="ArcBot.cs" />
     <Compile Include="ArcBotNPC.cs" />
-    <Compile Include="Views\CharacterPanel.xaml.cs">
+    <Compile Include="CharacterPanel.xaml.cs">
       <DependentUpon>CharacterPanel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\CharacterStatsPanel.xaml.cs">
+    <Compile Include="CharacterStatsPanel.xaml.cs">
       <DependentUpon>CharacterStatsPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="CustomMouseCursor.cs" />
     <Compile Include="EvolutionDreamer.cs" />
     <Compile Include="FitnessRules.cs" />
     <Compile Include="Inventory.cs" />
-    <Compile Include="Views\InventoryItem.xaml.cs">
+    <Compile Include="InventoryItem.xaml.cs">
       <DependentUpon>InventoryItem.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\InventoryPanel.xaml.cs">
+    <Compile Include="InventoryPanel.xaml.cs">
       <DependentUpon>InventoryPanel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\InventoryQuickPanel.xaml.cs">
+    <Compile Include="InventoryQuickPanel.xaml.cs">
       <DependentUpon>InventoryQuickPanel.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ItemDetailPanel.xaml.cs">
+    <Compile Include="ItemDetailPanel.xaml.cs">
       <DependentUpon>ItemDetailPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="ItemOptionsArco.cs" />
     <Compile Include="KeepItems2D.cs" />
     <Compile Include="MaterialIDs.cs" />
-    <Compile Include="Parts\MotionController2.cs" />
     <Compile Include="NPCNest.cs" />
     <Compile Include="OfflineWorld.cs" />
-    <Compile Include="Parts\MotionController_Linear.cs" />
+    <Compile Include="MotionController.cs" />
     <Compile Include="PortalVisual.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RamWeapon.cs" />
-    <Compile Include="Parts\SensorHoming2D.cs" />
-    <Compile Include="Parts\SensorVision.cs" />
-    <Compile Include="Views\ShopPanel.xaml.cs">
+    <Compile Include="SensorHoming.cs" />
+    <Compile Include="SensorVision.cs" />
+    <Compile Include="ShopPanel.xaml.cs">
       <DependentUpon>ShopPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="TrainingRoom.cs" />
@@ -116,60 +100,52 @@
     <Compile Include="WorldColorsArco.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Views\ArcanorumWindow.xaml">
+    <Page Include="ArcanorumWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ArenaTester\ArcArenaTester.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\BackdropPanel.xaml">
+    <Page Include="BackdropPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\BackdropQuick.xaml">
+    <Page Include="BackdropQuick.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\BackdropStylesheet.xaml">
+    <Page Include="BackdropStylesheet.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\CharacterPanel.xaml">
+    <Page Include="CharacterPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\CharacterStatsPanel.xaml">
+    <Page Include="CharacterStatsPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\InventoryItem.xaml">
+    <Page Include="InventoryItem.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\InventoryPanel.xaml">
+    <Page Include="InventoryPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\InventoryQuickPanel.xaml">
+    <Page Include="InventoryQuickPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\ItemDetailPanel.xaml">
+    <Page Include="ItemDetailPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\ShopPanel.xaml">
+    <Page Include="ShopPanel.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\HelperClassesAI\HelperClassesAI.csproj">
-      <Project>{BD763BB3-B9AB-4252-8265-CCB718B4519A}</Project>
-      <Name>HelperClassesAI</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228f5901-5156-43df-b377-627d80b4fdbc}</Project>
       <Name>HelperClassesCore</Name>
@@ -177,14 +153,6 @@
     <ProjectReference Include="..\..\..\HelperClassesWPF\HelperClassesWPF.csproj">
       <Project>{0f6b42d4-c2c8-499a-897d-76d4ce6d0db6}</Project>
       <Name>HelperClassesWPF</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ref\SharpNeatDomains\SharpNeatDomains.csproj">
-      <Project>{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}</Project>
-      <Name>SharpNeatDomains</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ref\SharpNeatLib\SharpNeatLib.csproj">
-      <Project>{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}</Project>
-      <Name>SharpNeatLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\AsteroidMiner\AsteroidMiner.csproj">
       <Project>{a80968c6-78cd-4d22-bfe9-364991784478}</Project>

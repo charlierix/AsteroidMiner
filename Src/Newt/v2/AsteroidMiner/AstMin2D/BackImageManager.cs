@@ -25,7 +25,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
     public class BackImageManager
     {
         //TODO: Instead of completely random positions, have more clumps and voids, ribbons, clouds
-        #region class: StarfieldVisual1
+        #region Class: StarfieldVisual1
 
         private class StarfieldVisual1 : FrameworkElement
         {
@@ -115,7 +115,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region class: StarfieldVisual2
+        #region Class: StarfieldVisual2
 
         private class StarfieldVisual2 : FrameworkElement
         {

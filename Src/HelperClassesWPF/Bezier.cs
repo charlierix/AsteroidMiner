@@ -515,7 +515,7 @@ namespace Game.HelperClassesWPF
     }
 
     //TODO: Make 1D and ND versions
-    #region class: BezierSegment3D
+    #region Class: BezierSegment3D
 
     public class BezierSegment3D       // wpf already has a BezierSegment
     {
@@ -626,7 +626,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: BezierMesh
+    #region Class: BezierMesh
 
     //TODO: This needs to use BezierSegment1D.  The x and y in the bezier objects are ignored, and is just wasted calculations
 

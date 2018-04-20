@@ -22,7 +22,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
     /// </remarks>
     public class ObjectRenderer
     {
-        #region enum: DrawMode
+        #region Enum: DrawMode
 
         public enum DrawMode
         {

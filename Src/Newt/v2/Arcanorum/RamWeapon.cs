@@ -800,7 +800,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region class: RamWeaponDNA
+    #region Class: RamWeaponDNA
 
     public class RamWeaponDNA
     {

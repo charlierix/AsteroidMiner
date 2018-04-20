@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
     public partial class MultithreadWorlds : Window
     {
         // moved to Game.HelperClassesCore.TimerCreateThread
-        #region class: MyTimer
+        #region Class: MyTimer
 
         ///// <summary>
         ///// Here is a stub for the type of timer I want to create
@@ -33,7 +33,7 @@ namespace Game.Newt.Testers
         //private class MyTimer : IDisposable
         //{
         //    //This isn't needed
-        //    #region class: MyThreadPool
+        //    #region Class: MyThreadPool
 
         //    //private class MyThreadPool
         //    //{

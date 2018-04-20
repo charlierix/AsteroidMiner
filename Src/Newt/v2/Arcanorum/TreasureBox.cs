@@ -252,7 +252,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
         #region ITakesDamage Members
 
-        public (bool isDead, WeaponDamage actualDamage)? Damage(WeaponDamage damage, Weapon weapon = null)
+        public Tuple<bool, WeaponDamage> Damage(WeaponDamage damage, Weapon weapon = null)
         {
             return WeaponDamage.DoDamage(this, damage);
         }

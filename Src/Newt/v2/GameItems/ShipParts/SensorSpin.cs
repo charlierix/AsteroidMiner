@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SensorSpinToolItem
+    #region Class: SensorSpinToolItem
 
     public class SensorSpinToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorSpinDesign
+    #region Class: SensorSpinDesign
 
     public class SensorSpinDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -157,7 +157,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorSpin
+    #region Class: SensorSpin
 
     /// <summary>
     /// Outputs the current angular velocity
@@ -171,7 +171,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     {
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(SensorSpin);
+        public const string PARTTYPE = "SensorSpin";
 
         private readonly object _lock = new object();
 
@@ -210,13 +210,43 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly => _neurons;
-        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
-        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Readonly
+        {
+            get
+            {
+                return _neurons;
+            }
+        }
+        public IEnumerable<INeuron> Neruons_ReadWrite
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
+        public IEnumerable<INeuron> Neruons_Writeonly
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
 
-        public IEnumerable<INeuron> Neruons_All => _neurons;
+        public IEnumerable<INeuron> Neruons_All
+        {
+            get
+            {
+                return _neurons;
+            }
+        }
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
+        public NeuronContainerType NeuronContainerType
+        {
+            get
+            {
+                return NeuronContainerType.Sensor;
+            }
+        }
 
         public double Radius
         {
@@ -225,7 +255,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn => _isOn;
+        public bool IsOn
+        {
+            get
+            {
+                return _isOn;
+            }
+        }
 
         #endregion
         #region IPartUpdatable Members
@@ -258,19 +294,49 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread => null;
-        public int? IntervalSkips_AnyThread => 0;
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
+        }
 
         #endregion
 
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass => _mass;
-        public override double TotalMass => _mass;
+        public override double DryMass
+        {
+            get
+            {
+                return _mass;
+            }
+        }
+        public override double TotalMass
+        {
+            get
+            {
+                return _mass;
+            }
+        }
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual => _scaleActual;
+        public override Vector3D ScaleActual
+        {
+            get
+            {
+                return _scaleActual;
+            }
+        }
 
         #endregion
 

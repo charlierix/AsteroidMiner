@@ -36,7 +36,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
     /// </remarks>
     public partial class MinerWindow : Window
     {
-        #region class: MineralPrice
+        #region Class: MineralPrice
 
         private class MineralPrice
         {
@@ -183,7 +183,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                var boundryLines = _world.SetCollisionBoundry(_boundryMin, _boundryMax);
+                List<Point3D[]> innerLines, outerLines;
+                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
                 // Draw the lines
                 _boundryLines = new ScreenSpaceLines3D(true);
@@ -191,9 +192,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _boundryLines.Color = WorldColors.BoundryLines;
                 _viewport.Children.Add(_boundryLines);
 
-                foreach (var line in boundryLines.innerLines)
+                foreach (Point3D[] line in innerLines)
                 {
-                    _boundryLines.AddLine(line.from, line.to);
+                    _boundryLines.AddLine(line[0], line[1]);
                 }
 
                 #endregion
@@ -278,7 +279,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 _map.ShouldShowSnapshotLines = false;
                 _map.ShouldSnapshotCentersDrift = true;
 
-                //_map.ItemRemoved += Map_ItemRemoved;
+                _map.ItemRemoved += new EventHandler<MapItemArgs>(Map_ItemRemoved);
 
                 #endregion
                 #region Radiation
@@ -359,8 +360,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
                 #endregion
 
                 CreateStars3D();      //TODO: Move this to BackImageManager
-                //CreateStars3DGrid();
-                //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
+                                      //CreateStars3DGrid();
+                                      //CreateShip(UtilityCore.GetRandomEnum<DefaultShipType>());
 
                 if (!LoadLatestSession())
                 {
@@ -477,17 +478,17 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             }
         }
 
-        //private void Map_ItemRemoved(object sender, MapItemArgs e)
-        //{
-        //    if (e.Item is IDisposable)
-        //    {
-        //        ((IDisposable)e.Item).Dispose();
-        //    }
-        //    else if (e.Item.PhysicsBody != null)
-        //    {
-        //        e.Item.PhysicsBody.Dispose();
-        //    }
-        //}
+        private void Map_ItemRemoved(object sender, MapItemArgs e)
+        {
+            if (e.Item is IDisposable)
+            {
+                ((IDisposable)e.Item).Dispose();
+            }
+            else if (e.Item.PhysicsBody != null)
+            {
+                e.Item.PhysicsBody.Dispose();
+            }
+        }
 
         private void Player_ShipChanged(object sender, ShipChangedArgs e)
         {
@@ -1636,7 +1637,7 @@ Cheat Keys:
         private SpaceStation2D CreateSpaceStations_Build(Point3D position, FlagProps flag = null, int? purchasedVolume = null, Inventory[] playerInventory = null)
         {
             Vector3D axis = new Vector3D(0, 0, 1);
-            Quaternion rotation = Math3D.GetRotation(axis, Math3D.GetRandomVector_Cone(axis, 0, 30, 1, 1));
+            Quaternion rotation = Math3D.GetRotation(axis, Math3D.GetRandomVector_Cone(axis, 30));
 
             SpaceStation2D retVal = new SpaceStation2D(position, _world, _material_SpaceStation, rotation, flag);
 

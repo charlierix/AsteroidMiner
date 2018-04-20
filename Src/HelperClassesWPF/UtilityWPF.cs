@@ -19,7 +19,7 @@ namespace Game.HelperClassesWPF
 {
     public static class UtilityWPF
     {
-        #region class: BuildTube
+        #region Class: BuildTube
 
         private static class BuildTube
         {
@@ -1800,7 +1800,6 @@ namespace Game.HelperClassesWPF
             return Color.FromArgb(alpha, newR.ToByte(), newG.ToByte(), newB.ToByte());
         }
 
-        //TODO: Make a version that chooses random points in an HSV cone
         /// <summary>
         /// This returns random colors that are as far from each other as possible
         /// </summary>
@@ -2474,11 +2473,7 @@ namespace Game.HelperClassesWPF
         /// <param name="grayValueScale">
         /// If the values in the double array are 0 to 1, then leave this as 255.  If they are already 0 to 255, set to 1
         /// </param>
-        /// <param name="invert">
-        /// False: 0=Black, 1=White
-        /// True: 0=White, 0=Black
-        /// </param>
-        public static BitmapSource GetBitmap(double[] grayColors, int width, int height, double grayValueScale = 255, bool invert = false)
+        public static BitmapSource GetBitmap(double[] grayColors, int width, int height, double grayValueScale = 255)
         {
             //if (colors.Length != width * height)
             //{
@@ -2502,10 +2497,6 @@ namespace Game.HelperClassesWPF
                     int offset = rowOffset + (columnCntr * pixelWidth);
 
                     byte gray = (grayColors[columnCntr + yOffset] * grayValueScale).ToByte_Round();
-                    if (invert)
-                    {
-                        gray = (255 - gray).ToByte();
-                    }
 
                     pixels[offset + 3] = 255;
                     pixels[offset + 2] = gray;
@@ -2635,7 +2626,7 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
-        public static BitmapSource GetBitmap_Aliased(double[] grayColors, int colorsWidth, int colorsHeight, int imageWidth, int imageHeight, double grayValueScale = 255, bool invert = false)
+        public static BitmapSource GetBitmap_Aliased(double[] grayColors, int colorsWidth, int colorsHeight, int imageWidth, int imageHeight, double grayValueScale = 255)
         {
             if (grayColors.Length != colorsWidth * colorsHeight)
             {
@@ -2656,13 +2647,13 @@ namespace Game.HelperClassesWPF
                 {
                     for (int x = 0; x < colorsWidth; x++)
                     {
-                        byte gray = (grayColors[index] * grayValueScale).ToByte_Round();
-                        if (invert)
-                        {
-                            gray = (255 - gray).ToByte();
-                        }
+                        int gray = (grayColors[index] * grayValueScale).ToInt_Round();
+                        if (gray < 0) gray = 0;
+                        if (gray > 255) gray = 255;
 
-                        Color color = Color.FromRgb(gray, gray, gray);
+                        byte grayByte = Convert.ToByte(gray);
+
+                        Color color = Color.FromRgb(grayByte, grayByte, grayByte);
 
                         ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
 
@@ -3008,24 +2999,26 @@ namespace Game.HelperClassesWPF
             retVal.TriangleIndices.Add(6);
             retVal.TriangleIndices.Add(7);
 
+
             // shouldn't I set normals?
             //retVal.Normals
 
+            // Exit Function
             //retVal.Freeze();
             return retVal;
         }
 
-        public static MeshGeometry3D GetSquare2D(double size, double z = 0)
+        public static MeshGeometry3D GetSquare2D(double size)
         {
             double halfSize = size / 2d;
 
             // Define 3D mesh object
             MeshGeometry3D retVal = new MeshGeometry3D();
 
-            retVal.Positions.Add(new Point3D(-halfSize, -halfSize, z));
-            retVal.Positions.Add(new Point3D(halfSize, -halfSize, z));
-            retVal.Positions.Add(new Point3D(halfSize, halfSize, z));
-            retVal.Positions.Add(new Point3D(-halfSize, halfSize, z));
+            retVal.Positions.Add(new Point3D(-halfSize, -halfSize, 0));
+            retVal.Positions.Add(new Point3D(halfSize, -halfSize, 0));
+            retVal.Positions.Add(new Point3D(halfSize, halfSize, 0));
+            retVal.Positions.Add(new Point3D(-halfSize, halfSize, 0));
 
             // Face
             retVal.TriangleIndices.Add(0);
@@ -3042,15 +3035,15 @@ namespace Game.HelperClassesWPF
             //retVal.Freeze();
             return retVal;
         }
-        public static MeshGeometry3D GetSquare2D(Point min, Point max, double z = 0)
+        public static MeshGeometry3D GetSquare2D(Point min, Point max)
         {
             // Define 3D mesh object
             MeshGeometry3D retVal = new MeshGeometry3D();
 
-            retVal.Positions.Add(new Point3D(min.X, min.Y, z));
-            retVal.Positions.Add(new Point3D(max.X, min.Y, z));
-            retVal.Positions.Add(new Point3D(max.X, max.Y, z));
-            retVal.Positions.Add(new Point3D(min.X, max.Y, z));
+            retVal.Positions.Add(new Point3D(min.X, min.Y, 0));
+            retVal.Positions.Add(new Point3D(max.X, min.Y, 0));
+            retVal.Positions.Add(new Point3D(max.X, max.Y, 0));
+            retVal.Positions.Add(new Point3D(min.X, max.Y, 0));
 
             //TODO: Make sure Y isn't reversed
             retVal.TextureCoordinates.Add(new Point(0, 0));
@@ -3317,58 +3310,6 @@ namespace Game.HelperClassesWPF
             // Exit Function
             //retVal.Freeze();
             return retVal;
-        }
-
-        public static (Point3D, Point3D)[] GetCubeLines(Point3D min, Point3D max)
-        {
-            return new[]
-            {
-                // bottom face
-                (new Point3D(min.X, min.Y, min.Z), new Point3D(max.X, min.Y, min.Z)),
-                (new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, max.Y, min.Z)),
-                (new Point3D(max.X, max.Y, min.Z), new Point3D(min.X, max.Y, min.Z)),
-                (new Point3D(min.X, max.Y, min.Z), new Point3D(min.X, min.Y, min.Z)),
-
-                // top face
-                (new Point3D(min.X, min.Y, max.Z), new Point3D(max.X, min.Y, max.Z)),
-                (new Point3D(max.X, min.Y, max.Z), new Point3D(max.X, max.Y, max.Z)),
-                (new Point3D(max.X, max.Y, max.Z), new Point3D(min.X, max.Y, max.Z)),
-                (new Point3D(min.X, max.Y, max.Z), new Point3D(min.X, min.Y, max.Z)),
-
-                // side faces
-                (new Point3D(min.X, min.Y, min.Z), new Point3D(min.X, min.Y, max.Z)),
-                (new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, min.Y, max.Z)),
-                (new Point3D(max.X, max.Y, min.Z), new Point3D(max.X, max.Y, max.Z)),
-                (new Point3D(min.X, max.Y, min.Z), new Point3D(min.X, max.Y, max.Z)),
-            };
-        }
-
-        /// <summary>
-        /// Creates a regular tetrahedron
-        /// </summary>
-        public static Tetrahedron GetTetrahedron(double radius, Transform3D transform = null)
-        {
-            double one = radius;
-            double oneThird = (radius / 3d);
-            double sqrt23 = Math.Sqrt(2d / 3d) * radius;
-            double sqrt29 = Math.Sqrt(2d / 9d) * radius;
-            double sqrt89 = Math.Sqrt(8d / 9d) * radius;
-
-            // Points
-            Point3D[] points = new Point3D[]
-            {
-                new Point3D(sqrt89, 0, -oneThird),        // 0
-                new Point3D(-sqrt29, sqrt23, -oneThird),        // 1
-                new Point3D(-sqrt29, -sqrt23, -oneThird),        // 2
-                new Point3D(0, 0, one),        // 3
-            };
-
-            if (transform != null)
-            {
-                points = points.Select(o => transform.Transform(o)).ToArray();
-            }
-
-            return new Tetrahedron(0, 1, 2, 3, points);
         }
 
         public static MeshGeometry3D GetSphere_LatLon(int separators, double radius)
@@ -4715,7 +4656,7 @@ namespace Game.HelperClassesWPF
             capTransform.Children.Add(new TranslateTransform3D(0, 0, halfHeight));
             capTransform.Children.Add(transform);
 
-            GetRing_Cap(ref pointOffset, retVal, capTransform, points, numSides, innerRadius, outerRadius);
+            GetRingSprtCap(ref pointOffset, retVal, capTransform, points, numSides, innerRadius, outerRadius);
 
             #endregion
 
@@ -4726,14 +4667,14 @@ namespace Game.HelperClassesWPF
             capTransform.Children.Add(new TranslateTransform3D(0, 0, -halfHeight));
             capTransform.Children.Add(transform);
 
-            GetRing_Cap(ref pointOffset, retVal, capTransform, points, numSides, innerRadius, outerRadius);
+            GetRingSprtCap(ref pointOffset, retVal, capTransform, points, numSides, innerRadius, outerRadius);
 
             #endregion
 
             // Exit Function
             return retVal;
         }
-        private static void GetRing_Cap(ref int pointOffset, MeshGeometry3D geometry, Transform3D transform, Point[] points, int numSides, double innerRadius, double outerRadius)
+        private static void GetRingSprtCap(ref int pointOffset, MeshGeometry3D geometry, Transform3D transform, Point[] points, int numSides, double innerRadius, double outerRadius)
         {
             // Points/Normals
             for (int cntr = 0; cntr < numSides; cntr++)
@@ -5228,27 +5169,26 @@ namespace Game.HelperClassesWPF
         {
             List<Point3D> retVal = new List<Point3D>();
 
-            if (model is Model3DGroup modelGroup)
+            if (model is Model3DGroup)
             {
-                foreach (var child in modelGroup.Children)
+                foreach (var child in ((Model3DGroup)model).Children)
                 {
                     // Recurse
                     retVal.AddRange(GetPointsFromMesh(child, transform));
                 }
             }
-            else if (model is GeometryModel3D modelGeometry)
+            else if (model is GeometryModel3D)
             {
-                Geometry3D geometry = modelGeometry.Geometry;
-                if (geometry is MeshGeometry3D geometryMesh)
+                Geometry3D geometry = ((GeometryModel3D)model).Geometry;
+                if (geometry is MeshGeometry3D)
                 {
-                    retVal.AddRange(GetPointsFromMesh(geometryMesh, null));     //NOTE: Only applying the transform passed in once
+                    retVal.AddRange(GetPointsFromMesh((MeshGeometry3D)geometry, null));     //NOTE: Only applying the transform passed in once
                 }
                 else
                 {
                     throw new ArgumentException("Unexpected type of geometry: " + geometry.GetType().ToString());
                 }
             }
-            else if (model is Light) { }     // ignore lights
             else
             {
                 throw new ArgumentException("Unexpected type of model: " + model.GetType().ToString());
@@ -7110,7 +7050,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region enum: TubeRingType_ORIG
+    #region Enum: TubeRingType_ORIG
 
     //TODO: Turn dome into Dome_Hemisphere, Dome_Tangent.  If it's tangent, then the height will be calculated on the fly (allow for acute and obtuse angles)
     //If you have a dome_tangent - ring - dome_tangent, they both emulate dome_hemisphere (so a sphere with a radius defined by the middle ring)
@@ -7123,7 +7063,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TubeRingDefinition_ORIG
+    #region Class: TubeRingDefinition_ORIG
 
     /// <summary>
     /// This defines a single ring - if it's the first or last in the list, then it's an end cap, and has more options of what it can
@@ -7261,7 +7201,7 @@ namespace Game.HelperClassesWPF
     //Call it TubeRingPath.  See Game.Newt.v2.GameItems.ShipParts.ConverterRadiationToEnergyDesign.GetShape -
     //the generic one will be a lot harder because one could be 3 points, the next could be 4.  QuickHull is too complex,
     //but need something like that to see which points should make triangles from
-    #region class: TubeRingRegularPolygon
+    #region Class: TubeRingRegularPolygon
 
     public class TubeRingRegularPolygon : TubeRingBase
     {
@@ -7309,7 +7249,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TubeRingPoint
+    #region Class: TubeRingPoint
 
     /// <summary>
     /// This will end the tube in a point (like a cone or a pyramid)
@@ -7332,11 +7272,11 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TubeRingDome
+    #region Class: TubeRingDome
 
     public class TubeRingDome : TubeRingBase
     {
-        #region class: PointsSingleton
+        #region Class: PointsSingleton
 
         private class PointsSingleton
         {
@@ -7475,7 +7415,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TubeRingBase
+    #region Class: TubeRingBase
 
     public abstract class TubeRingBase
     {
@@ -7616,7 +7556,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region interface: IBitmapCustom
+    #region Interface: IBitmapCustom
 
     //NOTE: The classes that implement this should be threadsafe
     //TODO: May want to add methods to set colors, and to populate an arbitrary BitmapSource with the modified pixels - but do so in a treadsafe way (returning a new IBitmapCustom)
@@ -7656,7 +7596,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: BitmapCustomCachedColors
+    #region Class: BitmapCustomCachedColors
 
     /// <summary>
     /// This caches the color array in the constructor.  This is slowest, and should only be used if you need as the color struct
@@ -8058,7 +7998,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: BitmapCustomCachedBytes
+    #region Class: BitmapCustomCachedBytes
 
     /// <summary>
     /// This stores the stream as they come from the file.  It is more efficient if you want the colors in a format other than
@@ -8210,11 +8150,11 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: BitmapStreamInfo
+    #region Class: BitmapStreamInfo
 
     public class BitmapStreamInfo
     {
-        #region enum: SupportedPixelFormats
+        #region Enum: SupportedPixelFormats
 
         private enum SupportedPixelFormats
         {
@@ -8308,7 +8248,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: MyHitTestResult
+    #region Class: MyHitTestResult
 
     // This was copied from the ship editor
     public class MyHitTestResult
@@ -8350,7 +8290,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: MaterialDefinition
+    #region Class: MaterialDefinition
 
     /// <summary>
     /// This defines a material, and is easy to serialize (meant to be put into classes that get serialized)
@@ -8403,7 +8343,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region struct: ColorHSV
+    #region Struct: ColorHSV
 
     public struct ColorHSV
     {
@@ -8473,7 +8413,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region enum: Axis
+    #region Enum: Axis
 
     public enum Axis
     {
@@ -8483,7 +8423,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region struct: AxisFor
+    #region Struct: AxisFor
 
     /// <summary>
     /// This helps with running for loops against an axis
@@ -8625,7 +8565,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region struct: AxisForDouble
+    #region Struct: AxisForDouble
 
     /// <summary>
     /// This helps with running for loops against an axis
@@ -8760,7 +8700,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region struct: Mapping_2D_1D
+    #region Struct: Mapping_2D_1D
 
     /// <summary>
     /// This is a mapping between 2D and 1D (good for bitmaps, or other rectangle grids that are physically stored as 1D arrays)
@@ -8780,7 +8720,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region struct: Mapping_3D_1D
+    #region Struct: Mapping_3D_1D
 
     /// <summary>
     /// This is a mapping between 3D and 1D
@@ -8803,7 +8743,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: Rhombicuboctahedron
+    #region Class: Rhombicuboctahedron
 
     public class Rhombicuboctahedron
     {
@@ -8838,14 +8778,14 @@ namespace Game.HelperClassesWPF
         // These are all the triangles that make up this hull
         public readonly TriangleIndexed[] AllTriangles;
 
-        public (int, int)[] GetUniqueLines()
+        public Tuple<int, int>[] GetUniqueLines()
         {
             return Icosidodecahedron.GetUniqueLines(UtilityCore.Iterate(this.SquarePolys_Orth, this.SquarePolys_Diag));
         }
     }
 
     #endregion
-    #region class: Icosidodecahedron
+    #region Class: Icosidodecahedron
 
     public class Icosidodecahedron
     {
@@ -8870,37 +8810,37 @@ namespace Game.HelperClassesWPF
 
         public readonly TriangleIndexed[] AllTriangles;
 
-        public (int, int)[] GetUniqueLines()
+        public Tuple<int, int>[] GetUniqueLines()
         {
             return GetUniqueLines(this.PentagonPolys);
         }
 
-        public static (int, int)[] PolyToTuple(int[] poly)
+        public static Tuple<int, int>[] PolyToTuple(int[] poly)
         {
-            List<(int, int)> retVal = new List<(int, int)>();
+            List<Tuple<int, int>> retVal = new List<Tuple<int, int>>();
 
             for (int cntr = 0; cntr < poly.Length - 1; cntr++)
             {
-                retVal.Add((poly[cntr], poly[cntr + 1]));
+                retVal.Add(Tuple.Create(poly[cntr], poly[cntr + 1]));
             }
 
-            retVal.Add((poly[poly.Length - 1], poly[0]));
+            retVal.Add(Tuple.Create(poly[poly.Length - 1], poly[0]));
 
             return retVal.ToArray();
         }
-        public static (int, int)[] GetUniqueLines(IEnumerable<int[]> polys)
+        public static Tuple<int, int>[] GetUniqueLines(IEnumerable<int[]> polys)
         {
             return polys.
                 Select(o => PolyToTuple(o)).        // convert this poly into tuple segments
                 SelectMany(o => o).     // flatten the polys into a single list
-                Select(o => o.Item1 < o.Item2 ? o : (o.Item2, o.Item1)).        // make sure that item1 is smallest
+                Select(o => o.Item1 < o.Item2 ? o : Tuple.Create(o.Item2, o.Item1)).        // make sure that item1 is smallest
                 Distinct().     // dedupe
                 ToArray();
         }
     }
 
     #endregion
-    #region class: TruncatedIcosidodecahedron
+    #region Class: TruncatedIcosidodecahedron
 
     public class TruncatedIcosidodecahedron
     {
@@ -8931,14 +8871,14 @@ namespace Game.HelperClassesWPF
 
         public readonly TriangleIndexed[] AllTriangles;
 
-        public (int, int)[] GetUniqueLines()
+        public Tuple<int, int>[] GetUniqueLines()
         {
             return Icosidodecahedron.GetUniqueLines(UtilityCore.Iterate(this.DecagonPolys, this.HexagonPolys, this.SquarePolys));
         }
     }
 
     #endregion
-    #region class: Dodecahedron
+    #region Class: Dodecahedron
 
     public class Dodecahedron
     {
@@ -8961,14 +8901,14 @@ namespace Game.HelperClassesWPF
 
         public readonly TriangleIndexed[] AllTriangles;
 
-        public (int, int)[] GetUniqueLines()
+        public Tuple<int, int>[] GetUniqueLines()
         {
             return Icosidodecahedron.GetUniqueLines(this.PentagonPolys);
         }
     }
 
     #endregion
-    #region class: TruncatedIcosahedron
+    #region Class: TruncatedIcosahedron
 
     /// <summary>
     /// This is hexagons and pentagons (a soccer ball, carbon 60 buckyball)
@@ -8998,7 +8938,7 @@ namespace Game.HelperClassesWPF
 
         public readonly TriangleIndexed[] AllTriangles;
 
-        public (int, int)[] GetUniqueLines()
+        public Tuple<int, int>[] GetUniqueLines()
         {
             return Icosidodecahedron.GetUniqueLines(UtilityCore.Iterate(this.PentagonPolys, this.HexagonPolys));
         }

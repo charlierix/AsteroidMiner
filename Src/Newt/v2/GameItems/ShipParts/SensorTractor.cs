@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SensorTractorToolItem
+    #region Class: SensorTractorToolItem
 
     public class SensorTractorToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorTractorDesign
+    #region Class: SensorTractorDesign
 
     public class SensorTractorDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -157,7 +157,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorTractor
+    #region Class: SensorTractor
 
     /// <summary>
     /// Outputs how much force is felt from other ship's tractor beams
@@ -165,7 +165,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     /// </summary>
     public class SensorTractor
     {
-        public const string PARTTYPE = nameof(SensorTractor);
+        public const string PARTTYPE = "SensorTractor";
     }
 
     #endregion

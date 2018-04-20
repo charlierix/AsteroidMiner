@@ -21,7 +21,7 @@ namespace Game.Newt.v1.AsteroidMiner1
     {
         //TODO:  Make add/remove events
 
-        #region class: MineralBlipProps
+        #region Class: MineralBlipProps
 
         private class MineralBlipProps
         {

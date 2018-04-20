@@ -233,7 +233,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         #endregion
     }
 
-    #region class: InventoryActionClickedArgs
+    #region Class: InventoryActionClickedArgs
 
     public class InventoryActionClickedArgs : EventArgs
     {

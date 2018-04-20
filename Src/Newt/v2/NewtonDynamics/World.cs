@@ -30,9 +30,9 @@ namespace Game.Newt.v2.NewtonDynamics
     /// </remarks>
     public class World : WorldBase
     {
-        #region class: RealtimeClock
+        #region Class: RealtimeClock
 
-        public class RealtimeClock
+        private class RealtimeClock
         {
             private bool _isFirstCall = true;
             private DateTime _lastUpdate;
@@ -198,7 +198,9 @@ namespace Game.Newt.v2.NewtonDynamics
         /// freeze once they hit the boundry.  This calls worldbase.setworldsize, but with bit larger size to minimize the chance of bodies
         /// freezing
         /// </remarks>
-        public ((Point3D from, Point3D to)[] innerLines, (Point3D from, Point3D to)[] outerLines) SetCollisionBoundry(Point3D min, Point3D max)
+        /// <param name="innerLines">element0 - from, element1 - to</param>
+        /// <param name="outerLines">element0 - from, element1 - to</param>
+        public void SetCollisionBoundry(out List<Point3D[]> innerLines, out List<Point3D[]> outerLines, Point3D min, Point3D max)
         {
             const double MAXDEPTH = 1000d;
 
@@ -249,50 +251,48 @@ namespace Game.Newt.v2.NewtonDynamics
 
             #region Inner Lines
 
-            var innerLines = new(Point3D from, Point3D to)[]
-            {
-                // Far
-                (new Point3D(min.X, min.Y, min.Z), new Point3D(max.X, min.Y, min.Z)),
-                (new Point3D(min.X, max.Y, min.Z), new Point3D(max.X, max.Y, min.Z)),
-                (new Point3D(min.X, min.Y, min.Z), new Point3D(min.X, max.Y, min.Z)),
-                (new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, max.Y, min.Z)),
+            innerLines = new List<Point3D[]>();
 
-                // Near
-                (new Point3D(min.X, min.Y, max.Z), new Point3D(max.X, min.Y, max.Z)),
-                (new Point3D(min.X, max.Y, max.Z), new Point3D(max.X, max.Y, max.Z)),
-                (new Point3D(min.X, min.Y, max.Z), new Point3D(min.X, max.Y, max.Z)),
-                (new Point3D(max.X, min.Y, max.Z), new Point3D(max.X, max.Y, max.Z)),
+            // Far
+            innerLines.Add(new Point3D[] { new Point3D(min.X, min.Y, min.Z), new Point3D(max.X, min.Y, min.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(min.X, max.Y, min.Z), new Point3D(max.X, max.Y, min.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(min.X, min.Y, min.Z), new Point3D(min.X, max.Y, min.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, max.Y, min.Z) });
 
-                // Connecting Z's
-                (new Point3D(min.X, min.Y, min.Z), new Point3D(min.X, min.Y, max.Z)),
-                (new Point3D(min.X, max.Y, min.Z), new Point3D(min.X, max.Y, max.Z)),
-                (new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, min.Y, max.Z)),
-                (new Point3D(max.X, max.Y, min.Z), new Point3D(max.X, max.Y, max.Z))
-            };
+            // Near
+            innerLines.Add(new Point3D[] { new Point3D(min.X, min.Y, max.Z), new Point3D(max.X, min.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(min.X, max.Y, max.Z), new Point3D(max.X, max.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(min.X, min.Y, max.Z), new Point3D(min.X, max.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(max.X, min.Y, max.Z), new Point3D(max.X, max.Y, max.Z) });
+
+            // Connecting Z's
+            innerLines.Add(new Point3D[] { new Point3D(min.X, min.Y, min.Z), new Point3D(min.X, min.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(min.X, max.Y, min.Z), new Point3D(min.X, max.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(max.X, min.Y, min.Z), new Point3D(max.X, min.Y, max.Z) });
+            innerLines.Add(new Point3D[] { new Point3D(max.X, max.Y, min.Z), new Point3D(max.X, max.Y, max.Z) });
 
             #endregion
             #region Outer Lines
 
-            var outerLines = new(Point3D from, Point3D to)[]
-            {
-                // Far
-                (new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ)),
-                (new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ)),
-                (new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ)),
-                (new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ)),
+            outerLines = new List<Point3D[]>();
 
-                // Near
-                (new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ), new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ)),
-                (new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ)),
-                (new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ), new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ)),
-                (new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ)),
+            // Far
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ) });
 
-                // Connecting Z's
-                (new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ)),
-                (new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ), new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ)),
-                (new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ)),
-                (new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ)),
-            };
+            // Near
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ), new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ), new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ) });
+
+            // Connecting Z's
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(min.X - depthX, min.Y - depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(min.X - depthX, max.Y + depthY, min.Z - depthZ), new Point3D(min.X - depthX, max.Y + depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(max.X + depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, min.Y - depthY, max.Z + depthZ) });
+            outerLines.Add(new Point3D[] { new Point3D(max.X + depthX, max.Y + depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ) });
 
             #endregion
 
@@ -300,8 +300,6 @@ namespace Game.Newt.v2.NewtonDynamics
             this.SetWorldSize(new Point3D(min.X - depthX, min.Y - depthY, min.Z - depthZ), new Point3D(max.X + depthX, max.Y + depthY, max.Z + depthZ));
             _boundryMin = min;  // storing the more constrained boundry, because if anything gets outside the actual boundry, it's frozen
             _boundryMax = max;
-
-            return (innerLines, outerLines);
         }
         /// <summary>
         /// This leaves the world size alone, it just gets rid of the bodies that reflect objects back inside the body
@@ -342,14 +340,23 @@ namespace Game.Newt.v2.NewtonDynamics
             }
         }
 
-        public double Update(double? elapsedTime = null)
+        public void Update()
         {
             if (_timer != null)
             {
-                throw new InvalidOperationException("Can't explicitly call Update when the constructor was told to use a timer");
+                throw new InvalidOperationException("");
             }
 
-            return Update_private(elapsedTime);
+            if (_isPaused)
+            {
+                return;
+            }
+
+            // Figure out how much time has elapsed since the last update
+            double elapsedTime = _clock.Update();
+            elapsedTime *= _simulationSpeed;
+
+            OnUpdate(elapsedTime);
         }
 
         #endregion
@@ -358,7 +365,58 @@ namespace Game.Newt.v2.NewtonDynamics
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            Update_private();
+            // Elapsed time is in seconds
+            //const double MAXELAPSEDTIME = 1d / 20d;		// newton won't allow > 20 fps during a single update
+
+            // Figure out how much time has elapsed since the last update
+            double elapsedTime = _clock.Update();
+            elapsedTime *= _simulationSpeed;
+
+            this.WorldClock.AddSeconds(elapsedTime);
+
+            OnUpdate(elapsedTime);
+
+            #region FAIL
+
+            // I'm not sure that all this does much good
+
+            //if (elapsedTime > MAXELAPSEDTIME)
+            //{
+            //    elapsedTime = MAXELAPSEDTIME;
+            //}
+
+            //if (elapsedTime > MAXELAPSEDTIME)
+            //{
+            //    #region Call multiple times
+
+            //    double remaining = elapsedTime;
+
+            //    while (remaining > 0d)
+            //    {
+            //        if (remaining > MAXELAPSEDTIME)
+            //        {
+            //            OnUpdate(MAXELAPSEDTIME);
+            //            remaining -= MAXELAPSEDTIME;
+            //        }
+            //        else
+            //        {
+            //            // To be consistent with the way the original update method was designed, I need to update the
+            //            // tracker clock now
+            //            _clock.Update();
+
+            //            OnUpdate(remaining);
+            //            break;
+            //        }
+            //    }
+
+            //    #endregion
+            //}
+            //else
+            //{
+            //    OnUpdate(elapsedTime);
+            //}
+
+            #endregion
         }
 
         private void body_ApplyForceAndTorque(object sender, BodyApplyForceAndTorqueArgs e)
@@ -435,7 +493,10 @@ namespace Game.Newt.v2.NewtonDynamics
         protected virtual void OnUpdate(double elapsedTime)
         {
             // Raise an event (doing this first to give listeners a chance to prep for the body update events that will get raised by newton)
-            Updating?.Invoke(this, new WorldUpdatingArgs(elapsedTime));
+            if (this.Updating != null)
+            {
+                this.Updating(this, new WorldUpdatingArgs(elapsedTime));
+            }
 
             // Tell the world to do its thing
             _inWorldUpdate = true;
@@ -461,84 +522,15 @@ namespace Game.Newt.v2.NewtonDynamics
             //    _removed.Clear();
             //}
 
-            Updated?.Invoke(this, new WorldUpdatingArgs(elapsedTime));
+            if (this.Updated != null)
+            {
+                this.Updated(this, new WorldUpdatingArgs(elapsedTime));
+            }
         }
 
         #endregion
 
         #region Private Methods
-
-        private double Update_private(double? elapsedTime = null)
-        {
-            if (_isPaused)
-            {
-                return 0;
-            }
-
-            double actualElapsed;
-
-            if (elapsedTime == null)
-            {
-                // Figure out how much time has elapsed since the last update
-                actualElapsed = _clock.Update();
-                actualElapsed *= _simulationSpeed;
-            }
-            else
-            {
-                actualElapsed = elapsedTime.Value;
-            }
-
-            WorldClock.AddSeconds(actualElapsed);
-
-            OnUpdate(actualElapsed);
-
-            return actualElapsed;
-
-            #region FAIL
-
-            // I'm not sure that all this does much good
-
-            // Elapsed time is in seconds
-            //const double MAXELAPSEDTIME = 1d / 20d;		// newton won't allow > 20 fps during a single update
-
-            //if (elapsedTime > MAXELAPSEDTIME)
-            //{
-            //    elapsedTime = MAXELAPSEDTIME;
-            //}
-
-            //if (elapsedTime > MAXELAPSEDTIME)
-            //{
-            //    #region Call multiple times
-
-            //    double remaining = elapsedTime;
-
-            //    while (remaining > 0d)
-            //    {
-            //        if (remaining > MAXELAPSEDTIME)
-            //        {
-            //            OnUpdate(MAXELAPSEDTIME);
-            //            remaining -= MAXELAPSEDTIME;
-            //        }
-            //        else
-            //        {
-            //            // To be consistent with the way the original update method was designed, I need to update the
-            //            // tracker clock now
-            //            _clock.Update();
-
-            //            OnUpdate(remaining);
-            //            break;
-            //        }
-            //    }
-
-            //    #endregion
-            //}
-            //else
-            //{
-            //    OnUpdate(elapsedTime);
-            //}
-
-            #endregion
-        }
 
         private void CreateBoundryBody(Point3D min, Point3D max)
         {
@@ -1060,11 +1052,11 @@ namespace Game.Newt.v2.NewtonDynamics
         #endregion
     }
 
-    #region class: WorldBase
+    #region Class: WorldBase
 
     public abstract class WorldBase : IDisposable
     {
-        #region struct: IntersectionPoint
+        #region Struct: IntersectionPoint
 
         /// <summary>
         /// This is returned when they do a ray cast
@@ -1153,7 +1145,7 @@ namespace Game.Newt.v2.NewtonDynamics
         //    throw new ApplicationException("finish this");
         //}
 
-        //#region class: GetTicksCountArgs
+        //#region Class: GetTicksCountArgs
 
         //public class GetTicksCountArgs : EventArgs
         //{
@@ -1485,7 +1477,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             // This is an anonymous method that gets called for each body hit
             //NOTE:  Newton doesn't appear to return the closest hit first, so I need to let it find all matches anyway, and store the results sorted by distance
-            Newton.NewtonWorldRayFilterCallback filterCallback = delegate (IntPtr body, float[] hitNormal, int collisionID, IntPtr userData, float percentAlongLine)
+            Newton.NewtonWorldRayFilterCallback filterCallback = delegate(IntPtr body, float[] hitNormal, int collisionID, IntPtr userData, float percentAlongLine)
                 {
                     IntersectionPoint intersect;
                     intersect.Body = ObjectStorage.Instance.GetBody(body);
@@ -1559,7 +1551,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region enum: SolverModel
+    #region Enum: SolverModel
 
     public enum SolverModel
     {
@@ -1576,7 +1568,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region enum: FrictionModel
+    #region Enum: FrictionModel
 
     public enum FrictionModel
     {
@@ -1585,7 +1577,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region enum: PlatformArchitecture
+    #region Enum: PlatformArchitecture
 
     public enum PlatformArchitecture
     {
@@ -1596,7 +1588,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region class: BodyLeaveWorldArgs
+    #region Class: BodyLeaveWorldArgs
 
     public class BodyLeaveWorldArgs : EventArgs
     {
@@ -1619,7 +1611,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: BodyDestroyedArgs
+    #region Class: BodyDestroyedArgs
 
     public class BodyDestroyedArgs : EventArgs
     {
@@ -1636,7 +1628,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: CollisionIslandUpdateArgs
+    #region Class: CollisionIslandUpdateArgs
 
     public class CollisionIslandUpdateArgs : EventArgs
     {
@@ -1663,7 +1655,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: CollisionHullDestroyedArgs
+    #region Class: CollisionHullDestroyedArgs
 
     public class CollisionHullDestroyedArgs : EventArgs
     {
@@ -1687,7 +1679,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: WorldUpdatingArgs
+    #region Class: WorldUpdatingArgs
 
     public class WorldUpdatingArgs : EventArgs
     {

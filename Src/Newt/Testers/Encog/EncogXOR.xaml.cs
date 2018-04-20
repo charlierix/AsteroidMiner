@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.Encog
 {
     public partial class EncogXOR : Window
     {
-        #region class: NNResultsVisual
+        #region Class: NNResultsVisual
 
         private class NNResultsVisual : FrameworkElement
         {

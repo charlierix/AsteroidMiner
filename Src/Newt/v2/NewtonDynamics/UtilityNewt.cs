@@ -14,7 +14,7 @@ namespace Game.Newt.v2.NewtonDynamics
 {
     public static class UtilityNewt
     {
-        #region enum: ObjectBreakdownType
+        #region Enum: ObjectBreakdownType
 
         /// <summary>
         /// These objects are built along the same axiis that newton uses
@@ -30,7 +30,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region enum: MassDistribution
+        #region Enum: MassDistribution
 
         public enum MassDistribution
         {
@@ -54,7 +54,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
         #endregion
 
-        #region class: ObjectMassBreakdown
+        #region Class: ObjectMassBreakdown
 
         public class ObjectMassBreakdown : IObjectMassBreakdown
         {
@@ -146,7 +146,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region class: ObjectMassBreakdownSet
+        #region Class: ObjectMassBreakdownSet
 
         public class ObjectMassBreakdownSet : IObjectMassBreakdown
         {
@@ -251,7 +251,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region interface: IObjectMassBreakdown
+        #region Interface: IObjectMassBreakdown
 
         public interface IObjectMassBreakdown : IEnumerable<Tuple<Point3D, double>>
         {
@@ -265,7 +265,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region class: MassPart
+        #region Class: MassPart
 
         public class MassPart
         {
@@ -286,7 +286,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
         #endregion
 
-        #region class: AxisInfo_Sphere
+        #region Class: AxisInfo_Sphere
 
         private class AxisInfo_Sphere
         {
@@ -1738,7 +1738,7 @@ namespace Game.Newt.v2.NewtonDynamics
             window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
             window.AddDots(polyPoints, DOTRAD, UtilityWPF.ColorFromHex("FFF"));
 
-            window.AddLines(edges.Select(o => (o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
 
             window.AddDot(new Point3D(0, 0, 0), sphereRadius, UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
 
@@ -1770,7 +1770,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
 
-            window.AddLines(edges.Select(o => (o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
 
             window.AddDot(new Point3D(0, 0, 0), sphereRadius, UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
 
@@ -1809,7 +1809,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             window.AddDots(facePoints, DOTRAD * .75, UtilityWPF.ColorFromHex("000"));
 
-            window.AddLines(edges.Select(o => (o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
+            window.AddLines(edges.Select(o => Tuple.Create(o.Point0, o.Point1Ext)), LINETHICK, UtilityWPF.ColorFromHex("000"));
 
             window.AddEllipse(new Point3D(0, 0, 0), new Vector3D(sphereRadius / ratioX, sphereRadius / ratioY, sphereRadius / ratioZ), UtilityWPF.ColorFromHex("30EEEEEE"), isHiRes: true);
 

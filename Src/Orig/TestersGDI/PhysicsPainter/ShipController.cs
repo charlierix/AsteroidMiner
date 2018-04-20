@@ -15,7 +15,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
     //TODO:  Put the majority of this class in Game.HelperClassesCore (as an abstract)
     public class ShipController
     {
-        #region enum: ShipTypeQual
+        #region Enum: ShipTypeQual
 
         public enum ShipTypeQual
         {
@@ -25,7 +25,7 @@ namespace Game.Orig.TestersGDI.PhysicsPainter
         }
 
         #endregion
-        #region enum: AttatchementType
+        #region Enum: AttatchementType
 
         private enum AttatchementType
         {

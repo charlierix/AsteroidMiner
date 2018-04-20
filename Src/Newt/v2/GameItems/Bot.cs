@@ -74,8 +74,6 @@ namespace Game.Newt.v2.GameItems
 
         private Ship.VisualEffects _visualEffects = null;
 
-        private readonly NeuralBucket _linkBucket;
-        // Only one of these two will be populated (or none), never both
         /// <remarks>
         /// Adding to the neural pool requires taking a lock, which slows down everything on this main thread (creation of
         /// wpf objects seems to be pretty hard hit for some strange reason).
@@ -86,7 +84,7 @@ namespace Game.Newt.v2.GameItems
         /// Instead of a hard lock, use reader lock and writer lock
         /// </remarks>
         private readonly Task<NeuralBucket> _neuralPoolAddTask;
-        private readonly NeuralPool_ManualTick _neuralPoolManualTick;
+        private readonly NeuralBucket _linkBucket;
 
         private readonly LifeEventWatcher _lifeEvents;
 
@@ -172,10 +170,9 @@ namespace Game.Newt.v2.GameItems
             _neuronLinks = construction.Links;
             if (_neuronLinks != null)
             {
-                var result = AddToNeuralPool(_neuronLinks, construction.ArgsExtra.NeuralPoolManual);
-                _linkBucket = result.bucket;
-                _neuralPoolAddTask = result.addTask;
-                _neuralPoolManualTick = result.manualPool;
+                var bucketTask = AddToNeuralPool(_neuronLinks);
+                _neuralPoolAddTask = bucketTask.Item1;
+                _linkBucket = bucketTask.Item2;
             }
 
             _lifeEvents = construction.PartConstruction.LifeEventWatcher;
@@ -206,21 +203,14 @@ namespace Game.Newt.v2.GameItems
                 {
                     if (_linkBucket != null)
                     {
-                        if (_neuralPoolAddTask != null)
+                        //NOTE: Since this is async, must make sure the remove is called only after the add finishes
+                        _neuralPoolAddTask.ContinueWith(t =>
                         {
-                            //NOTE: Since this is async, must make sure the remove is called only after the add finishes
-                            _neuralPoolAddTask.ContinueWith(t =>
+                            if (t.Result != null)
                             {
-                                if (t.Result != null)
-                                {
-                                    NeuralPool.Instance.Remove(t.Result);
-                                }
-                            });
-                        }
-                        else if(_neuralPoolManualTick != null)
-                        {
-                            _neuralPoolManualTick.Remove(_linkBucket);
-                        }
+                                NeuralPool.Instance.Remove(t.Result);
+                            }
+                        });
                     }
 
                     if (_parts.AllPartsArray != null)
@@ -580,31 +570,109 @@ namespace Game.Newt.v2.GameItems
         //}
 
         // These are exposed for debugging convienience.  Don't change their capacity, you'll mess stuff up
-        public IContainer Ammo => _parts.Containers.AmmoGroup;
-        public IContainer Energy => _parts.Containers.EnergyGroup;
-        public IContainer Fuel => _parts.Containers.FuelGroup;
-        public IContainer Plasma => _parts.Containers.PlasmaGroup;
+        public IContainer Ammo
+        {
+            get
+            {
+                return _parts.Containers.AmmoGroup;
+            }
+        }
+        public IContainer Energy
+        {
+            get
+            {
+                return _parts.Containers.EnergyGroup;
+            }
+        }
+        public IContainer Fuel
+        {
+            get
+            {
+                return _parts.Containers.FuelGroup;
+            }
+        }
+        public IContainer Plasma
+        {
+            get
+            {
+                return _parts.Containers.PlasmaGroup;
+            }
+        }
 
-        public CargoBayGroup CargoBays => _parts.Containers.CargoBayGroup;
+        public CargoBayGroup CargoBays
+        {
+            get
+            {
+                return _parts.Containers.CargoBayGroup;
+            }
+        }
 
         private readonly Thruster[] _thrusters;
-        public Thruster[] Thrusters => _thrusters;
+        public Thruster[] Thrusters
+        {
+            get
+            {
+                return _thrusters;
+            }
+        }
 
         private readonly ImpulseEngine[] _impulseEngines;
-        public ImpulseEngine[] ImpulseEngines => _impulseEngines;
+        public ImpulseEngine[] ImpulseEngines
+        {
+            get
+            {
+                return _impulseEngines;
+            }
+        }
 
         private readonly ProjectileGun[] _projectileGuns;
-        public ProjectileGun[] ProjectileGuns => _projectileGuns;
+        public ProjectileGun[] ProjectileGuns
+        {
+            get
+            {
+                return _projectileGuns;
+            }
+        }
 
-        public IEnumerable<PartBase> Parts => _parts.AllPartsArray;
+        public IEnumerable<PartBase> Parts
+        {
+            get
+            {
+                return _parts.AllPartsArray;
+            }
+        }
 
         // This is exposed for the ship viewer to be able to draw the links (the neurons are stored in the individual parts, but the links are stored at the ship level)
         private readonly NeuralUtility.ContainerOutput[] _neuronLinks;
-        public NeuralUtility.ContainerOutput[] NeuronLinks => _neuronLinks;
+        public NeuralUtility.ContainerOutput[] NeuronLinks
+        {
+            get
+            {
+                return _neuronLinks;
+            }
+        }
 
-        public string Name => _dna.ShipName;
-        public string Lineage => _dna.ShipLineage;
-        public long Generation => _dna.Generation;
+        public string Name
+        {
+            get
+            {
+                return _dna.ShipName;
+            }
+        }
+        public string Lineage
+        {
+            get
+            {
+                return _dna.ShipLineage;
+            }
+        }
+        public long Generation
+        {
+            get
+            {
+                return _dna.Generation;
+            }
+        }
 
         private volatile object _age = 0d;
         /// <summary>
@@ -716,7 +784,13 @@ namespace Game.Newt.v2.GameItems
         /// 
         /// It's ok to set the various ShouldRecalcMass_ properties when this is true.  Even if they are true, the mass won't be recalculated
         /// </remarks>
-        public bool IsPhysicsStatic => _isPhysicsStatic;
+        public bool IsPhysicsStatic
+        {
+            get
+            {
+                return _isPhysicsStatic;
+            }
+        }
 
         #endregion
 
@@ -780,28 +854,19 @@ namespace Game.Newt.v2.GameItems
             return ShipDNA.Create(_dna, dnaParts);
         }
 
-        public static (NeuralBucket bucket, Task<NeuralBucket> addTask, NeuralPool_ManualTick manualPool) AddToNeuralPool(NeuralUtility.ContainerOutput[] links, NeuralPool_ManualTick manualPool)
+        public static Tuple<Task<NeuralBucket>, NeuralBucket> AddToNeuralPool(NeuralUtility.ContainerOutput[] links)
         {
             // Create the bucket
             NeuralBucket bucket = new NeuralBucket(links.SelectMany(o => UtilityCore.Iterate(o.InternalLinks, o.ExternalLinks)).ToArray());
 
-            Task<NeuralBucket> task = null;
-
-            if (manualPool != null)
+            // Add to the pool from another thread.  This way the lock while waiting to add won't tie up this thread
+            Task<NeuralBucket> task = Task.Run(() =>
             {
-                manualPool.Add(bucket);
-            }
-            else
-            {
-                // Add to the pool from another thread.  This way the lock while waiting to add won't tie up this thread
-                task = Task.Run(() =>
-                {
-                    NeuralPool.Instance.Add(bucket);
-                    return bucket;
-                });
-            }
+                NeuralPool.Instance.Add(bucket);
+                return bucket;
+            });
 
-            return (bucket, task, manualPool);
+            return Tuple.Create(task, bucket);
         }
 
         #endregion

@@ -18,7 +18,7 @@ namespace Game.HelperClassesAI
 {
     public static class SelfOrganizingMapsWPF
     {
-        #region class: BlobEvents
+        #region Class: BlobEvents
 
         public class BlobEvents
         {
@@ -36,7 +36,7 @@ namespace Game.HelperClassesAI
         }
 
         #endregion
-        #region class: DrawTileArgs
+        #region Class: DrawTileArgs
 
         public class DrawTileArgs
         {
@@ -678,9 +678,33 @@ namespace Game.HelperClassesAI
                     DrawTileArgs args = new DrawTileArgs(orderedSamples[cntr], tileWidth, tileHeight, pixels, x, y, stride, pixelWidth);
                     drawTile(args);
                 }
+
+
+
+
+                #region DISCARD
+
+                //int index = 0;
+                //for (int y = 0; y < colorsHeight; y++)
+                //{
+                //    for (int x = 0; x < colorsWidth; x++)
+                //    {
+                //        int gray = (grayColors[index] * grayValueScale).ToInt_Round();
+                //        if (gray < 0) gray = 0;
+                //        if (gray > 255) gray = 255;
+                //        byte grayByte = Convert.ToByte(gray);
+                //        Color color = Color.FromRgb(grayByte, grayByte, grayByte);
+                //        ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
+                //        index++;
+                //    }
+                //}
+
+                #endregion
             }
 
             bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), pixels, stride, 0);
+
+
 
             return new ImageBrush(bitmap)
             {

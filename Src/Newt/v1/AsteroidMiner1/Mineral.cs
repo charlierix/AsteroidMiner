@@ -776,7 +776,7 @@ namespace Game.Newt.v1.AsteroidMiner1
         #endregion
     }
 
-    #region enum: MineralType
+    #region Enum: MineralType
 
     /// <summary>
     /// I tried to list these in order of value

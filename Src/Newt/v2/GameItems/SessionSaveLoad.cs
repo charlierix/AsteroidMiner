@@ -87,7 +87,10 @@ namespace Game.Newt.v2.GameItems
 
             string rootSessionFilename = GetRootOptionsFilename(baseFolder, name);
 
-            UtilityCore.SerializeToFile(rootSessionFilename, session);
+            using (FileStream stream = new FileStream(rootSessionFilename, FileMode.Create))
+            {
+                XamlServices.Save(stream, session);
+            }
 
             #endregion
 
@@ -220,8 +223,11 @@ namespace Game.Newt.v2.GameItems
 
             foreach (string xmlFileName in Directory.GetFiles(saveFolder, "*.xml"))
             {
-                object deserialized = UtilityCore.DeserializeFromFile(xmlFileName);
-                retVal.Add(Tuple.Create(Path.GetFileNameWithoutExtension(xmlFileName), deserialized));
+                using (FileStream stream = new FileStream(xmlFileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    object deserialized = XamlServices.Load(stream);
+                    retVal.Add(Tuple.Create(Path.GetFileNameWithoutExtension(xmlFileName), deserialized));
+                }
             }
 
             return retVal.ToArray();
@@ -284,7 +290,10 @@ namespace Game.Newt.v2.GameItems
 
                 filename = Path.Combine(saveFolder, filename);
 
-                UtilityCore.SerializeToFile(filename, saveFile.Item2);
+                using (FileStream stream = new FileStream(filename, FileMode.CreateNew))
+                {
+                    XamlServices.Save(stream, saveFile.Item2);
+                }
             }
         }
 
@@ -321,7 +330,13 @@ namespace Game.Newt.v2.GameItems
                 return null;
             }
 
-            return UtilityCore.DeserializeFromFile<ISessionOptions>(sessionFilename);
+            ISessionOptions retVal = null;
+            using (FileStream stream = new FileStream(sessionFilename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                retVal = (ISessionOptions)XamlServices.Load(stream);
+            }
+
+            return retVal;
         }
 
         private static bool AttemptNameFolder(out string sessionFolder, out string saveFolder, string nameFolder)
@@ -680,7 +695,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: SessionFolderResults
+    #region Class: SessionFolderResults
 
     public class SessionFolderResults
     {
@@ -732,7 +747,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region interface: ISessionOptions
+    #region Interface: ISessionOptions
 
     /// <summary>
     /// The session options class will be saved in a root folder

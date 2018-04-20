@@ -15,7 +15,7 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public static class ItemLinker
     {
-        #region class: DistributeDistances
+        #region Class: DistributeDistances
 
         private class DistributeDistances
         {
@@ -40,7 +40,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: Distances2to1
+        #region Class: Distances2to1
 
         /// <summary>
         /// This holds an item2, and distances to all item1s
@@ -65,7 +65,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region class: BrainBurden
+        #region Class: BrainBurden
 
         private class BrainBurden
         {
@@ -107,7 +107,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region class: ClosestFuzzyResult
+        #region Class: ClosestFuzzyResult
 
         private class ClosestFuzzyResult
         {
@@ -1051,7 +1051,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: LinkItem
+    #region Class: LinkItem
 
     public class LinkItem
     {
@@ -1066,7 +1066,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: LinkSet
+    #region Class: LinkSet
 
     public class LinkSet
     {
@@ -1102,7 +1102,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: LinkSetPair
+    #region Class: LinkSetPair
 
     public class LinkSetPair
     {
@@ -1128,7 +1128,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: ItemLinker_CombineArgs
+    #region Class: ItemLinker_CombineArgs
 
     /// <summary>
     /// This is used when doing a self linkage.  It gives thresholds for skinny triangles, and what to do with them (removing useless links)
@@ -1142,7 +1142,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ItemLinker_OverflowArgs
+    #region Class: ItemLinker_OverflowArgs
 
     /// <summary>
     /// This tells how to handle items that have too many links (move the link to a less burdened item)
@@ -1157,7 +1157,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: ItemLinker_ExtraArgs
+    #region Class: ItemLinker_ExtraArgs
 
     /// <summary>
     /// Default behavior is for each item to get one link.  This describes ways to have more than that minimum amount of links

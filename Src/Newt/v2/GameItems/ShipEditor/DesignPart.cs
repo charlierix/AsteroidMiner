@@ -111,78 +111,78 @@ namespace Game.Newt.v2.GameItems.ShipEditor
         {
             const double SIZE = 50d;
 
-            GuideLines = new ScreenSpaceLines3D(true);
+            this.GuideLines = new ScreenSpaceLines3D(true);
 
             // Get a color based on the part type
             Color color;
 
-            if (Part3D is AmmoBoxDesign)
+            if (this.Part3D is AmmoBoxDesign)
             {
                 color = WorldColors.AmmoBox_Color;
             }
-            else if (Part3D is BeamGunDesign || Part3D is GrappleGunDesign || Part3D is ProjectileGunDesign)
+            else if (this.Part3D is BeamGunDesign || this.Part3D is GrappleGunDesign || this.Part3D is ProjectileGunDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.GunBarrel_Color, .125d);		// shift it white, because it's too dark
             }
-            else if (Part3D is BrainDesign || Part3D is BrainNEATDesign || Part3D is BrainRGBRecognizerDesign || Part3D is DirectionControllerRingDesign || Part3D is DirectionControllerSphereDesign)
+            else if (this.Part3D is BrainDesign || this.Part3D is BrainRGBRecognizerDesign || this.Part3D is DirectionControllerRingDesign || this.Part3D is DirectionControllerSphereDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.Brain_Color, .25d);
             }
-            else if (Part3D is CargoBayDesign)
+            else if (this.Part3D is CargoBayDesign)
             {
                 color = WorldColors.CargoBay_Color;
             }
-            else if (Part3D is ConverterEnergyToAmmoDesign || Part3D is ConverterEnergyToFuelDesign || Part3D is ConverterEnergyToPlasmaDesign || Part3D is ConverterFuelToEnergyDesign || Part3D is ConverterMatterToAmmoDesign || Part3D is ConverterMatterToEnergyDesign || Part3D is ConverterMatterToFuelDesign || Part3D is ConverterRadiationToEnergyDesign || Part3D is ConverterMatterToPlasmaDesign)
+            else if (this.Part3D is ConverterEnergyToAmmoDesign || this.Part3D is ConverterEnergyToFuelDesign || this.Part3D is ConverterEnergyToPlasmaDesign || this.Part3D is ConverterFuelToEnergyDesign || this.Part3D is ConverterMatterToAmmoDesign || this.Part3D is ConverterMatterToEnergyDesign || this.Part3D is ConverterMatterToFuelDesign || this.Part3D is ConverterRadiationToEnergyDesign || this.Part3D is ConverterMatterToPlasmaDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.ConverterBase_Color, .125d);
             }
-            else if (Part3D is EnergyTankDesign)
+            else if (this.Part3D is EnergyTankDesign)
             {
                 color = WorldColors.EnergyTank_Color;
             }
-            else if (Part3D is EyeDesign || Part3D is CameraColorRGBDesign || Part3D is CameraHardCodedDesign)
+            else if (this.Part3D is EyeDesign || this.Part3D is CameraColorRGBDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.CameraBase_Color, .15d);
             }
-            else if (Part3D is SensorCollisionDesign || Part3D is SensorFluidDesign || Part3D is SensorGravityDesign || Part3D is SensorInternalForceDesign || Part3D is SensorNetForceDesign || Part3D is SensorRadiationDesign || Part3D is SensorSpinDesign || Part3D is SensorTractorDesign || Part3D is SensorVelocityDesign || Part3D is SensorHomingDesign)
+            else if (this.Part3D is SensorCollisionDesign || this.Part3D is SensorFluidDesign || this.Part3D is SensorGravityDesign || this.Part3D is SensorInternalForceDesign || this.Part3D is SensorNetForceDesign || this.Part3D is SensorRadiationDesign || this.Part3D is SensorSpinDesign || this.Part3D is SensorTractorDesign || this.Part3D is SensorVelocityDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White, WorldColors.SensorBase_Color, .125d);
             }
-            else if (Part3D is FuelTankDesign)
+            else if (this.Part3D is FuelTankDesign)
             {
                 color = WorldColors.FuelTank_Color;
             }
-            else if (Part3D is HangarBayDesign)
+            else if (this.Part3D is HangarBayDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.HangarBay_Color, .25d);
             }
-            else if (Part3D is SelfRepairDesign)
+            else if (this.Part3D is SelfRepairDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.SelfRepairBase_Color, .25d);
             }
-            else if (Part3D is ShieldEnergyDesign || Part3D is ShieldKineticDesign || Part3D is ShieldTractorDesign)
+            else if (this.Part3D is ShieldEnergyDesign || this.Part3D is ShieldKineticDesign || this.Part3D is ShieldTractorDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.Transparent, WorldColors.ShieldBase_Color, .125d);
             }
-            else if (Part3D is ThrusterDesign)
+            else if (this.Part3D is ThrusterDesign)
             {
                 color = WorldColors.Thruster_Color;
             }
-            else if (Part3D is TractorBeamDesign)
+            else if (this.Part3D is TractorBeamDesign)
             {
                 color = WorldColors.TractorBeamBase_Color;
             }
-            else if (Part3D is ImpulseEngineDesign)
+            else if (this.Part3D is ImpulseEngineDesign)
             {
                 color = UtilityWPF.AlphaBlend(Colors.White,
                     UtilityWPF.AlphaBlend(WorldColors.ImpulseEngineGlowball_Color, WorldColors.ImpulseEngine_Color, .25d),
                     .125d);
             }
-            else if (Part3D is PlasmaTankDesign)
+            else if (this.Part3D is PlasmaTankDesign)
             {
                 color = WorldColors.PlasmaTank_Color;
             }
-            else if (Part3D is SwarmBayDesign)
+            else if (this.Part3D is SwarmBayDesign)
             {
                 color = WorldColors.SwarmBay_Color;
             }
@@ -195,14 +195,14 @@ namespace Game.Newt.v2.GameItems.ShipEditor
             //color = UtilityWPF.AlphaBlend(color, _colors.Background, .9d);
             color = UtilityWPF.AlphaBlend(color, Colors.Transparent, .66d);
 
-            GuideLines.Color = color;
+            this.GuideLines.Color = color;
 
-            GuideLines.Thickness = .5d;
-            GuideLines.AddLine(new Point3D(-SIZE, 0, 0), new Point3D(SIZE, 0, 0));
-            GuideLines.AddLine(new Point3D(0, -SIZE, 0), new Point3D(0, SIZE, 0));
-            GuideLines.AddLine(new Point3D(0, 0, -SIZE), new Point3D(0, 0, SIZE));
+            this.GuideLines.Thickness = .5d;
+            this.GuideLines.AddLine(new Point3D(-SIZE, 0, 0), new Point3D(SIZE, 0, 0));
+            this.GuideLines.AddLine(new Point3D(0, -SIZE, 0), new Point3D(0, SIZE, 0));
+            this.GuideLines.AddLine(new Point3D(0, 0, -SIZE), new Point3D(0, 0, SIZE));
 
-            GuideLines.Transform = new TranslateTransform3D(Part3D.Position.ToVector());
+            this.GuideLines.Transform = new TranslateTransform3D(this.Part3D.Position.ToVector());
         }
 
         #endregion

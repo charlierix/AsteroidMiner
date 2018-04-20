@@ -85,7 +85,7 @@ namespace Game.HelperClassesWPF.Clipper
     using PolygonClp = List<IntPoint>;
     using PolygonsClp = List<List<IntPoint>>;
 
-    #region class: PolyTree
+    #region Class: PolyTree
 
     public class PolyTree : PolyNode
     {
@@ -121,7 +121,7 @@ namespace Game.HelperClassesWPF.Clipper
     }
 
     #endregion
-    #region class: PolyNode
+    #region Class: PolyNode
 
     public class PolyNode
     {
@@ -196,7 +196,7 @@ namespace Game.HelperClassesWPF.Clipper
 
     #endregion
 
-    #region struct: Int128
+    #region Struct: Int128
 
     //------------------------------------------------------------------------------
     // Int128 struct (enables safe math on signed 64bit integers)
@@ -401,7 +401,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region struct: IntPoint
+    #region Struct: IntPoint
 
     public struct IntPoint
     {
@@ -420,7 +420,7 @@ namespace Game.HelperClassesWPF.Clipper
     }
 
     #endregion
-    #region struct: IntRect
+    #region Struct: IntRect
 
     public struct IntRect
     {
@@ -458,7 +458,7 @@ namespace Game.HelperClassesWPF.Clipper
 
     #endregion
 
-    #region class: TEdge
+    #region Class: TEdge
 
     internal class TEdge
     {
@@ -487,7 +487,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: IntersectNode
+    #region Class: IntersectNode
 
     internal class IntersectNode
     {
@@ -498,7 +498,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: LocalMinima
+    #region Class: LocalMinima
 
     internal class LocalMinima
     {
@@ -509,7 +509,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: Scanbeam
+    #region Class: Scanbeam
 
     internal class Scanbeam
     {
@@ -518,7 +518,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: OutRec
+    #region Class: OutRec
 
     internal class OutRec
     {
@@ -531,7 +531,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: OutPt
+    #region Class: OutPt
 
     internal class OutPt
     {
@@ -542,7 +542,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: JoinRec
+    #region Class: JoinRec
 
     internal class JoinRec
     {
@@ -555,7 +555,7 @@ namespace Game.HelperClassesWPF.Clipper
     };
 
     #endregion
-    #region class: HorzJoinRec
+    #region Class: HorzJoinRec
 
     internal class HorzJoinRec
     {
@@ -565,7 +565,7 @@ namespace Game.HelperClassesWPF.Clipper
 
     #endregion
 
-    #region class: ClipperBase
+    #region Class: ClipperBase
 
     public class ClipperBase
     {
@@ -1061,7 +1061,7 @@ namespace Game.HelperClassesWPF.Clipper
     } //ClipperBase
 
     #endregion
-    #region class: Clipper
+    #region Class: Clipper
 
     public class Clipper : ClipperBase
     {
@@ -4028,7 +4028,7 @@ namespace Game.HelperClassesWPF.Clipper
 
     #endregion
 
-    #region class: ClipperException
+    #region Class: ClipperException
 
     class ClipperException : Exception
     {

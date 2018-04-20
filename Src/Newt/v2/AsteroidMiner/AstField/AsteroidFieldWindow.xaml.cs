@@ -97,7 +97,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                var boundryLines = _world.SetCollisionBoundry(_boundryMin, _boundryMax);
+                List<Point3D[]> innerLines, outerLines;
+                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
 
                 // Draw the lines
                 _boundryLines = new ScreenSpaceLines3D(true);
@@ -105,9 +106,9 @@ namespace Game.Newt.v2.AsteroidMiner.AstField
                 _boundryLines.Color = WorldColors.BoundryLines;
                 _viewport.Children.Add(_boundryLines);
 
-                foreach (var line in boundryLines.innerLines)
+                foreach (Point3D[] line in innerLines)
                 {
-                    _boundryLines.AddLine(line.from, line.to);
+                    _boundryLines.AddLine(line[0], line[1]);
                 }
 
                 #endregion

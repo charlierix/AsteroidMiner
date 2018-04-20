@@ -9,7 +9,7 @@ using Game.HelperClassesCore;
 namespace Game.HelperClassesWPF
 {
     //TODO: Make Triangle threadsafe instead of having a separate class
-    #region class: Triangle
+    #region Class: Triangle
 
     //TODO:  Add methods like Clone, GetTransformed(transform), etc
 
@@ -499,7 +499,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TriangleThreadsafe
+    #region Class: TriangleThreadsafe
 
     /// <summary>
     /// This is a copy of Triangle, but is readonly
@@ -762,7 +762,7 @@ namespace Game.HelperClassesWPF
     #endregion
 
     // These two are now threadsafe
-    #region class: TriangleIndexed
+    #region Class: TriangleIndexed
 
     /// <summary>
     /// This takes an array of points, then holds three ints that point to three of those points
@@ -1467,7 +1467,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: TriangleIndexedLinked
+    #region Class: TriangleIndexedLinked
 
     /// <summary>
     /// This one also knows about its neighbors
@@ -2160,7 +2160,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region interface: ITriangle
+    #region Interface: ITriangle
 
     //TODO:  May want more readonly statistics methods, like IsIntersecting, is Acute/Right/Obtuse
     public interface ITriangle : IComparable<ITriangle>
@@ -2235,7 +2235,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region interface: ITriangleIndexed
+    #region Interface: ITriangleIndexed
 
     public interface ITriangleIndexed : ITriangle
     {
@@ -2271,7 +2271,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region enum: TriangleEdge
+    #region Enum: TriangleEdge
 
     public enum TriangleEdge
     {
@@ -2281,7 +2281,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region enum: TriangleCorner
+    #region Enum: TriangleCorner
 
     public enum TriangleCorner
     {

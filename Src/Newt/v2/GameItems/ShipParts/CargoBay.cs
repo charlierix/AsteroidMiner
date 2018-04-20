@@ -14,7 +14,7 @@ using Game.Newt.v2.GameItems.MapParts;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: CargoBayToolItem
+    #region Class: CargoBayToolItem
 
     public class CargoBayToolItem : PartToolItemBase
     {
@@ -75,7 +75,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: CargoBayDesign
+    #region Class: CargoBayDesign
 
     public class CargoBayDesign : PartDesignBase
     {
@@ -83,7 +83,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.X_Y_Z;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -140,18 +140,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Breakdown;
+                return _massBreakdown.Item1;
             }
 
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, this.Scale, cellSize);
 
             // Store this
-            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
+            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
 
-            return _massBreakdown.Breakdown;
+            // Exit Function
+            return _massBreakdown.Item1;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -343,7 +344,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: CargoBay
+    #region Class: CargoBay
 
     //TODO: Expose two more input neurons, one will only allow cargo in if firing.  The other will eject cargo if firing (a good way to remove mass quickly)
 
@@ -351,7 +352,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     {
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(CargoBay);
+        public const string PARTTYPE = "CargoBay";
 
         private readonly object _lock = new object();
 
@@ -390,11 +391,35 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly => new INeuron[] { _neuron };
-        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
-        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Readonly
+        {
+            get
+            {
+                return new INeuron[] { _neuron };
+            }
+        }
+        public IEnumerable<INeuron> Neruons_ReadWrite
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
+        public IEnumerable<INeuron> Neruons_Writeonly
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
 
-        public IEnumerable<INeuron> Neruons_All => new INeuron[] { _neuron };
+        public IEnumerable<INeuron> Neruons_All
+        {
+            get
+            {
+                return new INeuron[] { _neuron };
+            }
+        }
 
         public double Radius
         {
@@ -402,10 +427,22 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
+        public NeuronContainerType NeuronContainerType
+        {
+            get
+            {
+                return NeuronContainerType.Sensor;
+            }
+        }
 
-        // This is a basic container that doesn't consume energy, so is always "on"
-        public bool IsOn => true;
+        public bool IsOn
+        {
+            get
+            {
+                // This is a basic container that doesn't consume energy, so is always "on"
+                return true;
+            }
+        }
 
         #endregion
         #region IPartUpdatable Members
@@ -419,8 +456,20 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _neuron.Value = UtilityCore.GetScaledValue_Capped(-1d, 1d, 0d, this.MaxVolume, this.UsedVolume);
         }
 
-        public int? IntervalSkips_MainThread => null;
-        public int? IntervalSkips_AnyThread => 0;
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
+        }
 
         #endregion
 
@@ -446,7 +495,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual => _scaleActual;
+        public override Vector3D ScaleActual
+        {
+            get
+            {
+                return _scaleActual;
+            }
+        }
 
         private volatile object _usedVolume = 0d;
         public double UsedVolume
@@ -692,7 +747,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region class: CargoBayGroup
+    #region Class: CargoBayGroup
 
     public class CargoBayGroup
     {
@@ -1048,7 +1103,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region enum: CargoType
+    #region Enum: CargoType
 
     public enum CargoType
     {
@@ -1057,7 +1112,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: Cargo_ShipPart
+    #region Class: Cargo_ShipPart
 
     //TODO: If part of the volume of this cargo gets removed, a bool should be set so that this part is known to be damaged (so it can't be turned into a real part later)
 
@@ -1091,7 +1146,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override Cargo Clone()
         {
-            return new Cargo_ShipPart(UtilityCore.Clone(this.PartDNA), this.Density, this.Volume);
+            return new Cargo_ShipPart(ShipPartDNA.Clone(this.PartDNA), this.Density, this.Volume);
         }
 
         public override CargoDNA GetNewDNA()
@@ -1104,7 +1159,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: Cargo_Mineral
+    #region Class: Cargo_Mineral
 
     public class Cargo_Mineral : Cargo
     {
@@ -1134,7 +1189,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: Cargo
+    #region Class: Cargo
 
     public class Cargo
     {
@@ -1195,7 +1250,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region class: CargoDNA
+    #region Class: CargoDNA
 
     /// <summary>
     /// This gets serialized to file

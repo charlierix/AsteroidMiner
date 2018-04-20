@@ -333,7 +333,7 @@ namespace Game.Newt.Testers.Newt2Tester
         #endregion
     }
 
-    #region class: AddBodyArgs
+    #region Class: AddBodyArgs
 
     public class AddBodyArgs : EventArgs
     {

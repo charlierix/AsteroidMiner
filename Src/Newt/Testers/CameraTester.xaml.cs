@@ -16,7 +16,7 @@ namespace Game.Newt.Testers
     /// </summary>
     public partial class CameraTester : Window
     {
-        #region class: TrackBallRoam
+        #region Class: TrackBallRoam
 
         public class TrackBallRoam_local
         {
@@ -402,7 +402,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: TrackballTransform
+        #region Class: TrackballTransform
 
         /// <summary>
         ///     Trackball is a utility class which observes the mouse events

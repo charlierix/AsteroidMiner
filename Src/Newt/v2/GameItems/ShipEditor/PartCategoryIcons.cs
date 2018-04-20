@@ -74,8 +74,6 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
         #region Private Methods
 
-        //https://docs.microsoft.com/en-us/dotnet/framework/wpf/graphics-multimedia/geometry-overview
-
         private static DrawingImage GetIcon_Container(Brush brushPrimary, Brush brushSecondary)
         {
             DrawingGroup group = new DrawingGroup();
@@ -150,7 +148,8 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
             #endregion
 
-            DrawingImage retVal = new DrawingImage(group);
+            DrawingImage retVal = new DrawingImage();
+            retVal.Drawing = group;
 
             return retVal;
         }

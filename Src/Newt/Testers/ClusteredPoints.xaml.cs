@@ -33,7 +33,7 @@ namespace Game.Newt.Testers
     /// </remarks>
     public partial class ClusteredPoints : Window
     {
-        #region class: PointValue
+        #region Class: PointValue
 
         private class PointValue
         {
@@ -45,7 +45,7 @@ namespace Game.Newt.Testers
         #region ORIG
         // this moved to Math3D
 
-        //#region class: ContourWorker
+        //#region Class: ContourWorker
 
         ///// <summary>
         ///// This is a copy of Math3D.GetIntersection_Mesh_Plane, but returns the triangles along with the two points where they sliced
@@ -322,7 +322,7 @@ namespace Game.Newt.Testers
         //}
 
         //#endregion
-        //#region class: ContourTriangleIntersect
+        //#region Class: ContourTriangleIntersect
 
         //private class ContourTriangleIntersect_local
         //{
@@ -339,7 +339,7 @@ namespace Game.Newt.Testers
         //}
 
         //#endregion
-        //#region class: ContourPolygon
+        //#region Class: ContourPolygon
 
         //private class ContourPolygon_local
         //{

@@ -28,7 +28,7 @@ namespace Game.Newt.Testers.Encog
 {
     public partial class EncogOCR : Window
     {
-        #region class: SimpleNetworkTrainer
+        #region Class: SimpleNetworkTrainer
 
         private class SimpleNetworkTrainer
         {
@@ -1284,7 +1284,7 @@ namespace Game.Newt.Testers.Encog
         #endregion
     }
 
-    #region class: EncogOCR_Session
+    #region Class: EncogOCR_Session
 
     public class EncogOCR_Session
     {
@@ -1296,7 +1296,7 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region class: TrainedNework_Simple
+    #region Class: TrainedNework_Simple
 
     public class TrainedNework_Simple
     {
@@ -1307,7 +1307,7 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region class: SketchData
+    #region Class: SketchData
 
     public class EncogOCR_SketchData
     {
@@ -1411,7 +1411,7 @@ namespace Game.Newt.Testers.Encog
     }
 
     #endregion
-    #region class: StrokeDefinition
+    #region Class: StrokeDefinition
 
     public class EncogOCR_StrokeDefinition
     {

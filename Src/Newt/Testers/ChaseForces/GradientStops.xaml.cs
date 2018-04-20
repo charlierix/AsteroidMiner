@@ -15,13 +15,12 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
-using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.Testers.ChaseForces
 {
     public partial class GradientStops : UserControl
     {
-        #region class: StopEntry
+        #region Class: StopEntry
 
         private class StopEntry
         {
@@ -90,15 +89,15 @@ namespace Game.Newt.Testers.ChaseForces
 
         #region Public Methods
 
-        public GradientEntry[] GetSelection()
+        public Tuple<double, double>[] GetSelection()
         {
             return _entries.
-                Select(o => new GradientEntry(o.Distance.Value, o.Percent.Value)).
-                OrderBy(o => o.Distance).      // it should already be sorted, but just making sure
+                Select(o => Tuple.Create(o.Distance.Value, o.Percent.Value)).
+                OrderBy(o => o.Item1).      // it should already be sorted, but just making sure
                 ToArray();
         }
 
-        public void StoreSelection(GradientEntry[] gradient)
+        public void StoreSelection(Tuple<double, double>[] gradient)
         {
             Clear();
 
@@ -106,7 +105,7 @@ namespace Game.Newt.Testers.ChaseForces
             {
                 for (int cntr = 0; cntr < gradient.Length; cntr++)
                 {
-                    Insert(cntr, gradient[cntr].Distance, gradient[cntr].Percent);
+                    Insert(cntr, gradient[cntr].Item1, gradient[cntr].Item2);
                 }
             }
 

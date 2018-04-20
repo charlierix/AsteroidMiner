@@ -25,7 +25,7 @@ namespace Game.Newt.Testers.FluidFields
 {
     public partial class FluidPainter3D : Window
     {
-        #region enum: ViewDirection
+        #region Enum: ViewDirection
 
         private enum ViewDirection
         {

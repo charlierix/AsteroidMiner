@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Game.Orig.Math3D
 {
-    #region interface: IMyPolygon
+    #region Interface: IMyPolygon
 
     /// <summary>
     /// This represents a polygon.  If your polygon is concave, you need to split it into convex pieces.
@@ -39,7 +39,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region class: MyPolygon
+    #region Class: MyPolygon
 
     /// <summary>
     /// This is a definition of a polygon (or group of polygons)
@@ -211,7 +211,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region class: MyPolygonSyncedRotation
+    #region Class: MyPolygonSyncedRotation
 
     /// <summary>
     /// This remembers the original definition, but keeps a copy that is kept rotated to the quaternion.
@@ -309,7 +309,7 @@ namespace Game.Orig.Math3D
 
     #endregion
 
-    #region class: SpherePolygon
+    #region Class: SpherePolygon
 
     public class SpherePolygon : Sphere, IMyPolygon
     {
@@ -387,7 +387,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region class: BallPolygon
+    #region Class: BallPolygon
 
     public class BallPolygon : Ball, IMyPolygon
     {
@@ -481,7 +481,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region class: SolidBallPolygon
+    #region Class: SolidBallPolygon
 
     public class SolidBallPolygon : SolidBall, IMyPolygon
     {
@@ -575,7 +575,7 @@ namespace Game.Orig.Math3D
     }
 
     #endregion
-    #region class: RigidBodyPolygon
+    #region Class: RigidBodyPolygon
 
     public class RigidBodyPolygon : RigidBody, IMyPolygon
     {

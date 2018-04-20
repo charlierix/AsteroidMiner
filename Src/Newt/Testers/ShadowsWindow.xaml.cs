@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
 {
     public partial class ShadowsWindow : Window
     {
-        #region class: TriangleVisual
+        #region Class: TriangleVisual
 
         private class TriangleVisual
         {
@@ -55,7 +55,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: HullTriangleIntersect
+        #region Class: HullTriangleIntersect
 
         private static class HullTriangleIntersect
         {
@@ -533,7 +533,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: HullTriangleIntersect2
+        #region Class: HullTriangleIntersect2
 
         // This was copied to Math3D
         private static class HullTriangleIntersect2
@@ -776,11 +776,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: PolyUnion
+        #region Class: PolyUnion
 
         private static class PolyUnion
         {
-            #region class: EdgeIntersection
+            #region Class: EdgeIntersection
 
             private class EdgeIntersection
             {
@@ -805,7 +805,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: PolygonIsland
+            #region Class: PolygonIsland
 
             private class PolygonIsland
             {
@@ -1326,11 +1326,11 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: PolyUnion2
+        #region Class: PolyUnion2
 
         private static class PolyUnion2
         {
-            #region class: EdgeIntersection
+            #region Class: EdgeIntersection
 
             private class EdgeIntersection
             {
@@ -1355,7 +1355,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: PolygonIsland
+            #region Class: PolygonIsland
 
             private class PolygonIsland
             {
@@ -1370,7 +1370,7 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: StitchSegments
+            #region Class: StitchSegments
 
             private static class StitchSegments
             {
@@ -1569,11 +1569,11 @@ namespace Game.Newt.Testers
             }
 
             #endregion
-            #region class: StitchSegments2
+            #region Class: StitchSegments2
 
             internal static class StitchSegments2
             {
-                #region class: Chain
+                #region Class: Chain
 
                 private class Chain
                 {
@@ -1588,7 +1588,7 @@ namespace Game.Newt.Testers
                 }
 
                 #endregion
-                #region class: Junction
+                #region Class: Junction
 
                 private class Junction
                 {
@@ -3004,7 +3004,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: Clipper
+        #region Class: Clipper
 
         // Got this here:
         // http://sourceforge.net/projects/polyclipping/
@@ -3137,7 +3137,7 @@ namespace Game.Newt.Testers
 
         #endregion
 
-        #region class: Triangulator
+        #region Class: Triangulator
 
         // Got this here:
         // http://wiki.unity3d.com/index.php?title=Triangulator
@@ -3442,7 +3442,8 @@ namespace Game.Newt.Testers
                 _world = new World();
 
                 double halfSize = 200d;
-                _world.SetCollisionBoundry(new Point3D(-halfSize, -halfSize, -halfSize), new Point3D(halfSize, halfSize, halfSize));
+                List<Point3D[]> innerLines, outerLines;
+                _world.SetCollisionBoundry(out innerLines, out outerLines, new Point3D(-halfSize, -halfSize, -halfSize), new Point3D(halfSize, halfSize, halfSize));
 
                 #endregion
                 #region Fields

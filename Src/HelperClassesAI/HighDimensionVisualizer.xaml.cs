@@ -21,7 +21,7 @@ namespace Game.HelperClassesAI
 {
     public partial class HighDimensionVisualizer : UserControl
     {
-        #region class: Dot
+        #region Class: Dot
 
         private class Dot
         {

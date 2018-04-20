@@ -25,7 +25,7 @@ namespace Game.Newt.Testers.TowerWrecker
 
     public partial class TowerWreckerWindow : Window
     {
-        #region enum: LeftClickAction
+        #region Enum: LeftClickAction
 
         private enum LeftClickAction
         {
@@ -42,7 +42,7 @@ namespace Game.Newt.Testers.TowerWrecker
 
         #endregion
 
-        #region class: BodyMaterial
+        #region Class: BodyMaterial
 
         private class BodyMaterial
         {
@@ -723,7 +723,7 @@ namespace Game.Newt.Testers.TowerWrecker
             _forceBeamSettings = e;
         }
 
-        private void Pellet_Click(object sender, RoutedEventArgs e)
+        private void btnPellet_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -740,7 +740,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Slug_Click(object sender, RoutedEventArgs e)
+        private void btnSlug_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -757,7 +757,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Baseball_Click(object sender, RoutedEventArgs e)
+        private void btnBaseball_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -774,7 +774,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Cannon_Click(object sender, RoutedEventArgs e)
+        private void btnCannon_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -792,7 +792,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Wrecker_Click(object sender, RoutedEventArgs e)
+        private void btnWrecker_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -810,7 +810,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void DrillHead_Click(object sender, RoutedEventArgs e)
+        private void btnDrillHead_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -828,7 +828,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void SpinningBar_Click(object sender, RoutedEventArgs e)
+        private void btnSpinningBar_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -846,7 +846,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void BigSpinner_Click(object sender, RoutedEventArgs e)
+        private void btnBigSpinner_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -875,7 +875,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void ClearProjectiles_Click(object sender, RoutedEventArgs e)
+        private void btnClearProjectiles_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -887,7 +887,7 @@ namespace Game.Newt.Testers.TowerWrecker
             }
         }
 
-        private void TowerMarbles_Click(object sender, RoutedEventArgs e)
+        private void btnTowerMarbles_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -953,7 +953,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void TowerSpikes_Click(object sender, RoutedEventArgs e)
+        private void btnTowerSpikes_Click(object sender, RoutedEventArgs e)
         {
             const double BASERADIUS = 2d;
 
@@ -1041,7 +1041,7 @@ namespace Game.Newt.Testers.TowerWrecker
             }
 
         }
-        private void TowerSpike_Click(object sender, RoutedEventArgs e)
+        private void btnTowerSpike_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1055,7 +1055,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void TowerDense2_Click(object sender, RoutedEventArgs e)
+        private void btnTowerDense2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1072,7 +1072,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void TowerDense_Click(object sender, RoutedEventArgs e)
+        private void btnTowerDense_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1086,7 +1086,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void ThickWall_Click(object sender, RoutedEventArgs e)
+        private void btnThickWall_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1192,7 +1192,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void FiveWalls_Click(object sender, RoutedEventArgs e)
+        private void btn5Walls_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1296,7 +1296,7 @@ namespace Game.Newt.Testers.TowerWrecker
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void ThreeWalls_Click(object sender, RoutedEventArgs e)
+        private void btn3Walls_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -1377,52 +1377,6 @@ namespace Game.Newt.Testers.TowerWrecker
                 }
 
                 _lastTowerHeight = zLimit + .5d;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-
-        private void Lire_onethird_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                BuildLire(1d/3d);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void Lire_half_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                BuildLire(1d/2d);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void Lire_twothirds_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                BuildLire(2d/3d);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-        private void Lire_1_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                BuildLire();
             }
             catch (Exception ex)
             {
@@ -1751,72 +1705,6 @@ namespace Game.Newt.Testers.TowerWrecker
             }
 
             _lastTowerHeight = zLimit + .5d;
-        }
-        private void BuildLire(double cheatX = 1)
-        {
-            ClearProjectilesAndExplosions();
-            ClearBricks();
-
-            #region Figure out how many bricks
-
-            int count;
-
-            if (radFew.IsChecked.Value)
-            {
-                count = 10;
-            }
-            else if (radNormal.IsChecked.Value)
-            {
-                count = 30;
-            }
-            else if (radMany.IsChecked.Value)
-            {
-                count = 90;
-            }
-            else if (radExtreme.IsChecked.Value)
-            {
-                count = 270;
-            }
-            else
-            {
-                MessageBox.Show("Unknow number of bricks", this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
-
-            #endregion
-
-            Vector3D size = new Vector3D(2, 1, .25);
-            double zGap = size.Z * 1;
-
-            // 1=1/2
-            // 2=1/4
-            // 3=1/6
-            // 4=1/8
-            // 5=1/10
-            // 6=1/12
-
-            double shiftX = 0;
-
-            for (int cntr = 0; cntr < count; cntr++)
-            {
-                byte colorIntensity = Convert.ToByte(StaticRandom.Next(114, 143));
-                Color color = Color.FromArgb(255, colorIntensity, colorIntensity, colorIntensity);
-
-                double x = 0;
-                if (cntr > 0)
-                {
-                    x = 1d / (count - cntr);
-                    x *= cheatX;
-                    x += shiftX;
-                    shiftX = x;
-                }
-
-                Point3D position = new Point3D(x, 0, (zGap * cntr));
-
-                AddBrick(CollisionShapeType.Box, color, size, 1d, position, _defaultDirectionFacing);
-            }
-
-            _lastTowerHeight = (zGap * count) + .5d;
         }
 
         //NOTE:  This doesn't remove the body from anything, but does add the explosion to _explosions

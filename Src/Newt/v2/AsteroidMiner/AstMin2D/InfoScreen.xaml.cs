@@ -25,7 +25,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public partial class InfoScreen : UserControl
     {
-        #region class: ResourcesVisual
+        #region Class: ResourcesVisual
 
         private class ResourcesVisual : FrameworkElement
         {

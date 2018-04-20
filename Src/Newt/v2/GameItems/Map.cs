@@ -32,7 +32,7 @@ namespace Game.Newt.v2.GameItems
         //TODO: Make this class threadsafe
         //TODO: Figure out ways to allow the physics objects to be in their own thread (currently very tied to the gui thread)
 
-        #region class: TypeNode
+        #region Class: TypeNode
 
         private class TypeNode
         {
@@ -271,7 +271,7 @@ namespace Game.Newt.v2.GameItems
         //TODO: Take in additional viewports, and delegates to get a visual based on item (visuals for minimap blips)
         public Map(Viewport3D viewport, CameraPool cameraPool, World world)
         {
-            Viewport = viewport;
+            this.Viewport = viewport;
 
             _cameraPool = cameraPool;
             if (_cameraPool == null)
@@ -295,7 +295,7 @@ namespace Game.Newt.v2.GameItems
                 _cameraPoolVisuals = new List<CameraPoolVisual>();
             }
 
-            World = world;
+            this.World = world;
         }
 
         #endregion
@@ -308,52 +308,10 @@ namespace Game.Newt.v2.GameItems
             GC.SuppressFinalize(this);
         }
 
-        //protected virtual void Dispose(bool disposing)
-        //{
-        //    if (disposing)
-        //    {
-        //        if (_snapshotTimer != null)
-        //        {
-        //            _snapshotTimer.IsEnabled = false;
-        //            _snapshotTimer = null;
-        //        }
-
-        //        // No need to do anything with the camera pool.  The caller should dispose it
-
-        //        // Kill em all
-        //        foreach (IMapObject mapObject in GetAllItems())
-        //        {
-        //            //System.Diagnostics.Debug.WriteLine("Map ");
-        //            //mapObject.Token
-
-        //            if (this.ItemRemoved != null)
-        //            {
-        //                // Let the listener dispose it
-        //                this.ItemRemoved(this, new MapItemArgs(mapObject));
-        //            }
-        //            else
-        //            {
-        //                // No listener, dispose it
-        //                if (mapObject is IDisposable)
-        //                {
-        //                    ((IDisposable)mapObject).Dispose();     // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
-        //                }
-        //                else if (mapObject.PhysicsBody != null)
-        //                {
-        //                    mapObject.PhysicsBody.Dispose();
-        //                }
-        //            }
-
-        //            //RemoveFromViewport(mapObject);		// the map will only be disposed at the end, so the state of the viewport isn't very important
-        //        }
-        //    }
-        //}
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
-                System.Diagnostics.Debug.WriteLine("Map Disposing");
-
                 if (_snapshotTimer != null)
                 {
                     _snapshotTimer.IsEnabled = false;
@@ -365,27 +323,25 @@ namespace Game.Newt.v2.GameItems
                 // Kill em all
                 foreach (IMapObject mapObject in GetAllItems())
                 {
-                    Remove_private(mapObject, true);
+                    if (this.ItemRemoved != null)
+                    {
+                        // Let the listener dispose it
+                        this.ItemRemoved(this, new MapItemArgs(mapObject));
+                    }
+                    else
+                    {
+                        // No listener, dispose it
+                        if (mapObject is IDisposable)
+                        {
+                            ((IDisposable)mapObject).Dispose();     // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
+                        }
+                        else if (mapObject.PhysicsBody != null)
+                        {
+                            mapObject.PhysicsBody.Dispose();
+                        }
+                    }
 
-                    //if (this.ItemRemoved != null)
-                    //{
-                    //    // Let the listener dispose it
-                    //    this.ItemRemoved(this, new MapItemArgs(mapObject));
-                    //}
-                    //else
-                    //{
-                    //    // No listener, dispose it
-                    //    if (mapObject is IDisposable)
-                    //    {
-                    //        ((IDisposable)mapObject).Dispose();     // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
-                    //    }
-                    //    else if (mapObject.PhysicsBody != null)
-                    //    {
-                    //        mapObject.PhysicsBody.Dispose();
-                    //    }
-                    //}
-
-                    ////RemoveFromViewport(mapObject);		// the map will only be disposed at the end, so the state of the viewport isn't very important
+                    //RemoveFromViewport(mapObject);		// the map will only be disposed at the end, so the state of the viewport isn't very important
                 }
             }
         }
@@ -581,7 +537,7 @@ namespace Game.Newt.v2.GameItems
         /// True: The item passed in is the same type that was added
         /// False: The item passed in was stored as another type (like as an interface)
         /// </param>
-        public bool RemoveItem<T>(T item, bool isFinalType = false, bool shouldDispose = true) where T : IMapObject
+        public bool RemoveItem<T>(T item, bool isFinalType = false) where T : IMapObject
         {
             TypeNode[] nodes = GetNodeSnapshot(isFinalType ? typeof(T) : item.GetType(), true);        // it's a bit overkill to include derived children, but safer
             if (nodes.Length == 0)
@@ -604,7 +560,13 @@ namespace Game.Newt.v2.GameItems
                     node.ItemsArray = null;
                 }
 
-                Remove_private(item, shouldDispose);
+                //TODO: Make this threadsafe
+                RemoveFromViewport(item);
+
+                if (this.ItemRemoved != null)
+                {
+                    this.ItemRemoved(this, new MapItemArgs(item));
+                }
 
                 return true;
             }
@@ -621,7 +583,7 @@ namespace Game.Newt.v2.GameItems
         /// <returns>
         /// The item that was removed (or null if not found)
         /// </returns>
-        public T RemoveItem<T>(Body physicsBody, bool shouldDispose = true) where T : IMapObject
+        public T RemoveItem<T>(Body physicsBody) where T : IMapObject
         {
             T nullT = default(T);
 
@@ -658,7 +620,13 @@ namespace Game.Newt.v2.GameItems
                     node.ItemsArray = null;
                 }
 
-                Remove_private(retVal, shouldDispose);
+                //TODO: Make this threadsafe
+                RemoveFromViewport(retVal);
+
+                if (this.ItemRemoved != null)
+                {
+                    this.ItemRemoved(this, new MapItemArgs(retVal));
+                }
 
                 return retVal;
             }
@@ -668,7 +636,7 @@ namespace Game.Newt.v2.GameItems
 
         public void Clear()
         {
-            foreach (IMapObject item in GetAllItems())
+            foreach (IMapObject item in GetAllItems().ToArray())
             {
                 RemoveItem(item);
             }
@@ -678,13 +646,24 @@ namespace Game.Newt.v2.GameItems
         /// This gives a dump of all the object the map knows about
         /// WARNING: If there are multiple threads, the items returned could be disposed
         /// </summary>
+        /// <remarks>
+        /// I didn't want map.dispose to dispose all the physics objects, so I'm exposing this method instead
+        /// </remarks>
         /// <param name="includeDisposed">Only include dipsosed if you are debugging the map.  Any regular code shouldn't request disposed objects</param>
-        public IMapObject[] GetAllItems(bool includeDisposed = false)
+        public IEnumerable<IMapObject> GetAllItems(bool includeDisposed = false)
         {
-            return GetNodeSnapshot().       // GetNodeSnapshot returns an array.  So a thread could change the tree around, but the foreach will be working against the array that was returned
-                SelectMany(o => o.GetItemsSnapshot()).      // this is also working against an array, so items could be added/removed from the node, and this foreach won't see those changes
-                Where(o => includeDisposed || !o.IsDisposed).
-                ToArray();
+            foreach (TypeNode node in GetNodeSnapshot())        // GetNodeSnapshot returns an array.  So a thread could change the tree around, but the foreach will be working against the array that was returned
+            {
+                foreach (IMapObject item in node.GetItemsSnapshot())        // this is also working against an array, so items could be added/removed from the node, and this foreach won't see those changes
+                {
+                    if(!includeDisposed && item.IsDisposed)
+                    {
+                        continue;
+                    }
+
+                    yield return item;
+                }
+            }
         }
 
         /// <summary>
@@ -952,7 +931,7 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())
                 {
-                    if (item.IsDisposed)
+                    if(item.IsDisposed)
                     {
                         continue;
                     }
@@ -972,7 +951,7 @@ namespace Game.Newt.v2.GameItems
             {
                 foreach (IMapObject item in node.GetItemsSnapshot())
                 {
-                    if (item.IsDisposed)
+                    if(item.IsDisposed)
                     {
                         continue;
                     }
@@ -985,30 +964,6 @@ namespace Game.Newt.v2.GameItems
             }
 
             return null;
-        }
-
-        private void Remove_private(IMapObject item, bool shouldDispose)
-        {
-            //TODO: Make this threadsafe
-            RemoveFromViewport(item);
-
-            if (ItemRemoved != null)
-            {
-                ItemRemoved(this, new MapItemArgs(item));
-            }
-
-            if (shouldDispose)
-            {
-                // No listener, dispose it
-                if (item is IDisposable)
-                {
-                    ((IDisposable)item).Dispose();     // IMapObject doesn't implement disposable, but ship does (and possibly others in the future)
-                }
-                else if (item.PhysicsBody != null)
-                {
-                    item.PhysicsBody.Dispose();
-                }
-            }
         }
 
         private void AddToViewport(IMapObject item)
@@ -1043,11 +998,11 @@ namespace Game.Newt.v2.GameItems
         {
             #region Main Viewport
 
-            if (Viewport != null && item.Visuals3D != null)
+            if (this.Viewport != null && item.Visuals3D != null)
             {
                 foreach (Visual3D visual in item.Visuals3D)
                 {
-                    Viewport.Children.Remove(visual);
+                    this.Viewport.Children.Remove(visual);
                 }
             }
 
@@ -1653,13 +1608,13 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region class: MapItemArgs
+    #region Class: MapItemArgs
 
     public class MapItemArgs : EventArgs
     {
         public MapItemArgs(IMapObject item)
         {
-            Item = item;
+            this.Item = item;
         }
 
         public readonly IMapObject Item;
@@ -1667,7 +1622,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: MapOctree
+    #region Class: MapOctree
 
     //TODO: It would be cool to have a parent property, but since the entire object is readonly, all children must be built
     //before the parent is built
@@ -1991,7 +1946,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: MapObjectInfo
+    #region Class: MapObjectInfo
 
     public class MapObjectInfo
     {

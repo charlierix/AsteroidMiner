@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region class: SensorGravityToolItem
+    #region Class: SensorGravityToolItem
 
     public class SensorGravityToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorGravityDesign
+    #region Class: SensorGravityDesign
 
     public class SensorGravityDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -150,12 +150,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return CollisionHull.CreateBox(world, 0, size, transform.Value);
         }
-        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
+        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> existing, Vector3D scale, double cellSize)
         {
-            if (existing != null && existing.Scale == scale && existing.CellSize == cellSize)
+            if (existing != null && existing.Item2 == scale && existing.Item3 == cellSize)
             {
                 // This has already been built for this size
-                return existing.Breakdown;
+                return existing.Item1;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -164,9 +164,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            existing = new MassBreakdownCache(breakdown, scale, cellSize);
+            existing = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, scale, cellSize);
 
-            return existing.Breakdown;
+            // Exit Function
+            return existing.Item1;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -272,7 +273,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SensorGravity
+    #region Class: SensorGravity
 
     /// <summary>
     /// Outputs how much gravity force is felt
@@ -284,7 +285,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     /// </remarks>
     public class SensorGravity : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region class: MagnitudeHistory
+        #region Class: MagnitudeHistory
 
         /// <summary>
         /// This is an implementation of newton's law of heating/cooling
@@ -382,7 +383,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(SensorGravity);
+        public const string PARTTYPE = "SensorGravity";
 
         private readonly object _lock = new object();
 
@@ -409,11 +410,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _energyTanks = energyTanks;
             _field = field;
 
-            Design = new SensorGravityDesign(options, true);
-            Design.SetDNA(dna);
+            this.Design = new SensorGravityDesign(options, true);
+            this.Design.SetDNA(dna);
 
-            GetMass(out _mass, out _volume, out double radius, out _scaleActual, dna, itemOptions);
-            Radius = radius;
+            double radius;
+            GetMass(out _mass, out _volume, out radius, out _scaleActual, dna, itemOptions);
+
+            this.Radius = radius;
 
             _neurons = CreateNeurons(dna, itemOptions, itemOptions.GravitySensor_NeuronDensity);
             _neuronMaxRadius = _neurons.Max(o => o.PositionLength);
@@ -423,13 +426,43 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly => _neurons;
-        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
-        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Readonly
+        {
+            get
+            {
+                return _neurons;
+            }
+        }
+        public IEnumerable<INeuron> Neruons_ReadWrite
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
+        public IEnumerable<INeuron> Neruons_Writeonly
+        {
+            get
+            {
+                return Enumerable.Empty<INeuron>();
+            }
+        }
 
-        public IEnumerable<INeuron> Neruons_All => _neurons;
+        public IEnumerable<INeuron> Neruons_All
+        {
+            get
+            {
+                return _neurons;
+            }
+        }
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
+        public NeuronContainerType NeuronContainerType
+        {
+            get
+            {
+                return NeuronContainerType.Sensor;
+            }
+        }
 
         public double Radius
         {
@@ -438,7 +471,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn => _isOn;
+        public bool IsOn
+        {
+            get
+            {
+                return _isOn;
+            }
+        }
 
         #endregion
         #region IPartUpdatable Members
@@ -475,8 +514,20 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread => null;
-        public int? IntervalSkips_AnyThread => 0;
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return null;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return 0;
+            }
+        }
 
         #endregion
 

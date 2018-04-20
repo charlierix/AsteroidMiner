@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Brain Tester" ResizeMode="CanResizeWithGrip" Width="980" Height="817" Loaded="Window_Loaded" Closed="Window_Closed">
+
     <Window.Resources>
         <DataTemplate x:Key="expanderHeader">
             <TextBlock Text="{Binding}" FontSize="16" FontWeight="bold" Foreground="#D9D3C3"/>
@@ -66,7 +67,7 @@
             <Border Grid.Row="0" Background="#8C8677" Padding="4,4,1,4" Style="{StaticResource controlsPanel}">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,3,0">
                     <StackPanel>
-
+                        
                         <!-- Gravity Sensor -->
                         <Expander IsExpanded="False" Header="Gravity Sensor">
                             <Border Style="{StaticResource controlsPanelInExpander}">
@@ -166,8 +167,8 @@
                             </Border>
                         </Expander>
 
-                        <!-- Links (orig) -->
-                        <Expander IsExpanded="False" Header="Links (orig)">
+                        <!-- Links -->
+                        <Expander IsExpanded="False" Header="Links">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <TextBlock Text="Brain Settings" Style="{StaticResource controlPanelLabel}"/>
@@ -200,7 +201,7 @@
                         </Expander>
 
                         <!-- Mutate -->
-                        <Expander IsExpanded="False" Header="Mutate">
+                        <Expander IsExpanded="True" Header="Mutate">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <CheckBox IsEnabled="False" Name="chkMutateAddRemoveParts" Content="Add/Remove Parts" Style="{StaticResource checkbox}"/>
@@ -218,7 +219,7 @@
                                 <StackPanel Margin="8">
                                     <ToggleButton Name="chkBrainRunning" Content="Running" IsChecked="True" Checked="chkBrainRunning_Checked" Unchecked="chkBrainRunning_Checked" />
 
-                                    <Button Visibility="Collapsed" Content="Advance One" Margin="0,4,0,0" Click="AdvanceBrainOne_Click"/>
+                                    <Button Visibility="Collapsed" Name="btnAdvanceBrainOne" Content="Advance One" Margin="0,4,0,0" Click="btnAdvanceBrainOne_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
@@ -227,21 +228,21 @@
                         <Expander Visibility="Visible" IsExpanded="False" Header="Misc Tests">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Content="Mutate 100 many times" Click="Mutate100ManyTimes_Click"/>
+                                    <Button Name="btnMutate100ManyTimes" Content="Mutate 100 many times" Click="btnMutate100ManyTimes_Click"/>
 
-                                    <Button Content="UtilityHelper.RandomRange" Margin="0,4,0,0" Click="RandRange_Click"/>
+                                    <Button Name="btnRandRange" Content="UtilityHelper.RandomRange" Margin="0,4,0,0" Click="btnRandRange_Click"/>
 
-                                    <Button Content="Mutate ItemOptions" Margin="0,4,0,0" Click="MutateItemOptions_Click"/>
+                                    <Button Name="btnMutateItemOptions" Content="Mutate ItemOptions" Margin="0,4,0,0" Click="btnMutateItemOptions_Click"/>
 
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <Button Content="Fuzzy Link Test 1" Click="FuzzyLinkTest_Click"/>
+                                        <Button Name="btnFuzzyLinkTest" Content="Fuzzy Link Test 1" Click="btnFuzzyLinkTest_Click"/>
                                         <TextBox Name="txtFuzzyLinkTestCount" Text="5" MinWidth="25" Margin="2,0,0,0"/>
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                         <StackPanel>
-                                            <Button Content="Fuzzy Link Test 2" Click="FuzzyLinkTest2_Click"/>
-                                            <Button Content="Fuzzy Link Test 2" ToolTip="Uses ItemLinker.cs" Click="FuzzyLinkTest2New_Click"/>
+                                            <Button Name="btnFuzzyLinkTest2" Content="Fuzzy Link Test 2" Click="btnFuzzyLinkTest2_Click"/>
+                                            <Button Name="btnFuzzyLinkTest2New" Content="Fuzzy Link Test 2" ToolTip="Uses ItemLinker.cs" Click="btnFuzzyLinkTest2New_Click"/>
                                         </StackPanel>
                                         <TextBox Name="txtFuzzyLinkTest2FromCount" Text="15" ToolTip="From Count" MinWidth="25" Margin="2,0,0,0"/>
                                         <TextBox Name="txtFuzzyLinkTest2ToCount" Text="15" ToolTip="To Count" MinWidth="25" Margin="2,0,0,0"/>
@@ -250,7 +251,7 @@
                                     </StackPanel>
 
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <Button Content="Fuzzy Link Test 3" Click="FuzzyLinkTest3_Click"/>
+                                        <Button Content="Fuzzy Link Test 3" Click="btnFuzzyLinkTest3_Click"/>
                                         <TextBox Name="txtFuzzyLinkTest3Points" Text="40" ToolTip="Points" MinWidth="25" Margin="2,0,0,0"/>
                                         <TextBox Name="txtFuzzyLinkTest3Links" Text="5" ToolTip="Initial Links" MinWidth="25" Margin="2,0,0,0"/>
                                         <TextBox Name="txtFuzzyLinkTest3MaxIntermediate" Text="3" ToolTip="Max intermediate links" MinWidth="25" Margin="2,0,0,0"/>
@@ -258,12 +259,9 @@
                                     </StackPanel>
 
                                     <UniformGrid Columns="2" Margin="0,4,0,0">
-                                        <Button Content="PropsByPercent 1" Click="PropsByPercent1_Click"/>
-                                        <Button Content="PropsByPercent 2" Click="PropsByPercent2_Click"/>
+                                        <Button Name="btnPropsByPercent1" Content="PropsByPercent 1" Click="btnPropsByPercent1_Click"/>
+                                        <Button Name="btnPropsByPercent2" Content="PropsByPercent 2" Click="btnPropsByPercent2_Click"/>
                                     </UniformGrid>
-
-                                    <Button Content="Iterators" Margin="0,4,0,0" Click="Iterators_Click"/>
-                                    <Button Content="Line Arrows" Margin="0,4,0,0" Click="LineArrows_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
@@ -275,15 +273,14 @@
             <!-- Buttons -->
             <Border Grid.Row="1" Style="{StaticResource controlsPanel}" VerticalAlignment="Bottom" Padding="6" Margin="0,12,0,0">
                 <StackPanel>
-                    <Button Content="Create gravity sensor" Click="GravitySensor_Click" />
-                    <Button Content="Create brain" Margin="0,4,0,0" Click="Brain_Click" />
-                    <Button Content="Create thrusters" Margin="0,4,0,0" Click="Thrusters_Click"/>
-                    <Button Content="Create links (orig)" Margin="0,4,0,0" Click="Links1_Click" />
-                    <Button Content="Create links (new)" Margin="0,4,0,0" Click="Links2_Click" />
+                    <Button Name="btnGravitySensor" Content="Create gravity sensor" Click="btnGravitySensor_Click" />
+                    <Button Name="btnBrain" Content="Create brain" Margin="0,4,0,0" Click="btnBrain_Click" />
+                    <Button Name="btnThrusters" Content="Create thrusters" Margin="0,4,0,0" Click="btnThrusters_Click"/>
+                    <Button Name="btnLinks" Content="Create links" Margin="0,4,0,0" Click="btnLinks_Click" />
 
-                    <Button Content="Mutate" Margin="0,8,0,0" Click="Mutate_Click"/>
+                    <Button Name="btnMutate" Content="Mutate" Margin="0,8,0,0" Click="btnMutate_Click"/>
 
-                    <Button Content="Clear" Margin="0,8,0,0" Click="Clear_Click"/>
+                    <Button Name="btnClear" Content="Clear" Margin="0,8,0,0" Click="btnClear_Click"/>
                 </StackPanel>
             </Border>
 

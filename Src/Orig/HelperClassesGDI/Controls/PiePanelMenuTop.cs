@@ -14,7 +14,7 @@ namespace Game.Orig.HelperClassesGDI.Controls
     /// </summary>
     public partial class PiePanelMenuTop : PiePanelTop
     {
-        #region class: PieButton
+        #region Class: PieButton
 
         private class PieButton
         {

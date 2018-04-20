@@ -8,7 +8,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems
 {
-    #region interface: IContainer
+    #region Interface: IContainer
 
     /// <summary>
     /// This defines a class that is designed to hang on to quantities of stuff
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region class: Container
+    #region Class: Container
 
     public class Container : IContainer
     {
@@ -422,7 +422,7 @@ namespace Game.Newt.v2.GameItems
     #endregion
 
     //TODO: Make a version that doesn't know about ITakesDamage (it should be the destroyed container's job to populate QuantityMax_Usable)
-    #region class: ContainerGroup
+    #region Class: ContainerGroup
 
     //WARNING: When this group isn't the sole owner of the containers, then this isn't completely threadsafe - at least not atomic.  Some containers could
     //get more filled than others
@@ -438,7 +438,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class ContainerGroup : IContainer
     {
-        #region enum: ContainerOwnershipType
+        #region Enum: ContainerOwnershipType
 
         public enum ContainerOwnershipType
         {
@@ -1196,95 +1196,6 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-    }
-
-    #endregion
-
-    #region class: ContainerInfinite
-
-    /// <summary>
-    /// This is used when you don't care about finite resources.  It pretends it's a container by always reporting that it's full.  None of the methods
-    /// or property sets actually do anything, they just silently return
-    /// </summary>
-    public class ContainerInfinite : IContainer
-    {
-        private readonly double _maxQuantity;
-
-        public ContainerInfinite(double maxQuantity = 1000000)
-        {
-            _maxQuantity = maxQuantity;
-        }
-
-        public double QuantityCurrent
-        {
-            get
-            {
-                return _maxQuantity;
-            }
-            set
-            {
-                // do nothing
-            }
-        }
-        public double QuantityMax
-        {
-            get
-            {
-                return _maxQuantity;
-            }
-            set
-            {
-                // do nothing
-            }
-        }
-
-        public double QuantityMax_Usable => _maxQuantity;
-
-        public double QuantityMaxMinusCurrent => 0;
-        public double QuantityMaxMinusCurrent_Usable => 0;
-
-        public bool OnlyRemoveMultiples
-        {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                // do nothing
-            }
-        }
-        public double RemovalMultiple
-        {
-            get
-            {
-                return 1;       // the value doesn't matter because OnlyRemoveMultiples returns false
-            }
-            set
-            {
-                // do nothing
-            }
-        }
-
-        public double AddQuantity(double amount, bool exactAmountOnly)
-        {
-            return 0;
-        }
-        public double AddQuantity(IContainer pullFrom, bool exactAmountOnly)
-        {
-            return AddQuantity(pullFrom, pullFrom.QuantityCurrent, exactAmountOnly);
-        }
-        public double AddQuantity(IContainer pullFrom, double amount, bool exactAmountOnly)
-        {
-            double pulled = pullFrom.RemoveQuantity(amount, exactAmountOnly);
-
-            return amount - pulled;
-        }
-
-        public double RemoveQuantity(double amount, bool exactAmountOnly)
-        {
-            return 0;
-        }
     }
 
     #endregion

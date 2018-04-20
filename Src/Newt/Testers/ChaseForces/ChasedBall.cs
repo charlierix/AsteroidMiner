@@ -256,8 +256,7 @@ namespace Game.Newt.Testers.ChaseForces
                 return;
             }
 
-            double directionLength = this.Direction.Length;
-            this.Direction = Math3D.GetRandomVector_Cone(this.Direction, 0, 45, directionLength, directionLength);
+            this.Direction = Math3D.GetRandomVector_Cone(this.Direction, 45);
 
             _elapsedDirection = 0;
         }
@@ -344,7 +343,7 @@ namespace Game.Newt.Testers.ChaseForces
         #endregion
     }
 
-    #region enum: MotionType_Position
+    #region Enum: MotionType_Position
 
     public enum MotionType_Position
     {
@@ -365,7 +364,7 @@ namespace Game.Newt.Testers.ChaseForces
     }
 
     #endregion
-    #region enum: MotionType_Orientation
+    #region Enum: MotionType_Orientation
 
     public enum MotionType_Orientation
     {

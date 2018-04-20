@@ -23,7 +23,7 @@ namespace Game.Newt.Testers
     /// </summary>
     public partial class NeuralTester : Window
     {
-        #region class: Neuron
+        #region Class: Neuron
 
         private class Neuron //: INeuron
         {
@@ -110,7 +110,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: NeuronLink
+        #region Class: NeuronLink
 
         //TODO: Having links store an index doesn't allow for dynamically changing brains
         //TODO: Storing the weight as readonly doesn't allow for dynamically changing brains
@@ -143,7 +143,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region class: NeuronBackPointer
+        #region Class: NeuronBackPointer
 
         /// <summary>
         /// This holds a reference to a neuron, and all the neurons that feed it

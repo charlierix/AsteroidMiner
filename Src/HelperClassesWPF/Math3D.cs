@@ -115,7 +115,7 @@ namespace Game.HelperClassesWPF
 {
     public static class Math3D
     {
-        #region enum: RayCastReturn
+        #region Enum: RayCastReturn
 
         public enum RayCastReturn
         {
@@ -126,7 +126,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region enum: LocationOnLineSegment
+        #region Enum: LocationOnLineSegment
 
         public enum LocationOnLineSegment
         {
@@ -136,7 +136,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: EvenDistribution
+        #region Class: EvenDistribution
 
         /// <summary>
         /// This class has several methods that have a similar behavior.  The method will place random points, then shift them around until a
@@ -151,7 +151,7 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         private static class EvenDistribution
         {
-            #region class: Dot
+            #region Class: Dot
 
             private class Dot
             {
@@ -168,7 +168,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region class: ShortPair
+            #region Class: ShortPair
 
             private class ShortPair
             {
@@ -922,7 +922,11 @@ namespace Game.HelperClassesWPF
             private static Dot[] GetDots_Cone(int movableCount, Vector3D[] staticPoints, Vector3D axis, double angle, double heightMin, double heightMax, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
             {
                 // Seed the movable ones with random locations (that's the best that can be done right now)
-                Vector3D[] movable = GetRandomVectors_Cone(movableCount, axis, 0d, angle, heightMin, heightMax);
+                Vector3D[] movable = new Vector3D[movableCount];
+                for (int cntr = 0; cntr < movableCount; cntr++)
+                {
+                    movable[cntr] = GetRandomVector_Cone(axis, 0d, angle, heightMin, heightMax);
+                }
 
                 // Call the other overload
                 return GetDots_Cone(movable, staticPoints, movableRepulseMultipliers, staticRepulseMultipliers);
@@ -1386,11 +1390,11 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: QuickHull3D
+        #region Class: QuickHull3D
 
         private static class QuickHull3D
         {
-            #region class: TriangleWithPoints
+            #region Class: TriangleWithPoints
 
             /// <summary>
             /// This links a triangle with a set of points that sit "outside" the triangle
@@ -2003,7 +2007,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: SliceTriangles
+        #region Class: SliceTriangles
 
         private static class SliceTriangles
         {
@@ -2551,7 +2555,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: RemoveThin
+        #region Class: RemoveThin
 
         private static class RemoveThin
         {
@@ -2812,7 +2816,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: HullTriangleIntersect
+        #region Class: HullTriangleIntersect
 
         private static class HullTriangleIntersect
         {
@@ -3334,7 +3338,7 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: DelaunayVoronoi3D
+        #region Class: DelaunayVoronoi3D
 
         /// <remarks>
         /// This uses MIConvexHull, which is under GNU Lesser General Public License
@@ -3342,7 +3346,7 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         private static class DelaunayVoronoi3D
         {
-            #region class: Vertex
+            #region Class: Vertex
 
             private class Vertex : Game.HelperClassesWPF.MIConvexHull.IVertex
             {
@@ -3362,7 +3366,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region class: Cell
+            #region Class: Cell
 
             private class Cell : Game.HelperClassesWPF.MIConvexHull.TriangulationCell<Vertex, Cell>
             {
@@ -3373,7 +3377,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region class: EdgeIndex
+            #region Class: EdgeIndex
 
             private class EdgeIndex : IComparable<EdgeIndex>, IComparable, IEquatable<EdgeIndex>
             {
@@ -4184,11 +4188,11 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region class: HullVoronoiIntersect
+        #region Class: HullVoronoiIntersect
 
         private static class HullVoronoiIntersect
         {
-            #region class: TriangleIntersection 1,2,3
+            #region Class: TriangleIntersection 1,2,3
 
             private class TriInt_I
             {
@@ -4237,7 +4241,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region class: PolyFragIntermediate
+            #region Class: PolyFragIntermediate
 
             private class PolyFragIntermediate
             {
@@ -4265,7 +4269,7 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            #region class: TestFaceResult
+            #region Class: TestFaceResult
 
             public class PolyFaceResult
             {
@@ -5091,14 +5095,15 @@ namespace Game.HelperClassesWPF
         /// </summary>
         public static Vector3D GetRandomVector(Vector3D boundryLower, Vector3D boundryUpper)
         {
+            Vector3D retVal = new Vector3D();
+
             Random rand = StaticRandom.GetRandomForThread();
 
-            return new Vector3D
-            {
-                X = rand.NextDouble(boundryLower.X, boundryUpper.X),
-                Y = rand.NextDouble(boundryLower.Y, boundryUpper.Y),
-                Z = rand.NextDouble(boundryLower.Z, boundryUpper.Z),
-            };
+            retVal.X = rand.NextDouble(boundryLower.X, boundryUpper.X);
+            retVal.Y = rand.NextDouble(boundryLower.Y, boundryUpper.Y);
+            retVal.Z = rand.NextDouble(boundryLower.Z, boundryUpper.Z);
+
+            return retVal;
         }
         /// <summary>
         /// This chooses a random point somewhere between the inner rectactle and the outer one
@@ -5130,12 +5135,13 @@ namespace Game.HelperClassesWPF
         /// </summary>
         public static Vector3D GetRandomVector(double maxValue)
         {
-            return new Vector3D
-            {
-                X = Math1D.GetNearZeroValue(maxValue),
-                Y = Math1D.GetNearZeroValue(maxValue),
-                Z = Math1D.GetNearZeroValue(maxValue),
-            };
+            Vector3D retVal = new Vector3D();
+
+            retVal.X = Math1D.GetNearZeroValue(maxValue);
+            retVal.Y = Math1D.GetNearZeroValue(maxValue);
+            retVal.Z = Math1D.GetNearZeroValue(maxValue);
+
+            return retVal;
         }
         /// <summary>
         /// Gets a random vector with radius between maxRadius*-1 and maxRadius (bounds are spherical,
@@ -5169,7 +5175,16 @@ namespace Game.HelperClassesWPF
 
             double theta = rand.NextDouble() * Math.PI * 2d;
 
-            double phi = GetPhiForRandom(rand.NextDouble(-1, 1));
+            // z is cos of phi, which isn't linear.  So the probability is higher that more will be at the poles.  Which means if I want
+            // a linear probability of z, I need to feed the cosine something that will flatten it into a line.  The curve that will do that
+            // is arccos (which basically rotates the cosine wave 90 degrees).  This means that it is undefined for any x outside the range
+            // of -1 to 1.  So I have to shift the random statement to go between -1 to 1, run it through the curve, then shift the result
+            // to go between 0 and pi.
+            //double phi = rand.NextDouble() * Math.PI;
+
+            double phi = (rand.NextDouble() * 2d) - 1d;		// value from -1 to 1
+            phi = -Math.Asin(phi) / (Math.PI * .5d);		// another value from -1 to 1
+            phi = (1d + phi) * Math.PI * .5d;		// from 0 to pi
 
             double sinPhi = Math.Sin(phi);
 
@@ -5316,45 +5331,22 @@ namespace Game.HelperClassesWPF
             return EvenDistribution.GetRandomVectors_Cone_EvenDist(movable, axis, angle, heightMin, heightMax, movableRepulseMultipliers, existingStaticPoints, staticRepulseMultipliers, stopRadiusPercent, stopIterationCount);
         }
 
-        //public static Vector3D GetRandomVector_Cone(Vector3D axis, double maxAngle, double radius)
-        //{
-        //    return GetRandomVector_Cone(axis, 0d, maxAngle);
-        //}
-        public static Vector3D GetRandomVector_Cone(Vector3D axis, double minAngle, double maxAngle, double minRadius, double maxRadius)
+        //TODO: This is concentrating the points near the axis.  I'm guessing it's because the linear chance of random is going through a sine (or something).  So the random should be weighted by the inverse of that to get an even spread
+        public static Vector3D GetRandomVector_Cone(Vector3D axis, double maxAngle)
         {
-            return GetRandomVectors_Cone(1, axis, minAngle, maxAngle, minRadius, maxRadius)[0];
+            return GetRandomVector_Cone(axis, 0d, maxAngle);
         }
-        public static Vector3D[] GetRandomVectors_Cone(int count, Vector3D axis, double minAngle, double maxAngle, double minRadius, double maxRadius)
+        public static Vector3D GetRandomVector_Cone(Vector3D axis, double minAngle, double maxAngle)
         {
-            Random rand = StaticRandom.GetRandomForThread();
+            // Get a rotate axis that is always orthogonal to the center axis
+            Vector3D rotateAxis = Vector3D.CrossProduct(axis, GetRandomVector_Spherical_Shell(1));
 
-            double minRand = GetRandomForPhi(Math1D.DegreesToRadians(minAngle));
-            double maxRand = GetRandomForPhi(Math1D.DegreesToRadians(maxAngle));
-            UtilityCore.MinMax(ref minRand, ref maxRand);
-
-            RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(new Vector3D(0, 0, 1), axis)));
-
-            Vector3D[] retVal = new Vector3D[count];
-
-            for (int cntr = 0; cntr < count; cntr++)
-            {
-                double theta = rand.NextDouble(2 * Math.PI);
-                double phi = GetPhiForRandom(rand.NextDouble(minRand, maxRand));
-                double radius = minRadius + ((maxRadius - minRadius) * Math.Sqrt(StaticRandom.NextDouble()));       // without the square root, there is more chance at the center than the edges
-
-                double sinPhi = Math.Sin(phi);
-
-                Vector3D vector = new Vector3D
-                (
-                    radius * Math.Cos(theta) * sinPhi,
-                    radius * Math.Sin(theta) * sinPhi,
-                    radius * Math.Cos(phi)
-                );
-
-                retVal[cntr] = transform.Transform(vector);
-            }
-
-            return retVal;
+            return axis.GetRotatedVector(rotateAxis, StaticRandom.NextDouble(minAngle, maxAngle));
+        }
+        public static Vector3D GetRandomVector_Cone(Vector3D axis, double minAngle, double maxAngle, double heightMin, double heightMax)
+        {
+            Vector3D direction = Math3D.GetRandomVector_Cone(axis, minAngle, maxAngle);
+            return direction.ToUnit(false) * StaticRandom.NextDouble(heightMin, heightMax);
         }
 
         public static Quaternion GetRandomRotation()
@@ -5686,11 +5678,7 @@ namespace Game.HelperClassesWPF
                 // Quaternion.Multiply fails with 90s and 180s.  Randomize things slightly and try again
                 //NOTE: It's not just Quaternion.Multiply.  A group transform with two rotate transforms fails the same way
                 //Here is a test case: from1=(-1, 0, 0), from2=(0, 0, 1), to1=(1, 0, 0), to2=(0, 1, 0)
-                return GetRotation(
-                    GetRandomVector_Cone(from1, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(from2, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(to1, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(to2, ANGLEMIN, ANGLEMAX, 1, 1));
+                return GetRotation(GetRandomVector_Cone(from1, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(from2, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(to1, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(to2, ANGLEMIN, ANGLEMAX));
             }
 
             // Rotate from onto to
@@ -5701,11 +5689,7 @@ namespace Game.HelperClassesWPF
             if (secondRotation.Angle.IsNearValue(90) || secondRotation.Angle.IsNearValue(180))
             {
                 // Quaternion.Multiply fails with 90s and 180s.  Randomize things slightly and try again
-                return GetRotation(
-                    GetRandomVector_Cone(from1, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(from2, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(to1, ANGLEMIN, ANGLEMAX, 1, 1),
-                    GetRandomVector_Cone(to2, ANGLEMIN, ANGLEMAX, 1, 1));
+                return GetRotation(GetRandomVector_Cone(from1, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(from2, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(to1, ANGLEMIN, ANGLEMAX), GetRandomVector_Cone(to2, ANGLEMIN, ANGLEMAX));
             }
 
             // Just to be safe
@@ -6394,116 +6378,6 @@ namespace Game.HelperClassesWPF
             }
 
             return -1;
-        }
-
-        /// <summary>
-        /// This returns cells in cube shape
-        /// NOTE: The number of cells returned may be larger than the count passed in
-        /// </summary>
-        public static (Rect3D rect, Point3D center)[] GetCells_Cube(double cellSize, int count, double margin = 0, Point3D? center = null)
-        {
-            int cuberoot = Math.Pow(count, 1d / 3d).ToInt_Floor();
-
-            int x = cuberoot;
-            int y = cuberoot;
-            int z = cuberoot;
-
-            if (x * y * z < count)
-            {
-                x++;
-            }
-
-            if (x * y * z < count)
-            {
-                y++;
-            }
-
-            if (x * y * z < count)
-            {
-                z++;
-            }
-
-            return GetCells(cellSize, x, y, z, margin, center);
-        }
-        public static (Rect3D rect, Point3D center)[] GetCells(double cellSize, int numCellsX, int numCellsY, int numCellsZ, double margin = 0, Point3D? center = null)
-        {
-            if (numCellsX <= 0 || numCellsY <= 0 || numCellsZ <= 0)
-            {
-                return new(Rect3D, Point3D)[0];
-            }
-
-            (Rect3D, Point3D)[] retVal = new(Rect3D, Point3D)[numCellsX * numCellsY * numCellsZ];
-
-            double offsetX = (cellSize * numCellsX) / -2;
-            double offsetY = (cellSize * numCellsY) / -2;
-            double offsetZ = (cellSize * numCellsZ) / -2;
-
-            offsetX += (margin * (numCellsX - 1)) / -2;
-            offsetY += (margin * (numCellsY - 1)) / -2;
-            offsetZ += (margin * (numCellsZ - 1)) / -2;
-
-            if (center != null)
-            {
-                offsetX += center.Value.X;
-                offsetY += center.Value.Y;
-                offsetZ += center.Value.Z;
-            }
-
-            double halfCellSize = cellSize / 2;
-
-            for (int z = 0; z < numCellsZ; z++)
-            {
-                int zIndex = z * numCellsX * numCellsY;
-
-                for (int y = 0; y < numCellsY; y++)
-                {
-                    int yIndex = y * numCellsX;
-
-                    for (int x = 0; x < numCellsX; x++)
-                    {
-                        Point3D cellTopLeft = new Point3D(
-                            offsetX + (cellSize * x) + (margin * x),
-                            offsetY + (cellSize * y) + (margin * y),
-                            offsetZ + (cellSize * z) + (margin * z));
-
-                        Point3D cellCenter = new Point3D(
-                            cellTopLeft.X + halfCellSize,
-                            cellTopLeft.Y + halfCellSize,
-                            cellTopLeft.Z + halfCellSize);
-
-                        retVal[zIndex + yIndex + x] =
-                        (
-                            new Rect3D(cellTopLeft.X, cellTopLeft.Y, cellTopLeft.Z, cellSize, cellSize, cellSize),
-                            cellCenter
-                        );
-                    }
-                }
-            }
-
-            return retVal;
-        }
-
-        /// <summary>
-        /// This turns x and y distances from 0 into arc length distances, then maps onto a sphere using polar coordinates.
-        /// The final point will be centered on (radius, 0, 0) and up will be +Z
-        /// </summary>
-        /// <remarks>
-        /// Make sure the radius of the sphere is larger than the 2D image, or the final spherical image will be too warped
-        /// </remarks>
-        public static Point3D ProjectPointOntoSphere(double x, double y, double radius)
-        {
-            return GetPoint_Polar(
-                x / radius,
-                (Math.PI / 2d) - (y / radius),      // centering on pi/2 so that the center is on the equator instead of the north pole
-                radius);
-        }
-
-        public static Point3D GetPoint_Polar(double theta, double phi, double radius)
-        {
-            return new Point3D(
-                radius * Math.Cos(theta) * Math.Sin(phi),
-                radius * Math.Sin(theta) * Math.Sin(phi),
-                radius * Math.Cos(phi));
         }
 
         #endregion
@@ -8656,35 +8530,6 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
-        /// This returns a phi from 0 to pi based on an input from -1 to 1
-        /// </summary>
-        /// <remarks>
-        /// NOTE: The input is linear (even chance of any value from -1 to 1), but the output is scaled to give an even chance of a Z
-        /// on a sphere:
-        /// 
-        /// z is cos of phi, which isn't linear.  So the probability is higher that more will be at the poles.  Which means if I want
-        /// a linear probability of z, I need to feed the cosine something that will flatten it into a line.  The curve that will do that
-        /// is arccos (which basically rotates the cosine wave 90 degrees).  This means that it is undefined for any x outside the range
-        /// of -1 to 1.  So I have to shift the random statement to go between -1 to 1, run it through the curve, then shift the result
-        /// to go between 0 and pi
-        /// </remarks>
-        private static double GetPhiForRandom(double num_negone_posone)
-        {
-            //double phi = rand.NextDouble(-1, 1);		// value from -1 to 1
-            //phi = -Math.Asin(phi) / (Math.PI * .5d);		// another value from -1 to 1
-            //phi = (1d + phi) * Math.PI * .5d;		// from 0 to pi
-
-            return Math.PI / 2d - Math.Asin(num_negone_posone);
-        }
-        /// <summary>
-        /// This is a complimentary function to GetPhiForRandom.  It's used to figure out the range for random to get a desired phi
-        /// </summary>
-        private static double GetRandomForPhi(double expectedRadians)
-        {
-            return -Math.Sin(expectedRadians - (Math.PI / 2));
-        }
-
-        /// <summary>
         /// This returns a number between LeftOuter--LeftInner or RightInner--RightOuter
         /// </summary>
         private static double GetRandomValue_Hole(Random rand, double outerLeft, double holeLeft, double holeRight, double outerRight)
@@ -9642,7 +9487,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region class: ContourPolygon
+    #region Class: ContourPolygon
 
     public class ContourPolygon
     {
@@ -9834,7 +9679,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: ContourTriangleIntersect
+    #region Class: ContourTriangleIntersect
 
     public class ContourTriangleIntersect
     {
@@ -9852,7 +9697,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: VoronoiResult3D
+    #region Class: VoronoiResult3D
 
     public class VoronoiResult3D
     {
@@ -9931,7 +9776,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: Face3D
+    #region Class: Face3D
 
     public class Face3D
     {
@@ -10150,7 +9995,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region class: Edge3D
+    #region Class: Edge3D
 
     /// <summary>
     /// This represents a line in 3D (either a line segment, ray, or infinite line)
@@ -10396,17 +10241,17 @@ namespace Game.HelperClassesWPF
         /// This finds all unique lines, and converts them into line segments
         /// NOTE: This returns more points than edges[0].AllEdgePoints, because it creates points for rays
         /// </summary>
-        public static ((int, int)[] lines, Point3D[] allPoints) GetUniqueLines(Edge3D[] edges, double? rayLength = null)
+        public static Tuple<Tuple<int, int>[], Point3D[]> GetUniqueLines(Edge3D[] edges, double? rayLength = null)
         {
             if (edges.Length == 0)
             {
-                return (new(int, int)[0], new Point3D[0]);
+                return Tuple.Create(new Tuple<int, int>[0], new Point3D[0]);
             }
 
             // Dedupe the edges
             Edge3D[] uniqueEdges = GetUniqueLines(edges);
 
-            List<(int, int)> segments = new List<(int, int)>();
+            List<Tuple<int, int>> segments = new List<Tuple<int, int>>();
             List<Point3D> points = new List<Point3D>();
 
             // Segments
@@ -10417,7 +10262,7 @@ namespace Game.HelperClassesWPF
                     points.AddRange(segment.AllEdgePoints);
                 }
 
-                segments.Add((segment.Index0, segment.Index1.Value));
+                segments.Add(Tuple.Create(segment.Index0, segment.Index1.Value));
             }
 
             // Rays
@@ -10425,10 +10270,10 @@ namespace Game.HelperClassesWPF
             {
                 points.Add(ray.GetPoint1Ext(rayLength));
 
-                segments.Add((ray.Index0, points.Count - 1));
+                segments.Add(Tuple.Create(ray.Index0, points.Count - 1));
             }
 
-            return (segments.ToArray(), points.ToArray());
+            return Tuple.Create(segments.ToArray(), points.ToArray());
         }
 
         public static Edge3D[] GetUniqueLines(Edge3D[] edges)
@@ -10716,7 +10561,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region class: Fragment Results
+    #region Class: Fragment Results
 
     public class VoronoiHullIntersect_PatchFragment
     {

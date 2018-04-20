@@ -154,7 +154,7 @@ namespace Game.Newt.v2.FlyingBeans
         #endregion
     }
 
-    #region enum: CauseOfDeath
+    #region Enum: CauseOfDeath
 
     public enum CauseOfDeath
     {
@@ -167,7 +167,7 @@ namespace Game.Newt.v2.FlyingBeans
     }
 
     #endregion
-    #region class: DeadBeanArgs
+    #region Class: DeadBeanArgs
 
     public class DeadBeanArgs : EventArgs
     {

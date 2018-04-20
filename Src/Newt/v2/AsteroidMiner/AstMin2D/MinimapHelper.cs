@@ -19,7 +19,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 {
     public class MinimapHelper
     {
-        #region class: MineralBlipProps
+        #region Class: MineralBlipProps
 
         private class MineralBlipProps
         {
@@ -36,7 +36,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region class: Blip
+        #region Class: Blip
 
         private class Blip
         {
@@ -55,7 +55,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region class: BlipVisual
+        #region Class: BlipVisual
 
         private class BlipVisual
         {
@@ -99,8 +99,8 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
             _map = map;
             _viewport = viewport;
 
-            _map.ItemAdded += Map_ItemAdded;
-            _map.ItemRemoved += Map_ItemRemoved;
+            _map.ItemAdded += new EventHandler<MapItemArgs>(Map_ItemAdded);
+            _map.ItemRemoved += new EventHandler<MapItemArgs>(Map_ItemRemoved);
         }
 
         #endregion

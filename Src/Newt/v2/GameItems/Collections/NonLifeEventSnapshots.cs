@@ -9,7 +9,7 @@ namespace Game.Newt.v2.GameItems.Collections
 {
     public class NonLifeEventSnapshots<T> where T : class
     {
-        #region class: Snapshot
+        #region Class: Snapshot
 
         private class Snapshot<T>
         {

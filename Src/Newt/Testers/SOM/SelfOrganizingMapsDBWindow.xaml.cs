@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.SOM
 {
     public partial class SelfOrganizingMapsDBWindow : Window
     {
-        #region class: QueryRequest
+        #region Class: QueryRequest
 
         private class QueryRequest
         {
@@ -41,7 +41,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region class: ColumnStatsRequest
+        #region Class: ColumnStatsRequest
 
         private class ColumnStatsRequest
         {
@@ -56,7 +56,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region class: SOMRequest
+        #region Class: SOMRequest
 
         private class SOMRequest
         {
@@ -72,7 +72,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region class: QueryResults
+        #region Class: QueryResults
 
         public class QueryResults
         {
@@ -106,7 +106,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region class: ColumnSetStats
+        #region Class: ColumnSetStats
 
         public class ColumnSetStats
         {
@@ -243,7 +243,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region class: ColumnStats
+        #region Class: ColumnStats
 
         public class ColumnStats
         {
@@ -278,7 +278,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region class: RowInput
+        #region Class: RowInput
 
         public class RowInput : ISOMInput
         {
@@ -288,7 +288,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region class: OverlayPolygonStats
+        #region Class: OverlayPolygonStats
 
         /// <summary>
         /// This is the tooltip when they go over a node

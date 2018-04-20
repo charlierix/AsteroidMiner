@@ -12,238 +12,6 @@ namespace Game.HelperClassesCore
 {
     public static class UtilityCore
     {
-        #region class: EnumerateColumn
-
-        public class EnumerateColumn
-        {
-            #region Declaration Section
-
-            private bool _hasStarted = false;
-            private bool _isFinished = false;
-
-            #endregion
-
-            #region Constructor
-
-            public EnumerateColumn(int count)
-            {
-                _count = count;
-            }
-
-            #endregion
-
-            #region Public Properties
-
-            private readonly int _count;
-            public int Count => _count;
-
-            private EnumerateColumn _left = null;
-            public EnumerateColumn Left
-            {
-                get
-                {
-                    return _left;
-                }
-                set
-                {
-                    if (_left != null)
-                    {
-                        throw new InvalidOperationException("Left can only be set once");
-                    }
-
-                    _left = value;
-                }
-            }
-
-            private EnumerateColumn _right = null;
-            public EnumerateColumn Right
-            {
-                get
-                {
-                    return _right;
-                }
-                set
-                {
-                    if (_right != null)
-                    {
-                        throw new InvalidOperationException("Right can only be set once");
-                    }
-
-                    _right = value;
-                }
-            }
-
-            private int _value = -1;
-            public int Value
-            {
-                get
-                {
-                    if (!_hasStarted)
-                    {
-                        throw new InvalidOperationException("Must call Start first");
-                    }
-                    else if (_isFinished)
-                    {
-                        throw new InvalidOperationException("This is finished");
-                    }
-                    else if (_value < 0 || _value >= _count)
-                    {
-                        throw new InvalidOperationException(string.Format("Value is in an invalid state: {0} (count is {1}", _value, _count));
-                    }
-
-                    return _value;
-                }
-            }
-
-            #endregion
-
-            #region Public Methods
-
-            public void Start()
-            {
-                if (Left != null || Right == null)
-                {
-                    throw new InvalidOperationException("Start can only be called on the leftmost node");
-                }
-                else if (_hasStarted)
-                {
-                    throw new InvalidOperationException("Start can only be called once");
-                }
-
-                _hasStarted = true;
-
-                _value = 0;
-
-                Right.LeftAdvanced();
-            }
-
-            public bool Advance()
-            {
-                if (Left != null || Right == null)
-                {
-                    throw new InvalidOperationException("Start can only be called on the leftmost node");
-                }
-                else if (!_hasStarted)
-                {
-                    throw new InvalidOperationException("Must call Start first");
-                }
-                else if (_isFinished)
-                {
-                    throw new InvalidOperationException("This has already advanced as far as it can");
-                }
-
-                if (Right.TryAdvance())
-                {
-                    // One of the nodes to the right could advance
-                    return true;
-                }
-
-                _value++;
-
-                if (_value >= _count)
-                {
-                    _isFinished = true;
-                    return false;
-                }
-
-                Right.LeftAdvanced();
-
-                return true;
-            }
-
-            #endregion
-
-            #region Private Methods
-
-            /// <summary>
-            /// This gets called from the node on the left.  It advanced one, so this class should reset and find the next available value
-            /// </summary>
-            private void LeftAdvanced()
-            {
-                if (Left == null)
-                {
-                    throw new InvalidOperationException("This can only be called from the left");
-                }
-                else if (_isFinished)
-                {
-                    throw new InvalidOperationException("This class is already finished");
-                }
-
-                // Only the leftmost node is explicitly started.  All nodes to the right get notified here (other calls call this method, but setting
-                // the bool more than once won't hurt)
-                _hasStarted = true;
-
-                if (!FindNext(0))
-                {
-                    throw new ApplicationException("Should always find a value");
-                }
-            }
-
-            private bool TryAdvance()
-            {
-                if (Left == null)
-                {
-                    throw new InvalidOperationException("This can only be called from the left");
-                }
-                else if (_isFinished)
-                {
-                    throw new InvalidOperationException("This class is already finished");
-                }
-
-                if (Right != null)
-                {
-                    if (Right.TryAdvance())
-                    {
-                        return true;
-                    }
-                }
-
-                return FindNext(_value + 1);
-            }
-
-            private bool FindNext(int from)
-            {
-                // These classes act like an odometer.  When a node on the left advances, all the nodes to its right need to start over and find
-                // the first available slot
-                for (int cntr = from; cntr < _count; cntr++)
-                {
-                    if (Left.IsAvailable(cntr))
-                    {
-                        _value = cntr;
-
-                        if (Right != null)
-                        {
-                            Right.LeftAdvanced();
-                        }
-
-                        return true;
-                    }
-                }
-
-                _value = -1;    // set it to an invalid value
-                return false;
-            }
-
-            private bool IsAvailable(int value)
-            {
-                if (value == _value)
-                {
-                    return false;
-                }
-
-                if (Left == null)
-                {
-                    return true;
-                }
-
-                return Left.IsAvailable(value);
-            }
-
-            #endregion
-        }
-
-        #endregion
-
         #region Declaration Section
 
         public const double NEARZERO = .000000001d;
@@ -281,56 +49,28 @@ namespace Game.HelperClassesCore
         /// </summary>
         public static double GetScaledValue_Capped(double minReturn, double maxReturn, double minRange, double maxRange, double valueRange)
         {
-            double retVal = GetScaledValue(minReturn, maxReturn, minRange, maxRange, valueRange);
+            if (minRange.IsNearValue(maxRange))
+            {
+                return minReturn;
+            }
+
+            // Get the percent of value within the range
+            double percent = (valueRange - minRange) / (maxRange - minRange);
+
+            // Get the lerp between the return range
+            double retVal = minReturn + (percent * (maxReturn - minReturn));
 
             // Cap the return value
-            if (minReturn < maxReturn)
-            {
-                if (retVal < minReturn)
-                {
-                    retVal = minReturn;
-                }
-                else if (retVal > maxReturn)
-                {
-                    retVal = maxReturn;
-                }
-            }
-            else if (minReturn > maxReturn)
-            {
-                if (retVal < maxReturn)
-                {
-                    retVal = maxReturn;
-                }
-                else if (retVal > minReturn)
-                {
-                    retVal = minReturn;
-                }
-            }
-            else
+            if (retVal < minReturn)
             {
                 retVal = minReturn;
             }
+            else if (retVal > maxReturn)
+            {
+                retVal = maxReturn;
+            }
 
             return retVal;
-        }
-
-        /// <summary>
-        /// This makes sure that value is between min an max
-        /// </summary>
-        public static double Cap(double value, int min, int max)
-        {
-            if (value < min)
-            {
-                return min;
-            }
-            else if (value > max)
-            {
-                return max;
-            }
-            else
-            {
-                return value;
-            }
         }
 
         /// <summary>
@@ -548,7 +288,7 @@ namespace Game.HelperClassesCore
         /// </summary>
         public static bool[] ConvertToBase2(long value, int vectorSize)
         {
-            if (value < 0)
+            if(value < 0)
             {
                 throw new ArgumentOutOfRangeException("This method can't handle negative numbers: " + value.ToString());
             }
@@ -1055,7 +795,7 @@ namespace Game.HelperClassesCore
         /// This returns all combinations of the lists passed in.  This is a nested loop, which makes it easier to
         /// write linq statements against
         /// </summary>
-        public static IEnumerable<(T1, T2)> Collate<T1, T2>(IEnumerable<T1> t1s, IEnumerable<T2> t2s)
+        public static IEnumerable<Tuple<T1, T2>> Collate<T1, T2>(IEnumerable<T1> t1s, IEnumerable<T2> t2s)
         {
             T2[] t2Arr = t2s.ToArray();
 
@@ -1063,11 +803,11 @@ namespace Game.HelperClassesCore
             {
                 foreach (T2 t2 in t2Arr)
                 {
-                    yield return (t1, t2);
+                    yield return Tuple.Create(t1, t2);
                 }
             }
         }
-        public static IEnumerable<(T1, T2, T3)> Collate<T1, T2, T3>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s)
+        public static IEnumerable<Tuple<T1, T2, T3>> Collate<T1, T2, T3>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s)
         {
             T2[] t2Arr = t2s.ToArray();
             T3[] t3Arr = t3s.ToArray();
@@ -1078,12 +818,12 @@ namespace Game.HelperClassesCore
                 {
                     foreach (T3 t3 in t3Arr)
                     {
-                        yield return (t1, t2, t3);
+                        yield return Tuple.Create(t1, t2, t3);
                     }
                 }
             }
         }
-        public static IEnumerable<(T1, T2, T3, T4)> Collate<T1, T2, T3, T4>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s, IEnumerable<T4> t4s)
+        public static IEnumerable<Tuple<T1, T2, T3, T4>> Collate<T1, T2, T3, T4>(IEnumerable<T1> t1s, IEnumerable<T2> t2s, IEnumerable<T3> t3s, IEnumerable<T4> t4s)
         {
             T2[] t2Arr = t2s.ToArray();
             T3[] t3Arr = t3s.ToArray();
@@ -1097,7 +837,7 @@ namespace Game.HelperClassesCore
                     {
                         foreach (T4 t4 in t4Arr)
                         {
-                            yield return (t1, t2, t3, t4);
+                            yield return Tuple.Create(t1, t2, t3, t4);
                         }
                     }
                 }
@@ -1237,61 +977,6 @@ namespace Game.HelperClassesCore
             #endregion
 
             return retVal.ToArray();
-        }
-
-        /// <summary>
-        /// This is a pretty specific use case.  Within an NxN square, each column and row can only be used once.  This method iterates
-        /// over all possible sets of those arrangments
-        /// </summary>
-        public static IEnumerable<(int index1, int index2)[]> AllUniquePairSets(int count)
-        {
-            #region initialize worker nodes
-
-            // This is a very OO approach.  Somewhat easy to implement instead of having a master method with lots of for loops back and forth, but not
-            // the most intuitive to use.  The idea is build a chain of nodes, only publicly give instructions to the first node.  That instruction bounces back and
-            // forth internally among the nodes.  Then read the results
-
-            // The result set is always square (count x count).  So create columns[count], telling each to have count rows
-            EnumerateColumn[] columns = Enumerable.Range(0, count).
-                Select(o => new EnumerateColumn(count)).
-                ToArray();
-
-            // Link them together
-            for (int cntr = 0; cntr < count; cntr++)
-            {
-                if (cntr > 0)
-                {
-                    columns[cntr].Left = columns[cntr - 1];
-                }
-
-                if (cntr < count - 1)
-                {
-                    columns[cntr].Right = columns[cntr + 1];
-                }
-            }
-
-            #endregion
-
-            // Tell them to take on the first state
-            columns[0].Start();
-
-            // Return that first state
-            yield return columns.
-                Select((o, i) => (i, o.Value)).
-                ToArray();
-
-            // Iterate over the rest of the states
-            while (true)
-            {
-                if (!columns[0].Advance())
-                {
-                    break;
-                }
-
-                yield return columns.
-                    Select((o, i) => (i, o.Value)).
-                    ToArray();
-            }
         }
 
         /// <summary>
@@ -1675,7 +1360,7 @@ namespace Game.HelperClassesCore
         {
             if (filename.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
-                #region xaml
+                #region XAML
 
                 using (FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
@@ -1686,7 +1371,7 @@ namespace Game.HelperClassesCore
             }
             else if (filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             {
-                #region json
+                #region JSON
 
                 using (StreamReader reader = new StreamReader(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                 {
@@ -1751,7 +1436,7 @@ namespace Game.HelperClassesCore
         {
             if (filename.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
-                #region xaml
+                #region XAML
 
                 using (FileStream file = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
@@ -1762,7 +1447,7 @@ namespace Game.HelperClassesCore
             }
             else if (filename.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
             {
-                #region json
+                #region JSON
 
                 using (StreamReader reader = new StreamReader(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
                 {
@@ -1787,43 +1472,6 @@ namespace Game.HelperClassesCore
             else
             {
                 throw new ApplicationException("Can't determine type of file (unknown extension): " + filename);
-            }
-        }
-
-        public static T DeserializeFromString<T>(string text, SerializeMode mode = SerializeMode.XAML)
-        {
-            if (mode == SerializeMode.XAML)
-            {
-                #region xaml
-
-                using (MemoryStream stream = new MemoryStream(Encoding.Unicode.GetBytes(text)))
-                {
-                    return (T)XamlServices.Load(stream);
-                }
-
-                #endregion
-            }
-            else
-            {
-                #region json
-
-                // SerializeToFile
-                if (text.StartsWith("["))
-                {
-                    int index = text.IndexOf('\n');
-                    if (index < 0 || text.Length <= index + 1)
-                    {
-                        throw new ApplicationException("Couldn't deserialize json:  Couldn't get to the json");
-                    }
-
-                    text = text.Substring(index + 1);
-                }
-
-                //NOTE: If the file defines a type, I could compare that type to T, but I'd rather just let the serializer throw a cast
-                //exception if it's the wrong type
-                return (T)new JavaScriptSerializer().Deserialize(text, typeof(T));
-
-                #endregion
             }
         }
 
@@ -2285,7 +1933,7 @@ namespace Game.HelperClassesCore
         #endregion
     }
 
-    #region enum: SerializeMode
+    #region Enum: SerializeMode
 
     public enum SerializeMode
     {
@@ -2355,7 +2003,7 @@ namespace Game.HelperClassesCore
 
     #endregion
 
-    #region class: LinkedItemWrapper
+    #region Class: LinkedItemWrapper
 
     public class LinkedItemWrapper<T>
     {
@@ -2365,7 +2013,7 @@ namespace Game.HelperClassesCore
     }
 
     #endregion
-    #region class: LinkWrapper
+    #region Class: LinkWrapper
 
     public class LinkWrapper<Titem, Tlink>
     {

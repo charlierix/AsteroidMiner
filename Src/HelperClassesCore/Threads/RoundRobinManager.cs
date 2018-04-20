@@ -149,7 +149,7 @@ namespace Game.HelperClassesCore.Threads
                         bool shouldRemove = false;
                         try
                         {
-                            if (!workers[index].Step1())
+                            if (!workers[index].Step())
                             {
                                 shouldRemove = true;
                             }
@@ -214,7 +214,7 @@ namespace Game.HelperClassesCore.Threads
         #endregion
     }
 
-    #region interface: IRoundRobinWorker
+    #region Interface: IRoundRobinWorker
 
     public interface IRoundRobinWorker
     {
@@ -228,7 +228,7 @@ namespace Game.HelperClassesCore.Threads
         /// True: This worker has more to do, keep calling Step.
         /// False: This worker is finished, and should never be called again.
         /// </returns>
-        bool Step1();
+        bool Step();
 
         /// <summary>
         /// This is needed when removing a worker.  It's a unique ID to be able to find it

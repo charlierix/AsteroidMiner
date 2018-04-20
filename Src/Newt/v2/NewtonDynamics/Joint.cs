@@ -14,7 +14,7 @@ namespace Game.Newt.v2.NewtonDynamics
     //TODO:  See if these try to return to the initialized position through spring forces, or are free (I think that's what Stiffness is for?)
     //TODO:  These allow the second body to be null, figure out when that would be useful - doesn't a joint only make sense between two bodies?
 
-    #region class: JointBase
+    #region Class: JointBase
 
     public abstract class JointBase : IDisposable
     {
@@ -150,7 +150,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region class: JointBallAndSocket
+    #region Class: JointBallAndSocket
 
     public class JointBallAndSocket : JointBase
     {
@@ -187,7 +187,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointHinge
+    #region Class: JointHinge
 
     public class JointHinge : JointBase
     {
@@ -215,7 +215,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointSlider
+    #region Class: JointSlider
 
     public class JointSlider : JointBase
     {
@@ -243,7 +243,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointCorkscrew
+    #region Class: JointCorkscrew
 
     public class JointCorkscrew : JointBase
     {
@@ -274,7 +274,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointUniversal
+    #region Class: JointUniversal
 
     public class JointUniversal : JointBase
     {
@@ -310,7 +310,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointUpVector
+    #region Class: JointUpVector
 
     public class JointUpVector : JointBase
     {
@@ -348,7 +348,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region class: JointUserDefined
+    #region Class: JointUserDefined
 
     //public class JointUserDefined : JointBase
     //{

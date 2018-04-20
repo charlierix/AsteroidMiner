@@ -18,7 +18,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     //TODO: Visual should be a truncated octahedron.  Tile some hexagon holes onto the hexagon portions
     //NO: it needs to be directional
 
-    #region class: SwarmBayToolItem
+    #region Class: SwarmBayToolItem
 
     public class SwarmBayToolItem : PartToolItemBase
     {
@@ -79,7 +79,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SwarmBayDesign
+    #region Class: SwarmBayDesign
 
     public class SwarmBayDesign : PartDesignBase
     {
@@ -89,7 +89,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private MassBreakdownCache _massBreakdown = null;
+        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
 
         #endregion
 
@@ -148,10 +148,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Breakdown;
+                return _massBreakdown.Item1;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -160,9 +160,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
+            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
 
-            return _massBreakdown.Breakdown;
+            // Exit Function
+            return _massBreakdown.Item1;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -246,13 +247,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region class: SwarmBay
+    #region Class: SwarmBay
 
     public class SwarmBay : PartBase, IPartUpdatable
     {
         #region Declaration Section
 
-        public const string PARTTYPE = nameof(SwarmBay);
+        public const string PARTTYPE = "SwarmBay";
 
         private readonly ItemOptions _itemOptions;
 
@@ -368,19 +369,49 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
         }
 
-        public int? IntervalSkips_MainThread => 0;
-        public int? IntervalSkips_AnyThread => null;
+        public int? IntervalSkips_MainThread
+        {
+            get
+            {
+                return 0;
+            }
+        }
+        public int? IntervalSkips_AnyThread
+        {
+            get
+            {
+                return null;
+            }
+        }
 
         #endregion
 
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass => _mass;
-        public override double TotalMass => _mass;
+        public override double DryMass
+        {
+            get
+            {
+                return _mass;
+            }
+        }
+        public override double TotalMass
+        {
+            get
+            {
+                return _mass;
+            }
+        }
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual => _scaleActual;
+        public override Vector3D ScaleActual
+        {
+            get
+            {
+                return _scaleActual;
+            }
+        }
 
         #endregion
 

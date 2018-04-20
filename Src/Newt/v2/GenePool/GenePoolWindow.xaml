@@ -38,11 +38,11 @@
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <StackPanel VerticalAlignment="Bottom">
-                <Button  Content="Add Food" Click="AddFood_Click"/>
-                <Button Content="Add Poison" Click="AddPoison_Click"/>
-                <Button Content="Add Bot" Click="AddBot_Click"/>
-                <Button Content="Add Egg" Click="AddEgg_Click"/>
-                <Button Content="Clear" Click="Clear_Click"/>
+                <Button  Name="btnAddFood" Content="Add Food" Click="btnAddFood_Click"/>
+                <Button Name="btnAddPoison" Content="Add Poison" Click="btnAddPoison_Click"/>
+                <Button Name="btnAddBot" Content="Add Bot" Click="btnAddBot_Click"/>
+                <Button Name="btnAddEgg" Content="Add Egg" Click="btnAddEgg_Click"/>
+                <Button Name="btnClear" Content="Clear" Click="btnClear_Click"/>
             </StackPanel>
 
             <CheckBox IsChecked="True" Name="chkShowViewerOnSelect" Content="Show viewer on select" Foreground="White" VerticalAlignment="Bottom" Margin="6,0,0,0"/>

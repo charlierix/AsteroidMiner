@@ -27,7 +27,7 @@ namespace Game.Newt.v2.GameItems
         double HitPoints_Max { get; }
     }
 
-    #region class: TakesDamageWorker
+    #region Class: TakesDamageWorker
 
     /// <summary>
     /// This is a helper class that holds properties about how much damage to take, multipliers for certain types, etc
@@ -164,7 +164,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region class: TakesDamageWorker_Props
+    #region Class: TakesDamageWorker_Props
 
     public class TakesDamageWorker_Props
     {
