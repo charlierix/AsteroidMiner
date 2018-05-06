@@ -74,6 +74,8 @@ namespace Game.Newt.v2.NewtonDynamics
 
                 if (_applyForceAndTorque == null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"ApplyForceAndTorque (remove): {_handle}");
+
                     _newtonApplyForceAndTorque = null;
                     Newton.NewtonBodySetForceAndTorqueCallback(_handle, _newtonApplyForceAndTorque);
                 }
@@ -167,17 +169,26 @@ namespace Game.Newt.v2.NewtonDynamics
         {
             if (disposing)// && _handle != IntPtr.Zero)
             {
-                _isDisposed = true;
-
-                if (this.Disposing != null)
+                if(_isDisposed)
                 {
-                    this.Disposing(this, new EventArgs());
+                    System.Diagnostics.Debug.WriteLine($"Dispose already disposed: {_handle}");
                 }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"Disposing: {_handle}");
 
-                _world.BodyDisposed(this);		//NOTE: This just gives the .net world object a chance to unhook event listeners
-                Newton.NewtonDestroyBody(_worldHandle, _handle);
-                ObjectStorage.Instance.RemoveBody(_handle);
-                //_handle = IntPtr.Zero;
+                    _isDisposed = true;
+
+                    if (Disposing != null)
+                    {
+                        Disposing(this, new EventArgs());
+                    }
+
+                    _world.BodyDisposed(this);      //NOTE: This just gives the .net world object a chance to unhook event listeners
+                    Newton.NewtonDestroyBody(_worldHandle, _handle);
+                    ObjectStorage.Instance.RemoveBody(_handle);
+                    //_handle = IntPtr.Zero;
+                }
             }
         }
 
@@ -995,7 +1006,7 @@ namespace Game.Newt.v2.NewtonDynamics
         //    NEWTON_API NewtonWorld* NewtonBodyGetWorld (const NewtonBody* const body);
     }
 
-    #region Struct: MassMatrix
+    #region struct: MassMatrix
 
     public struct MassMatrix
     {
@@ -1011,7 +1022,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region Class: BodyMovedArgs
+    #region class: BodyMovedArgs
 
     public class BodyMovedArgs : EventArgs
     {
@@ -1036,7 +1047,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region Class: BodyApplyForceAndTorqueArgs
+    #region class: BodyApplyForceAndTorqueArgs
 
     public class BodyApplyForceAndTorqueArgs : EventArgs
     {

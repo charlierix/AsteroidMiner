@@ -169,6 +169,8 @@
                                             <RowDefinition Height="auto"/>
                                             <RowDefinition Height="2"/>
                                             <RowDefinition Height="auto"/>
+                                            <RowDefinition Height="2"/>
+                                            <RowDefinition Height="auto"/>
                                         </Grid.RowDefinitions>
 
                                         <!-- Image Size -->
@@ -203,11 +205,12 @@
                                         </CheckBox>
                                         <helpctrl:SliderShowValues Grid.Column="2" Grid.Row="10" Name="trkConvMaxSpread" Minimum="20" Maximum="85" Value="65" IsInteger="True" Style="{StaticResource slider}"/>
 
-                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="12" Name="chkRandomNodeColors" Content="Random node colors"/>
+                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="12" Name="chkAlternateSplit" Content="Split large - Merge small"/>
+
+                                        <CheckBox Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="14" Name="chkRandomNodeColors" Content="Random node colors"/>
                                     </Grid>
 
                                     <Button Content="Group Convs" Margin="0,4,0,0" Style="{StaticResource goButton}" Click="Convolution_Click"/>
-
 
 
                                     <!-- K-Means -->
@@ -310,6 +313,8 @@
 
                                     <CheckBox Name="chkPreviewSpread" Content="Spread" ToolTip="Show the spread of distances"/>
                                     <CheckBox Name="chkPreviewPerImageSpread" Content="Each image spread" ToolTip="How far the image is from the center (as a percent of that node's max distance)"/>
+
+                                    <CheckBox Name="chkSquareRegions" Content="Square Regions" ToolTip="Squares instead of voronoi blobs"/>
 
                                     <Label Content="Visualizer" FontSize="14" FontWeight="600" Margin="0,8,0,0"/>
                                     <CheckBox Name="chkVisualizer3D" Content="3D"/>

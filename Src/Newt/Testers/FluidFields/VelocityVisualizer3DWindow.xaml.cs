@@ -23,7 +23,7 @@ namespace Game.Newt.Testers.FluidFields
 {
     public partial class VelocityVisualizer3DWindow : Window
     {
-        #region Enum: LinePlacementType
+        #region enum: LinePlacementType
 
         public enum LinePlacementType
         {

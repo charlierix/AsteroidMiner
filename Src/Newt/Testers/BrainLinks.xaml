@@ -103,29 +103,29 @@
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <UniformGrid Columns="2">
-                                        <Button Name="btn2DAddInput" Content="Add Input" Click="btn2DAddInput_Click"/>
+                                        <Button Content="Add Input" Click="AddInput2D_Click"/>
                                         <ComboBox Name="cbo2DAddInput"/>
 
-                                        <Button Name="btn2DAddOutput" Content="Add Output" Click="btn2DAddOutput_Click"/>
+                                        <Button Content="Add Output" Click="AddOutput2D_Click"/>
                                         <ComboBox Name="cbo2DAddOutput"/>
 
-                                        <Button Name="btn2DAddBrain" Content="Add Brain" Click="btn2DAddBrain_Click"/>
+                                        <Button Content="Add Brain" Click="AddBrain2D_Click"/>
                                         <ComboBox Name="cbo2DAddBrain"/>
 
-                                        <Button Name="btn2DClear" Content="Clear" Click="btn2DClear_Click"/>
+                                        <Button Content="Clear" Click="Clear2D_Click"/>
                                         <ComboBox Name="cbo2DClear"/>
                                     </UniformGrid>
 
                                     <CheckBox IsChecked="True" Name="chk2DRandomSize" Content="Random Size" Style="{StaticResource checkbox}" Margin="1,3,1,1"/>
 
-                                    <Button Name="btn2DVoronoiBrains" Content="Voronoi Brains" Margin="1,12,1,1" Click="btn2DVoronoiBrains_Click"/>
-                                    <Button Name="btn2DCreateLinksSimple" Content="Create Links (simple)" Click="btn2DCreateLinksSimple_Click"/>
+                                    <Button Content="Voronoi Brains" Margin="1,12,1,1" Click="VoronoiBrains2D_Click"/>
+                                    <Button Content="Create Links (simple)" Click="CreateLinksSimple2D_Click"/>
                                     <CheckBox Name="chk2DSkipThin" Content="Skip Thin" Style="{StaticResource checkbox}"/>
                                     <Slider Name="trk2DThinRatio" Minimum="0" Maximum="1" Value=".9" TickFrequency=".1"/>
 
-                                    <Button Name="btn2DCreateLinksVoronoi" Content="Create Links (voronoi)" Margin="1,12,1,1" Click="btn2DCreateLinksVoronoi_Click"/>
+                                    <Button Content="Create Links (voronoi)" Margin="1,12,1,1" Click="CreateLinksVoronoi2D_Click"/>
 
-                                    <Button Name="btn2DCreateLinksDistance" Content="Create Links (distance)" Margin="1,12,1,1" Click="btn2DCreateLinksDistance_Click"/>
+                                    <Button Content="Create Links (distance)" Margin="1,12,1,1" Click="CreateLinksDistance2D_Click"/>
                                     <ComboBox Name="cbo2DIOLinkupPriority"/>
                                     <Slider Name="trk2DLinkResistMult" Minimum="0" Maximum="100" Value="10" TickFrequency="10"/>
                                     <CheckBox IsChecked="False" Name="chk2DRainbowLinks" Content="Rainbow links" Style="{StaticResource checkbox}"/>
@@ -138,16 +138,16 @@
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
                                     <UniformGrid Columns="2">
-                                        <Button Content="Add Input" Click="btn3DAddInput_Click"/>
+                                        <Button Content="Add Input" Click="AddInput3D_Click"/>
                                         <ComboBox Name="cbo3DAddInput"/>
 
-                                        <Button Content="Add Output" Click="btn3DAddOutput_Click"/>
+                                        <Button Content="Add Output" Click="AddOutput3D_Click"/>
                                         <ComboBox Name="cbo3DAddOutput"/>
 
-                                        <Button Content="Add Brain" Click="btn3DAddBrain_Click"/>
+                                        <Button Content="Add Brain" Click="AddBrain3D_Click"/>
                                         <ComboBox Name="cbo3DAddBrain"/>
 
-                                        <Button Content="Clear" Click="btn3DClear_Click"/>
+                                        <Button Content="Clear" Click="Clear3D_Click"/>
                                         <ComboBox Name="cbo3DClear"/>
                                     </UniformGrid>
 
@@ -161,15 +161,15 @@
                                     <CheckBox Name="chk3DExtraLinkBySize" Content="Extra links by size" Style="{StaticResource checkbox}"/>
                                     <CheckBox Name="chk3DExtraLinkEvenDistribute" Content="Extra links even distribute" Style="{StaticResource checkbox}"/>
 
-                                    <Button Content="simple" Margin="1,12,1,1" Click="btn3DCreateLinksSimple_Click"/>
+                                    <Button Content="simple" Margin="1,12,1,1" Click="CreateLinksSimple3D_Click"/>
 
-                                    <Button Content="Brain-Brain" ToolTip="Linking brains together (this step ignores IO)" Click="btn3DLinksBrainBrain_Click"/>
-                                    <Button Content="Brain-IO (all io)" Click="btn3DLinksBrainIO_Click">
+                                    <Button Content="Brain-Brain" ToolTip="Linking brains together (this step ignores IO)" Click="LinksBrainBrain3D_Click"/>
+                                    <Button Content="Brain-IO (all io)" Click="LinksBrainIO3D_Click">
                                         <Button.ToolTip>
                                             <TextBlock>Each IO gets at least one brain (could have unlinked brains)<LineBreak/>This would be the standard way to link brains with IO</TextBlock>
                                         </Button.ToolTip>
                                     </Button>
-                                    <Button Content="Brain-Input (all brain)" Click="btn3DLinksBrainInput_Click">
+                                    <Button Content="Brain-Input (all brain)" Click="LinksBrainInput3D_Click">
                                         <Button.ToolTip>
                                             <TextBlock>Each brain gets exactly one input (could have unlinked inputs)<LineBreak/>This is how rgb cameras would link to rgb recognizers</TextBlock>
                                         </Button.ToolTip>
@@ -187,28 +187,28 @@
                                     <Border Style="{StaticResource interiorPanel}">
                                         <StackPanel>
                                             <TextBox Name="txt3DNumAdd" Text="6"/>
-                                            <Button Name="btn3DRandomSquare" Content="Random Square" Click="btn3DRandomSquare_Click"/>
-                                            <Button Name="btn3DRandomSphere" Content="Random Sphere" Click="btn3DRandomSphere_Click"/>
-                                            <Button Name="btn3DEvenSphere" Content="Even Sphere" Click="btn3DEvenSphere_Click"/>
-                                            <Button Name="btn3DEvenSphereShell" Content="Even Sphere Shell" Click="btn3DEvenSphereShell_Click"/>
-                                            <Button Visibility="Collapsed" Name="btn3DRandomCircle" Content="Random Circle" Click="btn3DRandomCircle_Click"/>
+                                            <Button Content="Random Square" Click="RandomSquare3D_Click"/>
+                                            <Button Content="Random Sphere" Click="RandomSphere3D_Click"/>
+                                            <Button Content="Even Sphere" Click="EvenSphere3D_Click"/>
+                                            <Button Content="Even Sphere Shell" Click="EvenSphereShell3D_Click"/>
+                                            <Button Visibility="Collapsed" Content="Random Circle" Click="RandomCircle3D_Click"/>
 
-                                            <Button Name="btn3DPerturb" Content="Perturb Points" Margin="1,12,1,1" Click="btn3DPerturb_Click"/>
+                                            <Button Content="Perturb Points" Margin="1,12,1,1" Click="Perturb3D_Click"/>
                                             <Slider Name="trk3DPerturbDist" Minimum="0" Maximum="1" Value=".2"/>
                                             <!--<CheckBox Name="chk3DPerturbOnlyRayClicked" Content="Only ray clicked" ToolTip="Only the points that have shift+click rays"/>-->
                                             <CheckBox IsChecked="True" Name="chk3DPerturbRerun" Content="Rerun last button" Style="{StaticResource checkbox}"/>
 
-                                            <Button Name="btn3DClearDelVor" Content="Clear" Margin="1,12,1,1" Click="btn3DClearDelVor_Click"/>
+                                            <Button Content="Clear" Margin="1,12,1,1" Click="ClearDelVor3D_Click"/>
                                         </StackPanel>
                                     </Border>
 
                                     <Border Margin="0,16,0,0" Style="{StaticResource interiorPanel}">
                                         <StackPanel Button.Click="Button3D_Click">
-                                            <Button Name="btn3DDelaunay" Content="Delaunay" Click="btn3DDelaunay_Click"/>
-                                            <Button Name="btn3DDelaunayPolys" Content="Delaunay (polys)" Click="btn3DDelaunayPolys_Click"/>
+                                            <Button Content="Delaunay" Click="Delaunay3D_Click"/>
+                                            <Button Content="Delaunay (polys)" Click="DelaunayPolys3D_Click"/>
 
-                                            <Button Name="btn3DVoronoi" Content="Voronoi" ToolTip="Shift+Click black points for extra visual" Margin="1,12,1,1" Click="btn3DVoronoi_Click"/>
-                                            <Button Name="btn3DVoronoiDelaunay" Content="Voronoi + Delaunay" ToolTip="Shift+Click black points for extra visual" Click="btn3DVoronoiDelaunay_Click"/>
+                                            <Button Content="Voronoi" ToolTip="Shift+Click black points for extra visual" Margin="1,12,1,1" Click="Voronoi3D_Click"/>
+                                            <Button Content="Voronoi + Delaunay" ToolTip="Shift+Click black points for extra visual" Click="VoronoiDelaunay3D_Click"/>
 
                                             <!--<Button Visibility="Collapsed" Name="btn3DVoronoing" Content="Voronoing" Click="btn3DVoronoing_Click"/>
                                             <Button Visibility="Collapsed" Name="btn3DVortex" Content="Vortex" Click="btn3DVortex_Click"/>
@@ -242,12 +242,12 @@
                         <Expander IsExpanded="False" Header="Misc">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Name="btnPlaneTiles2D" Content="Plane Tiles 2D" Click="btnPlaneTiles2D_Click"/>
-                                    <Button Name="btnPlaneTiles3D" Content="Plane Tiles 3D" Click="btnPlaneTiles3D_Click"/>
+                                    <Button Content="Plane Tiles 2D" Click="PlaneTiles2D_Click"/>
+                                    <Button Content="Plane Tiles 3D" Click="PlaneTiles3D_Click"/>
 
-                                    <Button Name="btnCircumcenterTetra" Content="Circumcenter of tetrahedron" Margin="1,12,1,1" Click="btnCircumcenterTetra_Click"/>
+                                    <Button Content="Circumcenter of tetrahedron" Margin="1,12,1,1" Click="CircumcenterTetra_Click"/>
 
-                                    <Button Name="btn3DText" Content="3D Text" Margin="1,12,1,1" Click="btn3DText_Click"/>
+                                    <Button Content="3D Text" Margin="1,12,1,1" Click="Text3D_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>

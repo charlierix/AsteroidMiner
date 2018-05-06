@@ -20,7 +20,7 @@ using Game.Newt.v2.NewtonDynamics;
 namespace Game.Newt.v2.GameItems.ShipParts
 {
     //TODO: CollisionHull and Mass need to be the trapazoidal cone instead of a cylinder
-    #region Class: BrainRGBRecognizerToolItem
+    #region class: BrainRGBRecognizerToolItem
 
     public class BrainRGBRecognizerToolItem : PartToolItemBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: BrainRGBRecognizerDesign
+    #region class: BrainRGBRecognizerDesign
 
     public class BrainRGBRecognizerDesign : PartDesignBase
     {
@@ -93,7 +93,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -174,10 +174,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter)
@@ -195,10 +195,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 new Transform3D[] { transform });
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(combined, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -282,11 +281,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: BrainRGBRecognizer
+    #region class: BrainRGBRecognizer
 
     public class BrainRGBRecognizer : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region Class: TrainerInput
+        #region class: TrainerInput
 
         /// <summary>
         /// Args to the training method
@@ -319,7 +318,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         #endregion
-        #region Class: TrainedRecognizer
+        #region class: TrainedRecognizer
 
         /// <summary>
         /// Output of the training method
@@ -341,7 +340,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         #endregion
-        #region Class: RecognitionResults
+        #region class: RecognitionResults
 
         /// <summary>
         /// This is the result of sensor data being classified with trained networks
@@ -365,7 +364,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "BrainRGBRecognizer";
+        public const string PARTTYPE = nameof(BrainRGBRecognizer);
 
         private readonly object _lock = new object();
 
@@ -427,8 +426,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _itemOptions = itemOptions;
             _energyTanks = energyTanks;
 
-            this.Design = new BrainRGBRecognizerDesign(options, true);
-            this.Design.SetDNA(dna);
+            Design = new BrainRGBRecognizerDesign(options, true);
+            Design.SetDNA(dna);
 
             _dnaExtra = dna.Extra ?? BrainRGBRecognizerDNAExtra.GetDefaultDNA();
 
@@ -470,20 +469,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return _outputNeurons;
             }
         }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
         public IEnumerable<INeuron> Neruons_All
         {
@@ -499,31 +486,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         //NOTE: Even though this uses neural nets, its just another sensor from the rest of the bot's perspective (because it's only active when tied to a camera
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Sensor;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
 
         private readonly double _radius;
-        public double Radius
-        {
-            get
-            {
-                return _radius;
-            }
-        }
+        public double Radius => _radius;
 
         private volatile bool _isOn = false;
-        public bool IsOn
-        {
-            get
-            {
-                return _isOn;
-            }
-        }
+        public bool IsOn => _isOn;
 
         #endregion
         #region IPartUpdatable Members
@@ -558,20 +527,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
@@ -717,7 +674,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             lifeEvents.EventOccurred += LifeEvents_EventOccurred;
 
             // Build the neurons
-            _outputNeurons = CreateNeurons(this.DNA, _itemOptions, lifeEvents);
+            _outputNeurons = CreateNeurons(DNA, _itemOptions, lifeEvents);
         }
 
         public void SetCamera(CameraColorRGB camera)
@@ -1453,7 +1410,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Class: BrainRGBRecognizerDNA
+    #region class: BrainRGBRecognizerDNA
 
     public class BrainRGBRecognizerDNA : ShipPartDNA
     {
@@ -1469,7 +1426,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: BrainRGBRecognizerDNAExtra
+    #region class: BrainRGBRecognizerDNAExtra
 
     public class BrainRGBRecognizerDNAExtra
     {

@@ -35,7 +35,7 @@ namespace Game.Newt.v2.GameItems
     {
         //DO NOT USE!!!!!  Replaced by Bot
 
-        #region Class: VisualEffects
+        #region class: VisualEffects
 
         public class VisualEffects
         {
@@ -160,7 +160,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: PartContainerBuilding
+        #region class: PartContainerBuilding
 
         protected class PartContainerBuilding
         {
@@ -220,7 +220,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: PartContainer
+        #region class: PartContainer
 
         protected class PartContainer
         {
@@ -318,7 +318,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: BuildPartsResults
+        #region class: BuildPartsResults
 
         public class BuildPartsResults
         {
@@ -333,7 +333,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: ShipConstruction
+        #region class: ShipConstruction
 
         protected class ShipConstruction
         {
@@ -1849,7 +1849,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region Class: ShipCoreArgs
+    #region class: ShipCoreArgs
 
     public class ShipCoreArgs
     {
@@ -1859,7 +1859,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: ShipExtraArgs
+    #region class: ShipExtraArgs
 
     public class ShipExtraArgs
     {
@@ -1874,19 +1874,23 @@ namespace Game.Newt.v2.GameItems
         public int Material_Projectile = 0;
         public int Material_SwarmBot = 0;
 
-        public bool RunNeural = true;
         public bool RepairPartPositions = true;
+
+        public bool RunNeural = true;
+        /// <summary>
+        /// If this is populated, the neurons get added to this instead of the singleton NeuralPool
+        /// </summary>
+        public NeuralPool_ManualTick NeuralPoolManual = null;
 
         //TODO: Implement this.  The ship needs to set mass to zero, and listen to mass change events, forcing it back to zero (also ignore calls to RecalcMass)
         public bool IsPhysicsStatic = false;
-
 
         public ItemLinker_OverflowArgs PartLink_Overflow = null;
         public ItemLinker_ExtraArgs PartLink_Extra = null;
     }
 
     #endregion
-    #region Class: ShipDNA
+    #region class: ShipDNA
 
     //TODO: Make this derive from MapPartDNA
     public class ShipDNA
@@ -1966,14 +1970,16 @@ namespace Game.Newt.v2.GameItems
         /// </summary>
         public static ShipDNA Create(string name, IEnumerable<ShipPartDNA> parts)
         {
-            ShipDNA retVal = new ShipDNA();
+            ShipDNA retVal = new ShipDNA
+            {
+                ShipName = name,
+                ShipLineage = Guid.NewGuid().ToString(),        //this will probably be overwritten, but give it something unique if it's not
+                Generation = 0,
 
-            retVal.ShipName = name;
-            retVal.ShipLineage = Guid.NewGuid().ToString();		//this will probably be overwritten, but give it something unique if it's not
-            retVal.Generation = 0;
+                LayerNames = new string[] { "layer1" }.ToList(),
+                PartsByLayer = new SortedList<int, List<ShipPartDNA>>()
+            };
 
-            retVal.LayerNames = new string[] { "layer1" }.ToList();
-            retVal.PartsByLayer = new SortedList<int, List<ShipPartDNA>>();
             retVal.PartsByLayer.Add(0, new List<ShipPartDNA>(parts));
 
             return retVal;
@@ -2026,7 +2032,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class:  TODO: SubChassisDNA
+    #region class:  TODO: SubChassisDNA
 
     ///// <remarks>
     ///// This might be overkill:

@@ -24,7 +24,7 @@ namespace Game.Newt.v2.GameItems.Collections
     /// </remarks>
     public class SOMList
     {
-        #region Class: ToVectorInstructions
+        #region class: ToVectorInstructions
 
         private class ToVectorInstructions
         {
@@ -54,7 +54,7 @@ namespace Game.Newt.v2.GameItems.Collections
         }
 
         #endregion
-        #region Class: SOMItem
+        #region class: SOMItem
 
         public class SOMItem : ISOMInput
         {

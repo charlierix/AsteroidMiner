@@ -537,7 +537,7 @@ namespace Game.HelperClassesAI
         #endregion
     }
 
-    #region Class: SOMFieldStats
+    #region class: SOMFieldStats
 
     public class SOMFieldStats
     {
@@ -564,7 +564,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Enum: SOMFieldType
+    #region enum: SOMFieldType
 
     public enum SOMFieldType
     {
@@ -577,7 +577,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region Class: SOMConvertToVectorProps
+    #region class: SOMConvertToVectorProps
 
     public class SOMConvertToVectorProps
     {

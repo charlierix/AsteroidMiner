@@ -15,7 +15,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 {
     //TODO: Currently, the thrust lines are drawn in Ship.VisualEffects.  Add to the interface so parts can draw/update their own visuals
 
-    #region Class: ThrusterToolItem
+    #region class: ThrusterToolItem
 
     //TODO: Support custom thrusters
     public class ThrusterToolItem : PartToolItemBase
@@ -121,7 +121,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ThrusterDesign
+    #region class: ThrusterDesign
 
     public class ThrusterDesign : PartDesignBase
     {
@@ -133,7 +133,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private Point3D[] _pointsForHull = null;
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -244,14 +244,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             if (!(dna is ThrusterDNA))
             {
-                throw new ArgumentException("The class passed in must be ThrusterDNA");
+                throw new ArgumentException("The class passed in must be " + nameof(ThrusterDNA));
             }
-
-            //ThrusterDNA dnaCast = (ThrusterDNA)dna;
 
             base.StoreDNA(dna);
 
             // The constructor already took care of these (the dna could be incomplete, the constructor has more certainty)
+            //ThrusterDNA dnaCast = (ThrusterDNA)dna;
             //this.ThrusterType = dnaCast.ThrusterType;
             //this.ThrusterDirections = dnaCast.ThrusterDirections;
         }
@@ -312,10 +311,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             UtilityNewt.ObjectMassBreakdownSet breakdown = null;
@@ -340,10 +339,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public static Vector3D[] GetThrusterDirections(ThrusterType thrusterType)
@@ -905,13 +903,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: Thruster
+    #region class: Thruster
 
     public class Thruster : PartBase, INeuronContainer, IPartUpdatable
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "Thruster";
+        public const string PARTTYPE = nameof(Thruster);
 
         private readonly object _lock = new object();
 
@@ -969,43 +967,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => _neurons;
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => _neurons;
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Manipulator;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Manipulator;
 
         public double Radius
         {
@@ -1013,17 +981,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public bool IsOn
-        {
-            get
-            {
-                // Even though thruster exposes neurons to control it, that's just an interface to the thruster, so there's
-                // no reason to draw from an energy tank to power those neurons.  (this IsOn property is from the
-                // perspective of a brain, that's why it's independant of how much fuel is available - you can always
-                // try to tell the thruster to fire, that's when it will check for fuel)
-                return true;
-            }
-        }
+        // Even though thruster exposes neurons to control it, that's just an interface to the thruster, so there's
+        // no reason to draw from an energy tank to power those neurons.  (this IsOn property is from the
+        // perspective of a brain, that's why it's independant of how much fuel is available - you can always
+        // try to tell the thruster to fire, that's when it will check for fuel)
+        public bool IsOn => true;
 
         #endregion
         #region IPartUpdatable Members
@@ -1065,65 +1027,23 @@ namespace Game.Newt.v2.GameItems.ShipParts
             this.FiredThrustsLastUpdate = thrustResults;
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
-        public ThrusterType ThrusterType
-        {
-            get
-            {
-                return ((ThrusterDesign)this.Design).ThrusterType;
-            }
-        }
+        public ThrusterType ThrusterType => ((ThrusterDesign)this.Design).ThrusterType;
         // These are unit vectors
-        public Vector3D[] ThrusterDirectionsModel
-        {
-            get
-            {
-                return ((ThrusterDesign)this.Design).ThrusterDirections;
-            }
-        }
+        public Vector3D[] ThrusterDirectionsModel => ((ThrusterDesign)this.Design).ThrusterDirections;
         public Vector3D[] ThrusterDirectionsShip
         {
             get;
@@ -1176,20 +1096,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
             get
             {
-                double maxSize = Math1D.Max(this.Design.Scale.X, this.Design.Scale.Y, this.Design.Scale.Z);		// they should all be the same
+                double maxSize = Math1D.Max(Design.Scale.X, Design.Scale.Y, Design.Scale.Z);		// they should all be the same
 
                 return maxSize * .5d;
             }
         }
 
         private readonly double _forceAtMax;
-        public double ForceAtMax
-        {
-            get
-            {
-                return _forceAtMax;
-            }
-        }
+        public double ForceAtMax => _forceAtMax;
 
         #endregion
 
@@ -1314,20 +1228,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Class: ThrusterDNA
+    #region class: ThrusterDNA
 
     public class ThrusterDNA : ShipPartDNA
     {
-        public ThrusterType ThrusterType
-        {
-            get;
-            set;
-        }
-        public Vector3D[] ThrusterDirections
-        {
-            get;
-            set;
-        }
+        public ThrusterType ThrusterType { get; set; }
+        public Vector3D[] ThrusterDirections { get; set; }
 
         public override bool IsEqual(ShipPartDNA dna, bool comparePositionOrientation = false, bool compareNeural = false)
         {
@@ -1375,7 +1281,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Enum: ThrusterType
+    #region enum: ThrusterType
 
     public enum ThrusterType
     {

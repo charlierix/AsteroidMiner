@@ -13,7 +13,7 @@ using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.GameItems.ShipEditor
 {
-    #region Class: TabControlPartsVM
+    #region class: TabControlPartsVM
 
     public class TabControlPartsVM : INotifyPropertyChanged
     {
@@ -191,7 +191,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
     #endregion
 
-    #region Class: TabControlPartsVM_CreateNew
+    #region class: TabControlPartsVM_CreateNew
 
     public class TabControlPartsVM_CreateNew : TabControlPartsVM
     {
@@ -302,7 +302,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
     #endregion
 
-    #region Class: TabControlPartsVM_FixedSupply
+    #region class: TabControlPartsVM_FixedSupply
 
     public class TabControlPartsVM_FixedSupply : TabControlPartsVM
     {
@@ -604,7 +604,7 @@ namespace Game.Newt.v2.GameItems.ShipEditor
 
     #endregion
 
-    #region Class: TabControlParts_DragObject
+    #region class: TabControlParts_DragObject
 
     /// <summary>
     /// This will hold a part that they drag from the tab control onto the 3D surface

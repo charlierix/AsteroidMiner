@@ -10,7 +10,7 @@ namespace Game.Newt.v1.NewtonDynamics1
 {
     public class MaterialPhysics
     {
-        #region Class: MaterialProps
+        #region class: MaterialProps
 
         private class MaterialProps
         {
@@ -44,7 +44,7 @@ namespace Game.Newt.v1.NewtonDynamics1
         }
 
         #endregion
-        #region Class: CollisionEventProps
+        #region class: CollisionEventProps
 
         private class CollisionEventProps
         {

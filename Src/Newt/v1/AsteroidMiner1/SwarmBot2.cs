@@ -16,7 +16,7 @@ namespace Game.Newt.v1.AsteroidMiner1
     /// </summary>
     public class SwarmBot2 : SwarmBotBase
     {
-        #region Enum: BehaviorType
+        #region enum: BehaviorType
 
         public enum BehaviorType
         {

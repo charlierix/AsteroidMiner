@@ -88,6 +88,11 @@ namespace Game.HelperClassesWPF
             return vector.X.ToString("N" + significantDigits.ToString()) + ", " + vector.Y.ToString("N" + significantDigits.ToString());
         }
 
+        public static string ToStringSignificantDigits(this Vector vector, int significantDigits)
+        {
+            return string.Format("{0}, {1}", vector.X.ToStringSignificantDigits(significantDigits), vector.Y.ToStringSignificantDigits(significantDigits));
+        }
+
         /// <summary>
         /// I was getting tired of needing two statements to get a unit vector
         /// </summary>
@@ -161,6 +166,20 @@ namespace Game.HelperClassesWPF
             return point.X.ToString("N" + significantDigits.ToString()) + ", " + point.Y.ToString("N" + significantDigits.ToString());
         }
 
+        public static string ToStringSignificantDigits(this Point point, int significantDigits)
+        {
+            return string.Format("{0}, {1}", point.X.ToStringSignificantDigits(significantDigits), point.Y.ToStringSignificantDigits(significantDigits));
+        }
+
+        #endregion
+
+        #region Size
+
+        public static Size3D ToSize3D(this Size size, double z = 0)
+        {
+            return new Size3D(size.Width, size.Height, z);
+        }
+
         #endregion
 
         #region Vector3D
@@ -219,6 +238,11 @@ namespace Game.HelperClassesWPF
         public static string ToString(this Vector3D vector, int significantDigits)
         {
             return vector.X.ToString("N" + significantDigits.ToString()) + ", " + vector.Y.ToString("N" + significantDigits.ToString()) + ", " + vector.Z.ToString("N" + significantDigits.ToString());
+        }
+
+        public static string ToStringSignificantDigits(this Vector3D vector, int significantDigits)
+        {
+            return string.Format("{0}, {1}, {2}", vector.X.ToStringSignificantDigits(significantDigits), vector.Y.ToStringSignificantDigits(significantDigits), vector.Z.ToStringSignificantDigits(significantDigits));
         }
 
         /// <summary>
@@ -375,6 +399,11 @@ namespace Game.HelperClassesWPF
             return point.X.ToString("N" + significantDigits.ToString()) + ", " + point.Y.ToString("N" + significantDigits.ToString()) + ", " + point.Z.ToString("N" + significantDigits.ToString());
         }
 
+        public static string ToStringSignificantDigits(this Point3D point, int significantDigits)
+        {
+            return string.Format("{0}, {1}", point.X.ToStringSignificantDigits(significantDigits), point.Y.ToStringSignificantDigits(significantDigits), point.Z.ToStringSignificantDigits(significantDigits));
+        }
+
         /// <summary>
         /// I was getting tired of needing two statements to get a unit vector
         /// </summary>
@@ -403,6 +432,20 @@ namespace Game.HelperClassesWPF
                 default:
                     throw new ApplicationException("Unknown Axis: " + axis.ToString());
             }
+        }
+
+        #endregion
+
+        #region Size3D
+
+        public static Size ToSize2D(this Size3D size)
+        {
+            return new Size(size.X, size.Y);
+        }
+
+        public static Vector3D ToVector(this Size3D size)
+        {
+            return new Vector3D(size.X, size.Y, size.Z);
         }
 
         #endregion
@@ -735,6 +778,31 @@ namespace Game.HelperClassesWPF
             return rect.Y + (rect.Height / 2d);
         }
 
+        public static Point Center(this Rect rect)
+        {
+            return new Point(rect.CenterX(), rect.CenterY());
+        }
+
+        /// <summary>
+        /// This returns a rectangle that is the new size, but still centered around the original's center point
+        /// </summary>
+        public static Rect ChangeSize(this Rect rect, double multiplier)
+        {
+            double halfWidth = rect.Width / 2;
+            double halfHeight = rect.Height / 2;
+
+            return new Rect(
+                (rect.X + halfWidth) - (halfWidth * multiplier),
+                (rect.Y + halfHeight) - (halfHeight * multiplier),
+                rect.Width * multiplier,
+                rect.Height * multiplier);
+        }
+
+        public static Rect3D ToRect3D(this Rect rect, double z = 0)
+        {
+            return new Rect3D(rect.Location.ToPoint3D(z), rect.Size.ToSize3D());
+        }
+
         #endregion
 
         #region Rect3D
@@ -760,9 +828,28 @@ namespace Game.HelperClassesWPF
             return thisRect.IntersectsWith(rect) || thisRect.Contains(rect) || rect.Contains(thisRect);
         }
 
-        public static double DiagonalLength(this Rect3D thisRect)
+        public static double DiagonalLength(this Rect3D rect)
         {
-            return new Vector3D(thisRect.SizeX, thisRect.SizeY, thisRect.SizeZ).Length;
+            return new Vector3D(rect.SizeX, rect.SizeY, rect.SizeZ).Length;
+        }
+
+        /// <summary>
+        /// This returns a rectangle that is the new size, but still centered around the original's center point
+        /// </summary>
+        public static Rect3D ChangeSize(this Rect3D rect, double multiplier)
+        {
+            return new Rect3D(
+                rect.X - (rect.SizeX * multiplier / 2),
+                rect.Y - (rect.SizeY * multiplier / 2),
+                rect.Z - (rect.SizeZ * multiplier / 2),
+                rect.SizeX * multiplier,
+                rect.SizeY * multiplier,
+                rect.SizeZ * multiplier);
+        }
+
+        public static Rect ToRect2D(this Rect3D rect)
+        {
+            return new Rect(rect.Location.ToPoint2D(), rect.Size.ToSize2D());
         }
 
         #endregion

@@ -18,25 +18,25 @@ namespace Game.HelperClassesAI
 {
     public static class SelfOrganizingMapsWPF
     {
-        #region Class: BlobEvents
+        #region class: BlobEvents
 
         public class BlobEvents
         {
-            public BlobEvents(Action<Polygon, SOMNode, ISOMInput[], MouseEventArgs> mouseMove, Action mouseLeave, Action<Polygon, SOMNode, ISOMInput[], MouseEventArgs> click)
+            public BlobEvents(Action<Shape, SOMNode, ISOMInput[], MouseEventArgs> mouseMove, Action mouseLeave, Action<Shape, SOMNode, ISOMInput[], MouseEventArgs> click)
             {
-                this.MouseMove = mouseMove;
-                this.MouseLeave = mouseLeave;
-                this.Click = click;
+                MouseMove = mouseMove;
+                MouseLeave = mouseLeave;
+                Click = click;
             }
 
-            public readonly Action<Polygon, SOMNode, ISOMInput[], MouseEventArgs> MouseMove;
+            public readonly Action<Shape, SOMNode, ISOMInput[], MouseEventArgs> MouseMove;
             public readonly Action MouseLeave;
 
-            public readonly Action<Polygon, SOMNode, ISOMInput[], MouseEventArgs> Click;
+            public readonly Action<Shape, SOMNode, ISOMInput[], MouseEventArgs> Click;
         }
 
         #endregion
-        #region Class: DrawTileArgs
+        #region class: DrawTileArgs
 
         public class DrawTileArgs
         {
@@ -246,53 +246,41 @@ namespace Game.HelperClassesAI
 
         #region Event Listeners
 
-        private static void Polygon2D_MouseMove(object sender, MouseEventArgs e)
+        public static void Polygon2D_MouseMove(object sender, MouseEventArgs e)
         {
             try
             {
-                Polygon senderCast = sender as Polygon;
-                if (senderCast == null)
+                if (sender is Shape senderCast)
                 {
-                    return;
+                    if (senderCast.Tag is Tuple<BlobEvents, SOMNode, ISOMInput[]> tag)
+                    {
+                        tag.Item1.MouseMove(senderCast, tag.Item2, tag.Item3, e);
+                    }
                 }
-
-                var tag = senderCast.Tag as Tuple<BlobEvents, SOMNode, ISOMInput[]>;
-                if (tag == null)
-                {
-                    return;
-                }
-
-                tag.Item1.MouseMove(senderCast, tag.Item2, tag.Item3, e);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Polygon2D_MouseMove", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private static void Polygon2D_MouseLeave(object sender, MouseEventArgs e)
+        public static void Polygon2D_MouseLeave(object sender, MouseEventArgs e)
         {
             try
             {
-                Polygon senderCast = sender as Polygon;
-                if (senderCast == null)
+                if (sender is Shape senderCast)
                 {
-                    return;
+                    if (senderCast.Tag is Tuple<BlobEvents, SOMNode, ISOMInput[]> tag)
+                    {
+                        tag.Item1.MouseLeave();
+                    }
                 }
-
-                var tag = senderCast.Tag as Tuple<BlobEvents, SOMNode, ISOMInput[]>;
-                if (tag == null)
-                {
-                    return;
-                }
-
-                tag.Item1.MouseLeave();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), "Polygon2D_MouseLeave", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private static void Polygon_MouseUp(object sender, MouseButtonEventArgs e)
+        public static void Polygon_MouseUp(object sender, MouseButtonEventArgs e)
         {
             try
             {
@@ -678,33 +666,9 @@ namespace Game.HelperClassesAI
                     DrawTileArgs args = new DrawTileArgs(orderedSamples[cntr], tileWidth, tileHeight, pixels, x, y, stride, pixelWidth);
                     drawTile(args);
                 }
-
-
-
-
-                #region DISCARD
-
-                //int index = 0;
-                //for (int y = 0; y < colorsHeight; y++)
-                //{
-                //    for (int x = 0; x < colorsWidth; x++)
-                //    {
-                //        int gray = (grayColors[index] * grayValueScale).ToInt_Round();
-                //        if (gray < 0) gray = 0;
-                //        if (gray > 255) gray = 255;
-                //        byte grayByte = Convert.ToByte(gray);
-                //        Color color = Color.FromRgb(grayByte, grayByte, grayByte);
-                //        ctx.DrawRectangle(new SolidColorBrush(color), null, new Rect(x * scaleX, y * scaleY, scaleX, scaleY));
-                //        index++;
-                //    }
-                //}
-
-                #endregion
             }
 
             bitmap.WritePixels(new Int32Rect(0, 0, bitmap.PixelWidth, bitmap.PixelHeight), pixels, stride, 0);
-
-
 
             return new ImageBrush(bitmap)
             {

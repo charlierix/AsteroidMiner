@@ -27,7 +27,7 @@ namespace Game.Newt.Testers.FluidFields
 
     public partial class WindTunnel2 : Window
     {
-        #region Class: FluidVisual
+        #region class: FluidVisual
 
         /// <summary>
         /// This is a wrapper to a line that moves through the world at the speed of the fluid
@@ -157,7 +157,7 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         #endregion
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors
         {
@@ -195,7 +195,7 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         #endregion
-        #region Class: BlockedCellCalc1
+        #region class: BlockedCellCalc1
 
         private static class BlockedCellCalc1
         {
@@ -390,7 +390,7 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         #endregion
-        #region Class: BlockedCellCalc2
+        #region class: BlockedCellCalc2
 
         // This gets rid of point matching and just does edge mapping.  But appears to run slower
         private static class BlockedCellCalc2

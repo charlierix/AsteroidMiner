@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: ShieldEnergyToolItem
+    #region class: ShieldEnergyToolItem
 
     public class ShieldEnergyToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ShieldEnergyDesign
+    #region class: ShieldEnergyDesign
 
     public class ShieldEnergyDesign : PartDesignBase
     {
@@ -81,7 +81,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -146,19 +146,18 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             var breakdown = GetMassBreakdown(this.Scale, cellSize);
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         internal static UtilityNewt.IObjectMassBreakdown GetMassBreakdown(Vector3D scale, double cellSize)
@@ -298,13 +297,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ShieldEnergy
+    #region class: ShieldEnergy
 
     public class ShieldEnergy : PartBase
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "ShieldEnergy";
+        public const string PARTTYPE = nameof(ShieldEnergy);
 
         private readonly ItemOptions _itemOptions;
 
@@ -335,29 +334,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 

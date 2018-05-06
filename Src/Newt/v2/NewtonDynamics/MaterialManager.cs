@@ -11,7 +11,7 @@ namespace Game.Newt.v2.NewtonDynamics
 {
     public class MaterialManager
     {
-        #region Class: CollisionListener
+        #region class: CollisionListener
 
         private class CollisionListener
         {
@@ -162,7 +162,7 @@ namespace Game.Newt.v2.NewtonDynamics
         //internal static extern IntPtr NewtonWorldGetNextBody(IntPtr newtonWorld, IntPtr curBody);
     }
 
-    #region Class: Material
+    #region class: Material
 
     /// <summary>
     /// This is just a data class that gets handed to MaterialManager.Add
@@ -221,7 +221,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region Class: MaterialCollision
+    #region class: MaterialCollision
 
     /// <summary>
     /// This is a collision between two bodies (of a material type).  Call MaterialManager.RegisterCollisionEvent, and the event raised will
@@ -439,7 +439,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region Class: MaterialCollisionArgs
+    #region class: MaterialCollisionArgs
 
     public class MaterialCollisionArgs : EventArgs
     {

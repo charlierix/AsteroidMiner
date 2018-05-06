@@ -22,7 +22,7 @@ namespace Game.HelperClassesCore.Threads
     /// </remarks>
     public class BackgroundTaskWorker<Treq, Tresp> : ICancel
     {
-        #region Class: RunningTask
+        #region class: RunningTask
 
         private class RunningTask
         {

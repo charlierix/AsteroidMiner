@@ -7,7 +7,6 @@
         mc:Ignorable="d"
         Title="Debug3D" Background="#C0C0C0" ResizeMode="CanResizeWithGrip" Width="800" Height="800" Loaded="Window_Loaded">
     <Grid Name="grdViewPort" Background="Transparent">
-
         <Viewport3D Name="_viewport" IsHitTestVisible="False">
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="_camera" Position="0,0,7" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
@@ -32,5 +31,7 @@
         </StackPanel>
 
         <Button Content="close all" ToolTip="Close all debug 3D windows" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Top" Click="CloseAll_Click"/>
+
+        <StackPanel Name="panelSnapshots" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="6"/>
     </Grid>
 </Window>

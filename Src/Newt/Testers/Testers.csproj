@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Game.Newt.Testers</RootNamespace>
     <AssemblyName>Game.Newt.Testers</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -88,6 +88,7 @@
     <Reference Include="PresentationFramework">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BrainTester.xaml.cs">
@@ -187,6 +188,20 @@
     </Compile>
     <Compile Include="MadShatter.xaml.cs">
       <DependentUpon>MadShatter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NEAT\AnticipatePositionWindow.xaml.cs">
+      <DependentUpon>AnticipatePositionWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NEAT\AntPos_Evaluator.cs" />
+    <Compile Include="NEAT\AntPos_ExperimentHyper.cs" />
+    <Compile Include="NEAT\AntPos_Objects.cs" />
+    <Compile Include="NEAT\PAN_Evaluator.cs" />
+    <Compile Include="NEAT\PAN_Experiment.cs" />
+    <Compile Include="NEAT\PAN_ScatterPlot3D.xaml.cs">
+      <DependentUpon>PAN_ScatterPlot3D.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NEAT\PickANumberWindow.xaml.cs">
+      <DependentUpon>PickANumberWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="NonlinearRandom.xaml.cs">
       <DependentUpon>NonlinearRandom.xaml</DependentUpon>
@@ -461,6 +476,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="NEAT\AnticipatePositionWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NEAT\PAN_ScatterPlot3D.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NEAT\PickANumberWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="NonlinearRandom.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -664,6 +691,14 @@
     <ProjectReference Include="..\..\HelperClassesCore\HelperClassesCore.csproj">
       <Project>{228F5901-5156-43DF-B377-627D80B4FDBC}</Project>
       <Name>HelperClassesCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ref\SharpNeatDomains\SharpNeatDomains.csproj">
+      <Project>{73AB8C8C-6315-4DC7-A3DE-3C747F86AC78}</Project>
+      <Name>SharpNeatDomains</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\ref\SharpNeatLib\SharpNeatLib.csproj">
+      <Project>{ABC5C77A-DEBA-420C-926C-BD3E6F37AE15}</Project>
+      <Name>SharpNeatLib</Name>
     </ProjectReference>
     <ProjectReference Include="..\v1\NewtonDynamics1\NewtonDynamics1.csproj">
       <Project>{57517a06-cffa-471d-b540-819727e3aae7}</Project>

@@ -19,7 +19,7 @@ namespace Game.Newt.v2.Arcanorum
     /// </summary>
     public class OfflineWorld : IDisposable
     {
-        #region Class: WorldVars
+        #region class: WorldVars
 
         private class WorldVars
         {
@@ -53,7 +53,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #endregion
 
-        #region Class: AddArgs
+        #region class: AddArgs
 
         public abstract class AddArgs
         {
@@ -72,7 +72,7 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         #endregion
-        #region Class: AddBotArgs
+        #region class: AddBotArgs
 
         public class AddBotArgs : AddArgs
         {
@@ -99,7 +99,7 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         #endregion
-        #region Class: AddWeaponArgs
+        #region class: AddWeaponArgs
 
         public class AddWeaponArgs : AddArgs
         {
@@ -114,7 +114,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #endregion
 
-        #region Class: RemoveArgs
+        #region class: RemoveArgs
 
         public class RemoveArgs
         {
@@ -238,8 +238,7 @@ namespace Game.Newt.v2.Arcanorum
 
             retVal.World = new World(false);
 
-            List<Point3D[]> innerLines, outerLines;
-            retVal.World.SetCollisionBoundry(out innerLines, out outerLines, retVal.BoundryMin, retVal.BoundryMax);
+            retVal.World.SetCollisionBoundry(retVal.BoundryMin, retVal.BoundryMax);
 
             #endregion
             #region Materials

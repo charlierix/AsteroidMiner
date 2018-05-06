@@ -12,7 +12,7 @@ using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF.Controls3D
 {
-    #region Class: BillboardLine3D
+    #region class: BillboardLine3D
 
     /// <summary>
     /// This is a line segment that uses billboarding as a crude way of appearing 3D.  It is meant to be cheap.
@@ -35,33 +35,43 @@ namespace Game.HelperClassesWPF.Controls3D
         private static int _numUsers;
 
         private readonly bool _isUsingTimer;
-        private readonly bool _shouldSpin;
 
         private readonly Vector3D _initialOrientation = new Vector3D(0, 0, 1);
+
+        private readonly GeometryModel3D _lineModel;
+        private GeometryModel3D _fromArrowModel = null;
+        private GeometryModel3D _toArrowModel = null;
+
+        // These get multiplied by the thickness
+        //TODO: May want to expose these as public properties
+        private readonly double _arrowBaseMult = 5;
+        private readonly double _arrowHeightMult = 10;
 
         #endregion
 
         #region Constructor
 
-        public BillboardLine3D(bool isArrow = false, bool shouldSpin = true, bool areFromToPointsUpdatedOnRegularInterval = true)
+        public BillboardLine3D(bool shouldUseSpinTimer = false)
         {
-            _shouldSpin = shouldSpin;
+            // Models
+            // NOTE: The arrows get added if the properties get set
+            _model = new Model3DGroup();
 
-            // Model
-            this.Model = new GeometryModel3D();
+            _lineModel = new GeometryModel3D()
+            {
+                Geometry = UtilityWPF.GetLine(new Point3D(0, 0, 0), new Point3D(0, 0, 1), 1),      // Create a line along Z, length 1, thickness 1
+            };
+
+            _model.Children.Add(_lineModel);
+
             InvalidateColor();      // this will populate the model's materials
-            this.Model.Geometry = GetInitialGeometry(isArrow);      // Create a line along Z, length 1, thickness 1
 
-            #region Timer
+            #region timer
 
-            if (areFromToPointsUpdatedOnRegularInterval)
+            _isUsingTimer = shouldUseSpinTimer;
+
+            if (_isUsingTimer)
             {
-                _isUsingTimer = false;
-            }
-            else
-            {
-                _isUsingTimer = true;
-
                 if (_timer == null)
                 {
                     _timer = new DispatcherTimer();
@@ -120,7 +130,8 @@ namespace Game.HelperClassesWPF.Controls3D
         /// caller to create a single visual that holds a group of these (the odds are good that when this class is used, there will
         /// be many lines needed)
         /// </remarks>
-        public readonly GeometryModel3D Model;
+        private readonly Model3DGroup _model;
+        public Model3D Model => _model;
 
         private bool _isReflectiveColor = false;
         public bool IsReflectiveColor
@@ -216,6 +227,84 @@ namespace Game.HelperClassesWPF.Controls3D
             }
         }
 
+        private double? _fromArrowPercent = null;
+        public double? FromArrowPercent
+        {
+            get
+            {
+                return _fromArrowPercent;
+            }
+            set
+            {
+                if (_fromArrowPercent == null && value == null)
+                {
+                    return;
+                }
+                else if (_fromArrowModel != null && value == null)
+                {
+                    _model.Children.Remove(_fromArrowModel);
+                    _fromArrowModel = null;
+                }
+                else if (_fromArrowModel == null && value != null)
+                {
+                    _fromArrowModel = GetArrowModel();
+                    _model.Children.Add(_fromArrowModel);
+                }
+
+                _fromArrowPercent = value;
+
+                InvalidateColor();
+                InvalidateGeometry();
+            }
+        }
+
+        private double? _toArrowPercent = null;
+        public double? ToArrowPercent
+        {
+            get
+            {
+                return _toArrowPercent;
+            }
+            set
+            {
+                if (_toArrowPercent == null && value == null)
+                {
+                    return;
+                }
+                else if (_toArrowModel != null && value == null)
+                {
+                    _model.Children.Remove(_toArrowModel);
+                    _toArrowModel = null;
+                }
+                else if (_toArrowModel == null && value != null)
+                {
+                    _toArrowModel = GetArrowModel();
+                    _model.Children.Add(_toArrowModel);
+                }
+
+                _toArrowPercent = value;
+
+                InvalidateColor();
+                InvalidateGeometry();
+            }
+        }
+
+        private double _arrowSizeMult = 1d;
+        public double ArrowSizeMult
+        {
+            get
+            {
+                return _arrowSizeMult;
+            }
+            set
+            {
+                _arrowSizeMult = value;
+
+                InvalidateColor();
+                InvalidateGeometry();
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -273,8 +362,20 @@ namespace Game.HelperClassesWPF.Controls3D
         {
             Material material = _material ?? GetMaterial(_isReflectiveColor, _color);
 
-            this.Model.Material = material;
-            this.Model.BackMaterial = material;
+            _lineModel.Material = material;
+            _lineModel.BackMaterial = material;
+
+            if (_fromArrowModel != null)
+            {
+                _fromArrowModel.Material = material;
+                _fromArrowModel.BackMaterial = material;
+            }
+
+            if (_toArrowModel != null)
+            {
+                _toArrowModel.Material = material;
+                _toArrowModel.BackMaterial = material;
+            }
         }
 
         private void InvalidateGeometry()
@@ -284,45 +385,185 @@ namespace Game.HelperClassesWPF.Controls3D
 
             if (Math1D.IsInvalid(directionLength) || Math1D.IsNearZero(directionLength))
             {
-                this.Model.Transform = new ScaleTransform3D(0, 0, 0);
+                _lineModel.Transform = new ScaleTransform3D(0, 0, 0);
+
+                if (_fromArrowModel != null)
+                {
+                    _fromArrowModel.Transform = new ScaleTransform3D(0, 0, 0);
+                }
+
+                if (_toArrowModel != null)
+                {
+                    _toArrowModel.Transform = new ScaleTransform3D(0, 0, 0);
+                }
                 return;
+            }
+
+            Vector3D directionUnit = new Vector3D();
+            double arrowWidth = 0;
+            double arrowLength = 0;
+            double halfArrowLength = 0;
+            if ((_fromArrowModel != null && _fromArrowPercent != null) || (_toArrowModel != null && _toArrowPercent != null))       // they should both be null or not null together, just being safe
+            {
+                directionUnit = direction.ToUnit(false);
+                arrowWidth = _thickness * _arrowBaseMult * _arrowSizeMult;
+                arrowLength = _thickness * _arrowHeightMult * _arrowSizeMult;
+                halfArrowLength = arrowLength / 2;
+            }
+
+            #region line
+
+            double length = directionLength;
+
+            // Reduce the length if the arrow is at the end so that the line graphic doesn't poke through the arrow graphic
+            double? fromOffset = null;
+            if (_fromArrowModel != null && _fromArrowPercent != null && _fromArrowPercent.Value.IsNearValue(1))
+            {
+                fromOffset = halfArrowLength;
+                length -= halfArrowLength;
+            }
+
+            if (_toArrowModel != null && _toArrowPercent != null && _toArrowPercent.Value.IsNearValue(1))
+            {
+                length -= halfArrowLength;
             }
 
             Transform3DGroup transform = new Transform3DGroup();
 
-            transform.Children.Add(new ScaleTransform3D(_thickness, _thickness, directionLength));
-
-            if (_shouldSpin)
+            if (length > Math1D.NEARZERO)
             {
-                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(_initialOrientation, StaticRandom.NextDouble(360d))));
-            }
+                transform.Children.Add(new ScaleTransform3D(_thickness, _thickness, length));
 
-            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(_initialOrientation, direction))));
+                if (fromOffset != null)
+                {
+                    transform.Children.Add(new TranslateTransform3D(0, 0, fromOffset.Value));
+                }
 
-            transform.Children.Add(new TranslateTransform3D(_fromPoint.ToVector()));
-
-            this.Model.Transform = transform;
-        }
-
-        private static MeshGeometry3D GetInitialGeometry(bool isArrow)
-        {
-            if (isArrow)
-            {
-                //TODO: Copy bits of GetLine in, and add arrows
-                throw new ApplicationException("finish this");
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(_initialOrientation, StaticRandom.NextDouble(360d))));     // spin
+                transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(_initialOrientation, direction))));
+                transform.Children.Add(new TranslateTransform3D(_fromPoint.ToVector()));
             }
             else
             {
-                //TODO: If _shouldSpin is false, then apply a random orientation here (otherwise all the line's crosses will be aligned and look funny)
-                return UtilityWPF.GetLine(new Point3D(0, 0, 0), new Point3D(0, 0, 1), 1);
+                // The arrows are visible, but there's not enough length to show the line graphic
+                transform.Children.Add(new ScaleTransform3D(0, 0, 0));
             }
+
+            _lineModel.Transform = transform;
+
+            #endregion
+            #region from arrow
+
+            if (_fromArrowModel != null && _fromArrowPercent != null)
+            {
+                Vector3D arrowOffset = directionUnit * arrowLength;
+                Point3D arrowPosition = _fromPoint + (direction * (1d - _fromArrowPercent.Value));
+                arrowPosition += arrowOffset;       // this is because the tip of the arrow should be that the percent, not the base
+
+                transform = new Transform3DGroup();
+
+                transform.Children.Add(new ScaleTransform3D(arrowWidth, arrowWidth, arrowLength));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(_initialOrientation, StaticRandom.NextDouble(360d))));      // spin
+                transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(_initialOrientation, -direction))));
+                transform.Children.Add(new TranslateTransform3D(arrowPosition.ToVector()));
+
+                _fromArrowModel.Transform = transform;
+            }
+
+            #endregion
+            #region to arrow
+
+            if (_toArrowModel != null && _toArrowPercent != null)
+            {
+                Vector3D arrowOffset = directionUnit * arrowLength;
+                Point3D arrowPosition = _fromPoint + (direction * _toArrowPercent.Value);
+                arrowPosition -= arrowOffset;       // this is because the tip of the arrow should be that the percent, not the base
+
+                transform = new Transform3DGroup();
+
+                transform.Children.Add(new ScaleTransform3D(arrowWidth, arrowWidth, arrowLength));
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(_initialOrientation, StaticRandom.NextDouble(360d))));      // spin
+                transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(_initialOrientation, direction))));
+                transform.Children.Add(new TranslateTransform3D(arrowPosition.ToVector()));
+
+                _toArrowModel.Transform = transform;
+            }
+
+            #endregion
+        }
+
+        private static GeometryModel3D GetArrowModel()
+        {
+            return new GeometryModel3D()
+            {
+                Geometry = GetArrowMesh(new Point3D(0, 0, 0), new Point3D(0, 0, 1), 1),
+            };
+        }
+        private static MeshGeometry3D GetArrowMesh(Point3D from, Point3D to, double thickness)
+        {
+            double half = thickness / 2d;
+
+            Vector3D line = to - from;
+            if (line.X == 0 && line.Y == 0 && line.Z == 0) line.X = 0.000000001d;
+
+            Vector3D orth1 = Math3D.GetArbitraryOrhonganal(line);
+            orth1 = Math3D.RotateAroundAxis(orth1, line, StaticRandom.NextDouble() * Math.PI * 2d);		// give it a random rotation so that if many lines are created by this method, they won't all be oriented the same
+            orth1 = orth1.ToUnit() * half;
+
+            Vector3D orth2 = Vector3D.CrossProduct(line, orth1);
+            orth2 = orth2.ToUnit() * half;
+
+            // Define 3D mesh object
+            MeshGeometry3D retVal = new MeshGeometry3D();
+
+            // Arrow Base
+            retVal.Positions.Add(from - orth1);     // 0
+            retVal.Positions.Add(from + orth1);     // 1
+            retVal.Positions.Add(from - orth2);     // 2
+            retVal.Positions.Add(from + orth2);     // 3
+
+            // Arrow Tip
+            retVal.Positions.Add(to);       // 4
+
+            // Tip Faces
+            retVal.TriangleIndices.Add(0);
+            retVal.TriangleIndices.Add(3);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(3);
+            retVal.TriangleIndices.Add(1);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(1);
+            retVal.TriangleIndices.Add(2);
+            retVal.TriangleIndices.Add(4);
+
+            retVal.TriangleIndices.Add(2);
+            retVal.TriangleIndices.Add(0);
+            retVal.TriangleIndices.Add(4);
+
+            // Base Faces
+            //NOTE: These lines need to use as few triangles as possible, and they will almost certainly leave IsShiny false.  So a backplate isn't really needed
+            //retVal.TriangleIndices.Add(0);
+            //retVal.TriangleIndices.Add(2);
+            //retVal.TriangleIndices.Add(1);
+
+            //retVal.TriangleIndices.Add(1);
+            //retVal.TriangleIndices.Add(3);
+            //retVal.TriangleIndices.Add(0);
+
+            // shouldn't I set normals?
+            //retVal.Normals
+
+            //retVal.Freeze();
+            return retVal;
         }
 
         #endregion
     }
 
     #endregion
-    #region Class: BillboardLine3DSet
+    #region class: BillboardLine3DSet
 
     /// <summary>
     /// BillboardLine3D is an individual line, and is also just a model.  This class manages a set of lines, and is a visual.
@@ -335,9 +576,7 @@ namespace Game.HelperClassesWPF.Controls3D
     {
         #region Declaration Section
 
-        private readonly bool _isArrow;
-        private readonly bool _shouldSpin;
-        private readonly bool _areFromToPointsUpdatedOnRegularInterval;
+        private readonly bool _shouldUseSpinTimer;
 
         private Material _material = null;
 
@@ -359,14 +598,12 @@ namespace Game.HelperClassesWPF.Controls3D
 
         #region Constructor
 
-        public BillboardLine3DSet(bool isArrow = false, bool shouldSpin = true, bool areFromToPointsUpdatedOnRegularInterval = true)
+        public BillboardLine3DSet(bool shouldUseSpinTimer = false)
         {
-            _isArrow = isArrow;
-            _shouldSpin = shouldSpin;
-            _areFromToPointsUpdatedOnRegularInterval = areFromToPointsUpdatedOnRegularInterval;
+            _shouldUseSpinTimer = shouldUseSpinTimer;
 
             _geometry = new Model3DGroup();
-            this.Content = _geometry;
+            Content = _geometry;
         }
 
         #endregion
@@ -444,8 +681,6 @@ namespace Game.HelperClassesWPF.Controls3D
         }
         public void AddLine(Point3D start, Point3D stop, double thickness)
         {
-            //bool addedOne = false;
-
             if (_lineCount == null)
             {
                 throw new InvalidOperationException("Must call BeginAddingLines before calling AddLine");
@@ -457,11 +692,10 @@ namespace Game.HelperClassesWPF.Controls3D
             else if (_lineCount.Value == _lines.Count)
             {
                 // Create a new line
-                BillboardLine3D line = new BillboardLine3D(false, _shouldSpin, _areFromToPointsUpdatedOnRegularInterval);
+                BillboardLine3D line = new BillboardLine3D(_shouldUseSpinTimer);
                 line.Material = _material;
 
                 _lines.Add(line);
-                //addedOne = true;
             }
 
             _lineCount = _lineCount.Value + 1;
@@ -469,8 +703,7 @@ namespace Game.HelperClassesWPF.Controls3D
             // Whatever line was at this index now gets this position
             _lines[_lineCount.Value - 1].SetPoints(start, stop, thickness);
 
-            //if (addedOne)
-            if(_lineCount.Value > _geometry.Children.Count)
+            if (_lineCount.Value > _geometry.Children.Count)
             {
                 // This must be done last.  Otherwise, when the computer is stressed, the line will get rendered before it is positioned
                 _geometry.Children.Add(_lines[_lineCount.Value - 1].Model);

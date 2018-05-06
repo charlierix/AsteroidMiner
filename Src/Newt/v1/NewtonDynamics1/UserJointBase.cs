@@ -199,7 +199,7 @@ namespace Game.Newt.v1.NewtonDynamics1
 		#endregion
 	}
 
-	#region Enum: BreakStrategy
+	#region enum: BreakStrategy
 
 	public enum BreakStrategy
 	{

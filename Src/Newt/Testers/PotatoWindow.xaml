@@ -75,12 +75,12 @@
                         <Expander Header="Point Cloud">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Click="btnPointCloudDisk_Click" Name="btnPointCloudDisk" Content="Disk"/>
-                                    <Button Click="btnPointCloudRingThick_Click" Name="btnPointCloudRingThick" Content="Ring (thick)"/>
-                                    <Button Click="btnPointCloudRing_Click" Name="btnPointCloudRing" Content="Ring"/>
-                                    <Button Click="btnPointCloudSphere_Click" Name="btnPointCloudSphere" Content="Sphere"/>
-                                    <Button Click="btnPointCloudSphereShellThick_Click" Name="btnPointCloudSphereShellThick" Content="Sphere Shell (thick)"/>
-                                    <Button Click="btnPointCloudSphereShell_Click" Name="btnPointCloudSphereShell" Content="Sphere Shell"/>
+                                    <Button Content="Disk" Click="PointCloudDisk_Click"/>
+                                    <Button Content="Ring (thick)" Click="PointCloudRingThick_Click"/>
+                                    <Button Content="Ring" Click="PointCloudRing_Click"/>
+                                    <Button Content="Sphere" Click="PointCloudSphere_Click"/>
+                                    <Button Content="Sphere Shell (thick)" Click="PointCloudSphereShellThick_Click"/>
+                                    <Button Content="Sphere Shell" Click="PointCloudSphereShell_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
@@ -89,8 +89,8 @@
                         <Expander IsExpanded="True" Header="Hull from Points">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Click="btnHullCircle2D_Click" Name="btnHullCircle2D" Content="Circle 2D"/>
-                                    <Button Click="btnHullSphere3D_Click" Name="btnHullSphere3D" Content="Sphere 3D"/>
+                                    <Button Content="Circle 2D" Click="HullCircle2D_Click"/>
+                                    <Button Content="Sphere 3D" Click="HullSphere3D_Click"/>
 
                                     <CheckBox Name="chkConcentricHulls" Content="Concentric hulls" Margin="2,5,2,2"/>
                                     <CheckBox Name="chkDrawDots" Content="Draw Dots" IsChecked="True"/>
@@ -106,9 +106,9 @@
                         <Expander IsExpanded="False" Header="Points on Hull">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Click="btnPointsOnHullTriangle_Click" Name="btnPointsOnHullTriangle" Content="Triangle"/>
-                                    <Button Click="btnPointsOnHullSeveralTriangles_Click" Name="btnPointsOnHullSeveralTriangles" Content="Several Triangles"/>
-                                    <Button Click="btnPointsOnHullRandom_Click" Name="btnPointsOnHullRandom" Content="Random Hull"/>
+                                    <Button Content="Triangle" Click="PointsOnHullTriangle_Click"/>
+                                    <Button Content="Several Triangles" Click="PointsOnHullSeveralTriangles_Click"/>
+                                    <Button Content="Random Hull" Click="PointsOnHullRandom_Click"/>
                                     <CheckBox Name="chkPointsDrawLines" Content="Draw Lines" IsChecked="False"/>
                                     <CheckBox Name="chkPointsDrawFaces" Content="Draw Faces" IsChecked="True"/>
                                 </StackPanel>
@@ -119,10 +119,10 @@
                         <Expander IsExpanded="False" Header="Hull, Points, Hull">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Click="btnHPHOrigAttempt_Click" Name="btnHPHOrigAttempt" Content="Orig Attempt (fail)"/>
-                                    <Button Click="btnHPHPreprocessPoints_Click" Name="btnHPHPreprocessPoints" Content="Preprocess Points (fail)"/>
-                                    <Button Click="btnHPHDetectCoplanar_Click" Name="btnHPHDetectCoplanar" Content="Detect Coplanar (fail)"/>
-                                    <Button Click="btnHPHPreprocessPoints2_Click" Name="btnHPHPreprocessPoints2" Content="Preprocess Points 2"/>
+                                    <Button Content="Orig Attempt (fail)" Click="HPHOrigAttempt_Click"/>
+                                    <Button Content="Preprocess Points (fail)" Click="HPHPreprocessPoints_Click"/>
+                                    <Button Content="Detect Coplanar (fail)" Click="HPHDetectCoplanar_Click"/>
+                                    <Button Content="Preprocess Points 2" Click="HPHPreprocessPoints2_Click"/>
                                     <CheckBox Name="chkHPHOrigLines" Content="Orig Lines" IsChecked="False"/>
                                     <CheckBox Name="chkHPHOrigFaces" Content="Orig Faces" IsChecked="True"/>
                                     <CheckBox Name="chkHPHOrigSoftFaces" Content="Orig Soft Faces" IsChecked="False"/>
@@ -138,7 +138,7 @@
                         <Expander IsExpanded="False" Header="Icosahedron">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Name="btnIcosahedron" Content="Icosahedron" Click="btnIcosahedron_Click"/>
+                                    <Button Content="Icosahedron" Click="Icosahedron_Click"/>
 
                                     <Grid Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
@@ -160,9 +160,9 @@
                                         <TextBlock Grid.Column="1" Name="lblIcoRadius" Text="10.0" VerticalAlignment="Center" Margin="4,0,0,0"/>
                                     </Grid>
 
-                                    <Button Name="btnIcoSpike1" Content="Spike Ball 1" Margin="0,20,0,0" Click="btnIcoSpike1_Click"/>
-                                    <Button Name="btnIcoSpike2" Content="Spike Ball 2" Click="btnIcoSpike2_Click"/>
-                                    <Button Name="btnIcoSpike3" Content="Spike Ball 3" Click="btnIcoSpike3_Click"/>
+                                    <Button Content="Spike Ball 1" Margin="0,20,0,0" Click="IcoSpike1_Click"/>
+                                    <Button Content="Spike Ball 2" Click="IcoSpike2_Click"/>
+                                    <Button Content="Spike Ball 3" Click="IcoSpike3_Click"/>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -191,13 +191,14 @@
                         <Expander IsExpanded="False" Header="Other Polyhedra">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Name="btnRhombicuboctahedron" Content="Rhombicuboctahedron" Click="btnRhombicuboctahedron_Click"/>
-                                    <Button Name="btnIcosidodecahedron" Content="Icosidodecahedron" Click="btnIcosidodecahedron_Click"/>
-                                    <Button Name="btnTruncatedIcosidodecahedron" Content="Truncated Icosidodecahedron" Click="btnTruncatedIcosidodecahedron_Click"/>
-                                    <Button Name="btnDodecahedron" Content="Dodecahedron" Click="btnDodecahedron_Click"/>
-                                    <Button Name="btnPentakisDodecahedron" Content="Pentakis Dodecahedron" Click="btnPentakisDodecahedron_Click"/>
-                                    <Button Name="btnTruncatedIcosahedron" Content="Truncated Icosahedron" ToolTip="Soccer Ball" Click="btnTruncatedIcosahedron_Click"/>
-                                    <Button Name="btnTruncatedOctahedron" Content="Truncated Octahedron" Click="btnTruncatedOctahedron_Click"/>
+                                    <Button Content="Tetrahedron" Click="Tetrahedron_Click"/>
+                                    <Button Content="Rhombicuboctahedron" Click="Rhombicuboctahedron_Click"/>
+                                    <Button Content="Icosidodecahedron" Click="Icosidodecahedron_Click"/>
+                                    <Button Content="Truncated Icosidodecahedron" Click="TruncatedIcosidodecahedron_Click"/>
+                                    <Button Content="Dodecahedron" Click="Dodecahedron_Click"/>
+                                    <Button Content="Pentakis Dodecahedron" Click="PentakisDodecahedron_Click"/>
+                                    <Button Content="Truncated Icosahedron" ToolTip="Soccer Ball" Click="TruncatedIcosahedron_Click"/>
+                                    <Button Visibility="Collapsed" Content="Truncated Octahedron"/>
                                     <Button Visibility="Collapsed" Content="Deltoidal icositetrahedron"/>
                                     <Button Visibility="Collapsed" Content="Pentagonal hexecontahedron"/>
                                     <Button Visibility="Collapsed" Content="Truncated cube" ToolTip="add a bevel % as input"/>
@@ -216,24 +217,24 @@
                         <Expander IsExpanded="False" Header="Asteroid Voronoi">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Name="btnNewAsteroid" Content="New Asteroid" Click="btnNewAsteroid_Click"/>
-                                    <Button Name="btnShatterTriangle" Content="Single Triangle" Click="btnShatterTriangle_Click"/>
-                                    <Button Visibility="Collapsed" Name="btnShatterTest" Content="test" Click="btnShatterTest_Click"/>
-                                    <Button Visibility="Collapsed" Name="btnShatterTest2" Content="test2" Click="btnShatterTest2_Click"/>
+                                    <Button Content="New Asteroid" Click="NewAsteroid_Click"/>
+                                    <Button Content="Single Triangle" Click="ShatterTriangle_Click"/>
+                                    <Button Visibility="Collapsed" Content="test" Click="ShatterTest_Click"/>
+                                    <Button Visibility="Collapsed" Content="test2" Click="ShatterTest2_Click"/>
 
                                     <!-- These were used to build the slice smooth and remove thin -->
                                     <StackPanel Visibility="Collapsed">
-                                        <Button Visibility="Collapsed" Name="btnNewAsteroidDivided1" Content="New Asteroid (divided 1)" Click="btnNewAsteroidDivided1_Click"/>
-                                        <Button Name="btnNewAsteroidDivided2Debug" Content="New Asteroid (divided - debug)" Click="btnNewAsteroidDivided2Debug_Click"/>
-                                        <Button Name="btnNewAsteroidDivided2" Content="New Asteroid (divided)" Click="btnNewAsteroidDivided2_Click"/>
-                                        <Button Name="btnNewAsteroidRemoveSkinny3" Content="New Asteroid (remove skinny 3)" Click="btnNewAsteroidRemoveSkinny3_Click"/>
-                                        <Button Name="btnNewAsteroidRemoveSkinnyJ" Content="New Asteroid (remove skinny J)" Click="btnNewAsteroidRemoveSkinnyJ_Click"/>
-                                        <Button Name="btnNewAsteroidRemoveAddRemove" Content="New Asteroid (remove add remove)" Click="btnNewAsteroidRemoveAddRemove_Click"/>
-                                        <Button Name="btnNewAsteroidFinal" Content="New Asteroid (final)" Click="btnNewAsteroidFinal_Click"/>
+                                        <Button Visibility="Collapsed" Content="New Asteroid (divided 1)" Click="NewAsteroidDivided1_Click"/>
+                                        <Button Content="New Asteroid (divided - debug)" Click="NewAsteroidDivided2Debug_Click"/>
+                                        <Button Content="New Asteroid (divided)" Click="NewAsteroidDivided2_Click"/>
+                                        <Button Content="New Asteroid (remove skinny 3)" Click="NewAsteroidRemoveSkinny3_Click"/>
+                                        <Button Content="New Asteroid (remove skinny J)" Click="NewAsteroidRemoveSkinnyJ_Click"/>
+                                        <Button Content="New Asteroid (remove add remove)" Click="NewAsteroidRemoveAddRemove_Click"/>
+                                        <Button Content="New Asteroid (final)" Click="NewAsteroidFinal_Click"/>
                                     </StackPanel>
 
-                                    <Button Name="btnShatterRandVoronoi" Content="Random Voronoi" Margin="2,8,2,2" Click="btnShatterRandVoronoi_Click"/>
-                                    <Button Name="btnShatterRandVoronoiFar" Content="Random Voronoi (far)" Click="btnShatterRandVoronoiFar_Click"/>
+                                    <Button Content="Random Voronoi" Margin="2,8,2,2" Click="ShatterRandVoronoi_Click"/>
+                                    <Button Content="Random Voronoi (far)" Click="ShatterRandVoronoiFar_Click"/>
                                     <Grid Margin="2,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="1*"/>
@@ -244,7 +245,7 @@
                                         <TextBox Grid.Column="2" Name="txtShatterVoronoiCount" Text="10" VerticalAlignment="Center"/>
                                     </Grid>
 
-                                    <Button Name="btnShatterRedraw" Content="Redraw" Margin="2,12,2,2" Click="btnShatterRedraw_Click"/>
+                                    <Button Content="Redraw" Margin="2,12,2,2" Click="ShatterRedraw_Click"/>
                                     <RadioButton Name="radShatterVoronoiLinesOnly" Content="Voronoi lines only"/>
                                     <RadioButton Name="radShatterTriangleByCtrlPoint" Content="Triangles by ctrl point"/>
                                     <RadioButton Visibility="Collapsed" Name="radShatterFirstCtrlPoint3" Content="First ctrl point (almost)"/>
@@ -254,8 +255,8 @@
                                     <RadioButton IsChecked="True" Name="radShatterFull" Content="Full"/>
                                     <RadioButton Name="radShatterFullExploded" Content="Full Exploded"/>
 
-                                    <Button Visibility="Collapsed" Name="btnShatterChains" Content="Test Chains 1" Margin="2,18,2,2" Click="btnShatterChains_Click"/>
-                                    <Button Visibility="Collapsed" Name="btnShatterChains2" Content="Test Chains 2" Click="btnShatterChains2_Click"/>
+                                    <Button Visibility="Collapsed" Content="Test Chains 1" Margin="2,18,2,2" Click="ShatterChains_Click"/>
+                                    <Button Visibility="Collapsed" Content="Test Chains 2" Click="ShatterChains2_Click"/>
 
                                 </StackPanel>
                             </Border>
@@ -265,19 +266,19 @@
                         <Expander IsExpanded="False" Header="Random Tests">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <Button Visibility="Collapsed" Click="btnVariousNormals_Click" Name="btnVariousNormals" Content="Various Normals"/>
-                                    <Button Click="btnOutsideSet_Click" Name="btnOutsideSet" Content="Outside Set"/>
-                                    <Button Click="btnStart3D_Click" Name="btnStart3D" Content="Start 3D"/>
-                                    <Button Click="btnFail3D_Click" Name="btnFail3D" Content="Fail 3D"/>
-                                    <Button Visibility="Collapsed" Click="btn3DAttempt6_Click" Name="btn3DAttempt6" Content="Attempt 6"/>
-                                    <Button Visibility="Collapsed" Click="btn3DAttempt6FromFile_Click" Name="btn3DAttempt6FromFile">
+                                    <Button Visibility="Collapsed" Content="Various Normals" Click="VariousNormals_Click"/>
+                                    <Button Content="Outside Set" Click="OutsideSet_Click"/>
+                                    <Button Content="Start 3D" Click="Start3D_Click"/>
+                                    <Button Content="Fail 3D" Click="Fail3D_Click"/>
+                                    <Button Visibility="Collapsed" Content="Attempt 6" Click="ThreeDAttempt6_Click"/>
+                                    <Button Visibility="Collapsed" Click="ThreeDAttempt6FromFile_Click">
                                         <Button.Content>
                                             <TextBlock>Attempt 6<LineBreak/>From File</TextBlock>
                                         </Button.Content>
                                     </Button>
                                     <TextBlock Name="lblTriangleReport" Text="" Visibility="Collapsed" Foreground="#2B3434"/>
 
-                                    <Button Click="btnHullCoplanar3D_Click" Name="btnHullCoplanar3D" Content="Coplanar 3D" Margin="0,8,0,0"/>
+                                    <Button Content="Coplanar 3D" Margin="0,8,0,0" Click="HullCoplanar3D_Click"/>
                                     <Grid Visibility="Collapsed">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="auto"/>

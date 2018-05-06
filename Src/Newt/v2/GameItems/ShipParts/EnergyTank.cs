@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: EnergyTankToolItem
+    #region class: EnergyTankToolItem
 
     public class EnergyTankToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: EnergyTankDesign
+    #region class: EnergyTankDesign
 
     public class EnergyTankDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XY_Z;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -148,10 +148,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
@@ -169,10 +169,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 new Transform3D[] { transform });
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(combined, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -235,7 +234,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: EnergyTank
+    #region class: EnergyTank
 
     /// <summary>
     /// This is the real world object that physically holds energy, has mass takes impact damage, etc
@@ -244,7 +243,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "EnergyTank";
+        public const string PARTTYPE = nameof(EnergyTank);
 
         private readonly Container _container;
 
@@ -402,35 +401,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #endregion
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return new INeuron[] { _neuron };
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => new INeuron[] { _neuron };
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return new INeuron[] { _neuron };
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => new INeuron[] { _neuron };
 
         public double Radius
         {
@@ -438,22 +413,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Sensor;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
 
-        public bool IsOn
-        {
-            get
-            {
-                // This is a basic container that doesn't consume energy, so is always "on"
-                return true;
-            }
-        }
+        // This is a basic container that doesn't consume energy, so is always "on"
+        public bool IsOn => true;
 
         #endregion
         #region IPartUpdatable Members
@@ -467,49 +430,19 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _neuron.Value = UtilityCore.GetScaledValue_Capped(-1d, 1d, 0d, _container.QuantityMax, _container.QuantityCurrent);       // Don't want to bother with a lock here, the only variable that changes is _container.QuantityCurrent
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
 
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 

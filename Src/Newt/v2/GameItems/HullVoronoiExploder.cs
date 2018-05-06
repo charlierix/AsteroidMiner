@@ -518,7 +518,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region Class: HullVoronoiExploder_Options
+    #region class: HullVoronoiExploder_Options
 
     public class HullVoronoiExploder_Options
     {
@@ -553,7 +553,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: HullVoronoiExploder_Response
+    #region class: HullVoronoiExploder_Response
 
     public class HullVoronoiExploder_Response
     {
@@ -569,7 +569,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: HullVoronoiExploder_Shard
+    #region class: HullVoronoiExploder_Shard
 
     public class HullVoronoiExploder_Shard
     {
@@ -583,7 +583,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: HullVoronoiExploder_ShotHit
+    #region class: HullVoronoiExploder_ShotHit
 
     /// <summary>
     /// This stores a shot and corresponding hull hit

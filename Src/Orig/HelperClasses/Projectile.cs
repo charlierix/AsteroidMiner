@@ -19,7 +19,7 @@ namespace Game.Orig.HelperClassesOrig
     /// </remarks>
     public class Projectile : BallBlip
     {
-        #region Class: ExplosionProps
+        #region class: ExplosionProps
 
         /// <summary>
         /// Theoretically, the radius should grow, then shrink.  But for this one, it instantaneously expands, hangs out for a second, and
@@ -37,7 +37,7 @@ namespace Game.Orig.HelperClassesOrig
         }
 
         #endregion
-        #region Class: FuseProps
+        #region class: FuseProps
 
         /// <summary>
         /// This can be used so the projectile doesn't fly around forever
@@ -326,7 +326,7 @@ namespace Game.Orig.HelperClassesOrig
         #endregion
     }
 
-    #region Enum: ProjectileState
+    #region enum: ProjectileState
 
     public enum ProjectileState
     {

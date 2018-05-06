@@ -13,7 +13,7 @@ using Game.HelperClassesCore;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: ConverterMatterToFuelToolItem
+    #region class: ConverterMatterToFuelToolItem
 
     public class ConverterMatterToFuelToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ConverterMatterToFuelDesign
+    #region class: ConverterMatterToFuelDesign
 
     public class ConverterMatterToFuelDesign : PartDesignBase
     {
@@ -83,7 +83,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
         public const double SCALE = .5d;
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -140,10 +140,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -152,10 +152,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Box, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(breakdown, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -349,13 +348,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ConverterMatterToFuel
+    #region class: ConverterMatterToFuel
 
     public class ConverterMatterToFuel : PartBase, IPartUpdatable, IContainer, IConverterMatter
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "ConverterMatterToFuel";
+        public const string PARTTYPE = nameof(ConverterMatterToFuel);
 
         private readonly object _lock = new object();
 
@@ -411,20 +410,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
         #region IContainer Members
@@ -662,13 +649,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         #endregion
 
@@ -687,7 +668,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Class: ConverterMatterGroup
+    #region class: ConverterMatterGroup
 
     /// <summary>
     /// This handles all of the matter converters as a group
@@ -895,7 +876,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     #endregion
 
-    #region Interface: IConverterMatter
+    #region interface: IConverterMatter
 
     public interface IConverterMatter
     {

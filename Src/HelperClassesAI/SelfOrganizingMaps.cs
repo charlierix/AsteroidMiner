@@ -33,6 +33,69 @@ namespace Game.HelperClassesAI
     /// </remarks>
     public static class SelfOrganizingMaps
     {
+        #region class: NodeCombo
+
+        private class NodeCombo
+        {
+            public SOMNode Node { get; set; }
+            public ISOMInput[] Inputs { get; set; }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// This version starts with a SOM, then potentially splits the largest node and/or gathers the smallest nodes into a single
+        /// </summary>
+        /// <returns></returns>
+        public static SOMResult Train(ISOMInput[] inputs, SOMRules rules, bool isDisplay2D)
+        {
+            SOMResult result = SelfOrganizingMaps.TrainSOM(inputs, rules, isDisplay2D);
+
+            if (result.Nodes.Length == 0)
+            {
+                return result;
+            }
+            else if (result.Nodes.Length == 1)
+            {
+                #region kmeans single node
+
+                if (inputs.Length < 20)
+                {
+                    return result;
+                }
+
+                return SelfOrganizingMaps.TrainKMeans(inputs, 5, true);
+
+                #endregion
+            }
+
+            var categorized = GetSOM_SplitMerge_Categorize(result);
+
+            List<SOMNode> nodes = new List<SOMNode>();
+            List<ISOMInput[]> newInputs = new List<ISOMInput[]>();
+
+            foreach (NodeCombo set in UtilityCore.Iterate(categorized.kmeans, categorized.keep))        // UtilityCore.Iterate gracefully skips nulls
+            {
+                nodes.Add(set.Node);
+                newInputs.Add(set.Inputs);
+            }
+
+            if (categorized.remaining != null)
+            {
+                nodes.Add(new SOMNode()
+                {
+                    Position = MathND.GetCenter(categorized.remaining.Select(o => o.Node.Position)),
+                    Weights = MathND.GetCenter(categorized.remaining.Select(o => o.Node.Weights)),
+                });
+
+                newInputs.Add(categorized.remaining.
+                    SelectMany(o => o.Inputs).
+                    ToArray());
+            }
+
+            return new SOMResult(nodes.ToArray(), newInputs.ToArray(), false);
+        }
+
         /// <summary>
         /// This creates nodes with random weights based on the input's weights.  After training, it creates random positions, and arranges
         /// the positions so similar sets are near each other
@@ -489,9 +552,7 @@ namespace Game.HelperClassesAI
 
         private static SOMResult TrainKMeans(int numNodes, ISOMInput[] inputs)
         {
-            SOMNode[] returnNodes;
-            ISOMInput[][] inputsByNode;
-            GetInitialKMeansNodes(out returnNodes, out inputsByNode, numNodes, inputs);
+            GetInitialKMeansNodes(out SOMNode[] returnNodes, out ISOMInput[][] inputsByNode, numNodes, inputs);
 
             while (true)
             {
@@ -837,10 +898,81 @@ namespace Game.HelperClassesAI
                 ToArray();
         }
 
+        private static (NodeCombo[] kmeans, NodeCombo[] keep, NodeCombo[] remaining) GetSOM_SplitMerge_Categorize(SOMResult result)
+        {
+            NodeCombo[] nodes = Enumerable.Range(0, result.Nodes.Length).
+                Select(o => new NodeCombo() { Node = result.Nodes[o], Inputs = result.InputsByNode[o] }).
+                OrderByDescending(o => o.Inputs.Length).
+                ToArray();
+
+            // First node is a potential kmeans split
+            NodeCombo kmeans = null;
+            int keepStart = 0;
+            if (nodes[0].Inputs.Length.ToDouble() / nodes[1].Inputs.Length.ToDouble() > 10)
+            {
+                kmeans = nodes[0];
+                keepStart = 1;
+            }
+
+            NodeCombo[] kmeansSplit = null;
+            if (kmeans != null)
+            {
+                SOMResult result2 = SelfOrganizingMaps.TrainKMeans(kmeans.Inputs, 4, true);
+
+                kmeansSplit = Enumerable.Range(0, result2.Nodes.Length).
+                    Select(o => new NodeCombo() { Node = result2.Nodes[o], Inputs = result2.InputsByNode[o] }).
+                    ToArray();
+            }
+
+            // Next nodes are the ones to leave alone
+            var keep = new List<NodeCombo>();
+            int? keepStop = null;
+
+            keep.Add(nodes[keepStart]);
+
+            for (int cntr = keepStart + 1; cntr < nodes.Length; cntr++)
+            {
+                if (nodes[keepStart].Inputs.Length.ToDouble() / nodes[cntr].Inputs.Length.ToDouble() > 10)
+                {
+                    keepStop = cntr;
+                    break;
+                }
+
+                keep.Add(nodes[cntr]);
+            }
+
+            // Everything else gets merged into a single node
+            NodeCombo[] remaining = null;
+            if (keepStop != null)
+            {
+                remaining = Enumerable.Range(keepStop.Value, result.Nodes.Length - keepStop.Value).
+                    Select(o => nodes[o]).
+                    ToArray();
+            }
+
+            if (remaining == null && keep.Count > 0 && kmeans != null)
+            {
+                int sumKeep = keep.Sum(o => o.Inputs.Length);
+
+                int smallestKmeans = kmeansSplit.
+                    Select(o => o.Inputs.Length).
+                    OrderBy(o => o).
+                    First();
+
+                if (smallestKmeans.ToDouble() / sumKeep.ToDouble() > 10)
+                {
+                    remaining = keep.ToArray();
+                    keep.Clear();
+                }
+            }
+
+            return (kmeansSplit, keep.ToArray(), remaining);
+        }
+
         #endregion
     }
 
-    #region Class: SOMRules
+    #region class: SOMRules
 
     public class SOMRules
     {
@@ -895,7 +1027,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Enum: SOMAttractionFunction
+    #region enum: SOMAttractionFunction
 
     public enum SOMAttractionFunction
     {
@@ -905,7 +1037,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Interface: ISOMInput
+    #region interface: ISOMInput
 
     public interface ISOMInput
     {
@@ -913,7 +1045,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Class: SOMInput
+    #region class: SOMInput
 
     /// <summary>
     /// If all you want is a link to the original source, you can use this
@@ -925,7 +1057,7 @@ namespace Game.HelperClassesAI
     }
 
     #endregion
-    #region Class: SOMNode
+    #region class: SOMNode
 
     //NOTE: The use of a somnode isn't really an input, but a container of inputs.  But it has a Weights property, so could be passed to generic worker methods
     public class SOMNode : ISOMInput
@@ -970,7 +1102,7 @@ namespace Game.HelperClassesAI
 
     #endregion
 
-    #region Class: SOMResult
+    #region class: SOMResult
 
     public class SOMResult
     {

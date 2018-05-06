@@ -22,7 +22,7 @@ namespace Game.Newt.Testers
 {
     public partial class EvenDistributionOther : Window
     {
-        #region Enum: BoundryShape
+        #region enum: BoundryShape
 
         private enum BoundryShape
         {
@@ -35,7 +35,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ConeBoundries
+        #region class: ConeBoundries
 
         private class ConeBoundries
         {
@@ -61,7 +61,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Dot
+        #region class: Dot
 
         private class Dot
         {
@@ -157,7 +157,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: Link
+        #region class: Link
 
         private class Link
         {
@@ -1157,8 +1157,7 @@ Tuple.Create(113, 120),
                     return Math3D.GetRandomVector(cubeAABB.Item1.ToVector(), cubeAABB.Item2.ToVector()).ToPoint();
 
                 case BoundryShape.Cone:
-                    Vector3D direction = Math3D.GetRandomVector_Cone(cone.AxisUnit, cone.Angle);
-                    return (direction.ToUnit(false) * StaticRandom.NextDouble(cone.HeightMin, cone.HeightMax)).ToPoint();
+                    return Math3D.GetRandomVector_Cone(cone.AxisUnit, 0, cone.Angle, cone.HeightMin, cone.HeightMax).ToPoint();
 
                 default:
                     throw new ApplicationException("Unknown BoundryShape: " + shape.ToString());
@@ -1571,9 +1570,7 @@ Tuple.Create(113, 120),
                 if (cone.HeightMin > 0)
                 {
                     //GetRandomPointInCone(axisUnit, angle, heightMin, heightMax);
-
-                    Vector3D direction = Math3D.GetRandomVector_Cone(cone.AxisUnit, cone.Angle);
-                    dot.Position = (direction.ToUnit(false) * StaticRandom.NextDouble(cone.HeightMin, cone.HeightMax)).ToPoint();
+                    dot.Position = Math3D.GetRandomVector_Cone(cone.AxisUnit, 0, cone.Angle, cone.HeightMin, cone.HeightMax).ToPoint();
                 }
 
                 return;

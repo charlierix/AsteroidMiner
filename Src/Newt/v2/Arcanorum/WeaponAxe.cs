@@ -12,7 +12,7 @@ namespace Game.Newt.v2.Arcanorum
 {
     public class WeaponAxe : WeaponPart
     {
-        #region Class: AxeSymetricalProps
+        #region class: AxeSymetricalProps
 
         private class AxeSymetricalProps
         {
@@ -45,7 +45,7 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         #endregion
-        #region Class: AxeSecondProps
+        #region class: AxeSecondProps
 
         public class AxeSecondProps
         {
@@ -193,6 +193,12 @@ namespace Game.Newt.v2.Arcanorum
 
             Transform3DGroup transform = new Transform3DGroup();
             transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 0, 1), 90)));
+
+            if(dna.IsBackward)
+            {
+                // This won't make a difference if it's a double sided axe, but will for single sided
+                transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(1, 0, 0), 180)));
+            }
 
             if (isLeftSide)
             {
@@ -907,7 +913,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Class: WeaponAxeDNA
+    #region class: WeaponAxeDNA
 
     public class WeaponAxeDNA : WeaponPartDNA
     {
@@ -980,7 +986,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Enum: WeaponAxeType
+    #region enum: WeaponAxeType
 
     /// <summary>
     /// These are shapes that the axe could take.  A lot of this variation could be achieved with parameters to an axe building algorithm
@@ -1013,7 +1019,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Enum: WeaponAxeSides
+    #region enum: WeaponAxeSides
 
     public enum WeaponAxeSides
     {
@@ -1023,7 +1029,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Enum: WeaponAxeStye
+    #region enum: WeaponAxeStye
 
     //TODO: Use different names
     public enum WeaponAxeStye

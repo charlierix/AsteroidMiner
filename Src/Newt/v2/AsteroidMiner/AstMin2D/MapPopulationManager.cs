@@ -22,7 +22,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
     /// </remarks>
     public class MapPopulationManager : IPartUpdatable
     {
-        #region Enum: InstructionType
+        #region enum: InstructionType
 
         private enum InstructionType
         {
@@ -32,7 +32,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
         }
 
         #endregion
-        #region Class: ChangeInstruction
+        #region class: ChangeInstruction
 
         private class ChangeInstruction
         {
@@ -114,7 +114,7 @@ namespace Game.Newt.v2.AsteroidMiner.AstMin2D
 
         #endregion
 
-        #region Class: Boundry
+        #region class: Boundry
 
         private class Boundry
         {

@@ -10,7 +10,7 @@ namespace Game.Newt.v1.NewtonDynamics1
 {
     public class ConvexBody3D : Visual3DBodyBase, IMesh
     {
-        #region Enum: CollisionShape
+        #region enum: CollisionShape
 
         public enum CollisionShape
         {

@@ -16,7 +16,7 @@ namespace Game.Orig.TestersGDI
 {
     public partial class MapTester1 : Form
     {
-        #region Enum: GravityMode
+        #region enum: GravityMode
 
         private enum GravityMode
         {

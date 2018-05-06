@@ -2418,7 +2418,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region Class: ConvolutionSet2D
+    #region class: ConvolutionSet2D
 
     public class ConvolutionSet2D : ConvolutionBase2D
     {
@@ -2637,7 +2637,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: SetOperationType
+    #region enum: SetOperationType
 
     public enum SetOperationType
     {
@@ -2650,7 +2650,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: Convolution2D
+    #region class: Convolution2D
 
     public class Convolution2D : ConvolutionBase2D
     {
@@ -3105,7 +3105,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: ConvolutionBase2D
+    #region class: ConvolutionBase2D
 
     public abstract class ConvolutionBase2D
     {
@@ -3118,7 +3118,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Enum: ConvolutionResultNegPosColoring
+    #region enum: ConvolutionResultNegPosColoring
 
     public enum ConvolutionResultNegPosColoring
     {
@@ -3135,7 +3135,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: ConvolutionExtractType
+    #region enum: ConvolutionExtractType
 
     public enum ConvolutionExtractType
     {
@@ -3151,7 +3151,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: ConvolutionPrimitiveType
+    #region enum: ConvolutionPrimitiveType
 
     public enum ConvolutionPrimitiveType
     {
@@ -3164,7 +3164,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Enum: ConvolutionToolTipType
+    #region enum: ConvolutionToolTipType
 
     //NOTE: If the convolution has a description, that will always display in the first line
     public enum ConvolutionToolTipType
@@ -3176,7 +3176,7 @@ namespace Game.HelperClassesWPF
 
     #endregion
 
-    #region Class: ConvolutionSet2D_DNA
+    #region class: ConvolutionSet2D_DNA
 
     public class ConvolutionSet2D_DNA : ConvolutionBase2D_DNA
     {
@@ -3189,7 +3189,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: Convolution2D_DNA
+    #region class: Convolution2D_DNA
 
     public class Convolution2D_DNA : ConvolutionBase2D_DNA
     {
@@ -3207,7 +3207,7 @@ namespace Game.HelperClassesWPF
     }
 
     #endregion
-    #region Class: ConvolutionBase2D_DNA
+    #region class: ConvolutionBase2D_DNA
 
     public abstract class ConvolutionBase2D_DNA
     {

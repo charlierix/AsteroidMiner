@@ -17,7 +17,7 @@ namespace Game.Newt.v1.AsteroidMiner1
 {
     public class Ship : IMapObject
     {
-        #region Enum: SwarmFormation
+        #region enum: SwarmFormation
 
         //TODO:  Make one that chases the mouse
         public enum SwarmFormation

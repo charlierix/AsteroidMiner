@@ -25,7 +25,7 @@ namespace Game.Newt.Testers
 {
     public partial class BrainTester2 : Window
     {
-        #region Class: ItemColors
+        #region class: ItemColors
 
         private class ItemColors : BrainTester.ItemColors
         {
@@ -33,7 +33,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ContainerStuff
+        #region class: ContainerStuff
 
         private class ContainerStuff
         {
@@ -51,7 +51,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: CameraStuff
+        #region class: CameraStuff
 
         private class CameraStuff
         {
@@ -65,7 +65,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: ControllerStuff
+        #region class: ControllerStuff
 
         private class ControllerStuff
         {
@@ -79,7 +79,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: MotorStuff
+        #region class: MotorStuff
 
         private class MotorStuff
         {
@@ -92,7 +92,7 @@ namespace Game.Newt.Testers
         }
 
         #endregion
-        #region Class: MapObjectStuff
+        #region class: MapObjectStuff
 
         private class MapObjectStuff
         {
@@ -167,8 +167,7 @@ namespace Game.Newt.Testers
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 // Don't bother with the boundry lines.  It looks funny with a partial viewport
                 //// Draw the lines
@@ -448,7 +447,7 @@ namespace Game.Newt.Testers
                     Tetrahedron[] tetras = Math3D.GetDelaunay(points, 10);
                     Tuple<int, int>[] uniqueLines = Tetrahedron.GetUniqueLines(tetras);
 
-                    window.AddLines(uniqueLines.Select(o => Tuple.Create(points[o.Item1], points[o.Item2])), .05, UtilityWPF.ColorFromHex("D8D8D8"));
+                    window.AddLines(uniqueLines.Select(o => (points[o.Item1], points[o.Item2])), .05, UtilityWPF.ColorFromHex("D8D8D8"));
 
                     #endregion
 
@@ -622,7 +621,7 @@ namespace Game.Newt.Testers
                     //}),
                     //.05, Colors.White);
 
-                    window.AddDots(neurons.Select(o => Tuple.Create(transform.Transform(o.Item2), o.Item3, UtilityWPF.ColorFromHex("20FFFFFF"), false, false)));
+                    window.AddDots(neurons.Select(o => (transform.Transform(o.Item2), o.Item3, UtilityWPF.ColorFromHex("20FFFFFF"), false, false)));
                 }
 
                 window.Show();
@@ -684,7 +683,7 @@ namespace Game.Newt.Testers
                 window.AddDots(pointsWorld_Linear.Select(o => o.ToPoint()), .5, Colors.Black);
                 window.AddDots(pointsWorld_NonLinear.Select(o => o.ToPoint()), .5, Colors.White);
 
-                window.AddLines(Enumerable.Range(0, pointsWorld_Linear.Length).Select(o => Tuple.Create(pointsWorld_Linear[o].ToPoint(), pointsWorld_NonLinear[o].ToPoint())), .05, Colors.Plum);
+                window.AddLines(Enumerable.Range(0, pointsWorld_Linear.Length).Select(o => (pointsWorld_Linear[o].ToPoint(), pointsWorld_NonLinear[o].ToPoint())), .05, Colors.Plum);
 
                 window.Messages_Bottom.Add(new TextBlock() { Text = pow.ToString() });
 
@@ -720,14 +719,14 @@ namespace Game.Newt.Testers
                 Point3D mid2 = new Point3D(-.5, -.5, -.5);
                 Point3D negMid = mid2 - orth;
 
-                window.AddLines(new[] { Tuple.Create(mid1, posMid), Tuple.Create(mid2, negMid) }, .003, lineColor);
+                window.AddLines(new[] { (mid1, posMid), (mid2, negMid) }, .003, lineColor);
 
                 window.AddLines(new[]
                     {
-                        Tuple.Create(new Point3D(-1,-1,-1), negMid),
-                        Tuple.Create(negMid, new Point3D(0,0,0)),
-                        Tuple.Create(new Point3D(0,0,0), posMid),
-                        Tuple.Create(posMid, new Point3D(1,1,1)),
+                        (new Point3D(-1,-1,-1), negMid),
+                        (negMid, new Point3D(0,0,0)),
+                        (new Point3D(0,0,0), posMid),
+                        (posMid, new Point3D(1,1,1)),
                     },
                     .004, Colors.White);
 
@@ -904,7 +903,7 @@ namespace Game.Newt.Testers
                 Icosidodecahedron ico = UtilityWPF.GetIcosidodecahedron(sphereRadius);
 
                 var icoLines = ico.GetUniqueLines().
-                    Select(o => Tuple.Create(ico.AllPoints[o.Item1], ico.AllPoints[o.Item2]));
+                    Select(o => (ico.AllPoints[o.Item1], ico.AllPoints[o.Item2]));
 
                 window.AddLines(icoLines, .015, UtilityWPF.AlphaBlend(ringColor, Colors.White, .5));
 
@@ -1181,7 +1180,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
+                        ShipPartDNA dnaCopy = UtilityCore.Clone(dna);
 
                         Vector3D rotateBy = GetPositionAroundCircle(dna.Position.X, dnas.Length, cntr);
                         dnaCopy.Position += rotateBy;
@@ -1254,7 +1253,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
+                        ShipPartDNA dnaCopy = UtilityCore.Clone(dna);
 
                         dnaCopy.Position += GetPositionAroundCircle(dna.Position.X, dnas.Length, cntr);
 
@@ -1290,15 +1289,13 @@ namespace Game.Newt.Testers
         {
             try
             {
-                double size;
-                if (!double.TryParse(txtMotorSize.Text, out size))
+                if (!double.TryParse(txtMotorSize.Text, out double size))
                 {
                     MessageBox.Show("Couldn't parse motor size", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                int impulseCount;
-                if (!int.TryParse(txtImpulseCount.Text, out impulseCount))
+                if (!int.TryParse(txtImpulseCount.Text, out int impulseCount))
                 {
                     MessageBox.Show("Couldn't parse number of impulse engines", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -1313,15 +1310,16 @@ namespace Game.Newt.Testers
                 }
 
                 // Build DNA
-                ShipPartDNA dna = new ShipPartDNA()
+                ImpulseEngineDNA dna = new ImpulseEngineDNA()
                 {
                     PartType = ImpulseEngine.PARTTYPE,
                     Position = new Point3D(3, 0, 0),
                     Orientation = Quaternion.Identity,
                     Scale = new Vector3D(size, size, size),
+                    ImpulseEngineType = ImpulseEngineType.Both,
                 };
 
-                ShipPartDNA[] dnas = new ShipPartDNA[impulseCount];
+                ImpulseEngineDNA[] dnas = new ImpulseEngineDNA[impulseCount];
 
                 for (int cntr = 0; cntr < impulseCount; cntr++)
                 {
@@ -1331,7 +1329,7 @@ namespace Game.Newt.Testers
                     }
                     else
                     {
-                        ShipPartDNA dnaCopy = ShipPartDNA.Clone(dna);
+                        ImpulseEngineDNA dnaCopy = UtilityCore.Clone(dna);
 
                         dnaCopy.Position += GetPositionAroundCircle(dna.Position.X, dnas.Length, cntr);
 
@@ -1895,7 +1893,7 @@ namespace Game.Newt.Testers
 
             UpdateCountReport();
         }
-        private void CreateMotors(ShipPartDNA[] dna)
+        private void CreateMotors(ImpulseEngineDNA[] dna)
         {
             if (_motors != null)
             {
@@ -1906,7 +1904,7 @@ namespace Game.Newt.Testers
             for (int cntr = 0; cntr < dna.Length; cntr++)
             {
                 motors[cntr] = new MotorStuff();
-                motors[cntr].ImpulseEngine = new ImpulseEngine(_editorOptions, _itemOptions, dna[cntr], _containers == null ? null : _containers.Plasma);
+                motors[cntr].ImpulseEngine = new ImpulseEngine(_editorOptions, _itemOptions, dna[cntr], _containers?.Plasma);
                 motors[cntr].ImpulseEngine.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(Body_RequestWorldLocation);
 
                 #region Ship Visual
@@ -2041,7 +2039,7 @@ namespace Game.Newt.Testers
 
         }
 
-        private static IEnumerable<Tuple<Point3D, Point3D>> GetCubeLines(double sideLength)
+        private static IEnumerable<(Point3D, Point3D)> GetCubeLines(double sideLength)
         {
             double half = sideLength / 2;
 
@@ -2061,7 +2059,7 @@ namespace Game.Newt.Testers
                     from.Insert(o, -half);
                     to.Insert(o, half);
 
-                    return Tuple.Create(new VectorND(from.ToArray()).ToPoint3D(), new VectorND(to.ToArray()).ToPoint3D());
+                    return (new VectorND(from.ToArray()).ToPoint3D(), new VectorND(to.ToArray()).ToPoint3D());
                 }));
         }
 

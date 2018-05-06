@@ -22,7 +22,7 @@ namespace Game.Newt.v2.NewtonDynamics
     /// </remarks>
     public class FluidField3D
     {
-        #region Enum: BoundryType
+        #region enum: BoundryType
 
         private enum SetBoundsType
         {
@@ -34,7 +34,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region Struct: IndexLERP
+        #region struct: IndexLERP
 
         private struct IndexLERP
         {
@@ -52,7 +52,7 @@ namespace Game.Newt.v2.NewtonDynamics
         }
 
         #endregion
-        #region Class: BoundrySettings
+        #region class: BoundrySettings
 
         private class BoundrySettings
         {
@@ -3114,7 +3114,7 @@ namespace Game.Newt.v2.NewtonDynamics
         #endregion
     }
 
-    #region Enum: FluidFieldBoundryType3D
+    #region enum: FluidFieldBoundryType3D
 
     //TODO: May want combinations of these: Bottom is solid, Top is open, Left/Right and Front/Back are wrap around
     public enum FluidFieldBoundryType3D
@@ -3158,7 +3158,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
     #endregion
 
-    #region Class: FluidFieldUniform
+    #region class: FluidFieldUniform
 
     /// <summary>
     /// This is the simplest possible implementation.  The viscocity and flow are the same for all positions
@@ -3187,7 +3187,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region Class: FluidFieldField
+    #region class: FluidFieldField
 
     /// <summary>
     /// This is implementation is tied to a single field
@@ -3227,7 +3227,7 @@ namespace Game.Newt.v2.NewtonDynamics
     }
 
     #endregion
-    #region Interface: IFluidField
+    #region interface: IFluidField
 
     /// <remarks>
     /// There could be a few different ways to feed this:

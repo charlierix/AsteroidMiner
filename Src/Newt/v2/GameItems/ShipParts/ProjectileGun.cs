@@ -13,7 +13,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: ProjectileGunToolItem
+    #region class: ProjectileGunToolItem
 
     public class ProjectileGunToolItem : PartToolItemBase
     {
@@ -74,7 +74,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ProjectileGunDesign
+    #region class: ProjectileGunDesign
 
     public class ProjectileGunDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -147,10 +147,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            if (_massBreakdown != null && _massBreakdown.Item2 == this.Scale && _massBreakdown.Item3 == cellSize)
+            if (_massBreakdown != null && _massBreakdown.Scale == Scale && _massBreakdown.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return _massBreakdown.Item1;
+                return _massBreakdown.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter
@@ -168,10 +168,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 new Transform3D[] { transform });
 
             // Store this
-            _massBreakdown = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(combined, this.Scale, cellSize);
+            _massBreakdown = new MassBreakdownCache(combined, Scale, cellSize);
 
-            // Exit Function
-            return _massBreakdown.Item1;
+            return _massBreakdown.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -301,11 +300,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: ProjectileGun
+    #region class: ProjectileGun
 
     public class ProjectileGun : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region Class: GunGroup
+        #region class: GunGroup
 
         private class GunGroup
         {
@@ -338,7 +337,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         #endregion
-        #region Class: GunAmmoGroup
+        #region class: GunAmmoGroup
 
         private class GunAmmoGroup
         {
@@ -359,7 +358,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         #endregion
-        #region Class: ProjectileProps
+        #region class: ProjectileProps
 
         /// <summary>
         /// This holds several props based on caliber.  Storing them in a class so it's a single volatile
@@ -403,7 +402,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "ProjectileGun";
+        public const string PARTTYPE = nameof(ProjectileGun);
 
         private readonly ItemOptions _itemOptions;
 
@@ -472,43 +471,13 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => _neurons;
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => _neurons;
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Manipulator;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Manipulator;
 
         public double Radius
         {
@@ -516,17 +485,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             private set;
         }
 
-        public bool IsOn
-        {
-            get
-            {
-                // Even though gun exposes neurons to control it, that's just an interface to the gun, so there's
-                // no reason to draw from an energy tank to power those neurons.  (this IsOn property is from the
-                // perspective of a brain, that's why it's independant of how much ammo is available - you can always
-                // try to tell the gun to fire, that's when it will check for ammo)
-                return true;
-            }
-        }
+        // Even though gun exposes neurons to control it, that's just an interface to the gun, so there's
+        // no reason to draw from an energy tank to power those neurons.  (this IsOn property is from the
+        // perspective of a brain, that's why it's independant of how much ammo is available - you can always
+        // try to tell the gun to fire, that's when it will check for ammo)
+        public bool IsOn => true;
 
         #endregion
         #region IPartUpdatable Members
@@ -590,20 +553,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
         {
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public int? IntervalSkips_MainThread => 0;
+        public int? IntervalSkips_AnyThread => null;
 
         #endregion
 
@@ -750,7 +701,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public Vector3D Fire()
         {
-            if(this.IsDestroyed)
+            if (this.IsDestroyed)
             {
                 return new Vector3D(0, 0, 0);
             }
@@ -901,7 +852,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods - gun combos
 
-        #region Class: GunCombo
+        #region class: GunCombo
 
         /// <summary>
         /// Each instance of this represents a set of sets.  That set of sets represents all guns, no repeats
@@ -1288,12 +1239,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     ThenByDescending(o => o.Item.Gun.DemandTotal).       // if there's a tie, choose the greediest gun
                     FirstOrDefault();
 
-                if(bestMatch == null)
+                if (bestMatch == null)
                 {
 
                 }
 
-                if(bestMatch != null)
+                if (bestMatch != null)
                 {
                     // Give this box to the chosen set of guns
                     bestMatch.Item.Boxes.Add(boxesDescending[cntr]);

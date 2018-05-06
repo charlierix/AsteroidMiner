@@ -10,7 +10,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems
 {
-    #region Class: FlagVisual
+    #region class: FlagVisual
 
     public class FlagVisual : FrameworkElement
     {
@@ -616,7 +616,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Class: FlagProps
+    #region class: FlagProps
 
     public class FlagProps
     {
@@ -632,7 +632,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Class: FlagOverlay
+    #region class: FlagOverlay
 
     public class FlagOverlay
     {
@@ -642,7 +642,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Enum: FlagBackType
+    #region enum: FlagBackType
 
     public enum FlagBackType
     {
@@ -660,7 +660,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Enum: FlagOverlayType
+    #region enum: FlagOverlayType
 
     public enum FlagOverlayType
     {
@@ -687,11 +687,11 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Class: FlagGenerator
+    #region class: FlagGenerator
 
     public static class FlagGenerator
     {
-        #region Enum: FlagColorCategory
+        #region enum: FlagColorCategory
 
         public enum FlagColorCategory
         {
@@ -705,7 +705,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: FlagColorCategoriesCache
+        #region class: FlagColorCategoriesCache
 
         public class FlagColorCategoriesCache
         {

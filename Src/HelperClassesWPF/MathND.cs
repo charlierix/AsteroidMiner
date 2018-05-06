@@ -25,7 +25,7 @@ namespace Game.HelperClassesWPF
     //    /// </summary>
     //    public static partial class MathND_OLD
     //    {
-    //        #region Class: BallOfSprings
+    //        #region class: BallOfSprings
 
     //        private static class BallOfSprings
     //        {
@@ -182,14 +182,14 @@ namespace Game.HelperClassesWPF
     //        }
 
     //        #endregion
-    //        #region Class: EvenDistribution
+    //        #region class: EvenDistribution
 
     //        /// <summary>
     //        /// This was copied from Math3D
     //        /// </summary>
     //        private static class EvenDistribution
     //        {
-    //            #region Class: Dot
+    //            #region class: Dot
 
     //            private class Dot
     //            {
@@ -206,7 +206,7 @@ namespace Game.HelperClassesWPF
     //            }
 
     //            #endregion
-    //            #region Class: ShortPair
+    //            #region class: ShortPair
 
     //            private class ShortPair
     //            {
@@ -976,7 +976,7 @@ namespace Game.HelperClassesWPF
     /// </summary>
     public static partial class MathND
     {
-        #region Class: BallOfSprings
+        #region class: BallOfSprings
 
         private static class BallOfSprings
         {
@@ -1118,14 +1118,14 @@ namespace Game.HelperClassesWPF
         }
 
         #endregion
-        #region Class: EvenDistribution
+        #region class: EvenDistribution
 
         /// <summary>
         /// This was copied from Math3D
         /// </summary>
         private static class EvenDistribution
         {
-            #region Class: Dot
+            #region class: Dot
 
             private class Dot
             {
@@ -1142,7 +1142,7 @@ namespace Game.HelperClassesWPF
             }
 
             #endregion
-            #region Class: ShortPair
+            #region class: ShortPair
 
             private class ShortPair
             {
@@ -2108,7 +2108,7 @@ namespace Game.HelperClassesWPF
         #endregion
     }
 
-    #region Class: VectorND
+    #region class: VectorND
 
     public class VectorND : IEnumerable<double>
     {
@@ -2242,6 +2242,9 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        /// <summary>
+        /// This is the number of dimensions (a 3D vector would return 3)
+        /// </summary>
         public int Size
         {
             get

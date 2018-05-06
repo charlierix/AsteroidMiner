@@ -24,7 +24,7 @@ namespace Game.Newt.Testers.SOM
 {
     public partial class SelfOrganizingMapsDBWindow : Window
     {
-        #region Class: QueryRequest
+        #region class: QueryRequest
 
         private class QueryRequest
         {
@@ -41,7 +41,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: ColumnStatsRequest
+        #region class: ColumnStatsRequest
 
         private class ColumnStatsRequest
         {
@@ -56,7 +56,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: SOMRequest
+        #region class: SOMRequest
 
         private class SOMRequest
         {
@@ -72,7 +72,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: QueryResults
+        #region class: QueryResults
 
         public class QueryResults
         {
@@ -106,7 +106,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: ColumnSetStats
+        #region class: ColumnSetStats
 
         public class ColumnSetStats
         {
@@ -243,7 +243,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: ColumnStats
+        #region class: ColumnStats
 
         public class ColumnStats
         {
@@ -278,7 +278,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: RowInput
+        #region class: RowInput
 
         public class RowInput : ISOMInput
         {
@@ -288,7 +288,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: OverlayPolygonStats
+        #region class: OverlayPolygonStats
 
         /// <summary>
         /// This is the tooltip when they go over a node
@@ -541,7 +541,7 @@ C";
             }
         }
 
-        private void Polygon_MouseMove(Polygon poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
+        private void Polygon_MouseMove(Shape poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
         {
             try
             {
@@ -577,12 +577,12 @@ C";
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Polygon_Click(Polygon poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
+        private void Polygon_Click(Shape poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
         {
             try
             {
                 int index = _result.Nodes.IndexOf(node, (o, p) => o.Token == p.Token);
-
+                
                 DBRowsDetail viewer = new DBRowsDetail(_queryResults, _columns, _result, index)
                 {
                     Background = poly.Fill,

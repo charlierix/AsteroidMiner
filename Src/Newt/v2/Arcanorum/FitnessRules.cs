@@ -9,7 +9,7 @@ using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.Arcanorum
 {
-    #region Class: FitnessRule_TooFar
+    #region class: FitnessRule_TooFar
 
     /// <summary>
     /// This rewards bots that stay inside a certain distance from a center
@@ -87,7 +87,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Class: FitnessRule_TooStill
+    #region class: FitnessRule_TooStill
 
     /// <summary>
     /// This punishes bots that hold still for long periods of time
@@ -177,7 +177,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Class: FitnessRule_TooTwitchy
+    #region class: FitnessRule_TooTwitchy
 
     /// <remarks>
     /// Take the dot product of the velocity from the previous frame to the current frame.  1 is fine, -1 is a reversal.
@@ -259,7 +259,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Class: FitnessTracker
+    #region class: FitnessTracker
 
     /// <summary>
     /// This class is just a convenience to tie multiple rules (and a weight for each) to a bot
@@ -339,7 +339,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Interface: IFitnessRule
+    #region interface: IFitnessRule
 
     public interface IFitnessRule
     {

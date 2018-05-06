@@ -24,7 +24,7 @@ namespace Game.Newt.Testers
 {
     public partial class SwarmBotTester : Window
     {
-        #region Class: ClusterVisuals
+        #region class: ClusterVisuals
 
         private class ClusterVisuals
         {
@@ -269,8 +269,7 @@ namespace Game.Newt.Testers
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 //TODO: Only draw the boundry lines if options say to
 
@@ -447,19 +446,19 @@ namespace Game.Newt.Testers
         {
             try
             {
-                if (e.Item.PhysicsBody != null)
-                {
-                    e.Item.PhysicsBody.ApplyForceAndTorque -= PhysicsBody_ApplyForceAndTorque;
-                }
+                //if (e.Item.PhysicsBody != null)
+                //{
+                //    e.Item.PhysicsBody.ApplyForceAndTorque -= PhysicsBody_ApplyForceAndTorque;
+                //}
 
-                if (e.Item is IDisposable)
-                {
-                    ((IDisposable)e.Item).Dispose();
-                }
-                else if (e.Item.PhysicsBody != null)
-                {
-                    e.Item.PhysicsBody.Dispose();
-                }
+                //if (e.Item is IDisposable)
+                //{
+                //    ((IDisposable)e.Item).Dispose();
+                //}
+                //else if (e.Item.PhysicsBody != null)
+                //{
+                //    e.Item.PhysicsBody.Dispose();
+                //}
             }
             catch (Exception ex)
             {

@@ -31,7 +31,7 @@ namespace Game.Newt.v2.GameItems.MapParts
     //  Or the swarmbay could maintain individual NNs, and give a single merged one to swarmbot instances
     public class SwarmBot1b : IDisposable, IMapObject, IPartUpdatable
     {
-        #region Class: ForceSettings_Initial
+        #region class: ForceSettings_Initial
 
         /// <summary>
         /// These are force settings before considering neighbors, distance, etc
@@ -51,7 +51,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         }
 
         #endregion
-        #region Class: ForceSettings_Final
+        #region class: ForceSettings_Final
 
         private class ForceSettings_Final
         {
@@ -59,7 +59,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         }
 
         #endregion
-        #region Class: CurrentChasingStroke
+        #region class: CurrentChasingStroke
 
         private class CurrentChasingStroke
         {
@@ -245,7 +245,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         #endregion
 
         #endregion
-        #region Class: StrokePointForce
+        #region class: StrokePointForce
 
         private class StrokePointForce
         {
@@ -263,7 +263,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         }
 
         #endregion
-        #region Class: NearPointResult
+        #region class: NearPointResult
 
         private class NearPointResult
         {
@@ -743,13 +743,13 @@ namespace Game.Newt.v2.GameItems.MapParts
             if (Math3D.IsNearZero(velocity))
                 desiredVelocity = Math3D.GetRandomVector_Spherical_Shell(maxSpeed);
             else
-                desiredVelocity = Math3D.GetRandomVector_Cone(velocity, 10).ToUnit(false) * maxSpeed;
+                desiredVelocity = Math3D.GetRandomVector_Cone(velocity, 0, 10, maxSpeed, maxSpeed);
 
             Vector3D desiredAngVelocity;
             if (Math3D.IsNearZero(angVelocity))
                 desiredAngVelocity = Math3D.GetRandomVector_Spherical_Shell(maxAngSpeed);
             else
-                desiredAngVelocity = Math3D.GetRandomVector_Cone(angVelocity, 10).ToUnit(false) * maxAngSpeed;
+                desiredAngVelocity = Math3D.GetRandomVector_Cone(angVelocity, 0, 10, maxAngSpeed, maxAngSpeed);
 
             #endregion
 
@@ -1688,7 +1688,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
             // Toward -- constant pull toward other bots
             forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * 1.2));
-            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * 20, gradient: new[] { Tuple.Create(0d, 0d), Tuple.Create(50d, 0d), Tuple.Create(100d, 1d) }));
+            forces.Add(new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * 20, gradient: new[] { new GradientEntry(0d, 0d), new GradientEntry(50d, 0d), new GradientEntry(100d, 1d) }));
 
             // Repel -- ramp up repulsion if too close to other bots
             // Friction if about to collide
@@ -1749,19 +1749,19 @@ namespace Game.Newt.v2.GameItems.MapParts
         private static ChasePoint_Force[] GetRepelInitialForces(double powerMult = 1, double distMult = 1)
         {
             //Tuple<double,double>[] gradient = GetDropoffGradient(5, 10, 1);
-            Tuple<double, double>[] gradient = new[]
+            GradientEntry[] gradient = new[]
             {
-                Tuple.Create(0d, 1d),
-                Tuple.Create(10d * distMult, 0d),
+                new GradientEntry(0d, 1d),
+                new GradientEntry(10d * distMult, 0d),
             };
 
             ChasePoint_Force repel = new ChasePoint_Force(ChaseDirectionType.Attract_Direction, ACCEL * -3 * powerMult, gradient: gradient);
 
             gradient = new[]
             {
-                Tuple.Create(0d, 1d),
-                Tuple.Create(1.5 * distMult, .7d),
-                Tuple.Create(3d * distMult, 0d),
+                new GradientEntry(0d, 1d),
+                new GradientEntry(1.5 * distMult, .7d),
+                new GradientEntry(3d * distMult, 0d),
             };
             ChasePoint_Force tooCloseAndHotFriction = new ChasePoint_Force(ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward, ACCEL * 4 * powerMult, gradient: gradient);
 

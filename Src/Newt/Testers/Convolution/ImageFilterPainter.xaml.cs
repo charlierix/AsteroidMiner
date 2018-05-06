@@ -21,7 +21,7 @@ namespace Game.Newt.Testers.Convolution
 {
     public partial class ImageFilterPainter : Window
     {
-        #region Class: Axis3DProps
+        #region class: Axis3DProps
 
         private class Axis3DProps
         {
@@ -47,7 +47,7 @@ namespace Game.Newt.Testers.Convolution
         }
 
         #endregion
-        #region Class: Bar3DProps
+        #region class: Bar3DProps
 
         private class Bar3DProps
         {
@@ -111,7 +111,7 @@ namespace Game.Newt.Testers.Convolution
         }
 
         #endregion
-        #region Class: AllBar3D
+        #region class: AllBar3D
 
         private class AllBar3D
         {

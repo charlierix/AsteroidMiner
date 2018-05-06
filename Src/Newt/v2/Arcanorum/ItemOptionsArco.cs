@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 
 namespace Game.Newt.v2.Arcanorum
@@ -12,7 +13,14 @@ namespace Game.Newt.v2.Arcanorum
         public const double ELASTICITY_WALL = .1d;
         public const double ELASTICITY_BOTRAM = .95d;
 
-        private volatile bool _shouldRechargeOnLevel = false;
+        #region Level
+
+        public const int MAXLEVEL = 40;
+
+        private volatile bool _shouldRechargeOnLevel = true;
+        /// <summary>
+        /// If true, things like hitpoints will refill during a level up
+        /// </summary>
         public bool ShouldRechargeOnLevel
         {
             get
@@ -25,6 +33,113 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
+        private volatile double[] _xpForNexLevel = Enumerable.Range(0, MAXLEVEL + 1).
+            Select(o => Math.Pow(20 * o, 1.65)).
+            ToArray();
+        /// <summary>
+        /// This is how much xp is required to get to the next level
+        /// </summary>
+        /// <remarks>
+        /// The array is zero based, but the equation will just return 0 at 0.  So just ignore element zero.  Use it like this:
+        /// 
+        /// At level N, element[N] tells how much xp is needed to get to level N+1
+        /// </remarks>
+        public double[] XPForNexLevel
+        {
+            get
+            {
+                return _xpForNexLevel;
+            }
+            set
+            {
+                _xpForNexLevel = value;
+            }
+        }
+
+        //NOTE: These arrays are zero based, but there is no zero level.  Just ignore array[0]
+
+        private volatile double[] _radiusAtLevel = Enumerable.Range(0, MAXLEVEL + 1).
+            Select(o => UtilityCore.GetScaledValue(.25, .8, 1, MAXLEVEL, o)).
+            ToArray();
+        public double[] RadiusAtLevel
+        {
+            get
+            {
+                return _radiusAtLevel;
+            }
+            set
+            {
+                _radiusAtLevel = value;
+            }
+        }
+
+        private volatile double[] _massAtLevel = Enumerable.Range(0, MAXLEVEL + 1).
+            Select(o => UtilityCore.GetScaledValue(2, 800, 1, MAXLEVEL, o)).
+            ToArray();
+        public double[] MassAtLevel
+        {
+            get
+            {
+                return _massAtLevel;
+            }
+            set
+            {
+                _massAtLevel = value;
+            }
+        }
+
+        private volatile double[] _hitPointsAtLevel = Enumerable.Range(0, MAXLEVEL + 1).
+            Select(o => UtilityCore.GetScaledValue(20, 2000, 1, MAXLEVEL, o)).
+            ToArray();
+        public double[] HitPointsAtLevel
+        {
+            get
+            {
+                return _hitPointsAtLevel;
+            }
+            set
+            {
+                _hitPointsAtLevel = value;
+            }
+        }
+
+        private volatile object _xpRatio_Treasure = .33d;
+        /// <summary>
+        /// How much xp to gain based on the amount of damage hp dealt to a treasure box
+        /// </summary>
+        public double XPRatio_Treasure
+        {
+            get
+            {
+                return (double)_xpRatio_Treasure;
+            }
+            set
+            {
+                _xpRatio_Treasure = value;
+            }
+        }
+
+        private volatile object _xpRatio_Bot = 1d;
+        /// <summary>
+        /// How much xp to gain based on the amount of damage hp dealt to another bot
+        /// </summary>
+        /// <remarks>
+        /// This should be more complex than a single ratio.  Hurting a "dumb" bot should give less xp than a proven fighter
+        /// </remarks>
+        public double XPRatio_Bot
+        {
+            get
+            {
+                return (double)_xpRatio_Bot;
+            }
+            set
+            {
+                _xpRatio_Bot = value;
+            }
+        }
+
+        #endregion
+
         private volatile object _gravity = 10d;
         public double Gravity
         {
@@ -35,6 +150,23 @@ namespace Game.Newt.v2.Arcanorum
             set
             {
                 _gravity = value;
+            }
+        }
+
+        private volatile object _inventoryWeightPercent = .5d;
+        /// <summary>
+        /// When an item is in a bot's inventory, this is what it weighs (don't want zero weight, because then there's no penalty
+        /// for hoarding)
+        /// </summary>
+        public double InventoryWeightPercent
+        {
+            get
+            {
+                return (double)_inventoryWeightPercent;
+            }
+            set
+            {
+                _inventoryWeightPercent = value;
             }
         }
 
@@ -118,7 +250,7 @@ namespace Game.Newt.v2.Arcanorum
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Motion Controller
+        #region Motion Controller - linear
 
         private volatile object _motionController_Linear_NeuronDensity = 20d;
         /// <summary>
@@ -150,6 +282,46 @@ namespace Game.Newt.v2.Arcanorum
         }
 
         public readonly DamageProps MotionController_Damage = new DamageProps(
+            HITPOINTMIN,
+            HITPOINTSLOPE,
+            DAMAGE_VELOCITYTHRESHOLD,
+            DAMAGE_ENERGYTHESHOLD,
+            DAMAGE_ENERGYTOHITPOINTMULT,
+            DAMAGE_RANDOMMAX);
+
+        #endregion
+        #region Motion Controller2
+
+        private volatile object _motionController2_NeuronDensity = 8d;
+        /// <summary>
+        /// This is how many neurons to place around the perimiter (this doesn't include the 2 interior neurons)
+        /// </summary>
+        public double MotionController2_NeuronDensity
+        {
+            get
+            {
+                return (double)_motionController2_NeuronDensity;
+            }
+            set
+            {
+                _motionController2_NeuronDensity = value;
+            }
+        }
+
+        private volatile object _motionController2_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
+        public double MotionController2_AmountToDraw
+        {
+            get
+            {
+                return (double)_motionController2_AmountToDraw;
+            }
+            set
+            {
+                _motionController2_AmountToDraw = value;
+            }
+        }
+
+        public readonly DamageProps MotionController2_Damage = new DamageProps(
             HITPOINTMIN,
             HITPOINTSLOPE,
             DAMAGE_VELOCITYTHRESHOLD,

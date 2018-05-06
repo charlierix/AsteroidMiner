@@ -421,6 +421,11 @@ namespace Game.HelperClassesCore
             return removed;
         }
 
+        public static bool IsNullOrEmpty<T>(this IList<T> list)
+        {
+            return list == null || list.Count == 0;
+        }
+
         #endregion
 
         #region MatchCollection
@@ -555,7 +560,13 @@ namespace Game.HelperClassesCore
             }
         }
 
-        public static bool NextBool(this Random rand)
+        /// <summary>
+        /// This returns true or false
+        /// </summary>
+        /// <param name="oneInX">
+        /// For 50/50 odds, pass in 2 (1 in 2 times will be true).  If you want a lower chance of true, then pass in a larger value
+        /// </param>
+        public static bool NextBool(this Random rand, int oneInX = 2)
         {
             return rand.Next(2) == 0;
         }

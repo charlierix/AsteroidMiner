@@ -23,7 +23,7 @@ namespace Game.Newt.v2.GameItems
     /// </summary>
     public class CameraPool : IDisposable
     {
-        #region Class: TaskWrapper
+        #region class: TaskWrapper
 
         /// <summary>
         /// This is a single thread
@@ -33,7 +33,7 @@ namespace Game.Newt.v2.GameItems
         /// </remarks>
         private class TaskWrapper : IDisposable
         {
-            #region Class: ViewportOffline
+            #region class: ViewportOffline
 
             /// <summary>
             /// This houses a viewport, camera, etc.
@@ -302,13 +302,10 @@ namespace Game.Newt.v2.GameItems
             {
                 bool numCamerasChanged = false;
 
-                Tuple<object, bool> item;
-                while (parent.AddRemoves.TryDequeue(out item))
+                while (parent.AddRemoves.TryDequeue(out Tuple<object, bool> item))
                 {
-                    if (item.Item1 is CameraPoolVisual)
+                    if (item.Item1 is CameraPoolVisual visual)
                     {
-                        CameraPoolVisual visual = (CameraPoolVisual)item.Item1;
-
                         if (item.Item2)
                         {
                             #region Add Visual
@@ -513,7 +510,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region Class: CameraPoolVisual
+    #region class: CameraPoolVisual
 
     public class CameraPoolVisual
     {
@@ -538,7 +535,7 @@ namespace Game.Newt.v2.GameItems
     }
 
     #endregion
-    #region Interface: ICameraPoolVisual
+    #region interface: ICameraPoolVisual
 
     public interface ICameraPoolVisual
     {
@@ -557,7 +554,7 @@ namespace Game.Newt.v2.GameItems
 
     #endregion
 
-    #region Interface: ICameraPoolCamera
+    #region interface: ICameraPoolCamera
 
     public interface ICameraPoolCamera
     {

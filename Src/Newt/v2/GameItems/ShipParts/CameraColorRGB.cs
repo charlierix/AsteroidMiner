@@ -12,7 +12,7 @@ using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
-    #region Class: CameraColorRGBToolItem
+    #region class: CameraColorRGBToolItem
 
     public class CameraColorRGBToolItem : PartToolItemBase
     {
@@ -73,7 +73,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: CameraColorRGBDesign
+    #region class: CameraColorRGBDesign
 
     public class CameraColorRGBDesign : PartDesignBase
     {
@@ -84,7 +84,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -153,12 +153,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return CollisionHull.CreateSphere(world, 0, size, transform.Value);
         }
-        internal static UtilityNewt.IObjectMassBreakdown GetCameraMassBreakdown(ref Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> existing, Vector3D scale, double cellSize)
+        internal static UtilityNewt.IObjectMassBreakdown GetCameraMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
         {
-            if (existing != null && existing.Item2 == scale && existing.Item3 == cellSize)
+            if (existing != null && existing.Scale == scale && existing.CellSize == cellSize)
             {
                 // This has already been built for this size
-                return existing.Item1;
+                return existing.Breakdown;
             }
 
             // Convert this.Scale into a size that the mass breakdown will use
@@ -167,10 +167,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Sphere, UtilityNewt.MassDistribution.Uniform, size, cellSize);
 
             // Store this
-            existing = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, scale, cellSize);
+            existing = new MassBreakdownCache(breakdown, scale, cellSize);
 
-            // Exit Function
-            return existing.Item1;
+            return existing.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -384,11 +383,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
     }
 
     #endregion
-    #region Class: CameraColorRGB
+    #region class: CameraColorRGB
 
     public class CameraColorRGB : PartBase, INeuronContainer, IPartUpdatable, ICameraPoolCamera
     {
-        #region Class: OverlayResult
+        #region class: OverlayResult
 
         internal class OverlayResult
         {
@@ -408,7 +407,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Declaration Section
 
-        public const string PARTTYPE = "CameraColorRGB";
+        public const string PARTTYPE = nameof(CameraColorRGB);
 
         private readonly ItemOptions _itemOptions;
 
@@ -478,35 +477,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return UtilityCore.Iterate(_neuronsR, _neuronsG, _neuronsB);
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => UtilityCore.Iterate(_neuronsR, _neuronsG, _neuronsB);
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return UtilityCore.Iterate(_neuronsR, _neuronsG, _neuronsB);
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => UtilityCore.Iterate(_neuronsR, _neuronsG, _neuronsB);
 
         private volatile NeuronContainerType _neuronContainerType = NeuronContainerType.Sensor;
         public NeuronContainerType NeuronContainerType
@@ -537,13 +512,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         private volatile bool _isOn = false;
-        public bool IsOn
-        {
-            get
-            {
-                return _isOn;
-            }
-        }
+        public bool IsOn => _isOn;
 
         #endregion
         #region IPartUpdatable Members
@@ -568,32 +537,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _isOn = true;
         }
 
-        public int? IntervalSkips_MainThread
-        {
-            get
-            {
-                return null;
-            }
-        }
-        public int? IntervalSkips_AnyThread
-        {
-            get
-            {
-                return 0;
-            }
-        }
+        public int? IntervalSkips_MainThread => null;
+        public int? IntervalSkips_AnyThread => 0;
 
         #endregion
         #region ICameraPoolCamera Members
 
         private readonly int _pixelWidthHeight;
-        public int PixelWidthHeight
-        {
-            get
-            {
-                return _pixelWidthHeight;
-            }
-        }
+        public int PixelWidthHeight => _pixelWidthHeight;
 
         public Tuple<Point3D, DoubleVector> GetWorldLocation_Camera()
         {
@@ -638,29 +589,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
         /// <summary>
         /// Item1=Token

@@ -62,7 +62,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Enum: FactorType
+        #region enum: FactorType
 
         public enum FactorType
         {
@@ -92,7 +92,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: MuateArgs
+        #region class: MuateArgs
 
         public class MuateArgs
         {
@@ -235,7 +235,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: MuateFactorArgs
+        #region class: MuateFactorArgs
 
         public class MuateFactorArgs
         {
@@ -262,7 +262,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: ShipPartAddRemoveArgs
+        #region class: ShipPartAddRemoveArgs
 
         public class ShipPartAddRemoveArgs
         {
@@ -274,7 +274,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: NeuronMutateArgs
+        #region class: NeuronMutateArgs
 
         public class NeuronMutateArgs
         {
@@ -298,7 +298,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: ShipMutateArgs
+        #region class: ShipMutateArgs
 
         public class ShipMutateArgs
         {
@@ -321,7 +321,7 @@ namespace Game.Newt.v2.GameItems
 
         public static T MutateSettingsObject<T>(T settings, MuateArgs args)
         {
-            T retVal = Clone(settings);
+            T retVal = UtilityCore.Clone(settings);
 
             PropsByPercent props = new PropsByPercent(new object[] { retVal }, new PropsByPercent.FilterArgs() { IgnoreTypes = new PropsByPercent.DataType[] { PropsByPercent.DataType.String } });
 
@@ -334,7 +334,7 @@ namespace Game.Newt.v2.GameItems
         public static ShipDNA Mutate(ShipDNA dna, ShipMutateArgs args)
         {
             // Start off with a clone of what was passed in
-            ShipDNA retVal = Clone(dna);
+            ShipDNA retVal = UtilityCore.Clone(dna);
             retVal.Generation++;
 
             if (args.PartAddRemove != null)
@@ -931,19 +931,6 @@ namespace Game.Newt.v2.GameItems
             return args.DefaultFactor;
         }
 
-        /// <summary>
-        /// NOTE: This only works if T is serializable (which the classes that this class deals with should be)
-        /// </summary>
-        private static T Clone<T>(T item)
-        {
-            using (MemoryStream stream = new MemoryStream())
-            {
-                XamlServices.Save(stream, item);
-                stream.Position = 0;
-                return (T)XamlServices.Load(stream);
-            }
-        }
-
         #region OLD
 
         ///// <summary>
@@ -1030,7 +1017,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
     }
 
-    #region Class: PropsByPercent
+    #region class: PropsByPercent
 
     /// <summary>
     /// This exposes properties of items in a list
@@ -1059,7 +1046,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class PropsByPercent : IEnumerable<PropsByPercent.PropWrapper>
     {
-        #region Enum: DataType
+        #region enum: DataType
 
         public enum DataType
         {
@@ -1073,7 +1060,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Class: PropWrapper
+        #region class: PropWrapper
 
         /// <summary>
         /// This is a wrapper to one of the items in PropsByPercent._list and an individual property off of that item
@@ -1178,7 +1165,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: FilterArgs
+        #region class: FilterArgs
 
         public class FilterArgs
         {
@@ -1297,7 +1284,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Class: ClassTracker
+        #region class: ClassTracker
 
         /// <summary>
         /// This represents a single item in _list
@@ -1324,7 +1311,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: PropTracker
+        #region class: PropTracker
 
         private class PropTracker
         {
@@ -1345,7 +1332,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Class: PercentTracker
+        #region class: PercentTracker
 
         /// <summary>
         /// This represents a chunk of memory in terms of percentage of its parent.
@@ -1736,7 +1723,7 @@ namespace Game.Newt.v2.GameItems
 
                     return retVal;
 
-                    #endregion
+                #endregion
 
                 default:
                     return 0;
@@ -1774,7 +1761,7 @@ namespace Game.Newt.v2.GameItems
                     Tuple<int, int> jIndex = GetJaggedIndex(jaggedArr, subIndex);
                     return ((Array)jaggedArr.GetValue(jIndex.Item1)).GetValue(jIndex.Item2);
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("Unexpected property: " + name);

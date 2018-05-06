@@ -14,7 +14,7 @@ namespace Game.Newt.v2.GameItems.MapParts
     {
         #region Declaration Section
 
-        public const string PARTTYPE = "Mineral";
+        public const string PARTTYPE = nameof(Mineral);
 
         private static ThreadLocal<SharedVisuals> _sharedVisuals = new ThreadLocal<SharedVisuals>(() => new SharedVisuals());
 
@@ -529,7 +529,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         #endregion
     }
 
-    #region Enum: MineralType
+    #region enum: MineralType
 
     /// <summary>
     /// I tried to list these in order of value
@@ -605,7 +605,7 @@ namespace Game.Newt.v2.GameItems.MapParts
     }
 
     #endregion
-    #region Class: MineralStats
+    #region class: MineralStats
 
     public class MineralStats
     {
@@ -626,7 +626,7 @@ namespace Game.Newt.v2.GameItems.MapParts
     }
 
     #endregion
-    #region Class: MineralDNA
+    #region class: MineralDNA
 
     public class MineralDNA : MapPartDNA
     {

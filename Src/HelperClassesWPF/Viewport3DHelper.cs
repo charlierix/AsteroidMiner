@@ -9,7 +9,7 @@ namespace Game.HelperClassesWPF
 {
     public static class Viewport3DHelper
 	{
-		#region Class: FindResult<T>
+		#region class: FindResult<T>
 
 		public class FindResult<T>
         {

@@ -377,7 +377,6 @@ namespace Game.Newt.v2.Arcanorum
                 if ((bot.PositionWorld - nestPosition).LengthSquared > maxDistanceSq)
                 {
                     _map.RemoveItem(bot, true);
-                    bot.Dispose();
                 }
                 else
                 {
@@ -390,7 +389,7 @@ namespace Game.Newt.v2.Arcanorum
 
         private void Update_AddBot(ArcBotNPC[] currentBots)
         {
-            const double HOMINGRADIUS = 8d;
+            const double HOMINGRADIUS = 20d;
             //const int LEVEL = 1;
 
             if (currentBots.Length >= 2)       //TODO: Get this from DNA
@@ -654,7 +653,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Class: NPCNestDNA
+    #region class: NPCNestDNA
 
     public class NPCNestDNA
     {

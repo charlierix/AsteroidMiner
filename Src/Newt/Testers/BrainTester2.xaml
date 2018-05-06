@@ -79,7 +79,6 @@
                             <Expander IsExpanded="False" Header="Camera">
                                 <Border Style="{StaticResource controlsPanelInExpander}">
                                     <StackPanel Margin="8">
-
                                         <UniformGrid Columns="2">
                                             <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
                                             <TextBox Name="txtCameraSize" Text="1"/>
@@ -90,7 +89,6 @@
                                             <!--<TextBox Name="txtCameraCount" Text="3"/>-->
                                             <TextBox Name="txtCameraCount" Text="1"/>
                                         </UniformGrid>
-
                                     </StackPanel>
                                 </Border>
                             </Expander>
@@ -112,7 +110,6 @@
                             <Expander IsExpanded="False" Header="Dir Controller">
                                 <Border Style="{StaticResource controlsPanelInExpander}">
                                     <StackPanel Margin="8">
-
                                         <UniformGrid Columns="2">
                                             <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
                                             <TextBox Name="txtControllerSize" Text="1"/>
@@ -125,7 +122,6 @@
                                         </UniformGrid>
 
                                         <CheckBox Name="chkDirControllerRandomOrientation" Content="Random orientation" Margin="0,6,0,0"/>
-
                                     </StackPanel>
                                 </Border>
                             </Expander>
@@ -134,7 +130,6 @@
                             <Expander IsExpanded="False" Header="Motor">
                                 <Border Style="{StaticResource controlsPanelInExpander}">
                                     <StackPanel Margin="8">
-
                                         <UniformGrid Columns="2">
                                             <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
                                             <TextBox Name="txtMotorSize" Text="1"/>
@@ -147,7 +142,6 @@
                                         </UniformGrid>
 
                                         <CheckBox Name="chkMotorRandomOrientation" Content="Random orientation" Margin="0,6,0,0"/>
-
                                     </StackPanel>
                                 </Border>
                             </Expander>
@@ -229,7 +223,6 @@
                             </ScrollViewer>
                         </Border>
                     </Expander>
-
                 </Grid>
             </Border>
 

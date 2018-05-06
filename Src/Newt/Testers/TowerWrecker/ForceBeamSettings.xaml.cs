@@ -64,7 +64,7 @@ namespace Game.Newt.Testers.TowerWrecker
 		#endregion
 	}
 
-	#region Class: ForceBeamSettingsArgs
+	#region class: ForceBeamSettingsArgs
 
 	public class ForceBeamSettingsArgs : EventArgs
 	{

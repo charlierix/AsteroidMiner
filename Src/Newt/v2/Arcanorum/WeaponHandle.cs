@@ -580,7 +580,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
     }
 
-    #region Class: WeaponHandleDNA
+    #region class: WeaponHandleDNA
 
     // Multiple handles could be attached together
     //TODO:
@@ -864,7 +864,7 @@ namespace Game.Newt.v2.Arcanorum
 
     #endregion
 
-    #region Enum: WeaponHandleMaterial
+    #region enum: WeaponHandleMaterial
 
     public enum WeaponHandleMaterial
     {
@@ -942,7 +942,7 @@ namespace Game.Newt.v2.Arcanorum
     }
 
     #endregion
-    #region Enum: WeaponHandleType
+    #region enum: WeaponHandleType
 
     public enum WeaponHandleType
     {

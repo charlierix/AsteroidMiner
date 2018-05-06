@@ -30,7 +30,7 @@ namespace Game.Newt.v2.FlyingBeans
     /// </summary>
     public partial class FlyingBeansWindow : Window
     {
-        #region Class: BoundryField
+        #region class: BoundryField
 
         /// <summary>
         /// This will be an inward pointing force near the boundry of the map.  It is a way to slow things down before
@@ -174,7 +174,7 @@ namespace Game.Newt.v2.FlyingBeans
         }
 
         #endregion
-        #region Class: ExplodingBean
+        #region class: ExplodingBean
 
         private class ExplodingBean : ExplosionWithVisual
         {
@@ -192,7 +192,7 @@ namespace Game.Newt.v2.FlyingBeans
         }
 
         #endregion
-        #region Class: SelectedBean
+        #region class: SelectedBean
 
         private class SelectedBean
         {
@@ -230,7 +230,7 @@ namespace Game.Newt.v2.FlyingBeans
 
         #endregion
 
-        #region Enum: ReportLineType
+        #region enum: ReportLineType
 
         private enum ReportLineType
         {
@@ -393,8 +393,7 @@ namespace Game.Newt.v2.FlyingBeans
                 _world = new World();
                 _world.Updating += new EventHandler<WorldUpdatingArgs>(World_Updating);
 
-                List<Point3D[]> innerLines, outerLines;
-                _world.SetCollisionBoundry(out innerLines, out outerLines, _boundryMin, _boundryMax);
+                var boundryLines = _world.SetCollisionBoundry(_boundryMin, _boundryMax);
 
                 // Draw the lines
                 _boundryLines = new ScreenSpaceLines3D(true)
@@ -404,9 +403,9 @@ namespace Game.Newt.v2.FlyingBeans
                 };
                 _viewport.Children.Add(_boundryLines);
 
-                foreach (Point3D[] line in innerLines)
+                foreach (var line in boundryLines.innerLines)
                 {
-                    _boundryLines.AddLine(line[0], line[1]);
+                    _boundryLines.AddLine(line.from, line.to);
                 }
 
                 #endregion
@@ -1424,8 +1423,6 @@ namespace Game.Newt.v2.FlyingBeans
             //_winnerManager.ShipDied(explosion.Bean);		// this was done when creating the explosion
             _map.RemoveItem(explosion.Bean, true);
             //_beans.Remove(explosion.Bean);		// this was done when creating the explosion
-
-            explosion.Bean.Dispose();
         }
         private void DisposeBean(Bean bean)
         {
@@ -1442,9 +1439,8 @@ namespace Game.Newt.v2.FlyingBeans
                 _selectedBean = null;
             }
 
-            _map.RemoveItem(bean, true);
             _beans.Remove(bean);
-            bean.Dispose();
+            _map.RemoveItem(bean, true);
         }
 
         private void FindWinners()

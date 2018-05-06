@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
@@ -18,13 +19,15 @@ using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls2D;
+using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.Testers.Convolution;
+using static Game.HelperClassesAI.SelfOrganizingMapsWPF;
 
 namespace Game.Newt.Testers.SOM
 {
     public partial class SelfOrganizingMapsWindow : Window
     {
-        #region Enum: SimpleColorScheme
+        #region enum: SimpleColorScheme
 
         private enum SimpleColorScheme
         {
@@ -33,7 +36,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: SimpleColorComponent
+        #region enum: SimpleColorComponent
 
         private enum SimpleColorComponent
         {
@@ -46,7 +49,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NodeWeightColor
+        #region enum: NodeWeightColor
 
         private enum NodeWeightColor
         {
@@ -55,7 +58,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NodeDisplayLayout
+        #region enum: NodeDisplayLayout
 
         private enum NodeDisplayLayout
         {
@@ -67,7 +70,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: ImageFilterType
+        #region enum: ImageFilterType
 
         private enum ImageFilterType
         {
@@ -80,7 +83,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Enum: NormalizationType
+        #region enum: NormalizationType
 
         private enum NormalizationType
         {
@@ -91,7 +94,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: ImageInput
+        #region class: ImageInput
 
         private class ImageInput : ISOMInput
         {
@@ -112,7 +115,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: OverlayPolygonStats
+        #region class: OverlayPolygonStats
 
         private class OverlayPolygonStats
         {
@@ -136,7 +139,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: SOMNodeVoronoiSet
+        #region class: SOMNodeVoronoiSet
 
         private class SOMNodeVoronoiSet
         {
@@ -153,7 +156,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: SOMNodeVoronoiCell
+        #region class: SOMNodeVoronoiCell
 
         private class SOMNodeVoronoiCell
         {
@@ -183,7 +186,7 @@ namespace Game.Newt.Testers.SOM
 
         #endregion
 
-        #region Class: VoronoiStats
+        #region class: VoronoiStats
 
         private class VoronoiStats
         {
@@ -193,7 +196,7 @@ namespace Game.Newt.Testers.SOM
         }
 
         #endregion
-        #region Class: VoronoiStats_Node
+        #region class: VoronoiStats_Node
 
         private class VoronoiStats_Node
         {
@@ -202,6 +205,826 @@ namespace Game.Newt.Testers.SOM
             public double Image { get; set; }
             public double Diff { get { return this.Image - this.Area; } }
             public double MinRadius { get; set; }
+        }
+
+        #endregion
+
+        #region class: SquareNodes
+
+        /// <summary>
+        /// This was copied from a tester that wasn't quite finished.  It's kind of a dead end thought, but I didn't want to lose the progress.  So the
+        /// code is still unoptimized and would need some rework to be made final
+        /// </summary>
+        private static class SquareNodes
+        {
+            #region class: SOMTiles
+
+            private class SOMTiles
+            {
+                public Point[] OrigPoints { get; set; }
+                public Point OrigCenter { get; set; }
+                public Color[] Colors { get; set; }
+
+                public SOMPoint[] Points { get; set; }
+            }
+
+            #endregion
+            #region class: SOMPoint
+
+            private class SOMPoint
+            {
+                public Point Position { get; set; }
+                public double Area { get; set; }
+                public double HalfSize { get; set; }
+
+                public Rect ToRect()
+                {
+                    return new Rect(new Point(Position.X - HalfSize, Position.Y - HalfSize), new Point(Position.X + HalfSize, Position.Y + HalfSize));
+                }
+            }
+
+            #endregion
+
+            #region class: RectItem
+
+            private class RectItem
+            {
+                public Rect Rectangle { get; set; }
+                public Rectangle Visual { get; set; }
+                public Vector Velocity { get; set; }
+
+                public double Mass => Rectangle.Width * Rectangle.Height;
+            }
+
+            #endregion
+
+            #region class: RectSet
+
+            private class RectSet
+            {
+                public Rect[] Rectangles { get; set; }
+                public double Ratio { get; set; }
+
+                public int Index_From { get; set; }
+                public int Index_To { get; set; }
+                public int Index_Chosen { get; set; }
+
+                public ScanRectType ScanType { get; set; }
+
+                public double Ratio_From { get; set; }
+                public double Ratio_To { get; set; }
+                public double Ratio_Avg { get; set; }
+                public double Ratio_StdDev { get; set; }
+            }
+
+            #endregion
+            #region enum: ScanRectType
+
+            private enum ScanRectType
+            {
+                SmallestRatio,
+                LargestRatio,
+                AverageRatio,
+            }
+
+            #endregion
+
+            #region Declaration Section
+
+            //private const double DOT = .0015;
+            private const double DOT = .015;
+            private const double LINE = DOT / 2;
+
+            #endregion
+
+            public static void Show(Border border, SOMResult result, Func<SOMNode, Color> getNodeColor, BlobEvents events = null)
+            {
+                const double AREA = 1;     //TODO: May want to calculate the area based on initial positions
+
+                double[] percents = GetPercents(result.InputsByNode.Select(o => o.Length).ToArray());
+
+                Color[] colors = result.Nodes.
+                    Select(o => getNodeColor(o)).
+                    ToArray();
+
+                #region create tiles
+
+                Point[] origPoints = result.Nodes.
+                        Select(o => o.Position.ToPoint()).
+                        ToArray();
+
+                SOMTiles tilesOrig = new SOMTiles()
+                {
+                    Colors = colors,
+
+                    OrigPoints = origPoints,
+                    OrigCenter = Math2D.GetCenter(origPoints),
+
+                    Points = result.Nodes.
+                        Select((o, i) =>
+                        {
+                            double area = AREA * percents[i];
+
+                            return new SOMPoint()
+                            {
+                                Position = o.Position.ToPoint(),
+                                Area = area,
+                                HalfSize = Math.Sqrt(area) / 2d,
+                            };
+                        }).
+                        ToArray(),
+                };
+
+                #endregion
+                #region convert to RectItems
+
+                RectItem[] rects = Enumerable.Range(0, origPoints.Length).
+                    Select(o => GetRekt(tilesOrig.Points[o].Position, tilesOrig.Points[o].HalfSize * 2)).
+                    Select(o => new RectItem() { Rectangle = o }).
+                    ToArray();
+
+                #endregion
+
+                #region iterate
+
+                double areaRects = rects.Sum(o => o.Rectangle.Width * o.Rectangle.Height);
+
+                Rect[][] runs = new Rect[200][];
+                //Rect[][] runs = new Rect[10][];
+                double[] ratios = new double[runs.Length];
+
+                for (int cntr = 0; cntr < runs.Length; cntr++)
+                {
+                    if (cntr > 0)
+                    {
+                        Iterate1(rects, 1);
+                    }
+
+                    runs[cntr] = rects.
+                        Select(o => o.Rectangle).
+                        ToArray();
+
+                    Rect aabb = Math2D.GetAABB(runs[cntr]);
+
+                    double areaAABB = aabb.Width * aabb.Height;
+                    ratios[cntr] = areaAABB / areaRects;
+
+                    //ShowRectSet(runs, ratios, cntr, colors);
+                }
+
+                #endregion
+
+                //ShowRectSets(runs, ratios, 9, 10, colors);
+                //ShowRectSets(runs, ratios, 49, 10, colors);
+                //ShowRectSets(runs, ratios, 99, 50, colors);
+                //ShowRectSets(runs, ratios, 199, 200, colors);
+
+                RectSet best = ChooseRectSet(runs, ratios, runs.Length - 1, (runs.Length * .75).ToInt_Ceiling(), ScanRectType.SmallestRatio);
+
+                // Draw
+                Vector size = new Vector(border.ActualWidth - border.Padding.Left - border.Padding.Right, border.ActualHeight - border.Padding.Top - border.Padding.Bottom);
+
+                Canvas canvas = DrawSquares(best, colors, result.Nodes, result.InputsByNode, size.X.ToInt_Floor(), size.Y.ToInt_Floor(), events);
+
+                border.Child = canvas;
+            }
+
+            #region Private Methods
+
+            private static void Iterate1(RectItem[] rectangles, double elapsedTime)
+            {
+                const double G = .005;
+                const double JOSTLE = .0005;
+                const double TOWARDCENTERMULT = .05;
+                const double TOWARDORIGINMULT = -.5;
+
+                Point center = Math2D.GetCenter(rectangles.Select(o => o.Rectangle.Center()));
+
+                #region forces
+
+                Vector[] forces = new Vector[rectangles.Length];
+
+                for (int cntr = 0; cntr < rectangles.Length; cntr++)
+                {
+                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit(false) * TOWARDCENTERMULT;
+                    forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center) * TOWARDCENTERMULT;
+
+                    //forces[cntr] += Math3D.GetRandomVector_Circular(JOSTLE).ToVector2D();     // this doesn't seem to help as much as I thought it would.  I thought they would get stuck and a little shaking around would make them settle in tighter
+                }
+
+                foreach (var pair in UtilityCore.GetPairs(rectangles.Length))
+                {
+                    Vector link = rectangles[pair.Item2].Rectangle.Center() - rectangles[pair.Item1].Rectangle.Center();
+
+                    double strength = (G * rectangles[pair.Item1].Mass * rectangles[pair.Item2].Mass) / link.LengthSquared;
+
+                    link = link.ToUnit(false) * strength;
+
+                    forces[pair.Item1] += link;
+                    forces[pair.Item2] -= link;
+                }
+
+                #endregion
+
+                #region velocities
+
+                Vector offset = center.ToVector() * TOWARDORIGINMULT;
+
+                for (int cntr = 0; cntr < rectangles.Length; cntr++)
+                {
+                    Vector accel = forces[cntr] / rectangles[cntr].Mass;
+                    Point position = rectangles[cntr].Rectangle.Center() + (accel * elapsedTime);
+
+                    position += offset;
+
+                    rectangles[cntr].Rectangle = GetRekt(position, rectangles[cntr].Rectangle);
+                }
+
+                #endregion
+
+                #region pull apart intersecting
+
+                bool foundOne = false;
+
+                do
+                {
+                    foundOne = false;
+
+                    foreach (var pair in UtilityCore.GetPairs(rectangles.Length))
+                    {
+                        Rect r1 = rectangles[pair.Item1].Rectangle;
+                        Rect r2 = rectangles[pair.Item2].Rectangle;
+
+                        if (PullApart(ref r1, ref r2))
+                        {
+                            foundOne = true;
+
+                            rectangles[pair.Item1].Rectangle = r1;
+                            rectangles[pair.Item2].Rectangle = r2;
+
+                            rectangles[pair.Item1].Velocity = new Vector();
+                            rectangles[pair.Item2].Velocity = new Vector();
+                        }
+                    }
+                } while (foundOne);
+
+                #endregion
+
+                #region visuals
+
+                foreach (RectItem item in rectangles)
+                {
+                    if (item.Visual != null)
+                    {
+                        Canvas.SetLeft(item.Visual, item.Rectangle.Left);
+                        Canvas.SetTop(item.Visual, item.Rectangle.Top);
+                    }
+                }
+
+                #endregion
+            }
+            private static void Iterate1_draw(RectItem[] rectangles, double elapsedTime)
+            {
+                const double G = .005;
+                const double JOSTLE = .0005;
+                const double TOWARDCENTERMULT = .05;
+                const double TOWARDORIGINMULT = -.5;
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Background = UtilityWPF.BrushFromHex("335"),
+                };
+
+                Point center = Math2D.GetCenter(rectangles.Select(o => o.Rectangle.Center()));
+
+                window.AddDot(center.ToPoint3D(), DOT, Colors.Red);
+
+                foreach (Rect rectangle in rectangles.Select(o => o.Rectangle))
+                {
+                    window.AddDot(rectangle.Center().ToPoint3D(), DOT, Colors.Gray);
+                }
+
+                #region forces
+
+                Vector[] forces = new Vector[rectangles.Length];
+
+                for (int cntr = 0; cntr < rectangles.Length; cntr++)
+                {
+                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit(false) * TOWARDCENTERMULT;
+                    forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center) * TOWARDCENTERMULT;
+
+                    //forces[cntr] += Math3D.GetRandomVector_Circular(JOSTLE).ToVector2D();     // this doesn't seem to help as much as I thought it would.  I thought they would get stuck and a little shaking around would make them settle in tighter
+                }
+
+                foreach (var pair in UtilityCore.GetPairs(rectangles.Length))
+                {
+                    Vector link = rectangles[pair.Item2].Rectangle.Center() - rectangles[pair.Item1].Rectangle.Center();
+
+                    double strength = (G * rectangles[pair.Item1].Mass * rectangles[pair.Item2].Mass) / link.LengthSquared;
+
+                    link = link.ToUnit(false) * strength;
+
+                    forces[pair.Item1] += link;
+                    forces[pair.Item2] -= link;
+                }
+
+                for (int cntr = 0; cntr < forces.Length; cntr++)
+                {
+                    window.AddLine(rectangles[cntr].Rectangle.Center().ToPoint3D(), rectangles[cntr].Rectangle.Center().ToPoint3D() + forces[cntr].ToVector3D(), LINE, Colors.Chartreuse);
+                }
+
+                #endregion
+
+                #region velocities
+
+                Vector offset = center.ToVector() * TOWARDORIGINMULT;
+
+                for (int cntr = 0; cntr < rectangles.Length; cntr++)
+                {
+                    Vector accel = forces[cntr] / rectangles[cntr].Mass;
+                    Point position = rectangles[cntr].Rectangle.Center() + (accel * elapsedTime);
+
+                    position += offset;
+
+                    window.AddDot(position.ToPoint3D(), DOT, Colors.Silver);
+
+                    rectangles[cntr].Rectangle = GetRekt(position, rectangles[cntr].Rectangle);
+
+                    window.AddDot(rectangles[cntr].Rectangle.Center().ToPoint3D(), DOT, Colors.White);
+                }
+
+                #endregion
+
+                #region pull apart intersecting
+
+                bool foundOne = false;
+
+                do
+                {
+                    foundOne = false;
+
+                    foreach (var pair in UtilityCore.GetPairs(rectangles.Length))
+                    {
+                        Rect r1 = rectangles[pair.Item1].Rectangle;
+                        Rect r2 = rectangles[pair.Item2].Rectangle;
+
+                        if (PullApart(ref r1, ref r2))
+                        {
+                            foundOne = true;
+
+                            rectangles[pair.Item1].Rectangle = r1;
+                            rectangles[pair.Item2].Rectangle = r2;
+
+                            rectangles[pair.Item1].Velocity = new Vector();
+                            rectangles[pair.Item2].Velocity = new Vector();
+                        }
+                    }
+                } while (foundOne);
+
+                #endregion
+
+                #region visuals
+
+                foreach (RectItem item in rectangles)
+                {
+                    if (item.Visual != null)
+                    {
+                        Canvas.SetLeft(item.Visual, item.Rectangle.Left);
+                        Canvas.SetTop(item.Visual, item.Rectangle.Top);
+                    }
+                }
+
+                #endregion
+
+                foreach (Rect rectangle in rectangles.Select(o => o.Rectangle))
+                {
+                    //window.AddDot(rectangle.Center().ToPoint3D(), DOT, Colors.DodgerBlue);
+                }
+
+                window.Show();
+            }
+
+            private static bool PullApart(ref Rect rect1, ref Rect rect2, double mult = 1.0001)
+            {
+                if (!rect1.IntersectsWith(rect2))
+                {
+                    return false;
+                }
+
+                //Debug3DWindow window = new Debug3DWindow()
+                //{
+                //    Background = UtilityWPF.BrushFromHex("353"),
+                //};
+
+                //Color[] colors = UtilityWPF.GetRandomColors(2, 100, 200);
+                //window.AddSquare(rect1, colors[0]);
+                //window.AddDot(rect1.Center().ToPoint3D(), DOT, colors[0]);
+                //window.AddSquare(rect2, colors[1]);
+                //window.AddDot(rect2.Center().ToPoint3D(), DOT, colors[1]);
+
+                Point pos1 = rect1.Center();
+                Point pos2 = rect2.Center();
+
+                Vector direction = pos1.IsNearValue(pos2) ?
+                    Math3D.GetRandomVector_Circular_Shell(1).ToVector2D() :
+                    (pos2 - pos1).ToUnit(false);
+
+                Vector directionRay = direction * (rect1.Width + rect2.Width + rect1.Height * rect2.Height);        // making it guaranteed longer than the rectangles
+
+                //window.AddLine(pos1.ToPoint3D(), (pos1 + directionRay).ToPoint3D(), LINE, Colors.Chartreuse);
+
+                double halfWidth = (rect1.Width + rect2.Width) / 2;
+                double halfHeight = (rect1.Height + rect2.Height) / 2;
+
+                var edges = new[]
+                {
+                    (new Point(pos1.X - halfWidth, pos1.Y - halfHeight), new Point(pos1.X + halfWidth, pos1.Y - halfHeight)),
+                    (new Point(pos1.X + halfWidth, pos1.Y - halfHeight), new Point(pos1.X + halfWidth, pos1.Y + halfHeight)),
+                    (new Point(pos1.X + halfWidth, pos1.Y + halfHeight), new Point(pos1.X - halfWidth, pos1.Y + halfHeight)),
+                    (new Point(pos1.X - halfWidth, pos1.Y + halfHeight), new Point(pos1.X - halfWidth, pos1.Y - halfHeight)),
+                };
+
+                //window.AddLines(edges.Select(o => (o.Item1.ToPoint3D(), o.Item2.ToPoint3D())), LINE, Colors.Silver);
+
+                var intersect = edges.
+                    Select(o => Math2D.GetIntersection_LineSegment_LineSegment(pos1, pos1 + directionRay, o.Item1, o.Item2)).
+                    Where(o => o != null).
+                    First();
+
+                //window.AddDot(intersect.Value.ToPoint3D(), DOT, Colors.Chartreuse);
+
+                Vector displacement = intersect.Value - pos1;
+
+                //Point mid = pos1 + (displacement * .5);
+
+                //window.AddDot(mid.ToPoint3D(), DOT, Colors.Chartreuse);
+
+                double area1 = rect1.Width * rect1.Height;
+                double area2 = rect2.Width * rect2.Height;
+
+                double percent1 = area1 / (area1 + area2);
+                double percent2 = 1d - percent1;
+
+                Point mid2 = pos1 + (displacement * percent1);
+                //window.AddDot(mid2.ToPoint3D(), DOT, Colors.HotPink);
+
+                displacement *= mult;
+
+                rect1 = GetRekt(mid2 - (displacement * percent1), rect1);
+                rect2 = GetRekt(mid2 + (displacement * percent2), rect2);
+
+                //colors = colors.
+                //    Select(o => UtilityWPF.AlphaBlend(Colors.White, o, .5)).
+                //    ToArray();
+
+                //double z = DOT * -.1;
+                //window.AddSquare(rect1, colors[0], z: z);
+                //window.AddDot(rect1.Center().ToPoint3D(z), DOT, colors[0]);
+                //window.AddSquare(rect2, colors[1], z: z);
+                //window.AddDot(rect2.Center().ToPoint3D(z), DOT, colors[1]);
+
+                //window.Show();
+
+                return true;
+            }
+
+            private static double[] GetPercents(int[] counts)
+            {
+                const double MINPERCENT = .1;
+
+                // If the number of items is 2, then the best this function can do is 1/3.  If 3 items, it's 1/5 : 1/(2n-1)
+                // Aesthetically, I'm shooting for the smallest item to be 10%, but for large lists, that's too high
+                double minPercent = Math.Min(.1, .95d / ((2d * counts.Length) - 1d));        // take the smallest possible times .95 so that the finder function doesn't work forever trying to reach an asymptote
+
+                int min = counts.Min();
+                if (min == 0)        // min should never be zero.  If it is, just pretend it's one
+                {
+                    min = 1;
+                }
+
+                int total = counts.Sum();
+
+                double percent = min.ToDouble() / total.ToDouble();
+
+                if (min == 0 || percent > MINPERCENT)
+                {
+                    // No adjustments needed
+                    return counts.
+                        Select(o => o.ToDouble() / total.ToDouble()).
+                        ToArray();
+                }
+
+                int max = counts.Max();
+
+                double max_min_ratio = max.ToDouble() / min.ToDouble();
+
+                var getPercents = new Func<double, (double[] percents, double min)>(mult =>
+                {
+                    int offset = (max_min_ratio * mult).ToInt_Ceiling();
+
+                    int[] adjustedCounts = counts.
+                        Select(o => o + offset).
+                        ToArray();
+
+                    int adjustedTotal = counts.Sum();
+
+                    double[] retVal = adjustedCounts.
+                        Select(o => o.ToDouble() / total.ToDouble()).
+                        ToArray();
+
+                    return (retVal, retVal.Min());
+                });
+
+
+                var getMinArea = new Func<double, double>(mult =>
+                {
+                    return getPercents(mult).min;
+                });
+
+                double multFinal = Math1D.GetInputForDesiredOutput_PosInput_PosCorrelation(MINPERCENT, MINPERCENT / 100, getMinArea);
+
+                return getPercents(multFinal).percents;
+            }
+
+            private static Rect GetRekt(Point center, Rect prev)
+            {
+                return new Rect(center.X - (prev.Width / 2), center.Y - (prev.Height / 2), prev.Width, prev.Height);
+            }
+            private static Rect GetRekt(Point center, double size)
+            {
+                double halfSize = size / 2;
+
+                return new Rect(center.X - halfSize, center.Y - halfSize, size, size);
+            }
+            private static Rect GetRekt(Point center, double sizeX, double sizeY)
+            {
+                return new Rect(center.X - (sizeX / 2), center.Y - (sizeY / 2), sizeX, sizeY);
+            }
+
+            private static void ShowRectSet(Rect[][] runs, double[] ratios, int index, Color[] colors)
+            {
+                RectSet set = ChooseRectSet(runs, ratios, index, 1, ScanRectType.SmallestRatio);
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Title = $"set {index}",
+                };
+
+                var aabb = Math2D.GetAABB(set.Rectangles);      // this is the largest set, so use it's bounding box
+
+                ShowRectSets_Set(window, set, aabb, new Point(0, 0), colors);
+
+                window.Show();
+            }
+            private static void ShowRectSets(Rect[][] runs, double[] ratios, int upTo, int scanCount, Color[] colors)
+            {
+                RectSet min = ChooseRectSet(runs, ratios, upTo, scanCount, ScanRectType.SmallestRatio);
+                RectSet avg = ChooseRectSet(runs, ratios, upTo, scanCount, ScanRectType.AverageRatio);
+                RectSet max = ChooseRectSet(runs, ratios, upTo, scanCount, ScanRectType.LargestRatio);
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Title = string.Format("{0} - {1}", upTo - scanCount, upTo),
+                };
+
+                //TODO: show some stats as text
+
+
+                var aabb = Math2D.GetAABB(max.Rectangles);      // this is the largest set, so use it's bounding box
+                double cellSize = Math.Max(aabb.Width, aabb.Height);
+
+                var cells = Math2D.GetCells_InvertY(cellSize, 3, 1, cellSize * .1);
+
+                ShowRectSets_Set(window, min, cells[0].rect, cells[0].center, colors);
+                ShowRectSets_Set(window, avg, cells[1].rect, cells[1].center, colors);
+                ShowRectSets_Set(window, max, cells[2].rect, cells[2].center, colors);
+
+                window.Show();
+            }
+            private static void ShowRectSets_Set(Debug3DWindow window, RectSet set, Rect bounds, Point drawCenter, Color[] colors)
+            {
+                #region tiles
+
+                for (int cntr = 0; cntr < set.Rectangles.Length; cntr++)
+                {
+                    Point position = drawCenter + set.Rectangles[cntr].Center().ToVector();
+
+                    window.AddSquare(position, set.Rectangles[cntr].Width, set.Rectangles[cntr].Height, colors[cntr]);
+                    window.AddDot(position.ToPoint3D(), DOT, colors[cntr]);
+                }
+
+                #endregion
+
+                #region ideal box
+
+                double halfSize2 = Math.Sqrt(set.Rectangles.Sum(o => o.Width * o.Height)) / 2d;
+
+                window.AddLines(
+                    new[]
+                    {
+                    (new Point3D(drawCenter.X - halfSize2, drawCenter.Y - halfSize2,0), new Point3D(drawCenter.X + halfSize2, drawCenter.Y - halfSize2, 0)),
+                    (new Point3D(drawCenter.X + halfSize2, drawCenter.Y - halfSize2,0), new Point3D(drawCenter.X + halfSize2, drawCenter.Y + halfSize2, 0)),
+                    (new Point3D(drawCenter.X + halfSize2, drawCenter.Y + halfSize2,0), new Point3D(drawCenter.X - halfSize2, drawCenter.Y + halfSize2, 0)),
+                    (new Point3D(drawCenter.X - halfSize2, drawCenter.Y + halfSize2,0), new Point3D(drawCenter.X - halfSize2, drawCenter.Y - halfSize2, 0)),
+                    },
+                    LINE,
+                    Colors.Gray);
+
+                #endregion
+
+                #region center of position
+
+                Point centerAll = Math2D.GetCenter(set.Rectangles.Select(o => o.Center()));
+
+                window.AddDot((drawCenter + centerAll.ToVector()).ToPoint3D(), DOT * 2, Colors.Red);
+
+                window.AddLines(
+                    set.Rectangles.Select(o => ((drawCenter + centerAll.ToVector()).ToPoint3D(), (drawCenter + o.Center().ToVector()).ToPoint3D())),
+                    LINE,
+                    Colors.Red);
+
+                #endregion
+            }
+
+            private static RectSet ChooseRectSet(Rect[][] runs, double[] ratios, int upTo, int scanCount, ScanRectType scanType)
+            {
+                int from = Math.Max(0, (upTo - scanCount));
+
+                IEnumerable<int> indices = Enumerable.Range(from, upTo - from + 1);
+
+                var avg_stddev = Math1D.Get_Average_StandardDeviation(indices.Select(o => ratios[o]));
+
+                int index = -1;
+                switch (scanType)
+                {
+                    case ScanRectType.SmallestRatio:
+                        #region smallest
+
+                        index = indices.
+                            Select(o => new
+                            {
+                                Index = o,
+                                Ratio = ratios[o],
+                            }).
+                            OrderBy(o => o.Ratio).
+                            First().
+                            Index;
+
+                        #endregion
+                        break;
+
+                    case ScanRectType.LargestRatio:
+                        #region largest
+
+                        index = indices.
+                            Select(o => new
+                            {
+                                Index = o,
+                                Ratio = ratios[o],
+                            }).
+                            OrderByDescending(o => o.Ratio).
+                            First().
+                            Index;
+
+                        #endregion
+                        break;
+
+                    case ScanRectType.AverageRatio:
+                        #region avg
+
+                        index = indices.
+                            Select(o => new
+                            {
+                                Index = o,
+                                RatioDist = Math.Abs(ratios[o] - avg_stddev.Item1),
+                            }).
+                            OrderBy(o => o.RatioDist).
+                            First().
+                            Index;
+
+                        #endregion
+                        break;
+
+                    default:
+                        throw new ApplicationException($"Unknown {nameof(ScanRectType)}: {scanType}");
+                }
+
+                return new RectSet()
+                {
+                    Index_Chosen = index,
+                    Ratio = ratios[index],
+                    Rectangles = runs[index],
+
+                    Index_From = from,
+                    Index_To = upTo,
+
+                    Ratio_From = ratios[from],
+                    Ratio_To = ratios[upTo],
+                    Ratio_Avg = avg_stddev.Item1,
+                    Ratio_StdDev = avg_stddev.Item2,
+
+                    ScanType = scanType,
+                };
+            }
+
+            private static Canvas DrawSquares(RectSet set, Color[] colors, SOMNode[] nodes, ISOMInput[][] inputsByNode, int imageWidth, int imageHeight, BlobEvents events)
+            {
+                const double MARGINPERCENT = 1.05;
+
+                #region transform
+
+                Rect aabbR = Math2D.GetAABB(set.Rectangles);
+                (Point min, Point max) aabb = ((aabbR.TopLeft.ToVector() * MARGINPERCENT).ToPoint(), (aabbR.BottomRight.ToVector() * MARGINPERCENT).ToPoint());
+
+                TransformGroup transform = new TransformGroup();
+                transform.Children.Add(new TranslateTransform(-aabb.min.X, -aabb.min.Y));
+                transform.Children.Add(new ScaleTransform(imageWidth / (aabb.max.X - aabb.min.X), imageHeight / (aabb.max.Y - aabb.min.Y)));
+
+                #endregion
+
+                Canvas retVal = new Canvas();
+                retVal.Effect = new DropShadowEffect()
+                {
+                    Color = Colors.Gray,
+                    Opacity = .2,
+                    BlurRadius = 5,
+                    Direction = 0,
+                    ShadowDepth = 0,
+                };
+
+                for (int cntr = 0; cntr < set.Rectangles.Length; cntr++)
+                {
+                    #region rectangle
+
+                    Point topLeft = transform.Transform(set.Rectangles[cntr].TopLeft);
+                    Point bottomRight = transform.Transform(set.Rectangles[cntr].BottomRight);
+
+                    Rectangle rectangle = new Rectangle()
+                    {
+                        Fill = new SolidColorBrush(colors[cntr]),
+                        Stroke = null, // new SolidColorBrush(UtilityWPF.OppositeColor(colors[cntr], false));
+                        StrokeThickness = 1,
+                        Width = bottomRight.X - topLeft.X,
+                        Height = bottomRight.Y - topLeft.Y,
+                        Tag = Tuple.Create(events, nodes[cntr], inputsByNode[cntr]),
+                    };
+
+                    if (events != null)
+                    {
+                        if (events.MouseMove != null && events.MouseLeave != null)
+                        {
+                            rectangle.MouseMove += SelfOrganizingMapsWPF.Polygon2D_MouseMove;
+                            rectangle.MouseLeave += SelfOrganizingMapsWPF.Polygon2D_MouseLeave;
+                        }
+
+                        if (events.Click != null)
+                        {
+                            rectangle.MouseUp += SelfOrganizingMapsWPF.Polygon_MouseUp;
+                        }
+                    }
+
+                    Canvas.SetLeft(rectangle, topLeft.X);
+                    Canvas.SetTop(rectangle, topLeft.Y);
+
+                    retVal.Children.Add(rectangle);
+
+                    #endregion
+                }
+
+                return retVal;
+            }
+
+            private static Point[] ResizeConvexPolygon(Point[] polygon, double newArea)
+            {
+                Point center = Math2D.GetCenter(polygon);
+
+                // Create a delagate that returns the area of the polygon based on the percent size
+                Func<double, double> getOutput = new Func<double, double>(o =>
+                {
+                    Point[] polyPoints = GetPolygon(center, polygon, o);
+                    return Math2D.GetAreaPolygon(polyPoints);
+                });
+
+                // Find a percent that returns the desired area
+                double percent = Math1D.GetInputForDesiredOutput_PosInput_PosCorrelation(newArea, newArea * .01, getOutput);
+
+                // Return the sized polygon
+                return GetPolygon(center, polygon, percent);
+            }
+
+            private static Point[] GetPolygon(Point center, Point[] polygon, double percent)
+            {
+                return polygon.
+                    Select(o =>
+                    {
+                        Vector displace = o - center;
+                        displace *= percent;
+                        return center + displace;
+                    }).
+                    ToArray();
+            }
+
+            #endregion
         }
 
         #endregion
@@ -342,7 +1165,7 @@ namespace Game.Newt.Testers.SOM
             }
         }
 
-        private void Polygon_MouseMove(Polygon poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
+        private void Polygon_MouseMove(Shape poly, SOMNode node, ISOMInput[] inputs, MouseEventArgs e)
         {
             try
             {
@@ -427,7 +1250,7 @@ namespace Game.Newt.Testers.SOM
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void Polygon_Click(Polygon sender, SOMNode node, ISOMInput[] images, MouseEventArgs e)
+        private void Polygon_Click(Shape sender, SOMNode node, ISOMInput[] images, MouseEventArgs e)
         {
             try
             {
@@ -576,6 +1399,10 @@ namespace Game.Newt.Testers.SOM
                     double maxSpreadPercent = trkConvMaxSpread.Value / 100d;
 
                     DoConvolution2(inputs, maxSpreadPercent, 4);
+                }
+                else if (chkAlternateSplit.IsChecked.Value)
+                {
+                    DoConvolution3(inputs);
                 }
                 else
                 {
@@ -849,7 +1676,14 @@ namespace Game.Newt.Testers.SOM
 
             var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, Polygon_Click);
 
-            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            if (chkSquareRegions.IsChecked.Value)
+            {
+                SquareNodes.Show(panelDisplay, result, getNodeColor, events);
+            }
+            else
+            {
+                SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            }
 
             // This is for the manual manipulate buttons
             _nodes = result.Nodes;
@@ -866,7 +1700,38 @@ namespace Game.Newt.Testers.SOM
 
             var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
 
-            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            if (chkSquareRegions.IsChecked.Value)
+            {
+                SquareNodes.Show(panelDisplay, result, getNodeColor, events);
+            }
+            else
+            {
+                SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            }
+
+            // This is for the manual manipulate buttons
+            _nodes = result.Nodes;
+            _imagesByNode = result.InputsByNode;
+            _wasEllipseTransferred = false;
+        }
+        private void DoConvolution3(ImageInput[] inputs)
+        {
+            SOMRules rules = GetSOMRules();
+
+            SOMResult result = SelfOrganizingMaps.Train(inputs, rules, true);
+
+            var getNodeColor = chkRandomNodeColors.IsChecked.Value ? _getNodeColor_Random : SelfOrganizingMapsWPF.GetNodeColor;
+
+            var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, null);
+
+            if (chkSquareRegions.IsChecked.Value)
+            {
+                SquareNodes.Show(panelDisplay, result, getNodeColor, events);
+            }
+            else
+            {
+                SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            }
 
             // This is for the manual manipulate buttons
             _nodes = result.Nodes;
@@ -1025,7 +1890,14 @@ namespace Game.Newt.Testers.SOM
 
             var events = new SelfOrganizingMapsWPF.BlobEvents(Polygon_MouseMove, Polygon_MouseLeave, Polygon_Click);
 
-            SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            if (chkSquareRegions.IsChecked.Value)
+            {
+                SquareNodes.Show(panelDisplay, result, getNodeColor, events);
+            }
+            else
+            {
+                SelfOrganizingMapsWPF.ShowResults2D_Blobs(panelDisplay, result, getNodeColor, events);
+            }
 
             // This is for the manual manipulate buttons
             _nodes = result.Nodes;
@@ -1652,7 +2524,7 @@ namespace Game.Newt.Testers.SOM
         #endregion
     }
 
-    #region Class: SelfOrganizingMapsOptions
+    #region class: SelfOrganizingMapsOptions
 
     /// <summary>
     /// This gets serialized to file

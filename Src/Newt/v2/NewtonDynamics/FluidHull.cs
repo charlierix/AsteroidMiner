@@ -12,7 +12,7 @@ namespace Game.Newt.v2.NewtonDynamics
 {
     public class FluidHull
     {
-        #region Class: FluidTriangle
+        #region class: FluidTriangle
 
         public class FluidTriangle : TriangleIndexed
         {

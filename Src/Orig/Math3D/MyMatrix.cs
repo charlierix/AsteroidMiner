@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Game.Orig.Math3D
 {
-    #region Class: Matrix3
+    #region class: Matrix3
 
     /// <summary>
     /// This is equivelent to System.Windows.Media.Matrix
@@ -276,7 +276,7 @@ namespace Game.Orig.Math3D
 
     #endregion
 
-    #region Class: Matrix4
+    #region class: Matrix4
 
     /// <summary>
     /// This is not complete, but I don't want to lose the definition
