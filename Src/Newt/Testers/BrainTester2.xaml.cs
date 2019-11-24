@@ -665,7 +665,7 @@ namespace Game.Newt.Testers
                     Select(o =>
                     {
                         double distanceFromOrigin = o.Length;
-                        return o.ToUnit(false) * projectToWorld_NonLinear(distanceFromOrigin);
+                        return o.ToUnit() * projectToWorld_NonLinear(distanceFromOrigin);
                     }).
                     ToArray();
 
@@ -1639,7 +1639,6 @@ namespace Game.Newt.Testers
             const double OFFSET = 1.5d;
 
             double offset2 = ((.1d - HEIGHT) / 2d) + HEIGHT;
-            //double offset2 = 
 
             ShipPartDNA dnaEnergy = new ShipPartDNA()
             {
@@ -1907,7 +1906,7 @@ namespace Game.Newt.Testers
                 motors[cntr].ImpulseEngine = new ImpulseEngine(_editorOptions, _itemOptions, dna[cntr], _containers?.Plasma);
                 motors[cntr].ImpulseEngine.RequestWorldLocation += new EventHandler<PartRequestWorldLocationArgs>(Body_RequestWorldLocation);
 
-                #region Ship Visual
+                #region ship visual
 
                 // WPF
                 ModelVisual3D visual = new ModelVisual3D();
@@ -1928,7 +1927,7 @@ namespace Game.Newt.Testers
                 }
 
                 #endregion
-                #region Debug Visuals
+                #region debug visuals
 
                 //_gravSensors[cntr].Gravity = new ScreenSpaceLines3D();
                 //_gravSensors[cntr].Gravity.Thickness = 2d;
@@ -1937,7 +1936,7 @@ namespace Game.Newt.Testers
                 //_viewportNeural.Children.Add(_gravSensors[cntr].Gravity);
 
                 #endregion
-                #region Neuron Visuals
+                #region neuron visuals
 
                 //NOTE: Since the neurons are semitransparent, they need to be added last
 

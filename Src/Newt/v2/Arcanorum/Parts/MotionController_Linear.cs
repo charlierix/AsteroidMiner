@@ -24,7 +24,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -72,11 +72,11 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
-            return SensorVisionDesign.CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
+            return MotionController2Design.CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            return SensorVisionDesign.GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
+            return MotionController2Design.GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
         }
 
         public override PartToolItemBase GetToolItem()
@@ -115,8 +115,8 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             #endregion
 
-            double radius = ((this.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY)) / 2d;
-            double height = this.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z;
+            double radius = ((this.Scale.X * MotionController2Design.SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * MotionController2Design.SIZEPERCENTOFSCALE_XY)) / 2d;
+            double height = this.Scale.Z * MotionController2Design.SIZEPERCENTOFSCALE_Z;
             double halfHeight = height / 2d;
 
             Model3DGroup retVal = new Model3DGroup();
@@ -215,7 +215,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
             this.Design.SetDNA(dna);
 
             double radius, volume;
-            SensorVision.GetMass(out _mass, out volume, out radius, out _scaleActual, dna, itemOptions);
+            MotionController2.GetMass(out _mass, out volume, out radius, out _scaleActual, dna, itemOptions);
 
             this.Radius = radius;
 

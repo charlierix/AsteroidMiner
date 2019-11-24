@@ -2,10 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Game.HelperClassesCore
 {
@@ -34,18 +32,36 @@ namespace Game.HelperClassesCore
 
         #endregion
 
-        #region double
+        #region long
 
-        public static bool IsNearZero(this double item)
+        /// <summary>
+        /// This just does Convert.ToDouble().  It doesn't save much typing, but feels more natural
+        /// </summary>
+        public static double ToDouble(this long value)
         {
-            return Math.Abs(item) <= UtilityCore.NEARZERO;
+            return Convert.ToDouble(value);
         }
 
-        // I really wanted to be able to define my own operator :(
-        //      =~
-        public static bool IsNearValue(this double item, double compare)
+        public static byte ToByte(this long value)
         {
-            return item >= compare - UtilityCore.NEARZERO && item <= compare + UtilityCore.NEARZERO;
+            if (value < 0) value = 0;
+            else if (value > 255) value = 255;
+
+            return Convert.ToByte(value);
+        }
+
+        #endregion
+
+        #region double
+
+        public static bool IsNearZero(this double item, double threshold = UtilityCore.NEARZERO)
+        {
+            return Math.Abs(item) <= threshold;
+        }
+
+        public static bool IsNearValue(this double item, double compare, double threshold = UtilityCore.NEARZERO)
+        {
+            return item >= compare - threshold && item <= compare + threshold;
         }
 
         public static bool IsInvalid(this double item)
@@ -99,6 +115,28 @@ namespace Game.HelperClassesCore
 
         #endregion
 
+        #region decimal
+
+        /// <summary>
+        /// This is useful for displaying a double value in a textbox when you don't know the range (could be
+        /// 1000001 or .1000001 or 10000.5 etc)
+        /// </summary>
+        public static string ToStringSignificantDigits(this decimal value, int significantDigits)
+        {
+            int numDecimals = GetNumDecimals(value);
+
+            if (numDecimals < 0)
+            {
+                return ToStringSignificantDigits_PossibleScientific(value, significantDigits);
+            }
+            else
+            {
+                return ToStringSignificantDigits_Standard(value, significantDigits, true);
+            }
+        }
+
+        #endregion
+
         #region string
 
         /// <summary>
@@ -120,12 +158,48 @@ namespace Game.HelperClassesCore
             }
         }
 
+        public static string ToInvert(this string text)
+        {
+            char[] inverted = text.ToCharArray();
+
+            for (int cntr = 0; cntr < inverted.Length; cntr++)
+            {
+                if (char.IsLetter(inverted[cntr]))
+                {
+                    if (char.IsUpper(inverted[cntr]))
+                    {
+                        inverted[cntr] = char.ToLower(inverted[cntr]);
+                    }
+                    else
+                    {
+                        inverted[cntr] = char.ToUpper(inverted[cntr]);
+                    }
+                }
+            }
+
+            return new string(inverted);
+        }
+
         /// <summary>
         /// This is a string.Join, but written to look like a linq statement
         /// </summary>
         public static string ToJoin(this IEnumerable<string> strings, string separator)
         {
             return string.Join(separator, strings);
+        }
+
+        public static bool In_ignorecase(this string value, params string[] compare)
+        {
+            if (compare == null)
+            {
+                return false;
+            }
+            else if (value == null)
+            {
+                return compare.Any(o => o == null);
+            }
+
+            return compare.Any(o => value.Equals(o, StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion
@@ -168,10 +242,10 @@ namespace Game.HelperClassesCore
         /// Got this here:
         /// http://www.claassen.net/geek/blog/2009/06/searching-tree-of-objects-with-linq.html
         /// 
-        /// Ex (assuming Node as a property IEnumerable<Node> Children):
+        /// Ex (assuming Node has a property IEnumerable<Node> Children):
         ///     Node[] all = root.Descendants(o => o.Children).ToArray();
         ///     
-        /// The original code has two depth first, breadth first.  But for simplicity, I'm just using depth first.  Uncomment the
+        /// The original code has two: depth first, breadth first.  But for simplicity, I'm just using depth first.  Uncomment the
         /// more explicit methods if neeeded
         /// </remarks>
         public static IEnumerable<T> Descendants<T>(this T head, Func<T, IEnumerable<T>> childrenFunc)
@@ -199,6 +273,7 @@ namespace Game.HelperClassesCore
 
             return retVal;
         }
+        //WARNING: this doesn't scale well.  Implement your own IEqualityComparer that has a good GetHashCode
         public static IEnumerable<T> Distinct<T>(this IEnumerable<T> source, Func<T, T, bool> comparer)
         {
             //List<T> retVal = new List<T>();
@@ -236,6 +311,10 @@ namespace Game.HelperClassesCore
             }
 
             return -1;
+        }
+        public static int IndexOf<T>(this IEnumerable<T> source, T item)
+        {
+            return source.IndexOf(item, (t1, t2) => t1.Equals(t2));
         }
 
         public static bool Contains<T>(this IEnumerable<T> source, T item, Func<T, T, bool> comparer)
@@ -280,6 +359,469 @@ namespace Game.HelperClassesCore
         public static ILookup<TKey, TSource> ToLookup<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, Func<TKey, TKey, bool> comparer)
         {
             return source.ToLookup(keySelector, new DelegateComparer<TKey>(comparer));
+        }
+
+        public static IEnumerable<(T1, T2)> SelectManys<T1, T2>(this IEnumerable<T1> source, SelectManysArgs2<T1, T2> args)
+        {
+            //NOTE: This version 2 is the same as one of the overloads as the standard SelectMany.  Just including it here for completeness
+
+            if (args == null)
+            {
+                throw new ArgumentNullException("args");
+            }
+            else if (args.Select_1_2 == null)
+            {
+                throw new ArgumentNullException("args.Select_1_2");
+            }
+
+            if (source == null)
+            {
+                yield break;
+            }
+
+            var list1 = source;
+
+            if (args.Where_1 != null)
+            {
+                list1 = list1.
+                    Where(o => args.Where_1(o));
+            }
+
+            foreach (T1 t1 in list1)
+            {
+                var list2 = args.Select_1_2(t1);
+
+                if (args.Where_2 != null)
+                {
+                    list2 = list2.
+                        Where(o => args.Where_2(o));
+                }
+
+                foreach (T2 t2 in list2)
+                {
+                    yield return (t1, t2);
+                }
+            }
+        }
+        public static IEnumerable<(T1, T2, T3)> SelectManys<T1, T2, T3>(this IEnumerable<T1> source, SelectManysArgs3<T1, T2, T3> args)
+        {
+            #region validate
+
+            if (args == null)
+            {
+                throw new ArgumentNullException("args");
+            }
+            else if (args.Select_1_2 == null)
+            {
+                throw new ArgumentNullException("args.Select_1_2");
+            }
+            else if (args.Select_2_3 == null)
+            {
+                throw new ArgumentNullException("args.Select_2_3");
+            }
+
+            #endregion
+
+            if (source == null)
+            {
+                yield break;
+            }
+
+            var list1 = source;
+
+            if (args.Where_1 != null)
+            {
+                list1 = list1.
+                    Where(o => args.Where_1(o));
+            }
+
+            foreach (T1 t1 in list1)
+            {
+                #region select 2
+
+                var list2 = args.Select_1_2(t1);
+
+                if (args.Where_2 != null)
+                {
+                    list2 = list2.
+                        Where(o => args.Where_2(o));
+                }
+
+                foreach (T2 t2 in list2)
+                {
+                    #region select 3
+
+                    var list3 = args.Select_2_3(t2);
+
+                    if (args.Where_3 != null)
+                    {
+                        list3 = list3.
+                            Where(o => args.Where_3(o));
+                    }
+
+                    foreach (T3 t3 in list3)
+                    {
+                        yield return (t1, t2, t3);
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+        }
+        public static IEnumerable<(T1, T2, T3, T4)> SelectManys<T1, T2, T3, T4>(this IEnumerable<T1> source, SelectManysArgs4<T1, T2, T3, T4> args)
+        {
+            #region validate
+
+            if (args == null)
+            {
+                throw new ArgumentNullException("args");
+            }
+            else if (args.Select_1_2 == null)
+            {
+                throw new ArgumentNullException("args.Select_1_2");
+            }
+            else if (args.Select_2_3 == null)
+            {
+                throw new ArgumentNullException("args.Select_2_3");
+            }
+            else if (args.Select_3_4 == null)
+            {
+                throw new ArgumentNullException("args.Select_3_4");
+            }
+
+            #endregion
+
+            if (source == null)
+            {
+                yield break;
+            }
+
+            var list1 = source;
+
+            if (args.Where_1 != null)
+            {
+                list1 = list1.
+                    Where(o => args.Where_1(o));
+            }
+
+            foreach (T1 t1 in list1)
+            {
+                #region select 2
+
+                var list2 = args.Select_1_2(t1);
+
+                if (args.Where_2 != null)
+                {
+                    list2 = list2.
+                        Where(o => args.Where_2(o));
+                }
+
+                foreach (T2 t2 in list2)
+                {
+                    #region select 3
+
+                    var list3 = args.Select_2_3(t2);
+
+                    if (args.Where_3 != null)
+                    {
+                        list3 = list3.
+                            Where(o => args.Where_3(o));
+                    }
+
+                    foreach (T3 t3 in list3)
+                    {
+                        #region select 4
+
+                        var list4 = args.Select_3_4(t3);
+
+                        if (args.Where_4 != null)
+                        {
+                            list4 = list4.
+                                Where(o => args.Where_4(o));
+                        }
+
+                        foreach (T4 t4 in list4)
+                        {
+                            yield return (t1, t2, t3, t4);
+                        }
+
+                        #endregion
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+        }
+        public static IEnumerable<(T1, T2, T3, T4, T5)> SelectManys<T1, T2, T3, T4, T5>(this IEnumerable<T1> source, SelectManysArgs5<T1, T2, T3, T4, T5> args)
+        {
+            #region validate
+
+            if (args == null)
+            {
+                throw new ArgumentNullException("args");
+            }
+            else if (args.Select_1_2 == null)
+            {
+                throw new ArgumentNullException("args.Select_1_2");
+            }
+            else if (args.Select_2_3 == null)
+            {
+                throw new ArgumentNullException("args.Select_2_3");
+            }
+            else if (args.Select_3_4 == null)
+            {
+                throw new ArgumentNullException("args.Select_3_4");
+            }
+            else if (args.Select_4_5 == null)
+            {
+                throw new ArgumentNullException("args.Select_4_5");
+            }
+
+            #endregion
+
+            if (source == null)
+            {
+                yield break;
+            }
+
+            var list1 = source;
+
+            if (args.Where_1 != null)
+            {
+                list1 = list1.
+                    Where(o => args.Where_1(o));
+            }
+
+            foreach (T1 t1 in list1)
+            {
+                #region select 2
+
+                var list2 = args.Select_1_2(t1);
+
+                if (args.Where_2 != null)
+                {
+                    list2 = list2.
+                        Where(o => args.Where_2(o));
+                }
+
+                foreach (T2 t2 in list2)
+                {
+                    #region select 3
+
+                    var list3 = args.Select_2_3(t2);
+
+                    if (args.Where_3 != null)
+                    {
+                        list3 = list3.
+                            Where(o => args.Where_3(o));
+                    }
+
+                    foreach (T3 t3 in list3)
+                    {
+                        #region select 4
+
+                        var list4 = args.Select_3_4(t3);
+
+                        if (args.Where_4 != null)
+                        {
+                            list4 = list4.
+                                Where(o => args.Where_4(o));
+                        }
+
+                        foreach (T4 t4 in list4)
+                        {
+                            #region select 5
+
+                            var list5 = args.Select_4_5(t4);
+
+                            if (args.Where_5 != null)
+                            {
+                                list5 = list5.
+                                    Where(o => args.Where_5(o));
+                            }
+
+                            foreach (T5 t5 in list5)
+                            {
+                                yield return (t1, t2, t3, t4, t5);
+                            }
+
+                            #endregion
+                        }
+
+                        #endregion
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+        }
+        public static IEnumerable<(T1, T2, T3, T4, T5, T6)> SelectManys<T1, T2, T3, T4, T5, T6>(this IEnumerable<T1> source, SelectManysArgs6<T1, T2, T3, T4, T5, T6> args)
+        {
+            #region validate
+
+            if (args == null)
+            {
+                throw new ArgumentNullException("args");
+            }
+            else if (args.Select_1_2 == null)
+            {
+                throw new ArgumentNullException("args.Select_1_2");
+            }
+            else if (args.Select_2_3 == null)
+            {
+                throw new ArgumentNullException("args.Select_2_3");
+            }
+            else if (args.Select_3_4 == null)
+            {
+                throw new ArgumentNullException("args.Select_3_4");
+            }
+            else if (args.Select_4_5 == null)
+            {
+                throw new ArgumentNullException("args.Select_4_5");
+            }
+            else if (args.Select_5_6 == null)
+            {
+                throw new ArgumentNullException("args.Select_5_6");
+            }
+
+            #endregion
+
+            if (source == null)
+            {
+                yield break;
+            }
+
+            var list1 = source;
+
+            if (args.Where_1 != null)
+            {
+                list1 = list1.
+                    Where(o => args.Where_1(o));
+            }
+
+            foreach (T1 t1 in list1)
+            {
+                #region select 2
+
+                var list2 = args.Select_1_2(t1);
+
+                if (args.Where_2 != null)
+                {
+                    list2 = list2.
+                        Where(o => args.Where_2(o));
+                }
+
+                foreach (T2 t2 in list2)
+                {
+                    #region select 3
+
+                    var list3 = args.Select_2_3(t2);
+
+                    if (args.Where_3 != null)
+                    {
+                        list3 = list3.
+                            Where(o => args.Where_3(o));
+                    }
+
+                    foreach (T3 t3 in list3)
+                    {
+                        #region select 4
+
+                        var list4 = args.Select_3_4(t3);
+
+                        if (args.Where_4 != null)
+                        {
+                            list4 = list4.
+                                Where(o => args.Where_4(o));
+                        }
+
+                        foreach (T4 t4 in list4)
+                        {
+                            #region select 5
+
+                            var list5 = args.Select_4_5(t4);
+
+                            if (args.Where_5 != null)
+                            {
+                                list5 = list5.
+                                    Where(o => args.Where_5(o));
+                            }
+
+                            foreach (T5 t5 in list5)
+                            {
+                                #region select 6
+
+                                var list6 = args.Select_5_6(t5);
+
+                                if (args.Where_6 != null)
+                                {
+                                    list6 = list6.
+                                        Where(o => args.Where_6(o));
+                                }
+
+                                foreach (T6 t6 in list6)
+                                {
+                                    yield return (t1, t2, t3, t4, t5, t6);
+                                }
+
+                                #endregion
+                            }
+
+                            #endregion
+                        }
+
+                        #endregion
+                    }
+
+                    #endregion
+                }
+
+                #endregion
+            }
+        }
+
+        /// <summary>
+        /// This is just like FirstOrDefault, but is meant to be used when you know that TSource is a value type.  This is hard
+        /// coded to return nullable T
+        /// </summary>
+        /// <remarks>
+        /// It's really annoying trying to use FirstOrDefault with value types, because they have to be converted to nullable first.
+        /// Extra annoying if the value type is a tuple with named items:
+        ///     (int index, double weight, SomeType obj)
+        /// would need to be duplicated verbatim, but with a ? at the end
+        ///     (int index, double weight, SomeType obj)?
+        /// </remarks>
+        public static TSource? FirstOrDefault_val<TSource>(this IEnumerable<TSource> source, Func<TSource, bool> predicate) where TSource : struct
+        {
+            // Here is an alternative
+            //return source.
+            //    Cast<TSource?>().
+            //    FirstOrDefault(o => predicate(o.Value));
+
+            foreach (TSource item in source)
+            {
+                if (predicate(item))
+                {
+                    return item;
+                }
+            }
+
+            return null;
+        }
+        public static TSource? FirstOrDefault_val<TSource>(this IEnumerable<TSource> source) where TSource : struct
+        {
+            foreach (TSource item in source)
+            {
+                return item;
+            }
+
+            return null;
         }
 
         #endregion
@@ -421,6 +963,23 @@ namespace Game.HelperClassesCore
             return removed;
         }
 
+        public static void RemoveAll<T>(this IList<T> list, IEnumerable<T> itemsToRemove)
+        {
+            if (itemsToRemove is IList<T> itemsList)
+            {
+                // The remove list already supports random access, so use it directly
+                list.RemoveWhere(o => itemsList.Contains(o));
+            }
+            else
+            {
+                // Cache the values in case the list is the result of an expensive linq statement (it would get reevaluated for every
+                // item in list)
+                T[] array = itemsToRemove.ToArray();
+
+                list.RemoveWhere(o => array.Contains(o));
+            }
+        }
+
         public static bool IsNullOrEmpty<T>(this IList<T> list)
         {
             return list == null || list.Count == 0;
@@ -445,12 +1004,11 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// TryGetValue is really useful, but the out param can't be used in linq.  So this wraps that method to return a tuple instead
         /// </summary>
-        public static Tuple<bool, TValue> TryGetValue<TKey, TValue>(this SortedList<TKey, TValue> list, TKey key)
+        public static (bool isSuccessful, TValue value) TryGetValue<TKey, TValue>(this SortedList<TKey, TValue> list, TKey key)
         {
-            TValue value;
-            bool found = list.TryGetValue(key, out value);
+            bool found = list.TryGetValue(key, out TValue value);
 
-            return Tuple.Create(found, value);
+            return (found, value);
         }
 
         #endregion
@@ -560,38 +1118,39 @@ namespace Game.HelperClassesCore
             }
         }
 
-        /// <summary>
-        /// This returns true or false
-        /// </summary>
-        /// <param name="oneInX">
-        /// For 50/50 odds, pass in 2 (1 in 2 times will be true).  If you want a lower chance of true, then pass in a larger value
-        /// </param>
-        public static bool NextBool(this Random rand, int oneInX = 2)
+        public static bool NextBool(this Random rand)
         {
             return rand.Next(2) == 0;
+        }
+        /// <summary>
+        /// Returns a boolean, but allows a threshold for true
+        /// </summary>
+        /// <param name="rand"></param>
+        /// <param name="chanceForTrue">0 would be no chance of true.  1 would be 100% chance of true</param>
+        /// <returns></returns>
+        public static bool NextBool(this Random rand, double chanceForTrue = .5)
+        {
+            return rand.NextDouble() < chanceForTrue;
         }
 
         /// <summary>
         /// Returns a string of random upper case characters
         /// </summary>
         /// <remarks>
-        /// TODO: Take in an enum for what types of characters to return (alpha, numeric, alphanumeric)
         /// TODO: Make NextSentence method that returns several "words" separated by spaces
         /// </remarks>
-        public static string NextString(this Random rand, int length)
+        public static string NextString(this Random rand, int length, string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         {
-            char[] retVal = new char[length];
-
-            for (int cntr = 0; cntr < length; cntr++)
-            {
-                retVal[cntr] = Convert.ToChar(Convert.ToByte(Convert.ToByte('A') + rand.Next(26)));
-            }
-
-            return new string(retVal);
+            return new string
+            (
+                Enumerable.Range(0, length).
+                    Select(o => chars[rand.Next(chars.Length)]).
+                    ToArray()
+            );
         }
-        public static string NextString(this Random rand, int randLengthFrom, int randLengthTo)
+        public static string NextString(this Random rand, int randLengthFrom, int randLengthTo, string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         {
-            return rand.NextString(rand.Next(randLengthFrom, randLengthTo));
+            return rand.NextString(rand.Next(randLengthFrom, randLengthTo), chars);
         }
 
         /// <summary>
@@ -608,12 +1167,36 @@ namespace Game.HelperClassesCore
 
         #endregion
 
+        #region T
+
+        public static bool In<T>(this T value, params T[] compare)
+        {
+            if (compare == null)
+            {
+                return false;
+            }
+            else if (value == null)
+            {
+                return compare.Any(o => o == null);
+            }
+
+            return compare.Any(o => value.Equals(o));
+        }
+
+        #endregion
+
         #region Private Methods
 
         private static int GetNumDecimals(double value)
         {
-            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
-
+            return GetNumDecimals_ToString(value.ToString(System.Globalization.CultureInfo.InvariantCulture));      // I think this forces decimal to always be a '.' ?
+        }
+        private static int GetNumDecimals(decimal value)
+        {
+            return GetNumDecimals_ToString(value.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+        private static int GetNumDecimals_ToString(string text)
+        {
             if (Regex.IsMatch(text, "[a-z]", RegexOptions.IgnoreCase))
             {
                 // This is in exponential notation, just give up (or maybe NaN)
@@ -634,10 +1217,43 @@ namespace Game.HelperClassesCore
             }
         }
 
+        private static string ToStringSignificantDigits_PossibleScientific(double value, int significantDigits)
+        {
+            return ToStringSignificantDigits_PossibleScientific_ToString(
+                value.ToString(System.Globalization.CultureInfo.InvariantCulture),      // I think this forces decimal to always be a '.' ?
+                value.ToString(),
+                significantDigits);
+        }
+        private static string ToStringSignificantDigits_PossibleScientific(decimal value, int significantDigits)
+        {
+            return ToStringSignificantDigits_PossibleScientific_ToString(
+                value.ToString(System.Globalization.CultureInfo.InvariantCulture),      // I think this forces decimal to always be a '.' ?
+                value.ToString(),
+                significantDigits);
+        }
+        private static string ToStringSignificantDigits_PossibleScientific_ToString(string textInvariant, string text, int significantDigits)
+        {
+            Match match = Regex.Match(textInvariant, @"^(?<num>\d\.\d+)(?<exp>E(-|)\d+)$");
+            if (!match.Success)
+            {
+                // Unknown
+                return text;
+            }
+
+            string standard = ToStringSignificantDigits_Standard(Convert.ToDouble(match.Groups["num"].Value), significantDigits, false);
+
+            return standard + match.Groups["exp"].Value;
+        }
+
         private static string ToStringSignificantDigits_Standard(double value, int significantDigits, bool useN)
         {
+            return ToStringSignificantDigits_Standard(Convert.ToDecimal(value), significantDigits, useN);
+        }
+        private static string ToStringSignificantDigits_Standard(decimal value, int significantDigits, bool useN)
+        {
             // Get the integer portion
-            long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
+            //long intPortion = Convert.ToInt64(Math.Truncate(value));		// going directly against the value for this (min could go from 1 to 1000.  1 needs two decimal places, 10 needs one, 100+ needs zero)
+            BigInteger intPortion = new BigInteger(Math.Truncate(value));       // ran into a case that didn't fit in a long
             int numInt;
             if (intPortion == 0)
             {
@@ -674,7 +1290,7 @@ namespace Game.HelperClassesCore
             }
 
             // Show a rounded number
-            double rounded = Math.Round(value, numPlaces);
+            decimal rounded = Math.Round(value, numPlaces);
             int numActualDecimals = GetNumDecimals(rounded);
             if (numActualDecimals < 0 || !useN)
             {
@@ -685,39 +1301,109 @@ namespace Game.HelperClassesCore
                 return rounded.ToString("N" + numActualDecimals);
             }
         }
-        private static string ToStringSignificantDigits_PossibleScientific(double value, int significantDigits)
-        {
-            string text = value.ToString(System.Globalization.CultureInfo.InvariantCulture);		// I think this forces decimal to always be a '.' ?
-
-            Match match = Regex.Match(text, @"^(?<num>\d\.\d+)(?<exp>E(-|)\d+)$");
-            if (!match.Success)
-            {
-                // Unknown
-                return value.ToString();
-            }
-
-            string standard = ToStringSignificantDigits_Standard(Convert.ToDouble(match.Groups["num"].Value), significantDigits, false);
-
-            return standard + match.Groups["exp"].Value;
-        }
 
         private static int ToIntSafe(double value)
         {
             double retVal = value;
+
             if (retVal < int.MinValue) retVal = int.MinValue;
             else if (retVal > int.MaxValue) retVal = int.MaxValue;
             else if (Math1D.IsInvalid(retVal)) retVal = int.MaxValue;
+
             return Convert.ToInt32(retVal);
         }
         private static byte ToByteSafe(double value)
         {
             int retVal = ToIntSafe(Math.Ceiling(value));
+
             if (retVal < 0) retVal = 0;
             else if (retVal > 255) retVal = 255;
             else if (Math1D.IsInvalid(retVal)) retVal = 255;
+
             return Convert.ToByte(retVal);
         }
 
         #endregion
     }
+
+    #region class: SelectManysArgs2
+
+    public class SelectManysArgs2<T1, T2>
+    {
+        public Func<T1, IEnumerable<T2>> Select_1_2 { get; set; }
+
+        // Where clauses are optional
+        public Func<T1, bool> Where_1 { get; set; }
+        public Func<T2, bool> Where_2 { get; set; }
+    }
+
+    #endregion
+    #region class: SelectManysArgs3
+
+    public class SelectManysArgs3<T1, T2, T3>
+    {
+        public Func<T1, IEnumerable<T2>> Select_1_2 { get; set; }
+        public Func<T2, IEnumerable<T3>> Select_2_3 { get; set; }
+
+        // Where clauses are optional
+        public Func<T1, bool> Where_1 { get; set; }
+        public Func<T2, bool> Where_2 { get; set; }
+        public Func<T3, bool> Where_3 { get; set; }
+    }
+
+    #endregion
+    #region class: SelectManysArgs4
+
+    public class SelectManysArgs4<T1, T2, T3, T4>
+    {
+        public Func<T1, IEnumerable<T2>> Select_1_2 { get; set; }
+        public Func<T2, IEnumerable<T3>> Select_2_3 { get; set; }
+        public Func<T3, IEnumerable<T4>> Select_3_4 { get; set; }
+
+        // Where clauses are optional
+        public Func<T1, bool> Where_1 { get; set; }
+        public Func<T2, bool> Where_2 { get; set; }
+        public Func<T3, bool> Where_3 { get; set; }
+        public Func<T4, bool> Where_4 { get; set; }
+    }
+
+    #endregion
+    #region class: SelectManysArgs5
+
+    public class SelectManysArgs5<T1, T2, T3, T4, T5>
+    {
+        public Func<T1, IEnumerable<T2>> Select_1_2 { get; set; }
+        public Func<T2, IEnumerable<T3>> Select_2_3 { get; set; }
+        public Func<T3, IEnumerable<T4>> Select_3_4 { get; set; }
+        public Func<T4, IEnumerable<T5>> Select_4_5 { get; set; }
+
+        // Where clauses are optional
+        public Func<T1, bool> Where_1 { get; set; }
+        public Func<T2, bool> Where_2 { get; set; }
+        public Func<T3, bool> Where_3 { get; set; }
+        public Func<T4, bool> Where_4 { get; set; }
+        public Func<T5, bool> Where_5 { get; set; }
+    }
+
+    #endregion
+    #region class: SelectManysArgs6
+
+    public class SelectManysArgs6<T1, T2, T3, T4, T5, T6>
+    {
+        public Func<T1, IEnumerable<T2>> Select_1_2 { get; set; }
+        public Func<T2, IEnumerable<T3>> Select_2_3 { get; set; }
+        public Func<T3, IEnumerable<T4>> Select_3_4 { get; set; }
+        public Func<T4, IEnumerable<T5>> Select_4_5 { get; set; }
+        public Func<T5, IEnumerable<T6>> Select_5_6 { get; set; }
+
+        // Where clauses are optional
+        public Func<T1, bool> Where_1 { get; set; }
+        public Func<T2, bool> Where_2 { get; set; }
+        public Func<T3, bool> Where_3 { get; set; }
+        public Func<T4, bool> Where_4 { get; set; }
+        public Func<T5, bool> Where_5 { get; set; }
+        public Func<T6, bool> Where_6 { get; set; }
+    }
+
+    #endregion
 }

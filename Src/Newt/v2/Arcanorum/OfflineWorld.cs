@@ -11,6 +11,7 @@ using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
 using Game.HelperClassesCore.Threads;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {

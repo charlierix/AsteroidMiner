@@ -3875,6 +3875,8 @@ namespace Game.Newt.Testers
                 _trackball = new TrackBallRoam(_camera);
                 _trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
                 _trackball.AllowZoomOnMouseWheel = true;
+                _trackball.InertiaPercentRetainPerSecond_Linear = .03;
+                _trackball.InertiaPercentRetainPerSecond_Angular = .7;
                 _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete_NoLeft));
                 //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
 

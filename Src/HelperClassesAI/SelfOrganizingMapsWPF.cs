@@ -197,7 +197,7 @@ namespace Game.HelperClassesAI
             }
 
             // Direction unit
-            Vector dirUnit = direction.ToUnit();
+            Vector dirUnit = direction.ToUnit(true);
             if (Math2D.IsInvalid(dirUnit))
             {
                 dirUnit = Math3D.GetRandomVector_Circular_Shell(1).ToVector2D();

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Windows.Media.Media3D;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
@@ -74,9 +75,27 @@ namespace Game.HelperClassesWPF
             return new Vector3D(vector.X, vector.Y, z);
         }
 
-        public static VectorND ToVectorND(this Vector vector)
+        public static VectorND ToVectorND(this Vector vector, int? dimensions = null)
         {
-            return new VectorND(new[] { vector.X, vector.Y });
+            if (dimensions == null)
+            {
+                return new VectorND(vector.X, vector.Y);
+            }
+            else
+            {
+                double[] arr = new double[dimensions.Value];
+
+                for (int cntr = 0; cntr < Math.Min(2, dimensions.Value); cntr++)
+                {
+                    switch (cntr)
+                    {
+                        case 0: arr[cntr] = vector.X; break;
+                        case 1: arr[cntr] = vector.Y; break;
+                    }
+                }
+
+                return new VectorND(arr);
+            }
         }
 
         public static string ToString(this Vector vector, bool extensionsVersion)
@@ -96,7 +115,7 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// I was getting tired of needing two statements to get a unit vector
         /// </summary>
-        public static Vector ToUnit(this Vector vector, bool useNaNIfInvalid = true)
+        public static Vector ToUnit(this Vector vector, bool useNaNIfInvalid = false)
         {
             Vector retVal = vector;
             retVal.Normalize();
@@ -152,9 +171,27 @@ namespace Game.HelperClassesWPF
             return new Point3D(point.X, point.Y, z);
         }
 
-        public static VectorND ToVectorND(this Point point)
+        public static VectorND ToVectorND(this Point point, int? dimensions = null)
         {
-            return new VectorND(new[] { point.X, point.Y });
+            if (dimensions == null)
+            {
+                return new VectorND(point.X, point.Y);
+            }
+            else
+            {
+                double[] arr = new double[dimensions.Value];
+
+                for (int cntr = 0; cntr < Math.Min(2, dimensions.Value); cntr++)
+                {
+                    switch (cntr)
+                    {
+                        case 0: arr[cntr] = point.X; break;
+                        case 1: arr[cntr] = point.Y; break;
+                    }
+                }
+
+                return new VectorND(arr);
+            }
         }
 
         public static string ToString(this Point point, bool extensionsVersion)
@@ -183,6 +220,11 @@ namespace Game.HelperClassesWPF
         #endregion
 
         #region Vector3D
+
+        public static bool IsZero(this Vector3D vector)
+        {
+            return vector.X == 0d && vector.Y == 0d && vector.Z == 0d;
+        }
 
         public static bool IsNearZero(this Vector3D vector)
         {
@@ -221,9 +263,28 @@ namespace Game.HelperClassesWPF
             return new Size3D(Math.Abs(vector.X), Math.Abs(vector.Y), Math.Abs(vector.Z));
         }
 
-        public static VectorND ToVectorND(this Vector3D vector)
+        public static VectorND ToVectorND(this Vector3D vector, int? dimensions = null)
         {
-            return new VectorND(new[] { vector.X, vector.Y, vector.Z });
+            if (dimensions == null)
+            {
+                return new VectorND(vector.X, vector.Y, vector.Z);
+            }
+            else
+            {
+                double[] arr = new double[dimensions.Value];
+
+                for (int cntr = 0; cntr < Math.Min(3, dimensions.Value); cntr++)
+                {
+                    switch (cntr)
+                    {
+                        case 0: arr[cntr] = vector.X; break;
+                        case 1: arr[cntr] = vector.Y; break;
+                        case 2: arr[cntr] = vector.Z; break;
+                    }
+                }
+
+                return new VectorND(arr);
+            }
         }
 
         public static double[] ToArray(this Vector3D vector)
@@ -304,7 +365,7 @@ namespace Game.HelperClassesWPF
         /// True=Standard behavior.  By definition a unit vector always has length of one, so if the initial length is zero, then the length becomes NaN
         /// False=Vector just goes to zero
         /// </param>
-        public static Vector3D ToUnit(this Vector3D vector, bool useNaNIfInvalid = true)
+        public static Vector3D ToUnit(this Vector3D vector, bool useNaNIfInvalid = false)
         {
             Vector3D retVal = vector;
             retVal.Normalize();
@@ -380,9 +441,28 @@ namespace Game.HelperClassesWPF
             return new Vector(point.X, point.Y);
         }
 
-        public static VectorND ToVectorND(this Point3D point)
+        public static VectorND ToVectorND(this Point3D point, int? dimensions = null)
         {
-            return new VectorND(new[] { point.X, point.Y, point.Z });
+            if (dimensions == null)
+            {
+                return new VectorND(point.X, point.Y, point.Z);
+            }
+            else
+            {
+                double[] arr = new double[dimensions.Value];
+
+                for (int cntr = 0; cntr < Math.Min(3, dimensions.Value); cntr++)
+                {
+                    switch (cntr)
+                    {
+                        case 0: arr[cntr] = point.X; break;
+                        case 1: arr[cntr] = point.Y; break;
+                        case 2: arr[cntr] = point.Z; break;
+                    }
+                }
+
+                return new VectorND(arr);
+            }
         }
 
         public static double[] ToArray(this Point3D point)
@@ -401,7 +481,7 @@ namespace Game.HelperClassesWPF
 
         public static string ToStringSignificantDigits(this Point3D point, int significantDigits)
         {
-            return string.Format("{0}, {1}", point.X.ToStringSignificantDigits(significantDigits), point.Y.ToStringSignificantDigits(significantDigits), point.Z.ToStringSignificantDigits(significantDigits));
+            return string.Format("{0}, {1}, {2}", point.X.ToStringSignificantDigits(significantDigits), point.Y.ToStringSignificantDigits(significantDigits), point.Z.ToStringSignificantDigits(significantDigits));
         }
 
         /// <summary>
@@ -411,7 +491,7 @@ namespace Game.HelperClassesWPF
         /// True=Standard behavior.  By definition a unit vector always has length of one, so if the initial length is zero, then the length becomes NaN
         /// False=Vector just goes to zero
         /// </param>
-        public static Point3D ToUnit(this Point3D point, bool useNaNIfInvalid = true)
+        public static Point3D ToUnit(this Point3D point, bool useNaNIfInvalid = false)
         {
             return point.ToVector().ToUnit(useNaNIfInvalid).ToPoint();
         }
@@ -432,6 +512,85 @@ namespace Game.HelperClassesWPF
                 default:
                     throw new ApplicationException("Unknown Axis: " + axis.ToString());
             }
+        }
+
+        #endregion
+
+        #region VectorND
+
+        public static bool IsNearZero(this VectorND vector)
+        {
+            if (vector.VectorArray == null)
+            {
+                return true;
+            }
+
+            return vector.VectorArray.All(o => o.IsNearZero());
+        }
+        public static bool IsNearValue(this VectorND vector, VectorND other)
+        {
+            return MathND.IsNearValue(vector.VectorArray, other.VectorArray);
+        }
+
+        public static bool IsInvalid(this VectorND vector)
+        {
+            double[] arr = vector.VectorArray;
+            if (arr == null)
+            {
+                return false;       // it could be argued that this is invalid, but all the other types that have IsInvalid only consider the values that Math1D.IsInvalid looks at
+            }
+
+            foreach (double value in arr)
+            {
+                if (Math1D.IsInvalid(value))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static string ToStringSignificantDigits(this VectorND vector, int significantDigits)
+        {
+            double[] arr = vector.VectorArray;
+            if (arr == null)
+            {
+                return "<null>";
+            }
+
+            return arr.
+                Select(o => o.ToStringSignificantDigits(significantDigits)).
+                ToJoin(", ");
+        }
+
+        /// <summary>
+        /// Returns the portion of this vector that lies along the other vector
+        /// NOTE: The return will be the same direction as alongVector, but the length from zero to this vector's full length
+        /// </summary>
+        /// <remarks>
+        /// This is copied from the Vector3D version
+        /// </remarks>
+        public static VectorND GetProjectedVector(this VectorND vector, VectorND alongVector, bool eitherDirection = true)
+        {
+            // c = (a dot unit(b)) * unit(b)
+
+            if (vector.IsNearZero() || alongVector.IsNearZero())
+            {
+                return MathND.GetZeroVector(vector, alongVector);
+            }
+
+            VectorND alongVectorUnit = alongVector.ToUnit();
+
+            double length = VectorND.DotProduct(vector, alongVectorUnit);
+
+            if (!eitherDirection && length < 0)
+            {
+                // It's in the oppositie direction, and that isn't allowed
+                return MathND.GetZeroVector(vector, alongVector);
+            }
+
+            return alongVectorUnit * length;
         }
 
         #endregion
@@ -949,31 +1108,74 @@ namespace Game.HelperClassesWPF
 
         #region double[]
 
-        public static Vector ToVector(this double[] values)
+        public static Vector ToVector(this double[] values, bool enforceSize = true)
         {
-            if (values == null)
+            if (enforceSize)
             {
-                throw new ArgumentNullException("values");
-            }
-            else if (values.Length != 2)
-            {
-                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
-            }
+                if (values == null)
+                {
+                    throw new ArgumentNullException("values");
+                }
+                else if (values.Length != 2)
+                {
+                    throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
+                }
 
-            return new Vector(values[0], values[1]);
+                return new Vector(values[0], values[1]);
+            }
+            else
+            {
+                if (values == null)
+                {
+                    return new Vector();
+                }
+
+                return new Vector
+                (
+                    values.Length >= 1 ?
+                        values[0] :
+                        0,
+                    values.Length >= 2 ?
+                        values[1] :
+                        0
+                );
+            }
         }
-        public static Vector3D ToVector3D(this double[] values)
+        public static Vector3D ToVector3D(this double[] values, bool enforceSize = true)
         {
-            if (values == null)
+            if (enforceSize)
             {
-                throw new ArgumentNullException("values");
-            }
-            else if (values.Length != 3)
-            {
-                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
-            }
+                if (values == null)
+                {
+                    throw new ArgumentNullException("values");
+                }
+                else if (values.Length != 3)
+                {
+                    throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
+                }
 
-            return new Vector3D(values[0], values[1], values[2]);
+                return new Vector3D(values[0], values[1], values[2]);
+            }
+            else
+            {
+                if (values == null)
+                {
+                    return new Vector3D();
+                }
+
+                return new Vector3D
+                (
+                    values.Length >= 1 ?
+                        values[0] :
+                        0,
+                    values.Length >= 2 ?
+                        values[1] :
+                        0,
+                    values.Length >= 3 ?
+                        values[2] :
+                        0
+                );
+            }
         }
         public static VectorND ToVectorND(this double[] values)
         {
@@ -989,31 +1191,74 @@ namespace Game.HelperClassesWPF
             return new VectorND(values);
         }
 
-        public static Point ToPoint(this double[] values)
+        public static Point ToPoint(this double[] values, bool enforceSize = true)
         {
-            if (values == null)
+            if (enforceSize)
             {
-                throw new ArgumentNullException("values");
-            }
-            else if (values.Length != 2)
-            {
-                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
-            }
+                if (values == null)
+                {
+                    throw new ArgumentNullException("values");
+                }
+                else if (values.Length != 2)
+                {
+                    throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 2.  len={0}", values.Length));
+                }
 
-            return new Point(values[0], values[1]);
+                return new Point(values[0], values[1]);
+            }
+            else
+            {
+                if (values == null)
+                {
+                    return new Point();
+                }
+
+                return new Point
+                (
+                    values.Length >= 1 ?
+                        values[0] :
+                        0,
+                    values.Length >= 2 ?
+                        values[1] :
+                        0
+                );
+            }
         }
-        public static Point3D ToPoint3D(this double[] values)
+        public static Point3D ToPoint3D(this double[] values, bool enforceSize = true)
         {
-            if (values == null)
+            if (enforceSize)
             {
-                throw new ArgumentNullException("values");
-            }
-            else if (values.Length != 3)
-            {
-                throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
-            }
+                if (values == null)
+                {
+                    throw new ArgumentNullException("values");
+                }
+                else if (values.Length != 3)
+                {
+                    throw new ArgumentOutOfRangeException("values", string.Format("This method requires the double array to be length 3.  len={0}", values.Length));
+                }
 
-            return new Point3D(values[0], values[1], values[2]);
+                return new Point3D(values[0], values[1], values[2]);
+            }
+            else
+            {
+                if (values == null)
+                {
+                    return new Point3D();
+                }
+
+                return new Point3D
+                (
+                    values.Length >= 1 ?
+                        values[0] :
+                        0,
+                    values.Length >= 2 ?
+                        values[1] :
+                        0,
+                    values.Length >= 3 ?
+                        values[2] :
+                        0
+                );
+            }
         }
 
         #endregion

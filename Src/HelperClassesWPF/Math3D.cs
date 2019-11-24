@@ -102,6 +102,8 @@
 // Co-Web Host of www.GameTutorials.com
 //
 //
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF.Controls3D;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -109,7 +111,6 @@ using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
 {
@@ -149,11 +150,11 @@ namespace Game.HelperClassesWPF
         /// There's a bit too much custom logic to put directly into Math3D, but I want it to appear from the outside that Math3D is doing
         /// all the work (so that consumers have just one util class to go to)
         /// </remarks>
-        private static class EvenDistribution
+        public static class EvenDistribution
         {
             #region class: Dot
 
-            private class Dot
+            public class Dot
             {
                 public Dot(bool isStatic, Vector3D position, double repulseMultiplier)
                 {
@@ -165,12 +166,17 @@ namespace Game.HelperClassesWPF
                 public readonly bool IsStatic;
                 public Vector3D Position;
                 public readonly double RepulseMultiplier;
+
+                public override string ToString()
+                {
+                    return string.Format("{0} | {1} | {2}", IsStatic ? "static" : "move", Position.ToString(), RepulseMultiplier);
+                }
             }
 
             #endregion
             #region class: ShortPair
 
-            private class ShortPair
+            public class ShortPair
             {
                 public ShortPair(int index1, int index2, double length, double lengthRatio, double avgMult, Vector3D link)
                 {
@@ -259,13 +265,17 @@ namespace Game.HelperClassesWPF
                 Vector3D[] movableCast = null;
                 if (movable != null)
                 {
-                    movableCast = movable.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                    movableCast = movable.
+                        Select(o => new Vector3D(o.X, o.Y, 0)).
+                        ToArray();
                 }
 
                 Vector3D[] existingStaticCast = null;
                 if (existingStaticPoints != null)
                 {
-                    existingStaticCast = existingStaticPoints.Select(o => new Vector3D(o.X, o.Y, 0)).ToArray();
+                    existingStaticCast = existingStaticPoints.
+                        Select(o => new Vector3D(o.X, o.Y, 0)).
+                        ToArray();
                 }
 
                 // Convert to dots
@@ -274,7 +284,9 @@ namespace Game.HelperClassesWPF
                 Vector3D[] retVal = GetCircular_Finish(dots, movable.Length, radius, stopRadiusPercent, stopIterationCount);
 
                 // Convert to 2D
-                return retVal.Select(o => new Vector(o.X, o.Y)).ToArray();
+                return retVal.
+                    Select(o => new Vector(o.X, o.Y)).
+                    ToArray();
             }
 
             public static Vector[] GetCircular_CenterPacked(int returnCount, Vector[] existingStaticPoints, double radius, double stopRadiusPercent, int stopIterationCount, double[] movableRepulseMultipliers, double[] staticRepulseMultipliers)
@@ -404,7 +416,8 @@ namespace Game.HelperClassesWPF
 
                 Tuple<Vector3D, Vector3D, double> extraProps = GetExtraProps_Cone(axis, angle);
 
-                return GetCone_Finish(dots, extraProps.Item1, extraProps.Item2, angle, extraProps.Item3, heightMin, heightMax, stopRadiusPercent, stopIterationCount);
+                //return GetCone_Finish(dots, extraProps.Item1, extraProps.Item2, angle, extraProps.Item3, heightMin, heightMax, stopRadiusPercent, stopIterationCount);
+                return GetCone_Finish_MONDAY(dots, extraProps.Item1, extraProps.Item2, angle, extraProps.Item3, heightMin, heightMax, stopRadiusPercent, stopIterationCount);
             }
             public static Vector3D[] GetRandomVectors_Cone_EvenDist(Vector3D[] movable, Vector3D axis, double angle, double heightMin, double heightMax, double[] movableRepulseMultipliers = null, Vector3D[] existingStaticPoints = null, double[] staticRepulseMultipliers = null, double stopRadiusPercent = .004, int stopIterationCount = 1000)
             {
@@ -514,14 +527,34 @@ namespace Game.HelperClassesWPF
                     numIterations++;
                 } while (MovePoints_Sphere(returnCount, dots, forces, PERCENT, stopDist, numIterations, stopIterationCount, smallestLength < smallestAllowed));
 
-                // Circular produces a radius that's way off, so this method will fix scale the outputs to the appropriate radius, but can only be
+                // Circular produces a radius that's way off, so this method will scale the outputs to the appropriate radius, but can only be
                 // called when all points are movable
                 if (returnCount == dots.Length)
                 {
                     FixRadius(dots, radius);
                 }
+                else if (returnCount == dots.Length - 1 && dots.First(o => o.IsStatic).Position.IsNearZero())
+                {
+                    // Special case where there is one static and it's in the center.  Scale the movable dots
+                    //Dot[] movableDots = dots.
+                    //    Where(o => !o.IsStatic).
+                    //    ToArray();
 
-                // Exit Function
+                    //FixRadius(movableDots, radius);
+
+                    //dots = movableDots.
+                    //    Concat(dots.Where(o => o.IsStatic)).        // there's only one, but concat wants a list
+                    //    ToArray();
+
+                    //NOTE: BuildReturn expects all movable to be before all static, and it only returns the movable points.  So the above
+                    //logic that keeps a separate list of movable and puts static back later is overkill
+                    dots = dots.
+                        Where(o => !o.IsStatic).
+                        ToArray();
+
+                    FixRadius(dots, radius);
+                }
+
                 return BuildReturn(dots, returnCount);
             }
             private static Vector3D[] GetCircular_CenterPacked_Finish(Dot[] dots, int returnCount, double radius, double stopRadiusPercent, int stopIterationCount)
@@ -680,10 +713,10 @@ namespace Game.HelperClassesWPF
 
                 var aabb = Math3D.GetAABB(dots.Select(o => o.Position.ToPoint()));
 
-                double radius = (aabb.Item2 - aabb.Item1).Length / 2;
-                double stopAmount = radius * stopRadiusPercent;
+                double aabb_radius = (aabb.Item2 - aabb.Item1).Length / 2;
+                double stopAmount = aabb_radius * stopRadiusPercent;
 
-                double? minDistance = GetMinDistance(dots, radius);
+                double? minDistance = GetMinDistance_Cone(dots, aabb_radius * 2);
 
                 double heightMinSquared = heightMin * heightMin;
                 double heightMaxSquared = heightMax * heightMax;
@@ -704,11 +737,74 @@ namespace Game.HelperClassesWPF
                     ToArray();
             }
 
+            public static double GetConeVolume(double heightMin, double heightMax, double angle)
+            {
+                double areaMin = GetConeSurfaceArea(heightMin, angle);
+                if (heightMin.IsNearValue(heightMax))
+                {
+                    // Both radii are the same, so just return the surface area
+                    return areaMin;
+                }
+
+                // The volume of a cone is SurfaceArea/3 * R
+                // https://www.mathalino.com/reviewer/solid-mensuration-solid-geometry/spherical-sector
+
+                // So take the larger cone's volume minus the smaller cone's volume and that will be the volume of the trapezoid section
+                double areaMax = GetConeSurfaceArea(heightMax, angle);
+
+                double volumeMin = areaMin / 3 * heightMin;
+                double volumeMax = areaMax / 3 * heightMax;
+
+                return volumeMax - volumeMin;
+            }
+            private static double GetConeSurfaceArea(double radius, double angle)
+            {
+                // surface area = 2*pi*R*h
+                //h=(use trig)                
+                //https://www.mathalino.com/reviewer/solid-mensuration-solid-geometry/spherical-zone
+
+                // In the case of a hemisphere, h is radius
+                double hemisphere = 2 * Math.PI * radius * radius;
+
+                if (angle.IsNearValue(0))
+                {
+                    return 0;
+                }
+                else if (angle.IsNearValue(90))
+                {
+                    return hemisphere;
+                }
+                else if (angle.IsNearValue(180))
+                {
+                    return hemisphere + hemisphere;
+                }
+
+                double offset = 0;
+                double h = 0;
+
+                if (angle < 90)
+                {
+                    // The surface area is the cap of the sphere, so H is radius minus the triangle defined by angle
+                    double run = radius * Math.Cos(Math1D.DegreesToRadians(angle));
+                    h = radius - run;
+                }
+                else
+                {
+                    // The surface area is the entire top hemisphere + a ring defined by the remainder of the angle.  So H is the base of
+                    // the triangle defined by the rest of the angle
+                    offset = hemisphere;
+
+                    h = radius * Math.Cos(Math1D.DegreesToRadians(angle - 90));
+                }
+
+                return offset + (2 * Math.PI * radius * h);
+            }
+
             private static bool MovePoints_Sphere(int returnCount, Dot[] dots, Vector3D[] forces, double movePercent, double stopDist, int numIterations, int stopIterationCount, bool areTooClose, double? snapRadius = null)
             {
                 double maxLength = 0d;
 
-                #region Move points
+                #region move points
 
                 for (int cntr = 0; cntr < returnCount; cntr++)		// only need to iterate up to returnCount.  All the rest in dots are immoble ones
                 {
@@ -731,7 +827,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Exit condition
+                #region exit condition
 
                 // See if this is good enough
                 maxLength = Math.Sqrt(maxLength);
@@ -742,7 +838,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Clear the forces
+                #region clear the forces
 
                 for (int cntr = 0; cntr < forces.Length; cntr++)
                 {
@@ -758,14 +854,14 @@ namespace Game.HelperClassesWPF
             private static double MoveStep_Cone(IList<Dot> dots, double percent, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double heightMinSquared, double heightMaxSquared, double? minDistance)
             {
                 // Find shortest pair lengths
-                ShortPair[] shortPairs = GetShortestPair(dots);
-                if (shortPairs.Length == 0)
+                ShortPair[] pairs = GetShortestPair(dots);
+                if (pairs.Length == 0)
                 {
                     return 0;
                 }
 
                 // Move the shortest pair away from each other (based on how far they are away from the avg)
-                double avg = shortPairs.Average(o => o.LengthRatio);
+                double avg = pairs.Average(o => o.LengthRatio);
 
                 // Artificially increase repulsive pressure
                 if (minDistance != null && avg < minDistance.Value)
@@ -773,17 +869,15 @@ namespace Game.HelperClassesWPF
                     avg = minDistance.Value;
                 }
 
-                double distToMoveMax = avg - shortPairs[0].LengthRatio;
+                double distToMoveMax = avg - pairs[0].LengthRatio;
                 if (distToMoveMax.IsNearZero())
                 {
                     // Found equilbrium
                     return 0;
                 }
 
-                double retVal = 0;
-
                 bool isFirst = true;
-                foreach (ShortPair pair in shortPairs)
+                foreach (ShortPair pair in pairs)
                 {
                     // Only want to move them if they are less than average
                     if (pair.LengthRatio >= avg)
@@ -807,7 +901,6 @@ namespace Game.HelperClassesWPF
                     isFirst = false;
 
                     double moveDist = distToMoveRatio * actualPercent * pair.AvgMult;
-                    retVal = Math.Max(retVal, moveDist);
 
                     // Unit vector
                     Vector3D displaceUnit;
@@ -817,7 +910,7 @@ namespace Game.HelperClassesWPF
                     }
                     else
                     {
-                        displaceUnit = pair.Link.ToUnit(false);
+                        displaceUnit = pair.Link.ToUnit();
                     }
 
                     // Can't move evenly.  Divide it up based on the ratio of multipliers
@@ -843,7 +936,7 @@ namespace Game.HelperClassesWPF
                     }
                 }
 
-                return retVal;
+                return distToMoveMax;
             }
 
             private static Vector3D[] BuildReturn(Dot[] dots, int returnCount)
@@ -915,7 +1008,6 @@ namespace Game.HelperClassesWPF
                     }
                 }
 
-                // Exit Function
                 return retVal;
             }
 
@@ -1122,7 +1214,7 @@ namespace Game.HelperClassesWPF
                             force = STRENGTH * inverseDistance * ((dots[outer].RepulseMultiplier + dots[inner].RepulseMultiplier) * .5d);
                         }
 
-                        if (force != null && !double.IsNaN(force.Value) && !double.IsInfinity(force.Value))
+                        if (force != null && !force.Value.IsInvalid())
                         {
                             link.Normalize();
                             link *= force.Value;
@@ -1162,7 +1254,7 @@ namespace Game.HelperClassesWPF
                         }
 
                         double force = STRENGTH * (maxDist / linkLength);
-                        if (double.IsNaN(force) || double.IsInfinity(force))
+                        if (force.IsInvalid())
                         {
                             force = .0001d;
                         }
@@ -1298,7 +1390,7 @@ namespace Game.HelperClassesWPF
                 }
 
                 // Cap Angle
-                Vector3D posUnit = point.ToUnit(false);
+                Vector3D posUnit = point.ToUnit();
 
                 if (Vector3D.DotProduct(posUnit, axisUnit) < maxDotProduct)
                 {
@@ -1334,28 +1426,41 @@ namespace Game.HelperClassesWPF
             /// 
             /// I didn't experiment too much with these values, but they seem pretty good
             /// </remarks>
-            private static double? GetMinDistance(Dot[] dots, double radius/*, Tuple<double[], double[]> aabb*/)
+            private static double? GetMinDistance_Cone(Dot[] dots, double aabb_length/*, Tuple<double[], double[]> aabb*/)
             {
+                // When there is no min distance, they get too relaxed.  If there are a lot of points, there are still holes after lots of iterations - sort
+                // of like the points form mesh crystals with voids between.  There's no pressure to push into those voids
+                //
+                // But with such a large min distance, there more outward pressure and they fill the entire volume better
+                //if (dots.Where(o => !o.IsStatic).Count() > 4)
+                //{
+                //    return null;
+                //}
+
                 //int dimensions = aabb.Item1.Length;
                 int dimensions = 3;
 
-                double numerator = radius * 3d / 2d;
+                double numerator = aabb_length * 3d / 4d;
                 double divisor = Math.Pow(dots.Length, 1d / dimensions);
 
                 return numerator / divisor;
             }
 
-            private static ShortPair[] GetShortestPair(IList<Dot> dots)
+            public static ShortPair[] GetShortestPair(IList<Dot> dots)
             {
                 List<ShortPair> retVal = new List<ShortPair>();
 
-                for (int outer = 0; outer < dots.Count - 1; outer++)
+                for (int outer = 0; outer < dots.Count; outer++)
                 {
-                    ShortPair currentShortest = null;
+                    (int index, Vector3D link, double length, double ratio, double avgMult)? currentShortest = null;
 
-                    for (int inner = outer + 1; inner < dots.Count; inner++)
+                    for (int inner = 0; inner < dots.Count; inner++)
                     {
-                        if (dots[outer].IsStatic && dots[inner].IsStatic)
+                        if (inner == outer)
+                        {
+                            continue;
+                        }
+                        else if (dots[outer].IsStatic && dots[inner].IsStatic)
                         {
                             continue;
                         }
@@ -1365,21 +1470,515 @@ namespace Game.HelperClassesWPF
                         double avgMult = (dots[inner].RepulseMultiplier + dots[outer].RepulseMultiplier) / 2d;
                         double ratio = length / avgMult;
 
-                        if (currentShortest == null || ratio < currentShortest.LengthRatio)
+                        if (currentShortest == null || ratio < currentShortest.Value.ratio)
                         {
-                            currentShortest = new ShortPair(outer, inner, length, ratio, avgMult, link);
+                            currentShortest = (inner, link, length, ratio, avgMult);
                         }
                     }
 
                     if (currentShortest != null)
                     {
-                        retVal.Add(currentShortest);
+                        retVal.Add(new ShortPair(outer, currentShortest.Value.index, currentShortest.Value.length, currentShortest.Value.ratio, currentShortest.Value.avgMult, currentShortest.Value.link));
                     }
                 }
 
                 return retVal.
                     OrderBy(o => o.LengthRatio).
                     ToArray();
+            }
+
+            #endregion
+
+            #region DEBUG ATTEMPTS
+
+            private static Vector3D[] GetCone_Finish_DEBUG_INTERMEDIATESTEPS(Dot[] dots, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double MOVEPERCENT = .1;
+
+                CapToCone(dots, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax);
+
+                var aabb = Math3D.GetAABB(dots.Select(o => o.Position.ToPoint()));
+
+                double aabb_radius = (aabb.Item2 - aabb.Item1).Length / 2;
+                double stopAmount = aabb_radius * stopRadiusPercent;
+
+                double? minDistance = GetMinDistance_Cone(dots, aabb_radius * 2);
+
+                double heightMinSquared = heightMin * heightMin;
+                double heightMaxSquared = heightMax * heightMax;
+
+
+                List<int> snapshotIndices = new List<int>();
+                int index = stopIterationCount;
+                while (index > 0)
+                {
+                    snapshotIndices.Add(index - 1);
+                    index /= 2;
+                }
+
+
+                for (int cntr = 0; cntr < stopIterationCount; cntr++)
+                {
+                    double amountMoved = MoveStep_Cone(dots, MOVEPERCENT, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared, minDistance);
+
+                    if (snapshotIndices.Contains(cntr))
+                    {
+                        Debug3DWindow window = new Debug3DWindow()
+                        {
+                            Title = cntr.ToString(),
+                        };
+
+                        var sizes = Debug3DWindow.GetDrawSizes(aabb_radius);
+
+                        window.AddDots(dots.Where(o => !o.IsStatic).Select(o => o.Position), sizes.dot, Colors.White);
+
+                        window.AddText($"amount moved: {amountMoved.ToStringSignificantDigits(3)}");
+                        window.AddText($"percent moved: {(amountMoved / aabb_radius).ToStringSignificantDigits(3)}");
+
+                        window.Show();
+                    }
+
+                    if (amountMoved < stopAmount)
+                    {
+                        break;
+                    }
+                }
+
+                //NOTE: The movable dots are always the front of the list, so the returned array will be the same positions as the initial movable array
+                return dots.
+                    Where(o => !o.IsStatic).
+                    Select(o => o.Position).
+                    ToArray();
+            }
+            private static Vector3D[] GetCone_Finish_DEBUG_FINALONLY(Dot[] dots, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double MOVEPERCENT = .1;
+
+                DateTime startTime = DateTime.UtcNow;
+
+                CapToCone(dots, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax);
+
+                var aabb = Math3D.GetAABB(dots.Select(o => o.Position.ToPoint()));
+
+                double aabb_radius = (aabb.Item2 - aabb.Item1).Length / 2;
+
+                double surfaceArea = GetConeSurfaceArea(Math1D.Avg(heightMin, heightMax), angle);
+
+                double stopAmount = surfaceArea * stopRadiusPercent;
+
+                double? minDistance = GetMinDistance_Cone(dots, aabb_radius * 2);
+
+                double heightMinSquared = heightMin * heightMin;
+                double heightMaxSquared = heightMax * heightMax;
+
+
+                //TODO: added surface area, but getting wild results.  maybe stopAmount calculation is too simple?
+
+
+                int cntr = 0;
+                double amountMoved = 0;
+                for (cntr = 0; cntr < stopIterationCount; cntr++)
+                {
+                    amountMoved = MoveStep_Cone(dots, MOVEPERCENT, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared, minDistance);
+
+                    if (amountMoved < stopAmount)
+                    {
+                        break;
+                    }
+                }
+
+
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Title = string.Format("{0} {1} | {2} {3}%", dots.Length, angle.ToInt_Round(), cntr, (amountMoved / surfaceArea).ToStringSignificantDigits(2)),
+                };
+
+                var sizes = Debug3DWindow.GetDrawSizes(aabb_radius);
+
+                window.AddDots(dots.Where(o => !o.IsStatic).Select(o => o.Position), sizes.dot, Colors.White);
+
+                string t = "\t";
+
+                window.AddText($"num points:{t}{dots.Length}");
+                window.AddText($"angle:\t{t}{angle.ToStringSignificantDigits(2)}");
+                window.AddText($"iterations:{t}{cntr}");
+                window.AddText("");
+                window.AddText($"surface area:{t}{surfaceArea.ToStringSignificantDigits(3)}");
+                window.AddText($"amount moved:{t}{amountMoved.ToStringSignificantDigits(3)}");
+                window.AddText($"stop amount:{t}{stopAmount.ToStringSignificantDigits(3)}");
+                window.AddText("");
+                window.AddText($"percent moved:{t}{(amountMoved / surfaceArea).ToStringSignificantDigits(3)}");
+                window.AddText("");
+                window.AddText($"elapsed time:{t}{(DateTime.UtcNow - startTime).TotalMilliseconds.ToString("N0")}");
+
+                window.Show();
+
+
+
+                //NOTE: The movable dots are always the front of the list, so the returned array will be the same positions as the initial movable array
+                return dots.
+                    Where(o => !o.IsStatic).
+                    Select(o => o.Position).
+                    ToArray();
+            }
+            private static Vector3D[] GetCone_Finish_DEBUG_PAIRS(Dot[] dots, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double stopRadiusPercent, int stopIterationCount)
+            {
+                //const double MOVEPERCENT = .1;
+                const double MOVEPERCENT = 1;
+                const string t = "\t";
+
+                DateTime startTime = DateTime.UtcNow;
+
+                CapToCone(dots, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax);
+
+                var aabb = Math3D.GetAABB(dots.Select(o => o.Position.ToPoint()));
+
+                double aabb_radius = (aabb.Item2 - aabb.Item1).Length / 2;
+
+                double surfaceArea = GetConeSurfaceArea(Math1D.Avg(heightMin, heightMax), angle);
+
+                double stopAmount = surfaceArea * stopRadiusPercent;
+
+                double? minDistance = GetMinDistance_Cone(dots, aabb_radius * 2);
+
+                double heightMinSquared = heightMin * heightMin;
+                double heightMaxSquared = heightMax * heightMax;
+
+                int cntr = 0;
+                double amountMoved = 0;
+                for (cntr = 0; cntr < stopIterationCount; cntr++)
+                {
+                    var step = MoveStep_Cone_DEBUG_PAIRS(dots, MOVEPERCENT, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared, minDistance);
+                    amountMoved = step.amtMoved;
+
+                    if (cntr % 450 == 0)
+                    {
+                        #region SHOW PAIRS
+
+                        //Debug3DWindow window_pair = new Debug3DWindow()
+                        //{
+                        //    Title = string.Format("{0} ({1})", dots.Length, cntr),
+                        //    Background = UtilityWPF.BrushFromHex("D9D4C1"),
+                        //};
+
+                        //var sizes_pair = Debug3DWindow.GetDrawSizes(radius);
+
+                        //window_pair.AddDots(dots.Where(o => !o.IsStatic).Select(o => o.Position), sizes_pair.dot, Colors.DimGray);
+
+                        //window_pair.AddLines(step.pairs.Select(o => (dots[o.Index1].Position.ToPoint(), dots[o.Index2].Position.ToPoint())), sizes_pair.line, Colors.DimGray);
+
+                        //// draw the lines as a stack
+                        //for (int i = 0; i < step.pairs.Length; i++)
+                        //{
+                        //    double offset = aabb.Item1.Y - (i * sizes_pair.dot);
+
+                        //    window_pair.AddLine(new Point3D(0, offset, 0), new Point3D(step.pairs[i].LengthRatio, offset, 0), sizes_pair.line, Colors.SteelBlue);
+                        //}
+
+                        //window_pair.AddLine(new Point3D(step.avg, aabb.Item1.Y, 0), new Point3D(step.avg, aabb.Item1.Y - (step.pairs.Length * sizes_pair.dot), 0), sizes_pair.line, Colors.RoyalBlue);
+
+                        //window_pair.AddText($"num points:{t}{dots.Length}");
+                        //window_pair.AddText($"angle:\t{t}{angle.ToStringSignificantDigits(2)}");
+                        //window_pair.AddText("");
+                        //window_pair.AddText($"surface area:{t}{surfaceArea.ToStringSignificantDigits(3)}");
+                        //window_pair.AddText($"avg length:{t}{step.avg.ToStringSignificantDigits(3)}");
+                        //window_pair.AddText($"num pairs:{t}{step.pairs.Length}");
+
+                        //window_pair.Show();
+
+                        #endregion
+                    }
+
+                    if (amountMoved < stopAmount)
+                    {
+                        break;
+                    }
+                }
+
+
+                #region SHOW FINAL
+
+                Debug3DWindow window_final = new Debug3DWindow()
+                {
+                    Title = string.Format("{0} {1} | {2} {3}%", dots.Length, angle.ToInt_Round(), cntr, (amountMoved / surfaceArea).ToStringSignificantDigits(2)),
+                };
+
+                var sizes_final = Debug3DWindow.GetDrawSizes(aabb_radius);
+
+                window_final.AddDots(dots.Where(o => !o.IsStatic).Select(o => o.Position), sizes_final.dot, Colors.DimGray);
+
+                window_final.AddText($"num points:{t}{dots.Length}");
+                window_final.AddText($"angle:\t{t}{angle.ToStringSignificantDigits(2)}");
+                window_final.AddText($"iterations:{t}{cntr}");
+                window_final.AddText("");
+                window_final.AddText($"surface area:{t}{surfaceArea.ToStringSignificantDigits(3)}");
+                window_final.AddText($"amount moved:{t}{amountMoved.ToStringSignificantDigits(3)}");
+                window_final.AddText($"stop amount:{t}{stopAmount.ToStringSignificantDigits(3)}");
+                window_final.AddText("");
+                window_final.AddText($"percent moved:{t}{(amountMoved / surfaceArea).ToStringSignificantDigits(3)}");
+                window_final.AddText("");
+                window_final.AddText($"elapsed time:{t}{(DateTime.UtcNow - startTime).TotalMilliseconds.ToString("N0")}");
+
+                window_final.Show();
+
+                #endregion
+
+
+                //NOTE: The movable dots are always the front of the list, so the returned array will be the same positions as the initial movable array
+                return dots.
+                    Where(o => !o.IsStatic).
+                    Select(o => o.Position).
+                    ToArray();
+            }
+            private static Vector3D[] GetCone_Finish_MONDAY(Dot[] dots, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double stopRadiusPercent, int stopIterationCount)
+            {
+                const double MOVEPERCENT = .1;
+                const string t = "\t";
+
+                DateTime startTime = DateTime.UtcNow;
+
+                CapToCone(dots, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax);
+
+                //TODO: Don't use aabb of the points passed in, calculate what the aabb should be.  The points passed in might be tightly packed
+                var aabb = Math3D.GetAABB(dots.Select(o => o.Position.ToPoint()));
+                double aabb_length = (aabb.Item2 - aabb.Item1).Length;
+                double? minDistance = GetMinDistance_Cone(dots, aabb_length);
+
+                double volume = GetConeVolume(heightMin, heightMax, angle);
+
+
+                //TODO: This needs to account for the number of points.  The more points, the smaller the avg distance between points, so that
+                //would need a smaller "percent"
+                double stopAmount = volume * stopRadiusPercent;
+
+
+                double heightMinSquared = heightMin * heightMin;
+                double heightMaxSquared = heightMax * heightMax;
+
+                int cntr = 0;
+                double amountMoved = 0;
+                for (cntr = 0; cntr < stopIterationCount; cntr++)
+                {
+                    amountMoved = MoveStep_Cone_MONDAY(dots, MOVEPERCENT, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared, minDistance);
+                    if (amountMoved < stopAmount)
+                    {
+                        break;
+                    }
+                }
+
+
+                #region SHOW FINAL
+
+                //Debug3DWindow window_final = new Debug3DWindow()
+                //{
+                //    Title = string.Format("{0} {1} | {2} {3}%", dots.Length, angle.ToInt_Round(), cntr, (amountMoved / volume).ToStringSignificantDigits(2)),
+                //};
+
+                //var sizes_final = Debug3DWindow.GetDrawSizes(heightMax);
+
+                //window_final.AddDots(dots.Where(o => !o.IsStatic).Select(o => o.Position), sizes_final.dot, Colors.DimGray);
+
+                //window_final.AddText($"num points:{t}{dots.Length}");
+                //window_final.AddText($"angle:\t{t}{angle.ToStringSignificantDigits(2)}");
+                //window_final.AddText($"iterations:{t}{cntr}");
+                //window_final.AddText("");
+                //window_final.AddText($"volume:{t}{t}{volume.ToStringSignificantDigits(3)}");
+                //window_final.AddText($"amount moved:{t}{amountMoved.ToStringSignificantDigits(3)}");
+                //window_final.AddText($"stop amount:{t}{stopAmount.ToStringSignificantDigits(3)}");
+                //window_final.AddText("");
+                //window_final.AddText($"percent moved:{t}{(amountMoved / volume).ToStringSignificantDigits(3)}");
+                //window_final.AddText("");
+                //window_final.AddText($"elapsed time:{t}{(DateTime.UtcNow - startTime).TotalMilliseconds.ToString("N0")}");
+
+                //window_final.Show();
+
+                #endregion
+
+
+                //NOTE: The movable dots are always the front of the list, so the returned array will be the same positions as the initial movable array
+                return dots.
+                    Where(o => !o.IsStatic).
+                    Select(o => o.Position).
+                    ToArray();
+            }
+
+            private static (double amtMoved, ShortPair[] pairs, double avg) MoveStep_Cone_DEBUG_PAIRS(IList<Dot> dots, double percent, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double heightMinSquared, double heightMaxSquared, double? minDistance)
+            {
+                // Find shortest pair lengths
+                ShortPair[] pairs = GetShortestPair(dots);
+                if (pairs.Length == 0)
+                {
+                    return (0, pairs, 0);
+                }
+
+                // Move the shortest pair away from each other (based on how far they are away from the avg)
+                double avg = Math1D.Avg(pairs.Average(o => o.LengthRatio), pairs.Max(o => o.LengthRatio));      // doing .75 instead of .5 to push them away faster
+
+                // Artificially increase repulsive pressure
+                if (minDistance != null && avg < minDistance.Value)
+                {
+                    avg = minDistance.Value;
+                }
+
+                double distToMoveMax = avg - pairs[0].LengthRatio;
+                if (distToMoveMax.IsNearZero())
+                {
+                    // Found equilbrium
+                    return (0, pairs, avg);
+                }
+
+                bool isFirst = true;
+                foreach (ShortPair pair in pairs)
+                {
+                    // Only want to move them if they are less than average
+                    if (pair.LengthRatio >= avg)
+                    {
+                        break;      // they are sorted, so the rest of the list will also be greater
+                    }
+
+                    // Figure out how far they should move
+                    double actualPercent, distToMoveRatio;
+                    if (isFirst)
+                    {
+                        actualPercent = percent;
+                        distToMoveRatio = distToMoveMax;
+                    }
+                    else
+                    {
+                        distToMoveRatio = avg - pair.LengthRatio;
+                        actualPercent = (distToMoveRatio / distToMoveMax) * percent;        // don't use the full percent.  Reduce it based on the ratio of this distance with the max distance
+                    }
+
+                    isFirst = false;
+
+                    double moveDist = distToMoveRatio * actualPercent * pair.AvgMult;
+
+                    // Unit vector
+                    Vector3D displaceUnit;
+                    if (pair.Length.IsNearZero())
+                    {
+                        displaceUnit = Math3D.GetRandomVector_Spherical_Shell(1);
+                    }
+                    else
+                    {
+                        displaceUnit = pair.Link.ToUnit();
+                    }
+
+                    // Can't move evenly.  Divide it up based on the ratio of multipliers
+                    double sumMult = dots[pair.Index1].RepulseMultiplier + dots[pair.Index2].RepulseMultiplier;
+                    double percent2 = dots[pair.Index1].RepulseMultiplier / sumMult;      // flipping 1 and 2, because if 1 is bigger, 2 needs to move more
+                    double percent1 = 1 - percent2;
+
+                    // Move dots
+                    Dot dot = dots[pair.Index1];
+                    if (!dot.IsStatic)
+                    {
+                        Vector3D displace = displaceUnit * (moveDist * percent1);
+                        dot.Position = dot.Position - displace;
+                        CapToCone(dot, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared);
+                    }
+
+                    dot = dots[pair.Index2];
+                    if (!dot.IsStatic)
+                    {
+                        Vector3D displace = displaceUnit * (moveDist * percent2);
+                        dot.Position = dot.Position + displace;
+                        CapToCone(dot, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared);
+                    }
+                }
+
+                return (distToMoveMax, pairs, avg);
+            }
+            private static double MoveStep_Cone_MONDAY(IList<Dot> dots, double percent, Vector3D axisUnit, Vector3D orthUnit, double angle, double maxDotProduct, double heightMin, double heightMax, double heightMinSquared, double heightMaxSquared, double? minDistance)
+            {
+                // Find shortest pair lengths
+                ShortPair[] pairs = GetShortestPair(dots);
+                if (pairs.Length == 0)
+                {
+                    return 0;
+                }
+
+                // Move the shortest pair away from each other (based on how far they are away from the avg)
+                double avg = pairs.Average(o => o.LengthRatio);
+
+                // Store this before avg gets changed by min distance
+                double retVal = avg - pairs[0].LengthRatio;
+
+                // Artificially increase repulsive pressure
+                if (minDistance != null && avg < minDistance.Value)
+                {
+                    avg = minDistance.Value;
+                }
+
+                double distToMoveMax = avg - pairs[0].LengthRatio;
+                if (distToMoveMax.IsNearZero())
+                {
+                    // Found equilbrium
+                    return retVal;
+                }
+
+                bool isFirst = true;
+                foreach (ShortPair pair in pairs)
+                {
+                    // Only want to move them if they are less than average
+                    if (pair.LengthRatio >= avg)
+                    {
+                        break;      // they are sorted, so the rest of the list will also be greater
+                    }
+
+                    // Figure out how far they should move
+                    double actualPercent, distToMoveRatio;
+                    if (isFirst)
+                    {
+                        actualPercent = percent;
+                        distToMoveRatio = distToMoveMax;
+                    }
+                    else
+                    {
+                        distToMoveRatio = avg - pair.LengthRatio;
+                        actualPercent = (distToMoveRatio / distToMoveMax) * percent;        // don't use the full percent.  Reduce it based on the ratio of this distance with the max distance
+                    }
+
+                    isFirst = false;
+
+                    double moveDist = distToMoveRatio * actualPercent * pair.AvgMult;
+
+                    // Unit vector
+                    Vector3D displaceUnit;
+                    if (pair.Length.IsNearZero())
+                    {
+                        displaceUnit = Math3D.GetRandomVector_Spherical_Shell(1);
+                    }
+                    else
+                    {
+                        displaceUnit = pair.Link.ToUnit();
+                    }
+
+                    // Can't move evenly.  Divide it up based on the ratio of multipliers
+                    double sumMult = dots[pair.Index1].RepulseMultiplier + dots[pair.Index2].RepulseMultiplier;
+                    double percent2 = dots[pair.Index1].RepulseMultiplier / sumMult;      // flipping 1 and 2, because if 1 is bigger, 2 needs to move more
+                    double percent1 = 1 - percent2;
+
+                    // Move dots
+                    Dot dot = dots[pair.Index1];
+                    if (!dot.IsStatic)
+                    {
+                        Vector3D displace = displaceUnit * (moveDist * percent1);
+                        dot.Position = dot.Position - displace;
+                        CapToCone(dot, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared);
+                    }
+
+                    dot = dots[pair.Index2];
+                    if (!dot.IsStatic)
+                    {
+                        Vector3D displace = displaceUnit * (moveDist * percent2);
+                        dot.Position = dot.Position + displace;
+                        CapToCone(dot, axisUnit, orthUnit, angle, maxDotProduct, heightMin, heightMax, heightMinSquared, heightMaxSquared);
+                    }
+                }
+
+                return retVal;
             }
 
             #endregion
@@ -3337,14 +3936,15 @@ namespace Game.HelperClassesWPF
         #region class: DelaunayVoronoi3D
 
         /// <remarks>
-        /// This uses MIConvexHull, which is under GNU Lesser General Public License
-        /// https://miconvexhull.codeplex.com/
+        /// This uses MIConvexHull, which is under The MIT License (MIT)
+        /// https://designengrlab.github.io/MIConvexHull/
+        /// https://github.com/DesignEngrLab/MIConvexHull
         /// </remarks>
         private static class DelaunayVoronoi3D
         {
             #region class: Vertex
 
-            private class Vertex : Game.HelperClassesWPF.MIConvexHull.IVertex
+            private class Vertex : MIConvexHull.IVertex
             {
                 public Vertex(int index, Point3D point)
                 {
@@ -3364,7 +3964,7 @@ namespace Game.HelperClassesWPF
             #endregion
             #region class: Cell
 
-            private class Cell : Game.HelperClassesWPF.MIConvexHull.TriangulationCell<Vertex, Cell>
+            private class Cell : MIConvexHull.TriangulationCell<Vertex, Cell>
             {
                 // These get populated after the voronoi result is returned
                 public int Index = -1;
@@ -3435,13 +4035,17 @@ namespace Game.HelperClassesWPF
                 }
 
                 // Convert the points into something the MIConvexHull library can use
-                Vertex[] vertices = points.Select((o, i) => new Vertex(i, o)).ToArray();
+                Vertex[] vertices = points.
+                    Select((o, i) => new Vertex(i, o)).
+                    ToArray();
 
                 // Run the delaunay
-                var tetrahedrons1 = Game.HelperClassesWPF.MIConvexHull.Triangulation.CreateDelaunay<Vertex>(vertices).Cells.ToArray();
+                var tetrahedrons1 = MIConvexHull.Triangulation.CreateDelaunay<Vertex>(vertices).Cells.ToArray();
 
                 // Convert into my classes
-                Tetrahedron[] tetrahedrons2 = tetrahedrons1.Select(o => new Tetrahedron(o.Vertices[0].Index, o.Vertices[1].Index, o.Vertices[2].Index, o.Vertices[3].Index, points, triangleDict)).ToArray();
+                Tetrahedron[] tetrahedrons2 = tetrahedrons1.
+                    Select(o => new Tetrahedron(o.Vertices[0].Index, o.Vertices[1].Index, o.Vertices[2].Index, o.Vertices[3].Index, points, triangleDict)).
+                    ToArray();
 
                 // Link them
                 for (int cntr = 0; cntr < tetrahedrons1.Length; cntr++)
@@ -3455,7 +4059,9 @@ namespace Game.HelperClassesWPF
                             continue;
                         }
 
-                        int[] indecies = neighbor1.Vertices.Select(o => o.Index).OrderBy(o => o).ToArray();
+                        int[] indecies = neighbor1.Vertices.
+                            Select(o => o.Index).OrderBy(o => o).
+                            ToArray();
 
                         // Find the tetra2
                         Tetrahedron neighbor2 = tetrahedrons2.First(o => o.IsMatch(indecies));
@@ -3473,7 +4079,7 @@ namespace Game.HelperClassesWPF
                 Tetrahedron[] delaunay = GetDelaunay(points);
 
                 // Voronoi
-                var voronoiMesh = Game.HelperClassesWPF.MIConvexHull.VoronoiMesh.Create<Vertex, Cell>(points.Select((o, i) => new Vertex(i, o)));
+                var voronoiMesh = MIConvexHull.VoronoiMesh.Create<Vertex, Cell>(points.Select((o, i) => new Vertex(i, o)).ToArray());
 
                 // Calculate the centers
                 int index = 0;
@@ -3509,7 +4115,7 @@ namespace Game.HelperClassesWPF
 
             #region Private Methods - Get Rays
 
-            private static IEnumerable<Edge3D> GetRays(HelperClassesWPF.MIConvexHull.VoronoiMesh<Vertex, Cell, HelperClassesWPF.MIConvexHull.VoronoiEdge<Vertex, Cell>> voronoiMesh, Tetrahedron[] delaunay, Point3D[] allCircumcenters)
+            private static IEnumerable<Edge3D> GetRays(MIConvexHull.VoronoiMesh<Vertex, Cell, MIConvexHull.VoronoiEdge<Vertex, Cell>> voronoiMesh, Tetrahedron[] delaunay, Point3D[] allCircumcenters)
             {
                 List<Edge3D> retVal = new List<Edge3D>();
 
@@ -3618,7 +4224,7 @@ namespace Game.HelperClassesWPF
             #endregion
             #region Private Methods - Get Faces
 
-            private static Tuple<Face3D[], int[][]> GetFaces(Point3D[] controlPoints, Edge3D[] edges, Point3D[] edgePoints, HelperClassesWPF.MIConvexHull.VoronoiMesh<Vertex, Cell, HelperClassesWPF.MIConvexHull.VoronoiEdge<Vertex, Cell>> voronoiMesh)
+            private static Tuple<Face3D[], int[][]> GetFaces(Point3D[] controlPoints, Edge3D[] edges, Point3D[] edgePoints, MIConvexHull.VoronoiMesh<Vertex, Cell, MIConvexHull.VoronoiEdge<Vertex, Cell>> voronoiMesh)
             {
                 List<Tuple<int[], Face3D>> uniqueFaces = new List<Tuple<int[], Face3D>>();
 
@@ -5664,8 +6270,8 @@ namespace Game.HelperClassesWPF
             const double ANGLEMAX = .1;
 
             // Calculate normals
-            Vector3D fromNormalUnit = Vector3D.CrossProduct(from1, from2).ToUnit();
-            Vector3D toNormalUnit = Vector3D.CrossProduct(to1, to2).ToUnit();
+            Vector3D fromNormalUnit = Vector3D.CrossProduct(from1, from2).ToUnit(true);
+            Vector3D toNormalUnit = Vector3D.CrossProduct(to1, to2).ToUnit(true);
 
             if (IsInvalid(fromNormalUnit) || IsInvalid(toNormalUnit))     // if the normals are invalid, then the two directions are colinear (or one is zero length, or invalid)
             {
@@ -6034,10 +6640,18 @@ namespace Game.HelperClassesWPF
                 return Tuple.Create(new Point3D(0, 0, 0), new Point3D(0, 0, 0));
             }
 
-            // Exit Function
             return Tuple.Create(new Point3D(minX, minY, minZ), new Point3D(maxX, maxY, maxZ));
         }
         public static Rect3D GetAABB_Rect(IEnumerable<Point3D> points)
+        {
+            var aabb = GetAABB(points);
+            return new Rect3D(aabb.Item1, (aabb.Item2 - aabb.Item1).ToSize());
+        }
+        public static Tuple<Point3D, Point3D> GetAABB(IEnumerable<Vector3D> points)
+        {
+            return GetAABB(points.Select(o => o.ToPoint()));
+        }
+        public static Rect3D GetAABB_Rect(IEnumerable<Vector3D> points)
         {
             var aabb = GetAABB(points);
             return new Rect3D(aabb.Item1, (aabb.Item2 - aabb.Item1).ToSize());
@@ -6323,7 +6937,7 @@ namespace Game.HelperClassesWPF
         public static Point3D[] ApplyBallOfSprings(Point3D[] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
         {
             VectorND[] pos = positions.
-                Select(o => new VectorND(new[] { o.X, o.Y, o.Z })).
+                Select(o => new VectorND(o.X, o.Y, o.Z)).
                 ToArray();
 
             VectorND[] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
@@ -6334,7 +6948,7 @@ namespace Game.HelperClassesWPF
         }
 
         /// <summary>
-        /// Dot product of unit vectors is cosine.  This makes it look roughly linear
+        /// Dot product of unit vectors is cosine.  This function makes it look roughly linear
         /// NOTE: You must pass in unit vectors, or the results will be wild
         /// </summary>
         public static double GetLinearDotProduct(Vector3D unit1, Vector3D unit2)
@@ -6429,10 +7043,10 @@ namespace Game.HelperClassesWPF
         {
             if (numCellsX <= 0 || numCellsY <= 0 || numCellsZ <= 0)
             {
-                return new(Rect3D, Point3D)[0];
+                return new (Rect3D, Point3D)[0];
             }
 
-            (Rect3D, Point3D)[] retVal = new(Rect3D, Point3D)[numCellsX * numCellsY * numCellsZ];
+            (Rect3D, Point3D)[] retVal = new (Rect3D, Point3D)[numCellsX * numCellsY * numCellsZ];
 
             double offsetX = (cellSize * numCellsX) / -2;
             double offsetY = (cellSize * numCellsY) / -2;
@@ -6504,6 +7118,145 @@ namespace Game.HelperClassesWPF
                 radius * Math.Cos(theta) * Math.Sin(phi),
                 radius * Math.Sin(theta) * Math.Sin(phi),
                 radius * Math.Cos(phi));
+        }
+
+        /// <summary>
+        /// This finds a line that goes through the points
+        /// </summary>
+        /// <remarks>
+        /// I tried to find a curve fit function, but they all seemed to use Z as distance.  I wanted this function to work
+        /// in any orientation, so distance from line must be real
+        /// 
+        /// So this function uses forces to pull on the line
+        /// </remarks>
+        /// <returns>
+        /// The calculated line is an infinite line (not a line segment), so pointOnLine is arbritrary
+        /// </returns>
+        public static (Point3D pointOnLine, Vector3D direction) GetAverageLine(Point3D[] points)
+        {
+            var aabb = GetAABB(points);
+            Vector3D direction = (aabb.Item2 - aabb.Item1) / 2;
+            Point3D center = aabb.Item1 + direction;
+
+            double directionLength = direction.Length * 2;
+            if (directionLength < 1 || directionLength > 10)
+            {
+                // Things get really finicky.  So just adjust the size and recurse
+                double mult = 5 / directionLength;
+
+                Point3D[] adjusted = points.
+                    Select(o => center + ((o - center) * mult)).
+                    ToArray();
+
+                return GetAverageLine(adjusted);
+            }
+
+            double movePercent_rot = 1 / directionLength;
+            double movePercent_lin = movePercent_rot * movePercent_rot;     // linear doesn't need to move very much compared to torque
+
+            Vector3D minLin = new Vector3D((aabb.Item2.X - aabb.Item1.X) / 20, (aabb.Item2.Y - aabb.Item1.Y) / 20, (aabb.Item2.Z - aabb.Item1.Z) / 20);
+
+            int count = 100;
+
+            #region draw
+
+            //double DOT = direction.Length / 100;
+            //double LINE = direction.Length / 200;
+
+            //Debug3DWindow window = new Debug3DWindow()
+            //{
+            //    Background = new SolidColorBrush(UtilityWPF.ColorFromHex("666")),
+            //};
+
+            //window.AddDots(points, DOT, Colors.Yellow);
+
+            //window.AddLines(aabb.Item1, aabb.Item2, LINE, UtilityWPF.ColorFromHex("888"));
+
+            //window.AddText($"count: {count}");
+
+            //window.AddText($"move% rot: {movePercent_rot.ToStringSignificantDigits(3)}");
+            //window.AddText($"move% lin: {movePercent_lin.ToStringSignificantDigits(3)}");
+
+            //window.AddText($"line length: {(direction.Length * 2).ToStringSignificantDigits(3)}");
+
+            //window.AddDot(center, DOT / 2, Colors.Yellow);
+            //window.AddLine(center - direction, center + direction, LINE, Colors.Yellow);
+
+            #endregion
+
+            for (int cntr = 0; cntr < count; cntr++)
+            {
+                Vector3D linear = new Vector3D();
+                Vector3D torque = new Vector3D();
+
+                foreach (Point3D point in points)
+                {
+                    Point3D closest = GetClosestPoint_Line_Point(center, direction, point);
+
+                    SplitForceIntoTranslationAndTorque(out Vector3D linear1, out Vector3D torque1, closest - center, point - closest);
+
+                    linear += linear1;
+                    torque += torque1;
+                }
+
+                linear *= movePercent_lin;
+                torque *= movePercent_rot;
+
+                if (linear.IsNearZero() && torque.IsNearZero())
+                {
+                    break;
+                }
+
+                // Cap linear (linear is sometimes unstable, torque seems much more stable)
+                if (Math.Abs(linear.X) > minLin.X)
+                {
+                    linear /= Math.Abs(linear.X) / minLin.X;
+                    movePercent_lin /= 2;
+                }
+
+                if (Math.Abs(linear.Y) > minLin.Y)
+                {
+                    linear /= Math.Abs(linear.Y) / minLin.Y;
+                    movePercent_lin /= 2;
+                }
+
+                if (Math.Abs(linear.Z) > minLin.Z)
+                {
+                    linear /= Math.Abs(linear.Z) / minLin.Z;
+                    movePercent_lin /= 2;
+                }
+
+                // Move the line
+                center += linear;
+
+                if (!torque.IsNearZero())
+                {
+                    direction = direction.GetRotatedVector(torque.ToUnit(), torque.Length);
+                }
+
+                #region draw
+
+                //Color lineColor = UtilityWPF.AlphaBlend(Colors.Chartreuse, Colors.Gold, cntr.ToDouble() / count.ToDouble());
+
+                //window.AddDot(center, DOT / 2, lineColor);
+                //window.AddLine(center - direction, center + direction, LINE, lineColor);
+
+                #endregion
+            }
+
+            #region draw
+
+            //window.AddText($"final move% rot: {movePercent_rot.ToStringSignificantDigits(3)}");
+            //window.AddText($"final move% lin: {movePercent_lin.ToStringSignificantDigits(3)}");
+
+            //window.AddText($"final center: {center.ToString()}");
+            //window.AddText($"final dir: {direction.ToString()}");
+
+            //window.Show();
+
+            #endregion
+
+            return (center, direction);
         }
 
         #endregion
@@ -7432,8 +8185,9 @@ namespace Game.HelperClassesWPF
 
             // 1)  First we need to get the vector of our line, Then normalize it so it's a length of 1
             Vector3D lineDir = line[1] - line[0];       // Get the Vector of the line
-            lineDir.Normalize();                // Normalize the lines vector
 
+            //NO!!!!  I don't know why this was done, but it messes up the segment length constraint
+            //lineDir.Normalize();                // Normalize the lines vector
 
             // 2) Use the plane equation (distance = Ax + By + Cz + D) to find the distance from one of our points to the plane.
             //    Here I just chose a arbitrary point as the point to find that distance.  You notice we negate that
@@ -7515,7 +8269,7 @@ namespace Game.HelperClassesWPF
             // There is an intersection, edge intersections need to be done in 2D
             var transform2D = Math2D.GetTransformTo2D(plane);
 
-            Point circleCenter = transform2D.Item1.Transform(circleIntersect.Item1).ToPoint2D();
+            Point circleCenter = transform2D.From3D_To2D.Transform(circleIntersect.Item1).ToPoint2D();
             double radiusSquared = circleIntersect.Item2 * circleIntersect.Item2;
 
             List<Point3D> retVal = new List<Point3D>();
@@ -9107,10 +9861,10 @@ namespace Game.HelperClassesWPF
             return;
         }
 
-        private static IEnumerable<Point3D> GetIntersectionFaceSphere_edge(Point3D inside, Point3D outside, Tuple<Transform3D, Transform3D> transform2D, Point circleCenter, double circleRadius, double sphereRadius_TEMP)
+        private static IEnumerable<Point3D> GetIntersectionFaceSphere_edge(Point3D inside, Point3D outside, TransformsToFrom2D transform2D, Point circleCenter, double circleRadius, double sphereRadius_TEMP)
         {
-            Point inside2D = transform2D.Item1.Transform(inside).ToPoint2D();
-            Point outside2D = transform2D.Item1.Transform(outside).ToPoint2D();
+            Point inside2D = transform2D.From3D_To2D.Transform(inside).ToPoint2D();
+            Point outside2D = transform2D.From3D_To2D.Transform(outside).ToPoint2D();
 
             double? intersectPercent = Math2D.GetIntersection_LineSegment_Circle_percent(inside2D, outside2D, circleCenter, circleRadius);
             if (intersectPercent == null)
@@ -10400,7 +11154,7 @@ namespace Game.HelperClassesWPF
         {
             if (edges.Length == 0)
             {
-                return (new(int, int)[0], new Point3D[0]);
+                return (new (int, int)[0], new Point3D[0]);
             }
 
             // Dedupe the edges

@@ -1,23 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesAI;
+﻿using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
-using SharpNeat.Core;
 using SharpNeat.Genomes.Neat;
 using SharpNeat.Phenomes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
+    //TODO: For the next version of brain, so just have one trained net.  Make an up front classifier that acts like a switch statement for which trained network to use
+    //That classifier would be a combination of clustering of the inputs and a simple feed forward net.  That way each cluster of input conditions (a current scenario
+    //the bot is in) gets its own specific trained net
     #region class: BrainNEATToolItem
 
     public class BrainNEATToolItem : PartToolItemBase
@@ -282,8 +282,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly IContainer _energyTanks;
 
-        private readonly Neuron_NegPos[] _neuronsInput;
-        private readonly Neuron_SensorPosition[] _neuronsOutput;
+        // These are -1 to 1
+        private readonly Neuron_Direct[] _neuronsInput;
+        private readonly Neuron_Direct[] _neuronsOutput;
         private readonly INeuron[] _neuronsAll;
 
         private readonly double _volume;        // this is used to calculate energy draw
@@ -328,7 +329,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             Design = new BrainNEATDesign(options, true);
             Design.SetDNA(dna);
 
-            if(dna == null || dna.UniqueID == Guid.Empty)
+            if (dna == null || dna.UniqueID == Guid.Empty)
             {
                 _uniqueID = Guid.NewGuid();
             }
@@ -359,7 +360,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public IEnumerable<INeuron> Neruons_All => _neuronsAll;
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Brain;
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Brain_HasInternalNN;
 
         public double Radius
         {
@@ -385,9 +386,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 _isOn = false;
 
-                foreach (Neuron_SensorPosition neuron in _neuronsOutput)
+                foreach (Neuron_Direct neuron in _neuronsOutput)
                 {
-                    neuron.Value = 0;
+                    neuron.SetValue(0);
                 }
             }
             else
@@ -421,7 +422,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 for (int cntr = 0; cntr < outputArr2.Length; cntr++)
                 {
-                    _neuronsOutput[cntr].Value = outputArr2[cntr];
+                    _neuronsOutput[cntr].SetValue(outputArr2[cntr]);
                 }
             }
         }
@@ -530,28 +531,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #region Private Methods
 
-        private static (Neuron_NegPos[] input, Neuron_SensorPosition[] output) CreateNeurons_HARDCODED(ShipPartDNA dna, ItemOptions itemOptions)
-        {
-            // Make an evenly distributed sherical shell of neurons.  Inputs with a positive Z coord, Outputs with a negative Z coord,
-            // and a band with no neurons around the equator
-
-            //dna.Neurons
-
-            return
-            (
-                Brain.GetNeuronPositions_Line2D(null, 16, 1, z: -1).
-                    Select(o => new Neuron_NegPos(o.ToPoint())).
-                    ToArray(),
-
-                Brain.GetNeuronPositions_Line2D(null, 16, 1, z: 1).
-                    Select(o => new Neuron_SensorPosition(o.ToPoint(), false)).
-                    ToArray()
-            );
-        }
         /// <summary>
-        /// inputs are +Z, outputs are -Z
+        /// inputs are located at +Z, outputs are -Z
         /// </summary>
-        private static (Neuron_NegPos[] input, Neuron_SensorPosition[] output) CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions)
+        private static (Neuron_Direct[] input, Neuron_Direct[] output) CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions)
         {
             const double MAXANGLE = 83;
 
@@ -582,11 +565,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return
             (
                 inputs.
-                    Select(o => new Neuron_NegPos(o)).
+                    Select(o => new Neuron_Direct(o, false)).
                     ToArray(),
 
                 outputs.
-                    Select(o => new Neuron_SensorPosition(o, false)).
+                    Select(o => new Neuron_Direct(o, false)).
                     ToArray()
             );
         }
@@ -613,7 +596,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             {
                 #region create new
 
-                retVal = Math3D.GetRandomVectors_Cone_EvenDist(count, axis, maxAngle, radius, radius);
+                retVal = Math3D.GetRandomVectors_Cone_EvenDist(count, axis, maxAngle, radius, radius, stopIterationCount: 12);
 
                 shouldRepair = false;
 

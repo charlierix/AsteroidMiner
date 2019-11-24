@@ -1,24 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Shapes;
-
 using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems;
-using Game.Newt.v2.GameItems.ShipParts;
-using Game.Newt.v2.GameItems.ShipEditor;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Clipper;
 using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.Testers
@@ -3171,7 +3164,7 @@ namespace Game.Newt.Testers
 
                 int nv = n;
                 int count = 2 * nv;
-                for (int m = 0, v = nv - 1; nv > 2; )
+                for (int m = 0, v = nv - 1; nv > 2;)
                 {
                     if ((count--) <= 0)
                     {
@@ -3505,7 +3498,7 @@ namespace Game.Newt.Testers
                 lines.Thickness = 1;
 
                 lines.AddLine(clickRay.Origin, clickRay.Origin + _testTriangle.Normal * 100);
-                lines.AddLine(clickRay.Origin, clickRay.Origin -_testTriangle.Normal * 100);
+                lines.AddLine(clickRay.Origin, clickRay.Origin - _testTriangle.Normal * 100);
 
                 lines.AddLine(hitPoint, clickRay.Origin + _testTriangle.Normal * 100);
                 lines.AddLine(hitPoint, clickRay.Origin - _testTriangle.Normal * 100);
@@ -6776,11 +6769,11 @@ namespace Game.Newt.Testers
                 //bool? includeEdgeHits = null;
 
                 var isInside = testPoints.Select(o => new
-                    {
-                        Point = o,
-                        IsInside1 = Math2D.IsInsidePolygon(poly1.ToArray(), o, includeEdgeHits),
-                        IsInside2 = Math2D.IsInsidePolygon(poly2.ToArray(), o, includeEdgeHits)
-                    }).ToArray();
+                {
+                    Point = o,
+                    IsInside1 = Math2D.IsInsidePolygon(poly1.ToArray(), o, includeEdgeHits),
+                    IsInside2 = Math2D.IsInsidePolygon(poly2.ToArray(), o, includeEdgeHits)
+                }).ToArray();
 
                 #region Draw
 
@@ -6847,10 +6840,10 @@ namespace Game.Newt.Testers
                     Select(o => Math3D.GetRandomVector_Circular(RADIUS)).
                     Select(o => new Point(o.X, o.Y)).
                     Select(o => new
-                        {
-                            Point = o,
-                            IsInside = Math2D.IsInsidePolygon(triangle, o, false),
-                        }).
+                    {
+                        Point = o,
+                        IsInside = Math2D.IsInsidePolygon(triangle, o, false),
+                    }).
                         ToArray();
 
                 #region Draw
@@ -7317,7 +7310,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaSpin = new ShipPartDNA() { PartType = SensorSpin.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(spinSize, spinSize, spinSize) };
                     return new SensorSpin(_editorOptions, _itemOptions, dnaSpin, null);
 
-                    #endregion
+                #endregion
 
                 case 1:
                     #region Fuel
@@ -7327,7 +7320,7 @@ namespace Game.Newt.Testers
                     fuel.QuantityCurrent = fuel.QuantityMax;		// without this, the fuel tank gets tossed around because it's so light
                     return fuel;
 
-                    #endregion
+                #endregion
 
                 case 2:
                     #region Energy
@@ -7335,7 +7328,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaEnergy = new ShipPartDNA() { PartType = EnergyTank.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new EnergyTank(_editorOptions, _itemOptions, dnaEnergy);
 
-                    #endregion
+                #endregion
 
                 case 3:
                     #region Brain
@@ -7343,7 +7336,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaBrain = new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, radius) };
                     return new Brain(_editorOptions, _itemOptions, dnaBrain, null);
 
-                    #endregion
+                #endregion
 
                 case 4:
                     #region Thruster
@@ -7351,7 +7344,7 @@ namespace Game.Newt.Testers
                     ThrusterDNA dnaThruster1 = new ThrusterDNA() { PartType = Thruster.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, height, height), ThrusterType = UtilityCore.GetRandomEnum(ThrusterType.Custom) };
                     return new Thruster(_editorOptions, _itemOptions, dnaThruster1, null);
 
-                    #endregion
+                #endregion
 
                 case 5:
                     #region Solar
@@ -7359,7 +7352,7 @@ namespace Game.Newt.Testers
                     ConverterRadiationToEnergyDNA dnaSolar = new ConverterRadiationToEnergyDNA() { PartType = ConverterRadiationToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(height, 1d + StaticRandom.NextDouble() * 4d, 1d), Shape = UtilityCore.GetRandomEnum<SolarPanelShape>() };
                     return new ConverterRadiationToEnergy(_editorOptions, _itemOptions, dnaSolar, null, _radiation);
 
-                    #endregion
+                #endregion
 
                 case 6:
                     #region Fuel->Energy
@@ -7367,7 +7360,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaBurner = new ShipPartDNA() { PartType = ConverterFuelToEnergy.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterFuelToEnergy(_editorOptions, _itemOptions, dnaBurner, null, null);
 
-                    #endregion
+                #endregion
 
                 case 7:
                     #region Energy->Ammo
@@ -7375,7 +7368,7 @@ namespace Game.Newt.Testers
                     ShipPartDNA dnaReplicator = new ShipPartDNA() { PartType = ConverterEnergyToAmmo.PARTTYPE, Position = position, Orientation = orientation, Scale = new Vector3D(radius, radius, height) };
                     return new ConverterEnergyToAmmo(_editorOptions, _itemOptions, dnaReplicator, null, null);
 
-                    #endregion
+                #endregion
 
                 default:
                     throw new ApplicationException("Unexpected integer");
@@ -7725,7 +7718,7 @@ namespace Game.Newt.Testers
         {
             var transforms = Math2D.GetTransformTo2D(polygon);
 
-            Point[][] clip2D = clipPolygons.Select(o => o.Select(p => transforms.Item1.Transform(p).ToPoint2D()).ToArray()).ToArray();
+            Point[][] clip2D = clipPolygons.Select(o => o.Select(p => transforms.From3D_To2D.Transform(p).ToPoint2D()).ToArray()).ToArray();
 
             // Merge the polygons
             Polygon2D[] unions = null;
@@ -7739,7 +7732,7 @@ namespace Game.Newt.Testers
             }
 
             // Get the area of the outer polygon
-            double outerArea = Math2D.GetAreaPolygon(polygon.Select(o => transforms.Item1.Transform(o)).ToArray());
+            double outerArea = Math2D.GetAreaPolygon(polygon.Select(o => transforms.From3D_To2D.Transform(o)).ToArray());
 
             // Get the area of the inner polygons
             double innerArea = 0d;

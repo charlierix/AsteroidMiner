@@ -9,6 +9,12 @@ using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.ArenaTester
 {
+    /// <summary>
+    /// This is owned by TrainingSession and is an accessor to training rooms
+    /// </summary>
+    /// <remarks>
+    /// This is a pretty thin class.  It arranges and creates the rooms, tells them to go each tick
+    /// </remarks>
     public class ArenaAccessor : IDisposable
     {
         #region class: TrainingRoomWrapper

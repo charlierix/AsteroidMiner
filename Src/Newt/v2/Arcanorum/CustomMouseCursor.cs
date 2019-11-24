@@ -11,6 +11,7 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {

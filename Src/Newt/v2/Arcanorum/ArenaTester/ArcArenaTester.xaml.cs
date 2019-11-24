@@ -1,28 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading.Tasks.Schedulers;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Game.HelperClassesAI;
+﻿using Game.HelperClassesAI;
 using Game.HelperClassesCore;
 using Game.HelperClassesCore.Threads;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.Arcanorum.MapObjects;
 using Game.Newt.v2.Arcanorum.Parts;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
-using Game.Newt.v2.GameItems.MapParts;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
@@ -31,6 +15,14 @@ using SharpNeat.EvolutionAlgorithms;
 using SharpNeat.EvolutionAlgorithms.ComplexityRegulation;
 using SharpNeat.Genomes.Neat;
 using SharpNeat.Phenomes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks.Schedulers;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.ArenaTester
 {
@@ -351,11 +343,21 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
                 _world.Dispose();
                 _world = null;
+
+                if (_viewer != null)
+                {
+                    _viewer.Close();
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void Viewer_Closed(object sender, EventArgs e)
+        {
+            _viewer = null;
         }
 
         private void World_Updating(object sender, WorldUpdatingArgs e)
@@ -449,6 +451,23 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 }
 
                 #endregion
+                #region winning genome stats
+
+                if (_bot == null)
+                {
+                    lblCurrentWinnerStats.Text = "";
+                }
+                else
+                {
+                    lblCurrentWinnerStats.Text = string.Format
+                    (
+                        "distance: {0}\r\nspeed: {1}",
+                        _bot.PositionWorld.ToVector().Length.ToStringSignificantDigits(3),
+                        _bot.VelocityWorld.Length.ToStringSignificantDigits(3)
+                    );
+                }
+
+                #endregion
 
                 if (chkKeep2D.IsChecked.Value)
                 {
@@ -488,6 +507,11 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
                 Action action = () =>
                 {
+                    if (_trainingSession == null)
+                    {
+                        return;
+                    }
+
                     eaStatus.Update(_trainingSession.EA);
 
                     #region snapshots
@@ -550,25 +574,23 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
                         _lastRefresh = now;
 
-
+                        Point? viewerPos = null;
                         if (_viewer != null)
                         {
+                            viewerPos = new Point(_viewer.Left, _viewer.Top);
                             _viewer.Close();
                         }
 
-                        _viewer = new ShipViewerWindow(_bot)
+                        _viewer = new ShipViewerWindow(_bot, this);
+                        _viewer.SetColorTheme_Light();
+
+                        if (viewerPos != null)
                         {
-                            Owner = this,
-                            PopupBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("A0808080")),
-                            PopupBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80808080")),
-                            ViewportBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("F0000000")),
-                            ViewportBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0F0")),
+                            _viewer.Left = viewerPos.Value.X;
+                            _viewer.Top = viewerPos.Value.Y;
+                        }
 
-                            PanelBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("8068736B")),
-                            PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45")),
-                            Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0")),
-                        };
-
+                        _viewer.Closed += Viewer_Closed;
                         _viewer.Show();
 
                         _genomeViewer.RefreshView(winningGenome);
@@ -646,7 +668,7 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                     if (part is SensorHoming partHoming)
                     {
                         partHoming.HomePoint = new Point3D(0, 0, 0);
-                        partHoming.HomeRadius = TrainingSession.ROOMSIZE / 2d;
+                        partHoming.HomeRadius = (TrainingSession.ROOMSIZE / 2d) * Evaluator3.MULT_HOMINGSIZE;
                     }
                 }
 
@@ -662,11 +684,132 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
                 _sessionLog = new BotTrackingStorage();
 
-                _trainingSession = new TrainingSession(
-                    dna, extra_offline, inputCount, outputCount,
-                    //(w, r) => new Evaluator2(w, r)
-                    (w, r) => new Evaluator3(w, r, _sessionLog, TrainingSession.GetActivationFunctionArgs(), maxEvalTime: 20)
-                    );
+                _trainingSession = new TrainingSession
+                (
+                    dna,
+                    extra_offline,
+                    inputCount,
+                    outputCount,
+                    (w, r) => new Evaluator3(w, r, _sessionLog, TrainingSession.GetActivationFunctionArgs(), maxEvalTime: 100)      // if the time is too short, the bot can get away with traveling slowly toward the wall.  The test period ends before it hits the wall and it gets a fairly good score
+                );
+
+                //TODO: TickGenomeListEvaluator needs to reference RoundRobinManager?
+                //It's currently just running on the main thread
+                //
+                //The Evaluate method gets called from the main thread.  ParallelGenomeListEvaluator does a parallel.foreach on the genome list
+                //
+                //The tick needs to hand a list to round robin, then wait until the list has been tested
+
+                _trainingSession.EA.UpdateEvent += EA_UpdateEvent;
+
+                _trainingSession.EA.StartContinue();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void FullRun2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                EndTraining();
+
+                #region ship extra args
+
+                ShipExtraArgs extra_offline = ArcBot2.GetArgs_Extra();
+                extra_offline.NeuralPoolManual = new NeuralPool_ManualTick();
+
+                ShipExtraArgs extra_online = ArcBot2.GetArgs_Extra();
+
+                #endregion
+                #region ship core args
+
+                ShipCoreArgs core = new ShipCoreArgs()
+                {
+                    World = _world,
+                    Material_Ship = _materialIDs.Bot,
+                    Map = new Map(null, extra_online.CameraPool, _world),
+                };
+
+                #endregion
+
+                WeaponDNA weaponDNA = new WeaponDNA()
+                {
+                    UniqueID = Guid.NewGuid(),
+                    Handle = WeaponHandleDNA.GetRandomDNA(),
+                };
+                weaponDNA.Handle.HandleMaterial = WeaponHandleMaterial.Hard_Wood;
+
+                Weapon weapon = new Weapon(weaponDNA, new Point3D(), _world, _materialIDs.Weapon);
+
+                #region create bot
+
+                // Need to create a bot that will wire up neurons, then save off that dna.  Otherwise, each room's bot will have a random
+                // wiring, and the training will be meaningless
+
+                int level = 5;      //StaticRandom.Next(1, 30);
+
+                // Create the bot
+                var construction = ArcBot2.GetConstruction(level, core, extra_online, _dragPlane, true);
+
+                _bot = new ArcBot2(construction, _materialIDs, _keep2D, _viewport);
+
+                ShipDNA dna = _bot.GetNewDNA();
+
+                ((ArcBot2)_bot).AttachWeapon(weapon);
+
+                _brainPart = _bot.Parts.FirstOrDefault(o => o is BrainNEAT) as BrainNEAT;
+                if (_brainPart == null)
+                {
+                    throw new ApplicationException("There needs to be a brain part");
+                }
+
+                foreach (PartBase part in _bot.Parts)
+                {
+                    if (part is SensorHoming partHoming)
+                    {
+                        partHoming.HomePoint = new Point3D(0, 0, 0);
+                        partHoming.HomeRadius = (TrainingSession.ROOMSIZE / 2d) * Evaluator3.MULT_HOMINGSIZE;
+                    }
+                }
+
+                int inputCount = _brainPart.Neruons_Writeonly.Count();
+                int outputCount = _brainPart.Neruons_Readonly.Count();
+
+                #endregion
+
+                _keep2D.Add(_bot, false);
+                _map.AddItem(_bot);
+                //_bot.Dispose();
+                //_bot = null;
+
+                _sessionLog = new BotTrackingStorage();
+
+                double weaponSpeed_min = 1;
+                double weaponSpeed_max = 2;
+
+                _trainingSession = new TrainingSession
+                (
+                    dna,
+                    extra_offline,
+                    inputCount,
+                    outputCount,
+                    (w, r) => new Evaluator_WeaponSpin(w, r, _sessionLog, TrainingSession.GetActivationFunctionArgs(), weaponSpeed_min, weaponSpeed_max, maxEvalTime: 100),      // if the time is too short, the bot can get away with traveling slowly toward the wall.  The test period ends before it hits the wall and it gets a fairly good score
+                    roomCount: 3
+                );
+
+                //NOTE: This event fires on a different thread
+                _trainingSession.RequestCustomBot = (c, k, d, m) =>
+                {
+                    var con = ArcBot2.GetConstruction(level, c, extra_offline, d, true);
+                    ArcBot2 bt2 = new ArcBot2(con, m, k, null);
+
+                    Weapon wep = new Weapon(weaponDNA, new Point3D(), c.World, m.Weapon);
+                    bt2.AttachWeapon(wep);
+
+                    return bt2;
+                };
 
                 //TODO: TickGenomeListEvaluator needs to reference RoundRobinManager?
                 //It's currently just running on the main thread
@@ -855,7 +998,7 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                     new BrainNEATDNA() { PartType = BrainNEAT.PARTTYPE, Position = new Point3D(0,0,-0.612726700748439), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
 
                     //new ShipPartDNA() { PartType = DirectionControllerRing.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
-                    new ShipPartDNA() { PartType = ImpulseEngine.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
+                    new ImpulseEngineDNA() { PartType = ImpulseEngine.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1), ImpulseEngineType = ImpulseEngineType.Translate },
                 };
 
                 ShipDNA dna = ShipDNA.Create("Arcbot Attempt 1", parts);
@@ -978,9 +1121,6 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
         {
             try
             {
-
-                //TODO: The external linker needs to be reworked so that regions of the inputs come specific parts instead of everything linking to everything
-
                 #region dna
 
                 double halfSqrt2 = Math.Sqrt(2) / 2;
@@ -1005,7 +1145,7 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                     new BrainNEATDNA() { PartType = BrainNEAT.PARTTYPE, Position = new Point3D(0,0,-0.612726700748439), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
 
                     //new ShipPartDNA() { PartType = DirectionControllerRing.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
-                    new ShipPartDNA() { PartType = ImpulseEngine.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1) },
+                    new ImpulseEngineDNA() { PartType = ImpulseEngine.PARTTYPE, Position = new Point3D(0,0,-1.21923909614498), Orientation = Quaternion.Identity, Scale = new Vector3D(1,1,1), ImpulseEngineType = ImpulseEngineType.Translate },
                 };
 
                 ShipDNA dna = ShipDNA.Create("Arcbot Attempt 1", parts);
@@ -1025,11 +1165,13 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 #region arena accessor (instantiate)
 
                 // Give it the map and instructions about room sizes/locations
-                ArenaAccessor_FAIL accessor = new ArenaAccessor_FAIL(
+                ArenaAccessor_FAIL accessor = new ArenaAccessor_FAIL
+                (
                     3, 100, 10,
                     false, false,
                     new Type[] { typeof(Bot) },
-                    new Type[] { typeof(Bot) });
+                    new Type[] { typeof(Bot) }
+                );
 
                 #endregion
 
@@ -1211,7 +1353,6 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 #endregion
 
                 accessor.Dispose();
-
             }
             catch (Exception ex)
             {
@@ -1350,10 +1491,11 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
                 #endregion
 
-                TrainingSession session = new TrainingSession(
+                TrainingSession session = new TrainingSession
+                (
                     dna, extra, inputCount, outputCount,
                     (w, r) => new Evaluator2(w, r)
-                    );
+                );
 
 
                 //TODO: store this as a member variable, tell ea to start and make a stop button
@@ -2115,10 +2257,10 @@ Replace('\'', '"');
 
                 window.AddAxisLines(RADIUS * 1.5, THICKNESS);
 
-                double maxAngle = rand.NextBool(3) ?
+                double maxAngle = rand.NextBool(.33) ?
                     180d :
                     rand.NextDouble(180);
-                double minAngle = rand.NextBool(3) ?
+                double minAngle = rand.NextBool(.33) ?
                     0d :
                     maxAngle * rand.NextDouble();
 
@@ -2129,7 +2271,7 @@ Replace('\'', '"');
 
                 Vector3D[] points = Math3D.GetRandomVectors_Cone(NUMSAMPLES, axis, minAngle, maxAngle, RADIUS, RADIUS);
 
-                window.AddLine(new Point3D(0, 0, 0), (axis.ToUnit(false) * RADIUS * 1.5).ToPoint(), THICKNESS, Colors.DarkBlue);
+                window.AddLine(new Point3D(0, 0, 0), (axis.ToUnit() * RADIUS * 1.5).ToPoint(), THICKNESS, Colors.DarkBlue);
                 window.AddDots(points.Select(o => o.ToPoint()), DOT, Colors.DodgerBlue);
 
                 window.Show();
@@ -2154,10 +2296,10 @@ Replace('\'', '"');
 
                 window.AddAxisLines(RADIUS * 1.5, THICKNESS);
 
-                double maxAngle = rand.NextBool(3) ?
+                double maxAngle = rand.NextBool(.33) ?
                     180d :
                     rand.NextDouble(180);
-                double minAngle = rand.NextBool(3) ?
+                double minAngle = rand.NextBool(.33) ?
                     0d :
                     maxAngle * rand.NextDouble();
 
@@ -2174,7 +2316,7 @@ Replace('\'', '"');
 
                 Vector3D[] points = Math3D.GetRandomVectors_Cone(NUMSAMPLES, axis, minAngle, maxAngle, minRadius, RADIUS);
 
-                window.AddLine(new Point3D(0, 0, 0), (axis.ToUnit(false) * RADIUS * 1.5).ToPoint(), THICKNESS, Colors.DarkBlue);
+                window.AddLine(new Point3D(0, 0, 0), (axis.ToUnit() * RADIUS * 1.5).ToPoint(), THICKNESS, Colors.DarkBlue);
                 window.AddDots(points.Select(o => o.ToPoint()), DOT, Colors.DodgerBlue);
 
                 window.Show();
@@ -3766,6 +3908,11 @@ Replace('\'', '"');
                 _map.RemoveItem(_bot);
                 _bot = null;
             }
+
+            if (_viewer != null)
+            {
+                _viewer.Close();
+            }
         }
 
         private static MutateUtility.NeuronMutateArgs GetMutateArgs(ItemOptionsArco options)
@@ -3918,7 +4065,7 @@ Replace('\'', '"');
 
         private static (Point3D fromLeft, Point3D fromRight, Point3D toLeft, Point3D toRight, Point3D baseLeft, Point3D baseRight) GetLinePoints1(Vector from, Vector to, double shaftThickness, double arrowThickness)
         {
-            Vector3D direction = (to - from).ToVector3D().ToUnit(false);
+            Vector3D direction = (to - from).ToVector3D().ToUnit();
 
             Vector3D axis = new Vector3D(0, 0, 1);
 
@@ -3943,7 +4090,7 @@ Replace('\'', '"');
         }
         private static (Point3D fromLeft, Point3D fromRight, Point3D toLeft, Point3D toRight, Point3D baseLeft, Point3D baseRight) GetLinePoints2(Vector from, Vector to, double shaftThickness, double arrowThickness, double sphereRadius)
         {
-            Vector3D direction = (to - from).ToVector3D().ToUnit(false);
+            Vector3D direction = (to - from).ToVector3D().ToUnit();
 
             Vector3D axis = new Vector3D(0, 0, 1);
 

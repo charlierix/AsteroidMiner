@@ -336,7 +336,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
                 foreach (SamplePoint neuron in _neuronPoints)
                 {
-                    Point3D worldPos = worldLoc.Item1 + worldLoc.Item2.GetRotatedVector(neuron.Position_World);
+                    Point3D worldPos = worldLoc.position + worldLoc.rotation.GetRotatedVector(neuron.Position_World);
 
                     double[] combinedValues = new double[neuron.Neurons.Length];
 
@@ -469,7 +469,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 Select(o =>
                 {
                     double distanceFromOrigin = o.Length;
-                    return o.ToUnit(false) * (worldMax * Math.Pow(distanceFromOrigin, 3));
+                    return o.ToUnit() * (worldMax * Math.Pow(distanceFromOrigin, 3));
                 }).
                 Select(o => o.ToPoint()).
                 ToArray();

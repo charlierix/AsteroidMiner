@@ -445,7 +445,7 @@ namespace Game.Newt.v2.GameItems
                 return actual.LengthSquared;
             }
 
-            double dot = Vector3D.DotProduct(objective.Value.ToUnit(false), actual.ToUnit(false));
+            double dot = Vector3D.DotProduct(objective.Value.ToUnit(), actual.ToUnit());
 
             // Ideal dot is 1, so 1-1 is 0.
             // 1 - 0 is 1
@@ -471,7 +471,7 @@ namespace Game.Newt.v2.GameItems
             double lenSqr = actual.LengthSquared;
             double maxSqr = maxPossible * maxPossible;
 
-            double dot = Vector3D.DotProduct(objective.Value.ToUnit(false), actual.ToUnit(false));
+            double dot = Vector3D.DotProduct(objective.Value.ToUnit(), actual.ToUnit());
 
             // This makes sure it's actually pushing the bot, and not just balancing forces
             double underPower = 0;
@@ -1185,7 +1185,7 @@ namespace Game.Newt.v2.GameItems
                         scorePosition += solution.o.Request.Rotate.Value;
                     }
 
-                    scorePosition = scorePosition.ToUnit(false) * 1.5;
+                    scorePosition = scorePosition.ToUnit() * 1.5;
 
                     #endregion
 
@@ -1461,7 +1461,7 @@ namespace Game.Newt.v2.GameItems
                 throw new ApplicationException("TODO: Handle non null rotation");
             }
 
-            Vector3D linearUnit = linear.Value.ToUnit();
+            Vector3D linearUnit = linear.Value.ToUnit(true);
             if (linearUnit.IsInvalid())
             {
                 throw new ApplicationException("TOTO: Handle non unit linear");
@@ -1612,7 +1612,7 @@ namespace Game.Newt.v2.GameItems
                 throw new ApplicationException("TODO: Handle non null rotation");
             }
 
-            Vector3D linearUnit = linear.Value.ToUnit();
+            Vector3D linearUnit = linear.Value.ToUnit(true);
             if (linearUnit.IsInvalid())
             {
                 throw new ApplicationException("TOTO: Handle non unit linear");
@@ -1671,7 +1671,7 @@ namespace Game.Newt.v2.GameItems
 
             Vector3D lineToBest = dots[0].o.Request.Linear.Value - linear.Value;
             lineToBest = Math3D.GetOrthogonal(linear.Value, lineToBest);
-            lineToBest = lineToBest.ToUnit(false);
+            lineToBest = lineToBest.ToUnit();
 
             window.AddLine(projectOffset.ToPoint(), (lineToBest + projectOffset).ToPoint(), LINETHICK, UtilityWPF.ColorFromHex("16376B"));
 
@@ -1679,7 +1679,7 @@ namespace Game.Newt.v2.GameItems
             {
                 Vector3D secondaryLine = dots[cntr].o.Request.Linear.Value - linear.Value;
                 secondaryLine = Math3D.GetOrthogonal(linear.Value, secondaryLine);
-                secondaryLine = secondaryLine.ToUnit(false);
+                secondaryLine = secondaryLine.ToUnit();
 
                 double dot = Vector3D.DotProduct(lineToBest, secondaryLine);
 

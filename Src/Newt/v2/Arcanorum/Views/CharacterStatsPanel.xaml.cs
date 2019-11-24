@@ -17,6 +17,7 @@ using System.Windows.Threading;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.Arcanorum.MapObjects;
 using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.Arcanorum.Views
@@ -232,7 +233,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     // Spray dots onto the collision mesh
                     var hullPoints = weapon.PhysicsBody.CollisionHull.GetVisualizationOfHull();
 
-                    AddDots(hullPoints.Select(o => o.Item1), weapon.DNA.Handle.Radius * .1, Colors.Black);
+                    AddDots(hullPoints.Select(o => o.position), weapon.DNA.Handle.Radius * .1, Colors.Black);
                 }
             }
             catch (Exception ex)

@@ -330,6 +330,9 @@ namespace Game.Newt.v2.GameItems
         }
 
         private double _multiplier = 20d;
+        /// <summary>
+        /// Final velocity is distance toward the desired point * this multiplier
+        /// </summary>
         public double Multiplier
         {
             get
@@ -342,6 +345,9 @@ namespace Game.Newt.v2.GameItems
             }
         }
 
+        /// <summary>
+        /// This allows the velocity to be capped
+        /// </summary>
         public double? MaxVelocity
         {
             get;
@@ -381,7 +387,7 @@ namespace Game.Newt.v2.GameItems
 
             if (this.MaxVelocity != null && newVelocity.LengthSquared > this.MaxVelocity.Value * this.MaxVelocity.Value)
             {
-                newVelocity = newVelocity.ToUnit(false) * this.MaxVelocity.Value;
+                newVelocity = newVelocity.ToUnit() * this.MaxVelocity.Value;
             }
 
             e.Body.Velocity = newVelocity;
@@ -533,7 +539,7 @@ namespace Game.Newt.v2.GameItems
                 // Limit if exceeds this.MaxForce
                 if (maxForce != null && retVal.Value.LengthSquared > maxForce.Value * maxForce.Value)
                 {
-                    retVal = retVal.Value.ToUnit(false) * maxForce.Value;
+                    retVal = retVal.Value.ToUnit() * maxForce.Value;
                 }
 
                 // Limit acceleration
@@ -544,7 +550,7 @@ namespace Game.Newt.v2.GameItems
 
                     if (accel > maxAcceleration.Value)
                     {
-                        retVal = retVal.Value.ToUnit(false) * (maxAcceleration.Value * args.ItemMass);
+                        retVal = retVal.Value.ToUnit() * (maxAcceleration.Value * args.ItemMass);
                     }
                 }
             }
@@ -824,17 +830,17 @@ namespace Game.Newt.v2.GameItems
             this.ItemMass = item.PhysicsBody.Mass;
 
             this.DirectionLength = direction.Length;
-            this.DirectionUnit = direction.ToUnit(false);
+            this.DirectionUnit = direction.ToUnit();
 
             // Velocity
             Vector3D velocity = this.Item.PhysicsBody.Velocity;
             this.VelocityLength = velocity.Length;
-            this.VelocityUnit = velocity.ToUnit(false);
+            this.VelocityUnit = velocity.ToUnit();
 
             // Along
             Vector3D velocityAlong = velocity.GetProjectedVector(direction);
             this.VelocityAlongLength = velocityAlong.Length;
-            this.VelocityAlongUnit = velocityAlong.ToUnit(false);
+            this.VelocityAlongUnit = velocityAlong.ToUnit();
             this.IsVelocityAlongTowards = Vector3D.DotProduct(direction, velocity) > 0d;
 
             // Orth
@@ -843,7 +849,7 @@ namespace Game.Newt.v2.GameItems
             Vector3D velocityOrth = velocity.GetProjectedVector(orth);
 
             this.VelocityOrthLength = velocityOrth.Length;
-            this.VelocityOrthUnit = velocityOrth.ToUnit(false);
+            this.VelocityOrthUnit = velocityOrth.ToUnit();
         }
 
         public readonly IMapObject Item;

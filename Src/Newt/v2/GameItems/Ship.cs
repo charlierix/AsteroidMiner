@@ -1577,8 +1577,8 @@ namespace Game.Newt.v2.GameItems
             {
                 INeuronContainer container = (INeuronContainer)part.Item1;
                 ShipPartDNA dna = part.Item2;
-                NeuralLinkDNA[] internalLinks = dna == null ? null : dna.InternalLinks;
-                NeuralLinkExternalDNA[] externalLinks = dna == null ? null : dna.ExternalLinks;
+                NeuralLinkDNA[] internalLinks = dna?.InternalLinks;
+                NeuralLinkExternalDNA[] externalLinks = dna?.ExternalLinks;
 
                 switch (container.NeuronContainerType)
                 {
@@ -1592,26 +1592,28 @@ namespace Game.Newt.v2.GameItems
                         #endregion
                         break;
 
-                    case NeuronContainerType.Brain:
+                    case NeuronContainerType.Brain_HasInternalNN:
+                    case NeuronContainerType.Brain_Standalone:
                         #region Brain
 
                         int brainChemicalCount = 0;
-                        if (part.Item1 is Brain)
+                        if (container.NeuronContainerType == NeuronContainerType.Brain_Standalone)
                         {
                             brainChemicalCount = Convert.ToInt32(Math.Round(((Brain)part.Item1).BrainChemicalCount * 1.33d, 0));		// increasing so that there is a higher chance of listeners
                         }
 
                         inputs.Add(new NeuralUtility.ContainerInput(
                             part.Item1.Token,
-                            container, NeuronContainerType.Brain,
+                            container, container.NeuronContainerType,
                             container.Position, container.Orientation,
                             itemOptions.Brain_LinksPerNeuron_Internal,
-                            new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
-								Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
-							},
+                            new[]
+                            {
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                (NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
+                            },
                             brainChemicalCount,
                             internalLinks, externalLinks));
 
@@ -1626,11 +1628,12 @@ namespace Game.Newt.v2.GameItems
                             container, NeuronContainerType.Manipulator,
                             container.Position, container.Orientation,
                             null,
-                            new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
-							{
-								Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
-								Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
-							},
+                            new[]
+                            {
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
+                            },
                             0,
                             null, externalLinks));
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Game.HelperClassesCore
 {
@@ -68,6 +66,12 @@ namespace Game.HelperClassesCore
             double divisionInt = Math.Round(division);
 
             return IsNearValue(division, divisionInt);
+        }
+
+        public static bool IsSameSign(double value1, double value2)
+        {
+            // dot product of two scalars is just multiplication
+            return value1 * value2 > 0;
         }
 
         #endregion
@@ -143,6 +147,7 @@ namespace Game.HelperClassesCore
 
             return Tuple.Create(mean, Math.Sqrt(variance));
         }
+
         public static Tuple<double, double> Get_Average_StandardDeviation(IEnumerable<int> values)
         {
             return Get_Average_StandardDeviation(values.Select(o => Convert.ToDouble(o)));
@@ -195,133 +200,28 @@ namespace Game.HelperClassesCore
         }
 
         // I got tired of nesting min/max statements
-        public static int Min(int v1, int v2, int v3)
+
+        public static int Min(params int[] values)
         {
-            return Math.Min(Math.Min(v1, v2), v3);
+            return values.Min();
         }
-        public static int Min(int v1, int v2, int v3, int v4)
+        public static double Min(params double[] values)
         {
-            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-        }
-        public static int Min(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+            return values.Min();
         }
 
-        public static double Min(double v1, double v2, double v3)
+        public static int Max(params int[] values)
         {
-            return Math.Min(Math.Min(v1, v2), v3);
+            return values.Max();
         }
-        public static double Min(double v1, double v2, double v3, double v4)
+        public static double Max(params double[] values)
         {
-            return Math.Min(Math.Min(v1, v2), Math.Min(v3, v4));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(v4, v5));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), v3), Math.Min(Math.Min(v4, v5), v6));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), v7));
-        }
-        public static double Min(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return Math.Min(Math.Min(Math.Min(v1, v2), Math.Min(v3, v4)), Math.Min(Math.Min(v5, v6), Math.Min(v7, v8)));
+            return values.Max();
         }
 
-        public static int Max(int v1, int v2, int v3)
+        public static double Avg(params double[] values)
         {
-            return Math.Max(Math.Max(v1, v2), v3);
-        }
-        public static int Max(int v1, int v2, int v3, int v4)
-        {
-            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-        }
-        public static int Max(int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-        }
-
-        public static double Max(double v1, double v2, double v3)
-        {
-            return Math.Max(Math.Max(v1, v2), v3);
-        }
-        public static double Max(double v1, double v2, double v3, double v4)
-        {
-            return Math.Max(Math.Max(v1, v2), Math.Max(v3, v4));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(v4, v5));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), v3), Math.Max(Math.Max(v4, v5), v6));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), v7));
-        }
-        public static double Max(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return Math.Max(Math.Max(Math.Max(v1, v2), Math.Max(v3, v4)), Math.Max(Math.Max(v5, v6), Math.Max(v7, v8)));
-        }
-
-        public static double Avg(double v1, double v2)
-        {
-            return (v1 + v2) / 2d;
-        }
-        public static double Avg(double v1, double v2, double v3)
-        {
-            return (v1 + v2 + v3) / 3d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4)
-        {
-            return (v1 + v2 + v3 + v4) / 4d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5)
-        {
-            return (v1 + v2 + v3 + v4 + v5) / 5d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6) / 6d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6 + v7) / 7d;
-        }
-        public static double Avg(double v1, double v2, double v3, double v4, double v5, double v6, double v7, double v8)
-        {
-            return (v1 + v2 + v3 + v4 + v5 + v6 + v7 + v8) / 8d;
+            return values.Sum() / values.Length.ToDouble();
         }
 
         public static double Avg(Tuple<double, double>[] weightedValues)
@@ -492,6 +392,35 @@ namespace Game.HelperClassesCore
             //return -1 + (2 / (1 + e ^ (-slope * e * x)));
             //return -maxY + ((2 * maxY) / (1 + Math.E ^ (-slope * Math.E * x)));
             return -maxY + ((2 * maxY) / (1 + Math.Pow(Math.E, (-(factor * slope) * Math.E * x))));
+        }
+
+        /// <summary>
+        /// A bell curve
+        /// </summary>
+        /// <remarks>
+        /// http://hyperphysics.phy-astr.gsu.edu/hbase/Math/gaufcn.html
+        /// 
+        /// Paste this into desmos for a visualization
+        /// https://www.desmos.com/calculator
+        /// \frac{1}{\sqrt{2\cdot\pi\cdot s^2}}\cdot e^{\frac{-\left(x-m\right)^2}{2s^2}}
+        /// 
+        /// NOTE: For the opposite of the bell curve, see MathND.RandN.  If you took a large sample of those randn results
+        /// and ran them through Debug3DWindow.GetCountGraph(), you would get the bell curve that this function returns
+        /// (for mean=0 and stddev=1)
+        /// </remarks>
+        /// <param name="mean">This is where the hump is centered over</param>
+        /// <param name="stddev">A positive number.  The smaller it is, the more of a spike the curve becomes</param>
+        public static double GetGaussian(double x, double mean = 0, double stddev = 1)
+        {
+            double two_s_sqr = 2 * stddev * stddev;
+
+            double num1 = x - mean;
+            num1 *= num1;
+            num1 = -num1;
+
+            double e_to_x = Math.Pow(Math.E, num1 / two_s_sqr);
+
+            return e_to_x / Math.Sqrt(Math.PI * two_s_sqr);
         }
 
         #endregion

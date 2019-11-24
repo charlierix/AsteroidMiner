@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
@@ -3437,14 +3433,24 @@ namespace Game.Newt.Testers
         }
 
         #endregion
+        #region class: CurrentMesh
+
+        private class CurrentMesh
+        {
+            public Point3D[][] HorizontalPoints { get; set; }
+        }
+
+        #endregion
 
         #region Declaration Section
+
+        private const string FILE = "Curves Options.xml";
 
         private const string _endPointS = "293335";
         private Color _endPointC = UtilityWPF.ColorFromHex(_endPointS);
         private Brush _endPointB = new SolidColorBrush(UtilityWPF.ColorFromHex(_endPointS));        // had to define _endPointS as a const, or the compiler chokes here
 
-        private const string _mainLineS = "FFF8F8FF";
+        private const string _mainLineS = "F8F8FF";
         private Color _mainLineC = UtilityWPF.ColorFromHex(_mainLineS);
         private Brush _mainLineB = new SolidColorBrush(UtilityWPF.ColorFromHex(_mainLineS));
 
@@ -3464,6 +3470,14 @@ namespace Game.Newt.Testers
         private Color _otherLineC = UtilityWPF.ColorFromHex(_otherLineS);
         private Brush _otherLineB = new SolidColorBrush(UtilityWPF.ColorFromHex(_otherLineS));
 
+        private const string _otherLineDarkS = "D8949275";
+        private Color _otherLineDarkC = UtilityWPF.ColorFromHex(_otherLineDarkS);
+        private Brush _otherLineDarkB = new SolidColorBrush(UtilityWPF.ColorFromHex(_otherLineDarkS));
+
+        private const string _trinalgeS = "AEBBBF";
+        private Color _triangleC = UtilityWPF.ColorFromHex(_trinalgeS);
+        private Brush _triangleB = new SolidColorBrush(UtilityWPF.ColorFromHex(_trinalgeS));
+
         /// <summary>
         /// This listens to the mouse/keyboard and controls the camera
         /// </summary>
@@ -3473,6 +3487,9 @@ namespace Game.Newt.Testers
 
         private Point3D[] _savedEnds = null;
         private object _savedAxe = null;
+
+        private CurrentMesh _currentMesh = null;
+        private string _meshTextureFilename = null;
 
         #endregion
 
@@ -3486,6 +3503,7 @@ namespace Game.Newt.Testers
             _trackball = new TrackBallRoam(_camera);
             _trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
             _trackball.AllowZoomOnMouseWheel = true;
+            _trackball.InertiaPercentRetainPerSecond_Angular = .7;
             _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
             //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
         }
@@ -3494,7 +3512,42 @@ namespace Game.Newt.Testers
 
         #region Event Listeners
 
-        private void btnSingleLine1Segment2D_Click(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                CurvesOptions options = UtilityCore.ReadOptions<CurvesOptions>(FILE);
+
+                _meshTextureFilename = options?.TextureFilename;
+
+                if (!string.IsNullOrWhiteSpace(_meshTextureFilename))
+                {
+                    lblTexture.Content = System.IO.Path.GetFileName(_meshTextureFilename);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            try
+            {
+                CurvesOptions options = new CurvesOptions()
+                {
+                    TextureFilename = _meshTextureFilename,
+                };
+
+                UtilityCore.SaveOptions(options, FILE);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SingleLine1Segment2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3557,7 +3610,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnSingleLine1Segment3D_Click(object sender, RoutedEventArgs e)
+        private void SingleLine1Segment3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3618,7 +3671,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnSingleLine2Segments2D_Click(object sender, RoutedEventArgs e)
+        private void SingleLine2Segments2D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3657,7 +3710,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnSingleLineMultiSegments3D_Click(object sender, RoutedEventArgs e)
+        private void SingleLineMultiSegments3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3674,7 +3727,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnPolygon3D_Click(object sender, RoutedEventArgs e)
+        private void Polygon3D_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3757,7 +3810,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnAxeSimple1_Click(object sender, RoutedEventArgs e)
+        private void AxeSimple1_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3770,7 +3823,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAxeSimple2_Click(object sender, RoutedEventArgs e)
+        private void AxeSimple2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3811,7 +3864,7 @@ namespace Game.Newt.Testers
             }
         }
 
-        private void btnAvgPlane_Click(object sender, RoutedEventArgs e)
+        private void AvgPlane_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -3970,7 +4023,7 @@ namespace Game.Newt.Testers
                 MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-        private void btnAvgPlane2_Click(object sender, RoutedEventArgs e)
+        private void AvgPlane2_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -4111,8 +4164,679 @@ namespace Game.Newt.Testers
             }
         }
 
+        private void Mesh_Checked(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_currentMesh == null)
+                {
+                    return;
+                }
+
+                PrepFor3D();
+
+                DrawMesh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void MeshSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            try
+            {
+                if (_currentMesh == null)
+                {
+                    return;
+                }
+
+                Slider[] rebuildSliders = new[] { trkNumHorzLines, trkMinControlPoints, trkControlPointsRandCount };
+
+                if (rebuildSliders.Any(o => o == e.OriginalSource))
+                {
+                    RandomMesh_Click(this, new RoutedEventArgs());
+                }
+                else
+                {
+                    PrepFor3D();
+                    DrawMesh();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void RandomMesh_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO: These should be sliders
+            const double RADIUS_ENDS = 1.5;      // radius isn't the best name for this one
+            const double RADIUS_INTERIOR = .6;
+
+            try
+            {
+                PrepFor3D();
+                _currentMesh = null;
+
+                int numHorizontals = trkNumHorzLines.Value.ToInt_Round();
+                double offsetY = (RADIUS_ENDS * numHorizontals) / -2d;
+                Point3D from = new Point3D(-RADIUS_ENDS * 3, offsetY, 0);
+                Point3D to = new Point3D(-from.X, offsetY, 0);
+                Vector3D offsetV = new Vector3D(0, RADIUS_ENDS, 0);
+
+                // Come up with horizontals
+                int ctrlFrom = trkMinControlPoints.Value.ToInt_Round();
+                int ctrlTo = ctrlFrom + trkControlPointsRandCount.Value.ToInt_Round();
+
+                Point3D[][] horizontalPoints = Enumerable.Range(0, numHorizontals).
+                    Select(o => GetRandomHorizontal(from + (offsetV * o), to + (offsetV * o), RADIUS_INTERIOR, ctrlFrom, ctrlTo)).
+                    ToArray();
+
+                //TODO: May want to store definitions used to come up with these points so that a slider could adjust amplitude
+                _currentMesh = new CurrentMesh()
+                {
+                    HorizontalPoints = horizontalPoints,
+                };
+
+
+                
+
+
+
+                DrawMesh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void TextureBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var fileDialog = new System.Windows.Forms.OpenFileDialog
+                {
+                    Title = "Choose texture image",
+                    CheckFileExists = true,
+                    Multiselect = false,
+                    Filter = "All Files (*.*)|*.*",
+                };
+
+                if (fileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    _meshTextureFilename = fileDialog.FileName;
+                    lblTexture.Content = System.IO.Path.GetFileName(_meshTextureFilename);
+
+                    PrepFor3D();
+                    DrawMesh();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
+        #region Private Methods - draw
+
+        private void PrepFor2D()
+        {
+            _canvas.Children.Clear();
+
+            _viewport.Visibility = Visibility.Collapsed;
+            _canvas.Visibility = Visibility.Visible;
+        }
+        private void PrepFor3D()
+        {
+            _viewport.Children.RemoveAll(_visuals);
+
+            _canvas.Visibility = Visibility.Hidden;     //NOTE: If this is set to collapsed, then the first time it's made visible, its width and height will be zero (until the window gets a chance to recalc)
+            _viewport.Visibility = Visibility.Visible;
+        }
+
+        private void DrawBezierLines(BezierSegment3D[] beziers, bool showLines, bool showControls, bool showEnds)
+        {
+            // Main Line
+            if (showLines)
+            {
+                foreach (BezierSegment3D bezier in beziers)
+                {
+                    AddLines(BezierUtil.GetPoints(100, bezier), _mainLineC, 2);
+                }
+            }
+
+            // Control Lines
+            if (showControls)
+            {
+                foreach (BezierSegment3D bezier in beziers)
+                {
+                    if (bezier.ControlPoints == null)
+                    {
+                        continue;
+                    }
+
+                    AddLines(bezier.Combined, _controlLineC);
+
+                    for (int cntr = 0; cntr < bezier.ControlPoints.Length; cntr++)
+                    {
+                        AddDot(bezier.ControlPoints[cntr], _controlPointC);
+                    }
+                }
+            }
+
+            // End Points
+            if (showEnds)
+            {
+                foreach (Point3D points in beziers[0].AllEndPoints)
+                {
+                    AddDot(points, _endPointC);
+                }
+            }
+        }
+
+        private void DrawBezierPlates(int count, BezierSegment3D[] seg1, BezierSegment3D[] seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
+        {
+            for (int cntr = 0; cntr < seg1.Length; cntr++)
+            {
+                DrawBezierPlate(count, seg1[cntr], seg2[cntr], color, isShiny, ensureNormalsPointTheSame);
+            }
+        }
+        private void DrawBezierPlate(int count, BezierSegment3D seg1, BezierSegment3D seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
+        {
+            Point3D[] rim1 = BezierUtil.GetPoints(count, seg1);
+            Point3D[] rim2 = BezierUtil.GetPoints(count, seg2);
+
+            Point3D[] allPoints = UtilityCore.Iterate(rim1, rim2).ToArray();
+
+            List<TriangleIndexed> triangles = new List<TriangleIndexed>();
+
+            for (int cntr = 0; cntr < count - 1; cntr++)
+            {
+                triangles.Add(new TriangleIndexed(count + cntr, count + cntr + 1, cntr, allPoints));        // bottom left
+                triangles.Add(new TriangleIndexed(cntr + 1, cntr, count + cntr + 1, allPoints));        // top right
+            }
+
+            #region Ensure all normals point the same way
+
+            //Doesn't work
+            //if (ensureNormalsPointTheSame)
+            //{
+            //    Vector3D firstNormal = triangles[0].Normal;
+            //    bool[] sameNormals = triangles.Select(o => Vector3D.DotProduct(firstNormal, o.Normal) > 0).ToArray();
+
+            //    int sameCount = sameNormals.Where(o => o).Count();
+
+            //    if (sameCount != triangles.Count)
+            //    {
+            //        // Some up, some down.  Majority rules
+            //        bool fixDifferents = sameCount > triangles.Count / 2;
+
+            //        for(int cntr = 0; cntr < triangles.Count; cntr++)
+            //        {
+            //            if(sameNormals[cntr] != fixDifferents)
+            //            {
+            //                triangles[cntr] = new TriangleIndexed(triangles[cntr].Index1, triangles[cntr].Index0, triangles[cntr].Index2, triangles[cntr].AllPoints);
+            //            }
+            //        }
+            //    }
+            //}
+
+            #endregion
+
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            if (isShiny)
+            {
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
+            }
+            else
+            {
+                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
+            }
+
+            // Geometry Model
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = materials;
+            geometry.BackMaterial = materials;
+            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles.ToArray());
+
+            // Model Visual
+            ModelVisual3D model = new ModelVisual3D();
+            model.Content = geometry;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(model);
+            _visuals.Add(model);
+        }
+        private void DrawTrianglePlate(Point3D point0, Point3D point1, Point3D point2, Color color, bool isShiny)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            if (isShiny)
+            {
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
+            }
+            else
+            {
+                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
+            }
+
+            // Geometry Model
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = materials;
+            geometry.BackMaterial = materials;
+            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(new[] { new TriangleIndexed(0, 1, 2, new[] { point0, point1, point2 }) });
+
+            // Model Visual
+            ModelVisual3D model = new ModelVisual3D();
+            model.Content = geometry;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(model);
+            _visuals.Add(model);
+        }
+        private void DrawPolyPlate(ITriangleIndexed[] triangles, Color color, bool isShiny)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            if (isShiny)
+            {
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
+            }
+            else
+            {
+                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
+                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
+            }
+
+            // Geometry Model
+            GeometryModel3D geometry = new GeometryModel3D();
+            geometry.Material = materials;
+            geometry.BackMaterial = materials;
+            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles);
+
+            // Model Visual
+            ModelVisual3D model = new ModelVisual3D();
+            model.Content = geometry;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(model);
+            _visuals.Add(model);
+        }
+        private void DrawMesh()
+        {
+            if (_currentMesh == null)
+            {
+                throw new InvalidOperationException("_currentMesh can't be null when this method is called");
+            }
+
+            #region control lines
+
+            if (chkMeshLines.IsChecked.Value)
+            {
+                foreach (Point3D[] line in _currentMesh.HorizontalPoints)
+                {
+                    foreach (Point3D point in line)
+                    {
+                        AddDot(point, _endPointC);
+                    }
+
+                    AddLines(line, _mainLineC);
+                }
+            }
+
+            #endregion
+
+            bool showMesh = chkMeshTexture.IsChecked.Value && File.Exists(_meshTextureFilename ?? "");
+
+            if (!chkMeshGridPoints.IsChecked.Value && !chkMeshTriangles.IsChecked.Value && !chkMeshNormals.IsChecked.Value && !showMesh && !chkMeshTextureCoords.IsChecked.Value)
+            {
+                return;
+            }
+
+            double controlPointPercent = trkMeshPercent.Value;
+
+            BezierSegment3D[][] horizontals = _currentMesh.HorizontalPoints.
+                Select(o => BezierUtil.GetBezierSegments(o, controlPointPercent)).
+                ToArray();
+
+            int horzCount = trkHorzCount.Value.ToInt_Round();
+            int vertCount = trkVertCount.Value.ToInt_Round();
+
+            #region grid points
+
+            if (chkMeshGridPoints.IsChecked.Value)
+            {
+                Point3D[] gridPoints = BezierUtil.GetBezierMesh_Points(horizontals, horzCount, vertCount, controlPointPercent);
+
+                foreach (Point3D point in gridPoints)
+                {
+                    AddDot(point, _otherPointC);
+                }
+
+                gridPoints = BezierUtil.GetBezierMesh_Points(horizontals, (horzCount * 2) - 1, (vertCount * 2) - 1, controlPointPercent);
+
+                foreach (Point3D point in gridPoints)
+                {
+                    AddDot(point, _otherPointC, .05);
+                }
+            }
+
+            #endregion
+
+            #region triangles
+
+            if (chkMeshTriangles.IsChecked.Value || chkMeshNormals.IsChecked.Value)
+            {
+                ITriangleIndexed[] triangles = BezierUtil.GetBezierMesh_Triangles(horizontals, horzCount, vertCount, controlPointPercent);
+
+                if (chkMeshTriangles.IsChecked.Value)
+                {
+                    AddTriangles(triangles, _triangleC, radMeshTriangles_Faceted.IsChecked.Value);
+                }
+
+                if (chkMeshNormals.IsChecked.Value)
+                {
+                    var normals = triangles.
+                        Select(o =>
+                        {
+                            Point3D center = o.GetCenterPoint();
+                            return Tuple.Create(center, center + o.Normal);
+                        });
+
+                    AddLines(normals, _otherLineDarkC);
+                }
+            }
+
+            #endregion
+
+            #region texture
+
+            if (showMesh || chkMeshTextureCoords.IsChecked.Value)
+            {
+                int horzCountAdjusted = Math.Max(horzCount % 2 == 1 ? horzCount : horzCount - 1, 3);
+                int vertCountAdjusted = Math.Max(vertCount % 2 == 1 ? vertCount : vertCount - 1, 3);
+
+                double aspectRatio = 1d;
+                ImageBrush imageBrush = null;
+                if (showMesh)
+                {
+                    BitmapImage bitmap = new BitmapImage(new Uri(_meshTextureFilename, UriKind.Relative));
+                    imageBrush = new ImageBrush()
+                    {
+                        ImageSource = bitmap,
+                    };
+
+                    if (radMeshTexture_Aspect.IsChecked.Value)
+                    {
+                        imageBrush.ViewportUnits = BrushMappingMode.Absolute;       //NOTE: Don't accidentally select ViewboxUnits     //https://stackoverflow.com/questions/7001186/why-does-texturecoordinates-work-as-expected-for-a-viewport2dvisual3d-but-not-f
+                    }
+
+                    aspectRatio = bitmap.PixelWidth.ToDouble() / bitmap.PixelHeight.ToDouble();
+                }
+
+                MeshGeometry3D geometry = BezierUtil.GetBezierMesh_MeshGeometry3D(horizontals, horzCountAdjusted, vertCountAdjusted, controlPointPercent, aspectRatio);
+
+                if (showMesh)
+                {
+                    GeometryModel3D model = new GeometryModel3D();
+
+                    DiffuseMaterial material = new DiffuseMaterial(imageBrush);
+                    model.Material = material;
+                    model.BackMaterial = material;
+
+                    model.Geometry = geometry;
+
+                    AddModel(model);
+                }
+
+                if (chkMeshTextureCoords.IsChecked.Value)
+                {
+                    double z = 1;
+
+                    if (geometry.Positions.Count == geometry.TextureCoordinates.Count)
+                    {
+                        var getColor = new Func<double, Color>(d =>
+                        {
+                            if (d >= 0 && d <= 1)
+                            {
+                                return UtilityWPF.AlphaBlend(Colors.White, Colors.Black, d);
+                            }
+                            else
+                            {
+                                d = d < 0 ? -d : d - 1;
+                                return UtilityWPF.AlphaBlend(Colors.Red, Colors.Gray, UtilityCore.GetScaledValue_Capped(0, 1, 0, 2, d));
+                            }
+                        });
+
+                        for (int cntr = 0; cntr < geometry.Positions.Count; cntr++)
+                        {
+                            Point3D point = geometry.Positions[cntr];
+                            Point coord = geometry.TextureCoordinates[cntr];
+
+                            //AddLine(point, new Point3D(point.X, point.Y, point.Z + z), getColor(coord.X), 5);
+                            //AddLine(point, new Point3D(point.X, point.Y, point.Z - z), getColor(coord.Y), 5);
+
+                            AddLine(point, new Point3D(point.X + z, point.Y, point.Z), getColor(coord.X), 5);
+                            AddLine(point, new Point3D(point.X, point.Y + z, point.Z), getColor(coord.Y), 5);
+
+                        }
+                    }
+                }
+            }
+
+            #endregion
+        }
+
+        private void AddDot(Point position, Brush brush, double size = 16)
+        {
+            Ellipse dot = new Ellipse()
+            {
+                Fill = brush,
+                Width = size,
+                Height = size
+            };
+
+            double halfSize = size / 2d;
+
+            Canvas.SetLeft(dot, position.X - halfSize);
+            Canvas.SetTop(dot, position.Y - halfSize);
+
+            _canvas.Children.Add(dot);
+        }
+        private void AddLine(Point from, Point to, Brush brush, double width = 2)
+        {
+            Line line = new Line()
+            {
+                X1 = from.X,
+                Y1 = from.Y,
+                X2 = to.X,
+                Y2 = to.Y,
+                Stroke = brush,
+                StrokeThickness = width
+            };
+
+            _canvas.Children.Add(line);
+        }
+        private void AddBezier(Point from, Point fromControl, Point to, Point toControl, Brush brush, double width = 2)
+        {
+            PathFigure figure = new PathFigure() { IsClosed = false };
+            figure.StartPoint = from;
+            figure.Segments.Add(new BezierSegment() { Point1 = fromControl, Point2 = toControl, Point3 = to });
+
+            PathGeometry geometry = new PathGeometry();
+            geometry.Figures.Add(figure);
+
+            var path = new System.Windows.Shapes.Path();
+            path.Stroke = brush;
+            path.StrokeThickness = width;
+            path.Data = geometry;
+
+            _canvas.Children.Add(path);
+        }
+
+        private void AddDot(Point3D position, Color color, double radius = .1)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
+
+            // Geometry Model
+            GeometryModel3D model = new GeometryModel3D();
+            model.Material = materials;
+            model.BackMaterial = materials;
+            model.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
+
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = model;
+            visual.Transform = new TranslateTransform3D(position.ToVector());
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(visual);
+            _visuals.Add(visual);
+        }
+        private void AddLine(Point3D from, Point3D to, Color color, double thickness = 1d)
+        {
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = thickness;
+            lineVisual.Color = color;
+            lineVisual.AddLine(from, to);
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points, Color color, double thickness = 1d)
+        {
+            // Draw the lines
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = thickness;
+            lineVisual.Color = color;
+
+            foreach (var line in lines)
+            {
+                lineVisual.AddLine(points[line.Item1], points[line.Item2]);
+            }
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddLines(IEnumerable<Tuple<Point3D, Point3D>> lines, Color color, double thickness = 1d)
+        {
+            // Draw the lines
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = thickness;
+            lineVisual.Color = color;
+
+            foreach (var line in lines)
+            {
+                lineVisual.AddLine(line.Item1, line.Item2);
+            }
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddLines(Point3D[] points, Color color, double thickness = 1d)
+        {
+            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
+            lineVisual.Thickness = thickness;
+            lineVisual.Color = color;
+
+            for (int cntr = 0; cntr < points.Length - 1; cntr++)
+            {
+                lineVisual.AddLine(points[cntr], points[cntr + 1]);
+            }
+
+            _viewport.Children.Add(lineVisual);
+            _visuals.Add(lineVisual);
+        }
+        private void AddPlane(ITriangle plane, Color color, double size = 20)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            //materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
+
+            // Build a differently sized triangle
+            ITriangle plane2 = new Triangle(
+                plane.Point1 + ((plane.Point0 - plane.Point1) * size),
+                plane.Point2 + ((plane.Point1 - plane.Point2) * size),
+                plane.Point0 + ((plane.Point2 - plane.Point0) * size)
+                );
+
+            // Create the points for the plane
+            Point3D[] points = new Point3D[4];
+            points[0] = plane2.Point0;
+            points[1] = plane2.Point1;
+            points[2] = plane2.Point2;
+            points[3] = Math3D.FromBarycentric(plane2, new Vector(1, 1));
+
+            // Geometry Model
+            GeometryModel3D model = new GeometryModel3D();
+            model.Material = materials;
+            model.BackMaterial = materials;
+            model.Geometry = UtilityWPF.GetMeshFromTriangles(new[] { new TriangleIndexed(0, 1, 2, points), new TriangleIndexed(1, 3, 2, points) });
+
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = model;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(visual);
+            _visuals.Add(visual);
+        }
+        private void AddTriangles(ITriangleIndexed[] triangles, Color color, bool independentFaces)
+        {
+            // Material
+            MaterialGroup materials = new MaterialGroup();
+            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
+            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
+
+            // Geometry Model
+            GeometryModel3D model = new GeometryModel3D();
+            model.Material = materials;
+            model.BackMaterial = materials;
+
+            if (independentFaces)
+            {
+                model.Geometry = UtilityWPF.GetMeshFromTriangles_IndependentFaces(triangles);
+            }
+            else
+            {
+                model.Geometry = UtilityWPF.GetMeshFromTriangles(triangles);
+            }
+
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = model;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(visual);
+            _visuals.Add(visual);
+        }
+        private void AddModel(GeometryModel3D model)
+        {
+            // Model Visual
+            ModelVisual3D visual = new ModelVisual3D();
+            visual.Content = model;
+
+            // Temporarily add to the viewport
+            _viewport.Children.Add(visual);
+            _visuals.Add(visual);
+        }
+
+        #endregion
         #region Private Methods
 
         private void Test2Segments2D(Point end1, Point end2, Point end3)
@@ -4561,353 +5285,24 @@ namespace Game.Newt.Testers
             return UtilityCore.Iterate<BezierSegment3D>(top, edge, bottomRight, bottomLeft).ToArray();
         }
 
-        private void PrepFor2D()
+        private static Point3D[] GetRandomHorizontal(Point3D from, Point3D to, double radius, int interiorFrom = 1, int interiorMaxCount = 4)
         {
-            _canvas.Children.Clear();
+            from += Math3D.GetRandomVector_Spherical(radius);
+            to += Math3D.GetRandomVector_Spherical(radius);
 
-            _viewport.Visibility = Visibility.Collapsed;
-            _canvas.Visibility = Visibility.Visible;
-        }
-        private void PrepFor3D()
-        {
-            _viewport.Children.RemoveAll(_visuals);
+            double[] percents = Enumerable.Range(0, StaticRandom.Next(interiorFrom, interiorMaxCount)).
+                Select(o => StaticRandom.NextDouble()).
+                OrderBy(o => o).
+                ToArray();
 
-            _canvas.Visibility = Visibility.Hidden;     //NOTE: If this is set to collapsed, then the first time it's made visible, its width and height will be zero (until the window gets a chance to recalc)
-            _viewport.Visibility = Visibility.Visible;
-        }
+            Vector3D origLine = to - from;
 
-        private void DrawBezierLines(BezierSegment3D[] beziers, bool showLines, bool showControls, bool showEnds)
-        {
-            // Main Line
-            if (showLines)
-            {
-                foreach (BezierSegment3D bezier in beziers)
-                {
-                    AddLines(BezierUtil.GetPoints(100, bezier), _mainLineC, 2);
-                }
-            }
+            Point3D[] intermediatePoints = percents.
+                Select(o => (from + (origLine * o)) + (Math3D.GetArbitraryOrhonganal(origLine).ToUnit() * StaticRandom.NextDouble(0, radius))).
+                ToArray();
 
-            // Control Lines
-            if (showControls)
-            {
-                foreach (BezierSegment3D bezier in beziers)
-                {
-                    if (bezier.ControlPoints == null)
-                    {
-                        continue;
-                    }
-
-                    AddLines(bezier.Combined, _controlLineC);
-
-                    for (int cntr = 0; cntr < bezier.ControlPoints.Length; cntr++)
-                    {
-                        AddDot(bezier.ControlPoints[cntr], _controlPointC);
-                    }
-                }
-            }
-
-            // End Points
-            if (showEnds)
-            {
-                foreach (Point3D points in beziers[0].AllEndPoints)
-                {
-                    AddDot(points, _endPointC);
-                }
-            }
-        }
-
-        private void DrawBezierPlates(int count, BezierSegment3D[] seg1, BezierSegment3D[] seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
-        {
-            for (int cntr = 0; cntr < seg1.Length; cntr++)
-            {
-                DrawBezierPlate(count, seg1[cntr], seg2[cntr], color, isShiny, ensureNormalsPointTheSame);
-            }
-        }
-        private void DrawBezierPlate(int count, BezierSegment3D seg1, BezierSegment3D seg2, Color color, bool isShiny, bool ensureNormalsPointTheSame = false)
-        {
-            Point3D[] rim1 = BezierUtil.GetPoints(count, seg1);
-            Point3D[] rim2 = BezierUtil.GetPoints(count, seg2);
-
-            Point3D[] allPoints = UtilityCore.Iterate(rim1, rim2).ToArray();
-
-            List<TriangleIndexed> triangles = new List<TriangleIndexed>();
-
-            for (int cntr = 0; cntr < count - 1; cntr++)
-            {
-                triangles.Add(new TriangleIndexed(count + cntr, count + cntr + 1, cntr, allPoints));        // bottom left
-                triangles.Add(new TriangleIndexed(cntr + 1, cntr, count + cntr + 1, allPoints));        // top right
-            }
-
-            #region Ensure all normals point the same way
-
-            //Doesn't work
-            //if (ensureNormalsPointTheSame)
-            //{
-            //    Vector3D firstNormal = triangles[0].Normal;
-            //    bool[] sameNormals = triangles.Select(o => Vector3D.DotProduct(firstNormal, o.Normal) > 0).ToArray();
-
-            //    int sameCount = sameNormals.Where(o => o).Count();
-
-            //    if (sameCount != triangles.Count)
-            //    {
-            //        // Some up, some down.  Majority rules
-            //        bool fixDifferents = sameCount > triangles.Count / 2;
-
-            //        for(int cntr = 0; cntr < triangles.Count; cntr++)
-            //        {
-            //            if(sameNormals[cntr] != fixDifferents)
-            //            {
-            //                triangles[cntr] = new TriangleIndexed(triangles[cntr].Index1, triangles[cntr].Index0, triangles[cntr].Index2, triangles[cntr].AllPoints);
-            //            }
-            //        }
-            //    }
-            //}
-
-            #endregion
-
-            // Material
-            MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            if (isShiny)
-            {
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
-            }
-            else
-            {
-                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
-            }
-
-            // Geometry Model
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = materials;
-            geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles.ToArray());
-
-            // Model Visual
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = geometry;
-
-            // Temporarily add to the viewport
-            _viewport.Children.Add(model);
-            _visuals.Add(model);
-        }
-        private void DrawTrianglePlate(Point3D point0, Point3D point1, Point3D point2, Color color, bool isShiny)
-        {
-            // Material
-            MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            if (isShiny)
-            {
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
-            }
-            else
-            {
-                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
-            }
-
-            // Geometry Model
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = materials;
-            geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(new[] { new TriangleIndexed(0, 1, 2, new[] { point0, point1, point2 }) });
-
-            // Model Visual
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = geometry;
-
-            // Temporarily add to the viewport
-            _viewport.Children.Add(model);
-            _visuals.Add(model);
-        }
-        private void DrawPolyPlate(ITriangleIndexed[] triangles, Color color, bool isShiny)
-        {
-            // Material
-            MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            if (isShiny)
-            {
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
-            }
-            else
-            {
-                Color derivedColor = UtilityWPF.AlphaBlend(color, Colors.White, .8d);
-                materials.Children.Add(new SpecularMaterial(new SolidColorBrush(Color.FromArgb(128, derivedColor.R, derivedColor.G, derivedColor.B)), 2d));
-            }
-
-            // Geometry Model
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = materials;
-            geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(triangles);
-
-            // Model Visual
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = geometry;
-
-            // Temporarily add to the viewport
-            _viewport.Children.Add(model);
-            _visuals.Add(model);
-        }
-
-        private void AddDot(Point position, Brush brush, double size = 16)
-        {
-            Ellipse dot = new Ellipse()
-            {
-                Fill = brush,
-                Width = size,
-                Height = size
-            };
-
-            double halfSize = size / 2d;
-
-            Canvas.SetLeft(dot, position.X - halfSize);
-            Canvas.SetTop(dot, position.Y - halfSize);
-
-            _canvas.Children.Add(dot);
-        }
-        private void AddLine(Point from, Point to, Brush brush, double width = 2)
-        {
-            Line line = new Line()
-            {
-                X1 = from.X,
-                Y1 = from.Y,
-                X2 = to.X,
-                Y2 = to.Y,
-                Stroke = brush,
-                StrokeThickness = width
-            };
-
-            _canvas.Children.Add(line);
-        }
-        private void AddBezier(Point from, Point fromControl, Point to, Point toControl, Brush brush, double width = 2)
-        {
-            PathFigure figure = new PathFigure() { IsClosed = false };
-            figure.StartPoint = from;
-            figure.Segments.Add(new BezierSegment() { Point1 = fromControl, Point2 = toControl, Point3 = to });
-
-            PathGeometry geometry = new PathGeometry();
-            geometry.Figures.Add(figure);
-
-            Path path = new Path();
-            path.Stroke = brush;
-            path.StrokeThickness = width;
-            path.Data = geometry;
-
-            _canvas.Children.Add(path);
-        }
-
-        private void AddDot(Point3D position, Color color, double radius = .1)
-        {
-            // Material
-            MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 50d));
-
-            // Geometry Model
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = materials;
-            geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetSphere_LatLon(3, radius, radius, radius);
-
-            // Model Visual
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = geometry;
-            model.Transform = new TranslateTransform3D(position.ToVector());
-
-            // Temporarily add to the viewport
-            _viewport.Children.Add(model);
-            _visuals.Add(model);
-        }
-        private void AddLine(Point3D from, Point3D to, Color color, double thickness = 1d)
-        {
-            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
-            lineVisual.Thickness = thickness;
-            lineVisual.Color = color;
-            lineVisual.AddLine(from, to);
-
-            _viewport.Children.Add(lineVisual);
-            _visuals.Add(lineVisual);
-        }
-        private void AddLines(IEnumerable<Tuple<int, int>> lines, Point3D[] points, Color color, double thickness = 1d)
-        {
-            // Draw the lines
-            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
-            lineVisual.Thickness = thickness;
-            lineVisual.Color = color;
-
-            foreach (var line in lines)
-            {
-                lineVisual.AddLine(points[line.Item1], points[line.Item2]);
-            }
-
-            _viewport.Children.Add(lineVisual);
-            _visuals.Add(lineVisual);
-        }
-        private void AddLines(IEnumerable<Tuple<Point3D, Point3D>> lines, Color color, double thickness = 1d)
-        {
-            // Draw the lines
-            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
-            lineVisual.Thickness = thickness;
-            lineVisual.Color = color;
-
-            foreach (var line in lines)
-            {
-                lineVisual.AddLine(line.Item1, line.Item2);
-            }
-
-            _viewport.Children.Add(lineVisual);
-            _visuals.Add(lineVisual);
-        }
-        private void AddLines(Point3D[] points, Color color, double thickness = 1d)
-        {
-            ScreenSpaceLines3D lineVisual = new ScreenSpaceLines3D(true);
-            lineVisual.Thickness = thickness;
-            lineVisual.Color = color;
-
-            for (int cntr = 0; cntr < points.Length - 1; cntr++)
-            {
-                lineVisual.AddLine(points[cntr], points[cntr + 1]);
-            }
-
-            _viewport.Children.Add(lineVisual);
-            _visuals.Add(lineVisual);
-        }
-        private void AddPlane(ITriangle plane, Color color, double size = 20)
-        {
-            // Material
-            MaterialGroup materials = new MaterialGroup();
-            materials.Children.Add(new DiffuseMaterial(new SolidColorBrush(color)));
-            //materials.Children.Add(new SpecularMaterial(new SolidColorBrush(UtilityWPF.AlphaBlend(color, Colors.White, .5d)), 5d));
-
-            // Build a differently sized triangle
-            ITriangle plane2 = new Triangle(
-                plane.Point1 + ((plane.Point0 - plane.Point1) * size),
-                plane.Point2 + ((plane.Point1 - plane.Point2) * size),
-                plane.Point0 + ((plane.Point2 - plane.Point0) * size)
-                );
-
-            // Create the points for the plane
-            Point3D[] points = new Point3D[4];
-            points[0] = plane2.Point0;
-            points[1] = plane2.Point1;
-            points[2] = plane2.Point2;
-            points[3] = Math3D.FromBarycentric(plane2, new Vector(1, 1));
-
-            // Geometry Model
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = materials;
-            geometry.BackMaterial = materials;
-            geometry.Geometry = UtilityWPF.GetMeshFromTriangles(new[] { new TriangleIndexed(0, 1, 2, points), new TriangleIndexed(1, 3, 2, points) });
-
-            // Model Visual
-            ModelVisual3D model = new ModelVisual3D();
-            model.Content = geometry;
-
-            // Temporarily add to the viewport
-            _viewport.Children.Add(model);
-            _visuals.Add(model);
+            return UtilityCore.Iterate<Point3D>(from, intermediatePoints, to).
+                ToArray();
         }
 
         #endregion
@@ -5104,6 +5499,15 @@ namespace Game.Newt.Testers
         }
 
         #endregion
+    }
+
+    #endregion
+
+    #region class: CurvesOptions
+
+    public class CurvesOptions
+    {
+        public string TextureFilename { get; set; }
     }
 
     #endregion

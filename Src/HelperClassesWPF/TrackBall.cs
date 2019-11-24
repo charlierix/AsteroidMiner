@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-using System.Text.RegularExpressions;
+using Game.HelperClassesCore;
+using Game.HelperClassesWPF.Controls3D;
 
 namespace Game.HelperClassesWPF
 {
@@ -24,6 +26,474 @@ namespace Game.HelperClassesWPF
     /// </remarks>
     public class TrackBallRoam
     {
+        #region class: VelocityTracker_Log
+
+        private class VelocityTracker_Log
+        {
+            #region Declaration Section
+
+            private const int MAXCOUNT = 5000;
+            private const int SAMPLEMILLISECONDS = 250;
+
+            private List<(Vector3D delta, DateTime time)> _velocityHistory = new List<(Vector3D delta, DateTime time)>();
+            private List<(AxisAngleRotation3D aarX, AxisAngleRotation3D aarY, DateTime time)> _angularVelocityHistory_InPlace = new List<(AxisAngleRotation3D aarX, AxisAngleRotation3D aarY, DateTime time)>();
+            private List<(Quaternion delta, DateTime time)> _angularVelocityHistory_Oribit = new List<(Quaternion delta, DateTime time)>();
+
+            #endregion
+
+            #region Public Methods
+
+            public void Clear()
+            {
+                _velocityHistory.Clear();
+                _angularVelocityHistory_InPlace.Clear();
+                _angularVelocityHistory_Oribit.Clear();
+            }
+
+            public void AddLinear(Vector3D delta)
+            {
+                _velocityHistory.Add((delta, DateTime.UtcNow));
+
+                while (_velocityHistory.Count > MAXCOUNT)
+                {
+                    _velocityHistory.RemoveAt(0);
+                }
+            }
+            public void AddAngular_InPlace(AxisAngleRotation3D aarX, AxisAngleRotation3D aarY)
+            {
+                _angularVelocityHistory_InPlace.Add((aarX, aarY, DateTime.UtcNow));
+
+                while (_angularVelocityHistory_InPlace.Count > MAXCOUNT)
+                {
+                    _angularVelocityHistory_InPlace.RemoveAt(0);
+                }
+            }
+            public void AddAngular_Orbit(Quaternion delta)
+            {
+                _angularVelocityHistory_Oribit.Add((delta, DateTime.UtcNow));
+
+                while (_angularVelocityHistory_Oribit.Count > MAXCOUNT)
+                {
+                    _angularVelocityHistory_Oribit.RemoveAt(0);
+                }
+            }
+
+            public ((Vector3D unit, double speed)? linear, (Vector3D axis, double speed, bool isInPlace)? angular) GetVelocity()
+            {
+                if (_velocityHistory.Count > 0)
+                {
+                    //DrawLinear();
+                    return (GetLinear(), null);
+                }
+                else if (_angularVelocityHistory_Oribit.Count > 0)
+                {
+                    //DrawOrbit();
+                    return (null, GetOrbit());
+                }
+
+                return (null, null);
+            }
+
+            #endregion
+
+            #region Private Methods
+
+            private void DrawLinear()
+            {
+                DateTime now = DateTime.UtcNow;
+
+                double LINE = _velocityHistory.Max(o => o.delta.Length) * .03;
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Title = string.Format("{0} - {1} seconds", _velocityHistory.Count.ToString("N0"), (_velocityHistory[_velocityHistory.Count - 1].time - _velocityHistory[0].time).TotalSeconds.ToStringSignificantDigits(2)),
+                };
+
+                #region offset
+
+                Vector3D offset;
+                if (_velocityHistory.Count == 0)
+                {
+                    offset = new Vector3D(0, 0, 1);
+                }
+                else
+                {
+                    try
+                    {
+                        ITriangle plane = Math2D.GetPlane_Average(_velocityHistory.Select(o => o.delta.ToPoint()).ToArray());
+                        offset = plane.Normal;
+                    }
+                    catch (Exception)
+                    {
+                        offset = new Vector3D(0, 0, 1);
+                    }
+                }
+
+                offset = offset.ToUnit() * (LINE * 3);
+
+                #endregion
+
+                #region every 10 milliseconds
+
+                Point3D currOffset = new Point3D();
+
+                DateTime curNow = now;
+                Color color = UtilityWPF.GetRandomColor(190, 240);
+
+                for (int cntr = _velocityHistory.Count - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = _velocityHistory[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > 10)
+                    {
+                        curNow = snapshot.time;
+                        color = UtilityWPF.GetRandomColor(190, 240);
+                    }
+
+                    window.AddLine(currOffset, currOffset + snapshot.delta, LINE, color);
+                    currOffset += offset;
+                }
+
+                #endregion
+
+                #region sum per 50 milliseconds
+
+                currOffset = new Point3D(LINE * 100, 0, 0);
+
+                curNow = now;
+                color = UtilityWPF.GetRandomColor(0, 128);
+
+                Vector3D sum = new Vector3D();
+
+                for (int cntr = _velocityHistory.Count - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = _velocityHistory[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > 50)
+                    {
+                        window.AddLine(currOffset, currOffset + sum, LINE, color);
+                        sum = new Vector3D();
+                        currOffset += offset;
+
+                        curNow = snapshot.time;
+                        color = UtilityWPF.GetRandomColor(0, 128);
+                    }
+
+                    sum += snapshot.delta;
+                }
+
+                #endregion
+
+                #region sum of last N milliseconds
+
+                currOffset = new Point3D(LINE * 100, 0, 0) - offset;
+
+                curNow = now;
+                DateTime lastNow = now;
+                color = UtilityWPF.GetRandomColor(0, 128);
+
+                sum = new Vector3D();
+
+                for (int cntr = _velocityHistory.Count - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = _velocityHistory[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > SAMPLEMILLISECONDS)
+                    {
+                        break;
+                    }
+
+                    lastNow = snapshot.time;
+                    sum += snapshot.delta;
+                }
+
+                window.AddLine(currOffset, currOffset + sum, LINE, Colors.White);
+
+                #endregion
+
+                window.Show();
+            }
+            private void DrawOrbit()
+            {
+                DateTime now = DateTime.UtcNow;
+
+                Debug3DWindow window = new Debug3DWindow()
+                {
+                    Title = string.Format("{0} - {1} seconds", _angularVelocityHistory_Oribit.Count.ToString("N0"), (_angularVelocityHistory_Oribit[_angularVelocityHistory_Oribit.Count - 1].time - _angularVelocityHistory_Oribit[0].time).TotalSeconds.ToStringSignificantDigits(2)),
+                };
+
+                var axisAngles = _angularVelocityHistory_Oribit.
+                    Select(o => new
+                    {
+                        axis = o.delta.Axis.ToUnit(),
+                        angle = o.delta.Angle,
+                        o.time,
+                    }).
+                    ToArray();
+
+                double LINE = axisAngles.Max(o => o.angle) * .03;
+
+                #region offset
+
+                Vector3D offset;
+                if (axisAngles.Length == 0)
+                {
+                    offset = new Vector3D(0, 0, 1);
+                }
+                else
+                {
+                    try
+                    {
+                        ITriangle plane = Math2D.GetPlane_Average(axisAngles.Select(o => o.axis.ToPoint()).ToArray());
+                        offset = plane.Normal;
+                    }
+                    catch (Exception)
+                    {
+                        offset = new Vector3D(0, 0, 1);
+                    }
+                }
+
+                offset = offset.ToUnit() * (LINE * 3);
+
+                #endregion
+
+                #region every 10 milliseconds
+
+                Point3D currOffset = new Point3D();
+
+                DateTime curNow = now;
+                Color color = UtilityWPF.GetRandomColor(190, 240);
+
+                for (int cntr = axisAngles.Length - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = axisAngles[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > 10)
+                    {
+                        curNow = snapshot.time;
+                        color = UtilityWPF.GetRandomColor(190, 240);
+                    }
+
+                    window.AddLine(currOffset, currOffset + (snapshot.axis * snapshot.angle), LINE, color);
+                    currOffset += offset;
+                }
+
+                var avg_stddev = Math1D.Get_Average_StandardDeviation(axisAngles.Select(o => o.angle));
+                var avgTime = Math1D.Get_Average_StandardDeviation(Enumerable.Range(0, axisAngles.Length - 1).Select(o => (axisAngles[o + 1].time - axisAngles[o].time).TotalSeconds));
+
+                window.AddText($"avg individuals: {avg_stddev.Item1.ToStringSignificantDigits(3)}");
+                window.AddText($"avg individuals scaled: {(avg_stddev.Item1 / avgTime.Item1).ToStringSignificantDigits(3)}");
+
+                #endregion
+
+                #region sum per 50 milliseconds
+
+                currOffset = new Point3D(LINE * 100, 0, 0);
+
+                curNow = now;
+                color = UtilityWPF.GetRandomColor(0, 128);
+
+                Vector3D sum = new Vector3D();
+
+                List<double> fifties = new List<double>();
+
+                for (int cntr = axisAngles.Length - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = axisAngles[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > 50)
+                    {
+                        window.AddLine(currOffset, currOffset + sum, LINE, color);
+                        sum = new Vector3D();
+                        currOffset += offset;
+
+                        fifties.Add(sum.Length);
+
+                        curNow = snapshot.time;
+                        color = UtilityWPF.GetRandomColor(0, 128);
+                    }
+
+                    sum += snapshot.axis * snapshot.angle;
+                }
+
+                avg_stddev = Math1D.Get_Average_StandardDeviation(fifties);
+                window.AddText($"avg 50s: {avg_stddev.Item1.ToStringSignificantDigits(3)}");
+
+                #endregion
+
+                #region sum of last N milliseconds
+
+                currOffset = new Point3D(LINE * 100, 0, 0) - offset;
+
+                curNow = now;
+                DateTime? lastNow = null;
+                color = UtilityWPF.GetRandomColor(0, 128);
+
+                sum = new Vector3D();
+
+                for (int cntr = axisAngles.Length - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = axisAngles[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > SAMPLEMILLISECONDS)
+                    {
+                        break;
+                    }
+
+                    lastNow = snapshot.time;
+                    sum += snapshot.axis * snapshot.angle;
+                }
+
+                window.AddLine(currOffset, currOffset + sum, LINE, Colors.White);
+
+                window.AddText($"final: {sum.Length.ToStringSignificantDigits(3)}");
+
+                if (lastNow != null)
+                {
+                    double duration = (now - lastNow.Value).TotalSeconds;
+
+
+                }
+
+                #endregion
+
+                window.Show();
+            }
+
+            private (Vector3D unit, double speed)? GetLinear()
+            {
+                DateTime now = DateTime.UtcNow;
+
+                #region sum of last N milliseconds
+
+                DateTime curNow = now;
+                DateTime? lastNow = null;
+
+                Vector3D sum = new Vector3D();
+
+                for (int cntr = _velocityHistory.Count - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = _velocityHistory[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > SAMPLEMILLISECONDS)
+                    {
+                        break;
+                    }
+
+                    lastNow = snapshot.time;
+                    sum += snapshot.delta;
+                }
+
+                #endregion
+
+                if (lastNow == null)
+                {
+                    return null;
+                }
+
+                // Speed will be per second.  Since only a quarter second is used, the final vector length will be larger than sum
+                double duration = (now - lastNow.Value).TotalSeconds;
+
+                return
+                (
+                    sum.ToUnit(),
+                    sum.Length / duration
+                );
+            }
+            private (Vector3D axis, double speed, bool isInPlace)? GetOrbit()
+            {
+                DateTime now = DateTime.UtcNow;
+
+                #region sum of last N milliseconds
+
+                DateTime curNow = now;
+                DateTime? lastNow = null;
+
+                Vector3D sum = new Vector3D();
+
+                for (int cntr = _angularVelocityHistory_Oribit.Count - 1; cntr >= 0; cntr--)
+                {
+                    var snapshot = _angularVelocityHistory_Oribit[cntr];
+
+                    if ((curNow - snapshot.time).TotalMilliseconds > SAMPLEMILLISECONDS)
+                    {
+                        break;
+                    }
+
+                    lastNow = snapshot.time;
+                    sum += snapshot.delta.Axis.ToUnit() * snapshot.delta.Angle;
+                }
+
+                #endregion
+
+                if (lastNow == null)
+                {
+                    return null;
+                }
+
+                // Speed will be per second.  Since only a quarter second is used, the final vector length will be larger than sum
+                double duration = (now - lastNow.Value).TotalSeconds;
+
+                return
+                (
+                    sum.ToUnit(),
+                    sum.Length / duration,
+                    false
+                );
+            }
+
+            #endregion
+        }
+
+        #endregion
+        #region class: VelocityTracker_Inertia
+
+        private class VelocityTracker_Inertia
+        {
+            public VelocityTracker_Inertia(VelocityTracker_Inertia_Linear linear)
+            {
+                InertiaLastTick = DateTime.UtcNow;
+                Linear = linear;
+                Angular = null;
+            }
+            public VelocityTracker_Inertia(VelocityTracker_Inertia_Angular angular)
+            {
+                InertiaLastTick = DateTime.UtcNow;
+                Angular = angular;
+                Linear = null;
+            }
+
+            public DateTime InertiaLastTick { get; set; }
+
+            // Only one of these should be populated
+            public readonly VelocityTracker_Inertia_Linear Linear;
+            public readonly VelocityTracker_Inertia_Angular Angular;
+        }
+
+        #endregion
+        #region class: VelocityTracker_Inertia_Linear
+
+        private class VelocityTracker_Inertia_Linear
+        {
+            public Vector3D VelocityUnit { get; set; }
+            public double Speed { get; set; }
+        }
+
+        #endregion
+        #region class: VelocityTracker_Inertia_Angular
+
+        private class VelocityTracker_Inertia_Angular
+        {
+            public Vector3D Axis { get; set; }
+            public double Speed { get; set; }
+
+            public bool IsInPlace { get; set; }
+
+            public double? OrbitRadius = null;
+        }
+
+        #endregion
+
         #region Events
 
         /// <summary>
@@ -47,6 +517,13 @@ namespace Game.HelperClassesWPF
 
         private AutoScrollEmulator _autoscroll = null;
         private CameraMovement? _currentAutoscrollAction = null;
+
+        private DispatcherTimer _inertiaTimer = null;
+        private double? _inertiaPercentRetainPerSecond_Linear = .03;
+        private double? _inertiaPercentRetainPerSecond_Angular = .03;
+
+        private VelocityTracker_Log _velocityLog = new VelocityTracker_Log();
+        private VelocityTracker_Inertia _velocityInertia = null;
 
         private List<CameraMovement> _currentKeyboardActions = new List<CameraMovement>();
         private DispatcherTimer _timerKeyboard = null;
@@ -282,6 +759,38 @@ namespace Game.HelperClassesWPF
             }
         }
 
+        /// <summary>
+        /// If non null, this will cause the camera to keep moving after they release the mouse
+        /// </summary>
+        /// <remarks>
+        /// Percent of 0 means it will be stopped after 1 second, no matter how fast it was going
+        /// Percent of 1 means it will stay the same speed forever
+        /// 
+        /// .03 is a pretty good setting
+        /// </remarks>
+        public double? InertiaPercentRetainPerSecond_Linear
+        {
+            get
+            {
+                return _inertiaPercentRetainPerSecond_Linear;
+            }
+            set
+            {
+                _inertiaPercentRetainPerSecond_Linear = value;
+            }
+        }
+        public double? InertiaPercentRetainPerSecond_Angular
+        {
+            get
+            {
+                return _inertiaPercentRetainPerSecond_Angular;
+            }
+            set
+            {
+                _inertiaPercentRetainPerSecond_Angular = value;
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -299,10 +808,10 @@ namespace Game.HelperClassesWPF
             //TODO:  Don't just get the radius, get a live point to follow
 
             // Raise an event, requesting the radius
-            if (this.GetOrbitRadius != null)
+            if (GetOrbitRadius != null)
             {
                 GetOrbitRadiusArgs args = new GetOrbitRadiusArgs(_camera.Position, _camera.LookDirection);
-                this.GetOrbitRadius(this, args);
+                GetOrbitRadius(this, args);
 
                 if (args.Result != null)
                 {
@@ -319,7 +828,7 @@ namespace Game.HelperClassesWPF
                 return _camera.Position.ToVector().Length;
             }
 
-            #region Ray Cast
+            #region ray cast
 
             // If there are no hits when fired from the dead center, fire off some more rays a random offset from the center
             //TODO: See if there is a more efficient way of getting all 3D objects on screen
@@ -348,7 +857,7 @@ namespace Game.HelperClassesWPF
 
             return _camera.Position.ToVector().Length;
 
-            #region Wrong Idea
+            #region WRONG IDEA
 
             //Vector3D position = _camera.Position.ToVector();
 
@@ -388,10 +897,7 @@ namespace Game.HelperClassesWPF
 
         protected virtual void OnUserMovedCamera(UserMovedCameraArgs e)
         {
-            if (this.UserMovedCamera != null)
-            {
-                this.UserMovedCamera(this, e);
-            }
+            UserMovedCamera?.Invoke(this, e);
         }
 
         #endregion
@@ -404,6 +910,8 @@ namespace Game.HelperClassesWPF
             {
                 return;
             }
+
+            _orbitRadius = null;
 
             Vector3D delta = _camera.LookDirection;
             delta.Normalize();
@@ -420,6 +928,12 @@ namespace Game.HelperClassesWPF
             {
                 return;
             }
+
+            _inertiaTimer?.Stop();
+            _velocityInertia = null;
+            _velocityLog.Clear();
+
+            _orbitRadius = null;
 
             // By capturing the mouse, mouse events will still come in even when they are moving the mouse
             // outside the element/form
@@ -450,7 +964,10 @@ namespace Game.HelperClassesWPF
             }
 
             Mouse.Capture(_eventSource, CaptureMode.None);
-            _orbitRadius = null;
+
+            StartMomentum();
+
+            //_orbitRadius = null;
 
             #region Detect Autoscroll
 
@@ -497,7 +1014,7 @@ namespace Game.HelperClassesWPF
 
                 if (action != null && !IsAutoScroll(action.Value))		// if it's an autoscroll action, then they missed their chance.  They will have to release the mouse, and click again (this would only happen if they were in the middle of doing some other action, and pressed even more buttons to change actions)
                 {
-                    #region Perform Action
+                    #region perform action
 
                     switch (action.Value)
                     {
@@ -594,6 +1111,86 @@ namespace Game.HelperClassesWPF
             _eventSource.Cursor = _autoscroll.SuggestedCursor;
         }
 
+        private void InertiaTimer_Tick(object sender, EventArgs e)
+        {
+            const double MINSPEED = .001;
+
+            if (_velocityInertia == null)
+            {
+                _inertiaTimer.Stop();
+                return;
+            }
+
+            DateTime now = DateTime.UtcNow;
+            double elapsed = (now - _velocityInertia.InertiaLastTick).TotalSeconds;
+
+            if (_velocityInertia.Linear != null)
+            {
+                #region linear
+
+                if (_inertiaPercentRetainPerSecond_Linear == null)
+                {
+                    _inertiaTimer.Stop();
+                    return;
+                }
+
+                // Decay
+                // Vt = Vo * (1/R)^-t
+                _velocityInertia.Linear.Speed = _velocityInertia.Linear.Speed * (Math.Pow((1 / _inertiaPercentRetainPerSecond_Linear.Value), -elapsed));
+
+                if (_velocityInertia.Linear.Speed < MINSPEED)
+                {
+                    _inertiaTimer.Stop();
+                    return;
+                }
+
+                double displacement = _velocityInertia.Linear.Speed * elapsed;
+
+                PanCamera(_velocityInertia.Linear.VelocityUnit * displacement);
+
+                _velocityInertia.InertiaLastTick = now;
+
+                #endregion
+            }
+            else if (_velocityInertia.Angular != null)
+            {
+                #region angular
+
+                if (_velocityInertia.Angular.Axis.Length == 0 || _velocityInertia.Angular.OrbitRadius == null || _inertiaPercentRetainPerSecond_Angular == null)
+                {
+                    _inertiaTimer.Stop();
+                    return;
+                }
+
+                _velocityInertia.Angular.Speed = _velocityInertia.Angular.Speed * (Math.Pow((1 / _inertiaPercentRetainPerSecond_Angular.Value), -elapsed));
+
+                if (_velocityInertia.Angular.Speed < MINSPEED)
+                {
+                    _inertiaTimer.Stop();
+                    return;
+                }
+
+                double displacement = _velocityInertia.Angular.Speed * elapsed;
+
+                if (_velocityInertia.Angular.IsInPlace)
+                {
+
+                }
+                else
+                {
+                    OrbitCamera(new Quaternion(_velocityInertia.Angular.Axis, displacement));
+                }
+
+                _velocityInertia.InertiaLastTick = now;
+
+                #endregion
+            }
+            else
+            {
+                _inertiaTimer.Stop();
+            }
+        }
+
         private void EventSource_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.IsRepeat)
@@ -601,6 +1198,10 @@ namespace Game.HelperClassesWPF
                 // If they hold in the key, this event keeps firing
                 return;
             }
+
+            _inertiaTimer?.Stop();
+            _velocityInertia = null;
+            _velocityLog.Clear();
 
             switch (e.Key)
             {
@@ -688,8 +1289,9 @@ namespace Game.HelperClassesWPF
         private void KeyboardTimer_Tick(object sender, EventArgs e)
         {
             // Account for slow machines
-            double elapsedTime = (DateTime.UtcNow - _lastKeyboardTick).TotalMilliseconds;
-            _lastKeyboardTick = DateTime.UtcNow;
+            DateTime now = DateTime.UtcNow;
+            double elapsedTime = (now - _lastKeyboardTick).TotalMilliseconds;
+            _lastKeyboardTick = now;
 
             foreach (CameraMovement movement in _currentKeyboardActions)
             {
@@ -729,63 +1331,13 @@ namespace Game.HelperClassesWPF
 
         #endregion
 
-        #region Private Methods
-
-        /// <summary>
-        /// This figures out which action to perform
-        /// </summary>
-        private CameraMovement? GetAction(MouseEventArgs e)
-        {
-            foreach (TrackBallMapping mapping in _mappings)
-            {
-                if (mapping.IsMatch(e))
-                {
-                    return mapping.Movement;
-                }
-            }
-
-            return null;
-        }
-        /// <summary>
-        /// This figures out which action to perform
-        /// </summary>
-        private CameraMovement? GetAction(KeyEventArgs e)
-        {
-            foreach (TrackBallMapping mapping in _mappings)
-            {
-                if (mapping.IsMatch(e))
-                {
-                    return mapping.Movement;
-                }
-            }
-
-            return null;
-        }
-
-        private static bool IsAutoScroll(CameraMovement action)
-        {
-            switch (action)
-            {
-                case CameraMovement.Orbit_AutoScroll:
-                case CameraMovement.Pan_AutoScroll:
-                case CameraMovement.RotateAroundLookDirection_AutoScroll:
-                case CameraMovement.RotateInPlace_AutoScroll:
-                case CameraMovement.Zoom_AutoScroll:
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
+        #region Private Methods - do movement
 
         private void PanCamera(Point currentPosition)
         {
-            Vector3D camZ = _camera.LookDirection;
-            camZ.Normalize();
-            Vector3D camX = -Vector3D.CrossProduct(camZ, _camera.UpDirection);
-            camX.Normalize();
-            Vector3D camY = Vector3D.CrossProduct(camZ, camX);
-            camY.Normalize();
+            Vector3D camZ = _camera.LookDirection.ToUnit();
+            Vector3D camX = -Vector3D.CrossProduct(camZ, _camera.UpDirection).ToUnit();
+            Vector3D camY = Vector3D.CrossProduct(camZ, camX).ToUnit();
 
             double dX = currentPosition.X - _previousPosition2D.X;
             double dY = currentPosition.Y - _previousPosition2D.Y;
@@ -795,9 +1347,16 @@ namespace Game.HelperClassesWPF
 
             Vector3D vPan = (camX * dX) + (camY * dY);
 
-            Point3D cameraPos = _camera.Position;
-            cameraPos += vPan;
-            _camera.Position = cameraPos;
+            //Point3D cameraPos = _camera.Position;
+            //cameraPos += vPan;
+            //_camera.Position = cameraPos;
+            _camera.Position += vPan;
+
+            _velocityLog.AddLinear(vPan);
+        }
+        private void PanCamera(Vector3D delta)
+        {
+            _camera.Position += delta;
         }
 
         private void ZoomCamera(Point currentPosition)
@@ -850,16 +1409,15 @@ namespace Game.HelperClassesWPF
             // Apply the changes
             _camera.UpDirection = vectors[0];
             _camera.LookDirection = vectors[1];
+
+            // This is so specific and rarely used, don't bother giving it momentum
         }
 
         private void RotateCamera(Point currentPosition)
         {
-            Vector3D camZ = _camera.LookDirection;
-            camZ.Normalize();
-            Vector3D camX = -Vector3D.CrossProduct(camZ, _camera.UpDirection);
-            camX.Normalize();
-            Vector3D camY = Vector3D.CrossProduct(camZ, camX);
-            camY.Normalize();
+            Vector3D camZ = _camera.LookDirection.ToUnit();
+            Vector3D camX = -Vector3D.CrossProduct(camZ, _camera.UpDirection).ToUnit();
+            Vector3D camY = Vector3D.CrossProduct(camZ, camX).ToUnit();
 
             double dX = currentPosition.X - _previousPosition2D.X;
             double dY = currentPosition.Y - _previousPosition2D.Y;
@@ -880,11 +1438,13 @@ namespace Game.HelperClassesWPF
 
             _camera.LookDirection = camZ;
             _camera.UpDirection = camY;
+
+            _velocityLog.AddAngular_InPlace(aarX, aarY);
         }
 
         private void OrbitCamera(Point currentPosition, Vector3D currentPosition3D)
         {
-            #region Get Mouse Movement - Spherical
+            #region get mouse movement - spherical
 
             // Figure out a rotation axis and angle
             Vector3D axis = Vector3D.CrossProduct(_previousPosition3D, currentPosition3D);
@@ -910,14 +1470,46 @@ namespace Game.HelperClassesWPF
             #endregion
 
             // This can't be calculated each mose move.  It causes a wobble when the look direction isn't pointed directly at the origin
+            //if (_orbitRadius == null)
+            //{
+            //    _orbitRadius = OnGetOrbitRadius();
+            //}
+
+            #region DELETE
+            //// Figure out the offset in world coords
+            //Vector3D lookLine = _camera.LookDirection.ToUnit();
+            //lookLine = lookLine * _orbitRadius.Value;
+
+            //Point3D orbitPointWorld = _camera.Position + lookLine;
+
+            //// Get the opposite of the look line (the line from the orbit center to the camera's position)
+            //Vector3D lookLineOpposite = lookLine * -1d;
+
+            //// Rotate
+            //Vector3D[] vectors = new Vector3D[] { lookLineOpposite, _camera.UpDirection, _camera.LookDirection };
+
+            //deltaRotation.GetRotatedVector(vectors);
+
+            //// Apply the changes
+            //_camera.Position = orbitPointWorld + vectors[0];
+            //_camera.UpDirection = vectors[1];
+            //_camera.LookDirection = vectors[2];
+            #endregion
+
+            OrbitCamera(deltaRotation);
+
+            _velocityLog.AddAngular_Orbit(deltaRotation);
+        }
+        private void OrbitCamera(Quaternion deltaRotation)
+        {
+            // This can't be calculated each mose move.  It causes a wobble when the look direction isn't pointed directly at the origin
             if (_orbitRadius == null)
             {
                 _orbitRadius = OnGetOrbitRadius();
             }
 
             // Figure out the offset in world coords
-            Vector3D lookLine = _camera.LookDirection;
-            lookLine.Normalize();
+            Vector3D lookLine = _camera.LookDirection.ToUnit();
             lookLine = lookLine * _orbitRadius.Value;
 
             Point3D orbitPointWorld = _camera.Position + lookLine;
@@ -934,6 +1526,99 @@ namespace Game.HelperClassesWPF
             _camera.Position = orbitPointWorld + vectors[0];
             _camera.UpDirection = vectors[1];
             _camera.LookDirection = vectors[2];
+        }
+
+        #endregion
+        #region Private Methods
+
+        private void StartMomentum()
+        {
+            if (_inertiaPercentRetainPerSecond_Linear == null && _inertiaPercentRetainPerSecond_Angular == null)
+            {
+                return;
+            }
+
+            var (linear, angular) = _velocityLog.GetVelocity();
+            _velocityLog.Clear();
+
+            if (linear != null && _inertiaPercentRetainPerSecond_Linear != null)
+            {
+                _velocityInertia = new VelocityTracker_Inertia(new VelocityTracker_Inertia_Linear()
+                {
+                    VelocityUnit = linear.Value.unit,
+                    Speed = linear.Value.speed,
+                });
+            }
+            else if (angular != null && _inertiaPercentRetainPerSecond_Angular != null)
+            {
+                _velocityInertia = new VelocityTracker_Inertia(new VelocityTracker_Inertia_Angular()
+                {
+                    Axis = angular.Value.axis,
+                    Speed = angular.Value.speed,
+                    IsInPlace = angular.Value.isInPlace,
+                    OrbitRadius = _orbitRadius,
+                });
+            }
+            else
+            {
+                return;
+            }
+
+            if (_inertiaTimer == null)
+            {
+                _inertiaTimer = new DispatcherTimer();
+                _inertiaTimer.Interval = TimeSpan.FromMilliseconds(20);
+                _inertiaTimer.Tick += InertiaTimer_Tick;
+            }
+
+            _inertiaTimer.Start();
+        }
+
+        /// <summary>
+        /// This figures out which action to perform
+        /// </summary>
+        private CameraMovement? GetAction(MouseEventArgs e)
+        {
+            foreach (TrackBallMapping mapping in _mappings)
+            {
+                if (mapping.IsMatch(e))
+                {
+                    return mapping.Movement;
+                }
+            }
+
+            return null;
+        }
+        /// <summary>
+        /// This figures out which action to perform
+        /// </summary>
+        private CameraMovement? GetAction(KeyEventArgs e)
+        {
+            foreach (TrackBallMapping mapping in _mappings)
+            {
+                if (mapping.IsMatch(e))
+                {
+                    return mapping.Movement;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsAutoScroll(CameraMovement action)
+        {
+            switch (action)
+            {
+                case CameraMovement.Orbit_AutoScroll:
+                case CameraMovement.Pan_AutoScroll:
+                case CameraMovement.RotateAroundLookDirection_AutoScroll:
+                case CameraMovement.RotateInPlace_AutoScroll:
+                case CameraMovement.Zoom_AutoScroll:
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         private static Vector3D ProjectToTrackball(double width, double height, Point point)
@@ -1048,7 +1733,7 @@ namespace Game.HelperClassesWPF
             double? retVal = null;
 
             // This gets called every time there is a hit
-            HitTestResultCallback resultCallback = delegate(HitTestResult result)
+            HitTestResultCallback resultCallback = delegate (HitTestResult result)
             {
                 if (result is RayHitTestResult)
                 {
@@ -1340,12 +2025,37 @@ namespace Game.HelperClassesWPF
 
         public enum PrebuiltMapping
         {
-            MouseComplete = 0,		// supports all actions across all 3 buttons (middle button emulated by left+right)
-            MouseComplete_NoLeft,		// same as Complete, but left button has no mapping - drops pan (left+right is still used)
-            MouseComplete_NoLeft_RightRotateInPlace,	// same as noleft, but right button function is swapped (ctrl+right is orbit)
-            Keyboard_ASDW_In,		// W maps to in
-            Keyboard_ASDW_Up,		// W maps to up
-            Keyboard_Arrows_In,		// Up maps to in
+            /// <summary>
+            /// Supports all actions across all 3 buttons (middle button emulated by left+right)
+            /// </summary>
+            MouseComplete = 0,
+            /// <summary>
+            /// Same as Complete, but left button has no mapping - drops pan (left+right is still used)
+            /// </summary>
+            MouseComplete_NoLeft,
+            /// <summary>
+            /// Same as noleft, but right button function is swapped (ctrl+right is orbit)
+            /// </summary>
+            MouseComplete_NoLeft_RightRotateInPlace,
+            /// <summary>
+            /// Same as MouseComplete, but left rotates and right pans
+            /// </summary>
+            MouseComplete_SwapLeftRight,
+            /// <summary>
+            /// W maps to in
+            /// </summary>
+            Keyboard_ASDW_In,
+            /// <summary>
+            /// W maps to up
+            /// </summary>
+            Keyboard_ASDW_Up,
+            /// <summary>
+            /// Up maps to in
+            /// </summary>
+            Keyboard_Arrows_In,
+            /// <summary>
+            /// Up maps to up
+            /// </summary>
             Keyboard_Arrows_Up
 
             //Sketchup,		// middle is cylindrical orbit, shift+middle is pan, wheel is zoom (but there are toggles that map those actions to the left mouse button)
@@ -1754,7 +2464,7 @@ namespace Game.HelperClassesWPF
                     break;
 
                 case PrebuiltMapping.MouseComplete_NoLeft_RightRotateInPlace:
-                    #region Complete_NoLeft
+                    #region MouseComplete_NoLeft_RightRotateInPlace
 
                     // Middle Button
                     complexMapping = new TrackBallMapping(CameraMovement.RotateAroundLookDirection_AutoScroll);
@@ -1815,6 +2525,75 @@ namespace Game.HelperClassesWPF
 
                     retVal.Add(new TrackBallMapping(CameraMovement.RotateInPlace_AutoScroll, MouseButton.Right, new Key[] { Key.LeftAlt, Key.RightAlt }));
                     retVal.Add(new TrackBallMapping(CameraMovement.RotateInPlace, MouseButton.Right));
+
+                    #endregion
+                    break;
+
+                case PrebuiltMapping.MouseComplete_SwapLeftRight:
+                    #region MouseComplete_SwapLeftRight
+
+                    // Right
+                    retVal.Add(new TrackBallMapping(CameraMovement.Pan, MouseButton.Right));
+
+                    // Middle Button
+                    complexMapping = new TrackBallMapping(CameraMovement.RotateAroundLookDirection_AutoScroll);
+                    complexMapping.Add(MouseButton.Middle);
+                    complexMapping.Add(new Key[] { Key.LeftCtrl, Key.RightCtrl });
+                    complexMapping.Add(new Key[] { Key.LeftAlt, Key.RightAlt });
+                    retVal.Add(complexMapping);
+                    retVal.Add(new TrackBallMapping(CameraMovement.RotateAroundLookDirection, MouseButton.Middle, new Key[] { Key.LeftCtrl, Key.RightCtrl }));
+
+                    complexMapping = new TrackBallMapping(CameraMovement.Zoom_AutoScroll);
+                    complexMapping.Add(MouseButton.Middle);
+                    complexMapping.Add(new Key[] { Key.LeftShift, Key.RightShift });
+                    complexMapping.Add(new Key[] { Key.LeftAlt, Key.RightAlt });
+                    retVal.Add(complexMapping);
+                    retVal.Add(new TrackBallMapping(CameraMovement.Zoom, MouseButton.Middle, new Key[] { Key.LeftShift, Key.RightShift }));
+
+                    retVal.Add(new TrackBallMapping(CameraMovement.Pan_AutoScroll, MouseButton.Middle));
+
+                    // Left+Right Buttons (emulate middle)
+                    complexMapping = new TrackBallMapping(CameraMovement.RotateAroundLookDirection_AutoScroll);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(MouseButton.Right);
+                    complexMapping.Add(new Key[] { Key.LeftCtrl, Key.RightCtrl });
+                    complexMapping.Add(new Key[] { Key.LeftAlt, Key.RightAlt });
+                    retVal.Add(complexMapping);
+
+                    complexMapping = new TrackBallMapping(CameraMovement.RotateAroundLookDirection);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(MouseButton.Right);
+                    complexMapping.Add(new Key[] { Key.LeftCtrl, Key.RightCtrl });
+                    retVal.Add(complexMapping);
+
+                    complexMapping = new TrackBallMapping(CameraMovement.Zoom_AutoScroll);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(MouseButton.Right);
+                    complexMapping.Add(new Key[] { Key.LeftShift, Key.RightShift });
+                    complexMapping.Add(new Key[] { Key.LeftAlt, Key.RightAlt });
+                    retVal.Add(complexMapping);
+
+                    complexMapping = new TrackBallMapping(CameraMovement.Zoom);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(MouseButton.Right);
+                    complexMapping.Add(new Key[] { Key.LeftShift, Key.RightShift });
+                    retVal.Add(complexMapping);
+
+                    complexMapping = new TrackBallMapping(CameraMovement.Pan_AutoScroll);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(MouseButton.Right);
+                    retVal.Add(complexMapping);
+
+                    // Left Button
+                    complexMapping = new TrackBallMapping(CameraMovement.RotateInPlace_AutoScroll);
+                    complexMapping.Add(MouseButton.Left);
+                    complexMapping.Add(new Key[] { Key.LeftCtrl, Key.RightCtrl });
+                    complexMapping.Add(new Key[] { Key.LeftAlt, Key.RightAlt });
+                    retVal.Add(complexMapping);
+                    retVal.Add(new TrackBallMapping(CameraMovement.RotateInPlace, MouseButton.Left, new Key[] { Key.LeftCtrl, Key.RightCtrl }));
+
+                    retVal.Add(new TrackBallMapping(CameraMovement.Orbit_AutoScroll, MouseButton.Left, new Key[] { Key.LeftAlt, Key.RightAlt }));
+                    retVal.Add(new TrackBallMapping(CameraMovement.Orbit, MouseButton.Left));
 
                     #endregion
                     break;
@@ -2074,33 +2853,33 @@ namespace Game.HelperClassesWPF
                         searchForPair = Key.Subtract;
                         break;
 
-                    //TODO: Do the rest of the oem/numpad dupes
-                    //case Key.Oem1
-                    //case Key.Oem2
-                    //case Key.Oem3
-                    //case Key.Oem4
-                    //case Key.Oem5
-                    //case Key.Oem6
-                    //case Key.Oem7
-                    //case Key.Oem8
-                    //case Key.Oem9		// where's 0?
-                    //case Key.NumPad0
-                    //case Key.NumPad1
-                    //case Key.NumPad2
-                    //case Key.NumPad3
-                    //case Key.NumPad4
-                    //case Key.NumPad5
-                    //case Key.NumPad6
-                    //case Key.NumPad7
-                    //case Key.NumPad8
-                    //case Key.NumPad9
+                        //TODO: Do the rest of the oem/numpad dupes
+                        //case Key.Oem1
+                        //case Key.Oem2
+                        //case Key.Oem3
+                        //case Key.Oem4
+                        //case Key.Oem5
+                        //case Key.Oem6
+                        //case Key.Oem7
+                        //case Key.Oem8
+                        //case Key.Oem9		// where's 0?
+                        //case Key.NumPad0
+                        //case Key.NumPad1
+                        //case Key.NumPad2
+                        //case Key.NumPad3
+                        //case Key.NumPad4
+                        //case Key.NumPad5
+                        //case Key.NumPad6
+                        //case Key.NumPad7
+                        //case Key.NumPad8
+                        //case Key.NumPad9
 
-                    //case Key.OemPeriod
-                    //case Key.OemQuestion
-                    //case Key.Decimal
-                    //case Key.Divide
+                        //case Key.OemPeriod
+                        //case Key.OemQuestion
+                        //case Key.Decimal
+                        //case Key.Divide
 
-                    //etc
+                        //etc
                 }
 
                 #endregion

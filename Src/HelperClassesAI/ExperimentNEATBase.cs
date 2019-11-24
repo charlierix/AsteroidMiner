@@ -818,11 +818,11 @@ namespace Game.HelperClassesAI
             return
             (
                 inputs: Math2D.GetCells_WithinSquare(inputSize, inputCountXY).
-                    Select(o => new VectorND(new[] { o.center.X, o.center.Y, -1d })).
+                    Select(o => new VectorND(o.center.X, o.center.Y, -1d)).
                     ToArray(),
 
                 outputs: Math2D.GetCells_WithinSquare(outputSize, outputCountXY).
-                    Select(o => new VectorND(new[] { o.center.X, o.center.Y, 1d })).
+                    Select(o => new VectorND(o.center.X, o.center.Y, 1d)).
                     ToArray()
             );
         }

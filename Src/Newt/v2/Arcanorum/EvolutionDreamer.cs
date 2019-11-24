@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems;
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.Newt.v2.GameItems.ShipParts;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
+using Game.Newt.v2.Arcanorum.MapObjects;
 using Game.Newt.v2.Arcanorum.Parts;
+using Game.Newt.v2.GameItems;
+using Game.Newt.v2.GameItems.ShipParts;
+using System;
+using System.Collections.Generic;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -109,6 +105,8 @@ namespace Game.Newt.v2.Arcanorum
 
         private volatile bool _isDisposed = false;
 
+        private readonly ItemOptionsArco _itemOptions;
+
         private readonly BotShellColorsDNA _shellColors;
 
         private readonly OfflineWorld _dreamWorld;
@@ -143,6 +141,7 @@ namespace Game.Newt.v2.Arcanorum
 
         public EvolutionDreamer(ItemOptionsArco itemOptions, BotShellColorsDNA shellColors, int numTrackedBots)
         {
+            _itemOptions = itemOptions;
             _shellColors = shellColors;
 
             _mutateArgs = GetMutateArgs(itemOptions);
@@ -228,21 +227,21 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Public Methods
 
-        public Tuple<BotDNA, WeaponDNA> GetBestBotDNA()
+        public (BotDNA bot, WeaponDNA weapon) GetBestBotDNA()
         {
             BotDNA winner = _winningBot;
 
             if (winner == null)
             {
-                return GetRandomDNA(_shellColors, this.WeaponDNA);
+                return GetRandomDNA(_itemOptions, _shellColors, this.WeaponDNA);
             }
             else
             {
-                return Tuple.Create(winner, this.WeaponDNA);
+                return (winner, this.WeaponDNA);
             }
         }
 
-        public static Tuple<BotDNA, WeaponDNA> GetRandomDNA(BotShellColorsDNA shellColors = null, WeaponDNA weapon = null)
+        public static (BotDNA bot, WeaponDNA weapon) GetRandomDNA(ItemOptionsArco itemOptions, BotShellColorsDNA shellColors = null, WeaponDNA weapon = null)
         {
             Random rand = StaticRandom.GetRandomForThread();
 
@@ -268,7 +267,7 @@ namespace Game.Newt.v2.Arcanorum
             // Vision
             //TODO: Support filtering by type
             partSize = rand.NextPercent(1, .5);
-            parts.Add(new ShipPartDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize) });
+            parts.Add(new SensorVisionDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(partSize, partSize, partSize), SearchRadius = itemOptions.VisionSensor_SearchRadius });
 
             // Brains
             int numBrains = 1 + Convert.ToInt32(rand.NextPow(5, 1d) * 4);
@@ -327,7 +326,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
 
-            return Tuple.Create(bot, weaponActual);
+            return (bot, weaponActual);
         }
 
         #endregion
@@ -364,7 +363,7 @@ namespace Game.Newt.v2.Arcanorum
                             BotDNA winningBot = _winningBot;
                             if (winningBot == null)
                             {
-                                dna = GetRandomDNA(_shellColors).Item1;
+                                dna = GetRandomDNA(_itemOptions, _shellColors).Item1;
                             }
                             else
                             {
@@ -461,13 +460,13 @@ namespace Game.Newt.v2.Arcanorum
 
             MutateUtility.MuateArgs linkMovement = new MutateUtility.MuateArgs(false, options.Link_PercentToMutate,
                 new Tuple<string, MutateUtility.MuateFactorArgs>[]
-					{
-						Tuple.Create("FromContainerPosition", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkContainer_MovementAmount)),
-						Tuple.Create("FromContainerOrientation", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, options.LinkContainer_RotateAmount))
-					},
+                    {
+                        Tuple.Create("FromContainerPosition", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.LinkContainer_MovementAmount)),
+                        Tuple.Create("FromContainerOrientation", new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Percent, options.LinkContainer_RotateAmount))
+                    },
                 new Tuple<PropsByPercent.DataType, MutateUtility.MuateFactorArgs>[]
-					{
-						Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Link_WeightAmount)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
+                    {
+                        Tuple.Create(PropsByPercent.DataType.Double, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Link_WeightAmount)),		// all the doubles are weights, which need to be able to cross over zero (percents can't go + to -)
 						Tuple.Create(PropsByPercent.DataType.Point3D, new MutateUtility.MuateFactorArgs(MutateUtility.FactorType.Distance, options.Link_MovementAmount)),		// using a larger value for the links
 					},
                 null);

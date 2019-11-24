@@ -734,14 +734,14 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             Vector3D[][] retVal;
 
-            double[] plateZs = GetNeuronPositionsInitialSprtZs(numPlates, radius);
+            double[] plateZs = GetNeuronPositionsInitial_Zs(numPlates, radius);
 
             if (dnaPositions == null)
             {
                 #region Create new
 
                 // Figure out how many neurons to put in each plate
-                int[] countsPerPlate = GetNeuronPositionsInitialSprtInitialPlateBreakdown(count, numPlates);
+                int[] countsPerPlate = GetNeuronPositionsInitial_InitialPlateBreakdown(count, numPlates);
 
                 retVal = new Vector3D[numPlates][];
 
@@ -762,7 +762,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             else
             {
                 // Separate the existing into plates
-                List<Vector3D>[] separated = GetNeuronPositionsInitialSprtSeparateExisting(dnaPositions, plateZs);
+                List<Vector3D>[] separated = GetNeuronPositionsInitial_SeparateExisting(dnaPositions, plateZs);
 
                 if (dnaPositions.Length > count)
                 {
@@ -773,7 +773,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     for (int cntr = 0; cntr < reduceCount; cntr++)
                     {
                         // Figure out which plate to remove from
-                        int index = GetNeuronPositionsInitialSprtGetRemoveIndex(separated);
+                        int index = GetNeuronPositionsInitial_GetRemoveIndex(separated);
 
                         separated[index].RemoveAt(StaticRandom.Next(separated[index].Count));
                     }
@@ -789,7 +789,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                     for (int cntr = 0; cntr < increaseCount; cntr++)
                     {
                         // Figure out which plate to add to
-                        int index = GetNeuronPositionsInitialSprtGetAddIndex(separated);
+                        int index = GetNeuronPositionsInitial_GetAddIndex(separated);
 
                         Vector3D newNeuron = Math3D.GetRandomVector_Circular(radius);
                         newNeuron.Z = plateZs[index];
@@ -804,10 +804,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 retVal = separated.Select(o => o.ToArray()).ToArray();
             }
 
-            // Exit Function
             return retVal;
         }
-        private static double[] GetNeuronPositionsInitialSprtZs(int numPlates, double radius)
+        private static double[] GetNeuronPositionsInitial_Zs(int numPlates, double radius)
         {
             if (numPlates == 1)
             {
@@ -830,7 +829,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return retVal;
         }
-        private static int[] GetNeuronPositionsInitialSprtInitialPlateBreakdown(int count, int numPlates)
+        private static int[] GetNeuronPositionsInitial_InitialPlateBreakdown(int count, int numPlates)
         {
             int[] retVal = new int[numPlates];
 
@@ -859,10 +858,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Some of the plates may have remainders, and the above loop always puts them in the first plates, so shuffle it
             retVal = UtilityCore.RandomRange(0, numPlates).Select(o => retVal[o]).ToArray();
 
-            // Exit Function
             return retVal;
         }
-        private static List<Vector3D>[] GetNeuronPositionsInitialSprtSeparateExisting(Point3D[] dnaPositions, double[] plateZs)
+        private static List<Vector3D>[] GetNeuronPositionsInitial_SeparateExisting(Point3D[] dnaPositions, double[] plateZs)
         {
             List<Vector3D>[] retVal = Enumerable.Range(0, dnaPositions.Length).Select(o => new List<Vector3D>()).ToArray();
 
@@ -875,10 +873,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 retVal[index].Add(new Vector3D(position.X, position.Z, plateZs[index]));
             }
 
-            // Exit Function
             return retVal;
         }
-        private static int GetNeuronPositionsInitialSprtGetAddIndex(List<Vector3D>[] separated)
+        private static int GetNeuronPositionsInitial_GetAddIndex(List<Vector3D>[] separated)
         {
             // See which plate has the smallest count
             int min = separated.Min(o => o.Count);
@@ -897,7 +894,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Pick a random plate from that list
             return candidates[StaticRandom.Next(candidates.Count)];
         }
-        private static int GetNeuronPositionsInitialSprtGetRemoveIndex(List<Vector3D>[] separated)
+        private static int GetNeuronPositionsInitial_GetRemoveIndex(List<Vector3D>[] separated)
         {
             // See which plate has the largest count
             int max = separated.Max(o => o.Count);

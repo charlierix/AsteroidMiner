@@ -14,6 +14,7 @@ using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -422,7 +423,7 @@ namespace Game.Newt.v2.Arcanorum
         #endregion
         #region IGivesDamage Members
 
-        public WeaponDamage CalculateDamage(MaterialCollision[] collisions)
+        public DamageProps CalculateDamage(MaterialCollision[] collisions)
         {
             if (!_isFullySetUp || collisions.Length == 0)
             {
@@ -443,7 +444,7 @@ namespace Game.Newt.v2.Arcanorum
 
             double damage = speed * damangeMult;
 
-            WeaponDamage retVal = new WeaponDamage(avgCollision.Item1, damage);
+            DamageProps retVal = new DamageProps(avgCollision.Item1, damage);
 
             // The act of hitting something needs to stop the ram, otherwise, they just keep pushing against the item
             // and continue to do damage
@@ -532,7 +533,7 @@ namespace Game.Newt.v2.Arcanorum
             _scale.ScaleZ = scale;
 
             // Translate
-            Point3D position = _bot.PositionWorld + (velocity.ToUnit(false) * (_bot.Radius * UtilityCore.GetScaledValue_Capped(1.05, 1.3, 0, dna.DamageMult * 25, damageMult)));
+            Point3D position = _bot.PositionWorld + (velocity.ToUnit() * (_bot.Radius * UtilityCore.GetScaledValue_Capped(1.05, 1.3, 0, dna.DamageMult * 25, damageMult)));
 
             _translate.OffsetX = position.X;
             _translate.OffsetY = position.Y;
@@ -756,7 +757,7 @@ namespace Game.Newt.v2.Arcanorum
         #region Orth1
 
             Vector orth = to - from;
-            orth = new Vector(-orth.Y, orth.X).ToUnit(false) * 10;
+            orth = new Vector(-orth.Y, orth.X).ToUnit() * 10;
 
             Point orthFrom = from - orth;
             Point orthTo = from + orth;

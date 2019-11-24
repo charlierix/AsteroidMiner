@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -214,7 +215,7 @@ namespace Game.Newt.v2.Arcanorum
 
         public void Update_AnyThread(double elapsedTime)
         {
-            Vector3D velocity = this.Bot.VelocityWorld.ToUnit(false);
+            Vector3D velocity = this.Bot.VelocityWorld.ToUnit();
 
             double dot = Vector3D.DotProduct((Vector3D)_velocityUnitLastTick, velocity);
 

@@ -23,9 +23,12 @@ namespace Game.Newt.v2.Arcanorum.Parts
     {
         #region Declaration Section
 
+        internal const double SIZEPERCENTOFSCALE_XY = 1d;
+        internal const double SIZEPERCENTOFSCALE_Z = .1d;
+
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -73,11 +76,51 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
-            return SensorVisionDesign.CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
+            return CreateSensorCollisionHull(world, Scale, Orientation, Position);
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            return SensorVisionDesign.GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
+            return GetSensorMassBreakdown(ref _massBreakdown, Scale, cellSize);
+        }
+
+        internal static CollisionHull CreateSensorCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
+        {
+            Transform3DGroup transform = new Transform3DGroup();
+            //transform.Children.Add(new ScaleTransform3D(scale));		// it ignores scale
+            transform.Children.Add(new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90)));		// the physics hull is along x, but dna is along z
+            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(orientation)));
+            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
+
+            // Scale X and Y should be identical, but average them to be safe
+            double radius = SIZEPERCENTOFSCALE_XY * Math1D.Avg(scale.X, scale.Y) * .5;      // multiplying by .5 to turn diameter into radius
+            double height = SIZEPERCENTOFSCALE_Z * scale.Z;
+
+            return CollisionHull.CreateCylinder(world, 0, radius, height, transform.Value);
+        }
+        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
+        {
+            if (existing != null && existing.Scale == scale && existing.CellSize == cellSize)
+            {
+                // This has already been built for this size
+                return existing.Breakdown;
+            }
+
+            // Convert this.Scale into a size that the mass breakdown will use (mass breakdown wants height along X, and scale is for radius, but the mass breakdown wants diameter)
+            Vector3D size = new Vector3D(scale.Z * SIZEPERCENTOFSCALE_Z, scale.X * SIZEPERCENTOFSCALE_XY * 2, scale.Y * SIZEPERCENTOFSCALE_XY * 2);
+
+            var cylinder = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
+
+            Transform3D transform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90));		// the physics hull is along x, but dna is along z
+
+            // Rotated
+            UtilityNewt.ObjectMassBreakdownSet combined = new UtilityNewt.ObjectMassBreakdownSet(
+                new UtilityNewt.ObjectMassBreakdown[] { cylinder },
+                new Transform3D[] { transform });
+
+            // Store this
+            existing = new MassBreakdownCache(combined, scale, cellSize);
+
+            return existing.Breakdown;
         }
 
         public override PartToolItemBase GetToolItem()
@@ -91,7 +134,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         private Model3D CreateGeometry(bool isFinal)
         {
-            #region Material
+            #region material
 
             DiffuseMaterial diffuse = WorldColorsArco.MotionController_Linear_Diffuse.Value;
             SpecularMaterial specular = WorldColorsArco.MotionController_Linear_Specular.Value;
@@ -116,13 +159,13 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             #endregion
 
-            double radius = ((this.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY)) / 2d;
-            double height = this.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z;
+            double radius = ((this.Scale.X * SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * SIZEPERCENTOFSCALE_XY)) / 2d;
+            double height = this.Scale.Z * SIZEPERCENTOFSCALE_Z;
             double halfHeight = height / 2d;
 
             Model3DGroup retVal = new Model3DGroup();
 
-            #region Center
+            #region center
 
             GeometryModel3D geometry = new GeometryModel3D();
             geometry.Material = material;
@@ -140,7 +183,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             #endregion
 
-            #region Ring
+            #region ring
 
             geometry = new GeometryModel3D();
             geometry.Material = material;
@@ -157,7 +200,6 @@ namespace Game.Newt.v2.Arcanorum.Parts
             // Transform
             retVal.Transform = GetTransformForGeometry(isFinal);
 
-            // Exit Function
             return retVal;
         }
 
@@ -212,11 +254,11 @@ namespace Game.Newt.v2.Arcanorum.Parts
             this.Design = new MotionController2Design(options, true);
             this.Design.SetDNA(dna);
 
-            SensorVision.GetMass(out _mass, out double volume, out double radius, out _scaleActual, dna, itemOptions);
+            GetMass(out _mass, out double volume, out double radius, out _scaleActual, dna, itemOptions);
 
             this.Radius = radius;
 
-            var neurons = CreateNeurons(dna, itemOptions, itemOptions.MotionController2_NeuronDensity);
+            var neurons = CreateNeurons(dna, itemOptions);
             _neuron_rotate_direction_speed = neurons.rot_dirspeed;
             _neuron_rotate_radius = neurons.rot_radius;
             _neurons_linear = neurons.linear;
@@ -294,27 +336,49 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         #endregion
 
+        #region Public Methods
+
+        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
+        {
+            double radiusLocal = ((dna.Scale.X * MotionController2Design.SIZEPERCENTOFSCALE_XY) + (dna.Scale.Y * MotionController2Design.SIZEPERCENTOFSCALE_XY)) / (2d * 2d);     // scale is diameter, so divide an extra two to get radius
+            double heightLocal = dna.Scale.Z * MotionController2Design.SIZEPERCENTOFSCALE_Z;
+            double halfHeightLocal = heightLocal / 2d;
+
+            volume = Math.PI * radiusLocal * radiusLocal * heightLocal;		// get volume of the cylinder
+
+            // This isn't the radius of the cylinder, it is the radius of the bounding sphere
+            radius = Math.Sqrt((radiusLocal * radiusLocal) + (halfHeightLocal * halfHeightLocal));
+
+            mass = volume * itemOptions.Sensor_Density;
+
+            actualScale = new Vector3D(dna.Scale.X * MotionController2Design.SIZEPERCENTOFSCALE_XY, dna.Scale.Y * MotionController2Design.SIZEPERCENTOFSCALE_XY, dna.Scale.Z * MotionController2Design.SIZEPERCENTOFSCALE_Z);
+        }
+
+        #endregion
+
         #region Private Methods
 
-        private static (Neuron_SensorPosition rot_dirspeed, Neuron_SensorPosition rot_radius, Neuron_SensorPosition[] linear) CreateNeurons(ShipPartDNA dna, ItemOptionsArco itemOptions, double neuronDensity)
+        private static (Neuron_SensorPosition rot_dirspeed, Neuron_SensorPosition rot_radius, Neuron_SensorPosition[] linear) CreateNeurons(ShipPartDNA dna, ItemOptionsArco itemOptions)
         {
-            #region Ring - linear
+            #region ring - linear
 
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             double radius = (dna.Scale.X + dna.Scale.Y) / (2d * 2d);		// XY should always be the same anyway (not looking at Z for this.  Z is just to keep the sensors from getting too close to each other)
-            double area = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
+            double area = Math.Pow(radius, itemOptions.MotionController2_NeuronGrowthExponent);
 
-            int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
-            if (neuronCount < 3)
+            int neuronCount = (area * itemOptions.MotionController2_NeuronDensity).ToInt_Ceiling();
+            neuronCount += 2;       // manually add two for the rotation neruons
+
+            if (neuronCount < 7)
             {
-                neuronCount = 3;
+                neuronCount = 7;
             }
 
             var neuronPositions = SplitNeuronPositions(dna.Neurons);
 
             // Place them evenly around the perimiter of a circle.
-            Vector3D[] linearPositions = Brain.GetNeuronPositions_Ring2D(neuronPositions?.linear, neuronCount, radius);
+            Vector3D[] linearPositions = NeuralUtility.GetNeuronPositions_CircularShell_Even(neuronPositions?.linear, neuronCount, radius);
 
             Neuron_SensorPosition[] linearNeurons = linearPositions.
                 Select(o => new Neuron_SensorPosition(o.ToPoint(), true, false)).
@@ -322,7 +386,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             #endregion
 
-            #region Interior - rotation
+            #region interior - rotation
 
             Neuron_SensorPosition rotateDirSpeed = new Neuron_SensorPosition(new Point3D(-.25, 0, 0), false, false);
             Neuron_SensorPosition rotateRadius = new Neuron_SensorPosition(new Point3D(.25, 0, 0), true, false);

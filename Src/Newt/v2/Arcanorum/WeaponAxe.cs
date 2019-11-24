@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -151,7 +152,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Public Methods
 
-        public override WeaponDamage CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
+        public override DamageProps CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
         {
             //TODO: Take damage (not much, just a bit of dulling)
 
@@ -159,7 +160,7 @@ namespace Game.Newt.v2.Arcanorum
 
             //TODO: Return some combination of extra kinetic, slash or pierce damage
 
-            return new WeaponDamage();
+            return new DamageProps();
         }
 
         #endregion

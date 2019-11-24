@@ -1,19 +1,16 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesCore.Threads;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.NewtonDynamics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Schedulers;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Game.HelperClassesAI;
-using Game.HelperClassesCore;
-using Game.HelperClassesCore.Threads;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -270,42 +267,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
     public class DirectionControllerRing : PartBase, INeuronContainer, IPartUpdatable
     {
-        #region class: NeuronShell
-
-        /// <summary>
-        /// This could hold a spherical shell, circular ring, or endpoints of a line
-        /// </summary>
-        internal class NeuronShell
-        {
-            public NeuronShell(Neuron_SensorPosition[] neurons, double radius)
-            {
-                this.Neurons = neurons;
-                this.Radius = radius;
-                this.VectorsUnit = neurons.
-                    Select(o => o.Position.ToVector() / radius).
-                    ToArray();
-            }
-
-            public readonly Neuron_SensorPosition[] Neurons;
-            public readonly double Radius;
-
-            public readonly Vector3D[] VectorsUnit;
-
-            public Vector3D GetVector()
-            {
-                Vector3D retVal = new Vector3D(0, 0, 0);
-
-                for (int cntr = 0; cntr < this.Neurons.Length; cntr++)
-                {
-                    retVal += this.VectorsUnit[cntr] * this.Neurons[cntr].Value;
-                }
-
-                return retVal;
-            }
-        }
-
-        #endregion
-
         #region Declaration Section
 
         public const string PARTTYPE = nameof(DirectionControllerRing);
@@ -314,9 +275,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly IContainer _energyTanks;
 
-        private readonly DirectionControllerRing.NeuronShell _neuronsLinear;
-        private readonly DirectionControllerRing.NeuronShell _neuronsRotation;
-        private readonly Neuron_SensorPosition[] _neurons;
+        private readonly NeuralUtility.NeuronShell _neuronsLinear;
+        private readonly NeuralUtility.NeuronShell _neuronsRotation;
+        private readonly Neuron_Direct[] _neurons;
 
         private readonly Thruster[] _thrusters;
         private readonly ImpulseEngine[] _impulseEngines;
@@ -359,8 +320,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 neuronCount = 1;
             }
 
-            _neuronsLinear = DirectionControllerRing.CreateNeuronShell_Ring(1, neuronCount);
-            _neuronsRotation = DirectionControllerRing.CreateNeuronShell_Line(1);
+            _neuronsLinear = NeuralUtility.CreateNeuronShell_Ring(1, neuronCount);
+            _neuronsRotation = NeuralUtility.CreateNeuronShell_Line(1);
 
             _neurons = _neuronsLinear.Neurons.
                 Concat(_neuronsRotation.Neurons).
@@ -473,66 +434,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = 4d / 3d * Math.PI * radius * radius * radius;
             mass = volume * itemOptions.DirectionController_Density;
-        }
-
-        internal static NeuronShell CreateNeuronShell_Sphere(double radius, int count)
-        {
-            Vector3D[] positions = Math3D.GetRandomVectors_SphericalShell_EvenDist(count, radius);
-
-            Neuron_SensorPosition[] neurons = positions.
-                Select(o => new Neuron_SensorPosition(o.ToPoint(), true, false)).
-                ToArray();
-
-            return new NeuronShell(neurons, radius);
-        }
-        internal static NeuronShell CreateNeuronShell_Ring(double radius, int count, ITriangle plane = null)
-        {
-            Vector[] positions2D = Math3D.GetRandomVectors_CircularRing_EvenDist(count, radius);
-
-            IEnumerable<Vector3D> positions3D;
-            if (plane == null)
-            {
-                positions3D = positions2D.
-                    Select(o => o.ToVector3D());
-            }
-            else
-            {
-                RotateTransform3D transform = new RotateTransform3D(new QuaternionRotation3D(Math3D.GetRotation(new Vector3D(0, 0, 1), plane.Normal)));
-
-                positions3D = positions2D.
-                    Select(o => transform.Transform(o.ToVector3D()));
-            }
-
-            Neuron_SensorPosition[] neurons = positions3D.
-                Select(o => new Neuron_SensorPosition(o.ToPoint(), true, false)).
-                ToArray();
-
-            return new NeuronShell(neurons, radius);
-        }
-        internal static NeuronShell CreateNeuronShell_Line(double radius, Vector3D? line = null)
-        {
-            Vector3D lineUnit;
-
-            if (line != null)
-            {
-                lineUnit = line.Value.ToUnit();
-                if (Math3D.IsInvalid(lineUnit))
-                {
-                    lineUnit = new Vector3D(0, 0, 1);
-                }
-            }
-            else
-            {
-                lineUnit = new Vector3D(0, 0, 1);
-            }
-
-            Neuron_SensorPosition[] neurons = new[]
-            {
-                new Neuron_SensorPosition((lineUnit * radius).ToPoint(), true, false),
-                new Neuron_SensorPosition((-lineUnit * radius).ToPoint(), true, false),
-            };
-
-            return new NeuronShell(neurons, radius);
         }
 
         public ThrusterSetting[] FindSolution_DEBUG(Vector3D? linear, Vector3D? rotation)

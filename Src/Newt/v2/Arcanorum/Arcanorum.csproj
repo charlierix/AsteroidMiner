@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
@@ -47,6 +49,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AIMousePlate.cs" />
+    <Compile Include="ArenaTester\EvaluatorUtil.cs" />
+    <Compile Include="ArenaTester\Evaluator_WeaponSpin.cs" />
+    <Compile Include="IGivesDamage.cs" />
+    <Compile Include="ITakesDamage.cs" />
+    <Compile Include="MapObjects\ArcBot2.cs" />
     <Compile Include="ArenaTester\ArenaAccessor.cs" />
     <Compile Include="ArenaTester\ArenaAccessor_FAIL.cs" />
     <Compile Include="ArenaTester\BotTrackingEntry.cs" />
@@ -56,11 +63,17 @@
     <Compile Include="ArenaTester\TrainingRoom.cs" />
     <Compile Include="ArenaTester\TrainingSession.cs" />
     <Compile Include="ArenaTester\WorldAccessor.cs" />
+    <Compile Include="ISensorVisionPoints.cs" />
+    <Compile Include="MapObjectTransfer.cs" />
+    <Compile Include="Parts\SensorArcbotWeapon.cs" />
     <Compile Include="Views\ArcanorumWindow.xaml.cs">
       <DependentUpon>ArcanorumWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ArenaTester\ArcArenaTester.xaml.cs">
       <DependentUpon>ArcArenaTester.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ArcbotTester.xaml.cs">
+      <DependentUpon>ArcbotTester.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\BackdropPanel.xaml.cs">
       <DependentUpon>BackdropPanel.xaml</DependentUpon>
@@ -68,8 +81,8 @@
     <Compile Include="Views\BackdropQuick.xaml.cs">
       <DependentUpon>BackdropQuick.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ArcBot.cs" />
-    <Compile Include="ArcBotNPC.cs" />
+    <Compile Include="MapObjects\ArcBot.cs" />
+    <Compile Include="MapObjects\ArcBotNPC.cs" />
     <Compile Include="Views\CharacterPanel.xaml.cs">
       <DependentUpon>CharacterPanel.xaml</DependentUpon>
     </Compile>
@@ -96,21 +109,23 @@
     <Compile Include="KeepItems2D.cs" />
     <Compile Include="MaterialIDs.cs" />
     <Compile Include="Parts\MotionController2.cs" />
-    <Compile Include="NPCNest.cs" />
+    <Compile Include="MapObjects\NPCNest.cs" />
     <Compile Include="OfflineWorld.cs" />
     <Compile Include="Parts\MotionController_Linear.cs" />
-    <Compile Include="PortalVisual.cs" />
+    <Compile Include="MapObjects\PortalVisual.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RamWeapon.cs" />
     <Compile Include="Parts\SensorHoming2D.cs" />
     <Compile Include="Parts\SensorVision.cs" />
+    <Compile Include="Views\SensorVisionViewer.cs" />
     <Compile Include="Views\ShopPanel.xaml.cs">
       <DependentUpon>ShopPanel.xaml</DependentUpon>
     </Compile>
     <Compile Include="TrainingRoom.cs" />
-    <Compile Include="TreasureBox.cs" />
-    <Compile Include="Weapon.cs" />
+    <Compile Include="MapObjects\TreasureBox.cs" />
+    <Compile Include="MapObjects\Weapon.cs" />
     <Compile Include="WeaponAxe.cs" />
+    <Compile Include="DamageProps.cs" />
     <Compile Include="WeaponHandle.cs" />
     <Compile Include="WeaponSpikeBall.cs" />
     <Compile Include="WorldColorsArco.cs" />
@@ -121,6 +136,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="ArenaTester\ArcArenaTester.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ArcbotTester.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

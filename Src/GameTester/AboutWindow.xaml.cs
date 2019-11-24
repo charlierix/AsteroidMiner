@@ -24,6 +24,8 @@ namespace Game.GameTester
 
             this.Background = SystemColors.ControlBrush;
 
+            #region lblGeneral
+
             lblGeneral.Text =
 @"This app is a collection of testers with the end goal of making an artificial life simulation.  When that alife simulator is more finished, I'll create a dedicated app for that.
 
@@ -32,6 +34,9 @@ I'm sharing this with the public because even if you don't care about the alife 
 This is written in C#, and uses WPF.  The physics engine is an open source dll called Newton Dynamics.
 
 The physics engine has an open source zlib licence, so I'm doing the same for this app.  But personally, I don't care if people copy bits of my code for their own use, that's why I'm sharing this publicly.";
+
+            #endregion
+            #region lblALifeGoal
 
             lblALifeGoal.Text =
 @"The goal for this app is to be an artificial life simulation.  At first, it will be space with asteroids and minerals, but eventually there will be fluid and planets.  So you could have flyers, swimmers, crawlers all in the same map.
@@ -48,6 +53,9 @@ The defintion of a map will also hold size, vector fields, radiation, gravity, a
 
 The idea is that the bots will evolve to be optimal for the map they are in.  A robust bot could be cloned across many maps and still thrive.";
 
+            #endregion
+            #region lblPointsOfInterest
+
             lblPointsOfInterest.Text =
 @"Everything in the Orig folder is old stuff, pre wpf.  Once wpf came out, I had to rename a lot of the math classes with My in front of them.  There may still be some useful stuff in there though.
 
@@ -62,6 +70,9 @@ The Game.HelperClassesWPF project has quite a bit in there.  It is a combination
 
 Game.Newt.v2.NewtonDynamics is a C# wrapper to the newton dll.  Newton is a great engine, I have a feeling a lot of the downloads will just be for this.";
 
+            #endregion
+            #region txtLicense_zLib
+
             txtLicense_zLib.Text =
 @"This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -72,6 +83,9 @@ Permission is granted to anyone to use this software for any purpose, including 
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 
 3. This notice may not be removed or altered from any source distribution.";
+
+            #endregion
+            #region txtLicense_Apache
 
             txtLicense_Apache.Text =
 @"Encog(tm) Core - C#/.Net Version
@@ -296,6 +310,53 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ";
+
+            #endregion
+            #region txtLicense_MIT
+
+            txtLicense_MIT.Text = @"/******************************************************************************
+ *
+ * The MIT License (MIT)
+ *
+ * MIConvexHull, Copyright (c) 2015 David Sehnal, Matthew Campbell
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the ""Software""), to deal
+ * in the Software without restriction, including without limitation the rights
+ *to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+  * copies of the Software, and to permit persons to whom the Software is
+  *furnished to do so, subject to the following conditions:
+            *
+            *The above copyright notice and this permission notice shall be included in
+ *all copies or substantial portions of the Software.
+
+*
+*THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *THE SOFTWARE.
+
+*
+*****************************************************************************/
+
+
+/* ***************************************************************************
+ * This file is part of SharpNEAT - Evolution of Neural Networks.
+ * 
+ * Copyright 2004-2016 Colin Green (sharpneat@gmail.com)
+ *
+ * SharpNEAT is free software; you can redistribute it and/or modify
+ * it under the terms of The MIT License (MIT).
+ *
+ * You should have received a copy of the MIT License
+ * along with SharpNEAT; if not, see https://opensource.org/licenses/MIT.
+ */
+";
+
+            #endregion
         }
 
         #endregion

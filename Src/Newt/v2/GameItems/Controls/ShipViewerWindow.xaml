@@ -6,7 +6,7 @@
              xmlns:ast2="clr-namespace:Game.Newt.v2.GameItems.Controls"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             x:Name="thisWindow" Title="ShipViewer" WindowStyle="None" WindowStartupLocation="Manual" Topmost="True" ShowActivated="False" ShowInTaskbar="False" AllowsTransparency="True" Background="Transparent" Width="800" Height="700" Loaded="Window_Loaded" Closed="Window_Closed">
+             x:Name="thisWindow" Title="ShipViewer" WindowStyle="None" WindowStartupLocation="Manual" ShowActivated="False" ShowInTaskbar="False" AllowsTransparency="True" Background="Transparent" Width="800" Height="700" Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <Style x:Key="radio" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{Binding Path=Foreground, ElementName=thisWindow}"/>
@@ -31,6 +31,17 @@
         </Border.Effect>-->
 
         <Grid>
+            <!-- WindowStyle="None" makes it so you can't resize from the sides.  So these rectangles are along the edge -->
+            <!-- of the window and allow the window to be resized from all sides -->
+            <Rectangle Name="gripLeft" Fill="Transparent" Width="8" HorizontalAlignment="Left" Cursor="SizeWE" MouseDown="grip_MouseDown" MouseMove="gripLeft_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripTop" Fill="Transparent" Height="8" VerticalAlignment="Top" Cursor="SizeNS" MouseDown="grip_MouseDown" MouseMove="gripTop_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripRight" Fill="Transparent" Width="8" HorizontalAlignment="Right" Cursor="SizeWE" MouseDown="grip_MouseDown" MouseMove="gripRight_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripBottom" Fill="Transparent" Height="8" VerticalAlignment="Bottom" Cursor="SizeNS" MouseDown="grip_MouseDown" MouseMove="gripBottom_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripTopLeft" Fill="Transparent" Width="8" Height="8" HorizontalAlignment="Left" VerticalAlignment="Top" Cursor="SizeNWSE" MouseDown="grip_MouseDown" MouseMove="gripTopLeft_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripTopRight" Fill="Transparent" Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top" Cursor="SizeNESW" MouseDown="grip_MouseDown" MouseMove="gripTopRight_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripBottomLeft" Fill="Transparent" Width="8" Height="8" HorizontalAlignment="Left" VerticalAlignment="Bottom" Cursor="SizeNESW" MouseDown="grip_MouseDown" MouseMove="gripBottomLeft_MouseMove" MouseUp="grip_MouseUp"/>
+            <Rectangle Name="gripBottomRight" Fill="Transparent" Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Bottom" Cursor="SizeNWSE" MouseDown="grip_MouseDown" MouseMove="gripBottomRight_MouseMove" MouseUp="grip_MouseUp"/>
+
             <!-- TODO: Fix this (ButtonClicked is never firing - an animation seems to be glitching) -->
             <!--<helpctrl:GlassButton_Circle ButtonClicked="btnClose_ButtonClicked" Name="btnClose" ButtonBackground="#FF9D6565" Width="15" Height="15" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-8,12,0">
                 <helpctrl:GlassButton_Circle.ButtonContent>
@@ -41,8 +52,29 @@
                 </helpctrl:GlassButton_Circle.ButtonContent>
             </helpctrl:GlassButton_Circle>-->
 
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,5,5,0" MouseDown="Close_MouseDown" MouseUp="Close_MouseUp">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{Binding Path=CloseBackground, ElementName=thisWindow}"/>
+                        <Setter Property="BorderBrush" Value="{Binding Path=CloseBorder, ElementName=thisWindow}"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="CornerRadius" Value="2"/>
+                        <Setter Property="Padding" Value="3,2,3,0"/>
+
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{Binding Path=CloseBackground_Highlight, ElementName=thisWindow}"/>
+                                <Setter Property="BorderBrush" Value="{Binding Path=CloseBorder_Highlight, ElementName=thisWindow}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+
+                <TextBlock Text="X" FontFamily="Lucida Console" FontSize="10" Foreground="{Binding Path=CloseForegroud, ElementName=thisWindow}"/>
+            </Border>
+
             <!-- Viewport -->
-            <Border Name="pnlViewport" Margin="4,18,4,4" CornerRadius="5" BorderBrush="{Binding Path=ViewportBorder, ElementName=thisWindow}" Background="{Binding Path=ViewportBackground, ElementName=thisWindow}">
+            <Border Name="pnlViewport" Margin="4,22,4,4" CornerRadius="5" BorderBrush="{Binding Path=ViewportBorder, ElementName=thisWindow}" Background="{Binding Path=ViewportBackground, ElementName=thisWindow}">
                 <Grid>
                     <Viewport3D Name="_viewportBack" Opacity=".04">
                         <Viewport3D.Camera>
@@ -77,7 +109,7 @@
             </Border>
 
             <!-- Overlays -->
-            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,20,0,0" Style="{StaticResource panelBorder}">
+            <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,22,4,0" Style="{StaticResource panelBorder}">
                 <StackPanel>
                     <!-- TODO: Make this visible when more overlays are implemented -->
                     <StackPanel Visibility="Collapsed" HorizontalAlignment="Right" Margin="0,0,0,12" RadioButton.Checked="Overlay_Checked" RadioButton.Unchecked="Overlay_Checked">
@@ -97,7 +129,7 @@
             </Border>
 
             <!-- Progress Meters -->
-            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Style="{StaticResource panelBorder}">
+            <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="4" Style="{StaticResource panelBorder}">
                 <StackPanel Name="pnlProgressBars">
 
                     <!-- This will be populated programatically -->

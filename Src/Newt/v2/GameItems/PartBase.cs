@@ -1314,7 +1314,7 @@ namespace Game.Newt.v2.GameItems
         /// several independent simulations that use a completely different class than ship.  Also, parts could be mounted to movable limbs.
         /// So it's up to the container to know all of that complexity, and just return world coords when asked.
         /// </remarks>
-        public Tuple<Point3D, Quaternion> GetWorldLocation()
+        public (Point3D position, Quaternion rotation) GetWorldLocation()
         {
             if (this.RequestWorldLocation == null)
             {
@@ -1335,7 +1335,7 @@ namespace Game.Newt.v2.GameItems
                 throw new ApplicationException("The event handler for RequestWorldLocation didn't set orientation");
             }
 
-            return Tuple.Create(args.Position.Value, args.Orientation.Value);
+            return (args.Position.Value, args.Orientation.Value);
         }
         /// <summary>
         /// Item1 = Velocity
@@ -1343,7 +1343,7 @@ namespace Game.Newt.v2.GameItems
         /// Item3 = Velocity at point (only returned if a position is passed in)
         /// NOTE: atPoint is in model coords, and should only be non null if you want the velocity at that point to be calculated
         /// </summary>
-        public Tuple<Vector3D, Vector3D, Vector3D?> GetWorldSpeed(Point3D? atPoint)
+        public (Vector3D velocity, Vector3D angularVelocity, Vector3D? velocityAtPoint) GetWorldSpeed(Point3D? atPoint)
         {
             if (this.RequestWorldSpeed == null)
             {
@@ -1368,7 +1368,7 @@ namespace Game.Newt.v2.GameItems
                 throw new ApplicationException("The event handler for RequestWorldSpeed didn't set velocity at point");
             }
 
-            return Tuple.Create(args.Velocity.Value, args.AngularVelocity.Value, args.VelocityAtPoint);
+            return (args.Velocity.Value, args.AngularVelocity.Value, args.VelocityAtPoint);
         }
         /// <summary>
         /// Try to avoid using this unless necessary.  If the part is hosted in something other than a map object, then the parent
@@ -1391,7 +1391,7 @@ namespace Game.Newt.v2.GameItems
             return args.Parent;
         }
 
-        public static Tuple<Point3D, Point3D> GetAABB(IEnumerable<PartBase> parts)
+        public static (Point3D min, Point3D max) GetAABB(IEnumerable<PartBase> parts)
         {
             QuaternionRotation3D quatRot = new QuaternionRotation3D(Quaternion.Identity);
             RotateTransform3D transform = new RotateTransform3D(quatRot);
@@ -1418,11 +1418,11 @@ namespace Game.Newt.v2.GameItems
 
             if (sawPart)
             {
-                return Tuple.Create(new Point3D(minX, minY, minZ), new Point3D(maxX, maxY, maxZ));
+                return (new Point3D(minX, minY, minZ), new Point3D(maxX, maxY, maxZ));
             }
             else
             {
-                return Tuple.Create(new Point3D(0, 0, 0), new Point3D(0, 0, 0));
+                return (new Point3D(0, 0, 0), new Point3D(0, 0, 0));
             }
         }
         private static void GetAABB_Test(ref double min, ref double max, RotateTransform3D transform, Point3D point, Vector3D scale, Axis axis)

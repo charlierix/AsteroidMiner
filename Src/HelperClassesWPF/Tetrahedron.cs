@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 
@@ -264,7 +262,9 @@ namespace Game.HelperClassesWPF
                 {
                     if (_edgeArray == null)
                     {
-                        _edgeArray = Edges.Select(o => Tuple.Create(GetIndex(o, true), GetIndex(o, false))).ToArray();
+                        _edgeArray = Edges.
+                            Select(o => Tuple.Create(GetIndex(o, true), GetIndex(o, false))).
+                            ToArray();
                     }
 
                     return _edgeArray;
@@ -1121,7 +1121,9 @@ namespace Game.HelperClassesWPF
                 }
             }
 
-            return retVal.Distinct().ToArray();		//distinct works, because the tuple always has the smaller index as item1
+            return retVal.
+                Distinct().     //distinct works, because the tuple always has the smaller index as item1
+                ToArray();
         }
 
         public static TriangleIndexed[] GetUniqueTriangles(Tetrahedron[] tetras)
@@ -1142,6 +1144,46 @@ namespace Game.HelperClassesWPF
                 mySorted[1] == indeciesSorted[1] &&
                 mySorted[2] == indeciesSorted[2] &&
                 mySorted[3] == indeciesSorted[3];
+        }
+
+        /// <summary>
+        /// This is a helper method that returns aspects of a tetrahedron
+        /// </summary>
+        public static ((int, int, int)[] faces, (int, int)[] edges) GetFacesEdges(int index0, int index1, int index2, int index3)
+        {
+            //this.Face_012 = FindOrCreateTriangle(index0, index1, index2, allPoints, buildingTriangles);
+            //this.Face_023 = FindOrCreateTriangle(index0, index2, index3, allPoints, buildingTriangles);
+            //this.Face_031 = FindOrCreateTriangle(index0, index3, index1, allPoints, buildingTriangles);
+            //this.Face_132 = FindOrCreateTriangle(index1, index3, index2, allPoints, buildingTriangles);
+
+            //public static TetrahedronEdge[] Edges = (TetrahedronEdge[])Enum.GetValues(typeof(TetrahedronEdge));
+            //Edge_01,
+            //Edge_02,
+            //Edge_03,
+            //Edge_12,
+            //Edge_13,
+            //Edge_23,
+
+            return
+            (
+                new[]
+                {
+                    (index0, index1, index2),
+                    (index0, index2, index3),
+                    (index0, index3, index1),
+                    (index1, index3, index2),
+                },
+
+                new[]
+                {
+                    (index0, index1),
+                    (index0, index2),
+                    (index0, index3),
+                    (index1, index2),
+                    (index1, index3),
+                    (index2, index3),
+                }
+            );
         }
 
         #endregion

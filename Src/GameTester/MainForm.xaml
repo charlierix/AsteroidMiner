@@ -119,6 +119,7 @@
                     <ListBoxItem Content="Mad Shatter" MouseUp="MadShatter_MouseUp"/>
                     <ListBoxItem Content="Evenly distribute sphere" MouseUp="EvenDistributeSphere_MouseUp"/>
                     <ListBoxItem Content="Evenly distribute other" MouseUp="EvenDistributeOther_MouseUp"/>
+                    <ListBoxItem Content="Nature of Shapes" MouseUp="NatureOfShapes_MouseUp"/>
                     <ListBoxItem Content="Clustered Points" MouseUp="ClusteredPoints_MouseUp"/>
                     <ListBoxItem Content="Shadows" MouseUp="Shadows_MouseUp"/>
                     <ListBoxItem Content="Curves" MouseUp="Curves_MouseUp"/>
@@ -194,6 +195,7 @@
                     <ListBoxItem Content="Swarm Bots" MouseUp="SwarmBots2_MouseUp"/>
                     <ListBoxItem Content="Thrust Controller" MouseUp="ThrustController_MouseUp"/>
                     <ListBoxItem Content="ArcArena" MouseUp="ArcArena_MouseUp"/>
+                    <ListBoxItem Content="ArcBot Tester" MouseUp="ArcBotTester_MouseUp"/>
                 </ListBox>
             </StackPanel>
         </ScrollViewer>

@@ -1,21 +1,14 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
+using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using System.Windows.Media.Media3D;
-
-using Game.HelperClassesCore;
-using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems.Controls
 {
@@ -57,7 +50,7 @@ namespace Game.Newt.v2.GameItems.Controls
 
         #region class: ItemColors
 
-        private class ItemColors
+        public class ItemColors
         {
             public Color Neuron_Zero_NegPos = UtilityWPF.ColorFromHex("20808080");
             public Color Neuron_Zero_ZerPos = UtilityWPF.ColorFromHex("205E88D1");
@@ -69,11 +62,34 @@ namespace Game.Newt.v2.GameItems.Controls
 
             public Color Link_Negative = UtilityWPF.ColorFromHex("40FC0300");
             public Color Link_Positive = UtilityWPF.ColorFromHex("4000B237");
+
+            public Color GetNeuronColor(INeuron neuron)
+            {
+                if (neuron.IsPositiveOnly)
+                {
+                    return UtilityWPF.AlphaBlend(Neuron_One_ZerPos, Neuron_Zero_ZerPos, neuron.Value);
+                }
+                else
+                {
+                    double weight = neuron.Value;     // need to grab the value locally, because it could be modified from a different thread
+
+                    if (weight < 0)
+                    {
+                        return UtilityWPF.AlphaBlend(Neuron_NegOne_NegPos, Neuron_Zero_NegPos, Math.Abs(weight));
+                    }
+                    else
+                    {
+                        return UtilityWPF.AlphaBlend(Neuron_One_NegPos, Neuron_Zero_NegPos, weight);
+                    }
+                }
+            }
         }
 
         #endregion
 
         #region Declaration Section
+
+        private const int MINSIZE = 40;
 
         private readonly Bot _bot;        // this could be null (if they use the parts overload)
         private readonly PartBase[] _parts;
@@ -96,13 +112,16 @@ namespace Game.Newt.v2.GameItems.Controls
         private Visual3D[] _startingVisualsBack;
         private Visual3D[] _startingVisualsFore;
 
+        private bool _isResizing = false;
+        private Point _resizeStart;
+
         private bool _isInitialized = false;
 
         #endregion
 
         #region Constructor
 
-        public ShipViewerWindow(Bot bot)
+        public ShipViewerWindow(Bot bot, Window owner)
         {
             InitializeComponent();
 
@@ -116,13 +135,13 @@ namespace Game.Newt.v2.GameItems.Controls
             minPoint = _bot.PhysicsBody.PositionFromWorld(minPoint);
             maxPoint = _bot.PhysicsBody.PositionFromWorld(maxPoint);
 
-            Constructor_Finish(Tuple.Create(minPoint, maxPoint));
+            Constructor_Finish((minPoint, maxPoint), owner);
         }
         /// <summary>
-        /// This overload is for bots that don't derive from ship, but do contain parts.  This will show the parts, and wont' show
+        /// This overload is for bots that don't derive from ship, but do contain parts.  This will show the parts, and won't show
         /// any ship specific visuals
         /// </summary>
-        public ShipViewerWindow(PartBase[] parts, NeuralUtility.ContainerOutput[] neuronLinks)
+        public ShipViewerWindow(PartBase[] parts, NeuralUtility.ContainerOutput[] neuronLinks, Window owner)
         {
             InitializeComponent();
 
@@ -132,13 +151,13 @@ namespace Game.Newt.v2.GameItems.Controls
 
             var aabb = PartBase.GetAABB(_parts);
 
-            Constructor_Finish(aabb);
+            Constructor_Finish(aabb, owner);
         }
 
-        private void Constructor_Finish(Tuple<Point3D, Point3D> aabb)
+        private void Constructor_Finish((Point3D min, Point3D max) aabb, Window owner)
         {
-            _centerOffset = (aabb.Item1 + ((aabb.Item2 - aabb.Item1) / 2d)).ToVector() * -1d;
-            _partsRadius = (aabb.Item2 - aabb.Item1).Length / 2d;
+            _centerOffset = (aabb.min + ((aabb.max - aabb.min) / 2d)).ToVector() * -1d;
+            _partsRadius = (aabb.max - aabb.min).Length / 2d;
 
             _startingVisualsBack = _viewportBack.Children.ToArray();
             _startingVisualsFore = _viewport.Children.ToArray();
@@ -151,6 +170,9 @@ namespace Game.Newt.v2.GameItems.Controls
 
             _progressBars = new ShipProgressBarManager(pnlProgressBars);
             _progressBars.Bot = _bot;
+
+            // This makes this window stay over top of the parent, but leaving TopMost as false so it's not on top of everything
+            Owner = owner;
 
             _isInitialized = true;
         }
@@ -204,9 +226,106 @@ namespace Game.Newt.v2.GameItems.Controls
         }
         public static readonly DependencyProperty PanelBorderProperty = DependencyProperty.Register("PanelBorder", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(160, 128, 128, 128))));
 
+        // Close Button
+        public Brush CloseForegroud
+        {
+            get { return (Brush)GetValue(CloseForegroudProperty); }
+            set { SetValue(CloseForegroudProperty, value); }
+        }
+        public static readonly DependencyProperty CloseForegroudProperty = DependencyProperty.Register("CloseForegroud", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(80, 255, 255, 255))));
+
+        public Brush CloseBackground
+        {
+            get { return (Brush)GetValue(CloseBackgroundProperty); }
+            set { SetValue(CloseBackgroundProperty, value); }
+        }
+        public static readonly DependencyProperty CloseBackgroundProperty = DependencyProperty.Register("CloseBackground", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(30, 128, 128, 128))));
+
+        public Brush CloseBorder
+        {
+            get { return (Brush)GetValue(CloseBorderProperty); }
+            set { SetValue(CloseBorderProperty, value); }
+        }
+        public static readonly DependencyProperty CloseBorderProperty = DependencyProperty.Register("CloseBorder", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(50, 128, 128, 128))));
+
+        public Brush CloseBackground_Highlight
+        {
+            get { return (Brush)GetValue(CloseBackground_HighlightProperty); }
+            set { SetValue(CloseBackground_HighlightProperty, value); }
+        }
+        public static readonly DependencyProperty CloseBackground_HighlightProperty = DependencyProperty.Register("CloseBackground_Highlight", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(128, 192, 192, 192))));
+
+        public Brush CloseBorder_Highlight
+        {
+            get { return (Brush)GetValue(CloseBorder_HighlightProperty); }
+            set { SetValue(CloseBorder_HighlightProperty, value); }
+        }
+        public static readonly DependencyProperty CloseBorder_HighlightProperty = DependencyProperty.Register("CloseBorder_Highlight", typeof(Brush), typeof(ShipViewerWindow), new UIPropertyMetadata(new SolidColorBrush(Color.FromArgb(192, 192, 192, 192))));
+
         #endregion
 
         #region Public Methods
+
+        public void SetColorTheme_Light()
+        {
+            // This is the main window's background (this will be the window's border region)
+            PopupBackground = UtilityWPF.BrushFromHex("C0B0B0B0");
+            PopupBorder = UtilityWPF.BrushFromHex("B0989898");
+
+            // The viewport will be the majority of what's visible
+            ViewportBackground = UtilityWPF.BrushFromHex("F0F0F0F0");
+            ViewportBorder = UtilityWPF.BrushFromHex("F0000000");
+
+            PanelBackground = UtilityWPF.BrushFromHex("60D4D9D5");
+            PanelBorder = UtilityWPF.BrushFromHex("80C7D1C9");
+
+            Foreground = UtilityWPF.BrushFromHex("525252");
+
+            CloseForegroud = UtilityWPF.BrushFromHex("A0EBEBEB");
+            CloseBackground = UtilityWPF.BrushFromHex("20A8A8A8");
+            CloseBorder = UtilityWPF.BrushFromHex("30A8A8A8");
+            CloseBackground_Highlight = UtilityWPF.BrushFromHex("80858585");
+            CloseBorder_Highlight = UtilityWPF.BrushFromHex("D0858585");
+        }
+        public void SetColorTheme_Dark()
+        {
+            PopupBackground = UtilityWPF.BrushFromHex("E0505050");
+            PopupBorder = UtilityWPF.BrushFromHex("E8303030");
+
+            ViewportBackground = UtilityWPF.BrushFromHex("C0E0E0E0");
+            ViewportBorder = UtilityWPF.BrushFromHex("E0000000");
+
+            PanelBackground = UtilityWPF.BrushFromHex("80424F45");
+            PanelBorder = UtilityWPF.BrushFromHex("8068736B");
+
+            Foreground = UtilityWPF.BrushFromHex("F0F0F0");
+        }
+        public void SetColorTheme_Dark_Gradient()
+        {
+            PopupBackground = UtilityWPF.BrushFromHex("E0505050");
+            PopupBorder = UtilityWPF.BrushFromHex("E8303030");
+
+            ViewportBackground = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 1),
+                GradientStops = new GradientStopCollection
+                {
+                    new GradientStop(UtilityWPF.ColorFromHex("C0EBEDE4"), 0d),
+                    new GradientStop(UtilityWPF.ColorFromHex("C0DFE0DA"), .1d),
+                    new GradientStop(UtilityWPF.ColorFromHex("C0E0E0E0"), .6d),
+                    new GradientStop(UtilityWPF.ColorFromHex("C0DADBD5"), .9d),
+                    new GradientStop(UtilityWPF.ColorFromHex("C0D7DBCC"), 1d)
+                },
+            };
+
+            ViewportBorder = UtilityWPF.BrushFromHex("E0000000");
+
+            PanelBackground = UtilityWPF.BrushFromHex("80424F45");
+            PanelBorder = UtilityWPF.BrushFromHex("8068736B");
+
+            Foreground = UtilityWPF.BrushFromHex("F0F0F0");
+        }
 
         /// <summary>
         /// This places the viewer in the corner of the screen that is farthest from the point passed in
@@ -308,47 +427,205 @@ namespace Game.Newt.v2.GameItems.Controls
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            #region Trackball
+            try
+            {
+                #region Trackball
 
-            // Trackball
-            _trackball = new TrackBallRoam(_camera);
-            //_trackball.KeyPanScale = 15d;
-            _trackball.EventSource = pnlViewport;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
-            _trackball.AllowZoomOnMouseWheel = true;
-            _trackball.MouseWheelScale *= .05d;
-            _trackball.PanScale *= .2d;
-            _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
-            //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
-            _trackball.ShouldHitTestOnOrbit = true;
+                // Trackball
+                _trackball = new TrackBallRoam(_camera);
+                //_trackball.KeyPanScale = 15d;
+                _trackball.EventSource = pnlViewport;       //NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
+                _trackball.AllowZoomOnMouseWheel = true;
+                _trackball.MouseWheelScale *= .05d;
+                _trackball.PanScale *= .2d;
+                _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
+                //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
+                _trackball.ShouldHitTestOnOrbit = true;
 
-            #endregion
+                #endregion
 
-            // Make sure the appropriate tab is showing
-            Overlay_Checked(this, new RoutedEventArgs());
+                // Make sure the appropriate tab is showing
+                Overlay_Checked(this, new RoutedEventArgs());
 
-            // Pull the camera back to a good distance
-            _camera.Position = (_camera.Position.ToVector().ToUnit() * (_partsRadius * 1.7d)).ToPoint();
-            //Camera_Changed(this, new EventArgs());
+                // Pull the camera back to a good distance
+                _camera.Position = (_camera.Position.ToVector().ToUnit() * (_partsRadius * 2.3d)).ToPoint();
+                //Camera_Changed(this, new EventArgs());
 
-            _timer.IsEnabled = true;
+                _timer.IsEnabled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
         private void Window_Closed(object sender, EventArgs e)
         {
 
         }
 
-        private void btnClose_ButtonClicked(object sender, RoutedEventArgs e)
+        private void Close_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            this.Close();
+            try
+            {
+                // This is needed because the window does a dragmove on mousedown, so the button needs to intercept that when the mouse
+                // is down over the button (without this, the button's mouseup never fires)
+                e.Handled = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void Close_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void grip_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (sender is Rectangle source)
+                {
+                    Mouse.Capture(source);
+                    _resizeStart = e.GetPosition(source);
+                    _isResizing = true;
+
+                    e.Handled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void grip_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            try
+            {
+                if (_isResizing && sender is Rectangle source)
+                {
+                    _isResizing = false;
+                    source.ReleaseMouseCapture();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void gripLeft_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, true, false, false, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, false, true, false, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripTop_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, false, false, true, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripBottom_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, false, false, false, true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripTopLeft_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, true, false, true, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripTopRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, false, true, true, false);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripBottomLeft_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                ChangeSize(sender, e, true, false, false, true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        private void gripBottomRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            try
+            {
+                // Don't really need the bottom right one, because ResizeMode="CanResizeWithGrip" implements bottom right, but it doesn't really hurt either
+                ChangeSize(sender, e, false, true, false, true);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.OriginalSource == pnlOuterBorder)     // this event fires for any click anywhere in this panel, but only drag if they actually click in the outer border
+            try
             {
-                // This allows the window to be dragged around (the mouse down event is on the border, so any control
-                // above it will intercept the mouse down event)
-                this.DragMove();
+                if (e.OriginalSource == pnlOuterBorder)     // this event fires for any click anywhere in this panel, but only drag if they actually click in the outer border
+                {
+                    // This allows the window to be dragged around (the mouse down event is on the border, so any control
+                    // above it will intercept the mouse down event)
+                    this.DragMove();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -488,38 +765,14 @@ namespace Game.Newt.v2.GameItems.Controls
 
                 //TODO: Store consumption/update graph
 
-                //TODO: Update neuron visuals
+                // Update neuron visuals
                 if (radNeural.IsChecked.Value && _neuronVisuals != null)
                 {
-                    #region Color neurons
-
                     foreach (var neuron in _neuronVisuals.Containers.SelectMany(o => o.Neurons))
                     {
-                        if (neuron.Item1.IsPositiveOnly)
-                        {
-                            neuron.Item2.Color = UtilityWPF.AlphaBlend(_itemColors.Neuron_One_ZerPos, _itemColors.Neuron_Zero_ZerPos, neuron.Item1.Value);
-                        }
-                        else
-                        {
-                            double weight = neuron.Item1.Value;		// need to grab the value locally, because it could be modified from a different thread
-
-                            if (weight < 0)
-                            {
-                                neuron.Item2.Color = UtilityWPF.AlphaBlend(_itemColors.Neuron_NegOne_NegPos, _itemColors.Neuron_Zero_NegPos, Math.Abs(weight));
-                            }
-                            else
-                            {
-                                neuron.Item2.Color = UtilityWPF.AlphaBlend(_itemColors.Neuron_One_NegPos, _itemColors.Neuron_Zero_NegPos, weight);
-                            }
-                        }
+                        neuron.Item2.Color = _itemColors.GetNeuronColor(neuron.Item1);
                     }
-
-                    #endregion
                 }
-
-
-
-
             }
             catch (Exception ex)
             {
@@ -880,6 +1133,62 @@ namespace Game.Newt.v2.GameItems.Controls
             }
 
             return existing[container];
+        }
+
+        private void ChangeSize(object sender, MouseEventArgs e, bool isLeft, bool isRight, bool isTop, bool isBottom)
+        {
+            Rectangle source = sender as Rectangle;
+
+            if (!_isResizing || source == null)
+            {
+                return;
+            }
+
+            Point position = e.GetPosition(source);
+
+            //TODO: Don't go less than MINSIZE
+
+            if (isLeft)
+            {
+                var newSize = GetNewSize(Width, _resizeStart.X - position.X);
+
+                Width = newSize.size;
+                Left -= newSize.change;
+            }
+            else if (isRight)
+            {
+                var newSize = GetNewSize(Width, position.X - _resizeStart.X);
+
+                Width = newSize.size;
+            }
+
+            if (isTop)
+            {
+                var newSize = GetNewSize(Height, _resizeStart.Y - position.Y);
+
+                Height = newSize.size;
+                Top -= newSize.change;
+            }
+            else if (isBottom)
+            {
+                var newSize = GetNewSize(Height, position.Y - _resizeStart.Y);
+
+                Height = newSize.size;
+            }
+        }
+
+        private static (double size, double change) GetNewSize(double oldSize, double change)
+        {
+            double newSize = oldSize + change;
+            double newChange = change;
+
+            if (newSize < MINSIZE)
+            {
+                newSize = MINSIZE;
+                newChange = MINSIZE - oldSize;
+            }
+
+            return (newSize, newChange);
         }
 
         #endregion

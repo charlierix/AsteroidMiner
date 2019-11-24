@@ -130,7 +130,10 @@
                         <Expander IsExpanded="False" Header="Brain">
                             <Border Style="{StaticResource controlsPanelInExpander}">
                                 <StackPanel Margin="8">
-                                    <UniformGrid Columns="2">
+                                    <CheckBox IsChecked="True" Name="chkStandardBrain" Content="Standard Brain"/>
+                                    <CheckBox IsChecked="True" Name="chkNEATBrain" Content="NEAT Brain"/>
+
+                                    <UniformGrid Columns="2" Margin="0,4,0,0">
                                         <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
                                         <TextBox Name="txtBrainSize" Text="1" VerticalContentAlignment="Center"/>
 
@@ -162,6 +165,23 @@
                                         <TextBlock Text="Count" Style="{StaticResource inlineLabelLeft}"/>
                                         <TextBox Name="txtThrusterCount" Text="3"/>
                                     </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                        </Expander>
+
+                        <!-- Impulse -->
+                        <Expander IsExpanded="False" Header="Impulse">
+                            <Border Style="{StaticResource controlsPanelInExpander}">
+                                <StackPanel Margin="8">
+                                    <UniformGrid Columns="2">
+                                        <TextBlock Text="Size" Style="{StaticResource inlineLabelLeft}"/>
+                                        <TextBox Name="txtImpulseSize" Text="1"/>
+
+                                        <TextBlock Text="Count" Style="{StaticResource inlineLabelLeft}"/>
+                                        <TextBox Name="txtImpulseCount" Text="1"/>
+                                    </UniformGrid>
+
+                                    <CheckBox Name="chkImpulseRandomOrientation" Content="Random orientation" Margin="0,6,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
@@ -264,10 +284,10 @@
 
                                     <Button Content="Iterators" Margin="0,4,0,0" Click="Iterators_Click"/>
                                     <Button Content="Line Arrows" Margin="0,4,0,0" Click="LineArrows_Click"/>
+                                    <Button Content="Neuron Activation" Margin="0,4,0,0" Click="NeuronActivation_Click"/>
                                 </StackPanel>
                             </Border>
                         </Expander>
-
                     </StackPanel>
                 </ScrollViewer>
             </Border>
@@ -278,8 +298,15 @@
                     <Button Content="Create gravity sensor" Click="GravitySensor_Click" />
                     <Button Content="Create brain" Margin="0,4,0,0" Click="Brain_Click" />
                     <Button Content="Create thrusters" Margin="0,4,0,0" Click="Thrusters_Click"/>
+                    <Button Content="Create impulse" Margin="0,4,0,0" Click="Impulse_Click"/>
                     <Button Content="Create links (orig)" Margin="0,4,0,0" Click="Links1_Click" />
-                    <Button Content="Create links (new)" Margin="0,4,0,0" Click="Links2_Click" />
+                    <Button Visibility="Collapsed" Content="Create links (fail)" Margin="0,4,0,0" Click="Links2_Click">
+                        <Button.LayoutTransform>
+                            <ScaleTransform ScaleX=".5" ScaleY=".5"/>
+                        </Button.LayoutTransform>
+                    </Button>
+                    <Button Visibility="Collapsed" Content="Create links (new)" Margin="0,4,0,0" Click="Links3_Click" />
+                    <Button Content="Create links (final?)" Margin="0,4,0,0" Click="Links4_Click" />
 
                     <Button Content="Mutate" Margin="0,8,0,0" Click="Mutate_Click"/>
 
@@ -321,7 +348,6 @@
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
                             <RowDefinition Height="auto"/>
-                            <RowDefinition Height="auto"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Column="0" Grid.Row="0" Text="# Input" Style="{StaticResource inlineHideLeft}"/>
@@ -330,10 +356,12 @@
                         <TextBlock Grid.Column="1" Grid.Row="1" Name="lblBrainNeuronCount" Text="0" Style="{StaticResource inlineHideRight}"/>
                         <TextBlock Grid.Column="0" Grid.Row="2" Text="# Thrust" Style="{StaticResource inlineHideLeft}"/>
                         <TextBlock Grid.Column="1" Grid.Row="2" Name="lblThrustNeuronCount" Text="0" Style="{StaticResource inlineHideRight}"/>
-                        <TextBlock Grid.Column="0" Grid.Row="3" Text="Total Neurons" Style="{StaticResource inlineLabelLeft}"/>
-                        <TextBlock Grid.Column="1" Grid.Row="3" Name="lblTotalNeuronCount" Text="0"/>
-                        <TextBlock Grid.Column="0" Grid.Row="4" Text="Total Links" Style="{StaticResource inlineLabelLeft}"/>
-                        <TextBlock Grid.Column="1" Grid.Row="4" Name="lblTotalLinkCount" Text="0"/>
+                        <TextBlock Grid.Column="0" Grid.Row="3" Text="# Impulse" Style="{StaticResource inlineHideLeft}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="3" Name="lblImpulseNeuronCount" Text="0" Style="{StaticResource inlineHideRight}"/>
+                        <TextBlock Grid.Column="0" Grid.Row="4" Text="Total Neurons" Style="{StaticResource inlineLabelLeft}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="4" Name="lblTotalNeuronCount" Text="0"/>
+                        <TextBlock Grid.Column="0" Grid.Row="5" Text="Total Links" Style="{StaticResource inlineLabelLeft}"/>
+                        <TextBlock Grid.Column="1" Grid.Row="5" Name="lblTotalLinkCount" Text="0"/>
                     </Grid>
                 </StackPanel>
             </Border>
@@ -367,7 +395,7 @@
                 <Border Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" Grid.RowSpan="2" Name="pnlViewportNeural" Background="Transparent">
                     <Viewport3D Name="_viewportNeural" IsHitTestVisible="False">
                         <Viewport3D.Camera>
-                            <PerspectiveCamera x:Name="_cameraNeural" Position="0,0,7" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                            <PerspectiveCamera x:Name="_cameraNeural" Position="1,0,8" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
                         </Viewport3D.Camera>
                         <ModelVisual3D>
                             <ModelVisual3D.Content>
@@ -385,7 +413,7 @@
                 <Border Grid.Column="1" Grid.ColumnSpan="2" Grid.Row="1" Grid.RowSpan="2" Name="pnlViewport" Background="Transparent">
                     <Viewport3D Name="_viewport" IsHitTestVisible="False">
                         <Viewport3D.Camera>
-                            <PerspectiveCamera x:Name="_camera" Position="0,0,7.5" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                            <PerspectiveCamera x:Name="_camera" Position="1,0,7.5" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
                         </Viewport3D.Camera>
                         <ModelVisual3D>
                             <ModelVisual3D.Content>

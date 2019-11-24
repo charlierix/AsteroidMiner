@@ -684,7 +684,13 @@ namespace Game.Newt.v2.GameItems
                 return null;
             }
 
-            return split.Standard.ToUnit();
+            Vector3D retVal = split.Standard.ToUnit(true);
+            if(retVal.IsInvalid())
+            {
+                return null;
+            }
+
+            return retVal;
         }
         private static Vector3D? GetScaledDirection(Tuple<Point3D, Vector3D>[] nearby)
         {

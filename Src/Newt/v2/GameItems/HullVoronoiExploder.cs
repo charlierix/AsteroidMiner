@@ -318,7 +318,7 @@ namespace Game.Newt.v2.GameItems
                 double sumRatio = pointsPerLength.Sum(o => o.Item2);
 
                 var pointsPerLengthNormalized = pointsPerLength.
-                    Select(o => Tuple.Create(o.Item1, o.Item2 / sumRatio)).
+                    Select(o => (o.Item1, o.Item2 / sumRatio)).
                     ToArray();
 
                 int index = UtilityCore.GetIndexIntoList(rand.NextPow(3), pointsPerLengthNormalized);
@@ -332,8 +332,8 @@ namespace Game.Newt.v2.GameItems
 
             while (runningSum > count)
             {
-                Tuple<int, double>[] fractions = sets.
-                    Select((o, i) => Tuple.Create(i, o.Item2.Count.ToDouble() / runningSum.ToDouble())).
+                var fractions = sets.
+                    Select((o, i) => (i, o.Item2.Count.ToDouble() / runningSum.ToDouble())).
                     OrderByDescending(o => o.Item2).
                     ToArray();
 

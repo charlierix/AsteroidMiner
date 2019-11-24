@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Media.Media3D;
-using System.Windows.Threading;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -451,7 +448,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         public IEnumerable<INeuron> Neruons_All => UtilityCore.Iterate<INeuron>(_neurons, _brainChemicals);
 
-        public NeuronContainerType NeuronContainerType => NeuronContainerType.Brain;
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Brain_Standalone;
 
         public double Radius
         {
@@ -586,117 +583,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
         }
 
-        // These are exposed publicly as utility methods
-        public static Vector3D[] GetNeuronPositions_Cluster(Point3D[] dnaPositions, int count, double radius, double minClusterDistPercent)
-        {
-            return GetNeuronPositions_Cluster(dnaPositions, null, 1d, count, radius, minClusterDistPercent);
-        }
-        public static Vector3D[] GetNeuronPositions_Cluster(Point3D[] dnaPositions, Point3D[] existingStaticPositions, double staticMultValue, int count, double radius, double minClusterDistPercent)
-        {
-            // Get the points passed in, or random points (capped to count)
-            Vector3D[] staticPoints;
-            double[] staticRepulseMult;
-            Vector3D[] retVal = GetNeuronPositionsInitial(out staticPoints, out staticRepulseMult, dnaPositions, existingStaticPositions, staticMultValue, count, radius, o => Math3D.GetRandomVector_Spherical(o));
-
-            // Don't let them get too close to each other
-            retVal = Math3D.GetRandomVectors_Spherical_ClusteredMinDist(retVal, radius, radius * 2d * minClusterDistPercent,        //clustdist% is of diameter, not radius
-                existingStaticPoints: staticPoints,
-                staticRepulseMultipliers: staticRepulseMult);
-
-            return retVal;
-        }
-
-        public static Vector3D[] GetNeuronPositions_Even(Point3D[] dnaPositions, int count, double radius)
-        {
-            return GetNeuronPositions_Even(dnaPositions, null, 1d, count, radius);
-        }
-        public static Vector3D[] GetNeuronPositions_Even(Point3D[] dnaPositions, Point3D[] existingStaticPositions, double staticMultValue, int count, double radius)
-        {
-            // Get the points passed in, or random points (capped to count)
-            Vector3D[] staticPoints;
-            double[] staticRepulseMult;
-            Vector3D[] retVal = GetNeuronPositionsInitial(out staticPoints, out staticRepulseMult, dnaPositions, existingStaticPositions, staticMultValue, count, radius, o => Math3D.GetRandomVector_Spherical(o));
-
-            // Space them out evenly
-            retVal = Math3D.GetRandomVectors_Spherical_EvenDist(retVal, radius,
-                existingStaticPoints: staticPoints,
-                staticRepulseMultipliers: staticRepulseMult);
-
-            // Exit Function
-            return retVal;
-        }
-
-        public static Vector3D[] GetNeuronPositions_Even2D(Point3D[] dnaPositions, int count, double radius, double z = 0)
-        {
-            return GetNeuronPositions_Even2D(dnaPositions, null, 1d, count, radius, z);
-        }
-        public static Vector3D[] GetNeuronPositions_Even2D(Point3D[] dnaPositions, Point3D[] existingStaticPositions, double staticMultValue, int count, double radius, double z = 0)
-        {
-            // Get the points passed in, or random points (capped to count)
-            Vector3D[] staticPoints;
-            double[] staticRepulseMult;
-            Vector3D[] retVal = GetNeuronPositionsInitial(out staticPoints, out staticRepulseMult, dnaPositions, existingStaticPositions, staticMultValue, count, radius, o => Math3D.GetRandomVector_Circular(o));
-
-            // Convert the 3D points to 2D
-            Vector[] retVal2D = retVal.Select(o => o.ToVector2D()).ToArray();
-            Vector[] staticPoints2D = null;
-            if (staticPoints != null)
-            {
-                staticPoints2D = staticPoints.Select(o => o.ToVector2D()).ToArray();
-            }
-
-            // Space them out evenly
-            retVal2D = Math3D.GetRandomVectors_Circular_EvenDist(retVal2D, radius,
-                existingStaticPoints: staticPoints2D,
-                staticRepulseMultipliers: staticRepulseMult);
-
-            // Exit Function
-            return retVal2D.Select(o => o.ToVector3D(z)).ToArray();
-        }
-
-        public static Vector3D[] GetNeuronPositions_Ring2D(Point3D[] dnaPositions, int count, double radius, double z = 0)
-        {
-            // Get the points passed in, or random points (capped to count)
-            Vector3D[] retVal = GetNeuronPositionsInitial(out Vector3D[] staticPoints, out double[] staticRepulseMult, dnaPositions, null, 1, count, radius, o => Math3D.GetRandomVector_Circular_Shell(o));
-
-            // Convert the 3D points to 2D
-            Vector[] retVal2D = retVal.Select(o => o.ToVector2D()).ToArray();
-            Vector[] staticPoints2D = null;
-            if (staticPoints != null)
-            {
-                staticPoints2D = staticPoints.Select(o => o.ToVector2D()).ToArray();
-            }
-
-            // Space them out evenly
-            retVal2D = Math3D.GetRandomVectors_CircularRing_EvenDist(retVal2D, radius,
-                stopRadiusPercent: .001,
-                existingStaticPoints: staticPoints2D,
-                staticRepulseMultipliers: staticRepulseMult);
-
-            // Exit Function
-            return retVal2D.Select(o => o.ToVector3D(z)).ToArray();
-        }
-
-        public static Vector3D[] GetNeuronPositions_Line2D(Point3D[] dnaPositions, int count, double radius, double y = 0, double z = 0)
-        {
-            // It doesn't matter what the old positions were, this evenly distributes across a line
-            if (count < 1)
-            {
-                return new Vector3D[0];
-            }
-            else if (count == 1)
-            {
-                return new[] { new Vector3D(0, y, z) };
-            }
-
-            double step = (radius * 2) / (count - 1);
-            double start = -radius;
-
-            return Enumerable.Range(0, count).
-                Select(o => new Vector3D(start + (step * o), y, z)).
-                ToArray();
-        }
-
         #endregion
 
         #region Private Methods
@@ -743,7 +629,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Figure out the positions
             //NOTE: Only let them go to half radius.  Cluster% then needs to be doubled (doubling it again so that the brain chemicals don't get
             //too close together)
-            Vector3D[] positions = GetNeuronPositions_Cluster(brainChemPositions, count, radius * .5d, itemOptions.Brain_NeuronMinClusterDistPercent * 4d);
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_Spherical_Cluster(brainChemPositions, count, radius * .5d, itemOptions.Brain_NeuronMinClusterDistPercent * 4d);
 
             // Exit Function
             return positions.Select(o => new Neuron_Fade(o.ToPoint(), K_UP, K_DOWN, VALUECUTOFF)).ToArray();
@@ -760,7 +646,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Figure out the positions
-            Vector3D[] positions = GetNeuronPositions_Cluster(dna.Neurons, brainChemicalPositions, 3d, count, radius, itemOptions.Brain_NeuronMinClusterDistPercent);
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_Spherical_Cluster(dna.Neurons, brainChemicalPositions, 3d, count, radius, itemOptions.Brain_NeuronMinClusterDistPercent);
 
             return positions.
                 Select(o => new Neuron_NegPos(o.ToPoint())).
@@ -772,86 +658,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
             radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
             volume = Math.Pow(radius, itemOptions.Brain_NeuronGrowthExponent);
-        }
-
-        private static Vector3D[] GetNeuronPositionsInitial(out Vector3D[] staticPoints, out double[] staticRepulseMult, Point3D[] dnaPositions, Point3D[] existingStaticPositions, double staticMultValue, int count, double radius, Func<double, Vector3D> getNewPoint)
-        {
-            //TODO: When reducing/increasing, it is currently just being random.  It may be more realistic to take proximity into account.  Play
-            // a variant of conway's game of life or something
-
-            Vector3D[] retVal;
-
-            if (dnaPositions == null)
-            {
-                #region Create new
-
-                retVal = new Vector3D[count];
-                for (int cntr = 0; cntr < count; cntr++)
-                {
-                    //retVal[cntr] = Math3D.GetRandomVectorSpherical(radius);
-                    retVal[cntr] = getNewPoint(radius);     // using a delegate instead
-                }
-
-                #endregion
-            }
-            else if (dnaPositions.Length > count)
-            {
-                #region Reduce
-
-                List<Vector3D> posList = dnaPositions.Select(o => o.ToVector()).ToList();
-
-                int reduceCount = dnaPositions.Length - count;
-
-                for (int cntr = 0; cntr < reduceCount; cntr++)
-                {
-                    posList.RemoveAt(StaticRandom.Next(posList.Count));
-                }
-
-                retVal = posList.ToArray();
-
-                #endregion
-            }
-            else if (dnaPositions.Length < count)
-            {
-                #region Increase
-
-                List<Vector3D> posList = dnaPositions.Select(o => o.ToVector()).ToList();
-
-                int increaseCount = count - dnaPositions.Length;
-
-                for (int cntr = 0; cntr < increaseCount; cntr++)
-                {
-                    //posList.Add(Math3D.GetRandomVectorSpherical2D(radius));
-                    posList.Add(getNewPoint(radius));       // using a delegate instead
-                }
-
-                retVal = posList.ToArray();
-
-                #endregion
-            }
-            else
-            {
-                #region Copy as is
-
-                retVal = dnaPositions.Select(o => o.ToVector()).ToArray();
-
-                #endregion
-            }
-
-            // Prep the static point arrays
-            staticPoints = null;
-            staticRepulseMult = null;
-            if (existingStaticPositions != null)
-            {
-                staticPoints = existingStaticPositions.Select(o => o.ToVector()).ToArray();
-                // This will force more than normal distance between brain chemical neurons and standard neurons.  The reason I'm doing this
-                // is because the brain chemical neurons can have some powerful effects on the brain, and when an offspring is made, the links
-                // in the dna only hold neuron position.  By having a larger gap, there is less chance of accidental miswiring
-                staticRepulseMult = Enumerable.Range(0, staticPoints.Length).Select(o => staticMultValue).ToArray();
-            }
-
-            // Exit Function
-            return retVal;
         }
 
         #endregion

@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 using Game.HelperClassesCore;
 
@@ -187,6 +178,10 @@ namespace Game.GameTester
         private void EvenDistributeOther_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.Testers.EvenDistributionOther().Show();
+        }
+        private void NatureOfShapes_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.Testers.NatureOfShapes().Show();
         }
         private void ClusteredPoints_MouseUp(object sender, MouseButtonEventArgs e)
         {
@@ -402,6 +397,10 @@ namespace Game.GameTester
         private void ArcArena_MouseUp(object sender, MouseButtonEventArgs e)
         {
             new Game.Newt.v2.Arcanorum.ArenaTester.ArcArenaTester().Show();
+        }
+        private void ArcBotTester_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            new Game.Newt.v2.Arcanorum.Views.ArcbotTester().Show();
         }
 
         #endregion

@@ -1,25 +1,20 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Shapes;
 using System.Xaml;
-using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF.Controls3D
 {
+    //TODO: Add a method Show_OtherProcess().  This will let them visualize a function they are debugging without stepping out of the function
+
     /// <summary>
     /// This is meant to be used when diagnosing an error.  Make a copy of your buggy function, instantiate a debug window
     /// from within the copy, draw the scene to try to help visualize the problem
@@ -33,6 +28,18 @@ namespace Game.HelperClassesWPF.Controls3D
     /// </remarks>
     public partial class Debug3DWindow : Window
     {
+        #region class: GraphMouseTracker
+
+        private class GraphMouseTracker
+        {
+            public GraphResult Graph { get; set; }
+            public Rect3D Location { get; set; }
+            public ModelVisual3D Visual { get; set; }
+            public Action<GraphMouseArgs> Delegate { get; set; }
+        }
+
+        #endregion
+
         #region Declaration Section
 
         public const string AXISCOLOR_X = "FF6060";
@@ -44,6 +51,8 @@ namespace Game.HelperClassesWPF.Controls3D
         private bool _wasSetCameraCalled = false;
 
         private readonly int _viewportOffset;
+
+        private readonly List<GraphMouseTracker> _graphMouseTrackers = new List<GraphMouseTracker>();
 
         #endregion
 
@@ -96,6 +105,41 @@ namespace Game.HelperClassesWPF.Controls3D
             set { SetValue(LightColor_SecondaryProperty, value); }
         }
         public static readonly DependencyProperty LightColor_SecondaryProperty = DependencyProperty.Register("LightColor_Secondary", typeof(Color), typeof(Debug3DWindow), new PropertyMetadata(Colors.Silver));
+
+        private double? _trackball_InertiaPercentRetainPerSecond_Linear = .03;
+        public double? Trackball_InertiaPercentRetainPerSecond_Linear
+        {
+            get
+            {
+                return _trackball_InertiaPercentRetainPerSecond_Linear;
+            }
+            set
+            {
+                _trackball_InertiaPercentRetainPerSecond_Linear = value;
+
+                if (_trackball != null)
+                {
+                    _trackball.InertiaPercentRetainPerSecond_Linear = value;
+                }
+            }
+        }
+        private double? _trackball_InertiaPercentRetainPerSecond_Angular = .03;
+        public double? Trackball_InertiaPercentRetainPerSecond_Angular
+        {
+            get
+            {
+                return _trackball_InertiaPercentRetainPerSecond_Angular;
+            }
+            set
+            {
+                _trackball_InertiaPercentRetainPerSecond_Angular = value;
+
+                if (_trackball != null)
+                {
+                    _trackball.InertiaPercentRetainPerSecond_Angular = value;
+                }
+            }
+        }
 
         #endregion
 
@@ -236,6 +280,15 @@ namespace Game.HelperClassesWPF.Controls3D
         {
             AddLine(point1.ToPoint(), point2.ToPoint(), thickness, color);
         }
+        public void AddLine(Point3D point1, Point3D point2, double thickness, Color colorFrom, Color colorTo)
+        {
+            Visuals3D.Add(
+                GetLine(point1, point2, thickness, colorFrom, colorTo));
+        }
+        public void AddLine(Vector3D point1, Vector3D point2, double thickness, Color colorFrom, Color colorTo)
+        {
+            AddLine(point1.ToPoint(), point2.ToPoint(), thickness, colorFrom, colorTo);
+        }
         public static Visual3D GetLine(Point3D point1, Point3D point2, double thickness, Color color)
         {
             BillboardLine3DSet visual = new BillboardLine3DSet();
@@ -248,11 +301,72 @@ namespace Game.HelperClassesWPF.Controls3D
 
             return visual;
         }
+        public static Visual3D GetLine(Point3D point1, Point3D point2, double thickness, Color colorFrom, Color colorTo)
+        {
+            return new ModelVisual3D()
+            {
+                Content = new BillboardLine3D()
+                {
+                    //Material = BillboardLine3D.GetLinearGradientMaterial_Unlit(colorFrom, colorTo),
+                    ColorTo = colorTo,
+                    Color = colorFrom,
+                    FromPoint = point1,
+                    ToPoint = point2,
+                    Thickness = thickness,
+                }.Model,
+            };
+        }
 
+        public void AddLines(Point3D cubeMin, Point3D cubeMax, double thickness, Color color)
+        {
+            var segments = new List<(Point3D, Point3D)>();
+
+            // Top
+            segments.Add((new Point3D(cubeMin.X, cubeMin.Y, cubeMin.Z), new Point3D(cubeMax.X, cubeMin.Y, cubeMin.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMin.Y, cubeMin.Z), new Point3D(cubeMax.X, cubeMax.Y, cubeMin.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMax.Y, cubeMin.Z), new Point3D(cubeMin.X, cubeMax.Y, cubeMin.Z)));
+            segments.Add((new Point3D(cubeMin.X, cubeMax.Y, cubeMin.Z), new Point3D(cubeMin.X, cubeMin.Y, cubeMin.Z)));
+
+            // Bottom
+            segments.Add((new Point3D(cubeMin.X, cubeMin.Y, cubeMax.Z), new Point3D(cubeMax.X, cubeMin.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMin.Y, cubeMax.Z), new Point3D(cubeMax.X, cubeMax.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMax.Y, cubeMax.Z), new Point3D(cubeMin.X, cubeMax.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMin.X, cubeMax.Y, cubeMax.Z), new Point3D(cubeMin.X, cubeMin.Y, cubeMax.Z)));
+
+            // Sides
+            segments.Add((new Point3D(cubeMin.X, cubeMin.Y, cubeMin.Z), new Point3D(cubeMin.X, cubeMin.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMin.Y, cubeMin.Z), new Point3D(cubeMax.X, cubeMin.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMax.X, cubeMax.Y, cubeMin.Z), new Point3D(cubeMax.X, cubeMax.Y, cubeMax.Z)));
+            segments.Add((new Point3D(cubeMin.X, cubeMax.Y, cubeMin.Z), new Point3D(cubeMin.X, cubeMax.Y, cubeMax.Z)));
+
+            AddLines(segments, thickness, color);
+        }
+        public void AddLines(IEnumerable<Point3D> points, double thickness, Color color)
+        {
+            Visuals3D.Add(
+                GetLines(points, thickness, color));
+        }
         public void AddLines(IEnumerable<(Point3D point1, Point3D point2)> lines, double thickness, Color color)
         {
             Visuals3D.Add(
                 GetLines(lines, thickness, color));
+        }
+        public static Visual3D GetLines(IEnumerable<Point3D> points, double thickness, Color color)
+        {
+            var segments = new List<(Point3D, Point3D)>();
+
+            Point3D? prev = null;
+            foreach (Point3D point in points)
+            {
+                if (prev != null)
+                {
+                    segments.Add((prev.Value, point));
+                }
+
+                prev = point;
+            }
+
+            return GetLines(segments, thickness, color);
         }
         public static Visual3D GetLines(IEnumerable<(Point3D point1, Point3D point2)> lines, double thickness, Color color)
         {
@@ -309,13 +423,13 @@ namespace Game.HelperClassesWPF.Controls3D
                 var transform2D = Math2D.GetTransformTo2D(plane);
 
                 // Transform the center point down to 2D
-                Point3D center2D = transform2D.Item1.Transform(center);
+                Point3D center2D = transform2D.From3D_To2D.Transform(center);
 
                 // Add a translate along the 2D plane
                 transform.Children.Add(new TranslateTransform3D(center2D.ToVector()));
 
                 // Now that it's positioned correctly in 2D, transform the whole thing into 3D (to line up with the 3D plane that was passed in)
-                transform.Children.Add(transform2D.Item2);
+                transform.Children.Add(transform2D.From2D_BackTo3D);
             }
 
             geometry.Transform = transform;
@@ -324,6 +438,19 @@ namespace Game.HelperClassesWPF.Controls3D
             {
                 Content = geometry
             };
+        }
+
+        public void AddTriangle(ITriangle triangle, Color? faceColor = null, Color? edgeColor = null, double? edgeThickness = null, bool isShinyFaces = true)
+        {
+            TriangleIndexed indexed = new TriangleIndexed(0, 1, 2, new[] { triangle.Point0, triangle.Point1, triangle.Point2 });
+
+            AddHull(new[] { indexed }, faceColor, edgeColor, edgeThickness, isShinyFaces, true);
+        }
+        public void AddTriangle(Point3D point1, Point3D point2, Point3D point3, Color? faceColor = null, Color? edgeColor = null, double? edgeThickness = null, bool isShinyFaces = true)
+        {
+            TriangleIndexed indexed = new TriangleIndexed(0, 1, 2, new[] { point1, point2, point3 });
+
+            AddHull(new[] { indexed }, faceColor, edgeColor, edgeThickness, isShinyFaces, true);
         }
 
         public void AddHull(ITriangleIndexed[] hull, Color? faceColor = null, Color? edgeColor = null, double? edgeThickness = null, bool isShinyFaces = true, bool isIndependentFaces = true)
@@ -370,39 +497,6 @@ namespace Game.HelperClassesWPF.Controls3D
             }
 
             return retVal.ToArray();
-        }
-
-        public void AddTriangle(Point3D point1, Point3D point2, Point3D point3, Color color, bool isShiny = true)
-        {
-            Visuals3D.Add(
-                GetTriangle(point1, point2, point3, color, isShiny));
-        }
-        public static Visual3D GetTriangle(Point3D point1, Point3D point2, Point3D point3, Color color, bool isShiny = true)
-        {
-            List<Visual3D> retVal = new List<Visual3D>();
-
-            Material material = GetMaterial(isShiny, color);
-
-            GeometryModel3D geometry = new GeometryModel3D();
-            geometry.Material = material;
-            geometry.BackMaterial = material;
-
-            MeshGeometry3D meshGeometry = new MeshGeometry3D();
-
-            meshGeometry.Positions.Add(point1);
-            meshGeometry.Positions.Add(point2);
-            meshGeometry.Positions.Add(point3);
-
-            meshGeometry.TriangleIndices.Add(0);
-            meshGeometry.TriangleIndices.Add(1);
-            meshGeometry.TriangleIndices.Add(2);
-
-            geometry.Geometry = meshGeometry;
-
-            return new ModelVisual3D
-            {
-                Content = geometry
-            };
         }
 
         public void AddSquare(Point center, double sizeX, double sizeY, Color color, bool isShiny = true, double z = 0)
@@ -525,6 +619,13 @@ namespace Game.HelperClassesWPF.Controls3D
             return visual;
         }
 
+        /// <summary>
+        /// This tells how often a value occurs
+        /// </summary>
+        /// <remarks>
+        /// This calls func a bunch of times, finds the min/max, creates subranges, then counts the number of
+        /// occurances in each range
+        /// </remarks>
         public static GraphResult GetCountGraph(Func<double> func, string title = null)
         {
             double[] raw = Enumerable.Range(0, 100000).
@@ -590,18 +691,55 @@ namespace Game.HelperClassesWPF.Controls3D
                 Max = max,
                 Ranges = ranges,
                 Counts = counts,
-                NormalizedCounts = normalized,
+                NormalizedPoints = normalized,
             };
         }
-        public void AddGraph(GraphResult graph, Point3D center, double size)
+        /// <summary>
+        /// This directly graphs the values (x is the index into values, y is the value at that index)
+        /// </summary>
+        public static GraphResult GetGraph(double[] values, string title = null)
+        {
+            double maxX = values.Length;        // need a double so that it's not integer division
+
+            double minY = values.Min();
+            double maxY = values.Max();
+
+            if (minY < 0 && maxY < 0)
+            {
+                maxY = 0;
+            }
+            else if (minY > 0 && maxY > 0)
+            {
+                minY = 0;
+            }
+
+            double range = maxY - minY;
+
+            Point[] normalized = values.
+                Select((o, i) => new Point
+                (
+                    i / maxX,
+                    UtilityCore.GetScaledValue(0, 1, minY, maxY, o)
+                )).
+                ToArray();
+
+            // Debug3DWindow.AddGraph() only looks at title and normalized values
+            return new GraphResult()
+            {
+                Title = title,
+                NormalizedPoints = normalized,
+            };
+        }
+
+        public void AddGraph(GraphResult graph, Point3D center, double size, Action<GraphMouseArgs> mouseMove = null)
         {
             double halfSize = size / 2;
 
             Rect3D rect = new Rect3D(center.X - halfSize, center.Y - halfSize, center.Z, size, size, 0);
 
-            AddGraph(graph, rect);
+            AddGraph(graph, rect, mouseMove);
         }
-        public void AddGraph(GraphResult graph, Rect3D location)
+        public void AddGraph(GraphResult graph, Rect3D location, Action<GraphMouseArgs> mouseMove = null)
         {
             double thickness = Math1D.Max(location.SizeX, location.SizeY, location.SizeZ) / 500;
 
@@ -635,7 +773,7 @@ namespace Game.HelperClassesWPF.Controls3D
                 thickness,
                 Colors.Black);
 
-            Point3D[] pointsWorld = graph.NormalizedCounts.
+            Point3D[] pointsWorld = graph.NormalizedPoints.
                 Select(o => new Point3D
                 (
                     location.X + (location.SizeX * o.X),
@@ -645,21 +783,31 @@ namespace Game.HelperClassesWPF.Controls3D
                 ToArray();
 
             AddLines(
-                Enumerable.Range(0, graph.NormalizedCounts.Length - 1).
+                Enumerable.Range(0, graph.NormalizedPoints.Length - 1).
                     Select(o => (pointsWorld[o], pointsWorld[o + 1])),
                 thickness,
                 Colors.White);
+
+            if (mouseMove != null)
+            {
+                AddGraphMousePlate(graph, location, mouseMove);
+            }
 
             if (!string.IsNullOrWhiteSpace(graph.Title))
             {
                 AddText3D(graph.Title, new Point3D(location.CenterX(), location.CenterY(), location.CenterZ()), new Vector3D(0, 0, 1), location.SizeY / 20, Colors.Black, false);
             }
         }
-        public void AddGraphs(GraphResult[] graphs, Point3D center, double graphSize)
+        public void AddGraphs(GraphResult[] graphs, Point3D center, double graphSize, Action<GraphMouseArgs>[] mouseMoves = null, bool showHotTrackLines = false)
         {
             if (graphs == null || graphs.Length == 0)
             {
                 return;
+            }
+
+            if (mouseMoves != null && mouseMoves.Length != graphs.Length)
+            {
+                throw new ArgumentException($"If mouseMoves is passed in, it needs to be the same size as graphs: graphs={graphs.Length}, mouseMoves={mouseMoves.Length}");
             }
 
             int rows = Math.Sqrt(graphs.Length).ToInt_Floor();
@@ -673,12 +821,51 @@ namespace Game.HelperClassesWPF.Controls3D
             var cells = Math2D.GetCells_InvertY(graphSize * 1.1111111, columns, rows).
                 ToArray();
 
+            Action<GraphMouseArgs>[] hottrackEvents = null;
+            if (showHotTrackLines)
+            {
+                #region hottrack lines
+
+                List<Visual3D> lines = new List<Visual3D>();
+
+                double thickness = Math.Max(cells[0].rect.Width, cells[0].rect.Height) / 500;
+
+                hottrackEvents = Enumerable.Range(0, graphs.Length).
+                    Select((o, i) => new Action<GraphMouseArgs>(e =>
+                    {
+                        if (mouseMoves != null)
+                        {
+                            mouseMoves[i](e);
+                        }
+
+                        Visuals3D.RemoveAll(lines);
+                        lines.Clear();
+
+                        // Horizontal
+                        lines.Add(GetLines(cells.Select(p =>
+                        {
+                            double x = p.rect.X + (p.rect.Width * e.NormalizedPoint.X);
+
+                            return (new Point3D(x, p.rect.Y, 0), new Point3D(x, p.rect.Y + p.rect.Height, 0));
+                        }),
+                        thickness,
+                        SystemColors.HotTrackColor));
+
+                        //TODO: Create a horizontal line for each graph where the graph intersects the x
+
+                        Visuals3D.AddRange(lines);
+                    })).
+                    ToArray();
+
+                #endregion
+            }
+
             for (int cntr = 0; cntr < graphs.Length; cntr++)
             {
                 Rect cellRect = cells[cntr].rect.ChangeSize(.9);
                 cellRect.Location += center.ToVector2D();
 
-                AddGraph(graphs[cntr], cellRect.ToRect3D(center.Z));
+                AddGraph(graphs[cntr], cellRect.ToRect3D(center.Z), hottrackEvents?[cntr] ?? mouseMoves?[cntr]);
             }
         }
 
@@ -778,6 +965,20 @@ namespace Game.HelperClassesWPF.Controls3D
             }
         }
 
+        public static (double dot, double line) GetDrawSizes(double maxRadius)
+        {
+            return
+            (
+                maxRadius * .0075,
+                maxRadius * .005
+            );
+        }
+
+        public List<MyHitTestResult> CastRay(System.Windows.Input.MouseEventArgs e)
+        {
+            return UtilityWPF.CastRay(out _, e.GetPosition(grdViewPort), grdViewPort, _camera, _viewport, true);
+        }
+
         #endregion
 
         #region Event Listeners
@@ -793,6 +994,8 @@ namespace Game.HelperClassesWPF.Controls3D
                 _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete));
                 //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
                 _trackball.ShouldHitTestOnOrbit = false;
+                _trackball.InertiaPercentRetainPerSecond_Linear = _trackball_InertiaPercentRetainPerSecond_Linear;
+                _trackball.InertiaPercentRetainPerSecond_Angular = _trackball_InertiaPercentRetainPerSecond_Angular;
 
                 //TODO: May want a public bool property telling whether to auto set this.  Also do this during Visuals3D change event
                 if (!_wasSetCameraCalled && this.Visuals3D.Count > 0)
@@ -924,6 +1127,60 @@ namespace Game.HelperClassesWPF.Controls3D
             }
         }
 
+        private void grdViewPort_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            try
+            {
+                if (_graphMouseTrackers.Count > 0)
+                {
+                    var hits = UtilityWPF.CastRay(out _, e.GetPosition(grdViewPort), grdViewPort, _camera, _viewport, true);
+
+                    if (hits.Count > 0)
+                    {
+                        foreach (var graph in _graphMouseTrackers)
+                        {
+                            var hit = hits.FirstOrDefault(o => o.ModelHit.VisualHit == graph.Visual);
+
+                            //WARNING: This ignores transforms
+                            if (hit != null)
+                            {
+                                Point3D point = hit.ModelHit.PointHit;
+
+                                //var visualBounds = hit.ModelHit.MeshHit.Bounds;       // this seems to be the same as model's bounds
+                                var visualBounds = hit.ModelHit.ModelHit.Bounds;
+
+                                //TODO: It looks like UtilityWPF.CastRay honors model's transform, but ignores visual's transform.  But Bounds is still untransformed
+                                //In order for the percent of X and Y logic below to work, the hit point would need to be reverse transformed into the original mesh's
+                                //coords
+                                //hit.ModelHit.ModelHit.Transform
+                                //hit.ModelHit.VisualHit.Transform
+
+                                //AddDot(point, .01, Colors.Red);
+
+                                double percentX = (point.X - visualBounds.X) / visualBounds.SizeX;
+                                double percentY = (point.Y - visualBounds.Y) / visualBounds.SizeY;
+
+                                double graphX = UtilityCore.GetScaledValue_Capped(graph.Graph.Min, graph.Graph.Max, 0, 1, percentX);
+
+                                graph.Delegate(new GraphMouseArgs()
+                                {
+                                    Graph = graph.Graph,
+                                    VisualBounds = visualBounds,
+                                    HitPoint = point,
+                                    NormalizedPoint = new Point(percentX, percentY),
+                                    SelectedXValue = graphX,
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -998,6 +1255,34 @@ namespace Game.HelperClassesWPF.Controls3D
             _trackball.MouseWheelScale = distance * .0007;
         }
 
+        /// <summary>
+        /// This creates a transparent visual that will catch mouse movements and raise the mouse move event
+        /// </summary>
+        private void AddGraphMousePlate(GraphResult graph, Rect3D location, Action<GraphMouseArgs> mouseMove)
+        {
+            DiffuseMaterial material = new DiffuseMaterial(Brushes.Transparent);
+
+            ModelVisual3D visual = new ModelVisual3D
+            {
+                Content = new GeometryModel3D
+                {
+                    Material = material,
+                    BackMaterial = material,
+                    Geometry = UtilityWPF.GetSquare2D(location.Location.ToPoint2D(), (location.Location + location.Size.ToVector()).ToPoint2D(), location.Z),
+                },
+            };
+
+            _graphMouseTrackers.Add(new GraphMouseTracker()
+            {
+                Graph = graph,
+                Location = location,
+                Visual = visual,
+                Delegate = mouseMove,
+            });
+
+            Visuals3D.Add(visual);
+        }
+
         private static Tuple<Point3D, Vector3D, Vector3D> GetCameraPosition(Point3D[] points)
         {
             if (points == null || points.Length == 0)
@@ -1063,6 +1348,7 @@ namespace Game.HelperClassesWPF.Controls3D
 
     #region class: GraphResult
 
+    //NOTE: A lot of the properties only make sense for a count graph.  When drawing a graph, NormalizedCounts is the only property that's really needed
     public class GraphResult
     {
         public string Title { get; set; }
@@ -1077,7 +1363,28 @@ namespace Game.HelperClassesWPF.Controls3D
         /// <summary>
         /// This runs the range from 0 to 1, and the counts from 0 to 1
         /// </summary>
-        public Point[] NormalizedCounts { get; set; }
+        public Point[] NormalizedPoints { get; set; }
+    }
+
+    #endregion
+    #region class: GraphMouseArgs
+
+    public class GraphMouseArgs : EventArgs
+    {
+        public GraphResult Graph { get; set; }
+
+        // These are the 3D values within Debug3DWindow's _viewport
+        public Rect3D VisualBounds { get; set; }
+        public Point3D HitPoint { get; set; }
+
+        /// <summary>
+        /// This is the 2D position within the graph, normalized from 0 to 1 (a percent of X, percent of Y)
+        /// </summary>
+        public Point NormalizedPoint { get; set; }
+        /// <summary>
+        /// This is what the percent corresponds to in the graph's horizonal axis
+        /// </summary>
+        public double SelectedXValue { get; set; }
     }
 
     #endregion

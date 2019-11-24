@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 
@@ -11,6 +10,25 @@ namespace Game.HelperClassesWPF
 {
     public static class BezierUtil
     {
+        #region struct: BezierMeshSamples_Distance
+
+        //TODO: Shorten the name
+        private struct BezierMeshSamples_Distance
+        {
+            public Point3D From { get; set; }
+            public Point3D To { get; set; }
+
+            public VectorInt FromIndex { get; set; }
+            public VectorInt ToIndex { get; set; }
+
+            public double DistSegment { get; set; }
+            public double DistSum { get; set; }
+
+            public bool IsHorizontal { get; set; }
+        }
+
+        #endregion
+
         // Get points along the curve
         public static Point3D[] GetPoints(int count, Point3D from, Point3D control, Point3D to)
         {
@@ -52,6 +70,14 @@ namespace Game.HelperClassesWPF
         public static Point3D[] GetPoints(int count, BezierSegment3D segment)
         {
             return GetPoints(count, UtilityCore.Iterate<Point3D>(segment.EndPoint0, segment.ControlPoints, segment.EndPoint1).ToArray());
+        }
+        public static Point3D[] GetPoints(int count, BezierSegment3D[] bezier)
+        {
+            double divisor = (count - 1).ToDouble();
+
+            return Enumerable.Range(0, count).
+                Select(o => GetPoint(o / divisor, bezier)).
+                ToArray();
         }
 
         /// <summary>
@@ -104,11 +130,11 @@ namespace Game.HelperClassesWPF
             double totalLength = bezier.Sum(o => o.Length_quick);
 
             double fromPercent = 0d;
-            for(int cntr = 0; cntr < bezier.Length; cntr++)
+            for (int cntr = 0; cntr < bezier.Length; cntr++)
             {
                 double toPercent = fromPercent + (bezier[cntr].Length_quick / totalLength);
 
-                if(percent >= fromPercent && percent <= toPercent)
+                if (percent >= fromPercent && percent <= toPercent)
                 {
                     double localPercent = ((percent - fromPercent) * totalLength) / bezier[cntr].Length_quick;
 
@@ -346,6 +372,244 @@ namespace Game.HelperClassesWPF
             return end1 + controlLine;
         }
 
+        /// <summary>
+        /// This takes in some horizontal beziers, then can generate a grid of points from that definition (using the beziers to infer
+        /// points at regular intervals)
+        /// </summary>
+        /// <param name="horizontals">
+        /// A set of beziers that define horizontals
+        /// 
+        /// Use GetBezierSegments() to create a horizontal line
+        /// 
+        /// The horizontals don't need to form a rectangle, they could form any kind of patch (they don't even need to be horizontal
+        /// along X).  But they shouldn't cross over each other
+        /// </param>
+        /// <param name="horzCount">How many horizontal points to return</param>
+        /// <param name="vertCount">How many vertical points to return</param>
+        /// <param name="controlPointPercent">
+        /// Where along the line segment to place the control point
+        /// 
+        /// .5 would be halfway.  Anything less than half will cause the curves to pinch.  Anything greater will exaggerate the curves
+        /// </param>
+        /// <returns>
+        /// A grid of points
+        /// 
+        /// NOTE: This 1D arrays is vertical, which is backward from normal images (bitmaps are horizontal scan lines concatenated
+        /// together.  These GetBezierMesh functions use vertical scan lines concatenated together)
+        /// </returns>
+        public static Point3D[] GetBezierMesh_Points(BezierSegment3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent = .5)
+        {
+            if (horzCount < 2 || vertCount < 2)
+            {
+                throw new ArgumentException($"horzCount and vertCount need to be at least 2.  horzCount={horzCount}, vertCount={vertCount}");
+            }
+
+            return GetVerticalSamples(horizontals, horzCount, vertCount, controlPointPercent).
+                SelectMany(o => o).
+                ToArray();
+        }
+        public static Point3D[][] GetBezierMesh_Horizontals(BezierSegment3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent = .5)
+        {
+            if (horzCount < 2 || vertCount < 2)
+            {
+                throw new ArgumentException($"horzCount and vertCount need to be at least 2.  horzCount={horzCount}, vertCount={vertCount}");
+            }
+
+            Point3D[][] verticals = GetVerticalSamples(horizontals, horzCount, vertCount, controlPointPercent);
+
+            // Convert the verticals into horizontals
+            return Enumerable.Range(0, vertCount).
+                Select(v => Enumerable.Range(0, horzCount).
+                    Select(h => verticals[h][v]).
+                    ToArray()).
+                ToArray();
+        }
+        /// <summary>
+        /// This creates a continous mesh of triangles
+        /// </summary>
+        /// <remarks>
+        /// NOTE: When there were only two triangles per square, the lighting reflection looked bad.  So an extra middle point per
+        /// square is generated and each square has four triangles.  This means that there are more points returned than requested
+        /// </remarks>
+        public static ITriangleIndexed[] GetBezierMesh_Triangles(BezierSegment3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent = .5)
+        {
+            if (horzCount < 2 || vertCount < 2)
+            {
+                throw new ArgumentException($"horzCount and vertCount need to be at least 2.  horzCount={horzCount}, vertCount={vertCount}");
+            }
+
+            int horzCount_centers = (horzCount * 2) - 1;
+            int vertCount_centers = (vertCount * 2) - 1;
+
+            var verticals = GetVerticalSamples(horizontals, horzCount_centers, vertCount_centers, controlPointPercent);
+
+            //NOTE: There are more points here than the triangles will use.  But it keeps the math simpler to keep a square grid
+            Point3D[] allPoints = verticals.
+                SelectMany(o => o).
+                ToArray();
+
+            List<ITriangleIndexed> triangles = new List<ITriangleIndexed>();
+
+            // Build triangles
+            foreach (var vertex in IterateTrianglePoints(horzCount_centers, vertCount_centers))
+            {
+                triangles.Add(new TriangleIndexed(vertex.index0, vertex.index1, vertex.index2, allPoints));
+            }
+
+            return triangles.ToArray();
+        }
+        /// <summary>
+        /// This creates a geometry that has the TextureCoordinates collection filled out
+        /// </summary>
+        /// <remarks>
+        /// For best results, the dimensions of the mesh should be roughly the same as the image (and roughly square).  If not, large amounts
+        /// of the edges of the mesh will stay transparent
+        /// 
+        /// NOTE: You must set "ImageBrush.ViewportUnits = BrushMappingMode.Absolute" to honor these texture mappings.  If you
+        /// leave it with the default of BrushMappingMode.RelativeToBoundingBox, wpf does it's own thing and the edges of the image
+        /// will likely fall off the geometry
+        /// 
+        /// TODO: Take in a zoom property
+        /// </remarks>
+        /// <param name="textureAspectRatio">
+        /// Measure the image's width/height before calling this function
+        /// 
+        /// This way the image will map to the curve and preserve the aspect ratio.  This function also makes sure the entire image fits on
+        /// the mesh.  Which means some of the geometry outside the image will be transparent
+        /// </param>
+        public static MeshGeometry3D GetBezierMesh_MeshGeometry3D(BezierSegment3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent = .5, double textureAspectRatio = 1, bool invertY = true, double zoom = 1)
+        {
+            if (horzCount < 3 || vertCount < 3)
+            {
+                throw new ArgumentException($"horzCount and vertCount need to be at least 3.  horzCount={horzCount}, vertCount={vertCount}");
+            }
+            else if (horzCount % 2 != 1 || vertCount % 2 != 1)
+            {
+                throw new ArgumentException($"horzCount and vertCount both need to be odd numbers (because the mesh's center needs to fall on an actual point).  horzCount={horzCount}, vertCount={vertCount}");
+            }
+
+            int horzCount_centers = (horzCount * 2) - 1;
+            int vertCount_centers = (vertCount * 2) - 1;
+
+            var verticals = GetVerticalSamples(horizontals, horzCount_centers, vertCount_centers, controlPointPercent);
+
+            //NOTE: There are more points here than the triangles will use.  But it keeps the math simpler to keep a square grid
+            Point3D[] allPoints = verticals.
+                SelectMany(o => o).
+                ToArray();
+
+            VectorInt center = new VectorInt(horzCount_centers / 2, vertCount_centers / 2);
+
+            var distances = GetDistancesFromPoint(center, allPoints, horzCount_centers, vertCount_centers);
+
+            #region build transform
+
+            double maxX = distances.lines.
+                Where(o => o.IsHorizontal).
+                Where(o => o.ToIndex.X == 0 || o.ToIndex.X == horzCount_centers - 1).
+                Min(o => Math.Abs(o.DistSum));
+
+            double maxY = distances.lines.
+                Where(o => !o.IsHorizontal).
+                Where(o => o.ToIndex.Y == 0 || o.ToIndex.Y == vertCount_centers - 1).
+                Min(o => Math.Abs(o.DistSum));
+
+            maxX *= 2;      // aspect ratio deals with width, and maxX and Y are only have width, half height.
+            maxY *= 2;
+
+            double aspect = maxX / maxY;
+
+            double scaleX = 1d;
+            double scaleY = 1d;
+            if (aspect.IsNearValue(textureAspectRatio))
+            {
+                scaleX = 1 / maxX;
+                scaleY = 1 / maxY;
+            }
+            else if (aspect > textureAspectRatio)
+            {
+                scaleX = 1 / (maxX / (aspect / textureAspectRatio));
+                scaleY = 1 / maxY;
+            }
+            else
+            {
+                scaleX = 1 / maxX;
+                scaleY = 1 / maxY / (aspect / textureAspectRatio);
+            }
+
+            scaleX /= zoom;
+            scaleY /= zoom;
+
+            TransformGroup textureTransform = new TransformGroup();
+            textureTransform.Children.Add(new ScaleTransform(scaleX, scaleY));      // turn -maxX to maxX into -.5 to .5
+            textureTransform.Children.Add(new TranslateTransform(.5, .5));      // distances.lengths is centered at (.5,.5).  TextureCoordinates needs 0 to 1
+
+            #endregion
+
+            MeshGeometry3D retVal = new MeshGeometry3D();
+
+            for (int cntr = 0; cntr < allPoints.Length; cntr++)
+            {
+                retVal.Positions.Add(allPoints[cntr]);
+
+                Point point = textureTransform.Transform(distances.lengths[cntr].ToPoint());
+                if (invertY)
+                {
+                    point = new Point(point.X, 1 - point.Y);
+                }
+
+                retVal.TextureCoordinates.Add(point);
+            }
+
+            foreach (var vertex in IterateTrianglePoints(horzCount_centers, vertCount_centers))
+            {
+                retVal.TriangleIndices.Add(vertex.index0);
+                retVal.TriangleIndices.Add(vertex.index1);
+                retVal.TriangleIndices.Add(vertex.index2);
+            }
+
+            #region DEBUG DRAW
+
+            //double LINE = .01;
+
+            //Debug3DWindow window = new Debug3DWindow();
+
+            ////TODO: Come up with more distinct colors
+            //var getColor = new Func<double, Color>(d =>
+            //{
+            //    if (d >= 0 && d <= 1)
+            //    {
+            //        return UtilityWPF.AlphaBlend(Colors.White, Colors.Black, d);
+            //    }
+            //    else
+            //    {
+            //        d = d < 0 ? -d : d - 1;
+            //        return UtilityWPF.AlphaBlend(Colors.Red, Colors.Gray, UtilityCore.GetScaledValue_Capped(0, 1, 0, 2, d));
+            //    }
+            //});
+
+            //foreach (var line in distances.lines)
+            //{
+            //    Point textureCoord = new Point(line.DistSum, line.DistSum);     // the lines are either horizontal or vertical (so there should be twice as many distances.lines as distances.lengths)
+            //    textureCoord = textureTransform.Transform(textureCoord);
+            //    Color color = getColor(line.IsHorizontal ? textureCoord.X : textureCoord.Y);
+
+            //    window.AddLine(line.From, line.To, LINE, color);
+            //}
+
+            //window.AddText($"max X: {maxX.ToStringSignificantDigits(3)}");
+            //window.AddText($"max Y: {maxY.ToStringSignificantDigits(3)}");
+            //window.AddText("");
+            //window.AddText($"scale X: {scaleX.ToStringSignificantDigits(3)}");
+            //window.AddText($"scale Y: {scaleY.ToStringSignificantDigits(3)}");
+
+            //window.Show();
+
+            #endregion
+
+            return retVal;
+        }
+
         #region Private Methods
 
         private static BezierSegment3D[] GetBezierSegments_Closed(Point3D[] ends, double along = .25)
@@ -420,7 +684,16 @@ namespace Game.HelperClassesWPF
             Vector3D axis = Vector3D.CrossProduct(dir21, dir23);
             if (axis.IsNearZero())
             {
-                return null;
+                if (angle.IsNearValue(180))
+                {
+                    // The two lines are colinear.  Can't return null because the calling function will return arbitrary points which is wrong.  Come
+                    // up with a random orth to one of the vectors so that the below portion of this function will choose accurate control points
+                    axis = Math3D.GetArbitraryOrhonganal(dir21);
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             // Get the vector directly between the two directions
@@ -449,6 +722,171 @@ namespace Game.HelperClassesWPF
             else
             {
                 return Tuple.Create(along * (length23 / length12), along);
+            }
+        }
+
+        private static Point3D[][] GetVerticalSamples(BezierSegment3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent)
+        {
+            // Get samples of the horizontals
+            Point3D[][] horizontalPoints = horizontals.
+                Select(o => GetPoints(horzCount, o)).
+                ToArray();
+
+            // Get samples of the verticals (these are the final points)
+            return GetVerticalSamples(horizontalPoints, horzCount, vertCount, controlPointPercent);
+        }
+        private static Point3D[][] GetVerticalSamples(Point3D[][] horizontals, int horzCount, int vertCount, double controlPointPercent)
+        {
+            List<Point3D[]> retVal = new List<Point3D[]>();
+
+            for (int h = 0; h < horzCount; h++)
+            {
+                // Get the points from each of the horizontal lines at this index
+                Point3D[] samples = horizontals.
+                    Select(o => o[h]).
+                    ToArray();
+
+                if (samples.Length == vertCount)
+                {
+                    // It would be rare that the number of vertical points requested is the same as the number of horizontal
+                    // stripes passed in as control points.  It's more probable that the horizontal stripes are just a rough set
+                    // of control points, and they are asking for a higher resolution of sample points within the mesh
+                    retVal.Add(samples);
+                }
+                else
+                {
+                    // Turn those sample points into a vertical bezier
+                    BezierSegment3D[] vertSegments = GetBezierSegments(samples, controlPointPercent);
+
+                    Point3D[] vertLine = GetPoints(vertCount, vertSegments);
+
+                    retVal.Add(vertLine);
+                }
+            }
+
+            return retVal.ToArray();
+        }
+
+        private static (Vector[] lengths, BezierMeshSamples_Distance[] lines) GetDistancesFromPoint(VectorInt center, Point3D[] points, int horzCount, int vertCount)
+        {
+            Vector[] lengths = new Vector[points.Length];
+            var lines = new List<BezierMeshSamples_Distance>();
+
+            // Horizontal passes
+            for (int y = 0; y < vertCount; y++)
+            {
+                lines.AddRange(DoPass_X_atY(new AxisFor(Axis.X, center.X, horzCount - 2), y, lengths, points, horzCount, vertCount));
+                lines.AddRange(DoPass_X_atY(new AxisFor(Axis.X, center.X, 1), y, lengths, points, horzCount, vertCount));
+            }
+
+            // Vertical passes
+            for (int x = 0; x < horzCount; x++)
+            {
+                lines.AddRange(DoPass_Y_atX(new AxisFor(Axis.Y, center.Y, vertCount - 2), x, lengths, points, horzCount, vertCount));
+                lines.AddRange(DoPass_Y_atX(new AxisFor(Axis.Y, center.Y, 1), x, lengths, points, horzCount, vertCount));
+            }
+
+            return (lengths, lines.ToArray());
+        }
+        private static BezierMeshSamples_Distance[] DoPass_X_atY(AxisFor axisX, int y, Vector[] lengths, Point3D[] points, int horzCount, int vertCount)
+        {
+            var retVal = new List<BezierMeshSamples_Distance>();
+
+            foreach (int x in axisX.Iterate())
+            {
+                int index0 = (x * vertCount) + y;
+                int index1 = ((x + axisX.Increment) * vertCount) + y;
+
+                Vector3D line = points[index1] - points[index0];
+
+                double lineLen = line.Length * (axisX.IsPos ? 1 : -1);      // lines going left should have a negative length
+                lengths[index1].X = lengths[index0].X + lineLen;
+
+                retVal.Add(new BezierMeshSamples_Distance()
+                {
+                    From = points[index0],
+                    To = points[index1],
+                    FromIndex = new VectorInt(x, y),
+                    ToIndex = new VectorInt(x + axisX.Increment, y),
+                    DistSegment = lineLen,
+                    DistSum = lengths[index1].X,
+                    IsHorizontal = true,
+                });
+            }
+
+            return retVal.ToArray();
+        }
+        private static BezierMeshSamples_Distance[] DoPass_Y_atX(AxisFor axisY, int x, Vector[] lengths, Point3D[] points, int horzCount, int vertCount)
+        {
+            var retVal = new List<BezierMeshSamples_Distance>();
+
+            foreach (int y in axisY.Iterate())
+            {
+                int index0 = (x * vertCount) + y;
+                int index1 = (x * vertCount) + y + axisY.Increment;
+
+                Vector3D line = points[index1] - points[index0];
+
+                double lineLen = line.Length * (axisY.IsPos ? 1 : -1);      // lines going toward 0 should have negative length
+                lengths[index1].Y = lengths[index0].Y + lineLen;
+
+                retVal.Add(new BezierMeshSamples_Distance()
+                {
+                    From = points[index0],
+                    To = points[index1],
+                    FromIndex = new VectorInt(x, y),
+                    ToIndex = new VectorInt(x, y + axisY.Increment),
+                    DistSegment = lineLen,
+                    DistSum = lengths[index1].Y,
+                    IsHorizontal = false,
+                });
+            }
+
+            return retVal.ToArray();
+        }
+
+        private static IEnumerable<(int index0, int index1, int index2)> IterateTrianglePoints(int countHorz, int countVert)
+        {
+            for (int h = 0; h < countHorz - 1; h += 2)
+            {
+                int offsetH_0 = h * countVert;
+                int offsetH_center = (h + 1) * countVert;
+                int offsetH_1 = (h + 2) * countVert;
+
+                for (int v = 0; v < countVert - 1; v += 2)
+                {
+                    // Left
+                    yield return
+                    (
+                        offsetH_0 + v,
+                        offsetH_0 + v + 2,
+                        offsetH_center + v + 1
+                    );
+
+                    // Bottom
+                    yield return
+                    (
+                        offsetH_0 + v + 2,
+                        offsetH_1 + v + 2,
+                        offsetH_center + v + 1
+                    );
+
+                    // Right
+                    yield return
+                    (
+                        offsetH_1 + v + 2,
+                        offsetH_1 + v,
+                        offsetH_center + v + 1
+                    );
+
+                    // Top
+                    yield return
+                    (
+                        offsetH_1 + v,
+                        offsetH_0 + v,
+                        offsetH_center + v + 1
+                    );
+                }
             }
         }
 
@@ -527,6 +965,9 @@ namespace Game.HelperClassesWPF
 
         #region Constructor
 
+        public BezierSegment3D(Point3D end0, Point3D end1, Point3D[] controlPoints)
+            : this(0, 1, controlPoints, new[] { end0, end1 }) { }
+
         public BezierSegment3D(int endIndex0, int endIndex1, Point3D[] controlPoints, Point3D[] allEndPoints)
         {
             this.EndIndex0 = endIndex0;
@@ -583,7 +1024,7 @@ namespace Game.HelperClassesWPF
                 {
                     if (_length_quick == null)
                     {
-                        if(this.ControlPoints == null || this.ControlPoints.Length == 0)
+                        if (this.ControlPoints == null || this.ControlPoints.Length == 0)
                         {
                             _length_quick = (this.EndPoint1 - this.EndPoint0).Length;
                         }
@@ -594,7 +1035,7 @@ namespace Game.HelperClassesWPF
                             length += (this.ControlPoints[0] - this.EndPoint0).LengthSquared;
                             length += (this.ControlPoints[this.ControlPoints.Length - 1] - this.EndPoint1).LengthSquared;
 
-                            for(int cntr = 0; cntr < this.ControlPoints.Length - 1; cntr++)
+                            for (int cntr = 0; cntr < this.ControlPoints.Length - 1; cntr++)
                             {
                                 length += (this.ControlPoints[cntr] - this.ControlPoints[cntr + 1]).LengthSquared;
                             }

@@ -8,15 +8,23 @@ using SharpNeat.Phenomes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.ArenaTester
 {
+    /// <summary>
+    /// Not too close to center, not too far from center
+    /// Not too slow, not too fast
+    /// </summary>
     public class Evaluator3 : IPhenomeTickEvaluator<IBlackBox, NeatGenome>
     {
         #region Declaration Section
+
+        // These get multiplied by the room's radius (roomWidth/2)
+        public const double MULT_MAXDIST2 = .4;
+        public const double MULT_MAXDIST = .3;
+        public const double MULT_MINDIST = .15;
+        public const double MULT_HOMINGSIZE = MULT_MAXDIST;
 
         private readonly WorldAccessor _worldAccessor;
         private readonly TrainingRoom _room;
@@ -28,6 +36,12 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
         private readonly double _minDistance;// = 10;
         private readonly double _maxDistance;// = 30;
         private readonly double _maxDistance2;// = 30 * 1.25;
+
+        private readonly double _minSpeed = 12;
+        private readonly double _maxSpeed = 16;
+        private readonly double _maxSpeed2 = 21;
+
+        private readonly double _roomRadius;
 
         private readonly double _maxEvalTime;
         private readonly double? _initialRandomVelocity;
@@ -54,17 +68,19 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
             _initialRandomVelocity = initialRandomVelocity;
 
             // Set distances based on room size (or take as params?, or just a percent param?)
-            double roomWidth = Math1D.Min(
+            double roomWidth = Math1D.Min
+            (
                 room.AABB.Item2.X - room.AABB.Item1.X,
                 room.AABB.Item2.Y - room.AABB.Item1.Y,
-                room.AABB.Item2.Z - room.AABB.Item1.Z);
+                room.AABB.Item2.Z - room.AABB.Item1.Z
+            );
 
             // Want radius, not diameter
-            roomWidth = roomWidth / 2;
+            _roomRadius = roomWidth / 2;
 
-            _maxDistance2 = roomWidth * .9;
-            _maxDistance = _maxDistance2 / 1.25;
-            _minDistance = _maxDistance * .25;
+            _maxDistance2 = _roomRadius * MULT_MAXDIST2;
+            _maxDistance = _roomRadius * MULT_MAXDIST;
+            _minDistance = _roomRadius * MULT_MINDIST;
         }
 
         #endregion
@@ -107,6 +123,10 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
             {
                 _room.Bot.PhysicsBody.Velocity = Math3D.GetRandomVector_Spherical(_initialRandomVelocity.Value);
             }
+            else
+            {
+                _room.Bot.PhysicsBody.Velocity = new Vector3D(0, 0, 0);
+            }
 
             _room.Bot.PhysicsBody.Rotation = Quaternion.Identity;
             _room.Bot.PhysicsBody.AngularVelocity = new Vector3D(0, 0, 0);
@@ -131,57 +151,38 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 throw new InvalidOperationException("EvaluateTick was called at an invalid time.  Either StartNewEvaluation was never called, or the current phenome has returned a final score and this class is waiting for a new call to StartNewEvaluation");
             }
 
-            if (_room.Bot.Fuel != null)
-            {
-                _room.Bot.Fuel.QuantityCurrent = _room.Bot.Fuel.QuantityMax;
-            }
-
-            if (_room.Bot.Energy != null)
-            {
-                _room.Bot.Energy.QuantityCurrent = _room.Bot.Energy.QuantityMax;
-            }
-
-            if (_room.Bot.Plasma != null)
-            {
-                _room.Bot.Plasma.QuantityCurrent = _room.Bot.Plasma.QuantityMax;
-            }
+            _room.Bot.RefillContainers();
 
             //TODO: May want to give a 1 second warmup before evaluating
 
             var distance = GetDistanceError(_room.Bot, _room.Center, _minDistance, _maxDistance, _maxDistance2);
 
-            //TODO: Speed
+            var speed = GetSpeedError(_room.Bot, _minSpeed, _maxSpeed, _maxSpeed2);
 
-            //TODO: Combine distance and speed errors (normalize between 0 and 1)
-            double error = distance.error;
+            // Combine errors
+            //TODO: Have multipliers so that distance could be weighted differently than speed - be sure the final value is normalized to 0 to 1
+            double error = Math1D.Avg(distance.error, speed.error);
+
+            double actualElapsed = EvaluatorUtil.GetActualElapsedTime(ref _runningTime, elapedTime, _maxEvalTime);
 
             // Add the error to the total (cap it if time is exceeded)
-            double actualElapsed = elapedTime;
-            if (_runningTime + elapedTime > _maxEvalTime)
-            {
-                actualElapsed = _maxEvalTime - _runningTime;
-            }
-
             error *= actualElapsed;
-
             _error += error;
 
-            _runningTime += elapedTime;
-
-            AddTrackingEntry();
+            _snapshots.Add(new BotTrackingEntry_Eval3(_runningTime, _room.Bot));
 
             if (distance.distance > _maxDistance2)
             {
                 // They went outside the allowed area.  Quit early and give maximum error for the remainder of the time
                 _error += (_maxEvalTime - _runningTime);
                 _runningTime = _maxEvalTime;
-                return FinishEvaluation();
+                return EvaluatorUtil.FinishEvaluation(ref _isEvaluating, _runningTime, _error, _maxEvalTime, _log, _room, _snapshots.ToArray());
             }
             else if (_runningTime >= _maxEvalTime)
             {
                 // If the counter is a certain amount, return the final score
                 // It's been tested long enough.  Return the score (score needs to grow, so an error of zero will give max score)
-                return FinishEvaluation();
+                return EvaluatorUtil.FinishEvaluation(ref _isEvaluating, _runningTime, _error, _maxEvalTime, _log, _room, _snapshots.ToArray());
             }
             else
             {
@@ -193,32 +194,6 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
         #endregion
 
         #region Private Methods
-
-        private FitnessInfo FinishEvaluation()
-        {
-            _isEvaluating = false;
-
-            double fitness = _runningTime - _error;
-
-            if (fitness < 0)
-            {
-                fitness = 0;
-            }
-
-            fitness *= 1000 / _maxEvalTime;     // scale the score to be 1000
-
-            FitnessInfo retVal = new FitnessInfo(fitness, fitness);
-
-            _log.AddEntry(new BotTrackingRun(_room.Center, _room.AABB.Item1, _room.AABB.Item2, retVal, _snapshots.ToArray()));
-
-            return retVal;
-        }
-
-        private void AddTrackingEntry()
-        {
-            //_snapshots.Add(new BotTrackingEntry(_runningTime, _room.Bot.PositionWorld, _room.Bot.VelocityWorld));
-            _snapshots.Add(new BotTrackingEntry_Eval3(_runningTime, _room.Bot));
-        }
 
         private static (double distance, double error) GetDistanceError(Bot bot, Point3D center, double minDistance, double maxDistance, double maxDistance2)
         {
@@ -244,8 +219,31 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
             return (distance, error);
         }
 
+        private static (double speed, double error) GetSpeedError(Bot bot, double minSpeed, double maxSpeed, double maxSpeed2)
+        {
+            double speed = bot.VelocityWorld.Length;
+
+            double error = 0;
+            if (speed < minSpeed)
+            {
+                error = UtilityCore.GetScaledValue_Capped(0, 1, minSpeed, 0, speed);
+            }
+            else if (speed > maxSpeed2)
+            {
+                error = 1;
+            }
+            else if (speed > maxSpeed)
+            {
+                error = UtilityCore.GetScaledValue_Capped(0, 1, maxSpeed, maxSpeed2, speed);
+            }
+
+            return (speed, error);
+        }
+
         #endregion
     }
+
+    #region class: BotTrackingEntry_Eval3
 
     public class BotTrackingEntry_Eval3 : BotTrackingEntry
     {
@@ -276,4 +274,6 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
         public string OffParts { get; private set; }
         public string OnParts { get; private set; }
     }
+
+    #endregion
 }

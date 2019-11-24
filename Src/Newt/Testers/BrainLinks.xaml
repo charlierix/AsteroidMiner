@@ -156,8 +156,12 @@
                                     <TextBlock Text="Link Resistance" Margin="1,12,1,1"/>
                                     <Slider Name="trk3DLinkResistMult" Minimum="0" Maximum="8" Value="1" TickFrequency="1"/>
 
-                                    <TextBlock Text="Extra Links %" Margin="1,12,1,1"/>
-                                    <Slider Name="trk3DExtraLinkPercent" Minimum="0" Maximum="400" Value="0" TickFrequency="100" AutoToolTipPrecision="0"/>
+                                    <TextBlock Text="Extra Links % - Input" Margin="1,12,1,1"/>
+                                    <Slider Name="trk3DExtraLinkPercentInput" Minimum="0" Maximum="400" Value="0" TickFrequency="100" LargeChange="25" AutoToolTipPrecision="0"/>
+
+                                    <TextBlock Text="Extra Links % - Output" Margin="1,12,1,1"/>
+                                    <Slider Name="trk3DExtraLinkPercentOutput" Minimum="0" Maximum="400" Value="0" TickFrequency="100" LargeChange="25" AutoToolTipPrecision="0"/>
+
                                     <CheckBox Name="chk3DExtraLinkBySize" Content="Extra links by size" Style="{StaticResource checkbox}"/>
                                     <CheckBox Name="chk3DExtraLinkEvenDistribute" Content="Extra links even distribute" Style="{StaticResource checkbox}"/>
 

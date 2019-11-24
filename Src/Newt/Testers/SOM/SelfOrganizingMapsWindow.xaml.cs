@@ -215,6 +215,9 @@ namespace Game.Newt.Testers.SOM
         /// This was copied from a tester that wasn't quite finished.  It's kind of a dead end thought, but I didn't want to lose the progress.  So the
         /// code is still unoptimized and would need some rework to be made final
         /// </summary>
+        /// <remarks>
+        /// TODO: Instead of a simple pull toward the center of position and collision detection, add an extra force that tries to equalize the gaps.
+        /// </remarks>
         private static class SquareNodes
         {
             #region class: SOMTiles
@@ -406,7 +409,7 @@ namespace Game.Newt.Testers.SOM
 
                 for (int cntr = 0; cntr < rectangles.Length; cntr++)
                 {
-                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit(false) * TOWARDCENTERMULT;
+                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit() * TOWARDCENTERMULT;
                     forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center) * TOWARDCENTERMULT;
 
                     //forces[cntr] += Math3D.GetRandomVector_Circular(JOSTLE).ToVector2D();     // this doesn't seem to help as much as I thought it would.  I thought they would get stuck and a little shaking around would make them settle in tighter
@@ -418,7 +421,7 @@ namespace Game.Newt.Testers.SOM
 
                     double strength = (G * rectangles[pair.Item1].Mass * rectangles[pair.Item2].Mass) / link.LengthSquared;
 
-                    link = link.ToUnit(false) * strength;
+                    link = link.ToUnit() * strength;
 
                     forces[pair.Item1] += link;
                     forces[pair.Item2] -= link;
@@ -510,7 +513,7 @@ namespace Game.Newt.Testers.SOM
 
                 for (int cntr = 0; cntr < rectangles.Length; cntr++)
                 {
-                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit(false) * TOWARDCENTERMULT;
+                    //forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center).ToUnit() * TOWARDCENTERMULT;
                     forces[cntr] -= (rectangles[cntr].Rectangle.Center() - center) * TOWARDCENTERMULT;
 
                     //forces[cntr] += Math3D.GetRandomVector_Circular(JOSTLE).ToVector2D();     // this doesn't seem to help as much as I thought it would.  I thought they would get stuck and a little shaking around would make them settle in tighter
@@ -522,7 +525,7 @@ namespace Game.Newt.Testers.SOM
 
                     double strength = (G * rectangles[pair.Item1].Mass * rectangles[pair.Item2].Mass) / link.LengthSquared;
 
-                    link = link.ToUnit(false) * strength;
+                    link = link.ToUnit() * strength;
 
                     forces[pair.Item1] += link;
                     forces[pair.Item2] -= link;
@@ -627,7 +630,7 @@ namespace Game.Newt.Testers.SOM
 
                 Vector direction = pos1.IsNearValue(pos2) ?
                     Math3D.GetRandomVector_Circular_Shell(1).ToVector2D() :
-                    (pos2 - pos1).ToUnit(false);
+                    (pos2 - pos1).ToUnit();
 
                 Vector directionRay = direction * (rect1.Width + rect2.Width + rect1.Height * rect2.Height);        // making it guaranteed longer than the rectangles
 
@@ -2513,7 +2516,7 @@ namespace Game.Newt.Testers.SOM
                 case NormalizationType.ToUnit:
                     return vector.
                         ToVectorND().
-                        ToUnit(false).
+                        ToUnit().
                         VectorArray;
 
                 default:

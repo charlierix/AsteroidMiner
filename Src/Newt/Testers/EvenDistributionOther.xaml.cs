@@ -1577,7 +1577,7 @@ Tuple.Create(113, 120),
             }
 
             // Cap Angle
-            Vector3D posUnit = point.ToUnit(false);
+            Vector3D posUnit = point.ToUnit();
 
             if (Vector3D.DotProduct(posUnit, cone.AxisUnit) < cone.Dot)
             {

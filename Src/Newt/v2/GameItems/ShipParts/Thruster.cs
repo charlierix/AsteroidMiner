@@ -1,15 +1,13 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.NewtonDynamics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-
-using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -926,7 +924,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         ///     Setting Percents, which will get looked at each update tick
         ///     Using these neurons, which will get looked at each update tick
         /// </remarks>
-        private readonly Neuron_ZeroPos[] _neurons;
+        private readonly Neuron_Direct[] _neurons;
 
         #endregion
 
@@ -1205,19 +1203,21 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        private static Neuron_ZeroPos[] CreateNeurons(Vector3D[] thrustDirections)
+        private static Neuron_Direct[] CreateNeurons(Vector3D[] thrustDirections)
         {
-            Neuron_ZeroPos[] retVal;
+            Neuron_Direct[] retVal;
 
             if (thrustDirections.Length == 1)
             {
                 // Since there's only one, just put it in the center
-                retVal = new Neuron_ZeroPos[] { new Neuron_ZeroPos(new Point3D(0, 0, 0)) };
+                retVal = new Neuron_Direct[] { new Neuron_Direct(new Point3D(0, 0, 0), true) };
             }
             else
             {
                 // Place the neurons along the direction of the corresponding thrust (the directions are already unit vectors)
-                retVal = thrustDirections.Select(o => new Neuron_ZeroPos(o.ToPoint())).ToArray();
+                retVal = thrustDirections.
+                    Select(o => new Neuron_Direct(o.ToPoint(), true)).
+                    ToArray();
             }
 
             return retVal;
@@ -1268,7 +1268,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 for (int cntr = 0; cntr < cast.ThrusterDirections.Length; cntr++)
                 {
                     // Ran into a case where original thruster directions weren't unit vectors, but the editor made them unit vectors
-                    if (!Math3D.IsNearValue(this.ThrusterDirections[cntr].ToUnit(false), cast.ThrusterDirections[cntr].ToUnit(false)))
+                    if (!Math3D.IsNearValue(this.ThrusterDirections[cntr].ToUnit(), cast.ThrusterDirections[cntr].ToUnit()))
                     {
                         return false;
                     }

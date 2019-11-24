@@ -509,7 +509,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
 
         /// <summary>
-        /// This removes enough minerals to fulfill the requested volume.  I may chop a larger mineral in two
+        /// This removes enough minerals to fulfill the requested volume.  It may chop a larger mineral in two
         /// </summary>
         /// <param name="type">The type of mineral to remove</param>
         /// <param name="volume">How much to remove</param>

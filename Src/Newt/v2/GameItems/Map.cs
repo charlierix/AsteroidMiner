@@ -1,18 +1,17 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.NewtonDynamics;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 using System.Xaml;
-using Game.HelperClassesCore;
-using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Controls3D;
-using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -863,7 +862,9 @@ namespace Game.Newt.v2.GameItems
                 }
                 else
                 {
-                    return _nodes.SelectMany(o => o.Descendants(p => p.DerivedChildren)).ToArray();
+                    return _nodes.
+                        SelectMany(o => o.Descendants(p => p.DerivedChildren)).
+                        ToArray();
                 }
             }
             finally
@@ -1013,20 +1014,18 @@ namespace Game.Newt.v2.GameItems
 
         private void AddToViewport(IMapObject item)
         {
-            #region Main Viewport
-
-            if (this.Viewport != null && item.Visuals3D != null)
+            // Main viewport
+            if (Viewport != null && item.Visuals3D != null)
             {
-                foreach (Visual3D visual in item.Visuals3D)
-                {
-                    this.Viewport.Children.Add(visual);
-                }
+                //NOTE: Normally, item.Visuals3D wouldn't already be in the viewport (because map should manage that, and the bot is
+                //just now being added to the map).  But arcbot.weapon plays with the viewport, so if the weapon gets attached before the
+                //but is added, then this remove is needed
+                Viewport.Children.RemoveAll(item.Visuals3D);
+
+                Viewport.Children.AddRange(item.Visuals3D);
             }
 
-            #endregion
-
-            #region Camera Pool
-
+            // Camera Pool
             if (_cameraPool != null && item.Model != null)
             {
                 byte[] modelBytes = SerializeModel(item.Model);
@@ -1036,8 +1035,6 @@ namespace Game.Newt.v2.GameItems
                 _cameraPoolVisuals.Add(poolVisual);
                 _cameraPool.Add(poolVisual);
             }
-
-            #endregion
         }
         private void RemoveFromViewport(IMapObject item)
         {

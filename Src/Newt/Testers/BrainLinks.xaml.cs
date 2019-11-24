@@ -862,11 +862,11 @@ namespace Game.Newt.Testers
 
                 // See what the new burdens would be for from and to for each io link
                 var newBurdens = from.LinksOrig.Select(o => new
-                    {
-                        IOIndex = o,
-                        FromBurden = BrainBurden.CalculateBurden(fromIOSize - io[o].Size, from.BrainSize),
-                        ToBurden = BrainBurden.CalculateBurden(toIOSize + io[o].Size, to.BrainSize),
-                    }).
+                {
+                    IOIndex = o,
+                    FromBurden = BrainBurden.CalculateBurden(fromIOSize - io[o].Size, from.BrainSize),
+                    ToBurden = BrainBurden.CalculateBurden(toIOSize + io[o].Size, to.BrainSize),
+                }).
                     Where(o => o.FromBurden >= linkBurden + o.ToBurden).        // throw out any moves that cause a reverse in burden
                     Select(o => new
                     {
@@ -1229,29 +1229,39 @@ namespace Game.Newt.Testers
 
             #region AddItemLocation
 
-            ComboBox[] combos = new[]
+            (ComboBox combo, AddItemLocation initial)[] combos1 = new[]
             {
-                cbo2DAddInput, cbo2DAddOutput, cbo2DAddBrain,
-                cbo3DAddInput, cbo3DAddOutput, cbo3DAddBrain,
+                (cbo2DAddInput, AddItemLocation.Left),
+                (cbo2DAddOutput, AddItemLocation.Right),
+                (cbo2DAddBrain, AddItemLocation.Center),
+
+                (cbo3DAddInput, AddItemLocation.Left),
+                (cbo3DAddOutput, AddItemLocation.Right),
+                (cbo3DAddBrain, AddItemLocation.Center),
             };
 
             foreach (string option in Enum.GetNames(typeof(AddItemLocation)))
             {
-                foreach (ComboBox combo in combos)
+                foreach (var combo in combos1)
                 {
-                    combo.Items.Add(option);
+                    combo.combo.Items.Add(option);
                 }
             }
 
-            foreach (ComboBox combo in combos)
+            foreach (var combo in combos1)
             {
-                combo.SelectedIndex = 0;
+                var index =  combo.combo.Items.
+                    AsEnumerabIe().
+                    Select((o, i) => new { index = i, item = o.ToString() }).
+                    First(o => o.item == combo.initial.ToString());
+
+                combo.combo.SelectedIndex = index.index;
             }
 
             #endregion
             #region ClearWhich
 
-            combos = new[]
+            ComboBox[] combos2 = new[]
             {
                 cbo2DClear,
                 cbo3DClear,
@@ -1259,13 +1269,13 @@ namespace Game.Newt.Testers
 
             foreach (string option in Enum.GetNames(typeof(ClearWhich)))
             {
-                foreach (ComboBox combo in combos)
+                foreach (ComboBox combo in combos2)
                 {
                     combo.Items.Add(option);
                 }
             }
 
-            foreach (ComboBox combo in combos)
+            foreach (ComboBox combo in combos2)
             {
                 combo.SelectedIndex = 0;
             }
@@ -1273,7 +1283,7 @@ namespace Game.Newt.Testers
             #endregion
             #region IOLinkupPriority
 
-            combos = new[]
+            combos2 = new[]
             {
                 cbo2DIOLinkupPriority,
                 //cbo3DIOLinkupPriority,
@@ -1281,13 +1291,13 @@ namespace Game.Newt.Testers
 
             foreach (string option in Enum.GetNames(typeof(Worker2D_Distance.IOLinkupPriority)))
             {
-                foreach (ComboBox combo in combos)
+                foreach (ComboBox combo in combos2)
                 {
                     combo.Items.Add(option);
                 }
             }
 
-            foreach (ComboBox combo in combos)
+            foreach (ComboBox combo in combos2)
             {
                 combo.SelectedIndex = 0;
             }
@@ -2045,9 +2055,16 @@ namespace Game.Newt.Testers
                     Select(o => new LinkItem(o.Position.Value, o.Size)).
                     ToArray();
 
-                LinkItem[] io = _inputs3D.
-                    Concat(_outputs3D).
-                    Select(o => new LinkItem(o.Position.Value, o.Size)).
+                LinkItem[] io_input = _inputs3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size, 0)).
+                    ToArray();
+
+                LinkItem[] io_output = _outputs3D.
+                    Select(o => new LinkItem(o.Position.Value, o.Size, 1)).
+                    ToArray();
+
+                LinkItem[] io = io_input.
+                    Concat(io_output).
                     ToArray();
 
                 ItemLinker_OverflowArgs overflowArgs = new ItemLinker_OverflowArgs()
@@ -2056,11 +2073,15 @@ namespace Game.Newt.Testers
                 };
 
                 ItemLinker_ExtraArgs extraArgs = null;
-                if (!trk3DExtraLinkPercent.Value.IsNearZero())
+                if (!trk3DExtraLinkPercentInput.Value.IsNearZero() || !trk3DExtraLinkPercentOutput.Value.IsNearZero())
                 {
                     extraArgs = new ItemLinker_ExtraArgs()
                     {
-                        Percent = trk3DExtraLinkPercent.Value / 100d,
+                        Percents = new[]
+                        {
+                            trk3DExtraLinkPercentInput.Value / 100d,
+                            trk3DExtraLinkPercentOutput.Value / 100d,
+                        },
                         BySize = chk3DExtraLinkBySize.IsChecked.Value,
                         EvenlyDistribute = chk3DExtraLinkEvenDistribute.IsChecked.Value,
                     };

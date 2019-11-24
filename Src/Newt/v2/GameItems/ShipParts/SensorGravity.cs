@@ -1,15 +1,13 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.NewtonDynamics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-
-using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -139,7 +137,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
         }
 
-        internal static CollisionHull CreateSensorCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
+        public static CollisionHull CreateSensorCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
         {
             Transform3DGroup transform = new Transform3DGroup();
             //transform.Children.Add(new ScaleTransform3D(scale));		// it ignores scale
@@ -150,7 +148,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return CollisionHull.CreateBox(world, 0, size, transform.Value);
         }
-        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
+        public static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref MassBreakdownCache existing, Vector3D scale, double cellSize)
         {
             if (existing != null && existing.Scale == scale && existing.CellSize == cellSize)
             {
@@ -186,7 +184,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 isFinal);
         }
 
-        internal static Model3DGroup CreateGeometry(List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, Transform3D transform, Color baseColor, SpecularMaterial baseSpecular, Color colorColor, SpecularMaterial colorSpecular, bool isFinal)
+        public static Model3DGroup CreateGeometry(List<MaterialColorProps> materialBrushes, List<EmissiveMaterial> selectionEmissives, Transform3D transform, Color baseColor, SpecularMaterial baseSpecular, Color colorColor, SpecularMaterial colorSpecular, bool isFinal)
         {
             //NOTE: This is copied and tweaked from ConverterMatterToFuelDesign
 
@@ -258,12 +256,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return retVal;
         }
 
-        internal static MeshGeometry3D GetMeshBase(double scale)
+        public static MeshGeometry3D GetMeshBase(double scale)
         {
             //NOTE: These tips are negative
             return ConverterMatterToFuelDesign.GetMesh(.5d * scale, -.35d * scale, 1);
         }
-        internal static MeshGeometry3D GetMeshColor(double scale)
+        public static MeshGeometry3D GetMeshColor(double scale)
         {
             return ConverterMatterToFuelDesign.GetMesh(.35d * scale, .15d * scale, 1);
         }
@@ -525,9 +523,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         #endregion
 
-        #region Private Methods
+        #region Public Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
+        public static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
         {
             volume = dna.Scale.X * dna.Scale.Y * dna.Scale.Z;		// get volume of the cube
             volume *= SensorGravityDesign.SIZEPERCENTOFSCALE;		// scale it
@@ -540,7 +538,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             actualScale = new Vector3D(dna.Scale.X * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Y * SensorGravityDesign.SIZEPERCENTOFSCALE, dna.Scale.Z * SensorGravityDesign.SIZEPERCENTOFSCALE);
         }
 
-        internal static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity)
+        public static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity)
         {
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
@@ -556,15 +554,20 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Place them evenly in a sphere
             //NOTE: An interesting side effect of calling this for each generation is that the parent may not have been perfectly evenly spaced, but calling this
             //again will slightly refine the positions
-            Vector3D[] positions = Brain.GetNeuronPositions_Even(dna.Neurons, count, radius);
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_Spherical_Even(dna.Neurons, count, radius);
 
             //TODO: Remove this, it's now done in getmass
             // The radius exposed through the neuron container interface needs to be reduced to actual size
             //radius *= SensorGravityDesign.SIZEPERCENTOFSCALE;
 
-            // Exit Function
-            return positions.Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).ToArray();
+            return positions.
+                Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).
+                ToArray();
         }
+
+        #endregion
+
+        #region Private Methods
 
         private Vector3D GetGravityModelCoords()
         {
@@ -573,10 +576,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 return new Vector3D(0, 0, 0);
             }
 
-            Tuple<Point3D, Quaternion> worldCoords = GetWorldLocation();
+            var worldCoords = GetWorldLocation();
 
             // Calculate the difference between the world orientation and model orientation
-            Quaternion toModelQuat = worldCoords.Item2.ToUnit() * this.Orientation.ToUnit();
+            Quaternion toModelQuat = worldCoords.rotation.ToUnit() * this.Orientation.ToUnit();
 
             //TODO: See if this is needed
             //toModelQuat = new Quaternion(quatDelta.Axis, quatDelta.Angle * -1d);
@@ -584,7 +587,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             RotateTransform3D toModelTransform = new RotateTransform3D(new QuaternionRotation3D(toModelQuat));
 
             // Get the force of gravity in world coords
-            Vector3D forceWorld = _field.GetForce(worldCoords.Item1);
+            Vector3D forceWorld = _field.GetForce(worldCoords.position);
 
             // Rotate the force into model coords
             return toModelTransform.Transform(forceWorld);

@@ -4,9 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Xaml;
-using System.Web.Script.Serialization;
 using System.Text.RegularExpressions;
+using System.Web.Script.Serialization;
+using System.Xaml;
 
 namespace Game.HelperClassesCore
 {
@@ -317,7 +317,7 @@ namespace Game.HelperClassesCore
         /// <summary>
         /// This makes sure that value is between min an max
         /// </summary>
-        public static double Cap(double value, int min, int max)
+        public static double Cap(double value, double min, double max)
         {
             if (value < min)
             {
@@ -565,6 +565,140 @@ namespace Game.HelperClassesCore
         {
             string text = new string(bits.Select(o => o ? '1' : '0').ToArray());
             return Convert.ToInt64(text, 2);
+        }
+
+        // These aren't concerned with the meaning of the value, just storing all possible values into the other type (they just shift up or down by minvalue)
+        public static ulong Map_long_ulong(long value)
+        {
+            return unchecked((ulong)(value - long.MinValue));
+        }
+        public static long Map_ulong_long(ulong value)
+        {
+            return unchecked((long)value + long.MinValue);
+        }
+
+        private static string[] _suffix = { "  ", "K", "M", "G", "T", "P", "E", "Z", "Y" };  // longs run out around EB -- yotta is bigger than zetta :)
+        public static string GetSizeDisplay(long size, int decimalPlaces = 0, bool includeB = false)
+        {
+            //http://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
+
+            if (size == 0)
+            {
+                return "0 " + _suffix[0] + (includeB ? "B" : "");
+            }
+
+            long abs = Math.Abs(size);
+
+            int place = Convert.ToInt32(Math.Floor(Math.Log(abs, 1024)));
+
+            string numberText;
+            if (decimalPlaces > 0)
+            {
+                double num = abs / Math.Pow(1024, place);
+                numberText = (Math.Sign(size) * num).ToStringSignificantDigits(decimalPlaces);
+            }
+            else
+            {
+                double num = Math.Ceiling(abs / Math.Pow(1024, place));        //NOTE: windows uses ceiling, so doing the same (showing decimal places just clutters the view if looking at a list)
+                numberText = (Math.Sign(size) * num).ToString("N0");
+            }
+
+            return numberText + " " + _suffix[place] + (includeB ? "B" : "");
+        }
+
+        public static int? GetCommonIndex((int, int) edge1, (int, int) edge2)
+        {
+            //This is a copy of Edge3D.GetCommonIndex
+
+            // 1.1 : 2.1
+            if (edge1.Item1 == edge2.Item1)
+                return edge1.Item1;
+
+            // 1.1 : 2.2
+            if (edge1.Item1 == edge2.Item2)
+                return edge1.Item1;
+
+            // 1.2 : 2.1
+            if (edge1.Item2 == edge2.Item1)
+                return edge1.Item2;
+
+            // 1.2 : 2.2
+            if (edge1.Item2 == edge2.Item2)
+                return edge1.Item2;
+
+            return null;
+        }
+        public static int[] GetPolygon((int, int)[] edges)
+        {
+            // This is a copy of Edge2D.GetPolygon
+
+            if (edges.Length < 2)
+            {
+                throw new ArgumentException($"Not enough segments to make a polygon: {edges.Length}");
+            }
+
+            List<int> retVal = new List<int>();
+            int? commonIndex;
+
+            for (int cntr = 0; cntr < edges.Length - 1; cntr++)
+            {
+                #region cntr, cntr+1
+
+                // Add the point from cntr that isn't shared with cntr + 1
+                commonIndex = GetCommonIndex(edges[cntr], edges[cntr + 1]);
+                if (commonIndex == null)
+                {
+                    // While in this main loop, there can't be any breaks
+                    throw new ApplicationException("Didn't find common point between edges");
+                }
+                else
+                {
+                    retVal.Add(commonIndex.Value);
+                }
+
+                #endregion
+            }
+
+            #region last edge
+
+            if (edges.Length == 2)
+            {
+                // These edges define an open polygon - looks like a U
+
+                // Take the item from the second edge that isn't in the list
+                if (edges[1].Item1 == retVal[0])
+                {
+                    retVal.Add(edges[1].Item2);
+                }
+                else
+                {
+                    retVal.Add(edges[1].Item1);
+                }
+
+                // Now loop back, taking the item from the first edge that isn't in the list
+                if (edges[0].Item1 == retVal[0])
+                {
+                    retVal.Add(edges[0].Item2);
+                }
+                else
+                {
+                    retVal.Add(edges[0].Item1);
+                }
+            }
+            else
+            {
+                commonIndex = GetCommonIndex(edges[0], edges[edges.Length - 1]);
+                if (commonIndex == null)
+                {
+                    throw new ApplicationException("Didn't find common point between edges");
+                }
+
+                retVal.Add(commonIndex.Value);
+            }
+
+            #endregion
+
+            return retVal.ToArray();
         }
 
         #endregion
@@ -1052,6 +1186,26 @@ namespace Game.HelperClassesCore
         }
 
         /// <summary>
+        /// This can be used to iterate over line segments of a polygon
+        /// </summary>
+        /// <remarks>
+        /// If 4 is passed in, this will return:
+        ///     0,1
+        ///     1,2
+        ///     2,3
+        ///     3,0
+        /// </remarks>
+        public static IEnumerable<(int from, int to)> IterateEdges(int count)
+        {
+            for (int cntr = 0; cntr < count - 1; cntr++)
+            {
+                yield return (cntr, cntr + 1);
+            }
+
+            yield return (count - 1, 0);
+        }
+
+        /// <summary>
         /// This returns all combinations of the lists passed in.  This is a nested loop, which makes it easier to
         /// write linq statements against
         /// </summary>
@@ -1245,6 +1399,15 @@ namespace Game.HelperClassesCore
         /// </summary>
         public static IEnumerable<(int index1, int index2)[]> AllUniquePairSets(int count)
         {
+            if (count == 1)
+            {
+                yield return new[]
+                {
+                    (0, 0)
+                };
+                yield break;
+            }
+
             #region initialize worker nodes
 
             // This is a very OO approach.  Somewhat easy to implement instead of having a master method with lots of for loops back and forth, but not
@@ -1323,18 +1486,18 @@ namespace Game.HelperClassesCore
         /// Item1=Index into original list (this isn't used by this method, but will be a link to the item represented by this item)
         /// Item2=Percent of whole that this item represents (the sum of the percents should add up to 1)
         /// </param>
-        public static int GetIndexIntoList(double percent, Tuple<int, double>[] fractionsOfWhole)
+        public static int GetIndexIntoList(double percent, (int index, double percent)[] fractionsOfWhole)
         {
             double used = 0;
 
             for (int cntr = 0; cntr < fractionsOfWhole.Length; cntr++)
             {
-                if (percent >= used && percent <= used + fractionsOfWhole[cntr].Item2)
+                if (percent >= used && percent <= used + fractionsOfWhole[cntr].percent)
                 {
                     return cntr;
                 }
 
-                used += fractionsOfWhole[cntr].Item2;
+                used += fractionsOfWhole[cntr].percent;
             }
 
             return -1;
@@ -1536,6 +1699,87 @@ namespace Game.HelperClassesCore
             }
 
             return retVal.ToArray();
+        }
+
+        /// <summary>
+        /// This returns a map between the old index and new index after some items are removed
+        /// </summary>
+        /// <remarks>
+        /// ex: count=6, remove={ 2, 4, 4, 0 }
+        /// final={ -1, 0, -1, 1, -1, 2 }
+        /// 0: -1
+        /// 1: 0
+        /// 2: -1
+        /// 3: 1
+        /// 4: -1
+        /// 5: 2
+        /// </remarks>
+        /// <param name="count">how many items were in the original list</param>
+        /// <param name="removeIndices">indices that will be removed from the original list</param>
+        /// <returns>
+        /// map: an array the size of count.  Each element will be the index to the reduced array, or -1 for removed items
+        /// from_to: an array the same size as the reduced list that tells old an new index
+        /// </returns>
+        public static (int[] map, (int from, int to)[] from_to) GetIndexMap(int count, IEnumerable<int> removeIndices)
+        {
+            List<int> preMap = Enumerable.Range(0, count).
+                Select(o => o).
+                ToList();
+
+            foreach (int rem in removeIndices.Distinct())
+            {
+                preMap.Remove(rem);
+            }
+
+            var midMap = preMap.
+                Select((o, i) => (from: o, to: i)).
+                ToArray();
+
+            int[] map = Enumerable.Range(0, count).
+                //Select(o => midMap.FirstOrDefault(p => p.from == o)?.to ?? -1).       // can't use ?. with a new style tuple
+                Select(o =>
+                {
+                    foreach (var mid in midMap)
+                        if (mid.from == o)
+                            return mid.to;
+                    return -1;
+                }).
+                ToArray();
+
+            return (map, midMap);
+        }
+
+        /// <summary>
+        /// This is useful if you have some outer loop that needs to access a set of items in a round robin.  Just hand
+        /// that loop an enumerator of this
+        /// </summary>
+        /// <remarks>
+        /// var getIndex = UtilityCore.InfiniteRoundRobin(count).GetEnumerator();
+        /// 
+        /// while (someCondition)
+        /// {
+        ///     getIndex.MoveNext();
+        ///     int index = getIndex.Current;
+        ///     
+        ///     ...
+        /// }
+        /// </remarks>
+        public static IEnumerable<int> InfiniteRoundRobin(int itemCount)
+        {
+            while (true)
+            {
+                for (int cntr = 0; cntr < itemCount; cntr++)
+                {
+                    yield return cntr;
+                }
+            }
+        }
+        public static IEnumerable<T> InfiniteRoundRobin<T>(T[] items)
+        {
+            foreach (int index in InfiniteRoundRobin(items.Length))
+            {
+                yield return items[index];
+            }
         }
 
         #endregion

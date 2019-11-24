@@ -1,70 +1,113 @@
 ﻿/******************************************************************************
  *
- *    MIConvexHull, Copyright (C) 2013 David Sehnal, Matthew Campbell
+ * The MIT License (MIT)
  *
- *  This library is free software; you can redistribute it and/or modify it 
- *  under the terms of  the GNU Lesser General Public License as published by 
- *  the Free Software Foundation; either version 2.1 of the License, or 
- *  (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, 
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser 
- *  General Public License for more details.
+ * MIConvexHull, Copyright (c) 2015 David Sehnal, Matthew Campbell
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *  
  *****************************************************************************/
 
-namespace Game.HelperClassesWPF.MIConvexHull
-{
-    using System;
-    using System.Collections.Generic;
+using System;
 
+namespace MIConvexHull
+{
     /// <summary>
-    /// Used to effectively store vertices beyond.
+    /// A more lightweight alternative to List of T.
+    /// On clear, only resets the count and does not clear the references
+    /// =&gt; this works because of the ObjectManager.
+    /// Includes a stack functionality.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    sealed class VertexBuffer
+    internal class SimpleList<T>
     {
-        VertexWrap[] items;
-        int count;
-        int capacity;
+        /// <summary>
+        /// The capacity
+        /// </summary>
+        private int capacity;
 
         /// <summary>
-        /// Number of elements present in the buffer.
+        /// The count
         /// </summary>
-        public int Count { get { return count; } }
+        public int Count;
+        /// <summary>
+        /// The items
+        /// </summary>
+        private T[] items;
 
         /// <summary>
         /// Get the i-th element.
         /// </summary>
-        /// <param name="i"></param>
-        /// <returns></returns>
-        public VertexWrap this[int i]
+        /// <param name="i">The i.</param>
+        /// <returns>T.</returns>
+        public T this[int i]
         {
             get { return items[i]; }
+            set { items[i] = value; }
         }
 
         /// <summary>
         /// Size matters.
         /// </summary>
-        void EnsureCapacity()
+        private void EnsureCapacity()
         {
-            if (count + 1 > capacity)
+            if (capacity == 0)
             {
-                if (capacity == 0) capacity = 4;
-                else capacity = 2 * capacity;
-                Array.Resize(ref items, capacity);
+                capacity = 32;
+                items = new T[32];
+            }
+            else
+            {
+                var newItems = new T[capacity*2];
+                Array.Copy(items, newItems, capacity);
+                capacity = 2*capacity;
+                items = newItems;
             }
         }
 
         /// <summary>
         /// Adds a vertex to the buffer.
         /// </summary>
-        /// <param name="item"></param>
-        public void Add(VertexWrap item)
+        /// <param name="item">The item.</param>
+        public void Add(T item)
         {
-            EnsureCapacity();
-            items[count++] = item;
+            if (Count + 1 > capacity) EnsureCapacity();
+            items[Count++] = item;
+        }
+
+        /// <summary>
+        /// Pushes the value to the back of the list.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        public void Push(T item)
+        {
+            if (Count + 1 > capacity) EnsureCapacity();
+            items[Count++] = item;
+        }
+
+        /// <summary>
+        /// Pops the last value from the list.
+        /// </summary>
+        /// <returns>T.</returns>
+        public T Pop()
+        {
+            return items[--Count];
         }
 
         /// <summary>
@@ -72,44 +115,56 @@ namespace Game.HelperClassesWPF.MIConvexHull
         /// </summary>
         public void Clear()
         {
-            count = 0;
+            Count = 0;
         }
     }
-        
+
+
+    /// <summary>
+    /// Class IndexBuffer.
+    /// A fancy name for a list of integers.
+    /// </summary>
+    internal class IndexBuffer : SimpleList<int>
+    {
+    }
+
     /// <summary>
     /// A priority based linked list.
     /// </summary>
-    sealed class FaceList
+    internal sealed class FaceList
     {
-        ConvexFaceInternal first, last;
+        /// <summary>
+        /// The last
+        /// </summary>
+        private ConvexFaceInternal last;
 
         /// <summary>
         /// Get the first element.
         /// </summary>
-        public ConvexFaceInternal First { get { return first; } }
+        /// <value>The first.</value>
+        public ConvexFaceInternal First { get; private set; }
 
         /// <summary>
         /// Adds the element to the beginning.
         /// </summary>
-        /// <param name="face"></param>
-        void AddFirst(ConvexFaceInternal face)
+        /// <param name="face">The face.</param>
+        private void AddFirst(ConvexFaceInternal face)
         {
             face.InList = true;
-            this.first.Previous = face;
-            face.Next = this.first;
-            this.first = face;
+            First.Previous = face;
+            face.Next = First;
+            First = face;
         }
 
         /// <summary>
         /// Adds a face to the list.
         /// </summary>
-        /// <param name="face"></param>
+        /// <param name="face">The face.</param>
         public void Add(ConvexFaceInternal face)
         {
             if (face.InList)
             {
-                //if (this.first.FurthestDistance < face.FurthestDistance)
-                if (this.first.VerticesBeyond.Count < face.VerticesBeyond.Count)
+                if (First.VerticesBeyond.Count < face.VerticesBeyond.Count)
                 {
                     Remove(face);
                     AddFirst(face);
@@ -119,24 +174,23 @@ namespace Game.HelperClassesWPF.MIConvexHull
 
             face.InList = true;
 
-            //if (first != null && first.FurthestDistance < face.FurthestDistance)
-            if (first != null && first.VerticesBeyond.Count < face.VerticesBeyond.Count)
+            if (First != null && First.VerticesBeyond.Count < face.VerticesBeyond.Count)
             {
-                this.first.Previous = face;
-                face.Next = this.first;
-                this.first = face;
+                First.Previous = face;
+                face.Next = First;
+                First = face;
             }
             else
             {
-                if (this.last != null)
+                if (last != null)
                 {
-                    this.last.Next = face;
+                    last.Next = face;
                 }
-                face.Previous = this.last;
-                this.last = face;
-                if (this.first == null)
+                face.Previous = last;
+                last = face;
+                if (First == null)
                 {
-                    this.first = face;
+                    First = face;
                 }
             }
         }
@@ -144,7 +198,7 @@ namespace Game.HelperClassesWPF.MIConvexHull
         /// <summary>
         /// Removes the element from the list.
         /// </summary>
-        /// <param name="face"></param>
+        /// <param name="face">The face.</param>
         public void Remove(ConvexFaceInternal face)
         {
             if (!face.InList) return;
@@ -155,18 +209,18 @@ namespace Game.HelperClassesWPF.MIConvexHull
             {
                 face.Previous.Next = face.Next;
             }
-            else if (/*first == face*/ face.Previous == null)
+            else if ( /*first == face*/ face.Previous == null)
             {
-                this.first = face.Next;
+                First = face.Next;
             }
 
             if (face.Next != null)
             {
                 face.Next.Previous = face.Previous;
             }
-            else if (/*last == face*/ face.Next == null)
+            else if ( /*last == face*/ face.Next == null)
             {
-                this.last = face.Previous;
+                last = face.Previous;
             }
 
             face.Next = null;
@@ -177,66 +231,70 @@ namespace Game.HelperClassesWPF.MIConvexHull
     /// <summary>
     /// Connector list.
     /// </summary>
-    sealed class ConnectorList
+    internal sealed class ConnectorList
     {
-        FaceConnector first, last;
+        /// <summary>
+        /// The last
+        /// </summary>
+        private FaceConnector last;
 
         /// <summary>
         /// Get the first element.
         /// </summary>
-        public FaceConnector First { get { return first; } }
+        /// <value>The first.</value>
+        public FaceConnector First { get; private set; }
 
         /// <summary>
         /// Adds the element to the beginning.
         /// </summary>
-        /// <param name="connector"></param>
-        void AddFirst(FaceConnector connector)
+        /// <param name="connector">The connector.</param>
+        private void AddFirst(FaceConnector connector)
         {
-            this.first.Previous = connector;
-            connector.Next = this.first;
-            this.first = connector;
+            First.Previous = connector;
+            connector.Next = First;
+            First = connector;
         }
 
         /// <summary>
         /// Adds a face to the list.
         /// </summary>
-        /// <param name="element"></param>
+        /// <param name="element">The element.</param>
         public void Add(FaceConnector element)
         {
-            if (this.last != null)
+            if (last != null)
             {
-                this.last.Next = element;
+                last.Next = element;
             }
-            element.Previous = this.last;
-            this.last = element;
-            if (this.first == null)
+            element.Previous = last;
+            last = element;
+            if (First == null)
             {
-                this.first = element;
+                First = element;
             }
         }
 
         /// <summary>
         /// Removes the element from the list.
         /// </summary>
-        /// <param name="connector"></param>
+        /// <param name="connector">The connector.</param>
         public void Remove(FaceConnector connector)
         {
             if (connector.Previous != null)
             {
                 connector.Previous.Next = connector.Next;
             }
-            else if (/*first == face*/ connector.Previous == null)
+            else if ( /*first == face*/ connector.Previous == null)
             {
-                this.first = connector.Next;
+                First = connector.Next;
             }
 
             if (connector.Next != null)
             {
                 connector.Next.Previous = connector.Previous;
             }
-            else if (/*last == face*/ connector.Next == null)
+            else if ( /*last == face*/ connector.Next == null)
             {
-                this.last = connector.Previous;
+                last = connector.Previous;
             }
 
             connector.Next = null;

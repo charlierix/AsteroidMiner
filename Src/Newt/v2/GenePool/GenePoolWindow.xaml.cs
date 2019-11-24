@@ -624,29 +624,8 @@ namespace Game.Newt.v2.GenePool
             //TODO: Zoom in on it
             #region Create Viewer
 
-            ShipViewerWindow retVal = new ShipViewerWindow(bot);
-            retVal.Owner = this;		// the other settings like topmost, showintaskbar, etc are already set in the window's xaml
-            retVal.PopupBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("60000000"));
-            retVal.PopupBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("30000000"));
-            retVal.ViewportBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("E0000000"));
-
-            LinearGradientBrush brush = new LinearGradientBrush();
-            brush.StartPoint = new Point(0, 0);
-            brush.EndPoint = new Point(1, 1);
-
-            GradientStopCollection gradients = new GradientStopCollection();
-            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0EBEDE4"), 0d));
-            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DFE0DA"), .1d));
-            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0E0E0E0"), .6d));
-            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DADBD5"), .9d));
-            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0D7DBCC"), 1d));
-            brush.GradientStops = gradients;
-
-            retVal.ViewportBackground = brush;
-
-            retVal.PanelBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("8068736B"));
-            retVal.PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45"));
-            retVal.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0"));
+            ShipViewerWindow retVal = new ShipViewerWindow(bot, this);
+            retVal.SetColorTheme_Dark_Gradient();
 
             #endregion
 

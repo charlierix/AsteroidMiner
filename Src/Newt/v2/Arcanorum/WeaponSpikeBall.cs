@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -51,7 +52,7 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Public Methods
 
-        public override WeaponDamage CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
+        public override DamageProps CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
         {
             //TODO: Take damage (wood could take some heavy damage, but the rest of the materials should be pretty tough)
 
@@ -61,7 +62,7 @@ namespace Game.Newt.v2.Arcanorum
 
 
 
-            return new WeaponDamage();
+            return new DamageProps();
         }
 
         #endregion

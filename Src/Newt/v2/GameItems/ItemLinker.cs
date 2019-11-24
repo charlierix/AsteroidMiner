@@ -19,10 +19,10 @@ namespace Game.Newt.v2.GameItems
 
         private class DistributeDistances
         {
-            public DistributeDistances(Tuple<int, double>[][] resistancesItem1, Distances2to1[] distances2to1)
+            public DistributeDistances((int index, double resistance)[][] resistancesItem1, Distances2to1[] distances2to1)
             {
-                this.ResistancesItem1 = resistancesItem1;
-                this.Distances2to1 = distances2to1;
+                ResistancesItem1 = resistancesItem1;
+                Distances2to1 = distances2to1;
             }
 
             /// <summary>
@@ -33,7 +33,7 @@ namespace Game.Newt.v2.GameItems
             /// Tuple.Item1: Index of other item1
             /// Tuple.Item2: Resistance felt between the two
             /// </remarks>
-            public readonly Tuple<int, double>[][] ResistancesItem1;
+            public readonly (int index, double resistance)[][] ResistancesItem1;
 
             //NOTE: These are ordered by distance
             public readonly Distances2to1[] Distances2to1;
@@ -47,10 +47,10 @@ namespace Game.Newt.v2.GameItems
         /// </summary>
         private class Distances2to1
         {
-            public Distances2to1(int index2, Tuple<int, double>[] distancesTo1)
+            public Distances2to1(int index2, (int index, double distance)[] distancesTo1)
             {
-                this.Index2 = index2;
-                this.DistancesTo1 = distancesTo1;
+                Index2 = index2;
+                DistancesTo1 = distancesTo1;
             }
 
             public readonly int Index2;
@@ -61,7 +61,7 @@ namespace Game.Newt.v2.GameItems
             /// Item2: distance to item1
             /// NOTE: These are sorted lowest to highest distance
             /// </summary>
-            public readonly Tuple<int, double>[] DistancesTo1;
+            public readonly (int index, double distance)[] DistancesTo1;
         }
 
         #endregion
@@ -539,33 +539,67 @@ namespace Game.Newt.v2.GameItems
 
         private static Tuple<int, int>[] Link12_Distribute(LinkItem[] items1, LinkItem[] items2, DistributeDistances distances)
         {
-            IEnumerable<int> addOrder = Enumerable.Range(0, distances.Distances2to1.Length);
+            // The distances list is already sorted closest to farthest
+            IEnumerable<int> addOrder = distances.Distances2to1.
+                Select(o => o.Index2);
 
             return AddLinks(items1, items2, distances, addOrder);
         }
 
         private static Tuple<int, int>[] Link12_Extra(Tuple<int, int>[] initial, LinkItem[] items1, LinkItem[] items2, DistributeDistances distances, ItemLinker_ExtraArgs extraArgs)
         {
+            Tuple<int, int>[] retVal = initial;
+
+            // Since extraArgs.Percents differs for different types of item2, process each subset on its own
+            for (int percIndex = 0; percIndex < extraArgs.Percents.Length; percIndex++)
+            {
+                if (extraArgs.Percents[percIndex] < 0 || extraArgs.Percents[percIndex].IsNearZero())
+                {
+                    continue;
+                }
+
+                retVal = Link12_Extra_ProcessSet(retVal, items1, items2, percIndex, distances, extraArgs.Percents[percIndex], extraArgs.BySize, extraArgs.EvenlyDistribute);
+            }
+
+            return retVal;
+        }
+        private static Tuple<int, int>[] Link12_Extra_ProcessSet(Tuple<int, int>[] initial, LinkItem[] items1, LinkItem[] items2, int item2PercentIndex, DistributeDistances distances, double percent, bool bySize, bool evenlyDistribute)
+        {
             Random rand = StaticRandom.GetRandomForThread();
 
-            int wholePercent = extraArgs.Percent.ToInt_Floor();
+            int[] validItem2Indices = items2.
+                Select((o, i) => new { index = i, item = o }).
+                Where(o => o.item.Item2PercentIndex == item2PercentIndex).
+                Select(o => o.index).
+                ToArray();
+
+            if(validItem2Indices.Length == 0)
+            {
+                return initial;
+            }
+
+            int wholePercent = percent.ToInt_Floor();
 
             List<int> addOrder = new List<int>();
 
-            if (extraArgs.BySize)
+            if (bySize)
             {
-                double totalSize = items2.Sum(o => o.Size);
-                double maxSize = extraArgs.Percent * totalSize;
+                double totalSize = validItem2Indices.Sum(o => items2[o].Size);
+                double maxSize = percent * totalSize;
                 double usedSize = 0;
 
-                if (extraArgs.EvenlyDistribute)
+                if (evenlyDistribute)
                 {
                     #region by size, evenly distribute
 
                     // Add some complete passes if over 100% percent
                     for (int cntr = 0; cntr < wholePercent; cntr++)
                     {
-                        addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length));
+                        addOrder.AddRange
+                        (
+                            UtilityCore.RandomRange(0, validItem2Indices.Length).
+                                Select(o => validItem2Indices[o])
+                        );
                     }
 
                     usedSize = wholePercent * totalSize;
@@ -576,9 +610,9 @@ namespace Game.Newt.v2.GameItems
                 #region by size, distribute the rest
 
                 //NOTE: Building this list by size so that larger items have a higher chance of being chosen
-                var bySize = items2.
-                    Select((o, i) => Tuple.Create(i, o.Size / totalSize)).
-                    OrderByDescending(o => o.Item2).
+                var itemsBySize = validItem2Indices.
+                    Select(o => (index: o, percent: items2[o].Size / totalSize)).
+                    OrderByDescending(o => o.percent).
                     ToArray();
 
                 // Keep selecting items unti the extra size is consumed (or if no more can be added)
@@ -588,8 +622,8 @@ namespace Game.Newt.v2.GameItems
 
                     for (int cntr = 0; cntr < 1000; cntr++)     // this is an infinite loop detector
                     {
-                        int attemptIndex = UtilityCore.GetIndexIntoList(rand.NextDouble(), bySize);     // get the index into the list that the rand percent represents
-                        attemptIndex = bySize[attemptIndex].Item1;      // get the index into items2
+                        int attemptIndex = UtilityCore.GetIndexIntoList(rand.NextDouble(), itemsBySize);     // get the index into the list that the rand percent represents
+                        attemptIndex = itemsBySize[attemptIndex].index;      // get the index into items2
 
                         if (items2[attemptIndex].Size + usedSize <= maxSize)
                         {
@@ -611,21 +645,29 @@ namespace Game.Newt.v2.GameItems
             }
             else
             {
-                if (extraArgs.EvenlyDistribute)
+                if (evenlyDistribute)
                 {
                     #region ignore size, evenly distribute
 
                     // Add some complete passes if over 100% percent
                     for (int cntr = 0; cntr < wholePercent; cntr++)
                     {
-                        addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length));
+                        addOrder.AddRange
+                        (
+                            UtilityCore.RandomRange(0, validItem2Indices.Length).
+                                Select(o => validItem2Indices[o])
+                        );
                     }
 
                     // Add some items based on the portion of percent that is less than 100%
-                    int remainder = (items2.Length * (extraArgs.Percent - wholePercent)).
+                    int remainder = (validItem2Indices.Length * (percent - wholePercent)).
                         ToInt_Round();
 
-                    addOrder.AddRange(UtilityCore.RandomRange(0, items2.Length, remainder));
+                    addOrder.AddRange
+                    (
+                        UtilityCore.RandomRange(0, validItem2Indices.Length, remainder).
+                            Select(o => validItem2Indices[o])
+                    );
 
                     #endregion
                 }
@@ -633,12 +675,16 @@ namespace Game.Newt.v2.GameItems
                 {
                     #region ignore size, randomly distribute
 
-                    int totalCount = (items2.Length * extraArgs.Percent).
+                    int totalCount = (validItem2Indices.Length * percent).
                         ToInt_Round();
 
                     //NOTE: UtilityCore.RandomRange stops when the list is exhausted, and makes sure not to have dupes.  That's not what is wanted
                     //here.  Just randomly pick X times
-                    addOrder.AddRange(Enumerable.Range(0, totalCount).Select(o => rand.Next(items2.Length)));
+                    addOrder.AddRange
+                    (
+                        Enumerable.Range(0, totalCount).
+                            Select(o => validItem2Indices[rand.Next(validItem2Indices.Length)])
+                    );
 
                     #endregion
                 }
@@ -672,10 +718,10 @@ namespace Game.Newt.v2.GameItems
                 #endregion
             }
 
-            foreach (var distanceIO in distances2to1_AddOrder.Select(o => distances.Distances2to1[o]))
+            foreach (var distanceIO in distances2to1_AddOrder.Select(o => distances.Distances2to1.First(p => p.Index2 == o)))
             {
                 int ioIndex = distanceIO.Index2;
-                int closestBrainIndex = distanceIO.DistancesTo1[0].Item1;
+                int closestBrainIndex = distanceIO.DistancesTo1[0].index;
 
                 AddIOLink(links, ioIndex, items2[ioIndex].Size, closestBrainIndex, distances.ResistancesItem1[closestBrainIndex]);
             }
@@ -693,7 +739,7 @@ namespace Game.Newt.v2.GameItems
         private static DistributeDistances GetDistances(LinkItem[] items1, LinkItem[] items2, ItemLinker_OverflowArgs overflowArgs)
         {
             // Distances between all item1s (not just delaunay, but all pairs)
-            Tuple<int, double>[][] resistancesItem1 = ItemItemResistance(items1, overflowArgs == null ? 1 : overflowArgs.LinkResistanceMult);
+            var resistancesItem1 = ItemItemResistance(items1, overflowArgs?.LinkResistanceMult ?? 1);
 
             // Figure out the distances between 2s and 1s
             var distances2to1 = Enumerable.Range(0, items2.Length).
@@ -701,17 +747,17 @@ namespace Game.Newt.v2.GameItems
                 (
                     o,
                     Enumerable.Range(0, items1.Length).
-                        Select(p => Tuple.Create(p, (items1[p].Position - items2[o].Position).Length)).        //Item1=items1 index, Item2=distance to item1
-                        OrderBy(p => p.Item2).      // first item1 needs to be the shortest distance
+                        Select(p => (index: p, distance: (items1[p].Position - items2[o].Position).Length)).        //Item1=items1 index, Item2=distance to item1
+                        OrderBy(p => p.distance).      // first item1 needs to be the shortest distance
                         ToArray()
                 )).
-                OrderBy(o => o.DistancesTo1.First().Item2).
+                OrderBy(o => o.DistancesTo1.First().distance).
                 ToArray();
 
             return new DistributeDistances(resistancesItem1, distances2to1);
         }
 
-        private static Tuple<int, double>[][] ItemItemResistance(LinkItem[] items, double linkResistanceMult)
+        private static (int index, double resistance)[][] ItemItemResistance(LinkItem[] items, double linkResistanceMult)
         {
             // Get the AABB, and use the diagonal as the size
             var aabb = Math3D.GetAABB(items.Select(o => o.Position));
@@ -728,14 +774,14 @@ namespace Game.Newt.v2.GameItems
                 }).
                 ToArray();
 
-            Tuple<int, double>[][] retVal = new Tuple<int, double>[items.Length][];
+            var retVal = new(int index, double resistance)[items.Length][];
 
             for (int cntr = 0; cntr < items.Length; cntr++)
             {
                 // Store all links for this item
                 retVal[cntr] = links2.
                     Where(o => o.Item1 == cntr || o.Item2 == cntr).       // find links between this item and another
-                    Select(o => Tuple.Create(o.Item1 == cntr ? o.Item2 : o.Item1, o.Item3)).     // store the link to the other item and the resistance
+                    Select(o => (o.Item1 == cntr ? o.Item2 : o.Item1, o.Item3)).     // store the link to the other item and the resistance
                     OrderBy(o => o.Item2).
                     ToArray();
             }
@@ -751,10 +797,10 @@ namespace Game.Newt.v2.GameItems
         /// Item1=Index of other brain
         /// Item2=Link resistance (burden) between closestBrainIndex and this brain
         /// </param>
-        private static void AddIOLink(BrainBurden[] finalLinks, int ioIndex, double ioSize, int closestBrainIndex, Tuple<int, double>[] brainBrainBurdens)
+        private static void AddIOLink(BrainBurden[] finalLinks, int ioIndex, double ioSize, int closestBrainIndex, (int index, double resistance)[] brainBrainBurdens)
         {
             // Figure out the cost of adding the link to the various brains
-            List<Tuple<int, double>> burdens = new List<Tuple<int, double>>();
+            var burdens = new List<(int index, double cost)>();
 
             for (int cntr = 0; cntr < finalLinks.Length; cntr++)
             {
@@ -771,18 +817,18 @@ namespace Game.Newt.v2.GameItems
                 double linkCost = 0d;
                 if (brainIndex != closestBrainIndex)
                 {
-                    var matchingBrain = brainBrainBurdens.FirstOrDefault(o => o.Item1 == brainIndex);
+                    (int index, double resistance)? matchingBrain = brainBrainBurdens.FirstOrDefault(o => o.index == brainIndex);
                     if (matchingBrain == null)
                     {
                         //NOTE: All brain-brain distances should be passed in, so this should never happen
                         continue;
                     }
 
-                    linkCost = matchingBrain.Item2;
+                    linkCost = matchingBrain.Value.resistance;
                 }
 
                 // LinkCost + IOStorageCost
-                burdens.Add(Tuple.Create(cntr, linkCost + BrainBurden.CalculateBurden(finalLinks[cntr].IOSize + ioSize, finalLinks[cntr].Size)));
+                burdens.Add((cntr, linkCost + BrainBurden.CalculateBurden(finalLinks[cntr].IOSize + ioSize, finalLinks[cntr].Size)));
             }
 
             if (burdens.Count == 0)
@@ -792,7 +838,9 @@ namespace Game.Newt.v2.GameItems
             }
 
             int cheapestIndex = burdens.
-                OrderBy(o => o.Item2).First().Item1;
+                OrderBy(o => o.cost).
+                First().
+                index;
 
             finalLinks[cheapestIndex].AddIOLink(ioIndex);
         }
@@ -1014,7 +1062,7 @@ namespace Game.Newt.v2.GameItems
             }
             else if (items.Length == 3)
             {
-                links = new[] 
+                links = new[]
                     {
                         Tuple.Create(0, 1),
                         Tuple.Create(0, 2),
@@ -1025,9 +1073,22 @@ namespace Game.Newt.v2.GameItems
             }
             else
             {
-                Tetrahedron[] tetras = Math3D.GetDelaunay(items.Select(o => o.Position).ToArray());
-                links = Tetrahedron.GetUniqueLines(tetras);
-                triangles = Tetrahedron.GetUniqueTriangles(tetras);
+                Point3D[] points3D = items.Select(o => o.Position).ToArray();
+                Tetrahedron[] tetras = Math3D.GetDelaunay(points3D, 3);
+
+                //NOTE: If the 3D points are almost coplanar, tetras will be non null, but the delaunay won't look right (there will be too many lines)
+                if (tetras == null)
+                {
+                    // Math3D.GetDelaunay fails when points are coplanar.  Assume that they are and do it in 2D
+                    TransformsToFrom2D transform = Math2D.GetTransformTo2D(points3D);
+                    triangles = Math2D.GetDelaunayTriangulation(points3D.Select(o => transform.From3D_To2D.Transform(o).ToPoint2D()).ToArray(), points3D);
+                    links = TriangleIndexed.GetUniqueLines(triangles);
+                }
+                else
+                {
+                    links = Tetrahedron.GetUniqueLines(tetras);
+                    triangles = Tetrahedron.GetUniqueTriangles(tetras);
+                }
             }
 
             segments = GetLengths(links, items);
@@ -1055,14 +1116,21 @@ namespace Game.Newt.v2.GameItems
 
     public class LinkItem
     {
-        public LinkItem(Point3D position, double size)
+        public LinkItem(Point3D position, double size, int item2PercentIndex = 0)
         {
-            this.Position = position;
-            this.Size = size;
+            Position = position;
+            Size = size;
+            Item2PercentIndex = item2PercentIndex;
         }
 
         public readonly Point3D Position;
         public readonly double Size;
+
+        /// <summary>
+        /// This only has meaning for the items passed as item2 into Link_1_2.
+        /// This ties to ItemLinker_ExtraArgs.Percents
+        /// </summary>
+        public readonly int Item2PercentIndex;
     }
 
     #endregion
@@ -1167,7 +1235,13 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// If .5, then an extra 50% links will be added
         /// </summary>
-        public double Percent = .5;
+        /// <remarks>
+        /// This is an array so that different items can have different percents.  For example, links between brain and I/O should have a percent for inputs, but
+        /// no extra for outputs (because multiple brains writing to the same thruster would be a mess)
+        /// 
+        /// See LinkItem.Item2PercentIndex
+        /// </remarks>
+        public double[] Percents = new[] { .5 };
 
         /// <summary>
         /// True: The number of extra links is calculated by size and count

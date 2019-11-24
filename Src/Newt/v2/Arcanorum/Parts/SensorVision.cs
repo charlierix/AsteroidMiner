@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.Parts
 {
-    //TODO: Support filters: type, family bot, player bot, other bot - don't hardcode, use the lineage
     //TODO: Hook to an energy tank
     //TODO: DNA should have a multiplier of SearchRadius
 
@@ -25,12 +23,11 @@ namespace Game.Newt.v2.Arcanorum.Parts
     {
         #region Declaration Section
 
-        internal const double SIZEPERCENTOFSCALE_XY = 1d;
-        internal const double SIZEPERCENTOFSCALE_Z = .1d;
+        internal const double SIZEPERCENTOFSCALE = .2d;
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -58,7 +55,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
             }
         }
 
-        private GeometryModel3D _geometry = null;
+        private Model3DGroup _geometry = null;
         public override Model3D Model
         {
             get
@@ -72,49 +69,45 @@ namespace Game.Newt.v2.Arcanorum.Parts
             }
         }
 
+        public double SearchRadius { get; set; }
+        //public Type FilterType { get; set; }
+
         #endregion
 
         #region Public Methods
 
+        public override ShipPartDNA GetDNA()
+        {
+            SensorVisionDNA retVal = new SensorVisionDNA();
+
+            base.FillDNA(retVal);
+            retVal.SearchRadius = SearchRadius;
+            //retVal.FilterType = FilterType;
+
+            return retVal;
+        }
+        public override void SetDNA(ShipPartDNA dna)
+        {
+            if (dna is SensorVisionDNA dnaCast)
+            {
+                base.StoreDNA(dna);
+
+                SearchRadius = dnaCast.SearchRadius;
+                //FilterType = dnaCast.FilterType;
+            }
+            else
+            {
+                throw new ArgumentException($"The class passed in must be {nameof(SensorVisionDNA)}: {dna.GetType()}");
+            }
+        }
+
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
-            return CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
+            return SensorGravityDesign.CreateSensorCollisionHull(world, Scale, Orientation, Position);
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            return GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
-        }
-
-        internal static CollisionHull CreateSensorCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
-        {
-            Transform3DGroup transform = new Transform3DGroup();
-            //transform.Children.Add(new ScaleTransform3D(scale));		// it ignores scale
-            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(orientation)));
-            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
-
-            // Scale X and Y should be identical, but average them to be safe
-            double radius = ((SIZEPERCENTOFSCALE_XY * scale.X) + (SIZEPERCENTOFSCALE_XY * scale.Y)) / 2d;
-
-            return CollisionHull.CreateCylinder(world, 0, radius, SIZEPERCENTOFSCALE_Z * scale.Z, transform.Value);
-        }
-        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> existing, Vector3D scale, double cellSize)
-        {
-            if (existing != null && existing.Item2 == scale && existing.Item3 == cellSize)
-            {
-                // This has already been built for this size
-                return existing.Item1;
-            }
-
-            // Convert this.Scale into a size that the mass breakdown will use
-            Vector3D size = new Vector3D(scale.X * SIZEPERCENTOFSCALE_XY, scale.Y * SIZEPERCENTOFSCALE_XY, scale.Z * SIZEPERCENTOFSCALE_Z);
-
-            var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
-
-            // Store this
-            existing = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, scale, cellSize);
-
-            // Exit Function
-            return existing.Item1;
+            return SensorGravityDesign.GetSensorMassBreakdown(ref _massBreakdown, Scale, cellSize);
         }
 
         public override PartToolItemBase GetToolItem()
@@ -126,46 +119,12 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         #region Private Methods
 
-        private GeometryModel3D CreateGeometry(bool isFinal)
+        private Model3DGroup CreateGeometry(bool isFinal)
         {
-            DiffuseMaterial diffuse = WorldColorsArco.SensorVision_Any_Diffuse.Value;
-            SpecularMaterial specular = WorldColorsArco.SensorVision_Any_Specular.Value;
-            if (!isFinal)
-            {
-                diffuse = diffuse.Clone();      // cloning, because the editor will manipulate the brush, and WorldColors is handing out a shared brush
-                specular = specular.Clone();
-            }
-
-            MaterialGroup material = new MaterialGroup();
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColorsArco.SensorVision_Any_Color));
-            material.Children.Add(diffuse);
-            this.MaterialBrushes.Add(new MaterialColorProps(specular));
-            material.Children.Add(specular);
-
-            if (!isFinal)
-            {
-                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-                material.Children.Add(selectionEmissive);
-                base.SelectionEmissives.Add(selectionEmissive);
-            }
-
-            GeometryModel3D retVal = new GeometryModel3D();
-            retVal.Material = material;
-            retVal.BackMaterial = material;
-
-            int segments = isFinal ? 6 : 35;
-
-            double radius = ((this.Scale.X * SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * SIZEPERCENTOFSCALE_XY)) / 2d;
-            double height = this.Scale.Z * SIZEPERCENTOFSCALE_Z;
-            RotateTransform3D rotateTransform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90));     // this needs to be along Z instead of X
-
-            retVal.Geometry = UtilityWPF.GetCylinder_AlongX(segments, radius, height, rotateTransform);
-
-            // Transform
-            retVal.Transform = GetTransformForGeometry(isFinal);
-
-            // Exit Function
-            return retVal;
+            return SensorGravityDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
+                GetTransformForGeometry(isFinal),
+                WorldColors.SensorBase_Color, WorldColors.SensorBase_Specular, WorldColorsArco.SensorVision_Any_Color, WorldColorsArco.SensorVision_Any_Specular.Value,
+                isFinal);
         }
 
         #endregion
@@ -216,6 +175,17 @@ namespace Game.Newt.v2.Arcanorum.Parts
         }
 
         #endregion
+        #region class: NeuronLayer
+
+        //TODO: filter of bot will have two layers
+        public class NeuronLayer
+        {
+            public SensorVisionFilterType FilterType { get; set; }
+            public double Z { get; set; }
+            public Neuron_SensorPosition[] Neurons { get; set; }
+        }
+
+        #endregion
 
         #region Declaration Section
 
@@ -224,139 +194,81 @@ namespace Game.Newt.v2.Arcanorum.Parts
         private readonly ItemOptionsArco _itemOptions;
         private readonly Map _map;
 
+        // Only one of these will be non null
         private readonly Neuron_SensorPosition[] _neurons;
+        private readonly NeuronLayer[] _neuronLayers;
+        private readonly Neuron_SensorPosition[] _allNeurons;
+
         private readonly double _neuronMaxRadius;
         private readonly double _neuronDistBetween;
-
-        //TODO: Make this an array
-        private readonly Type _filterType;
 
         /// <summary>
         /// This is recalcuated whenever they change the search radius
         /// </summary>
         private volatile DistanceProps _distProps = null;
 
+        private long _lastSnapshotToken = 0;
+
         #endregion
 
         #region Constructor
 
-        public SensorVision(EditorOptions options, ItemOptionsArco itemOptions, ShipPartDNA dna, Map map, double searchRadius, Type filterType = null)
+        public SensorVision(EditorOptions options, ItemOptionsArco itemOptions, SensorVisionDNA dna, Map map)
             : base(options, dna, itemOptions.VisionSensor_Damage.HitpointMin, itemOptions.VisionSensor_Damage.HitpointSlope, itemOptions.VisionSensor_Damage.Damage)
         {
             _itemOptions = itemOptions;
             _map = map;
-            _filterType = filterType;
 
-            this.Design = new SensorVisionDesign(options, true);
-            this.Design.SetDNA(dna);
+            Design = new SensorVisionDesign(options, true);
+            Design.SetDNA(dna);
 
             double radius, volume;
-            GetMass(out _mass, out volume, out radius, out _scaleActual, dna, itemOptions);
+            SensorGravity.GetMass(out _mass, out volume, out radius, out _scaleActual, dna, itemOptions);
 
-            this.Radius = radius;
+            Radius = radius;
 
-            _neurons = CreateNeurons(dna, itemOptions, itemOptions.VisionSensor_NeuronDensity, true, true);
-
-            #region Store stats about neurons
-
-            if (_neurons.Length == 0)
+            if (dna.Filters == null || dna.Filters.Length == 0)
             {
-                throw new ApplicationException("CreateNeurons should have guaranteed at least one neuron");
-            }
-            else if (_neurons.Length == 1)
-            {
-                // Since the neuron was forced to not be at the origin, just take the offset from origin (a single neuron vision
-                // field is pretty useless anyway)
-                _neuronDistBetween = _neurons[0].Position.ToVector().Length;
+                _neurons = CreateNeurons(dna, itemOptions, itemOptions.VisionSensor_NeuronDensity, true, true);
+                _neuronLayers = null;
+                _allNeurons = _neurons;
+
+                var distances = GetNeuronAvgDistance(_neurons.Select(o => o.Position.ToPoint2D()).ToArray());
+                _neuronDistBetween = distances.distBetween;
+                _neuronMaxRadius = distances.maxRadius;
             }
             else
             {
-                // Get the distance between each neuron
-                List<Tuple<int, int, double>> distances = new List<Tuple<int, int, double>>();
+                _neuronLayers = CreateNeurons_Layers(dna, itemOptions);
+                _neurons = null;
+                _allNeurons = _neuronLayers.
+                    SelectMany(o => o.Neurons).
+                    ToArray();
 
-                for (int outer = 0; outer < _neurons.Length - 1; outer++)
-                {
-                    for (int inner = outer + 1; inner < _neurons.Length; inner++)
-                    {
-                        double distance = (_neurons[outer].Position - _neurons[inner].Position).LengthSquared;
-
-                        distances.Add(Tuple.Create(outer, inner, distance));
-                    }
-                }
-
-                // Get the average of the minimum distance of each index
-                _neuronDistBetween = Enumerable.Range(0, _neurons.Length).
-                    Select(o => distances.
-                        Where(p => p.Item1 == o || p.Item2 == o).       // get the disances that mention this index
-                        Min(p => p.Item3)).     // only keep the smallest of those distances
-                    Average();      // get the average of all the mins
+                var distances = GetNeuronAvgDistance(_neuronLayers[0].Neurons.Select(o => o.Position.ToPoint2D()).ToArray());     // all the layers have neurons in the same place
+                _neuronDistBetween = distances.distBetween;
+                _neuronMaxRadius = distances.maxRadius;
             }
 
-            // Find the one that's farthest away from the origin (since they form a circle, there will be an outer ring of them that
-            // are about the same distance from the center)
-            _neuronMaxRadius = _neurons.Max(o => o.PositionLength);
-
-            #endregion
-
-            this.SearchRadius = searchRadius;       // need to set this last, because it populates _distProps
+            SearchRadius = dna.SearchRadius;       // need to set this last, because it populates _distProps
         }
 
         #endregion
 
         #region INeuronContainer Members
 
-        public IEnumerable<INeuron> Neruons_Readonly
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
-        public IEnumerable<INeuron> Neruons_ReadWrite
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
-        public IEnumerable<INeuron> Neruons_Writeonly
-        {
-            get
-            {
-                return Enumerable.Empty<INeuron>();
-            }
-        }
+        public IEnumerable<INeuron> Neruons_Readonly => _allNeurons;
+        public IEnumerable<INeuron> Neruons_ReadWrite => Enumerable.Empty<INeuron>();
+        public IEnumerable<INeuron> Neruons_Writeonly => Enumerable.Empty<INeuron>();
 
-        public IEnumerable<INeuron> Neruons_All
-        {
-            get
-            {
-                return _neurons;
-            }
-        }
+        public IEnumerable<INeuron> Neruons_All => _allNeurons;
 
-        public NeuronContainerType NeuronContainerType
-        {
-            get
-            {
-                return NeuronContainerType.Sensor;
-            }
-        }
+        public NeuronContainerType NeuronContainerType => NeuronContainerType.Sensor;
 
-        public double Radius
-        {
-            get;
-            private set;
-        }
+        public double Radius { get; private set; }
 
         private volatile bool _isOn = false;
-        public bool IsOn
-        {
-            get
-            {
-                return _isOn;
-            }
-        }
+        public bool IsOn => _isOn;
 
         #endregion
         #region IPartUpdatable Members
@@ -378,30 +290,66 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             _isOn = true;
 
-
-
             var snapshot = _map.LatestSnapshot;
             if (snapshot == null)
             {
-                foreach (var neuron in _neurons)
+                #region zero everything
+
+                if (_neurons != null)
                 {
-                    neuron.Value = 0d;
+                    foreach (var neuron in _neurons)
+                    {
+                        neuron.Value = 0d;
+                    }
                 }
+                else if (_neuronLayers != null)
+                {
+                    foreach (var neuron in _neuronLayers.SelectMany(o => o.Neurons))
+                    {
+                        neuron.Value = 0d;
+                    }
+                }
+
+                #endregion
+                return;
             }
-            else
+
+            long previous = Interlocked.Exchange(ref _lastSnapshotToken, snapshot.Token);
+            if (previous == snapshot.Token)
             {
-                var location = base.GetWorldLocation();
+                // Same as last tick, the neurons are already showing this
+                return;
+            }
 
-                var items = snapshot.GetItems(location.Item1, this.SearchRadius);
+            var location = base.GetWorldLocation();
 
-                if (_filterType != null)
+            var items = snapshot.GetItems(location.position, SearchRadius);
+
+            if (_neurons != null)
+            {
+                // Add attached weapons
+                var personalWeaponItems = items.
+                    Select(o => ApplyFilter(o, SensorVisionFilterType.Weapon_Attached_Personal, _botToken, NestToken)).
+                    Where(o => o != null).
+                    ToArray();
+
+                var attachedWeaponItems = items.
+                    Select(o => ApplyFilter(o, SensorVisionFilterType.Weapon_Attached_Other, _botToken, NestToken)).
+                    Where(o => o != null).
+                    ToArray();
+
+                UpdateNeurons(_neurons, location, items.Concat(personalWeaponItems).Concat(attachedWeaponItems), _distProps, _botToken);
+            }
+            else if (_neuronLayers != null)
+            {
+                foreach (var layer in _neuronLayers)
                 {
-                    items = MapOctree.FilterType(_filterType, items, true);
+                    var filteredItems = items.
+                        Select(o => ApplyFilter(o, layer.FilterType, _botToken, NestToken)).
+                        Where(o => o != null);
+
+                    UpdateNeurons(layer.Neurons, location, filteredItems, _distProps, _botToken);
                 }
-
-                //TODO: There may be other filters, like type of bot { family, player, other }
-
-                UpdateNeurons(_neurons, location, items, _distProps, _botToken);
             }
         }
 
@@ -425,31 +373,12 @@ namespace Game.Newt.v2.Arcanorum.Parts
         #region Public Properties
 
         private readonly double _mass;
-        public override double DryMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
-        public override double TotalMass
-        {
-            get
-            {
-                return _mass;
-            }
-        }
+        public override double DryMass => _mass;
+        public override double TotalMass => _mass;
 
         private readonly Vector3D _scaleActual;
-        public override Vector3D ScaleActual
-        {
-            get
-            {
-                return _scaleActual;
-            }
-        }
+        public override Vector3D ScaleActual => _scaleActual;
 
-        private double _searchRadius = -1d;
         /// <summary>
         /// How far this part can see
         /// NOTE: The farthest out neuron isn't exactly this radius, but can see out a bit far
@@ -469,11 +398,11 @@ namespace Game.Newt.v2.Arcanorum.Parts
         {
             get
             {
-                return _searchRadius;
+                return ((SensorVisionDesign)Design).SearchRadius;
             }
             set
             {
-                _searchRadius = value;
+                ((SensorVisionDesign)Design).SearchRadius = value;
 
                 RebuildDistanceProps();
             }
@@ -509,42 +438,21 @@ namespace Game.Newt.v2.Arcanorum.Parts
             }
         }
 
+        /// <summary>
+        /// If the bot belongs to a nest, this is that token
+        /// </summary>
+        public long? NestToken { get; set; }
+
+        // This is exposed for debug
+        public NeuronLayer[] NeuronLayers => _neuronLayers;
+
         #endregion
 
         #region Internal Methods
 
-        internal static void GetMass(out double mass, out double volume, out double radius, out Vector3D actualScale, ShipPartDNA dna, ItemOptions itemOptions)
-        {
-            double radiusLocal = ((dna.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY) + (dna.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY)) / (2d * 2d);     // scale is diameter, so divide an extra two to get radius
-            double heightLocal = dna.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z;
-            double halfHeightLocal = heightLocal / 2d;
-
-            volume = Math.PI * radiusLocal * radiusLocal * heightLocal;		// get volume of the cylinder
-
-            // This isn't the radius of the cylinder, it is the radius of the bounding sphere
-            radius = Math.Sqrt((radiusLocal * radiusLocal) + (halfHeightLocal * halfHeightLocal));
-
-            mass = volume * itemOptions.Sensor_Density;
-
-            actualScale = new Vector3D(dna.Scale.X * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Y * SensorVisionDesign.SIZEPERCENTOFSCALE_XY, dna.Scale.Z * SensorVisionDesign.SIZEPERCENTOFSCALE_Z);
-        }
-
         internal static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity, bool hasHoleInMiddle, bool ignoreSetValue)
         {
-            #region Calculate Counts
-
-            // Figure out how many to make
-            //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
-            double radius = (dna.Scale.X + dna.Scale.Y) / (2d * 2d);		// XY should always be the same anyway (not looking at Z for this.  Z is just to keep the sensors from getting too close to each other)
-            double area = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
-
-            int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
-            if (neuronCount == 0)
-            {
-                neuronCount = 1;
-            }
-
-            #endregion
+            var count = GetNeuronCount(dna.Scale, itemOptions.Sensor_NeuronGrowthExponent, neuronDensity);
 
             Point3D[] staticPositions = null;
             if (hasHoleInMiddle)
@@ -554,11 +462,81 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             // Place them evenly within a circle.
             // I don't want a neuron in the center, so placing a static point there to force the neurons away from the center
-            Vector3D[] positions = Brain.GetNeuronPositions_Even2D(dna.Neurons, staticPositions, 1d, neuronCount, radius);
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_Circular_Even(dna.Neurons, staticPositions, 1d, count.neuronCount, count.radius);
 
-            // Exit Function
             return positions.
                 Select(o => new Neuron_SensorPosition(o.ToPoint(), true, ignoreSetValue)).
+                ToArray();
+        }
+        private static NeuronLayer[] CreateNeurons_Layers(SensorVisionDNA dna, ItemOptionsArco itemOptions)
+        {
+            if (dna.Filters == null || dna.Filters.Length == 0)
+            {
+                throw new ApplicationException("This method requires filters to be populated");
+            }
+
+            var count = GetNeuronCount(dna.Scale, itemOptions.Sensor_NeuronGrowthExponent, itemOptions.VisionSensor_NeuronDensity);
+
+            //TODO: SensorVisionFilterType.Bot will need two layers
+            var neuronZs = GetNeuron_Zs(dna.Filters.Length, count.radius);
+
+            Point3D[] staticPositions = new Point3D[] { new Point3D(0, 0, 0) };
+
+            Point3D[] singlePlate = null;
+            if (dna.Neurons != null && dna.Neurons.Length > 0)
+            {
+                var byLayer = NeuralUtility.DivideNeuronLayersIntoSheets(dna.Neurons, neuronZs.z, count.neuronCount);
+
+                // Just use one of the layer's positions to re evenly distribute (first layer with the correct number of neurons - or closest number).
+                // Could try to find the nearest between each layer and use the average of each set, but that's a lot of expense with very little payoff
+                singlePlate = GetBestNeuronSheet(byLayer, count.neuronCount);
+            }
+
+            // Make sure there is a correct number of neurons and apply an even distribution
+            singlePlate = NeuralUtility.GetNeuronPositions_Circular_Even(singlePlate, staticPositions, 1d, count.neuronCount, count.radius).
+                Select(o => o.ToPoint()).
+                ToArray();
+
+            // Use the location of neurons in this single layer for all layers.  By making sure that each neuron represents the same point in each
+            // layer (and the index of that neuron is the same in each layer), position logic in each tick can be optimized
+            return Enumerable.Range(0, dna.Filters.Length).
+                Select(o => new NeuronLayer()
+                {
+                    FilterType = dna.Filters[o],
+                    Z = neuronZs.z[o],
+                    Neurons = singlePlate.
+                        Select(p => new Neuron_SensorPosition(new Point3D(p.X, p.Y, neuronZs.z[o]), true, true)).
+                        ToArray(),
+                }).
+                ToArray();
+        }
+
+        internal static (MapObjectInfo item, Point3D[] points)[] GetItemPoints(IEnumerable<MapObjectInfo> items, long botToken, long? nestToken)
+        {
+            var personalWeaponItems = items.
+                Select(o => ApplyFilter(o, SensorVisionFilterType.Weapon_Attached_Personal, botToken, nestToken)).
+                Where(o => o != null).
+                ToArray();
+
+            var attachedWeaponItems = items.
+                Select(o => ApplyFilter(o, SensorVisionFilterType.Weapon_Attached_Other, botToken, nestToken)).
+                Where(o => o != null).
+                ToArray();
+
+            return items.
+                Where(o => o.Token != botToken).
+                Concat(personalWeaponItems).
+                Concat(attachedWeaponItems).
+                Select(o =>
+                {
+                    Point3D[] points;
+                    if (o.MapObject is ISensorVisionPoints sp)
+                        points = sp.GetSensorVisionPoints();
+                    else
+                        points = new[] { o.Position };
+
+                    return (o, points);
+                }).
                 ToArray();
         }
 
@@ -566,27 +544,53 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         #region Private Methods
 
-        private static void UpdateNeurons(Neuron_SensorPosition[] neurons, Tuple<Point3D, Quaternion> location, IEnumerable<MapObjectInfo> items, DistanceProps distProps, long botToken)
+        private static void UpdateNeurons(Neuron_SensorPosition[] neurons, (Point3D position, Quaternion rotation) worldLoc, IEnumerable<MapObjectInfo> items, DistanceProps distProps, long botToken)
         {
-            //TODO: Rotate into world
+            var itemPoints = items.
+                Select(o =>
+                {
+                    Point3D[] points;
+                    if (o.MapObject is ISensorVisionPoints sp)
+                        points = sp.GetSensorVisionPoints();
+                    else
+                        points = new[] { o.Position };
 
+                    return new
+                    {
+                        item = o,
+                        points,
+                    };
+                }).
+                ToArray();
 
             // Since neuron.Value is a volatile, build up the final values in a local array
             double[] values = new double[neurons.Length];
 
-            Vector3D positionVect = location.Item1.ToVector();
+            Vector3D worldLocVect = worldLoc.position.ToVector();
 
-            foreach (MapObjectInfo item in items)
+            for (int cntr = 0; cntr < neurons.Length; cntr++)
             {
-                if (item.Token == botToken)
-                {
-                    continue;
-                }
+                // Don't want to rotate, the neurons are already lined up with their real world position.  Just need to translate
+                //Point3D worldPos = worldLoc.position + worldLoc.rotation.GetRotatedVector(distProps.NeuronWorldPositions[cntr].ToVector());
+                Point3D worldPos = distProps.NeuronWorldPositions[cntr] + worldLocVect;
 
-                for (int cntr = 0; cntr < neurons.Length; cntr++)
+                //foreach (MapObjectInfo item in items)
+                foreach (var item in itemPoints)
                 {
-                    //TODO: don't just look at item's position.  Should also account for its radius
-                    double distance = (distProps.NeuronWorldPositions[cntr] + positionVect - item.Position).Length;
+                    //if (item.Token == botToken)
+                    //{
+                    //    continue;
+                    //}
+
+                    //TODO: don't just look at item's position.  Should also account for its radius - especially weapons
+                    //double distance = (worldPos - item.Position).Length;
+
+                    double distance = item.points.
+                        Select(o => (worldPos - o).LengthSquared).
+                        OrderBy().
+                        First();
+
+                    distance = Math.Sqrt(distance);
 
                     // y=mx+b
                     double neuronValue = (distProps.Slope * distance) + distProps.B;
@@ -612,26 +616,338 @@ namespace Game.Newt.v2.Arcanorum.Parts
             }
         }
 
+        private static (double radius, int neuronCount) GetNeuronCount(Vector3D scale, double neuronGrowthExponent, double neuronDensity)
+        {
+            // Figure out how many to make
+            //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
+            double radius = (scale.X + scale.Y) / (2d * 2d);		// XY should always be the same anyway (not looking at Z for this.  Z is just to keep the sensors from getting too close to each other)
+            double area = Math.Pow(radius, neuronGrowthExponent);
+
+            int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
+            if (neuronCount == 0)
+            {
+                neuronCount = 1;
+            }
+
+            return (radius, neuronCount);
+        }
+
+        private static (double[] z, double gap) GetNeuron_Zs(int numPlates, double radius)
+        {
+            if (numPlates == 1)
+            {
+                return (new double[] { 0d }, 0);
+            }
+
+            // Don't want the plate's Z to go all the way to the edge of radius, so suck it in a bit
+            double max = radius * .75d;
+
+            double gap = (max * 2d) / Convert.ToDouble(numPlates - 1);		// multiplying by 2 because radius is only half
+
+            double[] retVal = new double[numPlates];
+            double current = max * -1d;
+
+            for (int cntr = 0; cntr < numPlates; cntr++)
+            {
+                retVal[cntr] = current;
+                current += gap;
+            }
+
+            return (retVal, gap);
+        }
+
+        private static Point3D[] GetBestNeuronSheet(Point3D[][] sheets, int neuronCount)
+        {
+            //NOTE: NeuralUtility.DivideNeuronLayersIntoSheets redistributes so that each layer has count.  So while getting first layer with count will work, taking it a step farther by finding the layer with the lowest spread
+            //var retVal = sheets.FirstOrDefault(o => o.Length == neuronCount);
+
+            // Look for an exact count match
+            var retVal = sheets.
+                Where(o => o.Length == neuronCount).
+                Select(o => new
+                {
+                    layer = o,
+                    avg_stddev = Math1D.Get_Average_StandardDeviation(o.Select(p => p.Z)),
+                }).
+                OrderBy(o => o.avg_stddev.Item2).
+                Select(o => o.layer).
+                FirstOrDefault();
+
+            if (retVal != null)
+            {
+                return retVal;
+            }
+
+            // Look for the smallest layer with more than count
+            retVal = sheets.
+                Where(o => o.Length > neuronCount).
+                Select(o => new
+                {
+                    layer = o,
+                    avg_stddev = Math1D.Get_Average_StandardDeviation(o.Select(p => p.Z)),
+                }).
+                OrderBy(o => o.layer.Length).
+                ThenBy(o => o.avg_stddev.Item2).
+                Select(o => o.layer).
+                FirstOrDefault();
+
+            if (retVal != null)
+            {
+                return retVal;
+            }
+
+            // Look for the largest layer with less than count
+            retVal = sheets.
+                Where(o => o.Length < neuronCount).      // this where is unnecessary, just putting it here for completeness (at this point, all layers are less than count
+                Select(o => new
+                {
+                    layer = o,
+                    avg_stddev = Math1D.Get_Average_StandardDeviation(o.Select(p => p.Z)),
+                }).
+                OrderByDescending(o => o.layer.Length).
+                ThenBy(o => o.avg_stddev.Item2).
+                Select(o => o.layer).
+                FirstOrDefault();
+
+            if (retVal != null)
+            {
+                return retVal;
+            }
+
+            throw new ApplicationException("byLayer is empty (this should never happen)");
+        }
+
+        private static (double distBetween, double maxRadius) GetNeuronAvgDistance(Point[] neurons)
+        {
+            double distBetween;
+
+            if (neurons.Length == 0)
+            {
+                throw new ApplicationException("CreateNeurons should have guaranteed at least one neuron");
+            }
+
+            // Find the one that's farthest away from the origin (since they form a circle, there will be an outer ring of them that
+            // are about the same distance from the center)
+            double maxRadius = Math.Sqrt(neurons.Max(o => o.ToVector().LengthSquared));
+
+            if (neurons.Length == 1)
+            {
+                // Since the neuron was forced to not be at the origin, just take the offset from origin (a single neuron vision
+                // field is pretty useless anyway)
+                distBetween = neurons[0].ToVector().Length;
+            }
+            else
+            {
+                // Get the distance between each neuron
+                var distances = new List<(int index1, int index2, double distance)>();
+
+                for (int outer = 0; outer < neurons.Length - 1; outer++)
+                {
+                    for (int inner = outer + 1; inner < neurons.Length; inner++)
+                    {
+                        double distance = (neurons[outer] - neurons[inner]).LengthSquared;
+
+                        distances.Add((outer, inner, distance));
+                    }
+                }
+
+                // Get the average of the minimum distance of each index
+                distBetween = Enumerable.Range(0, neurons.Length).
+                    Select(o => distances.
+                        Where(p => p.index1 == o || p.index2 == o).       // get the disances that mention this index
+                        Min(p => p.distance)).     // only keep the smallest of those distances
+                    Select(o => Math.Sqrt(o)).
+                    Average();      // get the average of all the mins
+
+                #region TEST
+
+                //var test = Enumerable.Range(0, neurons.Length).
+                //    Select(o => distances.
+                //        Where(p => p.index1 == o || p.index2 == o).       // get the disances that mention this index
+                //        Min(p => p.distance)).     // only keep the smallest of those distances
+                //    Select(o => Math.Sqrt(o)).
+                //    OrderBy(o => o).
+                //    ToArray();
+
+                //var size = Debug3DWindow.GetDrawSizes(maxRadius);
+
+                //Debug3DWindow window = new Debug3DWindow();
+
+                //window.AddAxisLines(maxRadius * 1.1, size.line);
+
+                //window.AddDots(neurons.Select(o => o.Position), size.dot, Colors.White);
+
+                //window.AddLines
+                //(
+                //    Enumerable.Range(0, neurons.Length).
+                //        Select(o => distances.
+                //            Where(p => p.index1 == o || p.index2 == o).
+                //            OrderBy(p => p.distance).
+                //            First()).
+                //        Select(o => (neurons[o.index1].Position, neurons[o.index2].Position)),
+                //    size.line,
+                //    Colors.Gainsboro
+                //);
+
+                //window.AddCircle(new Point3D(), distBetween, size.line, Colors.Gray);
+
+                //window.AddText($"max radius: {maxRadius}");
+                //window.AddText($"dist between: {distBetween}");
+
+                //window.Show();
+
+                #endregion
+            }
+
+            return (distBetween, maxRadius);
+        }
+
+        private static MapObjectInfo ApplyFilter(MapObjectInfo item, SensorVisionFilterType filterType, long botToken, long? nestToken)
+        {
+            switch (filterType)
+            {
+                case SensorVisionFilterType.Bot_Family:
+                    if (item.Token == botToken)
+                        return null;
+                    else
+                    {
+                        if (item.MapObject is ArcBotNPC npc && npc.NestToken == nestToken)
+                            return item;
+                        else
+                            return null;
+                    }
+
+                case SensorVisionFilterType.Bot_Other:
+                    if (item.Token == botToken)
+                        return null;
+                    else
+                    {
+                        if (item.MapObject is ArcBot || item.MapObject is ArcBot2)
+                        {
+                            if (ApplyFilter(item, SensorVisionFilterType.Bot_Family, botToken, nestToken) == null)
+                                return item;
+                            else
+                                return null;        // it's a family bot, which means it's not an other bot
+                        }
+                        else
+                            return null;
+                    }
+
+                case SensorVisionFilterType.Nest:
+                    if (item.MapObject is NPCNest)
+                        return item;
+                    else
+                        return null;
+
+                case SensorVisionFilterType.TreasureBox:
+                    if (item.MapObject is TreasureBox)
+                        return item;
+                    else
+                        return null;
+
+                case SensorVisionFilterType.Weapon_Attached_Personal:
+                case SensorVisionFilterType.Weapon_Attached_Other:
+                    Weapon weapon = null;
+                    if (item.MapObject is ArcBot bot)
+                    {
+                        weapon = bot.Weapon;
+                    }
+                    else if (item.MapObject is ArcBot2 bot2)
+                    {
+                        weapon = bot2.Weapon;
+                    }
+
+                    if (weapon == null)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        if ((filterType == SensorVisionFilterType.Weapon_Attached_Personal && item.Token != botToken) || (filterType == SensorVisionFilterType.Weapon_Attached_Other && item.Token == botToken))
+                            return null;
+                        else
+                            return new MapObjectInfo(weapon, weapon.GetType());
+                    }
+
+                case SensorVisionFilterType.Weapon_FreeFloating:
+                    if (item.MapObject is Weapon)
+                        return item;
+                    else
+                        return null;
+
+                default:
+                    throw new ApplicationException($"Unknown {nameof(SensorVisionFilterType)}: {filterType}");
+            }
+        }
+
         private void RebuildDistanceProps()
         {
-            const double B = .75d;      // y=mx+b:  don't want to use a b of 1, because y gets added to a neuron's current output, so multiple objects close together would quickly saturate a neuron
-            const double B_at_neighbor = .4d;       // at a distance of nearest neighbor, what the output should be (this needs to be relatively high so that there is some overlap.  Otherwise there are holes where items won't be seen)
+            const double B = .9; //.75d;      // y=mx+b:  don't want to use a b of 1, because y gets added to a neuron's current output, so multiple objects close together would quickly saturate a neuron
+            const double B_at_neighbor = .1; //.4d;       // at a distance of nearest neighbor, what the output should be (this needs to be relatively high so that there is some overlap.  Otherwise there are holes where items won't be seen)
+
+            double scale = SearchRadius / (_neuronMaxRadius + _neuronDistBetween);
 
             // Rise over run, but negative
-            double slope = (B_at_neighbor - B) / _neuronDistBetween;
-
-            // I want a distance of _neuronDistBetween between the outermost neuron and SearchRadius
-            double scale = _searchRadius / (_neuronMaxRadius + _neuronDistBetween);
+            double slope = (B_at_neighbor - B) / (_neuronDistBetween * scale);
 
             // Take each existing length times scale to see where they should be.  Don't need to worry about checking for
             // null, there are no neurons at 0,0,0.
-            Point3D[] worldScalePositions = _neurons.Select(o => (o.PositionUnit.Value * (o.PositionLength * scale)).ToPoint()).ToArray();
+            Neuron_SensorPosition[] neurons = _neurons != null ? _neurons : _neuronLayers[0].Neurons;
+
+            Point3D[] worldScalePositions = neurons.
+                Select(o =>
+                {
+                    Vector3D pos2D = o.Position.ToVector2D().ToVector3D();      // need to set the neuron's Z to zero, or the real world position will be way off
+
+                    return (pos2D.ToUnit() * (pos2D.Length * scale)).ToPoint();
+                }).
+                ToArray();
 
             // Store a new one
-            _distProps = new DistanceProps(_searchRadius, _neuronMaxRadius, _neuronDistBetween, slope, B, worldScalePositions);
+            _distProps = new DistanceProps(SearchRadius, _neuronMaxRadius, _neuronDistBetween, slope, B, worldScalePositions);
         }
 
         #endregion
+    }
+
+    #endregion
+
+    #region enum: SensorVisionFilterType
+
+    public enum SensorVisionFilterType
+    {
+        Bot_Family,
+        Bot_Other,
+
+        TreasureBox,
+        Nest,
+
+        Weapon_FreeFloating,
+        Weapon_Attached_Personal,
+        Weapon_Attached_Other,
+
+        // These might not belong here.  All other enum values are types (nouns), these are suggested actions (verbs)
+        // Would need some way of keeping track whether a particular bot or family of bots has been friendly or hostile
+        //Attack,
+        //Avoid,
+        //Protect,
+        //PickUp,
+    }
+
+    #endregion
+
+    #region class: SensorVisionDNA
+
+    public class SensorVisionDNA : ShipPartDNA
+    {
+        public double SearchRadius { get; set; }
+
+        //public Type FilterType { get; set; }
+
+        /// <summary>
+        /// There will be one layer of neurons for each filter.  If this is null, there will be one layer that fires for everything
+        /// </summary>
+        public SensorVisionFilterType[] Filters { get; set; }
     }
 
     #endregion

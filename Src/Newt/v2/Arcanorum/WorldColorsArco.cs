@@ -23,5 +23,9 @@ namespace Game.Newt.v2.Arcanorum
         public static Color MotionController2_Color = UtilityWPF.ColorFromHex("4851B5");
         public static ThreadLocal<DiffuseMaterial> MotionController2_Diffuse = new ThreadLocal<DiffuseMaterial>(() => new DiffuseMaterial(new SolidColorBrush(MotionController2_Color)));
         public static ThreadLocal<SpecularMaterial> MotionController2_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("A0D3E0A3")), 40));
+
+        public static Color SensorArcbotWeapon_Color => UtilityWPF.ColorFromHex("945037");
+        private static ThreadLocal<SpecularMaterial> _sensorArcbotWeapon_Specular = new ThreadLocal<SpecularMaterial>(() => new SpecularMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex("40AC7040")), 16d));
+        public static SpecularMaterial SensorArcbotWeapon_Specular => _sensorArcbotWeapon_Specular.Value;
     }
 }

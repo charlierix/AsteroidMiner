@@ -234,7 +234,7 @@ namespace Game.Newt.Testers.ChaseForces
                 _chasedBallTransform.OffsetY = _chasedBall.Position.Y;
                 _chasedBallTransform.OffsetZ = _chasedBall.Position.Z;
 
-                _chasedDirectionModel.SetPoints(_chasedBall.Position, _chasedBall.Position + _chasedBall.Direction.ToUnit() * 10);
+                _chasedDirectionModel.SetPoints(_chasedBall.Position, _chasedBall.Position + (_chasedBall.Direction.ToUnit() * 10));
 
                 // Chasing Objects
                 if (_object_LinearVelocity != null)

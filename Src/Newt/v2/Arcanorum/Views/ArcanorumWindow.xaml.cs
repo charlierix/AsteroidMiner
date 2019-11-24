@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
-using System.Windows.Shapes;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls2D;
+using Game.HelperClassesWPF.Controls3D;
+using Game.Newt.v2.Arcanorum.MapObjects;
+using Game.Newt.v2.Arcanorum.Parts;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Controls2D;
-using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.NewtonDynamics;
-using Game.Newt.v2.Arcanorum.Parts;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.Views
 {
@@ -946,11 +941,10 @@ namespace Game.Newt.v2.Arcanorum.Views
                 {
                     bool isDead = false;
                     // Handle specific types of visuals
-                    if (_visuals2D[index] is Visual2DHitPoint)
+                    if (_visuals2D[index] is Visual2DHitPoint visualCast)
                     {
-                        Visual2DHitPoint visualCast = (Visual2DHitPoint)_visuals2D[index];
                         visualCast.Update();
-                        isDead = Math1D.IsNearZero(visualCast.TakesDamage.HitPoints.QuantityCurrent);
+                        isDead = visualCast.TakesDamage.HitPoints.QuantityCurrent.IsNearZero();
                     }
 
                     // See if it should be removed
@@ -1034,15 +1028,15 @@ namespace Game.Newt.v2.Arcanorum.Views
                     {
                         if (_isShiftPressed)
                         {
-                            bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Inventory);
+                            bot.AttachWeapon(weaponFreeFloating, ItemToFrom.Map, ItemToFrom.Inventory);
                         }
                         else if (_isCtrlPressed)
                         {
-                            bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Map);
+                            bot.AttachWeapon(weaponFreeFloating, ItemToFrom.Map, ItemToFrom.Map);
                         }
                         else if (_isAltPressed)
                         {
-                            bot.AddToInventory(weaponFreeFloating, ArcBot.ItemToFrom.Map);
+                            bot.AddToInventory(weaponFreeFloating, ItemToFrom.Map);
                         }
                         else
                         {
@@ -1053,7 +1047,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     else
                     {
                         // For now, always attach
-                        bot.AttachWeapon(weaponFreeFloating, ArcBot.ItemToFrom.Map, ArcBot.ItemToFrom.Inventory);
+                        bot.AttachWeapon(weaponFreeFloating, ItemToFrom.Map, ItemToFrom.Inventory);
 
                         //TODO: Expand this method, or make a different one, and let the bot decide
                         //bot.CollidedWithTreasure(
@@ -1073,7 +1067,7 @@ namespace Game.Newt.v2.Arcanorum.Views
 
                 #region Do damage
 
-                WeaponDamage damage = weaponSwinging.CalculateDamage(e.Collisions);
+                DamageProps damage = weaponSwinging.CalculateDamage(e.Collisions);
                 if (damage != null)
                 {
                     #region damage other bot
@@ -1096,7 +1090,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                             }
                             else
                             {
-                                bot.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Map);     // if they are holding a weapon, release it to the map
+                                bot.AttachWeapon(null, ItemToFrom.Nowhere, ItemToFrom.Map);     // if they are holding a weapon, release it to the map
 
                                 //TODO: Randomly spill some of its inventory
                                 //bot.Inventory.Weapons
@@ -1196,7 +1190,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     return;
                 }
 
-                WeaponDamage damage = weaponSwinging.CalculateDamage(e.Collisions);
+                DamageProps damage = weaponSwinging.CalculateDamage(e.Collisions);
                 if (damage != null)
                 {
                     #region damag treasure box
@@ -1275,7 +1269,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     return;
                 }
 
-                WeaponDamage damage = bot.CalculateDamage(e.Collisions);
+                DamageProps damage = bot.CalculateDamage(e.Collisions);
                 if (damage != null)
                 {
                     #region damage barrel
@@ -1359,11 +1353,11 @@ namespace Game.Newt.v2.Arcanorum.Views
                     case Key.OemTilde:
                         if (_isShiftPressed)
                         {
-                            _player.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Map);
+                            _player.AttachWeapon(null, ItemToFrom.Nowhere, ItemToFrom.Map);
                         }
                         else
                         {
-                            _player.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Inventory);
+                            _player.AttachWeapon(null, ItemToFrom.Nowhere, ItemToFrom.Inventory);
                         }
                         break;
 
@@ -1604,29 +1598,8 @@ namespace Game.Newt.v2.Arcanorum.Views
                         {
                             #region Show Viewer
 
-                            _selectedBotViewer = new ShipViewerWindow(parts, _selectedBot.NeuronLinks);
-                            _selectedBotViewer.Owner = this;		// the other settings like topmost, showintaskbar, etc are already set in the window's xaml
-                            _selectedBotViewer.PopupBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("60000000"));
-                            _selectedBotViewer.PopupBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("30000000"));
-                            _selectedBotViewer.ViewportBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("E0000000"));
-
-                            LinearGradientBrush brush = new LinearGradientBrush();
-                            brush.StartPoint = new Point(0, 0);
-                            brush.EndPoint = new Point(1, 1);
-
-                            GradientStopCollection gradients = new GradientStopCollection();
-                            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0EBEDE4"), 0d));
-                            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DFE0DA"), .1d));
-                            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0E0E0E0"), .6d));
-                            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DADBD5"), .9d));
-                            gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0D7DBCC"), 1d));
-                            brush.GradientStops = gradients;
-
-                            _selectedBotViewer.ViewportBackground = brush;
-
-                            _selectedBotViewer.PanelBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("8068736B"));
-                            _selectedBotViewer.PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45"));
-                            _selectedBotViewer.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0"));
+                            _selectedBotViewer = new ShipViewerWindow(parts, _selectedBot.NeuronLinks, this);
+                            _selectedBotViewer.SetColorTheme_Dark_Gradient();
 
                             //Point windowClickPoint = UtilityWPF.TransformToScreen(clickPoint, grdViewPort);
                             //Point popupPoint = new Point(windowClickPoint.X + 50, windowClickPoint.Y - (_selectedBotViewer.Height / 3d));
@@ -1762,7 +1735,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     treasure = new object[] { WeaponDNA.GetRandomDNA() };
                 }
 
-                TreasureBox box = new TreasureBox(center + Math3D.GetRandomVector_Circular(radius), 1000, 100, _materialIDs.TreasureBox, _world, new WeaponDamage(), treasure);
+                TreasureBox box = new TreasureBox(center + Math3D.GetRandomVector_Circular(radius), 1000, 100, _materialIDs.TreasureBox, _world, new DamageProps(), treasure);
                 box.PhysicsBody.AngularVelocity = Math3D.GetRandomVector_Spherical(6);
 
                 _keep2D.Add(box, false);
@@ -1785,7 +1758,7 @@ namespace Game.Newt.v2.Arcanorum.Views
 
                     Parts = new ShipPartDNA[]
                     {
-                        new ShipPartDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) },
+                        new SensorVisionDNA() { PartType = SensorVision.PARTTYPE, Position = new Point3D(0, 0, 1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1), SearchRadius = _itemOptions.VisionSensor_SearchRadius },
                         new ShipPartDNA() { PartType = Brain.PARTTYPE, Position = new Point3D(0, 0, 0), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) },
                         new ShipPartDNA() { PartType = MotionController2.PARTTYPE, Position = new Point3D(0, 0, -1.5), Orientation = Quaternion.Identity, Scale = new Vector3D(1, 1, 1) },
                     }
@@ -2030,7 +2003,7 @@ namespace Game.Newt.v2.Arcanorum.Views
 
             for (int cntr = 0; cntr < count; cntr++)
             {
-                #region Create Nest
+                #region create nest
 
                 Point3D position;
                 if (cntr == 0)
@@ -2069,7 +2042,7 @@ namespace Game.Newt.v2.Arcanorum.Views
 
         // This adds text to the window
         //TODO: Make sounds
-        private void AddStrikeDamage(WeaponDamage damage, bool isPlayer)
+        private void AddStrikeDamage(DamageProps damage, bool isPlayer)
         {
             if (damage.Position == null)
             {
@@ -2219,7 +2192,7 @@ namespace Game.Newt.v2.Arcanorum.Views
             if (_isShiftPressed)
             {
                 // Eject from inventory to the map
-                _player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], ArcBot.ItemToFrom.Map);
+                _player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], ItemToFrom.Map);
 
                 //TODO: Test these others
                 //_player.RemoveFromInventory(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Inventory);
@@ -2228,7 +2201,7 @@ namespace Game.Newt.v2.Arcanorum.Views
             else
             {
                 // Equip from inventory
-                _player.AttachWeapon(_player.Inventory.Weapons[number - 1], ArcBot.ItemToFrom.Inventory, ArcBot.ItemToFrom.Inventory);
+                _player.AttachWeapon(_player.Inventory.Weapons[number - 1], ItemToFrom.Inventory, ItemToFrom.Inventory);
 
                 //TODO: Test these others
                 //_player.AttachWeapon(_player.Inventory.Weapons[number - 1], Bot.ItemToFrom.Inventory, Bot.ItemToFrom.Map);
@@ -2251,7 +2224,7 @@ namespace Game.Newt.v2.Arcanorum.Views
                     Weapon weapon = _player.Inventory.Weapons.Where(o => o.DNA.UniqueID == shopPanelCast.AttachedWeaponID.Value).FirstOrDefault();
                     if (weapon != null)
                     {
-                        _player.AttachWeapon(weapon, ArcBot.ItemToFrom.Inventory, ArcBot.ItemToFrom.Inventory);
+                        _player.AttachWeapon(weapon, ItemToFrom.Inventory, ItemToFrom.Inventory);
                     }
                 }
 
@@ -2406,7 +2379,7 @@ namespace Game.Newt.v2.Arcanorum.Views
         #endregion
     }
 
-    #region class: AsteroidFieldOptions
+    #region class: ArcanorumOptions
 
     /// <summary>
     /// This class gets saved to xaml in their appdata folder

@@ -301,7 +301,7 @@ namespace Game.Newt.v2.GameItems
                 // Limit if exceeds this.MaxForce
                 if (this.MaxTorque != null && torque.Value.LengthSquared > this.MaxTorque.Value * this.MaxTorque.Value)
                 {
-                    torque = torque.Value.ToUnit(false) * this.MaxTorque.Value;
+                    torque = torque.Value.ToUnit() * this.MaxTorque.Value;
                 }
 
                 // Limit acceleration
@@ -314,7 +314,7 @@ namespace Game.Newt.v2.GameItems
 
                     if (accel > this.MaxAcceleration.Value)
                     {
-                        torque = torque.Value.ToUnit(false) * (this.MaxAcceleration.Value * mass);
+                        torque = torque.Value.ToUnit() * (this.MaxAcceleration.Value * mass);
                     }
                 }
 
@@ -510,12 +510,12 @@ namespace Game.Newt.v2.GameItems
             // Angular Velocity
             Vector3D angularVelocity = this.Item.PhysicsBody.AngularVelocity;
             this.AngVelocityLength = angularVelocity.Length;
-            this.AngVelocityUnit = angularVelocity.ToUnit(false);
+            this.AngVelocityUnit = angularVelocity.ToUnit();
 
             // Along
             Vector3D velocityAlong = angularVelocity.GetProjectedVector(direction);
             this.AngVelocityAlongLength = velocityAlong.Length;
-            this.AngVelocityAlongUnit = velocityAlong.ToUnit(false);
+            this.AngVelocityAlongUnit = velocityAlong.ToUnit();
             this.IsAngVelocityAlongTowards = Vector3D.DotProduct(direction, angularVelocity) > 0d;
 
             // Orth
@@ -524,7 +524,7 @@ namespace Game.Newt.v2.GameItems
             Vector3D velocityOrth = angularVelocity.GetProjectedVector(orth);
 
             this.AngVelocityOrthLength = velocityOrth.Length;
-            this.AngVelocityOrthUnit = velocityOrth.ToUnit(false);
+            this.AngVelocityOrthUnit = velocityOrth.ToUnit();
         }
 
         public readonly IMapObject Item;

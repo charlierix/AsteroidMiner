@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -1027,7 +1025,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             double radius = (dna.Scale.X + dna.Scale.Y + dna.Scale.Z) / (3d * 2d);		// xyz should all be the same anyway
 
-            Vector3D[] positions = Brain.GetNeuronPositions_Line2D(null, lifeEvents.Types.Length, radius);
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_Line_Even(null, lifeEvents.Types.Length, radius);
 
             return positions.
                 Select(o => new Neuron_SensorPosition(o.ToPoint(), true)).
@@ -1347,12 +1345,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 Select(o =>
                 {
                     var cast = o as SOMInput<SOMList.SOMItem>;
-                    if (cast == null) return null;
+                    if (cast == null) return (VectorND?)null;
 
                     return cast.Source.Original;
                 }).
                 Where(o => o != null).
-                Select(o => o.VectorArray).
+                Select(o => o.Value.VectorArray).
                 ToArray();
 
             SaveImages(parentFolder, childFolder, width, height, images, isColor);

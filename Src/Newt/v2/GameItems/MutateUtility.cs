@@ -1,15 +1,11 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipParts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.IO;
 using System.Windows.Media.Media3D;
-using System.Xaml;
-
-using Game.HelperClassesCore;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.GameItems.ShipParts;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -319,6 +315,20 @@ namespace Game.Newt.v2.GameItems
 
         #region Public Methods - big objects
 
+        public static T[] MutateList<T>(T[] list, MuateArgs args)
+        {
+            T[] cloned = UtilityCore.Clone(list);
+
+            PropsByPercent props = new PropsByPercent(cloned.Select(o => (object)o).ToArray(), new PropsByPercent.FilterArgs() { IgnoreTypes = new PropsByPercent.DataType[] { PropsByPercent.DataType.String } });
+
+            MutateProps(props, args);
+
+            // Ran into a problem returning cloned.  The list passed in was a bunch of Vector3D and the mutated values were only
+            // in props._list, because structs are copies.  So need to return that list back to the caller
+            return props.List.
+                Select(o => (T)o).
+                ToArray();
+        }
         public static T MutateSettingsObject<T>(T settings, MuateArgs args)
         {
             T retVal = UtilityCore.Clone(settings);
@@ -327,7 +337,6 @@ namespace Game.Newt.v2.GameItems
 
             MutateProps(props, args);
 
-            // Exit Function
             return retVal;
         }
 
@@ -361,7 +370,6 @@ namespace Game.Newt.v2.GameItems
                 Mutate(parts, args.NeuronChanges);
             }
 
-            // Exit Function
             return retVal;
         }
 
@@ -1490,6 +1498,8 @@ namespace Game.Newt.v2.GameItems
             private set;
         }
 
+        public object[] List => _list;
+
         #endregion
 
         #region Public Method
@@ -1561,10 +1571,19 @@ namespace Game.Newt.v2.GameItems
                 if (!props.ContainsKey(type))
                 {
                     // Store the properties that should be tracked
-                    props.Add(type, type.GetProperties().Where(o => GetDatatype(o) != DataType.Unknown && (filter == null || filter.IsMatch(o))).ToArray());
+                    props.Add
+                    (
+                        type,
+                        type.GetProperties().
+                            Where(o => o.CanRead && o.CanWrite && GetDatatype(o) != DataType.Unknown && (filter == null || filter.IsMatch(o))).
+                            ToArray()
+                    );
                 }
 
-                int[] countBreakdown = props[type].Select(o => GetPropSize(o, item)).ToArray();
+                int[] countBreakdown = props[type].
+                    Select(o => GetPropSize(o, item)).
+                    ToArray();
+
                 counts.Add(new Tuple<int, PercentTracker[], Type>(countBreakdown.Sum(), GetPercents(countBreakdown), type));
             }
 
@@ -1594,7 +1613,6 @@ namespace Game.Newt.v2.GameItems
                 offset += size;
             }
 
-            // Exit Function
             return retVal.ToArray();
         }
 

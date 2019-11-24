@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
-using Game.HelperClassesWPF;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.Parts
 {
@@ -21,12 +18,9 @@ namespace Game.Newt.v2.Arcanorum.Parts
     {
         #region Declaration Section
 
-        internal const double SIZEPERCENTOFSCALE_XY = 1d;
-        internal const double SIZEPERCENTOFSCALE_Z = .1d;
-
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
-        private Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> _massBreakdown = null;
+        private MassBreakdownCache _massBreakdown = null;
 
         #endregion
 
@@ -54,7 +48,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
             }
         }
 
-        private GeometryModel3D _geometry = null;
+        private Model3DGroup _geometry = null;
         public override Model3D Model
         {
             get
@@ -74,43 +68,11 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         public override CollisionHull CreateCollisionHull(WorldBase world)
         {
-            return CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
+            return SensorGravityDesign.CreateSensorCollisionHull(world, this.Scale, this.Orientation, this.Position);
         }
         public override UtilityNewt.IObjectMassBreakdown GetMassBreakdown(double cellSize)
         {
-            return GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
-        }
-
-        internal static CollisionHull CreateSensorCollisionHull(WorldBase world, Vector3D scale, Quaternion orientation, Point3D position)
-        {
-            Transform3DGroup transform = new Transform3DGroup();
-            //transform.Children.Add(new ScaleTransform3D(scale));		// it ignores scale
-            transform.Children.Add(new RotateTransform3D(new QuaternionRotation3D(orientation)));
-            transform.Children.Add(new TranslateTransform3D(position.ToVector()));
-
-            // Scale X and Y should be identical, but average them to be safe
-            double radius = ((SIZEPERCENTOFSCALE_XY * scale.X) + (SIZEPERCENTOFSCALE_XY * scale.Y)) / 2d;
-
-            return CollisionHull.CreateCylinder(world, 0, radius, SIZEPERCENTOFSCALE_Z * scale.Z, transform.Value);
-        }
-        internal static UtilityNewt.IObjectMassBreakdown GetSensorMassBreakdown(ref Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double> existing, Vector3D scale, double cellSize)
-        {
-            if (existing != null && existing.Item2 == scale && existing.Item3 == cellSize)
-            {
-                // This has already been built for this size
-                return existing.Item1;
-            }
-
-            // Convert this.Scale into a size that the mass breakdown will use
-            Vector3D size = new Vector3D(scale.X * SIZEPERCENTOFSCALE_XY, scale.Y * SIZEPERCENTOFSCALE_XY, scale.Z * SIZEPERCENTOFSCALE_Z);
-
-            var breakdown = UtilityNewt.GetMassBreakdown(UtilityNewt.ObjectBreakdownType.Cylinder, UtilityNewt.MassDistribution.Uniform, size, cellSize);
-
-            // Store this
-            existing = new Tuple<UtilityNewt.IObjectMassBreakdown, Vector3D, double>(breakdown, scale, cellSize);
-
-            // Exit Function
-            return existing.Item1;
+            return SensorGravityDesign.GetSensorMassBreakdown(ref _massBreakdown, this.Scale, cellSize);
         }
 
         public override PartToolItemBase GetToolItem()
@@ -122,46 +84,12 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
         #region Private Methods
 
-        private GeometryModel3D CreateGeometry(bool isFinal)
+        private Model3DGroup CreateGeometry(bool isFinal)
         {
-            DiffuseMaterial diffuse = WorldColorsArco.SensorVision_Any_Diffuse.Value;
-            SpecularMaterial specular = WorldColorsArco.SensorVision_Any_Specular.Value;
-            if (!isFinal)
-            {
-                diffuse = diffuse.Clone();      // cloning, because the editor will manipulate the brush, and WorldColors is handing out a shared brush
-                specular = specular.Clone();
-            }
-
-            MaterialGroup material = new MaterialGroup();
-            this.MaterialBrushes.Add(new MaterialColorProps(diffuse, WorldColorsArco.SensorVision_Any_Color));
-            material.Children.Add(diffuse);
-            this.MaterialBrushes.Add(new MaterialColorProps(specular));
-            material.Children.Add(specular);
-
-            if (!isFinal)
-            {
-                EmissiveMaterial selectionEmissive = new EmissiveMaterial(Brushes.Transparent);
-                material.Children.Add(selectionEmissive);
-                base.SelectionEmissives.Add(selectionEmissive);
-            }
-
-            GeometryModel3D retVal = new GeometryModel3D();
-            retVal.Material = material;
-            retVal.BackMaterial = material;
-
-            int segments = isFinal ? 6 : 35;
-
-            double radius = ((this.Scale.X * SIZEPERCENTOFSCALE_XY) + (this.Scale.Y * SIZEPERCENTOFSCALE_XY)) / 2d;
-            double height = this.Scale.Z * SIZEPERCENTOFSCALE_Z;
-            RotateTransform3D rotateTransform = new RotateTransform3D(new AxisAngleRotation3D(new Vector3D(0, 1, 0), 90));     // this needs to be along Z instead of X
-
-            retVal.Geometry = UtilityWPF.GetCylinder_AlongX(segments, radius, height, rotateTransform);
-
-            // Transform
-            retVal.Transform = GetTransformForGeometry(isFinal);
-
-            // Exit Function
-            return retVal;
+            return SensorGravityDesign.CreateGeometry(this.MaterialBrushes, base.SelectionEmissives,
+                GetTransformForGeometry(isFinal),
+                WorldColors.SensorBase_Color, WorldColors.SensorBase_Specular, WorldColorsArco.SensorVision_Any_Color, WorldColorsArco.SensorVision_Any_Specular.Value,
+                isFinal);
         }
 
         #endregion
@@ -197,7 +125,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
             Design = new SensorHoming2DDesign(options, true);
             Design.SetDNA(dna);
 
-            SensorVision.GetMass(out _mass, out double volume, out double radius, out _scaleActual, dna, itemOptions);
+            SensorGravity.GetMass(out _mass, out double volume, out double radius, out _scaleActual, dna, itemOptions);
 
             Radius = radius;
 
@@ -459,7 +387,7 @@ namespace Game.Newt.v2.Arcanorum.Parts
 
             // Place them evenly in a ring
             // I don't want a neuron in the center, so placing a static point there to force the neurons away from the center
-            Vector3D[] positions = Brain.GetNeuronPositions_Ring2D(dna.Neurons, neuronCount, radius);       //why 2D?
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_CircularShell_Even(dna.Neurons, neuronCount, radius);       //why 2D?
 
             // Exit Function
             return positions.

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
@@ -1213,7 +1212,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             int[] xyzStart = new[] { xStart, yStart, zStart };
             int[] xyzLength = new[] { e.XLength, e.YLength, e.ZLength };
-            VectorND xyzRatios = new VectorND(new[] { ratioX, ratioY, ratioZ });
+            VectorND xyzRatios = new VectorND(ratioX, ratioY, ratioZ);
             bool[] isEven = new[] { isXEven, isYEven, isZEven };
 
             // Origin
@@ -1354,8 +1353,8 @@ namespace Game.Newt.v2.NewtonDynamics
                             Cells = rangeIterator.
                                 Select(o =>
                                 {
-                                    VectorND cellPosMin = new VectorND(3);
-                                    VectorND cellPosMax = cellMax.ToVectorND();
+                                    double[] cellPosMin = new double[3];
+                                    double[] cellPosMax = new double[3];
 
                                     AdjustSpherePosition(cellPosMin, cellPosMax, axis, o, cellSize, xyzRatios, cellMax, originIndex);
 
@@ -1394,8 +1393,8 @@ namespace Game.Newt.v2.NewtonDynamics
                     Cells = iteratator.
                         Select(o =>
                         {
-                            VectorND cellPosMin = new VectorND(3);
-                            VectorND cellPosMax = cellMax.ToVectorND();
+                            double[] cellPosMin = new double[3];
+                            double[] cellPosMax = new double[3];
 
                             AdjustSpherePosition(cellPosMin, cellPosMax, axis1, o.Item1, cellSize, xyzRatios, cellMax, originIndex);
                             AdjustSpherePosition(cellPosMin, cellPosMax, axis2, o.Item2, cellSize, xyzRatios, cellMax, originIndex);
@@ -1433,7 +1432,7 @@ namespace Game.Newt.v2.NewtonDynamics
             }
         }
 
-        private static void AdjustSpherePosition(VectorND cellPosMin, VectorND cellPosMax, Axis axis, int iteration, double cellSize, VectorND xyzRatios, Point3D cellMax, int[] xyzStart)
+        private static void AdjustSpherePosition(double[] cellPosMin, double[] cellPosMax, Axis axis, int iteration, double cellSize, VectorND xyzRatios, Point3D cellMax, int[] xyzStart)
         {
             int index = GetAxisIndex(axis);
 
@@ -1629,7 +1628,7 @@ namespace Game.Newt.v2.NewtonDynamics
             var transform2D = Math2D.GetTransformTo2D(plane);
 
             var transformed = polyPoints.
-                Select(o => transform2D.Item1.Transform(o).ToPoint2D().ToPoint3D()).
+                Select(o => transform2D.From3D_To2D.Transform(o).ToPoint2D().ToPoint3D()).
                 //Select(o => transform2D.Item1.Transform(o)).
                 ToArray();
 
@@ -1643,7 +1642,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             // Transformed back
             var transformedBack = transformed.
-                Select(o => transform2D.Item2.Transform(o)).
+                Select(o => transform2D.From2D_BackTo3D.Transform(o)).
                 ToArray();
 
             window.AddDots(transformedBack, DOTRAD, UtilityWPF.ColorFromHex("FFC0C0"));
@@ -1654,7 +1653,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             var transformedBack2 = transformed.
                 Select(o => o.ToPoint2D().ToPoint3D()).
-                Select(o => transform2D.Item2.Transform(o)).
+                Select(o => transform2D.From2D_BackTo3D.Transform(o)).
                 ToArray();
 
             window.AddDots(transformedBack2, DOTRAD, UtilityWPF.ColorFromHex("EEE"));

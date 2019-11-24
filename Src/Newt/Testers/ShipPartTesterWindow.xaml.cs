@@ -637,7 +637,7 @@ namespace Game.Newt.Testers
 
             private void DrawZeroTorqueTest()
             {
-                var hulls = DrawZeroTorqueTestSprtGetHulls();
+                var hulls = DrawZeroTorqueTest_GetHulls();
 
                 //bool isPossible = hulls.All(o => o.IsInside != IsInsideResult.Neither);
 
@@ -751,7 +751,7 @@ namespace Game.Newt.Testers
                     //_viewport.Children.Add(model);
                 }
             }
-            private HullLineResult[] DrawZeroTorqueTestSprtGetHulls()
+            private HullLineResult[] DrawZeroTorqueTest_GetHulls()
             {
                 HullLineResult[] retVal = new HullLineResult[_vectors.Length];
                 for (int cntr = 0; cntr < _vectors.Length; cntr++)
@@ -761,7 +761,7 @@ namespace Game.Newt.Testers
                     Tuple<IsInsideResult, ITriangle, Point3D> isInside = null;
                     if (hull != null)
                     {
-                        isInside = DrawZeroTorqueTestSprtIsInside(hull, opposite);
+                        isInside = DrawZeroTorqueTest_IsInside(hull, opposite);
                     }
 
                     if (isInside == null)
@@ -776,7 +776,7 @@ namespace Game.Newt.Testers
 
                 return retVal;
             }
-            private Tuple<IsInsideResult, ITriangle, Point3D> DrawZeroTorqueTestSprtIsInside(TriangleIndexed[] hull, Vector3D opposite)
+            private Tuple<IsInsideResult, ITriangle, Point3D> DrawZeroTorqueTest_IsInside(TriangleIndexed[] hull, Vector3D opposite)
             {
                 if (Math3D.IsInside_Planes(hull, opposite.ToPoint()))
                 {
@@ -807,7 +807,7 @@ namespace Game.Newt.Testers
                 //const double MINPERCENT = .005d;
 
                 // Find 100% thrusters
-                SortedList<int, List<int[]>> fullThrusts = DrawZeroTorqueTest2SprtGetFullThrusts(_vectors);
+                SortedList<int, List<int[]>> fullThrusts = DrawZeroTorqueTest2_GetFullThrusts(_vectors);
 
                 if (fullThrusts.Count == 0)
                 {
@@ -921,7 +921,7 @@ namespace Game.Newt.Testers
                 }
             }
 
-            private static SortedList<int, List<int[]>> DrawZeroTorqueTest2SprtGetFullThrusts(Vector3D[] vectors)
+            private static SortedList<int, List<int[]>> DrawZeroTorqueTest2_GetFullThrusts(Vector3D[] vectors)
             {
                 SortedList<int, List<int[]>> retVal = new SortedList<int, List<int[]>>();
 
@@ -1055,7 +1055,7 @@ namespace Game.Newt.Testers
                 const double MINPERCENT = .005d;
 
                 // Find 100% thrusters
-                SortedList<int, List<int[]>> fullThrusts = DrawZeroTorqueTest3SprtGetFullThrusts(_vectors);
+                SortedList<int, List<int[]>> fullThrusts = DrawZeroTorqueTest3_GetFullThrusts(_vectors);
 
                 if (fullThrusts.Count == 0)
                 {
@@ -1086,7 +1086,7 @@ namespace Game.Newt.Testers
 
                 //TODO: Implement this
                 // Find the next highest percent
-                //DrawZeroTorqueTest3SprtNextHighest(_vectors, fullThrusts);
+                //DrawZeroTorqueTest3_NextHighest(_vectors, fullThrusts);
 
 
 
@@ -1177,7 +1177,7 @@ namespace Game.Newt.Testers
                 #endregion
             }
 
-            private static SortedList<int, List<int[]>> DrawZeroTorqueTest3SprtGetFullThrusts(Vector3D[] vectors)
+            private static SortedList<int, List<int[]>> DrawZeroTorqueTest3_GetFullThrusts(Vector3D[] vectors)
             {
                 SortedList<int, List<int[]>> retVal = new SortedList<int, List<int[]>>();
 
@@ -2153,18 +2153,18 @@ namespace Game.Newt.Testers
                 if (hasTorque.Count == 0)
                 {
                     // All zero torque
-                    retVal.AddRange(GetZeroTorquesSprtZeroTorque(noTorque, fuelToThrust));
+                    retVal.AddRange(GetZeroTorques_ZeroTorque(noTorque, fuelToThrust));
                 }
                 else if (hasTorque.Count == 2)
                 {
                     // Two
-                    retVal.AddRange(GetZeroTorquesSprtTwoTorque(noTorque, hasTorque, fuelToThrust));
+                    retVal.AddRange(GetZeroTorques_TwoTorque(noTorque, hasTorque, fuelToThrust));
                 }
                 else if (hasTorque.Count > 2)
                 {
                     // Many
-                    //retVal.AddRange(GetZeroTorquesSprtManyTorque1(noTorque, hasTorque, fuelToThrust));
-                    retVal.AddRange(GetZeroTorquesSprtManyTorque5(noTorque, hasTorque, fuelToThrust, centerMass));
+                    //retVal.AddRange(GetZeroTorques_ManyTorque1(noTorque, hasTorque, fuelToThrust));
+                    retVal.AddRange(GetZeroTorques_ManyTorque5(noTorque, hasTorque, fuelToThrust, centerMass));
                 }
 
                 // Throw out any that have zero translation
@@ -2173,7 +2173,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtZeroTorque(List<ThrustContribution> noTorque, double fuelToThrust)
+            private static List<ThrustSet> GetZeroTorques_ZeroTorque(List<ThrustContribution> noTorque, double fuelToThrust)
             {
                 Vector3D translation = new Vector3D(0, 0, 0);
                 Vector3D torque = new Vector3D(0, 0, 0);
@@ -2193,7 +2193,7 @@ namespace Game.Newt.Testers
                 retVal.Add(new ThrustSet(thrusters, translation, torque, fuelUsed));
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtTwoTorque(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
+            private static List<ThrustSet> GetZeroTorques_TwoTorque(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
             {
                 List<ThrustSet> retVal = new List<ThrustSet>();
 
@@ -2262,7 +2262,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque1(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque1(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
             {
                 List<ThrustSet> retVal = new List<ThrustSet>();
 
@@ -2335,7 +2335,7 @@ namespace Game.Newt.Testers
 
                 return new List<ThrustSet>();
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque2(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque2(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust)
             {
 
                 // This method is stable font/back, but won't stop roll around sumTorque
@@ -2457,7 +2457,7 @@ namespace Game.Newt.Testers
                 //return new List<ThrustSet>();
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque3(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque3(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
             {
                 List<ThrustSet> retVal = new List<ThrustSet>();
 
@@ -2664,10 +2664,10 @@ namespace Game.Newt.Testers
 
 
 
-                //return GetZeroTorquesSprtManyTorque3SprtReturnA(noTorque, posOrthDots, negOrthDots, percentLeftRight, fuelToThrust);
-                return GetZeroTorquesSprtManyTorque3SprtReturnC(noTorque, posOrthDots, negOrthDots, percentLeftRight, fuelToThrust, centerMass);
+                //return GetZeroTorques_ManyTorque3-ReturnA(noTorque, posOrthDots, negOrthDots, percentLeftRight, fuelToThrust);
+                return GetZeroTorques_ManyTorque3_ReturnC(noTorque, posOrthDots, negOrthDots, percentLeftRight, fuelToThrust, centerMass);
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque4(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque4(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
             {
                 const double MINPERCENT = .005d;
 
@@ -2759,7 +2759,7 @@ namespace Game.Newt.Testers
 
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque5(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque5(List<ThrustContribution> noTorque, List<ThrustContribution> hasTorque, double fuelToThrust, Point3D centerMass)
             {
                 const double MINPERCENT = .005d;
 
@@ -3079,7 +3079,7 @@ namespace Game.Newt.Testers
                 return false;
             }
 
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque3SprtReturnA(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque3_ReturnA(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust)
             {
                 List<ThrustSetting> thrusters = new List<ThrustSetting>();
                 Vector3D translation = new Vector3D();
@@ -3131,7 +3131,7 @@ namespace Game.Newt.Testers
                 retVal.Add(new ThrustSet(thrusters.ToArray(), translation, torque, fuelUsed));
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque3SprtReturnB(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust, Point3D centerMass)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque3_ReturnB(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust, Point3D centerMass)
             {
                 #region Consolidate candidates
 
@@ -3264,7 +3264,7 @@ namespace Game.Newt.Testers
                 retVal.Add(new ThrustSet(thrusters.ToArray(), translation, torque, fuelUsed));
                 return retVal;
             }
-            private static List<ThrustSet> GetZeroTorquesSprtManyTorque3SprtReturnC(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust, Point3D centerMass)
+            private static List<ThrustSet> GetZeroTorques_ManyTorque3_ReturnC(List<ThrustContribution> noTorque, List<Tuple<ThrustContribution, double, Vector3D, double>> posOrthDots, List<Tuple<ThrustContribution, double, Vector3D, double>> negOrthDots, double percentLeftRight, double fuelToThrust, Point3D centerMass)
             {
                 #region Consolidate candidates
 
@@ -3541,17 +3541,17 @@ namespace Game.Newt.Testers
             {
                 // Look at past successful results to help limit the range of what random percents to pick
                 Vector[] minMaxAbs, minMaxScaled;		// using X as the min, Y as the max
-                GeneratePercents2SprtExamineHistory(out minMaxAbs, out minMaxScaled, candidates, currentSmallest);
+                GeneratePercents2_ExamineHistory(out minMaxAbs, out minMaxScaled, candidates, currentSmallest);
 
                 // Come up with random percents
-                double[] percents = GeneratePercents2SprtGenerate(candidates, rand, minMaxAbs, minMaxScaled);
-                //Vector3D testTorque = GeneratePercents2SprtTest(candidates, percents, centerMass);		// no need to do this here, it won't be used
+                double[] percents = GeneratePercents2_Generate(candidates, rand, minMaxAbs, minMaxScaled);
+                //Vector3D testTorque = GeneratePercents2_Test(candidates, percents, centerMass);		// no need to do this here, it won't be used
 
                 // Using these percents, max out the thrusters and return that torque
                 //NOTE: This gets to the solution quickly for three thrusters.  But with 4, things keep bouncing around (one of the thrusters is max, then another.  Once that is
                 //sorted out, the other 3 jockey for 2nd, and it takes minutes to try to find a solution)
                 double[] maxPercents = FiringAttempt.GetRelativePercents(percents);
-                Vector3D torque = GeneratePercents2SprtTest(candidates, maxPercents, centerMass);
+                Vector3D torque = GeneratePercents2_Test(candidates, maxPercents, centerMass);
 
                 // Exit Function
                 return new FiringAttempt(maxPercents, torque);
@@ -3560,18 +3560,18 @@ namespace Game.Newt.Testers
             {
                 // Look at past successful results to help limit the range of what random percents to pick
                 Vector[] minMaxAbs, minMaxScaled;		// using X as the min, Y as the max
-                GeneratePercents2SprtExamineHistory(out minMaxAbs, out minMaxScaled, candidates, currentSmallest);
+                GeneratePercents2_ExamineHistory(out minMaxAbs, out minMaxScaled, candidates, currentSmallest);
 
                 // Come up with random percents
-                double[] percents = GeneratePercents2SprtGenerate(candidates, rand, minMaxAbs, minMaxScaled);
-                Vector3D testTorque = GeneratePercents2SprtTest(candidates, percents, centerMass);		// no need to do this here, it won't be used
+                double[] percents = GeneratePercents2_Generate(candidates, rand, minMaxAbs, minMaxScaled);
+                Vector3D testTorque = GeneratePercents2_Test(candidates, percents, centerMass);		// no need to do this here, it won't be used
 
 
                 // Using these percents, max out the thrusters and return that torque
                 //NOTE: This gets to the solution quickly for three thrusters.  But with 4, things keep bouncing around (one of the thrusters is max, then another.  Once that is
                 //sorted out, the other 3 jockey for 2nd, and it takes minutes to try to find a solution)
                 double[] maxPercents = FiringAttempt.GetRelativePercents(percents);
-                Vector3D torque = GeneratePercents2SprtTest(candidates, maxPercents, centerMass);
+                Vector3D torque = GeneratePercents2_Test(candidates, maxPercents, centerMass);
 
 
 
@@ -3594,7 +3594,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return new FiringAttempt(maxPercents, torque);
             }
-            private static void GeneratePercents2SprtExamineHistory(out Vector[] minMaxAbs, out Vector[] minMaxScaled, Tuple<ThrustContribution, double, double>[] candidates, SortedList<double, FiringAttempt> currentSmallest)
+            private static void GeneratePercents2_ExamineHistory(out Vector[] minMaxAbs, out Vector[] minMaxScaled, Tuple<ThrustContribution, double, double>[] candidates, SortedList<double, FiringAttempt> currentSmallest)
             {
                 const double DIFFPERCENT = .025d;		// increases the range 5% (2.5% each direction)
 
@@ -3697,7 +3697,7 @@ namespace Game.Newt.Testers
                     #endregion
                 }
             }
-            private static double[] GeneratePercents2SprtGenerate(Tuple<ThrustContribution, double, double>[] candidates, Random rand, Vector[] minMaxAbs, Vector[] minMaxScaled)
+            private static double[] GeneratePercents2_Generate(Tuple<ThrustContribution, double, double>[] candidates, Random rand, Vector[] minMaxAbs, Vector[] minMaxScaled)
             {
                 // Figure out which one represents the largest scale
                 int maxIndex = 0;
@@ -3766,13 +3766,13 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal;
             }
-            private static double[] GeneratePercents2SprtIncrease()
+            private static double[] GeneratePercents2_Increase()
             {
 
                 return null;
 
             }
-            private static Vector3D GeneratePercents2SprtTest(Tuple<ThrustContribution, double, double>[] candidates, double[] percents, Point3D centerMass)
+            private static Vector3D GeneratePercents2_Test(Tuple<ThrustContribution, double, double>[] candidates, double[] percents, Point3D centerMass)
             {
                 Vector3D retVal = new Vector3D(0, 0, 0);
 
@@ -4127,7 +4127,7 @@ namespace Game.Newt.Testers
 
                         if (points != null && points.Length > 0)
                         {
-                            double sumSize = GetIntersectionsSprtSize(sizes, hulls, outer) + GetIntersectionsSprtSize(sizes, hulls, inner);
+                            double sumSize = GetIntersections_Size(sizes, hulls, outer) + GetIntersections_Size(sizes, hulls, inner);
                             double minSize = sumSize * ignoreDepthPercent;
 
                             // Filter out the shallow penetrations
@@ -4145,7 +4145,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal.ToArray();
             }
-            private static double GetIntersectionsSprtSize(SortedList<int, double> sizes, CollisionHull[] hulls, int index)
+            private static double GetIntersections_Size(SortedList<int, double> sizes, CollisionHull[] hulls, int index)
             {
                 if (sizes.ContainsKey(index))
                 {
@@ -4192,13 +4192,13 @@ namespace Game.Newt.Testers
                         // Normal is pointing away from the first and toward the second
                         Vector3D normalUnit = intersectPoint.Normal.ToUnit();
 
-                        DoStepSprtAddForce(moves, intersection.Item1, normalUnit * (-1d * distance1), null);
-                        DoStepSprtAddForce(moves, intersection.Item2, normalUnit * distance2, null);
+                        DoStep_AddForce(moves, intersection.Item1, normalUnit * (-1d * distance1), null);
+                        DoStep_AddForce(moves, intersection.Item2, normalUnit * distance2, null);
                     }
                 }
 
                 // Apply the movements
-                DoStepSprtMove(parts, moves);
+                DoStep_Move(parts, moves);
 
                 // Remember which parts were modified (the list will be deduped later)
                 changedParts.AddRange(moves.Keys);
@@ -4235,23 +4235,23 @@ namespace Game.Newt.Testers
 
                         Vector3D translation, torque;
                         Math3D.SplitForceIntoTranslationAndTorque(out translation, out torque, intersectPoint.ContactPoint - parts[intersection.Item1].Position, normalUnit * (-1d * distance1));
-                        DoStepSprtAddForce(moves, intersection.Item1, translation, DoStep2SprtRotate(torque, sizes[intersection.Item1]));
+                        DoStep_AddForce(moves, intersection.Item1, translation, DoStep2_Rotate(torque, sizes[intersection.Item1]));
 
 
                         Math3D.SplitForceIntoTranslationAndTorque(out translation, out torque, intersectPoint.ContactPoint - parts[intersection.Item2].Position, normalUnit * distance2);
-                        DoStepSprtAddForce(moves, intersection.Item2, translation, DoStep2SprtRotate(torque, sizes[intersection.Item2]));
+                        DoStep_AddForce(moves, intersection.Item2, translation, DoStep2_Rotate(torque, sizes[intersection.Item2]));
 
 
                     }
                 }
 
                 // Apply the movements
-                DoStepSprtMove(parts, moves);
+                DoStep_Move(parts, moves);
 
                 // Remember which parts were modified (the list will be deduped later)
                 changedParts.AddRange(moves.Keys);
             }
-            private static Quaternion? DoStep2SprtRotate(Vector3D torque, double size)
+            private static Quaternion? DoStep2_Rotate(Vector3D torque, double size)
             {
                 const double MAXANGLE = 22.5d;
 
@@ -4270,7 +4270,7 @@ namespace Game.Newt.Testers
                 return new Quaternion(axis, angle);
             }
 
-            private static void DoStepSprtAddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
+            private static void DoStep_AddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
             {
                 if (!moves.ContainsKey(index))
                 {
@@ -4279,7 +4279,7 @@ namespace Game.Newt.Testers
 
                 moves[index].Add(Tuple.Create(translation, rotation));
             }
-            private static void DoStepSprtMove(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
+            private static void DoStep_Move(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
             {
                 foreach (int partIndex in moves.Keys)
                 {

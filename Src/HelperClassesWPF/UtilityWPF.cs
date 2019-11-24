@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,8 +12,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Media3D;
-using System.Windows.Threading;
-using Game.HelperClassesCore;
 
 namespace Game.HelperClassesWPF
 {
@@ -59,7 +57,6 @@ namespace Game.HelperClassesWPF
                 TubeRingBase prevRing = rings.Count > 1 ? rings[rings.Count - 2] : null;
                 EndCap(ref pointOffset, ref rotateAnglesForPerp, retVal, numSides, prevRing, rings[rings.Count - 1], null, transform, false, curZ, softSides);
 
-                // Exit Function
                 //retVal.Freeze();
                 return retVal;
             }
@@ -68,7 +65,7 @@ namespace Game.HelperClassesWPF
 
             private static void Initialize(out double height, out double startZ, int numSides, List<TubeRingBase> rings, bool shouldCenterZ)
             {
-                #region Validate
+                #region validate
 
                 if (rings.Count == 1)
                 {
@@ -115,7 +112,7 @@ namespace Game.HelperClassesWPF
             {
                 if (ringCurrent is TubeRingDome)
                 {
-                    #region Dome
+                    #region dome
 
                     Point[] domePointsTheta = EndCap_GetPoints(ringPrev, ringNext, numSides, isFirst);
                     double capHeight = EndCap_GetCapHeight(ringCurrent, ringNext, isFirst);
@@ -135,7 +132,7 @@ namespace Game.HelperClassesWPF
                 }
                 else if (ringCurrent is TubeRingPoint)
                 {
-                    #region Point
+                    #region point
 
                     Point[] conePointsTheta = EndCap_GetPoints(ringPrev, ringNext, numSides, isFirst);
                     double capHeight = EndCap_GetCapHeight(ringCurrent, ringNext, isFirst);
@@ -156,7 +153,7 @@ namespace Game.HelperClassesWPF
                 }
                 else if (ringCurrent is TubeRingRegularPolygon)
                 {
-                    #region Regular Polygon
+                    #region regular polygon
 
                     TubeRingRegularPolygon ringCurrentCast = (TubeRingRegularPolygon)ringCurrent;
 
@@ -221,7 +218,6 @@ namespace Game.HelperClassesWPF
                     throw new ApplicationException("The points are null for dome/point.  Validation should have caught this before now");
                 }
 
-                // Exit Function
                 return retVal;
             }
             private static Transform3D EndCap_GetTransform(Transform3D transform, bool isFirst, double z)
@@ -298,7 +294,7 @@ namespace Game.HelperClassesWPF
                 // NOTE: There is one more than NumSegmentsPhi
                 Point[] pointsPhi = ring.GetUnitPointsPhi(ring.NumSegmentsPhi);
 
-                #region Positions/Normals
+                #region positions/normals
 
                 //for (int phiCntr = 0; phiCntr < numSegmentsPhi; phiCntr++)		// The top point will be added after this loop
                 for (int phiCntr = pointsPhi.Length - 1; phiCntr > 0; phiCntr--)
@@ -339,7 +335,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Triangles - Rings
+                #region triangles - rings
 
                 int zOffsetBottom = pointOffset;
                 int zOffsetTop;
@@ -377,7 +373,7 @@ namespace Game.HelperClassesWPF
                 }
 
                 #endregion
-                #region Triangles - Cap
+                #region triangles - cap
 
                 int topIndex = geometry.Positions.Count - 1;
 
@@ -435,7 +431,7 @@ namespace Game.HelperClassesWPF
 
                         // pointsTheta are already the length they are supposed to be (not nessassarily a unit circle)
 
-                        #region Top/Left triangle
+                        #region top/left triangle
 
                         point = new Point3D(
                             pointsTheta[thetaCntr].X * pointsPhi[phiCntr].Y,
@@ -471,7 +467,7 @@ namespace Game.HelperClassesWPF
 
                         zOffset += 3;
 
-                        #region Bottom/Right triangle
+                        #region bottom/right triangle
 
                         point = new Point3D(
                             pointsTheta[thetaCntr].X * pointsPhi[phiCntr].Y,
@@ -509,7 +505,7 @@ namespace Game.HelperClassesWPF
                     }
 
                     // Connecting the last 2 points to the first 2
-                    #region Top/Left triangle
+                    #region top/left triangle
 
                     point = new Point3D(
                         pointsTheta[pointsTheta.Length - 1].X * pointsPhi[phiCntr].Y,
@@ -545,7 +541,7 @@ namespace Game.HelperClassesWPF
 
                     zOffset += 3;
 
-                    #region Bottom/Right triangle
+                    #region bottom/right triangle
 
                     point = new Point3D(
                         pointsTheta[pointsTheta.Length - 1].X * pointsPhi[phiCntr].Y,
@@ -583,7 +579,7 @@ namespace Game.HelperClassesWPF
                 }
 
                 #endregion
-                #region Triangles - Cap
+                #region triangles - cap
 
                 // This is basically the same idea as EndCap_ConeHard, except for the extra phi bits
 
@@ -671,7 +667,7 @@ namespace Game.HelperClassesWPF
 
                         // pointsTheta are already the length they are supposed to be (not nessassarily a unit circle)
 
-                        #region Top/Left triangle
+                        #region top/left triangle
 
                         point = new Point3D(
                             pointsTheta[thetaCntr].X * pointsPhi[phiCntr].Y,
@@ -707,7 +703,7 @@ namespace Game.HelperClassesWPF
 
                         zOffset += 3;
 
-                        #region Bottom/Right triangle
+                        #region bottom/right triangle
 
                         point = new Point3D(
                             pointsTheta[thetaCntr].X * pointsPhi[phiCntr].Y,
@@ -745,7 +741,7 @@ namespace Game.HelperClassesWPF
                     }
 
                     // Connecting the last 2 points to the first 2
-                    #region Top/Left triangle
+                    #region top/left triangle
 
                     point = new Point3D(
                         pointsTheta[pointsTheta.Length - 1].X * pointsPhi[phiCntr].Y,
@@ -781,7 +777,7 @@ namespace Game.HelperClassesWPF
 
                     zOffset += 3;
 
-                    #region Bottom/Right triangle
+                    #region bottom/right triangle
 
                     point = new Point3D(
                         pointsTheta[pointsTheta.Length - 1].X * pointsPhi[phiCntr].Y,
@@ -819,7 +815,7 @@ namespace Game.HelperClassesWPF
                 }
 
                 #endregion
-                #region Triangles - Cap
+                #region triangles - cap
 
                 // This is basically the same idea as EndCap_ConeHard, except for the extra phi bits
 
@@ -890,7 +886,7 @@ namespace Game.HelperClassesWPF
 
             private static void EndCap_ConeSoft(ref int pointOffset, ref double[] rotateAnglesForPerp, MeshGeometry3D geometry, Point[] pointsTheta, Transform3D transform, Transform3D normalTransform, TubeRingPoint ring, double capHeight, bool isFirst)
             {
-                #region Positions/Normals
+                #region positions/normals
 
                 if (isFirst || !ring.MergeNormalWithPrevIfSoft)
                 {
@@ -908,7 +904,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Triangles
+                #region triangles
 
                 int topIndex = geometry.Positions.Count - 1;
 
@@ -972,7 +968,7 @@ namespace Game.HelperClassesWPF
 
             private static void EndCap_PlateSoft(ref int pointOffset, ref double[] rotateAnglesForPerp, MeshGeometry3D geometry, Point[] pointsTheta, Transform3D transform, Transform3D normalTransform, TubeRingBase ring, bool isFirst)
             {
-                #region Positions/Normals
+                #region positions/normals
 
                 if (isFirst || !ring.MergeNormalWithPrevIfSoft)
                 {
@@ -998,7 +994,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Add the triangles
+                #region add the triangles
 
                 // Start with 0,1,2
                 geometry.TriangleIndices.Add(pointOffset + 0);
@@ -1098,7 +1094,7 @@ namespace Game.HelperClassesWPF
             {
                 if (ring1 is TubeRingRegularPolygon && ring2 is TubeRingRegularPolygon)
                 {
-                    #region Tube
+                    #region tube
 
                     if (softSides)
                     {
@@ -1127,7 +1123,7 @@ namespace Game.HelperClassesWPF
 
                 Point[] points = Math2D.GetCircle_Cached(numSides);
 
-                #region Points/Normals
+                #region points/normals
 
                 //TODO: Don't add the bottom ring's points, only the top
 
@@ -1147,7 +1143,7 @@ namespace Game.HelperClassesWPF
 
                 #endregion
 
-                #region Triangles
+                #region triangles
 
                 int zOffsetBottom = pointOffset;
                 int zOffsetTop = zOffsetBottom + numSides;
@@ -1342,7 +1338,6 @@ namespace Game.HelperClassesWPF
                 b = backColor.B + (((foreColor.B - backColor.B) * INV256) * alpha * 255d);
             }
 
-            //  Exit Function
             return GetColorCapped(a, r, g, b);
         }
         /// <summary>
@@ -1465,7 +1460,6 @@ namespace Game.HelperClassesWPF
                 return Colors.Transparent;
             }
 
-            //  Exit Function
             return GetColorCapped(a * 256d, r * 256d, g * 256d, b * 256d);
         }
         /// <summary>
@@ -1526,7 +1520,6 @@ namespace Game.HelperClassesWPF
                 return Colors.Transparent;
             }
 
-            //  Exit Function
             return GetColorCapped(a * 255d, r * 255d, g * 255d, b * 255d);
         }
         /// <summary>
@@ -1580,7 +1573,6 @@ namespace Game.HelperClassesWPF
                 return new byte[] { 0, 0, 0, 0 };
             }
 
-            //  Exit Function
             return new byte[]
             {
                 GetByteCapped(a * 256d),
@@ -1606,7 +1598,7 @@ namespace Game.HelperClassesWPF
             const double INV255 = 1d / 255d;
             const double NEARZERO = .001d;
 
-            #region Convert to doubles
+            #region convert to doubles
 
             List<Tuple<double, double, double, double>> doubles = new List<Tuple<double, double, double, double>>();
 
@@ -1634,7 +1626,7 @@ namespace Game.HelperClassesWPF
                 return new byte[] { 0, 0, 0, 0 };       // Colors.Transparent;
             }
 
-            #region Weighted sum
+            #region weighted sum
 
             double sumA = 0, sumR = 0, sumG = 0, sumB = 0;
             double sumWeight = 0;
@@ -1661,7 +1653,6 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            //  Exit Function
             return GetColorCapped_Bytes((sumA / doubles.Count) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
         }
 
@@ -1688,7 +1679,7 @@ namespace Game.HelperClassesWPF
             const double INV255 = 1d / 255d;
             const double NEARZERO = .001d;
 
-            #region Convert to doubles
+            #region convert to doubles
 
             //  A, R, G, B, %
             List<Tuple<double, double, double, double, double>> doubles = new List<Tuple<double, double, double, double, double>>();        //  I hate using such an ugly tuple, but the alternative is linq and anonymous types, and this method needs to be as fast as possible
@@ -1718,7 +1709,7 @@ namespace Game.HelperClassesWPF
                 return new byte[] { 0, 0, 0, 0 };       // Colors.Transparent;
             }
 
-            #region Weighted sum
+            #region weighted sum
 
             double sumA = 0, sumR = 0, sumG = 0, sumB = 0;
             double sumAlphaWeight = 0, sumWeight = 0;
@@ -1746,7 +1737,6 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            //  Exit Function
             return GetColorCapped_Bytes((sumA / sumAlphaWeight) * 255d, sumR * divisor * 255d, sumG * divisor * 255d, sumB * divisor * 255d);
         }
 
@@ -2129,7 +2119,7 @@ namespace Game.HelperClassesWPF
 
             if (sat == 0d)
             {
-                #region Gray
+                #region gray
 
                 // If the saturation is 0, then all colors are the same.
                 // (This is some flavor of gray.)
@@ -2141,7 +2131,7 @@ namespace Game.HelperClassesWPF
             }
             else
             {
-                #region Color
+                #region color
 
                 // Calculate the appropriate sector of a 6-part color wheel
                 double sectorPos = hue / 60d;
@@ -2203,7 +2193,7 @@ namespace Game.HelperClassesWPF
                 #endregion
             }
 
-            #region Scale/Cap 255
+            #region scale/cap 255
 
             // Scale to 255 (using int to make it easier to handle overflow)
             int rNew = Convert.ToInt32(Math.Round(r * 255d));
@@ -2240,7 +2230,6 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            // Exit Function
             return Color.FromArgb(a, Convert.ToByte(rNew), Convert.ToByte(gNew), Convert.ToByte(bNew));
         }
 
@@ -2964,6 +2953,104 @@ namespace Game.HelperClassesWPF
 
         #region 3D Geometry
 
+        //TODO: This function is flipping the colors of point2 and point3 (2 is 3's color, and 3 is 2's color)
+        /// <summary>
+        /// This textures a triangle with several gradient brushes
+        /// </summary>
+        /// <param name="blackPlate">
+        /// If all three colors are opaque, the black background makes the colors stand out.  But if you're dealing with
+        /// semitransparency, set this to false
+        /// </param>
+        public static Model3D GetGradientTriangle(Point3D point1, Point3D point2, Point3D point3, Color color1, Color color2, Color color3, bool blackPlate)
+        {
+            Vector3D normal = new Triangle(point1, point2, point3).Normal;
+
+            MeshGeometry3D geometry = new MeshGeometry3D()
+            {
+                TriangleIndices = new Int32Collection(new[] { 0, 1, 2, 2, 1, 0 }),
+                Normals = new Vector3DCollection(new[] { normal, normal, normal, normal, normal, normal }),
+                TextureCoordinates = new PointCollection(new[] { new Point(0, 0), new Point(1, 0), new Point(0, 1) }),
+                Positions = new Point3DCollection(new[] { point1, point2, point3 }),
+            };
+
+            Model3DGroup group = new Model3DGroup();
+
+            #region back black
+
+            if (blackPlate)
+            {
+                group.Children.Add(new GeometryModel3D()
+                {
+                    Material = new DiffuseMaterial(Brushes.Black),
+                    Geometry = geometry,
+                });
+            }
+
+            #endregion
+            #region point 1
+
+            group.Children.Add(new GeometryModel3D()
+            {
+                Material = new DiffuseMaterial(new RadialGradientBrush()
+                {
+                    Center = new Point(0, 0),
+                    GradientOrigin = new Point(0, 0),
+                    RadiusX = 1,
+                    RadiusY = 1,
+                    GradientStops = new GradientStopCollection(new[]
+                    {
+                        new GradientStop(color1, 0),
+                        new GradientStop(Color.FromArgb(0, color1.R, color1.G, color1.B), 1),
+                    }),
+                }),
+                Geometry = geometry,
+            });
+
+            #endregion
+            #region point 2
+
+            group.Children.Add(new GeometryModel3D()
+            {
+                Material = new DiffuseMaterial(new RadialGradientBrush()
+                {
+                    Center = new Point(1, 0),
+                    GradientOrigin = new Point(1, 0),
+                    RadiusX = 1,
+                    RadiusY = 1,
+                    GradientStops = new GradientStopCollection(new[]
+                    {
+                        new GradientStop(color2, 0),
+                        new GradientStop(Color.FromArgb(0, color2.R, color2.G, color2.B), 1),
+                    }),
+                }),
+                Geometry = geometry,
+            });
+
+            #endregion
+            #region point 3
+
+            group.Children.Add(new GeometryModel3D()
+            {
+                Material = new DiffuseMaterial(new RadialGradientBrush()
+                {
+                    Center = new Point(0.5, 1),
+                    GradientOrigin = new Point(0.5, 1),
+                    RadiusX = 1,
+                    RadiusY = 1,
+                    GradientStops = new GradientStopCollection(new[]
+                    {
+                        new GradientStop(color3, 0),
+                        new GradientStop(Color.FromArgb(0, color3.R, color3.G, color3.B), 1),
+                    }),
+                }),
+                Geometry = geometry,
+            });
+
+            #endregion
+
+            return group;
+        }
+
         /// <summary>
         /// ScreenSpaceLines3D makes a line that is the same thickness regardless of zoom/perspective.  This returns two bars in a cross
         /// pattern to make sort of a line.  This isn't meant to look very realistic when viewed up close, but is meant to be cheap
@@ -2985,36 +3072,76 @@ namespace Game.HelperClassesWPF
             // Define 3D mesh object
             MeshGeometry3D retVal = new MeshGeometry3D();
 
-            // Plate 1
+            #region plate 1
+
+            // 0
             retVal.Positions.Add(from + orth1);
+            retVal.TextureCoordinates.Add(new Point(0, 0));
+
+            // 1
             retVal.Positions.Add(to + orth1);
+            retVal.TextureCoordinates.Add(new Point(1, 1));
+
+            // 2
             retVal.Positions.Add(from - orth1);
+            retVal.TextureCoordinates.Add(new Point(0, 0));
+
+            // 3
             retVal.Positions.Add(to - orth1);
+            retVal.TextureCoordinates.Add(new Point(1, 1));
 
-            // Plate 2
-            retVal.Positions.Add(from + orth2);
-            retVal.Positions.Add(to + orth2);
-            retVal.Positions.Add(from - orth2);
-            retVal.Positions.Add(to - orth2);
-
-            // Face 1
             retVal.TriangleIndices.Add(0);
             retVal.TriangleIndices.Add(3);
             retVal.TriangleIndices.Add(1);
+
             retVal.TriangleIndices.Add(0);
             retVal.TriangleIndices.Add(2);
             retVal.TriangleIndices.Add(3);
 
-            // Face 2
+            retVal.Normals.Add(orth2);
+            retVal.Normals.Add(orth2);
+            retVal.Normals.Add(orth2);
+            retVal.Normals.Add(orth2);
+            retVal.Normals.Add(orth2);
+            retVal.Normals.Add(orth2);
+
+            #endregion
+
+            #region plate 2
+
+            // 4
+            retVal.Positions.Add(from + orth2);
+            retVal.TextureCoordinates.Add(new Point(0, 0));
+
+            // 5
+            retVal.Positions.Add(to + orth2);
+            retVal.TextureCoordinates.Add(new Point(1, 1));
+
+            // 6
+            retVal.Positions.Add(from - orth2);
+            retVal.TextureCoordinates.Add(new Point(0, 0));
+
+            // 7
+            retVal.Positions.Add(to - orth2);
+            retVal.TextureCoordinates.Add(new Point(1, 1));
+
             retVal.TriangleIndices.Add(4);
             retVal.TriangleIndices.Add(7);
             retVal.TriangleIndices.Add(5);
+
             retVal.TriangleIndices.Add(4);
             retVal.TriangleIndices.Add(6);
             retVal.TriangleIndices.Add(7);
 
-            // shouldn't I set normals?
-            //retVal.Normals
+            retVal.Normals.Add(orth1);
+            retVal.Normals.Add(orth1);
+            retVal.Normals.Add(orth1);
+            retVal.Normals.Add(orth1);
+            retVal.Normals.Add(orth1);
+            retVal.Normals.Add(orth1);
+
+            #endregion
+
 
             //retVal.Freeze();
             return retVal;
@@ -3346,6 +3473,17 @@ namespace Game.HelperClassesWPF
                 (new Point3D(max.X, max.Y, min.Z), new Point3D(max.X, max.Y, max.Z)),
                 (new Point3D(min.X, max.Y, min.Z), new Point3D(min.X, max.Y, max.Z)),
             };
+        }
+
+        public static Triangle GetEquilateralTriangle(double radius, double z = 0)
+        {
+            Vector3D up = new Vector3D(0, 0, 1);
+
+            Vector3D top = new Vector3D(0, radius, z);
+            Vector3D left = top.GetRotatedVector(up, 120);
+            Vector3D right = top.GetRotatedVector(up, -120);
+
+            return new Triangle(top.ToPoint(), left.ToPoint(), right.ToPoint());
         }
 
         /// <summary>
@@ -4196,7 +4334,7 @@ namespace Game.HelperClassesWPF
             return new TruncatedIcosidodecahedron(decagonPolys, hexagonPolys, squarePolys, points);
         }
 
-        public static MeshGeometry3D GetCylinder_AlongX(int numSegments, double radius, double height, RotateTransform3D rotateTransform = null)
+        public static MeshGeometry3D GetCylinder_AlongX(int numSegments, double radius, double height, RotateTransform3D rotateTransform = null, bool incudeCaps = true)
         {
             //NOTE: All the other geometries in this class are along the x axis, so I want to follow suit, but I think best along the z axis.  So I'll transform the points before commiting them to the geometry
             //TODO: This is so close to GetMultiRingedTube, the only difference is the multi ring tube has "hard" faces, and this has "soft" faces (this one shares points and normals, so the lighting is smoother)
@@ -4263,13 +4401,19 @@ namespace Game.HelperClassesWPF
 
             #endregion
 
-            // Caps
-            int pointOffset = retVal.Positions.Count;
+            #region Caps
 
-            //NOTE: The normals are backward from what you'd think
+            if (incudeCaps)
+            {
+                int pointOffset = retVal.Positions.Count;
 
-            GetCylinder_AlongXSprtEndCap(ref pointOffset, retVal, points, new Vector3D(0, 0, 1), radius, radius, -halfHeight, transform);
-            GetCylinder_AlongXSprtEndCap(ref pointOffset, retVal, points, new Vector3D(0, 0, -1), radius, radius, halfHeight, transform);
+                //NOTE: The normals are backward from what you'd think
+
+                GetCylinder_AlongXSprtEndCap(ref pointOffset, retVal, points, new Vector3D(0, 0, 1), radius, radius, -halfHeight, transform);
+                GetCylinder_AlongXSprtEndCap(ref pointOffset, retVal, points, new Vector3D(0, 0, -1), radius, radius, halfHeight, transform);
+            }
+
+            #endregion
 
             // Exit Function
             //retVal.Freeze();
@@ -5476,10 +5620,11 @@ namespace Game.HelperClassesWPF
             if (retVal.Count > 1)
             {
                 Point3D clickRayOrigin = clickRay.Origin;		// the compiler complains about anonymous methods using out params
-                retVal = retVal.OrderBy(o => o.GetDistanceFromPoint(clickRayOrigin)).ToList();
+                retVal = retVal.
+                    OrderBy(o => o.GetDistanceFromPoint(clickRayOrigin)).
+                    ToList();
             }
 
-            // Exit Function
             return retVal;
         }
 
@@ -7457,11 +7602,7 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// This lets you fine tune how many vertical separations there are in the dome (usually just use the same number as horizontal segments)
         /// </summary>
-        public int NumSegmentsPhi
-        {
-            get;
-            private set;
-        }
+        public int NumSegmentsPhi { get; private set; }
 
         #endregion
 
@@ -7493,11 +7634,7 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// This is how far this ring is (in Z) from the previous ring in the tube.  The first ring in the tube ignores this property
         /// </summary>
-        public double DistFromPrevRing
-        {
-            get;
-            private set;
-        }
+        public double DistFromPrevRing { get; private set; }
 
         /// <summary>
         /// This is only looked at if doing soft sides
@@ -7514,11 +7651,7 @@ namespace Game.HelperClassesWPF
         /// Pyramid/Cone - You would want false, because it's greater than 90 degrees between the base cap and side
         /// Rings meant to look seamless - When the angle is low between two rings, that's when this should be true
         /// </remarks>
-        public bool MergeNormalWithPrevIfSoft
-        {
-            get;
-            private set;
-        }
+        public bool MergeNormalWithPrevIfSoft { get; private set; }
 
         #region Public Methods
 
@@ -7531,7 +7664,7 @@ namespace Game.HelperClassesWPF
         /// </remarks>
         public static List<TubeRingBase> FitNewSize(List<TubeRingBase> rings, double radiusX, double radiusY, double length)
         {
-            #region Get sizes of the list passed in
+            #region get sizes of the list passed in
 
             double origLength = rings.Skip(1).Sum(o => o.DistFromPrevRing);
 
@@ -7558,7 +7691,7 @@ namespace Game.HelperClassesWPF
 
                 if (rings[cntr] is TubeRingDome)
                 {
-                    #region Dome
+                    #region dome
 
                     TubeRingDome dome = (TubeRingDome)rings[cntr];
 
@@ -7568,7 +7701,7 @@ namespace Game.HelperClassesWPF
                 }
                 else if (rings[cntr] is TubeRingPoint)
                 {
-                    #region TubeRingPoint
+                    #region point
 
                     TubeRingPoint point = (TubeRingPoint)rings[cntr];
 
@@ -7578,7 +7711,7 @@ namespace Game.HelperClassesWPF
                 }
                 else if (rings[cntr] is TubeRingRegularPolygon)
                 {
-                    #region TubeRingRegularPolygon
+                    #region regular polygon
 
                     TubeRingRegularPolygon poly = (TubeRingRegularPolygon)rings[cntr];
 

@@ -2,7 +2,6 @@
 using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems;
-using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
 using SharpNeat.Core;
@@ -13,8 +12,6 @@ using SharpNeat.Phenomes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.ArenaTester
@@ -23,11 +20,11 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
     public class TrainingSession : IDisposable
     {
+        public Func<ShipCoreArgs, KeepItems2D, DragHitShape, MaterialIDs, Bot> RequestCustomBot = null;
+
         #region Declaration Section
 
-        public const int ROOMCOUNT = 25;
         public const double ROOMSIZE = 100;
-        public const double ROOMMARGIN = ROOMSIZE / 10;
 
         private static Lazy<ExperimentInitArgs_Activation> _activationFunctionArgs = new Lazy<ExperimentInitArgs_Activation>(() =>
         new ExperimentInitArgs_Activation_CyclicFixedTimesteps()
@@ -40,12 +37,14 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
         #region Constructor
 
-        public TrainingSession(ShipDNA dna, ShipExtraArgs shipExtraArgs, int inputCount, int outputCount, Func<WorldAccessor, TrainingRoom, IPhenomeTickEvaluator<IBlackBox, NeatGenome>> getNewEvaluator)
+        public TrainingSession(ShipDNA dna, ShipExtraArgs shipExtraArgs, int inputCount, int outputCount, Func<WorldAccessor, TrainingRoom, IPhenomeTickEvaluator<IBlackBox, NeatGenome>> getNewEvaluator, int roomCount = 25, double roomSize = ROOMSIZE)
         {
             DNA = dna;
             ShipExtraArgs = shipExtraArgs;
 
-            Arena = new ArenaAccessor(ROOMCOUNT, ROOMSIZE, ROOMMARGIN, false, false, new Type[] { typeof(Bot) }, new Type[] { typeof(Bot) }, shipExtraArgs.NeuralPoolManual, (.1, .25));
+            double roomMargin = roomSize / 10;
+
+            Arena = new ArenaAccessor(roomCount, roomSize, roomMargin, false, false, new Type[] { typeof(Bot) }, new Type[] { typeof(Bot) }, shipExtraArgs.NeuralPoolManual, (.1, .25));
             Arena.WorldCreated += Arena_WorldCreated;
 
             foreach (var (room, _) in Arena.AllRooms)
@@ -61,8 +60,8 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 InputCount = inputCount,
                 OutputCount = outputCount,
                 IsHyperNEAT = false,
-                PopulationSize = ROOMCOUNT,        // may want to do a few more than rooms in case extra are made
-                SpeciesCount = Math.Max(2, (ROOMCOUNT / 4d).ToInt_Ceiling()),
+                PopulationSize = roomCount,        // may want to do a few more than rooms in case extra are made
+                SpeciesCount = Math.Max(2, (roomCount / 4d).ToInt_Ceiling()),
                 Activation = GetActivationFunctionArgs(),
                 Complexity_RegulationStrategy = ComplexityCeilingType.Absolute,
                 Complexity_Threshold = 200,
@@ -217,6 +216,25 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
 
             foreach (var (room, _) in Arena.AllRooms)
             {
+                #region keep 2D
+
+                //TODO: drag plane should either be a plane or a large cylinder, based on the current (level|scene|stage|area|arena|map|place|region|zone)
+
+                // This game is 3D emulating 2D, so always have the mouse go to the XY plane
+                DragHitShape dragPlane = new DragHitShape();
+                dragPlane.SetShape_Plane(new Triangle(new Point3D(-1, -1, room.Center.Z), new Point3D(1, -1, room.Center.Z), new Point3D(0, 1, room.Center.Z)));
+
+                // This will keep objects onto that plane using forces (not velocities)
+                KeepItems2D keep2D = new KeepItems2D
+                {
+                    SnapShape = dragPlane,
+                };
+
+                //keep2D.Add(room.Bot, false);
+                keep2Ds.Add(keep2D);
+
+                #endregion
+
                 #region bot
 
                 ShipCoreArgs core = new ShipCoreArgs()
@@ -230,8 +248,16 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 //events.
 
                 // Create the bot
-                BotConstruction_Result construction = BotConstructor.ConstructBot(DNA, core, ShipExtraArgs);
-                Bot bot = new Bot(construction);
+                Bot bot = null;
+                if (RequestCustomBot != null)
+                {
+                    bot = RequestCustomBot(core, keep2D, dragPlane, MaterialIDs);
+                }
+                else
+                {
+                    BotConstruction_Result construction = BotConstructor.ConstructBot(DNA, core, ShipExtraArgs);
+                    bot = new Bot(construction);
+                }
 
                 // Find some parts
                 BrainNEAT brainPart = bot.Parts.FirstOrDefault(o => o is BrainNEAT) as BrainNEAT;
@@ -256,32 +282,15 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
                 room.BrainPart = brainPart;
                 room.HomingParts = homingParts;
 
-                foreach(SensorHoming homing in homingParts)
+                foreach (SensorHoming homing in homingParts)
                 {
                     homing.HomePoint = room.Center;
-                    homing.HomeRadius = ROOMSIZE / 2d;
+                    homing.HomeRadius = (ROOMSIZE / 2d) * Evaluator3.MULT_HOMINGSIZE;
                 }
 
                 room.Map.AddItem(bot);
 
-                #region keep 2D
-
-                //TODO: drag plane should either be a plane or a large cylinder, based on the current (level|scene|stage|area|arena|map|place|region|zone)
-
-                // This game is 3D emulating 2D, so always have the mouse go to the XY plane
-                DragHitShape dragPlane = new DragHitShape();
-                dragPlane.SetShape_Plane(new Triangle(new Point3D(-1, -1, room.Center.Z), new Point3D(1, -1, room.Center.Z), new Point3D(0, 1, room.Center.Z)));
-
-                // This will keep objects onto that plane using forces (not velocities)
-                KeepItems2D keep2D = new KeepItems2D
-                {
-                    SnapShape = dragPlane,
-                };
-
                 keep2D.Add(room.Bot, false);
-                keep2Ds.Add(keep2D);
-
-                #endregion
             }
 
             Keep2D = keep2Ds.ToArray();

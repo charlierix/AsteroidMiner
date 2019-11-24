@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
+using System;
+using System.Linq;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -13,7 +10,7 @@ namespace Game.Newt.v2.Arcanorum
         public const double ELASTICITY_WALL = .1d;
         public const double ELASTICITY_BOTRAM = .95d;
 
-        #region Level
+        #region level
 
         public const int MAXLEVEL = 40;
 
@@ -170,9 +167,22 @@ namespace Game.Newt.v2.Arcanorum
             }
         }
 
-        #region Vision Sensor
+        #region vision sensor
 
-        private volatile object _visionSensor_NeuronDensity = 20d;
+        private volatile object _visionSensor_SearchRadius = 10d;
+        public double VisionSensor_SearchRadius
+        {
+            get
+            {
+                return (double)_visionSensor_SearchRadius;
+            }
+            set
+            {
+                _visionSensor_SearchRadius = value;
+            }
+        }
+
+        private volatile object _visionSensor_NeuronDensity = 200d;
         /// <summary>
         /// This is how many neurons to place inside of a vision sensor
         /// </summary>
@@ -210,7 +220,7 @@ namespace Game.Newt.v2.Arcanorum
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Homing Sensor
+        #region homing sensor
 
         private volatile object _homingSensor_NeuronDensity = 20d;
         /// <summary>
@@ -250,7 +260,39 @@ namespace Game.Newt.v2.Arcanorum
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Motion Controller - linear
+        #region weapon sensor
+
+        private volatile object _sensorArcbotWeapon_NeuronDensity = 20d;
+        /// <summary>
+        /// This is how many neurons to place inside of an arcbot weapon sensor
+        /// </summary>
+        public double SensorArcbotWeapon_NeuronDensity
+        {
+            get
+            {
+                return (double)_sensorArcbotWeapon_NeuronDensity;
+            }
+            set
+            {
+                _sensorArcbotWeapon_NeuronDensity = value;
+            }
+        }
+
+        private volatile object _sensorArcbotWeapon_AmountToDraw = 1d; //.001d;  this is multiplied by ENERGYDRAWMULT
+        public double SensorArcbotWeapon_AmountToDraw
+        {
+            get
+            {
+                return (double)_sensorArcbotWeapon_AmountToDraw;
+            }
+            set
+            {
+                _sensorArcbotWeapon_AmountToDraw = value;
+            }
+        }
+
+        #endregion
+        #region motion controller - linear
 
         private volatile object _motionController_Linear_NeuronDensity = 20d;
         /// <summary>
@@ -290,9 +332,9 @@ namespace Game.Newt.v2.Arcanorum
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Motion Controller2
+        #region motion controller2
 
-        private volatile object _motionController2_NeuronDensity = 8d;
+        private volatile object _motionController2_NeuronDensity = 24d;
         /// <summary>
         /// This is how many neurons to place around the perimiter (this doesn't include the 2 interior neurons)
         /// </summary>
@@ -305,6 +347,29 @@ namespace Game.Newt.v2.Arcanorum
             set
             {
                 _motionController2_NeuronDensity = value;
+            }
+        }
+
+        private volatile object _motionController2_NeuronGrowthExponent = 1d;
+        /// <summary>
+        /// Even though the sensor appears to be a cube, the neurons are placed in a sphere, but if volume
+        /// is calculated as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
+        /// quickly for smaller values.
+        /// 
+        /// So instead the volume is calculated as Math.Pow(radius, this.SensorNeuronGrowthExponent)
+        /// </summary>
+        /// <remarks>
+        /// If you want spherical growth, just set this to 3
+        /// </remarks>
+        public double MotionController2_NeuronGrowthExponent
+        {
+            get
+            {
+                return (double)_motionController2_NeuronGrowthExponent;
+            }
+            set
+            {
+                _motionController2_NeuronGrowthExponent = value;
             }
         }
 
@@ -330,7 +395,7 @@ namespace Game.Newt.v2.Arcanorum
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Nest
+        #region nest
 
         //TODO: Instead of absolutes, these should be multipliers (to be multiplied with dna props)
         private volatile object _nest_Energy_Max = 100d;

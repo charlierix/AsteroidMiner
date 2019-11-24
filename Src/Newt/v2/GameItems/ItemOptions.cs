@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Game.HelperClassesWPF;
+using System;
 using System.Threading;
 using System.Windows.Media;
-using Game.HelperClassesWPF;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -19,7 +16,7 @@ namespace Game.Newt.v2.GameItems
     /// </remarks>
     public class ItemOptions
     {
-        #region Mineral Densities
+        #region mineral densities
 
         // These are copied here for convenience (all in kg/m^3)
         // Ice: 934
@@ -35,7 +32,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region HitPoints
+        #region hit points
 
         public const double HITPOINTMIN = 32;
         public const double HITPOINTSLOPE = 1;
@@ -173,7 +170,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Egg
+        #region egg
 
         private volatile object _egg_Density = 3500d;
         /// <summary>
@@ -193,7 +190,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Ship
+        #region ship
 
         private volatile object _momentOfInertiaMultiplier = 1d;
         /// <summary>
@@ -239,8 +236,31 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
+        #region misc neural
+
+        private volatile object _neural_ExistingRatioCap = 1.05;
+        /// <summary>
+        /// When linking from a source to destination container, and there are existing links, the relinker can potentially create
+        /// more links (because uncertain links will create extra to nearby neurons)
+        /// 
+        /// This is a ratio that caps the final count (final = (source * ratio).ToIntRound)
+        /// </summary>
+        public double Neural_ExistingRatioCap
+        {
+            get
+            {
+                return (double)_neural_ExistingRatioCap;
+            }
+            set
+            {
+                _neural_ExistingRatioCap = value;
+            }
+        }
+
+        #endregion
+
         // Containers
-        #region Cargo Bay
+        #region cargo bay
 
         private volatile object _cargoBay_WallDensity = 20d;
         /// <summary>
@@ -267,7 +287,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Ammo Box
+        #region ammo box
 
         private volatile object _ammo_Density = 10000d;
         /// <summary>
@@ -310,7 +330,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Fuel Tank
+        #region fuel tank
 
         private volatile object _fuel_Density = 750d;
         /// <summary>
@@ -358,7 +378,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Energy Tank
+        #region energy tank
 
         private volatile object _energyTank_Density = 1000d;
         /// <summary>
@@ -393,7 +413,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Plasma Tank
+        #region plasma tank
 
         private volatile object _plasmaTank_Density = 1800d;
         /// <summary>
@@ -422,7 +442,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Converters
-        #region Matter Converters - all
+        #region matter converters - all
 
         private volatile object _matterConverter_WallDensity = 600d;
         /// <summary>
@@ -464,7 +484,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Matter Converters - matter ->
+        #region matter converters - matter ->
 
         public readonly DamageProps MatterConverter_Damage = new DamageProps(
             HITPOINTMIN,
@@ -475,7 +495,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Matter Converters - energy ->
+        #region matter converters - energy ->
 
         public readonly DamageProps EnergyConverter_Damage = new DamageProps(
             HITPOINTMIN,
@@ -486,7 +506,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Matter -> Fuel
+        #region matter -> fuel
 
         private volatile object _matterToFuel_AmountToDraw = 100d;
         /// <summary>
@@ -521,7 +541,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Matter -> Energy
+        #region matter -> energy
 
         private volatile object _matterToEnergy_AmountToDraw = 100d;
         /// <summary>
@@ -556,7 +576,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Matter -> Plasma
+        #region matter -> plasma
 
         private volatile object _matterToPlasma_AmountToDraw = 100d;
         /// <summary>
@@ -591,7 +611,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Matter -> Ammo
+        #region matter -> ammo
 
         private volatile object _matterToAmmo_AmountToDraw = 100d;
         /// <summary>
@@ -626,7 +646,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Energy -> Ammo
+        #region energy -> ammo
 
         private volatile object _energyToAmmo_ConversionRate = .033d;		// 30 units of energy for one unit of ammo
         public double EnergyToAmmo_ConversionRate
@@ -671,7 +691,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Energy -> Fuel
+        #region energy -> fuel
 
         private volatile object _energyToFuel_ConversionRate = .1d;		// 10 units of energy for one unit of fuel
         public double EnergyToFuel_ConversionRate
@@ -716,7 +736,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Energy -> Plasma
+        #region energy -> plasma
 
         private volatile object _energyToPlasma_ConversionRate = .05d;		// 20 units of energy for one unit of plasma
         public double EnergyToPlasma_ConversionRate
@@ -761,7 +781,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Fuel -> Energy
+        #region fuel -> energy
 
         private volatile object _fuelToEnergy_ConversionRate = .9d;		// 10 units of fuel for 9 units of energy (it's just burning fuel)
         public double FuelToEnergy_ConversionRate
@@ -814,7 +834,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Solar Panel (Radiation -> Energy)
+        #region solar panel (radiation -> energy)
 
         private volatile object _solarPanel_ConversionRate = .003d;
         public double SolarPanel_ConversionRate
@@ -853,7 +873,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Sensors
-        #region Sensors - all
+        #region sensors - all
 
         private volatile object _sensor_Density = 1500d;
         public double Sensor_Density
@@ -870,8 +890,8 @@ namespace Game.Newt.v2.GameItems
 
         private volatile object _sensor_NeuronGrowthExponent = .8d;
         /// <summary>
-        /// Even though the sensor appears to be a cube, the neurons are placed in a sphere, but if I calculate
-        /// volume as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
+        /// Even though the sensor appears to be a cube, the neurons are placed in a sphere, but if volume
+        /// is calculated as a sphere, then the number of neurons explodes for radius greater than 1, and shrinks
         /// quickly for smaller values.
         /// 
         /// So instead the volume is calculated as Math.Pow(radius, this.SensorNeuronGrowthExponent)
@@ -900,7 +920,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region Gravity Sensor
+        #region gravity sensor
 
         private volatile object _gravitySensor_NeuronDensity = 20d;
         /// <summary>
@@ -932,7 +952,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Spin Sensor
+        #region spin sensor
 
         private volatile object _spinSensor_NeuronDensity = 20d;
         /// <summary>
@@ -988,7 +1008,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Velocity Sensor
+        #region velocity sensor
 
         private volatile object _velocitySensor_NeuronDensity = 20d;
         /// <summary>
@@ -1020,7 +1040,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Homing Sensor
+        #region homing sensor
 
         private volatile object _homingSensor_NeuronDensity = 20d;
         /// <summary>
@@ -1065,7 +1085,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region Camera - all
+        #region camera - all
 
         private volatile object _camera_Density = 1100d;
         public double Camera_Density
@@ -1108,7 +1128,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region CameraColorRGB
+        #region camera color rgb
 
         private volatile object _cameraColorRGB_NeuronDensity = 20d * 3d;
         /// <summary>
@@ -1149,7 +1169,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region CameraHardCoded
+        #region camera hardcoded
 
         private volatile object _cameraHardCoded_NeuronDensity = 32d;
         /// <summary>
@@ -1194,7 +1214,7 @@ namespace Game.Newt.v2.GameItems
 
         #endregion
 
-        #region Brain
+        #region brain
 
         private volatile object _brain_Density = 800d;
         public double Brain_Density
@@ -1405,7 +1425,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region BrainNEAT
+        #region brain neat
 
         private volatile object _brainNEAT_NeuronDensity_Input = 85d;
         /// <summary>
@@ -1440,7 +1460,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         #endregion
-        #region DirectionController
+        #region direction controller
 
         private volatile object _directionController_Density = 900d;
         public double DirectionController_Density
@@ -1548,7 +1568,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Propulsion
-        #region Thruster (Fuel -> Force)
+        #region thruster (fuel -> force)
 
         private volatile object _thruster_Density = 600d;
         public double Thruster_Density
@@ -1656,7 +1676,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region TractorBeam (Plasma -> Force)
+        #region tractorbeam (plasma -> force)
 
         private volatile object _tractorBeam_Density = 1800d;
         public double TractorBeam_Density
@@ -1680,7 +1700,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region ImpulseEngine (Plasma -> Force)
+        #region impulseengine (plasma -> force)
 
         private volatile object _impulseEngine_Density = 1800d;
         public double ImpulseEngine_Density
@@ -1795,7 +1815,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Guns
-        #region ProjectileWeapon
+        #region projectile weapon
 
         private volatile object _projectileWeapon_Density = 1700d;
         public double ProjectileWeapon_Density
@@ -1880,7 +1900,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region BeamGun
+        #region beam gun
 
         private volatile object _beamGun_Density = 1800d;
         public double BeamGun_Density
@@ -1906,7 +1926,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Shields
-        #region Shields - all
+        #region shields - all
 
         private volatile object _shield_Density = 1800d;
         public double Shield_Density
@@ -1932,7 +1952,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
 
         // Misc
-        #region SwarmBay
+        #region swarm bay
 
         private volatile object _swarmBay_Density = 3000d;
         public double SwarmBay_Density
@@ -1962,7 +1982,7 @@ namespace Game.Newt.v2.GameItems
             DAMAGE_RANDOMMAX);
 
         #endregion
-        #region SwarmBot
+        #region swarm bot
 
         public double SwarmBot_AmountToDraw;
         public double SwarmBot_SearchRadius = 50;

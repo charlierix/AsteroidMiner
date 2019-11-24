@@ -17,6 +17,7 @@ using System.Windows.Threading;
 using Game.HelperClassesCore;
 using Game.Newt.v2.GameItems;
 using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
 
 namespace Game.Newt.v2.Arcanorum.Views
 {
@@ -118,7 +119,7 @@ namespace Game.Newt.v2.Arcanorum.Views
             else
             {
                 this.AttachedWeaponID = bot.Weapon.DNA.UniqueID;
-                bot.AttachWeapon(null, ArcBot.ItemToFrom.Nowhere, ArcBot.ItemToFrom.Inventory);
+                bot.AttachWeapon(null, ItemToFrom.Nowhere, ItemToFrom.Inventory);
             }
 
             //TODO: When the user can create weapons in the shop, this will need to be recalculated, and all item cameras need to be adjusted

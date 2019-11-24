@@ -929,7 +929,7 @@ namespace Game.Newt.v2.GameItems.MapParts
             }
 
             // Go full acceleration directly toward
-            Vector3D retVal = (destination.NearestPoint - position).ToUnit(false) * accel;
+            Vector3D retVal = (destination.NearestPoint - position).ToUnit() * accel;
 
             if (destination.DistanceSquared < radius * radius)
             {
@@ -1144,7 +1144,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    }
 
         //    // For now, just aim straight for the first point
-        //    return (objectiveStroke.Points[0].Item1 - position).ToUnit(false) * this.MaxAccel;
+        //    return (objectiveStroke.Points[0].Item1 - position).ToUnit() * this.MaxAccel;
         //}
         //private Vector3D? GetStrokeForce_HASREPULSE(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
         //{
@@ -1209,7 +1209,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    #endregion
 
         //    // Start with attraction to the current point
-        //    Vector3D retVal = towardCurrentPoint.ToUnit(false) * this.MaxAccel;
+        //    Vector3D retVal = towardCurrentPoint.ToUnit() * this.MaxAccel;
 
         //    #region influence velocity
 
@@ -1244,7 +1244,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //        }
         //        else
         //        {
-        //            retVal += dirToPoint.ToUnit(false) * repulse.Strength;
+        //            retVal += dirToPoint.ToUnit() * repulse.Strength;
         //        }
         //    }
 
@@ -1320,7 +1320,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    #endregion
 
         //    // Start with attraction to the current point
-        //    Vector3D retVal = towardCurrentPoint.ToUnit(false) * this.MaxAccel;
+        //    Vector3D retVal = towardCurrentPoint.ToUnit() * this.MaxAccel;
 
         //    #region influence velocity
 
@@ -1355,7 +1355,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    //    }
         //    //    else
         //    //    {
-        //    //        retVal += dirToPoint.ToUnit(false) * repulse.Strength;
+        //    //        retVal += dirToPoint.ToUnit() * repulse.Strength;
         //    //    }
         //    //}
 
@@ -1398,7 +1398,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    }
 
         //    // For now, just aim straight for the first point
-        //    return (toObjective).ToUnit(false) * this.MaxAccel;
+        //    return (toObjective).ToUnit() * this.MaxAccel;
         //}
         //private Vector3D? GetStrokeForce_MULTIWITHVELOCITY(SwarmObjectiveStrokes.Stroke objectiveStroke, Point3D position, Vector3D velocity)
         //{
@@ -1446,7 +1446,7 @@ namespace Game.Newt.v2.GameItems.MapParts
         //    #endregion
 
         //    // For now, just aim straight for the first point
-        //    Vector3D retVal = (toObjective).ToUnit(false) * this.MaxAccel;
+        //    Vector3D retVal = (toObjective).ToUnit() * this.MaxAccel;
 
         //    #region influence velocity
 
@@ -1784,7 +1784,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                 if (accel.LengthSquared > maxAccel * maxAccel)
                 {
-                    accel = accel.ToUnit(false) * maxAccel;
+                    accel = accel.ToUnit() * maxAccel;
                 }
 
                 linear = accel;
@@ -1805,7 +1805,7 @@ namespace Game.Newt.v2.GameItems.MapParts
                 return vector;
             }
 
-            return vector.ToUnit(false) * maxLength;
+            return vector.ToUnit() * maxLength;
         }
 
         private Tuple<Vector3D?, Vector3D?> CombineAccels(Vector3D? neighborAccel, Vector3D? strokeAccel, Point3D position)

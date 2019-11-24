@@ -1,27 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
-using System.Windows.Shapes;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
+using Game.HelperClassesWPF.Controls2D;
 using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems;
 using Game.Newt.v2.GameItems.Controls;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
-using Game.HelperClassesWPF.Controls2D;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.FlyingBeans
 {
@@ -1094,29 +1088,8 @@ namespace Game.Newt.v2.FlyingBeans
                     {
                         #region Show Viewer
 
-                        ShipViewerWindow viewer = new ShipViewerWindow(clickedBean.Item1);
-                        viewer.Owner = this;		// the other settings like topmost, showintaskbar, etc are already set in the window's xaml
-                        viewer.PopupBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("60000000"));
-                        viewer.PopupBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("30000000"));
-                        viewer.ViewportBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("E0000000"));
-
-                        LinearGradientBrush brush = new LinearGradientBrush();
-                        brush.StartPoint = new Point(0, 0);
-                        brush.EndPoint = new Point(1, 1);
-
-                        GradientStopCollection gradients = new GradientStopCollection();
-                        gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0EBEDE4"), 0d));
-                        gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DFE0DA"), .1d));
-                        gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0E0E0E0"), .6d));
-                        gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0DADBD5"), .9d));
-                        gradients.Add(new GradientStop(UtilityWPF.ColorFromHex("E0D7DBCC"), 1d));
-                        brush.GradientStops = gradients;
-
-                        viewer.ViewportBackground = brush;
-
-                        viewer.PanelBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("8068736B"));
-                        viewer.PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45"));
-                        viewer.Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0"));
+                        ShipViewerWindow viewer = new ShipViewerWindow(clickedBean.Item1, this);
+                        viewer.SetColorTheme_Dark_Gradient();
 
                         Point windowClickPoint = UtilityWPF.TransformToScreen(clickedBean.Item3, grdViewPort);
                         Point popupPoint = new Point(windowClickPoint.X + 50, windowClickPoint.Y - (viewer.Height / 3d));

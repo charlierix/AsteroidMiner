@@ -970,7 +970,7 @@ namespace Game.HelperClassesWPF
         private static Point3D? CastRay_PlaneLimited(ITriangle plane, RayHitTestParameters mouseDownClickRay, RayHitTestParameters mouseDownCenterRay, RayHitTestParameters currentClickRay, RayHitTestParameters cameraLook)
         {
             // They are looking along the plane, so snap to a line instead of a plane
-            RayHitTestParameters snapLine = CastRay_PlaneLimitedSprtGetSnapLine(plane, cameraLook.Direction);		// the returned vector is used like 3 bools, with only one axis set to true
+            RayHitTestParameters snapLine = CastRay_PlaneLimited_GetSnapLine(plane, cameraLook.Direction);		// the returned vector is used like 3 bools, with only one axis set to true
             if (snapLine == null)
             {
                 return null;
@@ -979,7 +979,7 @@ namespace Game.HelperClassesWPF
             double dummy1;
             return CastRay_Line(out dummy1, snapLine.Origin, snapLine.Direction, mouseDownClickRay, mouseDownCenterRay, currentClickRay);
         }
-        private static RayHitTestParameters CastRay_PlaneLimitedSprtGetSnapLine(ITriangle plane, Vector3D lookDirection)
+        private static RayHitTestParameters CastRay_PlaneLimited_GetSnapLine(ITriangle plane, Vector3D lookDirection)
         {
             const double THRESHOLD = .33d;
 

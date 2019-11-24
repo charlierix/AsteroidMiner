@@ -329,18 +329,8 @@ namespace Game.Newt.v2.MissileCommand
                     _viewer = null;
                 }
 
-                _viewer = new ShipViewerWindow(_bot)
-                {
-                    Owner = this,		// the other settings like topmost, showintaskbar, etc are already set in the window's xaml
-
-                    PopupBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("60000000")),
-                    PopupBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("30000000")),
-                    ViewportBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("E0000000")),
-                    ViewportBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("E0E0E0E0")),
-                    PanelBorder = new SolidColorBrush(UtilityWPF.ColorFromHex("8068736B")),
-                    PanelBackground = new SolidColorBrush(UtilityWPF.ColorFromHex("80424F45")),
-                    Foreground = new SolidColorBrush(UtilityWPF.ColorFromHex("F0F0F0")),
-                };
+                _viewer = new ShipViewerWindow(_bot, this);
+                _viewer.SetColorTheme_Dark();
 
                 _viewer.Show();      // it needs to be shown first to get the size
             }

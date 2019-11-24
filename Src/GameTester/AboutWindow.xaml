@@ -112,6 +112,30 @@
                 </Grid>
             </TabItem>
 
+            <!-- MIT License -->
+            <TabItem Header="MIT License">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="MIT License" Style="{StaticResource headerText}"/>
+                        <TextBlock Text="Used by MIConvexHull" Style="{StaticResource subHeaderText}"/>
+                        <TextBlock Text="Used by SharpNEAT" Style="{StaticResource subHeaderText}"/>
+                    </StackPanel>
+
+                    <!-- This is set in code, it was easier with all the line breaks -->
+                    <TextBox Grid.Row="1" Background="Transparent" BorderThickness="0" BorderBrush="Transparent" Name="txtLicense_MIT" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="2,4,2,0"/>
+
+                    <TextBlock Grid.Row="2"><Hyperlink Click="Hyperlink_Click"><Run Text="https://opensource.org/licenses/MIT"/></Hyperlink></TextBlock>
+                    <TextBlock Grid.Row="3"><Hyperlink Click="Hyperlink_Click"><Run Text="https://en.wikipedia.org/wiki/MIT_License"/></Hyperlink></TextBlock>
+                </Grid>
+            </TabItem>
+
             <!-- References -->
             <TabItem Header="References">
                 <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Margin="6">
@@ -130,6 +154,11 @@
                         <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.heatonresearch.com/wiki/Main_Page"/></Hyperlink></TextBlock>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://github.com/encog/encog-dotnet-core/wiki/Encog-Download-Links"/></Hyperlink></TextBlock>
 
+                        <TextBlock Text="SharpNEAT" Style="{StaticResource ackHeader}"/>
+                        <TextBlock Text="This grows neural nets" Style="{StaticResource ackDescription}"/>
+                        <TextBlock Margin="0" Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://sharpneat.sourceforge.net/"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://github.com/colgreen/sharpneat"/></Hyperlink></TextBlock>
+
                         <TextBlock Text="3D Tools for the Windows Presentation Foundation" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="The previous link had code from here embedded in it.  Lots of good stuff" Style="{StaticResource ackDescription}"/>
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://3dtools.codeplex.com"/></Hyperlink></TextBlock>
@@ -143,10 +172,8 @@
                         <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="http://www.mozilla.org/MPL/"/></Hyperlink></TextBlock>
 
                         <TextBlock Text="Delaunay/Voronoi 3D" Style="{StaticResource ackHeader}"/>
-                        <!--<TextBlock Text="The 3D implementation (MIConvexHull) has GNU Lesser Public Licence 2.1" Style="{StaticResource ackDescription}"/>-->
-
-                        <TextBlock Style="{StaticResource ackDescription}">The 3D implementation (<TextBlock Style="{StaticResource ackLink}" Margin="0"><Hyperlink NavigateUri="https://miconvexhull.codeplex.com/" TextDecorations="None" Click="Hyperlink_Click"><Run Text="MIConvexHull"/></Hyperlink></TextBlock>) has GNU Lesser Public Licence 2.1</TextBlock> 
-                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://www.gnu.org/licenses/lgpl-2.1.html"/></Hyperlink></TextBlock>
+                        <TextBlock Style="{StaticResource ackDescription}">The 3D implementation has The MIT License (MIT)</TextBlock>
+                        <TextBlock Style="{StaticResource ackLink}"><Hyperlink Click="Hyperlink_Click"><Run Text="https://designengrlab.github.io/MIConvexHull/"/></Hyperlink></TextBlock>
 
                         <TextBlock Text="Clipper" Style="{StaticResource ackHeader}"/>
                         <TextBlock Text="This is a library that does some 2D polygon combinations (intersect, union)" Style="{StaticResource ackDescription}"/>

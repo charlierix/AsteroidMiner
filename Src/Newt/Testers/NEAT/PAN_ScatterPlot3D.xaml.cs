@@ -106,7 +106,7 @@ namespace Game.Newt.Testers.NEAT
                 _viewport.Children.RemoveAt(_viewport.Children.Count - 1);
             }
 
-            VectorND center = new VectorND(new[] { .5, .5, .5 });
+            VectorND center = new VectorND(.5, .5, .5);
 
             // Add the numbers
             for (int cntr = 0; cntr < 8; cntr++)
@@ -119,7 +119,7 @@ namespace Game.Newt.Testers.NEAT
                     TrueColor :
                     FalseColor;
 
-                AddText3D(cntr.ToString(), position.ToPoint3D(), position.ToVector3D().ToUnit(false), .1, color, false);
+                AddText3D(cntr.ToString(), position.ToPoint3D(), position.ToVector3D().ToUnit(), .1, color, false);
             }
 
             _viewportOffset_Labels = _viewport.Children.Count;

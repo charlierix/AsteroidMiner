@@ -1,10 +1,8 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Game.HelperClassesCore;
-using Game.HelperClassesWPF;
 
 namespace Game.HelperClassesAI
 {
@@ -1091,10 +1089,7 @@ namespace Game.HelperClassesAI
                 retVal.Weights = this.Weights.Clone();
             }
 
-            if (this.Position != null)
-            {
-                retVal.Position = this.Position.Clone();
-            }
+            retVal.Position = this.Position.Clone();
 
             return retVal;
         }

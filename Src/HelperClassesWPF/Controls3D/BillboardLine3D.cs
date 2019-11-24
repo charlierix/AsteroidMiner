@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
@@ -46,6 +43,14 @@ namespace Game.HelperClassesWPF.Controls3D
         //TODO: May want to expose these as public properties
         private readonly double _arrowBaseMult = 5;
         private readonly double _arrowHeightMult = 10;
+
+        private SolidColorBrush _solidBrush = null;
+        private SolidColorBrush _solidBrush_Unlit = null;
+
+        private LinearGradientBrush _linearBrush = null;
+        private LinearGradientBrush _linearBrush_Unlit = null;
+
+        private Material _material = null;
 
         #endregion
 
@@ -122,6 +127,7 @@ namespace Game.HelperClassesWPF.Controls3D
 
         #region Public Properties
 
+        private readonly Model3DGroup _model;
         /// <summary>
         /// This is the model that this class keeps updated
         /// </summary>
@@ -130,7 +136,6 @@ namespace Game.HelperClassesWPF.Controls3D
         /// caller to create a single visual that holds a group of these (the odds are good that when this class is used, there will
         /// be many lines needed)
         /// </remarks>
-        private readonly Model3DGroup _model;
         public Model3D Model => _model;
 
         private bool _isReflectiveColor = false;
@@ -142,15 +147,22 @@ namespace Game.HelperClassesWPF.Controls3D
             }
             set
             {
+                _solidBrush = null;
+                _solidBrush_Unlit = null;
+
+                _linearBrush = null;
+                _linearBrush_Unlit = null;
+
                 _material = null;
+
                 _isReflectiveColor = value;
 
                 InvalidateColor();
             }
         }
 
-        private Color _color = Colors.Transparent;
-        public Color Color
+        private Color? _color = null;
+        public Color? Color
         {
             get
             {
@@ -159,16 +171,41 @@ namespace Game.HelperClassesWPF.Controls3D
             set
             {
                 _material = null;
+
                 _color = value;
 
                 InvalidateColor();
             }
         }
 
-        // If this is set, it overrides this.Color and this.IsReflectiveColor
-        //NOTE: Setting either of those will set this back to null
-        private Material _material = null;
-        internal Material Material
+        private Color? _color2 = null;
+        public Color? ColorTo
+        {
+            get
+            {
+                return _color2;
+            }
+            set
+            {
+                _solidBrush = null;
+                _solidBrush_Unlit = null;
+
+                _material = null;
+
+                _color2 = value;
+
+                InvalidateColor();
+            }
+        }
+
+        /// <summary>
+        /// If this is set, it overrides this.Color and this.IsReflectiveColor
+        /// NOTE: look at GetLinearGradientMaterial_Reflective, GetLinearGradientMaterial_Unlit
+        /// </summary>
+        /// <remarks>
+        /// NOTE: Setting either of those will set this back to null
+        /// </remarks>
+        public Material Material
         {
             get
             {
@@ -176,6 +213,12 @@ namespace Game.HelperClassesWPF.Controls3D
             }
             set
             {
+                _solidBrush = null;
+                _solidBrush_Unlit = null;
+
+                _linearBrush = null;
+                _linearBrush_Unlit = null;
+
                 _material = value;
 
                 InvalidateColor();
@@ -330,19 +373,21 @@ namespace Game.HelperClassesWPF.Controls3D
             InvalidateGeometry();
         }
 
-        internal static Material GetMaterial(bool isReflective, Color color)
+        public static Material GetSolidColorMaterial(bool isReflective, Color color)
         {
-            if (isReflective)
-            {
-                DiffuseMaterial litMaterial = new DiffuseMaterial(new SolidColorBrush(color));
-                litMaterial.Freeze();
+            return GetSolidColorMaterial_private(isReflective, color).
+                material;
+        }
 
-                return litMaterial;
-            }
-            else
-            {
-                return UtilityWPF.GetUnlitMaterial(color);
-            }
+        public static Material GetLinearGradientMaterial_Reflective(Color from, Color to)
+        {
+            return GetLinearGradientMaterial_Reflective_private(from, to).
+                material;
+        }
+        public static Material GetLinearGradientMaterial_Unlit(Color from, Color to)
+        {
+            return GetLinearGradientMaterial_Unlit_private(from, to).
+                material;
         }
 
         #endregion
@@ -360,7 +405,125 @@ namespace Game.HelperClassesWPF.Controls3D
 
         private void InvalidateColor()
         {
-            Material material = _material ?? GetMaterial(_isReflectiveColor, _color);
+            Material material = null;
+            if (_material != null)
+            {
+                material = _material;
+            }
+            else if (_color != null && _color2 != null)
+            {
+                #region gradient
+
+                _solidBrush = null;
+                _solidBrush_Unlit = null;
+
+                if (_isReflectiveColor)
+                {
+                    if (_linearBrush != null && _linearBrush_Unlit == null)
+                    {
+                        _linearBrush.GradientStops[0].Color = _color.Value;
+                        _linearBrush.GradientStops[1].Color = _color2.Value;
+
+                        return;
+                    }
+                    else
+                    {
+                        // create a new one
+                        _linearBrush = null;
+                        _linearBrush_Unlit = null;
+
+                        var result = GetLinearGradientMaterial_Reflective_private(_color.Value, _color2.Value);
+                        _linearBrush = result.brush;
+                        material = result.material;
+                    }
+                }
+                else
+                {
+                    if (_linearBrush != null && _linearBrush_Unlit != null)
+                    {
+                        Color diffuseFrom = Colors.Black;
+                        diffuseFrom.ScA = _color.Value.ScA;
+                        Color diffuseTo = Colors.Black;
+                        diffuseTo.ScA = _color2.Value.ScA;
+
+                        _linearBrush.GradientStops[0].Color = diffuseFrom;
+                        _linearBrush.GradientStops[1].Color = diffuseTo;
+
+                        _linearBrush_Unlit.GradientStops[0].Color = _color.Value;
+                        _linearBrush_Unlit.GradientStops[1].Color = _color2.Value;
+
+                        return;
+                    }
+                    else
+                    {
+                        // create a new one
+                        _linearBrush = null;
+                        _linearBrush_Unlit = null;
+
+                        var result = GetLinearGradientMaterial_Unlit_private(_color.Value, _color2.Value);
+                        _linearBrush = result.brush;
+                        _linearBrush_Unlit = result.brushUnlit;
+                        material = result.material;
+                    }
+                }
+
+                #endregion
+            }
+            else if (_color != null && _color2 == null)
+            {
+                #region solid
+
+                _linearBrush = null;
+                _linearBrush_Unlit = null;
+
+                if (_isReflectiveColor)
+                {
+                    if (_solidBrush != null && _solidBrush_Unlit == null)
+                    {
+                        _solidBrush.Color = _color.Value;
+
+                        return;
+                    }
+                    else
+                    {
+                        // create a new one
+                        _solidBrush = null;
+                        _solidBrush_Unlit = null;
+
+                        var result = GetSolidColorMaterial_private(true, _color.Value);
+                        _solidBrush = result.brush;
+                        material = result.material;
+                    }
+                }
+                else
+                {
+                    if (_solidBrush != null && _solidBrush_Unlit != null)
+                    {
+                        Color diffuse = Colors.Black;
+                        diffuse.ScA = _color.Value.ScA;
+
+                        _solidBrush.Color = diffuse;
+                        _solidBrush_Unlit.Color = _color.Value;
+
+                        return;
+                    }
+                    else
+                    {
+                        // create a new one
+                        _solidBrush = null;
+                        _solidBrush_Unlit = null;
+
+                        var result = GetSolidColorMaterial_private(false, _color.Value);
+                        _solidBrush = result.brush;
+                        _solidBrush_Unlit = result.brushUnlit;
+                        material = result.material;
+                    }
+                }
+
+                #endregion
+            }
+
+            //NOTE: Material could be null
 
             _lineModel.Material = material;
             _lineModel.BackMaterial = material;
@@ -405,7 +568,7 @@ namespace Game.HelperClassesWPF.Controls3D
             double halfArrowLength = 0;
             if ((_fromArrowModel != null && _fromArrowPercent != null) || (_toArrowModel != null && _toArrowPercent != null))       // they should both be null or not null together, just being safe
             {
-                directionUnit = direction.ToUnit(false);
+                directionUnit = direction.ToUnit();
                 arrowWidth = _thickness * _arrowBaseMult * _arrowSizeMult;
                 arrowLength = _thickness * _arrowHeightMult * _arrowSizeMult;
                 halfArrowLength = arrowLength / 2;
@@ -557,6 +720,79 @@ namespace Game.HelperClassesWPF.Controls3D
 
             //retVal.Freeze();
             return retVal;
+        }
+
+        private static (Point from, Point to) GetLinearGradientPoints()
+        {
+            return (new Point(0, 0), new Point(1, 0));
+        }
+
+        public static (Material material, SolidColorBrush brush, SolidColorBrush brushUnlit) GetSolidColorMaterial_private(bool isReflective, Color color)
+        {
+            if (isReflective)
+            {
+                SolidColorBrush brush = new SolidColorBrush(color);
+                DiffuseMaterial litMaterial = new DiffuseMaterial(brush);
+
+                //litMaterial.Freeze();     // can't freeze, because this class supports changing the colors
+
+                return (litMaterial, brush, null);
+            }
+            else
+            {
+                // This was copied from UtilityWPF.GetUnlitMaterial
+
+                Color diffuse = Colors.Black;
+                diffuse.ScA = color.ScA;
+
+                MaterialGroup group = new MaterialGroup();
+
+                SolidColorBrush brush = new SolidColorBrush(diffuse);
+                group.Children.Add(new DiffuseMaterial(brush));
+
+                SolidColorBrush brushUnlit = new SolidColorBrush(color);
+                group.Children.Add(new EmissiveMaterial(brushUnlit));
+
+                //group.Freeze();       // can't freeze, because this class supports changing the colors
+
+                return (group, brush, brushUnlit);
+            }
+        }
+
+        public static (Material material, LinearGradientBrush brush) GetLinearGradientMaterial_Reflective_private(Color from, Color to)
+        {
+            var points = GetLinearGradientPoints();
+
+            var brush = new LinearGradientBrush(from, to, points.from, points.to);
+            DiffuseMaterial material = new DiffuseMaterial(brush);
+
+            //material.Freeze();        // can't freeze, because this class supports changing the colors
+
+            return (material, brush);
+        }
+        public static (Material material, LinearGradientBrush brush, LinearGradientBrush brushUnlit) GetLinearGradientMaterial_Unlit_private(Color from, Color to)
+        {
+            // this is copied from UtilityWPF.GetUnlitMaterial
+
+            Color diffuseFrom = Colors.Black;
+            diffuseFrom.ScA = from.ScA;
+
+            Color diffuseTo = Colors.Black;
+            diffuseTo.ScA = from.ScA;
+
+            var points = GetLinearGradientPoints();
+
+            MaterialGroup material = new MaterialGroup();
+
+            var brush = new LinearGradientBrush(diffuseFrom, diffuseTo, points.from, points.to);
+            material.Children.Add(new DiffuseMaterial(brush));
+
+            var brushUnlit = new LinearGradientBrush(from, to, points.from, points.to);
+            material.Children.Add(new EmissiveMaterial(brushUnlit));
+
+            //material.Freeze();        // can't freeze, because this class supports changing the colors
+
+            return (material, brush, brushUnlit);
         }
 
         #endregion
@@ -733,7 +969,7 @@ namespace Game.HelperClassesWPF.Controls3D
 
         private void InvalidateColor()
         {
-            _material = BillboardLine3D.GetMaterial(_isReflectiveColor, _color);
+            _material = BillboardLine3D.GetSolidColorMaterial(_isReflectiveColor, _color);
 
             // Update existing lines
             foreach (BillboardLine3D line in _lines)

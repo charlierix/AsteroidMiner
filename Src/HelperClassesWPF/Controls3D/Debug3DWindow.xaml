@@ -1,12 +1,12 @@
 ﻿<Window x:Class="Game.HelperClassesWPF.Controls3D.Debug3DWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Game.HelperClassesWPF.Controls3D"
-        mc:Ignorable="d"
-        Title="Debug3D" Background="#C0C0C0" ResizeMode="CanResizeWithGrip" Width="800" Height="800" Loaded="Window_Loaded">
-    <Grid Name="grdViewPort" Background="Transparent">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:Game.HelperClassesWPF.Controls3D"
+    mc:Ignorable="d"
+    Title="Debug3D" Background="#C0C0C0" ResizeMode="CanResizeWithGrip" Width="800" Height="800" Loaded="Window_Loaded">
+    <Grid Name="grdViewPort" Background="Transparent" MouseMove="grdViewPort_MouseMove">
         <Viewport3D Name="_viewport" IsHitTestVisible="False">
             <Viewport3D.Camera>
                 <PerspectiveCamera x:Name="_camera" Position="0,0,7" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>

@@ -1,136 +1,75 @@
 ﻿/******************************************************************************
  *
- *    MIConvexHull, Copyright (C) 2013 David Sehnal, Matthew Campbell
+ * The MIT License (MIT)
  *
- *  This library is free software; you can redistribute it and/or modify it 
- *  under the terms of  the GNU Lesser General Public License as published by 
- *  the Free Software Foundation; either version 2.1 of the License, or 
- *  (at your option) any later version.
- *
- *  This library is distributed in the hope that it will be useful, 
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser 
- *  General Public License for more details.
+ * MIConvexHull, Copyright (c) 2015 David Sehnal, Matthew Campbell
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  *  
  *****************************************************************************/
 
-namespace Game.HelperClassesWPF.MIConvexHull
-{
-    using System.Collections.Generic;
-    using System.Linq;
-    using System;
+using System;
+using System.Collections.Generic;
 
+namespace MIConvexHull
+{
     /// <summary>
     /// Calculation and representation of Delaunay triangulation.
     /// </summary>
-    /// <typeparam name="TVertex"></typeparam>
-    /// <typeparam name="TCell"></typeparam>
+    /// <typeparam name="TVertex">The type of the t vertex.</typeparam>
+    /// <typeparam name="TCell">The type of the t cell.</typeparam>
+    /// <seealso cref="MIConvexHull.ITriangulation{TVertex, TCell}" />
     public class DelaunayTriangulation<TVertex, TCell> : ITriangulation<TVertex, TCell>
         where TCell : TriangulationCell<TVertex, TCell>, new()
         where TVertex : IVertex
     {
         /// <summary>
-        /// Cells of the triangulation.
-        /// </summary>
-        public IEnumerable<TCell> Cells { get; private set; }
-
-        /// <summary>
-        /// Creates the Delaunay triangulation of the input data.
-        /// Be careful with concurrency, because during the computation, the vertex position arrays get resized.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static DelaunayTriangulation<TVertex, TCell> Create(IEnumerable<TVertex> data)
-        {
-            if (data == null) throw new ArgumentException("data can't be null.");
-            if (!(data is IList<TVertex>)) data = data.ToArray();
-            if (data.Count() == 0) return new DelaunayTriangulation<TVertex, TCell> { Cells = Enumerable.Empty<TCell>() };
-
-            int dimension = data.First().Position.Length;
-
-            // Resize the arrays and lift the data.
-            foreach (var p in data)
-            {
-                double lenSq = MathHelper.LengthSquared(p.Position);
-                var v = p.Position;
-                Array.Resize(ref v, dimension + 1);
-                p.Position = v;
-                p.Position[dimension] = lenSq;
-            }
-
-            // Find the convex hull
-            var delaunayFaces = ConvexHullInternal.GetConvexFacesInternal<TVertex, TCell>(data);
-
-            // Resize the data back
-            foreach (var p in data)
-            {
-                var v = p.Position;
-                Array.Resize(ref v, dimension);
-                p.Position = v;
-            }
-            // Remove the "upper" faces
-            for (var i = delaunayFaces.Count - 1; i >= 0; i--)
-            {
-                var candidate = delaunayFaces[i];
-                if (candidate.Normal[dimension] >= 0.0)
-                {
-                    for (int fi = 0; fi < candidate.AdjacentFaces.Length; fi++)
-                    {
-                        var f = candidate.AdjacentFaces[fi];
-                        if (f != null)
-                        {
-                            for (int j = 0; j < f.AdjacentFaces.Length; j++)
-                            {
-                                if (object.ReferenceEquals(f.AdjacentFaces[j], candidate))
-                                {
-                                    f.AdjacentFaces[j] = null;
-                                }
-                            }
-                        }
-                    }
-                    var li = delaunayFaces.Count - 1;
-                    delaunayFaces[i] = delaunayFaces[li];
-                    delaunayFaces.RemoveAt(li);
-                }
-            }
-
-            // Create the "TCell" representation.
-            int cellCount = delaunayFaces.Count;
-            var cells = new TCell[cellCount];
-
-            for (int i = 0; i < cellCount; i++)
-            {
-                var face = delaunayFaces[i];
-                var vertices = new TVertex[dimension + 1];
-                for (int j = 0; j <= dimension; j++) vertices[j] = (TVertex)face.Vertices[j].Vertex;
-                cells[i] = new TCell
-                {
-                    Vertices = vertices,
-                    Adjacency = new TCell[dimension + 1]
-                };
-                face.Tag = i;
-            }
-
-            for (int i = 0; i < cellCount; i++)
-            {
-                var face = delaunayFaces[i];
-                var cell = cells[i];
-                for (int j = 0; j <= dimension; j++)
-                {
-                    if (face.AdjacentFaces[j] == null) continue;
-                    cell.Adjacency[j] = cells[face.AdjacentFaces[j].Tag];
-                }
-            }
-
-            return new DelaunayTriangulation<TVertex, TCell> { Cells = cells };
-        }
-
-        /// <summary>
         /// Can only be created using a factory method.
         /// </summary>
         private DelaunayTriangulation()
         {
+        }
 
+        /// <summary>
+        /// Cells of the triangulation.
+        /// </summary>
+        /// <value>The cells.</value>
+        public IEnumerable<TCell> Cells { get; private set; }
+
+        /// <summary>
+        /// Creates the Delaunay triangulation of the input data.
+        /// </summary>
+        /// <param name="data">The data.</param>
+        /// <param name="PlaneDistanceTolerance">The plane distance tolerance (default is 1e-10). If too high, points 
+        /// will be missed. If too low, the algorithm may break. Only adjust if you notice problems.</param>
+        /// <returns>DelaunayTriangulation&lt;TVertex, TCell&gt;.</returns>
+        /// <exception cref="System.ArgumentNullException">data</exception>
+        /// <exception cref="ArgumentNullException">data</exception>
+        public static DelaunayTriangulation<TVertex, TCell> Create(IList<TVertex> data,
+            double PlaneDistanceTolerance)// = Constants.DefaultPlaneDistanceTolerance)
+        {
+            if (data == null) throw new ArgumentNullException("data");
+            if (data.Count == 0) return new DelaunayTriangulation<TVertex, TCell> { Cells = new TCell[0] };
+
+            var cells = ConvexHullAlgorithm.GetDelaunayTriangulation<TVertex, TCell>(data, PlaneDistanceTolerance);
+
+            return new DelaunayTriangulation<TVertex, TCell> { Cells = cells };
         }
     }
 }

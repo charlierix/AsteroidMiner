@@ -207,9 +207,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly IContainer _energyTanks;
 
-        private readonly DirectionControllerRing.NeuronShell _neuronsLinear;
-        private readonly DirectionControllerRing.NeuronShell _neuronsRotation;
-        private readonly Neuron_SensorPosition[] _neurons;
+        private readonly NeuralUtility.NeuronShell _neuronsLinear;
+        private readonly NeuralUtility.NeuronShell _neuronsRotation;
+        private readonly Neuron_Direct[] _neurons;
 
         private readonly Thruster[] _thrusters;
         private readonly ImpulseEngine[] _impulseEngines;
@@ -253,8 +253,8 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 neuronCount = 1;
             }
 
-            _neuronsLinear = DirectionControllerRing.CreateNeuronShell_Sphere(1, neuronCount);
-            _neuronsRotation = DirectionControllerRing.CreateNeuronShell_Sphere(.4, neuronCount);
+            _neuronsLinear = NeuralUtility.CreateNeuronShell_Sphere(1, neuronCount);
+            _neuronsRotation = NeuralUtility.CreateNeuronShell_Sphere(.4, neuronCount);
 
             _neurons = _neuronsLinear.Neurons.
                 Concat(_neuronsRotation.Neurons).

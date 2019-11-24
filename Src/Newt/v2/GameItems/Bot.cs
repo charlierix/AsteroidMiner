@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -42,9 +41,9 @@ namespace Game.Newt.v2.GameItems
         private readonly ShipDNA _dna;
         private readonly ShipPartDNA[] _dnaParts;
 
-        private RadiationField _radiation = null;
-        private IGravityField _gravity = null;
-        private CameraPool _cameraPool = null;
+        protected readonly RadiationField _radiation = null;
+        protected readonly IGravityField _gravity = null;
+        private readonly CameraPool _cameraPool = null;
 
         private readonly BotConstruction_Parts _parts;
         private readonly IPartUpdatable[] _updatableParts_MainThread;
@@ -217,7 +216,7 @@ namespace Game.Newt.v2.GameItems
                                 }
                             });
                         }
-                        else if(_neuralPoolManualTick != null)
+                        else if (_neuralPoolManualTick != null)
                         {
                             _neuralPoolManualTick.Remove(_linkBucket);
                         }
@@ -804,6 +803,32 @@ namespace Game.Newt.v2.GameItems
             return (bucket, task, manualPool);
         }
 
+        /// <summary>
+        /// This is a helper method to keep the containers full - useful for testers.  Call this every tick
+        /// </summary>
+        public void RefillContainers()
+        {
+            if (Ammo != null)
+            {
+                Ammo.QuantityCurrent = Ammo.QuantityMax;
+            }
+
+            if (Fuel != null)
+            {
+                Fuel.QuantityCurrent = Fuel.QuantityMax;
+            }
+
+            if (Energy != null)
+            {
+                Energy.QuantityCurrent = Energy.QuantityMax;
+            }
+
+            if (Plasma != null)
+            {
+                Plasma.QuantityCurrent = Plasma.QuantityMax;
+            }
+        }
+
         #endregion
         #region Protected Methods
 
@@ -857,23 +882,23 @@ namespace Game.Newt.v2.GameItems
             foreach (ImpulseEngine impulse in _impulseEngines)
             {
                 // Look at the thrusts from the last firing
-                Tuple<Vector3D?, Vector3D?> thrust_torque = impulse.ThrustsTorquesLastUpdate;
-                if (thrust_torque == null)
+                ImpulseEngineOutput impulseOutput = impulse.ThrustsTorquesLastUpdate;
+                if (impulseOutput == null)
                 {
                     continue;
                 }
 
                 // Apply force
-                if (thrust_torque.Item1 != null)
+                if (impulseOutput.Linear != null)
                 {
                     //NOTE: Not looking at the part's orientation.  The impulse engine is a bit of a cheat part, and just works regardless of position/orientation
-                    e.Body.AddForce(e.Body.DirectionToWorld(thrust_torque.Item1.Value));
+                    e.Body.AddForce(e.Body.DirectionToWorld(impulseOutput.Linear.Value));
                 }
 
                 // Apply torque
-                if (thrust_torque.Item2 != null)
+                if (impulseOutput.Torque != null)
                 {
-                    e.Body.AddTorque(e.Body.DirectionToWorld(thrust_torque.Item2.Value));
+                    e.Body.AddTorque(e.Body.DirectionToWorld(impulseOutput.Torque.Value));
                 }
             }
 

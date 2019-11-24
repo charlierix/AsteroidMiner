@@ -1,13 +1,11 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.Arcanorum.MapObjects;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
 
 namespace Game.Newt.v2.Arcanorum
 {
@@ -27,8 +25,8 @@ namespace Game.Newt.v2.Arcanorum
 
             var model = GetModel(dna, materials);
 
-            this.Model = model.Item1;
-            this.DNA = model.Item2;
+            Model = model.model;
+            DNA = model.dna;
         }
 
         #endregion
@@ -52,20 +50,20 @@ namespace Game.Newt.v2.Arcanorum
 
         #region Public Methods
 
-        public override WeaponDamage CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
+        public override DamageProps CalculateExtraDamage(Point3D positionLocal, double collisionSpeed)
         {
             //TODO: Take damage.  If it's just a handle, it won't take much damage.  But if there is a heavy weight attached, the handle should take a lot of damage (if it's wood)
 
 
             // The handle doesn't have any kind of special damage.  Maybe some of the special materials might (demon handle)
-            return new WeaponDamage();
+            return new DamageProps();
         }
 
         #endregion
 
         #region Private Methods - Model
 
-        private static Tuple<Model3DGroup, WeaponHandleDNA> GetModel(WeaponHandleDNA dna, WeaponMaterialCache materials)
+        private static (Model3DGroup model, WeaponHandleDNA dna) GetModel(WeaponHandleDNA dna, WeaponMaterialCache materials)
         {
             WeaponHandleDNA finalDNA = UtilityCore.Clone(dna);
             if (finalDNA.KeyValues == null)
@@ -92,8 +90,7 @@ namespace Game.Newt.v2.Arcanorum
                     throw new ApplicationException("Unknown WeaponHandleType: " + finalDNA.HandleType.ToString());
             }
 
-            // Exit Function
-            return Tuple.Create(model, finalDNA);
+            return (model, finalDNA);
 
             #region WRAITH
             //retVal.Children.Add(new DiffuseMaterial(new SolidColorBrush(UtilityWPF.ColorFromHex(this.DiffuseColor))));
@@ -154,7 +151,6 @@ namespace Game.Newt.v2.Arcanorum
                     throw new ApplicationException("Unknown WeaponHandleMaterial: " + dna.HandleMaterial.ToString());
             }
 
-            // Exit Function
             return retVal;
         }
 
@@ -169,7 +165,7 @@ namespace Game.Newt.v2.Arcanorum
 
             GeometryModel3D geometry = new GeometryModel3D();
 
-            #region Material
+            #region material
 
             switch (dna.HandleMaterial)
             {
@@ -189,7 +185,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
 
-            #region Tube
+            #region tube
 
             double maxX1 = WeaponDNA.GetKeyValue("maxX1", from, to, rand.NextDouble(.45, .7));
             double maxX2 = WeaponDNA.GetKeyValue("maxX2", from, to, rand.NextDouble(.45, .7));
@@ -223,7 +219,7 @@ namespace Game.Newt.v2.Arcanorum
             var from = dna.KeyValues;
             var to = finalDNA.KeyValues;
 
-            #region Materials
+            #region materials
 
             System.Windows.Media.Media3D.Material material1, material2;
 
@@ -250,7 +246,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
 
-            #region Ends
+            #region ends
 
             double capRadius = dna.Radius * 1.1;
 
@@ -294,7 +290,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
 
-            #region Shaft
+            #region shaft
 
             geometry = new GeometryModel3D();
 
@@ -334,10 +330,10 @@ namespace Game.Newt.v2.Arcanorum
             double washerThickness2 = WeaponDNA.GetKeyValue("washerThickness2", from, to, dna.Length * rand.NextPercent(.15d, .5d));
             double washerOffset = WeaponDNA.GetKeyValue("washerOffset", from, to, rand.NextPercent(.05d, .5d));
 
-            var material = GetModel_Rod_CompositeSprtMaterial(finalDNA.MaterialsForCustomizable[0]);
+            var material = GetModel_Rod_Composite_Material(finalDNA.MaterialsForCustomizable[0]);
 
             //NOTE: The beam/core dimensions shouldn't be randomized.  This should look like a manufactured, almost mass produced product
-            #region Beams
+            #region beams
 
             // Beam1
             GeometryModel3D geometry = new GeometryModel3D();
@@ -360,9 +356,9 @@ namespace Game.Newt.v2.Arcanorum
             geometries.Children.Add(geometry);
 
             #endregion
-            #region Core
+            #region core
 
-            material = GetModel_Rod_CompositeSprtMaterial(finalDNA.MaterialsForCustomizable[1]);
+            material = GetModel_Rod_Composite_Material(finalDNA.MaterialsForCustomizable[1]);
 
             geometry = new GeometryModel3D();
 
@@ -376,11 +372,11 @@ namespace Game.Newt.v2.Arcanorum
             geometries.Children.Add(geometry);
 
             #endregion
-            #region Washers
+            #region washers
 
-            material = GetModel_Rod_CompositeSprtMaterial(finalDNA.MaterialsForCustomizable[2]);
+            material = GetModel_Rod_Composite_Material(finalDNA.MaterialsForCustomizable[2]);
 
-            var locations = new Tuple<double, double>[] 
+            var locations = new Tuple<double, double>[]
             {
                 Tuple.Create(0d, washerThickness1),
                 Tuple.Create(washerOffset, washerThickness1),
@@ -405,7 +401,7 @@ namespace Game.Newt.v2.Arcanorum
 
             #endregion
         }
-        private static System.Windows.Media.Media3D.Material GetModel_Rod_CompositeSprtMaterial(MaterialDefinition definition)
+        private static System.Windows.Media.Media3D.Material GetModel_Rod_Composite_Material(MaterialDefinition definition)
         {
             MaterialGroup retVal = new MaterialGroup();
 
@@ -458,7 +454,7 @@ namespace Game.Newt.v2.Arcanorum
             var from = dna.KeyValues;
             var to = finalDNA.KeyValues;
 
-            #region Shaft
+            #region shaft
 
             GeometryModel3D shaft = new GeometryModel3D();
 
@@ -503,7 +499,7 @@ namespace Game.Newt.v2.Arcanorum
                 return;
             }
 
-            #region Gems
+            #region gems
 
             List<double> percents = new List<double>();
 
@@ -567,8 +563,8 @@ namespace Game.Newt.v2.Arcanorum
                 case WeaponHandleMaterial.Hard_Wood:
                     return WeaponHandleType.Rod;
 
-                //case WeaponHandleMaterial.CheapRope:
-                //case WeaponHandleMaterial.HempRope:
+                //case WeaponHandleMaterial.NylonRope:
+                //case WeaponHandleMaterial.WireRope:
                 //case WeaponHandleMaterial.Wraith:
                 //    return WeaponHandleType.Rope;
 
@@ -873,8 +869,8 @@ namespace Game.Newt.v2.Arcanorum
         Hard_Wood,
 
         // Rope - only for ropes
-        //CheapRope,
-        //HempRope,
+        //NylonRope,
+        //WireRope
 
         // Metal - these are durable, but very dense
         Bronze,

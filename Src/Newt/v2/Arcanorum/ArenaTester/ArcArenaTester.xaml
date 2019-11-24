@@ -37,8 +37,8 @@
         </Grid>
 
         <StackPanel Grid.Column="0" Grid.Row="0" Margin="8">
-
-            <Button Content="full run 1" Click="FullRun1_Click"/>
+            <Button Content="torus" Click="FullRun1_Click"/>
+            <Button Content="weapon spin" Click="FullRun2_Click"/>
             <Button Content="stop" Margin="0,8,0,0" Click="Stop_Click"/>
 
             <Expander IsExpanded="False" Header="prototypes" Margin="0,20,0,0">
@@ -124,6 +124,8 @@
             <ai:NeatEAStats x:Name="eaStatus"/>
 
             <UniformGrid Name="panelLogs" Columns="2"/>
+
+            <TextBlock Name="lblCurrentWinnerStats"/>
         </StackPanel>
 
         <WindowsFormsHost Grid.Column="1" Grid.Row="2" Name="nnViewerHost" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="175" Height="175" Margin="8"/>

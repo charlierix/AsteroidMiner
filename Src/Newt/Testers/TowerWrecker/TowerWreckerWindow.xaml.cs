@@ -1141,7 +1141,7 @@ namespace Game.Newt.Testers.TowerWrecker
                         {
                             #region Main Brick
 
-                            Color color = ThickWallSprtColor(x, xLimit);
+                            Color color = ThickWall_Color(x, xLimit);
                             Vector3D size = new Vector3D(1, 2, 1);
 
                             double offset;
@@ -1164,7 +1164,7 @@ namespace Game.Newt.Testers.TowerWrecker
 
                             if ((y == -yLimit && offset > 0) || (y >= yLimit - 2 && offset < 0))
                             {
-                                color = ThickWallSprtColor(x, xLimit);
+                                color = ThickWall_Color(x, xLimit);
                                 size = new Vector3D(1, .5, 1);
 
                                 if (offset < 0)
@@ -1863,7 +1863,7 @@ namespace Game.Newt.Testers.TowerWrecker
             return retVal;
         }
 
-        private Color ThickWallSprtColor(int x, int xLimit)
+        private Color ThickWall_Color(int x, int xLimit)
         {
             // Gray scale
             double brightness = UtilityCore.GetScaledValue_Capped(30, 185, 2 * xLimit + 2, 0, xLimit + x);
@@ -1960,7 +1960,7 @@ namespace Game.Newt.Testers.TowerWrecker
 
             if (_leftClickAction == LeftClickAction.ShootBall)
             {
-                FireRaySprtShootBall();
+                FireRay_ShootBall();
                 return;
             }
 
@@ -2068,7 +2068,7 @@ namespace Game.Newt.Testers.TowerWrecker
                     break;
             }
         }
-        private void FireRaySprtShootBall()
+        private void FireRay_ShootBall()
         {
             Vector3D velocity = _rayDirection.ToUnit() * trkBulletSpeed.Value;
             DoubleVector directionFacing = new DoubleVector(velocity, Math3D.GetArbitraryOrhonganal(velocity));
@@ -2215,8 +2215,6 @@ namespace Game.Newt.Testers.TowerWrecker
                     MessageBox.Show("Unknown ball type: " + cboLeftBallType.Text, this.Title, MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
             }
-
-
         }
 
         #endregion

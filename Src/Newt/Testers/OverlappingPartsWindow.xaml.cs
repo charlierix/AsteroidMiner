@@ -213,7 +213,7 @@ namespace Game.Newt.Testers
 
 
 
-                        CollisionHull.IntersectionPoint[] points = _hulls[outer].GetIntersectingPoints_HullToHull(100, _hulls[inner], 0, GetIntersectionsSprtTransform(outer), GetIntersectionsSprtTransform(inner));
+                        CollisionHull.IntersectionPoint[] points = _hulls[outer].GetIntersectingPoints_HullToHull(100, _hulls[inner], 0, GetIntersections_Transform(outer), GetIntersections_Transform(inner));
 
 
 
@@ -223,7 +223,7 @@ namespace Game.Newt.Testers
 
                         if (points != null && points.Length > 0)
                         {
-                            double sumSize = GetIntersectionsSprtSize(sizes, _hulls, outer) + GetIntersectionsSprtSize(sizes, _hulls, inner);
+                            double sumSize = GetIntersections_Size(sizes, _hulls, outer) + GetIntersections_Size(sizes, _hulls, inner);
                             double minSize = sumSize * _ignoreDepthPercent;
 
                             // Filter out the shallow penetrations
@@ -241,7 +241,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal.ToArray();
             }
-            private Transform3D GetIntersectionsSprtTransform(int index)
+            private Transform3D GetIntersections_Transform(int index)
             {
                 if (!_hasMoved[index])
                 {
@@ -255,7 +255,7 @@ namespace Game.Newt.Testers
 
                 return retVal;
             }
-            private static double GetIntersectionsSprtSize(SortedList<int, double> sizes, CollisionHull[] hulls, int index)
+            private static double GetIntersections_Size(SortedList<int, double> sizes, CollisionHull[] hulls, int index)
             {
                 if (sizes.ContainsKey(index))
                 {
@@ -305,13 +305,13 @@ namespace Game.Newt.Testers
                         //TODO: Maybe not always
                         Vector3D normalUnit = intersectPoint.Normal.ToUnit();
 
-                        DoStepSprtAddForce(moves, intersection.Item1, normalUnit * (-1d * distance1), null);
-                        DoStepSprtAddForce(moves, intersection.Item2, normalUnit * distance2, null);
+                        DoStep_AddForce(moves, intersection.Item1, normalUnit * (-1d * distance1), null);
+                        DoStep_AddForce(moves, intersection.Item2, normalUnit * distance2, null);
                     }
                 }
 
                 // Apply the movements
-                DoStepSprtMove(_parts, moves);
+                DoStep_Move(_parts, moves);
 
                 // Remember which parts were modified
                 foreach (int index in moves.Keys)
@@ -320,7 +320,7 @@ namespace Game.Newt.Testers
                 }
             }
 
-            private static void DoStepSprtAddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
+            private static void DoStep_AddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
             {
                 if (!moves.ContainsKey(index))
                 {
@@ -329,7 +329,7 @@ namespace Game.Newt.Testers
 
                 moves[index].Add(Tuple.Create(translation, rotation));
             }
-            private static void DoStepSprtMove(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
+            private static void DoStep_Move(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
             {
                 foreach (int partIndex in moves.Keys)
                 {
@@ -600,7 +600,7 @@ namespace Game.Newt.Testers
                         CollisionHull.IntersectionPoint[] points;
                         if (_useTransforms)
                         {
-                            points = _hulls[outer].GetIntersectingPoints_HullToHull(100, _hulls[inner], 0, GetIntersectionsSprtTransform(outer), GetIntersectionsSprtTransform(inner));
+                            points = _hulls[outer].GetIntersectingPoints_HullToHull(100, _hulls[inner], 0, GetIntersections_Transform(outer), GetIntersections_Transform(inner));
                         }
                         else
                         {
@@ -644,7 +644,7 @@ namespace Game.Newt.Testers
                 // Exit Function
                 return retVal.ToArray();
             }
-            private Transform3D GetIntersectionsSprtTransform(int index)
+            private Transform3D GetIntersections_Transform(int index)
             {
                 if (!_hasMoved[index])
                 {
@@ -705,12 +705,12 @@ namespace Game.Newt.Testers
                         Vector3D translation1, torque1;
                         Vector3D offset1 = intersectPoint.ContactPoint - _parts[intersection.Index1].Position;
                         Math3D.SplitForceIntoTranslationAndTorque(out translation1, out torque1, offset1, direction * (-1d * distance1));
-                        DoStepSprtAddForce(moves, intersection.Index1, translation1, this.DoRotations ? DoStepSprtRotate(torque1, intersection.AvgSize1, sizeScale) : null);		// don't use the full size, or the rotation won't even be noticable
+                        DoStep_AddForce(moves, intersection.Index1, translation1, this.DoRotations ? DoStep_Rotate(torque1, intersection.AvgSize1, sizeScale) : null);		// don't use the full size, or the rotation won't even be noticable
 
                         Vector3D translation2, torque2;
                         Vector3D offset2 = intersectPoint.ContactPoint - _parts[intersection.Index2].Position;
                         Math3D.SplitForceIntoTranslationAndTorque(out translation2, out torque2, offset2, direction * distance2);
-                        DoStepSprtAddForce(moves, intersection.Index2, translation2, this.DoRotations ? DoStepSprtRotate(torque2, intersection.AvgSize2, sizeScale) : null);
+                        DoStep_AddForce(moves, intersection.Index2, translation2, this.DoRotations ? DoStep_Rotate(torque2, intersection.AvgSize2, sizeScale) : null);
 
                         // Debug visuals
                         retVal.Add(new DebugPoints(intersectPoint.ContactPoint, translation1, torque1, offset1, translation2, torque2, offset2));
@@ -718,7 +718,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Apply the movements
-                DoStepSprtMove(_parts, moves);
+                DoStep_Move(_parts, moves);
 
                 // Remember which parts were modified
                 foreach (int index in moves.Keys)
@@ -769,12 +769,12 @@ namespace Game.Newt.Testers
                         Vector3D translation1, torque1;
                         Vector3D offset1 = intersectPoint.ContactPoint - _parts[intersection.Index1].Position;
                         Math3D.SplitForceIntoTranslationAndTorque(out translation1, out torque1, offset1, direction * (-1d * distance1));
-                        DoStepSprtAddForce(moves, intersection.Index1, translation1, this.DoRotations ? DoStepSprtRotate(torque1, intersection.AvgSize1, sizeScale) : null);		// don't use the full size, or the rotation won't even be noticable
+                        DoStep_AddForce(moves, intersection.Index1, translation1, this.DoRotations ? DoStep_Rotate(torque1, intersection.AvgSize1, sizeScale) : null);		// don't use the full size, or the rotation won't even be noticable
 
                         Vector3D translation2, torque2;
                         Vector3D offset2 = intersectPoint.ContactPoint - _parts[intersection.Index2].Position;
                         Math3D.SplitForceIntoTranslationAndTorque(out translation2, out torque2, offset2, direction * distance2);
-                        DoStepSprtAddForce(moves, intersection.Index2, translation2, this.DoRotations ? DoStepSprtRotate(torque2, intersection.AvgSize2, sizeScale) : null);
+                        DoStep_AddForce(moves, intersection.Index2, translation2, this.DoRotations ? DoStep_Rotate(torque2, intersection.AvgSize2, sizeScale) : null);
 
                         // Debug visuals
                         retVal.Add(new DebugPoints(intersectPoint.ContactPoint, translation1, torque1, offset1, translation2, torque2, offset2));
@@ -782,7 +782,7 @@ namespace Game.Newt.Testers
                 }
 
                 // Apply the movements
-                DoStepSprtMove(_parts, moves);
+                DoStep_Move(_parts, moves);
 
                 // Remember which parts were modified
                 foreach (int index in moves.Keys)
@@ -794,7 +794,7 @@ namespace Game.Newt.Testers
                 return retVal.ToArray();
             }
 
-            private static Quaternion? DoStepSprtRotate(Vector3D torque, double size, double penetrationScale)
+            private static Quaternion? DoStep_Rotate(Vector3D torque, double size, double penetrationScale)
             {
                 const double MAXANGLE = 12d; //22.5d;
 
@@ -819,7 +819,7 @@ namespace Game.Newt.Testers
                 return new Quaternion(axis, angle);
             }
 
-            private static void DoStepSprtAddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
+            private static void DoStep_AddForce(SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves, int index, Vector3D? translation, Quaternion? rotation)
             {
                 if (!moves.ContainsKey(index))
                 {
@@ -828,7 +828,7 @@ namespace Game.Newt.Testers
 
                 moves[index].Add(Tuple.Create(translation, rotation));
             }
-            private static void DoStepSprtMove(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
+            private static void DoStep_Move(PartBase[] parts, SortedList<int, List<Tuple<Vector3D?, Quaternion?>>> moves)
             {
                 foreach (int partIndex in moves.Keys)
                 {

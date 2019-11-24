@@ -47,6 +47,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,6 +58,7 @@
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="encog-core-cs">
@@ -188,6 +190,9 @@
     </Compile>
     <Compile Include="MadShatter.xaml.cs">
       <DependentUpon>MadShatter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="NatureOfShapes.xaml.cs">
+      <DependentUpon>NatureOfShapes.xaml</DependentUpon>
     </Compile>
     <Compile Include="NEAT\AnticipatePositionWindow.xaml.cs">
       <DependentUpon>AnticipatePositionWindow.xaml</DependentUpon>
@@ -473,6 +478,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MadShatter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="NatureOfShapes.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
-using Game.HelperClassesWPF.Controls3D;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.GameItems.ShipParts;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems
 {
@@ -32,12 +28,12 @@ namespace Game.Newt.v2.GameItems
 
         //TODO: Make two overloads.  One that returns a task, and one that does everything on one thread
         //It wouldn't do much good.  The two most expensive methods are InstantiateParts_Standard, SeparateParts - instantiate takes twice as long as separate).  Both must run in the calling thread
-        public static BotConstruction_Result ConstructBot(IEnumerable<ShipPartDNA> dna, ShipCoreArgs core, ShipExtraArgs extra = null, BotConstructor_Events events = null)
+        public static BotConstruction_Result ConstructBot(IEnumerable<ShipPartDNA> dna, ShipCoreArgs core, ShipExtraArgs extra = null, BotConstructor_Events events = null, object[] botObjects = null)
         {
             ShipDNA shipDNA = ShipDNA.Create(dna);
-            return ConstructBot(shipDNA, core, extra, events);
+            return ConstructBot(shipDNA, core, extra, events, botObjects);
         }
-        public static BotConstruction_Result ConstructBot(ShipDNA dna, ShipCoreArgs core, ShipExtraArgs extra = null, BotConstructor_Events events = null)
+        public static BotConstruction_Result ConstructBot(ShipDNA dna, ShipCoreArgs core, ShipExtraArgs extra = null, BotConstructor_Events events = null, object[] botObjects = null)
         {
             // Fix args
             FixArgs(ref extra, ref events);
@@ -48,11 +44,11 @@ namespace Game.Newt.v2.GameItems
             // Instantiate Parts
             BotConstruction_Parts parts = new BotConstruction_Parts();
 
-            IEnumerable<ShipPartDNA> untouchedParts = InstantiateParts_Containers(validatedParts.Item1, parts, core, extra, events.InstantiateUnknownPart_Container, events.InstantiateUnknownPart_ContainerGroups);
+            IEnumerable<ShipPartDNA> untouchedParts = InstantiateParts_Containers(validatedParts.Item1, parts, core, extra, events.InstantiateUnknownPart_Container, events.InstantiateUnknownPart_ContainerGroups, botObjects);
 
-            untouchedParts = InstantiateParts_Standard(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard);
+            untouchedParts = InstantiateParts_Standard(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard, botObjects);
 
-            InstantiateParts_Post(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Standard);
+            InstantiateParts_Post(untouchedParts, parts, core, extra, events.InstantiateUnknownPart_Post, botObjects);
 
             //TODO: The discarded parts should still be part of the bot, just not active.  Make a special part that is an inactive lump,
             //and will hold the dna (future generations may mutate the dna enough to make it valid again)
@@ -79,7 +75,7 @@ namespace Game.Newt.v2.GameItems
                 BotConstruction_Result recursed;
                 try
                 {
-                    recursed = ConstructBot(ShipDNA.Create(dna, dna_hulls.Item1), core, extra, events);
+                    recursed = ConstructBot(ShipDNA.Create(dna, dna_hulls.Item1), core, extra, events, botObjects);
                 }
                 finally
                 {
@@ -480,7 +476,7 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// Containers get built first.  Most of the standard parts need at least one container group to function
         /// </summary>
-        private static IEnumerable<ShipPartDNA> InstantiateParts_Containers(ShipPartDNA[] parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, PartBase> instantiateUnknown, Func<BotConstruction_Containers, object[]> instantiateUnknownGroups)
+        private static IEnumerable<ShipPartDNA> InstantiateParts_Containers(ShipPartDNA[] parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, object[], PartBase> instantiateUnknown, Func<BotConstruction_Containers, object[]> instantiateUnknownGroups, object[] botObjects)
         {
             List<ShipPartDNA> untouchedParts = new List<ShipPartDNA>();
 
@@ -521,7 +517,7 @@ namespace Game.Newt.v2.GameItems
                         if (instantiateUnknown != null)
                         {
                             // Call a delegate
-                            customPart = instantiateUnknown(dna, core, extra);
+                            customPart = instantiateUnknown(dna, core, extra, botObjects);
                         }
 
                         if (customPart != null)
@@ -557,7 +553,7 @@ namespace Game.Newt.v2.GameItems
         /// <summary>
         /// Standard parts should be the majority of the parts.  They only rely on containers
         /// </summary>
-        private static IEnumerable<ShipPartDNA> InstantiateParts_Standard(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> instantiateUnknown)
+        private static IEnumerable<ShipPartDNA> InstantiateParts_Standard(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, object[], PartBase> instantiateUnknown, object[] botObjects)
         {
             List<ShipPartDNA> untouchedParts = new List<ShipPartDNA>();
 
@@ -712,7 +708,7 @@ namespace Game.Newt.v2.GameItems
                         if (instantiateUnknown != null)
                         {
                             // Call a delegate
-                            customPart = instantiateUnknown(dna, core, extra, containers);
+                            customPart = instantiateUnknown(dna, core, extra, containers, botObjects);
                         }
 
                         if (customPart != null)
@@ -733,7 +729,7 @@ namespace Game.Newt.v2.GameItems
         /// This is for parts that need access to some of the standard parts
         /// NOTE: These parts get added to the standard list
         /// </summary>
-        private static void InstantiateParts_Post(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> instantiateUnknown)
+        private static void InstantiateParts_Post(IEnumerable<ShipPartDNA> parts, BotConstruction_Parts building, ShipCoreArgs core, ShipExtraArgs extra, Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, object[], IEnumerable<PartBase>, PartBase> instantiateUnknown, object[] botObjects)
         {
             EditorOptions options = extra.Options;
             ItemOptions itemOptions = extra.ItemOptions;
@@ -760,7 +756,7 @@ namespace Game.Newt.v2.GameItems
                         if (instantiateUnknown != null)
                         {
                             // Call a delegate
-                            customPart = instantiateUnknown(dna, core, extra, containers);
+                            customPart = instantiateUnknown(dna, core, extra, containers, botObjects, standard.SelectMany(o => o.Value));
                         }
 
                         if (customPart != null)
@@ -852,7 +848,7 @@ namespace Game.Newt.v2.GameItems
         #endregion
         #region Private Methods - link neural
 
-        private static NeuralUtility.ContainerOutput[] LinkNeural(ShipExtraArgs extra, BotConstruction_Parts parts)
+        private static NeuralUtility.ContainerOutput[] LinkNeural_OLD(ShipExtraArgs extra, BotConstruction_Parts parts)
         {
             if (!extra.RunNeural)
             {
@@ -903,9 +899,30 @@ namespace Game.Newt.v2.GameItems
 
             #endregion
 
-            NeuralUtility.ContainerInput[] neuralContainers = BuildNeuralContainers(parts, extra.ItemOptions);
+            NeuralUtility.ContainerInput[] neuralContainers = BuildNeuralContainers_OLD(parts, extra.ItemOptions);
 
             NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons(partMap, neuralContainers, extra.ItemOptions.NeuralLink_MaxWeight);
+
+            if (retVal.Length == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return retVal;
+            }
+        }
+        private static NeuralUtility.ContainerOutput[] LinkNeural(ShipExtraArgs extra, BotConstruction_Parts parts)
+        {
+            if (!extra.RunNeural)
+            {
+                return null;
+            }
+
+            NeuralUtility.ContainerInput[] neuralContainers = BuildNeuralContainers(parts, extra.ItemOptions);
+
+            //NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons2(neuralContainers, extra.ItemOptions.NeuralLink_MaxWeight);
+            NeuralUtility.ContainerOutput[] retVal = NeuralUtility.LinkNeurons3(neuralContainers, extra.ItemOptions.NeuralLink_MaxWeight);
 
             if (retVal.Length == 0)
             {
@@ -1023,7 +1040,7 @@ namespace Game.Newt.v2.GameItems
 
             //NOTE: Some parts may have been set to none
             LinkItem[] brains = neuralParts.
-                Where(o => o.NeuronContainerType == NeuronContainerType.Brain).
+                Where(o => o.NeuronContainerType == NeuronContainerType.Brain_HasInternalNN || o.NeuronContainerType == NeuronContainerType.Brain_Standalone).
                 Select(o => new LinkItem(o.Position, o.Radius)).
                 ToArray();
 
@@ -1076,12 +1093,15 @@ namespace Game.Newt.v2.GameItems
         private static double GetEstimatedLinkCount(PartBase[] parts, ItemLinker_ExtraArgs extraLinks)
         {
             // The ratio of brains to IO is a big influence on the estimate, so count the number of brains
-            int numBrains = parts.Count(o => o is INeuronContainer && ((INeuronContainer)o).NeuronContainerType == NeuronContainerType.Brain);
+            int numBrains = parts.Count(o => o is INeuronContainer oN && oN.NeuronContainerType.In(NeuronContainerType.Brain_HasInternalNN, NeuronContainerType.Brain_Standalone));
             double ratio = numBrains.ToDouble() / parts.Length.ToDouble();
 
             // Use the mesh to do a bicubic interpolation
             double retVal = _linkEstimateMesh.Value.EstimateValue(ratio, parts.Length);
-            retVal *= 1d + extraLinks.Percent;
+
+            // Average is possibly too low, Max is a bit high, so take the average of (avg, max)
+            double percent = Math1D.Avg(extraLinks.Percents.Average(), extraLinks.Percents.Max());
+            retVal *= 1d + percent;
 
             return retVal;
         }
@@ -1131,7 +1151,7 @@ namespace Game.Newt.v2.GameItems
         }
 
         //TODO: May want a delegate called for each part
-        private static NeuralUtility.ContainerInput[] BuildNeuralContainers(BotConstruction_Parts parts, ItemOptions itemOptions)
+        private static NeuralUtility.ContainerInput[] BuildNeuralContainers_OLD(BotConstruction_Parts parts, ItemOptions itemOptions)
         {
             List<NeuralUtility.ContainerInput> retVal = new List<NeuralUtility.ContainerInput>();
 
@@ -1154,7 +1174,8 @@ namespace Game.Newt.v2.GameItems
                         #endregion
                         break;
 
-                    case NeuronContainerType.Brain:
+                    case NeuronContainerType.Brain_HasInternalNN:
+                    case NeuronContainerType.Brain_Standalone:
                         #region Brain
 
                         int brainChemicalCount = 0;
@@ -1165,18 +1186,18 @@ namespace Game.Newt.v2.GameItems
 
                         retVal.Add(new NeuralUtility.ContainerInput(
                             part.Item1.Token,
-                            container, NeuronContainerType.Brain,
+                            container, container.NeuronContainerType,
                             container.Position, container.Orientation,
 
-                            // there are other parts that call themselves brains, but their internal firings are custom logic.  So only the Brain class needs internal wiring at this level
-                            //TODO: If more parts need internal wiring in the future, add another enum value Brain_Standard, Brain_Custom (or something) - or this method should call a delegate for each part that can apply custom logic/ratios
-                            part.Item1 is Brain ? itemOptions.Brain_LinksPerNeuron_Internal : (double?)null,
+                            // Only standalone brains have internal wirings defined at this level
+                            container.NeuronContainerType == NeuronContainerType.Brain_Standalone ? itemOptions.Brain_LinksPerNeuron_Internal : (double?)null,
 
-                            new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
+                            new[]
                             {
-                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
-                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
-                                Tuple.Create(NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromSensor),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                (NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Smallest, itemOptions.Brain_LinksPerNeuron_External_FromManipulator)
                             },
                             brainChemicalCount,
                             internalLinks, externalLinks));
@@ -1192,10 +1213,11 @@ namespace Game.Newt.v2.GameItems
                             container, NeuronContainerType.Manipulator,
                             container.Position, container.Orientation,
                             null,
-                            new Tuple<NeuronContainerType, NeuralUtility.ExternalLinkRatioCalcType, double>[]
+                            new[]
                             {
-                                Tuple.Create(NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
-                                Tuple.Create(NeuronContainerType.Brain, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Sensor),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Destination, itemOptions.Thruster_LinksPerNeuron_Brain),
                             },
                             0,
                             null, externalLinks));
@@ -1208,6 +1230,115 @@ namespace Game.Newt.v2.GameItems
 
                     default:
                         throw new ApplicationException("Unknown NeuronContainerType: " + container.NeuronContainerType.ToString());
+                }
+            }
+
+            return retVal.ToArray();
+        }
+        private static NeuralUtility.ContainerInput[] BuildNeuralContainers(BotConstruction_Parts parts, ItemOptions itemOptions)
+        {
+            List<NeuralUtility.ContainerInput> retVal = new List<NeuralUtility.ContainerInput>();
+
+            foreach (var part in parts.AllParts.Where(o => o.Item1 is INeuronContainer))
+            {
+                INeuronContainer container = (INeuronContainer)part.Item1;
+                ShipPartDNA dna = part.Item2;
+                NeuralLinkDNA[] internalLinks = dna?.InternalLinks;
+                NeuralLinkExternalDNA[] externalLinks = dna?.ExternalLinks;
+
+                switch (container.NeuronContainerType)
+                {
+                    case NeuronContainerType.Sensor:
+                        #region sensor
+
+                        // The sensor is a source, so shouldn't have any links.  But it needs to be included in the args so that other
+                        // neuron containers can hook to it
+                        retVal.Add(new NeuralUtility.ContainerInput(part.Item1.Token, container, NeuronContainerType.Sensor, container.Position, container.Orientation, null, null, 0, null, null));
+
+                        #endregion
+                        break;
+
+                    case NeuronContainerType.Brain_HasInternalNN:
+                        #region brain shell
+
+                        retVal.Add(new NeuralUtility.ContainerInput(
+                            part.Item1.Token,
+                            container,
+                            container.NeuronContainerType,
+                            container.Position,
+                            container.Orientation,
+                            null,       // Only standalone brains have internal wirings defined at this level
+                            new[]
+                            {
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),     // a manipulator should never feed a brain, unless it has some readonly neurons (maybe status indicators?)
+                            },
+                            0,
+                            internalLinks,
+                            externalLinks));
+
+                        #endregion
+                        break;
+
+                    case NeuronContainerType.Brain_Standalone:
+                        #region brain standalone
+
+                        int brainChemicalCount = 0;
+                        if (part.Item1 is Brain castBrain)      // it should always be this type when the containertype is Brain_Standalone
+                        {
+                            brainChemicalCount = (castBrain.BrainChemicalCount * 1.33d).ToInt_Round();		// increasing so that there is a higher chance of listeners
+                        }
+
+                        retVal.Add(new NeuralUtility.ContainerInput(
+                            part.Item1.Token,
+                            container,
+                            container.NeuronContainerType,
+                            container.Position,
+                            container.Orientation,
+                            itemOptions.Brain_LinksPerNeuron_Internal,
+                            new[]
+                            {
+                                (NeuronContainerType.Sensor, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Average, itemOptions.Brain_LinksPerNeuron_External_FromBrain),
+                                (NeuronContainerType.Manipulator, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap)      // a manipulator should never feed a brain, unless it has some readonly neurons (maybe status indicators?)
+                            },
+                            brainChemicalCount,
+                            internalLinks,
+                            externalLinks));
+
+                        #endregion
+                        break;
+
+                    case NeuronContainerType.Manipulator:
+                        #region manipulator
+
+                        retVal.Add(new NeuralUtility.ContainerInput(
+                            part.Item1.Token,
+                            container,
+                            NeuronContainerType.Manipulator,
+                            container.Position,
+                            container.Orientation,
+                            null,
+                            new[]       //NOTE: not mapping from a sensor to a manipulator.  signals must flow through a brain
+                            {
+                                (NeuronContainerType.Brain_HasInternalNN, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                                (NeuronContainerType.Brain_Standalone, NeuralUtility.ExternalLinkRatioCalcType.Source, itemOptions.Neural_ExistingRatioCap),
+                            },
+                            0,
+                            null,
+                            externalLinks));
+
+                        #endregion
+                        break;
+
+                    case NeuronContainerType.None:
+                        break;
+
+                    default:
+                        throw new ApplicationException($"Unknown {nameof(NeuronContainerType)}: {container.NeuronContainerType}");
                 }
             }
 
@@ -1662,17 +1793,36 @@ namespace Game.Newt.v2.GameItems
         /// There is a pre pass through the parts that looks for containers.  Then the standard pass can hand containers to the other parts.
         /// If you have a custom container part, then hook to this delegate
         /// </summary>
-        public Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, PartBase> InstantiateUnknownPart_Container { get; set; }
+        /// <remarks>
+        /// object[] is for items that the parts need, but the botconstructor doesn't know about
+        /// </remarks>
+        public Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, object[], PartBase> InstantiateUnknownPart_Container { get; set; }
         /// <summary>
         /// Once the container parts are instantiated, container groups get created
         /// NOTE: Passing BotConstruction_Containers, which will have everything populated except CustomContainerGroups (which is what this delegate populates)
         /// </summary>
+        /// <remarks>
+        /// object[] is for items that the parts need, but the botconstructor doesn't know about
+        /// </remarks>
         public Func<BotConstruction_Containers, object[]> InstantiateUnknownPart_ContainerGroups { get; set; }
 
         /// <summary>
         /// This pass goes through all the parts that haven't been created in previous passes
         /// </summary>
-        public Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, PartBase> InstantiateUnknownPart_Standard { get; set; }
+        /// <remarks>
+        /// object[] is for items that the parts need, but the botconstructor doesn't know about
+        /// 
+        /// For example, arcbot's MotionController2 needs the drag plane
+        /// </remarks>
+        public Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, object[], PartBase> InstantiateUnknownPart_Standard { get; set; }
+
+        /// <summary>
+        /// This pass is for parts that rely on parts created in the standard pass
+        /// </summary>
+        /// <remarks>
+        /// IEnumerable[PartBase] is a list of all the parts built during the standard pass
+        /// </remarks>
+        public Func<ShipPartDNA, ShipCoreArgs, ShipExtraArgs, BotConstruction_Containers, object[], IEnumerable<PartBase>, PartBase> InstantiateUnknownPart_Post { get; set; }
 
 
         //TODO: There may need to be two variants of the below delegates.  No dna, links stored in dna

@@ -1,0 +1,216 @@
+﻿<Window x:Class="Game.Newt.Testers.NatureOfShapes"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Game.Newt.Testers"
+        mc:Ignorable="d"
+        Title="Nature of Shapes" ResizeMode="CanResizeWithGrip" Width="1000" Height="800" Closing="Window_Closing">
+    <Window.Resources>
+        <Style x:Key="expanderStackPanel" TargetType="StackPanel">
+            <Setter Property="Margin" Value="6"/>
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="b2v"/>
+    </Window.Resources>
+
+    <Grid Margin="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="8"/>
+            <ColumnDefinition Width="1*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+
+            <ScrollViewer Grid.Row="0">
+                <StackPanel>
+                    <Expander IsExpanded="False" Header="Segment Length %">
+                        <StackPanel Style="{StaticResource expanderStackPanel}">
+                            <Label Content="Radius"/>
+                            <TextBox Name="txtRadius" Text=".5"/>
+
+                            <Button Content="Line - interior" Margin="0,8,0,0" Click="Line_Interior_Click"/>
+                            <Button Content="Square - interior" Click="Square_Interior_Click"/>
+                            <Button Content="Cube - interior" Click="Cube_Interior_Click"/>
+
+                            <Button Content="Line - perimiter" Margin="0,8,0,0" Click="Line_Perimiter_Click"/>
+                            <Button Content="Square - perimiter" Click="Square_Perimiter_Click"/>
+                            <Button Content="Cube - perimiter" Click="Cube_Perimiter_Click"/>
+
+                            <Button Content="Circle - interior" Margin="0,8,0,0" Click="Circle_Interior_Click"/>
+                            <Button Content="Sphere - interior" Click="Sphere_Interior_Click"/>
+
+                            <Button Content="Circle - perimiter" Margin="0,8,0,0" Click="Circle_Perimiter_Click"/>
+                            <Button Content="Sphere - perimiter" Click="Sphere_Perimiter_Click"/>
+                            <Button Content="Sphere 4D - perimiter" Click="Sphere4D_Perimiter_Click"/>
+                            <Button Content="Sphere 5D - perimiter" Click="Sphere5D_Perimiter_Click"/>
+                            <Button Content="Sphere 6D - perimiter" Click="Sphere6D_Perimiter_Click"/>
+                            <Button Content="Sphere 7D - perimiter" Click="Sphere7D_Perimiter_Click"/>
+                            <Button Content="Sphere 8D - perimiter" Click="Sphere8D_Perimiter_Click"/>
+                            <Button Content="Sphere 12D - perimiter" Click="Sphere12D_Perimiter_Click"/>
+                            <Button Content="Sphere 60D - perimiter" Click="Sphere60D_Perimiter_Click"/>
+                            <Button Content="Sphere 360D - perimiter" Click="Sphere360D_Perimiter_Click"/>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander IsExpanded="True" Header="Collapse Sphere" Margin="0,8,0,0">
+                        <StackPanel Style="{StaticResource expanderStackPanel}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="# Points"/>
+                                <TextBox Grid.Column="2" Name="txtNumPoints" Text="80"/>
+                            </Grid>
+
+                            <Grid Margin="0,8,0,0" MinWidth="175">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="4"/>
+                                    <ColumnDefinition Width="auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                    <RowDefinition Height="auto"/>
+                                </Grid.RowDefinitions>
+
+                                <CheckBox Grid.Column="0" Grid.Row="0" Name="chkTopSlicePlane" Content="Top Slice Plane"/>
+                                <TextBlock Grid.Column="2" Grid.Row="0" Name="lblTopSlicePlaceValue" Text="1" Foreground="#808080" HorizontalAlignment="Right" Visibility="{Binding IsChecked,ElementName=chkTopSlicePlane,Converter={StaticResource b2v}}"/>
+                                <Slider Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="1" Name="trkTopSlicePlane" Minimum="-1" Maximum="1" Value="1" Visibility="{Binding IsChecked,ElementName=chkTopSlicePlane,Converter={StaticResource b2v}}" ValueChanged="trkTopSlicePlane_ValueChanged"/>
+
+                                <TextBlock Grid.Column="0" Grid.Row="3" Text="Slice Plane"/>
+                                <TextBlock Grid.Column="2" Grid.Row="3" Name="lblSlicePlaceValue" Text="0" Foreground="#808080" HorizontalAlignment="Right"/>
+                                <Slider Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="4" Name="trkSlicePlane" Minimum="-1" Maximum="1" Value="0" ValueChanged="trkSlicePlane_ValueChanged"/>
+
+                                <CheckBox Visibility="Collapsed" Grid.Column="0" Grid.Row="6" Name="chkVerticalSlices" Content="Vertical Slices"/>
+                                <CheckBox Grid.Column="0" Grid.Row="7" Name="chkVerticalSliceXOnly" Content="X only" Visibility="{Binding IsChecked,ElementName=chkVerticalSlices,Converter={StaticResource b2v}}"/>
+                                <Slider Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="8" Name="trkVerticalSliceWidth" Minimum="0" Maximum="1" Value=".5" Visibility="{Binding IsChecked,ElementName=chkVerticalSlices,Converter={StaticResource b2v}}"/>
+                            </Grid>
+
+                            <Button Content="3D" Margin="0,8,0,0" Click="CollapseSphere3D_Click"/>
+                            <Button Content="4D" Click="CollapseSphere4D_Click"/>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander IsExpanded="False" Header="Skinning Spheres" Margin="0,8,0,0">
+                        <StackPanel Style="{StaticResource expanderStackPanel}">
+                            <CheckBox Name="chkShowIn1FewerDim" Content="show in D-1" ToolTip="2D -> 1D, 3D -> 2D" Checked="chkShowIn1FewerDim_Checked" Unchecked="chkShowIn1FewerDim_Checked"/>
+                            <CheckBox IsChecked="True" Name="chkColorByLastDim" Content="color by last D" Checked="chkColorByLastDim_Checked" Unchecked="chkColorByLastDim_Checked"/>
+                            <CheckBox Name="chkIgnoreBottom" Content="ignore bottom" Checked="chkIgnoreBottom_Checked" Unchecked="chkIgnoreBottom_Checked"/>
+
+                            <Button Content="Uniform perimiter points 2D" Margin="0,8,0,0" Click="UniformPoints2D_Click"/>
+                            <Button Content="Uniform perimiter points 3D" Click="UniformPoints3D_Click"/>
+                            <Button Content="Uniform perimiter points 4D" Click="UniformPoints4D_Click"/>
+
+                            <Button Content="Tessellate 3D" Margin="0,8,0,0" Click="Tessellate3D_Click"/>
+                            <Button Content="Tessellate 4D" Click="Tessellate4D_Click"/>
+
+                            <Button Content="Poly at angle 3D" Margin="0,8,0,0" Click="PolyAtAngle3D_Click"/>
+                            <Button Content="Poly at angle 4D" Click="PolyAtAngle4D_Click"/>
+
+                            <CheckBox IsChecked="True" Name="chkRunning" Content="running" Margin="0,8,0,0" Checked="chkRunning_Checked" Unchecked="chkRunning_Checked"/>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander IsExpanded="False" Header="Forces Misc" Margin="0,8,0,0">
+                        <StackPanel Style="{StaticResource expanderStackPanel}">
+                            <Button Content="maintain triangle" Click="MaintainTriangle_Click"/>
+                            <Button Content="latch joint" Click="LatchJoint_Click"/>
+                            <Button Content="latch joint 2" Click="LatchJoint2_Click"/>
+                            <Button Content="latch joint 3" Click="LatchJoint3_Click"/>
+                        </StackPanel>
+                    </Expander>
+
+                    <Expander IsExpanded="False" Header="Misc" Margin="0,8,0,0">
+                        <StackPanel Style="{StaticResource expanderStackPanel}">
+                            <TextBox Name="txtGaussianMax" Text="1.5" ToolTip="x goes from 0 to this; mean=0; stddev=1"/>
+                            <Button Content="Gaussian" Click="Gaussian_Click"/>
+
+                            <CheckBox IsChecked="True" Name="chkNegateGauss" Content="random negate" Margin="0,8,0,0"/>
+                            <TextBox Name="txtGaussianMax2" Text=""/>
+                            <Button Content="Random guass 1D" Click="RandGuass1D_Click"/>
+                            <Button Content="Random guass 2D" Click="RandGuass2D_Click"/>
+                            <Button Content="Random guass 3D" Click="RandGuass3D_Click"/>
+                            <Button Content="Random guass 4D" Click="RandGuass4D_Click"/>
+                            <Button Content="Random guass 5D" Click="RandGuass5D_Click"/>
+
+                            <Button Content="python solution" Margin="0,8,0,0" Click="PythonSolution_Click"/>
+                            <Button Content="python 1D" Click="Python1D_Click"/>
+                            <Button Content="python 1D 2" Click="Python1D2_Click"/>
+
+                            <Button Content="multi color triangle" Margin="0,8,0,0" Click="MultiColorTriangle_Click"/>
+                            <Button Content="gradient square" Click="GradientSquare_Click"/>
+                            <Button Content="gradient arrow" Click="GradientArrow_Click"/>
+
+                            <Button Content="opposite vector" Margin="0,8,0,0" Click="OppositeVector_Click"/>
+
+                            <Button Content="poly from segments" Margin="0,8,0,0" Click="PolyFromSegments_Click"/>
+                        </StackPanel>
+                    </Expander>
+                </StackPanel>
+            </ScrollViewer>
+
+            <StackPanel Grid.Row="2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="4"/>
+                        <ColumnDefinition Width="auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="4"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Slider Grid.Column="0" Grid.Row="0" Name="trkBackground" Minimum="0" Maximum="100" Value="100" ValueChanged="Background_ValueChanged"/>
+                    <Label Grid.Column="2" Grid.Row="0" Content="background"/>
+
+                    <ComboBox Grid.Column="0" Grid.Row="2" Name="cboZeroColor" MinWidth="80" SelectionChanged="cboZeroColor_SelectionChanged"/>
+                    <Label Grid.Column="2" Grid.Row="2" Content="zero color"/>
+                </Grid>
+
+                <Button Content="Clear" Margin="0,4,0,0" Click="Clear_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Viewport -->
+        <Border Grid.Column="2" Name="grdViewPort" Background="#30FFFFFF" BorderThickness="1" BorderBrush="#30000000" CornerRadius="3">
+            <Viewport3D Name="_viewport" IsHitTestVisible="False">
+                <!-- Camera -->
+                <Viewport3D.Camera>
+                    <PerspectiveCamera x:Name="_camera" Position="0,0,25" LookDirection="0,0,-1" UpDirection="0,1,0" FieldOfView="45"/>
+                </Viewport3D.Camera>
+                <!-- Lights -->
+                <ModelVisual3D>
+                    <ModelVisual3D.Content>
+                        <Model3DGroup>
+                            <AmbientLight Color="DimGray" />
+                            <DirectionalLight Color="White" Direction="1,-1,-1" />
+                            <DirectionalLight Color="#A0A0A0" Direction="-1,1,1" />
+                        </Model3DGroup>
+                    </ModelVisual3D.Content>
+                </ModelVisual3D>
+            </Viewport3D>
+        </Border>
+
+        <!-- A 2D plate to draw on -->
+        <Grid Grid.Column="2" Name="frontPlate"/>
+    </Grid>
+</Window>

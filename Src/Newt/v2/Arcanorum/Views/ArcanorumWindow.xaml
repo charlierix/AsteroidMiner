@@ -30,11 +30,9 @@
             <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="450"/>
         </Style>
-        
     </Window.Resources>
 
     <Grid>
-
         <Grid Name="grdViewPort" MouseMove="grdViewPort_MouseMove" MouseWheel="grdViewPort_MouseWheel" MouseLeave="grdViewPort_MouseLeave" MouseDown="grdViewPort_MouseDown">
             <Grid.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" >
@@ -90,7 +88,6 @@
                 <TextBlock Text="Level" Style="{StaticResource mainText}"/>
                 <TextBlock Name="lblLevel" Text="7" Margin="6,0,0,0" Style="{StaticResource mainTextValue}"/>
             </StackPanel>
-            
         </Grid>
 
         <local:InventoryQuickPanel x:Name="pnlInventoryQuick" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8,0,0,8" IsHitTestVisible="False"/>

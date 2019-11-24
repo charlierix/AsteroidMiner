@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
+﻿using Game.HelperClassesCore;
 using Game.HelperClassesWPF;
 using Game.Newt.v2.GameItems.ShipEditor;
 using Game.Newt.v2.NewtonDynamics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -576,7 +574,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
         }
         private static (Point3D fromLeft, Point3D fromRight, Point3D toLeft, Point3D toRight, Point3D baseLeft, Point3D baseRight) GetLinePoints(Vector from, Vector to, double shaftThickness, double arrowThickness, double sphereRadius)
         {
-            Vector3D direction = (to - from).ToVector3D().ToUnit(false);
+            Vector3D direction = (to - from).ToVector3D().ToUnit();
 
             Vector3D axis = new Vector3D(0, 0, 1);
 
@@ -680,9 +678,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private readonly IContainer _plasmaTanks;
 
-        private readonly DirectionControllerRing.NeuronShell _neuronsLinear;
-        private readonly DirectionControllerRing.NeuronShell _neuronsRotation;
-        private readonly Neuron_SensorPosition[] _neurons;
+        private readonly NeuralUtility.NeuronShell _neuronsLinear;
+        private readonly NeuralUtility.NeuronShell _neuronsRotation;
+        private readonly Neuron_Direct[] _neurons;
 
         // If this is true, then it ignores neurons
         private volatile bool _isManuallyControlled = false;
@@ -707,41 +705,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             _linearForceAtMax = volume * itemOptions.Impulse_LinearStrengthRatio * ItemOptions.IMPULSEENGINE_FORCESTRENGTHMULT;		//ImpulseStrengthRatio is stored as a lower value so that the user doesn't see such a huge number
             _rotationForceAtMax = volume * itemOptions.Impulse_RotationStrengthRatio * ItemOptions.IMPULSEENGINE_FORCESTRENGTHMULT;
 
-            #region neurons
-
-            double area = Math.Pow(radius, itemOptions.ImpulseEngine_NeuronGrowthExponent);
-
-            int neuronCount = Convert.ToInt32(Math.Ceiling(itemOptions.ImpulseEngine_NeuronDensity_Half * area));
-            if (neuronCount == 0)
-            {
-                neuronCount = 1;
-            }
-
-            List<Neuron_SensorPosition> allNeurons = new List<Neuron_SensorPosition>();
-
-            if (dna.ImpulseEngineType == ImpulseEngineType.Both || dna.ImpulseEngineType == ImpulseEngineType.Translate)
-            {
-                _neuronsLinear = DirectionControllerRing.CreateNeuronShell_Sphere(1, neuronCount);
-                allNeurons.AddRange(_neuronsLinear.Neurons);
-            }
-            else
-            {
-                _neuronsLinear = null;
-            }
-
-            if (dna.ImpulseEngineType == ImpulseEngineType.Both || dna.ImpulseEngineType == ImpulseEngineType.Rotate)
-            {
-                _neuronsRotation = DirectionControllerRing.CreateNeuronShell_Sphere(.4, neuronCount);
-                allNeurons.AddRange(_neuronsRotation.Neurons);
-            }
-            else
-            {
-                _neuronsRotation = null;
-            }
-
-            _neurons = allNeurons.ToArray();
-
-            #endregion
+            // Neurons
+            var neurons = GetNeurons(radius, dna, _itemOptions);
+            _neuronsLinear = neurons.linear;
+            _neuronsRotation = neurons.rotation;
+            _neurons = UtilityCore.Iterate(_neuronsLinear?.Neurons, _neuronsRotation?.Neurons).ToArray();
         }
 
         #endregion
@@ -773,7 +741,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             // Update glowball
             var current = _thrustsTorquesLastUpdate;
 
-            double percent = current == null ? 0d : current.Item1;
+            double percent = current?.GlowballSizePercent ?? 0d;
 
             ImpulseEngineDesign design = (ImpulseEngineDesign)this.Design;
             design.SetGlowballPercent(percent);
@@ -793,10 +761,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             }
 
             // Get desired force, torque
-            var forceTorque = GetForceTorque(forceTorquePercent?.linear, forceTorquePercent?.rotate, _linearForceAtMax, _rotationForceAtMax, elapsedTime, _itemOptions, IsDestroyed, _plasmaTanks);
-
-            // Store percent, force, torque
-            _thrustsTorquesLastUpdate = Tuple.Create(forceTorque.Item1, Tuple.Create(forceTorque.Item2, forceTorque.Item3));
+            _thrustsTorquesLastUpdate = GetForceTorque(forceTorquePercent?.linear, forceTorquePercent?.rotate, _linearForceAtMax, _rotationForceAtMax, elapsedTime, _itemOptions, IsDestroyed, _plasmaTanks);
         }
 
         public int? IntervalSkips_MainThread => 0;
@@ -813,23 +778,10 @@ namespace Game.Newt.v2.GameItems.ShipParts
         private readonly Vector3D _scaleActual;
         public override Vector3D ScaleActual => _scaleActual;
 
-        private volatile Tuple<double, Tuple<Vector3D?, Vector3D?>> _thrustsTorquesLastUpdate = null;
-        public Tuple<Vector3D?, Vector3D?> ThrustsTorquesLastUpdate
-        {
-            get
-            {
-                var current = _thrustsTorquesLastUpdate;
-
-                if (current == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    return current.Item2;
-                }
-            }
-        }
+        //private volatile Tuple<double, Tuple<Vector3D?, Vector3D?>> _thrustsTorquesLastUpdate = null;
+        //public Tuple<Vector3D?, Vector3D?> ThrustsTorquesLastUpdate
+        private volatile ImpulseEngineOutput _thrustsTorquesLastUpdate = null;
+        public ImpulseEngineOutput ThrustsTorquesLastUpdate => _thrustsTorquesLastUpdate;
 
         private readonly double _linearForceAtMax;
         public double LinearForceAtMax => _linearForceAtMax;
@@ -916,7 +868,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             return (linear, rotation);
         }
-        private static (Vector3D? linear, Vector3D? rotate) GetForceTorquePercent_Neural(DirectionControllerRing.NeuronShell linear, DirectionControllerRing.NeuronShell rotation, ImpulseEngineType engineType)
+        private static (Vector3D? linear, Vector3D? rotate) GetForceTorquePercent_Neural(NeuralUtility.NeuronShell linear, NeuralUtility.NeuronShell rotation, ImpulseEngineType engineType)
         {
             Vector3D? linearPercent = null;
             if (engineType == ImpulseEngineType.Both || engineType == ImpulseEngineType.Translate)
@@ -933,11 +885,11 @@ namespace Game.Newt.v2.GameItems.ShipParts
             return (linearPercent, rotatePercent);
         }
 
-        private static (double glowballSizePercent, Vector3D? linear, Vector3D? torque) GetForceTorque(Vector3D? linearPercent, Vector3D? rotationPercent, double linearForceAtMax, double rotationForceAtMax, double elapsedTime, ItemOptions itemOptions, bool isDetroyed, IContainer plasmaTanks)
+        private static ImpulseEngineOutput GetForceTorque(Vector3D? linearPercent, Vector3D? rotationPercent, double linearForceAtMax, double rotationForceAtMax, double elapsedTime, ItemOptions itemOptions, bool isDetroyed, IContainer plasmaTanks)
         {
             if (isDetroyed || plasmaTanks == null)
             {
-                return (0d, null, null);
+                return new ImpulseEngineOutput() { GlowballSizePercent = 0d, Linear = null, Torque = null };
             }
 
             // Cap percents
@@ -946,7 +898,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             if ((linearPecentLength + rotationPercentLength).IsNearZero())
             {
                 // No force desired
-                return (0d, null, null);
+                return new ImpulseEngineOutput() { GlowballSizePercent = 0d, Linear = null, Torque = null };
             }
 
             #region convert % to force
@@ -982,7 +934,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
             if (plasmaUnused.IsNearValue(plasmaToUse))
             {
                 // No plasma
-                return (0d, null, null);
+                return new ImpulseEngineOutput() { GlowballSizePercent = 0d, Linear = null, Torque = null };
             }
             else if (plasmaUnused > 0d)
             {
@@ -1031,7 +983,12 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             #endregion
 
-            return (finalPercent, actualLinearForce, actualRotationForce);
+            return new ImpulseEngineOutput()
+            {
+                GlowballSizePercent = finalPercent,
+                Linear = actualLinearForce,
+                Torque = actualRotationForce,
+            };
         }
 
         private static double CapPercent(ref Vector3D? percent)
@@ -1044,7 +1001,7 @@ namespace Game.Newt.v2.GameItems.ShipParts
                 if (retVal > 1)
                 {
                     retVal = 1;
-                    percent = percent.Value.ToUnit(false);
+                    percent = percent.Value.ToUnit();
                 }
             }
 
@@ -1059,6 +1016,74 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             volume = 4d / 3d * Math.PI * radius * radius * radius;
             mass = volume * itemOptions.ImpulseEngine_Density;
+        }
+
+        private static (NeuralUtility.NeuronShell linear, NeuralUtility.NeuronShell rotation) GetNeurons(double radius, ImpulseEngineDNA dna, ItemOptions itemOptions)
+        {
+            const double RADIUS_LINEAR = 1;
+            const double RADIUS_ROTATION = .4;
+
+            double area = Math.Pow(radius, itemOptions.ImpulseEngine_NeuronGrowthExponent);
+
+            int count = Convert.ToInt32(Math.Ceiling(itemOptions.ImpulseEngine_NeuronDensity_Half * area));
+            if (count == 0)
+            {
+                count = 1;
+            }
+
+            if (dna.Neurons == null || dna.Neurons.Length == 0)
+            {
+                return GetNeurons_New(count, RADIUS_LINEAR, RADIUS_ROTATION, dna);
+            }
+            else
+            {
+                return GetNeurons_Existing(count, RADIUS_LINEAR, RADIUS_ROTATION, dna);
+            }
+        }
+        private static (NeuralUtility.NeuronShell linear, NeuralUtility.NeuronShell rotation) GetNeurons_New(int count, double radiusLinear, double radiusRotation, ImpulseEngineDNA dna)
+        {
+            NeuralUtility.NeuronShell linear = null;
+            NeuralUtility.NeuronShell rotation = null;
+
+            if (dna.ImpulseEngineType.In(ImpulseEngineType.Both, ImpulseEngineType.Translate))
+            {
+                linear = NeuralUtility.CreateNeuronShell_Sphere(radiusLinear, count);
+            }
+
+            if (dna.ImpulseEngineType.In(ImpulseEngineType.Both, ImpulseEngineType.Rotate))
+            {
+                rotation = NeuralUtility.CreateNeuronShell_Sphere(radiusRotation, count);
+            }
+
+            return (linear, rotation);
+        }
+        private static (NeuralUtility.NeuronShell linear, NeuralUtility.NeuronShell rotation) GetNeurons_Existing(int count, double radiusLinear, double radiusRotation, ImpulseEngineDNA dna)
+        {
+            NeuralUtility.NeuronShell linear = null;
+            NeuralUtility.NeuronShell rotation = null;
+
+            switch (dna.ImpulseEngineType)
+            {
+                case ImpulseEngineType.Translate:
+                    linear = NeuralUtility.CreateNeuronShell_Sphere(dna.Neurons, radiusLinear, count);
+                    break;
+
+                case ImpulseEngineType.Rotate:
+                    rotation = NeuralUtility.CreateNeuronShell_Sphere(dna.Neurons, radiusRotation, count);
+                    break;
+
+                case ImpulseEngineType.Both:
+                    Point3D[][] byRadius = NeuralUtility.DivideNeuronShellsByRadius(dna.Neurons, new[] { radiusLinear, radiusRotation }, count);
+
+                    linear = NeuralUtility.CreateNeuronShell_Sphere(byRadius[0], radiusLinear, count);
+                    rotation = NeuralUtility.CreateNeuronShell_Sphere(byRadius[1], radiusRotation, count);
+                    break;
+
+                default:
+                    throw new ApplicationException($"Unknown {nameof(ImpulseEngineType)}: {dna.ImpulseEngineType}");
+            }
+
+            return (linear, rotation);
         }
 
         #endregion
@@ -1082,6 +1107,16 @@ namespace Game.Newt.v2.GameItems.ShipParts
         Translate,
         Rotate,
         Both,
+    }
+
+    #endregion
+    #region class: ImpulseEngineOutput
+
+    public class ImpulseEngineOutput
+    {
+        public double GlowballSizePercent { get; set; }
+        public Vector3D? Linear { get; set; }
+        public Vector3D? Torque { get; set; }
     }
 
     #endregion

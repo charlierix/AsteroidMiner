@@ -279,7 +279,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                     retVal[cntr].PhysicsBody.Rotation = children[cntr].Part.Orientation;
 
-                    Vector3D velFromCenter = children[cntr].Part.Position.ToVector().ToUnit(false);
+                    Vector3D velFromCenter = children[cntr].Part.Position.ToVector().ToUnit();
                     velFromCenter *= UtilityCore.GetScaledValue(1, 4, 1, MAXOVERDMG, overDamage);
 
                     retVal[cntr].PhysicsBody.Velocity = parentVel + velFromCenter;
@@ -1226,7 +1226,7 @@ namespace Game.Newt.v2.GameItems.MapParts
 
                     retVal[cntr].PhysicsBody.Rotation = children[cntr].Part.Orientation;
 
-                    Vector3D velFromCenter = children[cntr].Part.Position.ToVector().ToUnit(false);
+                    Vector3D velFromCenter = children[cntr].Part.Position.ToVector().ToUnit();
                     velFromCenter *= UtilityCore.GetScaledValue(1, 4, 1, MAXOVERDMG, overDamage);
 
                     retVal[cntr].PhysicsBody.Velocity = parentVel + velFromCenter;

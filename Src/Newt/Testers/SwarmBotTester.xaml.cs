@@ -642,7 +642,7 @@ namespace Game.Newt.Testers
                         clickDist = clickDistNearSwarm.Value;
                     }
 
-                    clickPoint3D = clickRay.Origin + clickRay.Direction.ToUnit(false) * clickDist;
+                    clickPoint3D = clickRay.Origin + clickRay.Direction.ToUnit() * clickDist;
                 }
 
                 // Update the click plane

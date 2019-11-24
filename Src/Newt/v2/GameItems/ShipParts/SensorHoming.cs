@@ -1,17 +1,12 @@
-﻿using System;
+﻿using Game.HelperClassesCore;
+using Game.HelperClassesWPF;
+using Game.Newt.v2.GameItems.ShipEditor;
+using Game.Newt.v2.NewtonDynamics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Media3D;
-using Game.HelperClassesCore;
-using Game.Newt.v2.GameItems;
-using Game.Newt.v2.GameItems.ShipEditor;
-using Game.Newt.v2.GameItems.ShipParts;
-using Game.HelperClassesWPF;
-using Game.Newt.v2.NewtonDynamics;
 using System.Windows;
+using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.GameItems.ShipParts
 {
@@ -81,9 +76,6 @@ namespace Game.Newt.v2.GameItems.ShipParts
     public class SensorHomingDesign : PartDesignBase
     {
         #region Declaration Section
-
-        internal const double SIZEPERCENTOFSCALE_XY = 1d;
-        internal const double SIZEPERCENTOFSCALE_Z = .1d;
 
         public const PartDesignAllowedScale ALLOWEDSCALE = PartDesignAllowedScale.XYZ;		// This is here so the scale can be known through reflection
 
@@ -362,9 +354,9 @@ namespace Game.Newt.v2.GameItems.ShipParts
             if (Math3D.IsNearZero(direction))
             {
                 // They are sitting on the home point.  Zero everything out and exit
-                for (int cntr = 0; cntr < _neurons.Length; cntr++)
+                foreach(var neuron in _neurons)
                 {
-                    _neurons[cntr].Value = 0d;
+                    neuron.Value = 0d;
                 }
 
                 return;
@@ -384,25 +376,25 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
             Vector3D directionUnit = direction.ToUnit();
 
-            for (int cntr = 0; cntr < _neurons.Length; cntr++)
+            foreach (var neuron in _neurons)
             {
-                if (_neurons[cntr].PositionUnit == null)
+                if (neuron.PositionUnit == null)
                 {
                     // This neuron is sitting at 0,0,0
-                    _neurons[cntr].Value = 0d;
+                    neuron.Value = 0d;
                 }
                 else
                 {
-                    double dot = Vector3D.DotProduct(directionUnit, _neurons[cntr].PositionUnit.Value);
+                    double dot = Vector3D.DotProduct(directionUnit, neuron.PositionUnit.Value);
                     dot += 1d;		// get this to scale from 0 to 2 instead of -1 to 1
 
                     if (dot < MINDOT)
                     {
-                        _neurons[cntr].Value = 0d;
+                        neuron.Value = 0d;
                     }
                     else
                     {
-                        _neurons[cntr].Value = UtilityCore.GetScaledValue_Capped(0d, magnitude, MINDOT, 2d, dot);
+                        neuron.Value = UtilityCore.GetScaledValue_Capped(0d, magnitude, MINDOT, 2d, dot);
                     }
                 }
             }
@@ -434,26 +426,21 @@ namespace Game.Newt.v2.GameItems.ShipParts
 
         private static Neuron_SensorPosition[] CreateNeurons(ShipPartDNA dna, ItemOptions itemOptions, double neuronDensity, bool ignoreSetValue)
         {
-            #region Calculate Counts
+            #region calculate counts
 
             // Figure out how many to make
             //NOTE: This radius isn't taking SCALE into account.  The other neural parts do this as well, so the neural density properties can be more consistent
-            double radius = (dna.Scale.X + dna.Scale.Y) / (2d * 2d);		// XY should always be the same anyway (not looking at Z for this.  Z is just to keep the sensors from getting too close to each other)
+            double radius = Math1D.Avg(dna.Scale.X, dna.Scale.Y, dna.Scale.Z) / 2d;     // dividing by 2, because radius is wanted, not diameter
             double area = Math.Pow(radius, itemOptions.Sensor_NeuronGrowthExponent);
 
-            int neuronCount = Convert.ToInt32(Math.Ceiling(neuronDensity * area));
-            if (neuronCount == 0)
-            {
-                neuronCount = 1;
-            }
+            int neuronCount = (neuronDensity * area).ToInt_Ceiling();
+            neuronCount = Math.Max(neuronCount, 10);
 
             #endregion
 
-            // Place them evenly in a ring
-            // I don't want a neuron in the center, so placing a static point there to force the neurons away from the center
-            Vector3D[] positions = Brain.GetNeuronPositions_Ring2D(dna.Neurons, neuronCount, radius);       //why 2D?
+            // Place them evenly on the surface of a sphere
+            Vector3D[] positions = NeuralUtility.GetNeuronPositions_SphericalShell_Even(dna.Neurons, neuronCount, radius);
 
-            // Exit Function
             return positions.
                 Select(o => new Neuron_SensorPosition(o.ToPoint(), true, ignoreSetValue)).
                 ToArray();

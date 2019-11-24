@@ -423,7 +423,7 @@ namespace Game.Newt.Testers
                     double sumRatio = pointsPerLength.Sum(o => o.Item2);
 
                     var pointsPerLengthNormalized = pointsPerLength.
-                        Select(o => Tuple.Create(o.Item1, o.Item2 / sumRatio)).
+                        Select(o => (o.Item1, o.Item2 / sumRatio)).
                         ToArray();
 
                     int index = UtilityCore.GetIndexIntoList(rand.NextPow(3), pointsPerLengthNormalized);
@@ -437,8 +437,8 @@ namespace Game.Newt.Testers
 
                 while (runningSum > count)
                 {
-                    Tuple<int, double>[] fractions = sets.
-                        Select((o, i) => Tuple.Create(i, o.Item2.Count.ToDouble() / runningSum.ToDouble())).
+                    var fractions = sets.
+                        Select((o, i) => (i, o.Item2.Count.ToDouble() / runningSum.ToDouble())).
                         OrderByDescending(o => o.Item2).
                         ToArray();
 
@@ -725,6 +725,7 @@ namespace Game.Newt.Testers
             _trackball = new TrackBallRoam(_camera);
             _trackball.EventSource = grdViewPort;		//NOTE:  If this control doesn't have a background color set, the trackball won't see events (I think transparent is ok, just not null)
             _trackball.AllowZoomOnMouseWheel = true;
+            _trackball.InertiaPercentRetainPerSecond_Angular = .7;
             _trackball.Mappings.AddRange(TrackBallMapping.GetPrebuilt(TrackBallMapping.PrebuiltMapping.MouseComplete_NoLeft));
             //_trackball.GetOrbitRadius += new GetOrbitRadiusHandler(Trackball_GetOrbitRadius);
 
@@ -2252,8 +2253,8 @@ namespace Game.Newt.Testers
 
             double totalLength = hitsByLength.Sum(o => o.Item2);
 
-            Tuple<int, double>[] hitsByPercentLength = hitsByLength.
-                Select(o => Tuple.Create(o.Item1, o.Item2 / totalLength)).
+            var hitsByPercentLength = hitsByLength.
+                Select(o => (o.Item1, o.Item2 / totalLength)).
                 ToArray();
 
             // Define control point cones
@@ -2344,8 +2345,8 @@ namespace Game.Newt.Testers
                         double dot = Vector3D.DotProduct(hitDirectionUnit, toPointUnit);
                         double linearDot = Math3D.GetLinearDotProduct(hitDirectionUnit, toPointUnit);
 
-                        Vector3D along = toPoint.GetProjectedVector(hitDirection).ToUnit(false);
-                        Vector3D orth = (o - Math3D.GetClosestPoint_Line_Point(hitStart, hitDirection, o)).ToUnit(false);
+                        Vector3D along = toPoint.GetProjectedVector(hitDirection).ToUnit();
+                        Vector3D orth = (o - Math3D.GetClosestPoint_Line_Point(hitStart, hitDirection, o)).ToUnit();
 
                         along *= linearDot * trkProjForceAlong.Value;
                         orth *= (1 - linearDot) * trkProjForceOrth.Value;
@@ -2404,8 +2405,8 @@ namespace Game.Newt.Testers
                     double dot = Vector3D.DotProduct(hitDirectionUnit, toPointUnit);
                     double linearDot = Math3D.GetLinearDotProduct(hitDirectionUnit, toPointUnit);
 
-                    Vector3D along = toPoint.GetProjectedVector(hitDirection).ToUnit(false);
-                    Vector3D orth = (o - Math3D.GetClosestPoint_Line_Point(hitStart, hitDirection, o)).ToUnit(false);
+                    Vector3D along = toPoint.GetProjectedVector(hitDirection).ToUnit();
+                    Vector3D orth = (o - Math3D.GetClosestPoint_Line_Point(hitStart, hitDirection, o)).ToUnit();
 
                     along *= linearDot;
                     orth *= (1 - linearDot);

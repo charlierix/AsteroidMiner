@@ -308,15 +308,13 @@ namespace Game.Newt.Testers
         {
             try
             {
-                double radius;
-                if (!double.TryParse(txtRadius.Text, out radius))
+                if (!double.TryParse(txtRadius.Text, out double radius))
                 {
                     MessageBox.Show("Couldn't parse radius as a double", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                double percent;
-                if (!double.TryParse(txtMovePercent.Text, out percent))
+                if (!double.TryParse(txtMovePercent.Text, out double percent))
                 {
                     MessageBox.Show("Couldn't parse percent as a double", this.Title, MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;

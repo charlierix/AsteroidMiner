@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="encog-core-cs">
@@ -94,6 +96,7 @@
     <Compile Include="MapParts\SwarmBot1b.cs" />
     <Compile Include="MutateUtility.cs" />
     <Compile Include="Neural.cs" />
+    <Compile Include="NeuralUtility.cs" />
     <Compile Include="PartBase.cs" />
     <Compile Include="PartSeparator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

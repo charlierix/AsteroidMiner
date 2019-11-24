@@ -647,16 +647,12 @@ namespace Game.Newt.v2.NewtonDynamics
         /// <summary>
         /// This is a helper method to visualize the collision hull.  It fires rays toward the hull, and returns where those rays hit
         /// </summary>
-        /// <returns>
-        /// Item1=Position
-        /// Item2=Normal
-        /// </returns>
-        public Tuple<Point3D, Vector3D>[] GetVisualizationOfHull(int steps = 10)
+        public (Point3D position, Vector3D normal)[] GetVisualizationOfHull(int steps = 10)
         {
             Point3D aabbMin, aabbMax;
             CalculateAproximateAABB(out aabbMin, out aabbMax);
 
-            List<Tuple<Point3D, Vector3D>> retVal = new List<Tuple<Point3D, Vector3D>>();
+            var retVal = new List<(Point3D, Vector3D)>();
 
             //TODO: Adjust the steps to get a square dpi
             int xSteps = steps;
@@ -686,11 +682,11 @@ namespace Game.Newt.v2.NewtonDynamics
 
             return retVal.ToArray();
         }
-        private Tuple<Point3D, Vector3D>[] GetVisualizationOfHull_Plate(AxisForDouble axis1, AxisForDouble axis2, AxisForDouble axis3, Vector3D rayDirection)
+        private (Point3D position, Vector3D normal)[] GetVisualizationOfHull_Plate(AxisForDouble axis1, AxisForDouble axis2, AxisForDouble axis3, Vector3D rayDirection)
         {
             //WARNING: Make sure rayDirection is long enough to pass through the entire hullD
 
-            List<Tuple<Point3D, Vector3D>> retVal = new List<Tuple<Point3D, Vector3D>>();
+            var retVal = new List<(Point3D, Vector3D)>();
 
             double percent;
             Point3D? contactPoint;
@@ -701,7 +697,7 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 if (RayCast(out percent, out contactPoint, out contactNormal, out faceID, point, point + rayDirection))
                 {
-                    retVal.Add(Tuple.Create(contactPoint.Value, contactNormal.Value));
+                    retVal.Add((contactPoint.Value, contactNormal.Value));
                 }
             }
 

@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Game.Newt.Testers.Curves"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Curves" ResizeMode="CanResizeWithGrip" Width="950" Height="850">
+        Title="Curves" ResizeMode="CanResizeWithGrip" Width="950" Height="850" Loaded="Window_Loaded" Closed="Window_Closed">
     <Window.Resources>
         <DataTemplate x:Key="expanderHeader">
             <TextBlock Text="{Binding}" FontSize="15" FontWeight="bold" Foreground="#BDC6C9"/>
@@ -26,6 +26,34 @@
         <Style TargetType="CheckBox">
             <Setter Property="Foreground" Value="White"/>
         </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style x:Key="promptText" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="sliderValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="sliderInteger" TargetType="Slider">
+            <Setter Property="SmallChange" Value="1"/>
+            <Setter Property="LargeChange" Value="5"/>
+            <Setter Property="IsSnapToTickEnabled" Value="True"/>
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="b2v"/>
     </Window.Resources>
 
     <Grid Background="#566063">
@@ -42,14 +70,14 @@
                     <Expander IsExpanded="True" Header="Single Line">
                         <Border Style="{StaticResource controlsPanelInExpander}">
                             <StackPanel Margin="8,6">
-                                <Button Name="btnSingleLine1Segment2D" Content="1 Segment 2D" Click="btnSingleLine1Segment2D_Click"/>
-                                <Button Name="btnSingleLine1Segment3D" Content="1 Segment 3D" Click="btnSingleLine1Segment3D_Click"/>
+                                <Button Content="1 Segment 2D" Click="SingleLine1Segment2D_Click"/>
+                                <Button Content="1 Segment 3D" Click="SingleLine1Segment3D_Click"/>
 
-                                <Button Name="btnSingleLine2Segments2D" Content="2 Segments 2D" Margin="0,12,0,0" Click="btnSingleLine2Segments2D_Click"/>
+                                <Button Content="2 Segments 2D" Margin="0,12,0,0" Click="SingleLine2Segments2D_Click"/>
                                 <Slider Name="trkSingleLine2Segments2DPercent" Minimum="0" Maximum="1" Value=".25" ValueChanged="trkSingleLine2Segments2DPercent_ValueChanged"/>
 
-                                <Button Name="btnSingleLineMultiSegments3D" Content="Multi segments 3D" Margin="0,12,0,0" Click="btnSingleLineMultiSegments3D_Click"/>
-                                <Button Name="btnPolygon3D" Content="Polygon 3D" Click="btnPolygon3D_Click"/>
+                                <Button Content="Multi segments 3D" Margin="0,12,0,0" Click="SingleLineMultiSegments3D_Click"/>
+                                <Button Content="Polygon 3D" Click="Polygon3D_Click"/>
                                 <Slider Name="trkSingleLineMultiSegments3DPercent" Minimum="0" Maximum=".5" Value=".25" ValueChanged="trkSingleLineMultiSegments3DPercent_ValueChanged"/>
                                 <CheckBox Name="chkIsClosed3D" Content="Closed" Checked="chkIsClosed3D_Checked" Unchecked="chkIsClosed3D_Checked"/>
 
@@ -59,14 +87,14 @@
                     </Expander>
 
                     <!-- Axe -->
-                    <Expander IsExpanded="True" Header="Axe">
+                    <Expander IsExpanded="False" Header="Axe">
                         <Border Style="{StaticResource controlsPanelInExpander}">
                             <StackPanel Margin="8,6" CheckBox.Checked="Axe_Checked" CheckBox.Unchecked="Axe_Checked">
-                                <Button Name="btnAxeSimple1" Content="Simple1" Click="btnAxeSimple1_Click"/>
-                                <Button Name="btnAxeSimple2" Content="Simple2" Click="btnAxeSimple2_Click"/>
+                                <Button Content="Simple1" Click="AxeSimple1_Click"/>
+                                <Button Content="Simple2" Click="AxeSimple2_Click"/>
 
-                                <Button Name="btnAvgPlane" Content="Avg Plane 1" Margin="0,20,0,2" Click="btnAvgPlane_Click"/>
-                                <Button Name="btnAvgPlane2" Content="Avg Plane 2" Margin="0,2,0,20" Click="btnAvgPlane2_Click"/>
+                                <Button Content="Avg Plane 1" Margin="0,20,0,2" Click="AvgPlane_Click"/>
+                                <Button Content="Avg Plane 2" Margin="0,2,0,20" Click="AvgPlane2_Click"/>
 
                                 <CheckBox IsChecked="True" Name="chkAxeLine" Content="Show lines" Margin="0,8,0,0"/>
                                 <CheckBox Name="chkAxeControl" Content="Show control points"/>
@@ -75,7 +103,111 @@
                             </StackPanel>
                         </Border>
                     </Expander>
-                    
+
+                    <!-- Mesh -->
+                    <Expander IsExpanded="True" Header="Mesh">
+                        <Border Style="{StaticResource controlsPanelInExpander}">
+                            <StackPanel Margin="8,6" CheckBox.Checked="Mesh_Checked" CheckBox.Unchecked="Mesh_Checked" Slider.ValueChanged="MeshSlider_ValueChanged">
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto"/>
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="1*" MinWidth="80"/>
+                                        <ColumnDefinition Width="4"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                        <RowDefinition Height="2"/>
+                                        <RowDefinition Height="auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="0" Text="# Horz Lines" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="0" Name="trkNumHorzLines" Minimum="2" Maximum="12" Value="6" ToolTip="How many horizontal lines define the mesh" Style="{StaticResource sliderInteger}"/>
+                                    <TextBlock Grid.Column="4" Grid.Row="0" Text="{Binding ElementName=trkNumHorzLines, Path=Value, StringFormat={}{0:##,0}}" Style="{StaticResource sliderValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="2" Text="Ctrl # Min" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="2" Name="trkMinControlPoints" Minimum="0" Maximum="5" Value="1" Style="{StaticResource sliderInteger}">
+                                        <Slider.ToolTip>
+                                            <TextBlock>The minimum nuber of control points in each horizontal control line<LineBreak/>(If zero, it will be a straight line)<LineBreak/>#Ctrl = Rand(#Min, #Min + #Rand)</TextBlock>
+                                        </Slider.ToolTip>
+                                    </Slider>
+                                    <TextBlock Grid.Column="4" Grid.Row="2" Text="{Binding ElementName=trkMinControlPoints, Path=Value, StringFormat={}{0:##,0}}" Style="{StaticResource sliderValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="4" Text="Ctrl # Rand" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="4" Name="trkControlPointsRandCount" Minimum="0" Maximum="5" Value="3" Style="{StaticResource sliderInteger}">
+                                        <Slider.ToolTip>
+                                            <TextBlock>How many extra random control points to add<LineBreak/>#Ctrl = Rand(#Min, #Min + #Rand)</TextBlock>
+                                        </Slider.ToolTip>
+                                    </Slider>
+                                    <TextBlock Grid.Column="4" Grid.Row="4" Text="{Binding ElementName=trkControlPointsRandCount, Path=Value, StringFormat={}{0:##,0}}" Style="{StaticResource sliderValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="6" Text="Ctrl %" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="6" Name="trkMeshPercent" Minimum="0" Maximum=".5" Value=".5">
+                                        <Slider.ToolTip>
+                                            <TextBlock>When defining a bezier, this is the percent along the line segment to place the control point<LineBreak/>.5 would be halfway.  Anything less than half will cause the curves to pinch</TextBlock>
+                                        </Slider.ToolTip>
+                                    </Slider>
+                                    <TextBlock Grid.Column="4" Grid.Row="6" Text="{Binding ElementName=trkMeshPercent, Path=Value, StringFormat={}{0:##,0.00}}" Style="{StaticResource sliderValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="8" Text="# Horz" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="8" Name="trkHorzCount" Interval="1" Minimum="2" Maximum="21" Value="3" Style="{StaticResource sliderInteger}">
+                                        <Slider.ToolTip>
+                                            <TextBlock>The number of horizontal sample points of the mesh<LineBreak/>NOTE: Texture mapping requires an odd number</TextBlock>
+                                        </Slider.ToolTip>
+                                    </Slider>
+                                    <TextBlock Grid.Column="4" Grid.Row="8" Text="{Binding ElementName=trkHorzCount, Path=Value, StringFormat={}{0:##,0}}" Style="{StaticResource sliderValue}"/>
+
+                                    <TextBlock Grid.Column="0" Grid.Row="10" Text="# Vert" Style="{StaticResource promptText}"/>
+                                    <Slider Grid.Column="2" Grid.Row="10" Name="trkVertCount" Interval="1" Minimum="2" Maximum="21" Value="3" Style="{StaticResource sliderInteger}">
+                                        <Slider.ToolTip>
+                                            <TextBlock>The number of vertical sample points of the mesh<LineBreak/>NOTE: Texture mapping requires an odd number</TextBlock>
+                                        </Slider.ToolTip>
+                                    </Slider>
+                                    <TextBlock Grid.Column="4" Grid.Row="10" Text="{Binding ElementName=trkVertCount, Path=Value, StringFormat={}{0:##,0}}" Style="{StaticResource sliderValue}"/>
+                                </Grid>
+
+                                <Button Content="Random mesh" Click="RandomMesh_Click"/>
+
+                                <Grid Margin="0,4,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="1*"/>
+                                        <ColumnDefinition Width="2"/>
+                                        <ColumnDefinition Width="auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <Label Grid.Column="0" Name="lblTexture"/>
+                                    <Button Grid.Column="2" Content="..." Padding="2,-1" ToolTip="Browse for texture" Click="TextureBrowse_Click"/>
+                                </Grid>
+
+                                <Label Content="Show:" Margin="0,8,0,-2"/>
+                                <CheckBox Name="chkMeshLines" Content="Control Lines"/>
+                                <CheckBox Name="chkMeshGridPoints" Content="Grid Points"/>
+                                <CheckBox IsChecked="True" Name="chkMeshTriangles" Content="Triangles"/>
+                                <StackPanel Margin="16,0,0,0" Visibility="{Binding IsChecked,ElementName=chkMeshTriangles,Converter={StaticResource b2v}}">
+                                    <RadioButton IsChecked="True" Name="radMeshTriangles_Faceted" Content="Faceted"/>
+                                    <RadioButton Name="radMeshTriangles_Smooth" Content="Smooth"/>
+                                </StackPanel>
+                                <CheckBox Name="chkMeshNormals" Content="Triangle Normals"/>
+                                <CheckBox Name="chkMeshTexture" Content="Texture"/>
+                                <StackPanel Margin="16,0,0,0" Visibility="{Binding IsChecked,ElementName=chkMeshTexture,Converter={StaticResource b2v}}">
+                                    <RadioButton IsChecked="True" Name="radMeshTexture_Aspect" Content="Maintain aspect ratio"/>
+                                    <RadioButton Name="radMeshTexture_Fill" Content="Fill"/>
+                                </StackPanel>
+                                <CheckBox Name="chkMeshTextureCoords" Content="Texture Coords"/>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
+
                 </StackPanel>
             </ScrollViewer>
         </Border>
@@ -95,8 +227,8 @@
                         <ModelVisual3D.Content>
                             <Model3DGroup>
                                 <AmbientLight Color="DimGray" />
-                                <DirectionalLight Color="White" Direction="-1,-1,-1" />
-                                <DirectionalLight Color="#303030" Direction="1,1,1" />
+                                <DirectionalLight Color="#303030" Direction="-1,-1,-1" />
+                                <DirectionalLight Color="White" Direction="1,1,1" />
                             </Model3DGroup>
                         </ModelVisual3D.Content>
                     </ModelVisual3D>

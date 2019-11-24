@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Game.Newt.v2.Arcanorum.MapObjects;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -8,6 +9,18 @@ using System.Threading.Tasks;
 
 namespace Game.Newt.v2.Arcanorum
 {
+    //TODO: Make an Inventory2 that is handed CargoBay or CargoBayGroup.  Those will be the actual storage
+    // Weapons get stored as Cargo_ShipPart, or make another derived class: Cargo_MapPart
+    // The problem with Cargo_MapPart is there is no base dna class for map parts, so maybe store the map object itself (after removed from the map and viewport), or store dna as object
+    //
+    // Inventory has events for changes that CargoBay doesn't.  So may want to add events to cargobay.  That's made more complex by cargobay being threadsafe
+    //
+    // There should be some types of inventory managment that are controllable by neuron - probably in the cargo bay, but inventory could have more specific types of managment
+    //      Pick up item - replace if "better"
+    //              better would be defined by a classifier (or regression?) NN trained on what that bot prefers
+    //      Sell "junk" items
+
+
     //TODO: Place volume limits
     public class Inventory
     {

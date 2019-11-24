@@ -944,7 +944,7 @@ namespace Game.Newt.Testers.Encog
                 // Get the 2D direction this sketch is from the main
                 Vector direction = rotate.Transform(nextSketch.PlanePoint - center3D).ToVector2D();
 
-                Vector dirUnit = direction.ToUnit();
+                Vector dirUnit = direction.ToUnit(true);
                 if (Math2D.IsInvalid(dirUnit))
                 {
                     dirUnit = Math3D.GetRandomVector_Circular_Shell(1).ToVector2D();        // sitting on top of each other, just push it in a random direction

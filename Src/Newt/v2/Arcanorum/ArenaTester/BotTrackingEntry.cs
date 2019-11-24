@@ -1,9 +1,5 @@
 ﻿using SharpNeat.Core;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media.Media3D;
 
 namespace Game.Newt.v2.Arcanorum.ArenaTester
@@ -17,19 +13,15 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
     {
         public BotTrackingEntry(double elapsedTime, Point3D position, Vector3D velocity)
         {
-            _elapsedTime = elapsedTime;
-            _position = position;
-            _velocity = velocity;
+            ElapsedTime = elapsedTime;
+            Position = position;
+            Velocity = velocity;
         }
 
-        private readonly double _elapsedTime;
-        public double ElapsedTime => _elapsedTime;
+        public double ElapsedTime { get; }
 
-        private readonly Point3D _position;
-        public Point3D Position => _position;
-
-        private readonly Vector3D _velocity;
-        public Vector3D Velocity => _velocity;
+        public Point3D Position { get; }
+        public Vector3D Velocity { get; }
     }
 
     #endregion
@@ -39,27 +31,20 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
     {
         public BotTrackingRun(Point3D roomCenter, Point3D roomMin, Point3D roomMax, FitnessInfo score, BotTrackingEntry[] log)
         {
-            _roomCenter = roomCenter;
-            _roomMin = roomMin;
-            _roomMax = roomMax;
-            _score = score;
-            _log = log;
+            RoomCenter = roomCenter;
+            RoomMin = roomMin;
+            RoomMax = roomMax;
+            Score = score;
+            Log = log;
         }
 
-        private readonly Point3D _roomCenter;
-        public Point3D RoomCenter => _roomCenter;
+        public Point3D RoomCenter { get; }
+        public Point3D RoomMin { get; }
+        public Point3D RoomMax { get; }
 
-        private readonly Point3D _roomMin;
-        public Point3D RoomMin => _roomMin;
+        public FitnessInfo Score { get; }
 
-        private readonly Point3D _roomMax;
-        public Point3D RoomMax => _roomMax;
-
-        private readonly FitnessInfo _score;
-        public FitnessInfo Score => _score;
-
-        private readonly BotTrackingEntry[] _log;
-        public BotTrackingEntry[] Log => _log;
+        public BotTrackingEntry[] Log { get; }
     }
 
     #endregion
@@ -109,7 +94,7 @@ namespace Game.Newt.v2.Arcanorum.ArenaTester
         {
             lock (_lock)
             {
-                if(_log.Keys.Count == 0)
+                if (_log.Keys.Count == 0)
                 {
                     return new BotTrackingRun[0];
                 }

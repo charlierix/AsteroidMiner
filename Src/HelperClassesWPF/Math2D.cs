@@ -2425,7 +2425,7 @@ namespace Game.HelperClassesWPF
 
                 RebuildVars vars = new RebuildVars(voronoi, new ControlPointStats[0], new int[0], circle, radius);
 
-                NewCell cell = new NewCell(0, CapCircle_OneTwoSprtEdges(vars, circle));
+                NewCell cell = new NewCell(0, CapCircle_OneTwo_Edges(vars, circle));
 
                 // Exit Function
                 return BuildResult(vars, new NewCell[] { cell });
@@ -2472,14 +2472,14 @@ namespace Game.HelperClassesWPF
 
                 RebuildVars vars = new RebuildVars(voronoi, new ControlPointStats[0], new int[0], circle, radius);
 
-                NewCell cell0 = new NewCell(0, CapCircle_OneTwoSprtEdges(vars, clippedPoints0));
-                NewCell cell1 = new NewCell(1, CapCircle_OneTwoSprtEdges(vars, clippedPoints1));
+                NewCell cell0 = new NewCell(0, CapCircle_OneTwo_Edges(vars, clippedPoints0));
+                NewCell cell1 = new NewCell(1, CapCircle_OneTwo_Edges(vars, clippedPoints1));
 
                 // Exit Function
                 return BuildResult(vars, new NewCell[] { cell0, cell1 });
             }
 
-            private static int[] CapCircle_OneTwoSprtEdges(RebuildVars vars, Point[] polygon)
+            private static int[] CapCircle_OneTwo_Edges(RebuildVars vars, Point[] polygon)
             {
                 //NOTE: This could be optimized a bit, but the gains are tiny, and this method shouldn't be called very often
 
@@ -2536,9 +2536,9 @@ namespace Game.HelperClassesWPF
                 }
 
                 // Exit Function
-                return GetUnboundControlPointsSprtStats(voronoi, pointIndices.ToArray());
+                return GetUnboundControlPoints_Stats(voronoi, pointIndices.ToArray());
             }
-            private static ControlPointStats[] GetUnboundControlPointsSprtStats(VoronoiResult2D voronoi, int[] unboundPoints)
+            private static ControlPointStats[] GetUnboundControlPoints_Stats(VoronoiResult2D voronoi, int[] unboundPoints)
             {
                 ControlPointStats[] retVal = new ControlPointStats[unboundPoints.Length];
 
@@ -2656,10 +2656,10 @@ namespace Game.HelperClassesWPF
                 for (int cntr = 0; cntr < clippedPoints.Length - 1; cntr++)
                 {
                     // Find the edge that has clipped[cntr] and clipped[cntr+1], otherwise create a new edge
-                    newEdges.Add(RebuildCellSprtGetNewEdgeIndex(clippedPoints[cntr], clippedPoints[cntr + 1], vars.Voronoi.Edges, vars.Voronoi.EdgesByControlPoint[index], vars));
+                    newEdges.Add(RebuildCell_GetNewEdgeIndex(clippedPoints[cntr], clippedPoints[cntr + 1], vars.Voronoi.Edges, vars.Voronoi.EdgesByControlPoint[index], vars));
                 }
 
-                newEdges.Add(RebuildCellSprtGetNewEdgeIndex(clippedPoints[clippedPoints.Length - 1], clippedPoints[0], vars.Voronoi.Edges, vars.Voronoi.EdgesByControlPoint[index], vars));
+                newEdges.Add(RebuildCell_GetNewEdgeIndex(clippedPoints[clippedPoints.Length - 1], clippedPoints[0], vars.Voronoi.Edges, vars.Voronoi.EdgesByControlPoint[index], vars));
 
                 // Exit Function
                 return new NewCell(index, newEdges.ToArray());
@@ -2676,7 +2676,7 @@ namespace Game.HelperClassesWPF
                 return new NewCell(index, edges);
             }
 
-            private static int RebuildCellSprtGetNewEdgeIndex(Point point0, Point point1, Edge2D[] allEdges, int[] cellEdges, RebuildVars vars)
+            private static int RebuildCell_GetNewEdgeIndex(Point point0, Point point1, Edge2D[] allEdges, int[] cellEdges, RebuildVars vars)
             {
                 int? pointIndex0 = null, pointIndex1 = null;
 
@@ -4442,7 +4442,7 @@ namespace Game.HelperClassesWPF
             return size.Width / size.Height;
         }
 
-        public static Tuple<Transform3D, Transform3D> GetTransformTo2D(Point3D[] polygon)
+        public static TransformsToFrom2D GetTransformTo2D(Point3D[] polygon)
         {
             if (polygon.Length < 3)
             {
@@ -4451,18 +4451,18 @@ namespace Game.HelperClassesWPF
 
             return GetTransformTo2D(new Triangle(polygon[0], polygon[1], polygon[2]));
         }
-        /// <summary>
-        /// Item1 is transform from 3D to 2D
-        /// Item2 is how to get a 2D back to 3D
-        /// </summary>
-        public static Tuple<Transform3D, Transform3D> GetTransformTo2D(ITriangle triangle)
+        public static TransformsToFrom2D GetTransformTo2D(ITriangle triangle)
         {
             Vector3D zUp = new Vector3D(0, 0, 1);
 
             if (Math.Abs(Vector3D.DotProduct(triangle.NormalUnit, zUp)).IsNearValue(1))
             {
                 // It's already 2D
-                return new Tuple<Transform3D, Transform3D>(new TranslateTransform3D(0, 0, -triangle.Point0.Z), new TranslateTransform3D(0, 0, triangle.Point0.Z));
+                return new TransformsToFrom2D()
+                {
+                    From3D_To2D = new TranslateTransform3D(0, 0, -triangle.Point0.Z),
+                    From2D_BackTo3D = new TranslateTransform3D(0, 0, triangle.Point0.Z),
+                };
             }
 
             // Don't bother with a double vector, just rotate the normal
@@ -4479,7 +4479,11 @@ namespace Game.HelperClassesWPF
             transformTo3D.Children.Add(new TranslateTransform3D(0, 0, rotatedXYPlane.Z));
             transformTo3D.Children.Add(new RotateTransform3D(new QuaternionRotation3D(rotation.ToReverse())));
 
-            return new Tuple<Transform3D, Transform3D>(transformTo2D, transformTo3D);
+            return new TransformsToFrom2D()
+            {
+                From3D_To2D = transformTo2D,
+                From2D_BackTo3D = transformTo3D,
+            };
         }
 
         public static List<Point> DedupePoints(List<Point> points)
@@ -4738,8 +4742,8 @@ namespace Game.HelperClassesWPF
 
             // Figure out a transform that will make Z drop out
             var transform = GetTransformTo2D(plane);
-            transformTo2D = transform.Item1;
-            transformTo3D = transform.Item2;
+            transformTo2D = transform.From3D_To2D;
+            transformTo3D = transform.From2D_BackTo3D;
 
             // Transform them
             Point[] retVal = new Point[points.Length];
@@ -4872,7 +4876,7 @@ namespace Game.HelperClassesWPF
         public static Point[] ApplyBallOfSprings(Point[] positions, Tuple<int, int, double>[] desiredDistances, int numIterations)
         {
             VectorND[] pos = positions.
-                Select(o => new VectorND(new[] { o.X, o.Y })).
+                Select(o => new VectorND(o.X, o.Y)).
                 ToArray();
 
             VectorND[] retVal = MathND.ApplyBallOfSprings(pos, desiredDistances, numIterations);
@@ -5017,6 +5021,23 @@ namespace Game.HelperClassesWPF
             }
 
             return retVal;
+        }
+
+        /// <summary>
+        /// Use this to figure out how to call GetCells, GetCells_InvertY with an arbitrary number of cells.  This packs them into
+        /// roughly a square
+        /// </summary>
+        public static VectorInt GetCellColumnsRows(int count)
+        {
+            int rows = Math.Sqrt(count).ToInt_Floor();
+
+            int columns = count / rows;
+            if (count % rows != 0)
+            {
+                columns++;
+            }
+
+            return new VectorInt(columns, rows);
         }
 
         #endregion
@@ -5423,8 +5444,8 @@ namespace Game.HelperClassesWPF
                 return new Polygon2D[0];
             }
 
-            double scale = GetUnion_PolygonsSprtGetScale(polygons);
-            var convertedPolys = GetUnion_PolygonsSprtConvertInput(polygons, scale);
+            double scale = GetUnion_Polygons_GetScale(polygons);
+            var convertedPolys = GetUnion_Polygons_ConvertInput(polygons, scale);
 
             Clipper.Clipper clipper = new Clipper.Clipper();
             clipper.AddPolygons(convertedPolys, PolyType.ptSubject);        // when doing union, I don't think it matters what is subject and what is union
@@ -5439,7 +5460,7 @@ namespace Game.HelperClassesWPF
                 return new Polygon2D[0];
             }
 
-            return GetUnion_PolygonsSprtConvertOutput(solution, 1d / scale);
+            return GetUnion_Polygons_ConvertOutput(solution, 1d / scale);
         }
 
         /// <summary>
@@ -5452,11 +5473,11 @@ namespace Game.HelperClassesWPF
         public static Tuple<int, int[]>[] GetPolygonIslands(Point[][] polygons)
         {
             // Find the polygons that are inside of others
-            SortedList<int, List<int>> containers = GetPolygonIslandsSprtFindHoles(polygons);
+            SortedList<int, List<int>> containers = GetPolygonIslands_FindHoles(polygons);
 
             // The initial pass finds parent-child, but doesn't detect grandchild and deeper.  Merge grandchildren so that containers.Keys is
             // only root polygons
-            GetPolygonIslandsSprtRoots(containers);
+            GetPolygonIslands_Roots(containers);
 
             // Build the return
             List<Tuple<int, int[]>> retVal = new List<Tuple<int, int[]>>();
@@ -5631,7 +5652,7 @@ namespace Game.HelperClassesWPF
             }
         }
 
-        private static double GetUnion_PolygonsSprtGetScale(Point[][] polygons)
+        private static double GetUnion_Polygons_GetScale(Point[][] polygons)
         {
             // I was going to go with massively large scale to use most of the range of int64, but there was a comment that says he
             // caps at +- 1.5 billion
@@ -5646,7 +5667,7 @@ namespace Game.HelperClassesWPF
 
             return 10000d;
         }
-        private static List<List<IntPoint>> GetUnion_PolygonsSprtConvertInput(Point[][] polygons, double scale)
+        private static List<List<IntPoint>> GetUnion_Polygons_ConvertInput(Point[][] polygons, double scale)
         {
             List<List<IntPoint>> retVal = new List<List<IntPoint>>();
 
@@ -5683,7 +5704,7 @@ namespace Game.HelperClassesWPF
         /// 
         /// http://www.angusj.com/delphi/clipper/documentation/Docs/Units/ClipperLib/Classes/PolyTree/_Body.htm
         /// </remarks>
-        private static Polygon2D[] GetUnion_PolygonsSprtConvertOutput(PolyTree solution, double scaleInverse)
+        private static Polygon2D[] GetUnion_Polygons_ConvertOutput(PolyTree solution, double scaleInverse)
         {
             List<Polygon2D> retVal = new List<Polygon2D>();
 
@@ -5722,7 +5743,7 @@ namespace Game.HelperClassesWPF
             return retVal.ToArray();
         }
 
-        private static SortedList<int, List<int>> GetPolygonIslandsSprtFindHoles(Point[][] polygons)
+        private static SortedList<int, List<int>> GetPolygonIslands_FindHoles(Point[][] polygons)
         {
             SortedList<int, List<int>> retVal = new SortedList<int, List<int>>();
 
@@ -5763,7 +5784,7 @@ namespace Game.HelperClassesWPF
 
             return retVal;
         }
-        private static void GetPolygonIslandsSprtRoots(SortedList<int, List<int>> containers)
+        private static void GetPolygonIslands_Roots(SortedList<int, List<int>> containers)
         {
             bool hadMerge = false;
 
@@ -6110,7 +6131,7 @@ namespace Game.HelperClassesWPF
             }
             else
             {
-                return this.Point0 + (this.Direction.Value.ToUnit() * extensionLength);
+                return this.Point0 + (this.Direction.Value.ToUnit(true) * extensionLength);
             }
         }
 
@@ -6304,7 +6325,7 @@ namespace Game.HelperClassesWPF
                 }
                 else
                 {
-                    retVal.Add(GetPolygonSprtPoint(edges[cntr], rayLength, edges[cntr].Index0 != commonIndex));
+                    retVal.Add(GetPolygon_Point(edges[cntr], rayLength, edges[cntr].Index0 != commonIndex));
                 }
 
                 #endregion
@@ -6322,16 +6343,16 @@ namespace Game.HelperClassesWPF
                 commonIndex = GetCommonIndex(edges[edges.Length - 2], edges[edges.Length - 1]);
 
                 // But write the common one first, because it would get skipped
-                retVal.Add(GetPolygonSprtPoint(edges[edges.Length - 1], rayLength, edges[edges.Length - 1].Index0 == commonIndex));
+                retVal.Add(GetPolygon_Point(edges[edges.Length - 1], rayLength, edges[edges.Length - 1].Index0 == commonIndex));
             }
 
-            retVal.Add(GetPolygonSprtPoint(edges[edges.Length - 1], rayLength, edges[edges.Length - 1].Index0 != commonIndex));
+            retVal.Add(GetPolygon_Point(edges[edges.Length - 1], rayLength, edges[edges.Length - 1].Index0 != commonIndex));
 
             #endregion
 
             return retVal.ToArray();
         }
-        private static Point GetPolygonSprtPoint(Edge2D edge, double rayLength, bool useZero)
+        private static Point GetPolygon_Point(Edge2D edge, double rayLength, bool useZero)
         {
             if (useZero)
             {
@@ -6344,7 +6365,7 @@ namespace Game.HelperClassesWPF
                     return edge.Point1.Value;
 
                 case EdgeType.Ray:
-                    return edge.Point0 + (edge.Direction.Value.ToUnit() * rayLength);
+                    return edge.Point0 + (edge.Direction.Value.ToUnit(true) * rayLength);
 
                 default:
                     throw new ApplicationException("Unexpected EdgeType: " + edge.EdgeType.ToString());     // lines aren't supported
@@ -6375,7 +6396,7 @@ namespace Game.HelperClassesWPF
 #endif
 
             // Figure out the winding
-            bool includeRight = IsInsideSprtWinding(edges);
+            bool includeRight = IsInside_Winding(edges);
 
             int common;
             Point from, to;
@@ -6387,7 +6408,7 @@ namespace Game.HelperClassesWPF
                 // Can't just blindly use p0 then p1, need to get the common point, then always go from other to common
                 common = GetCommonIndex(edges[cntr], edges[cntr + 1]);
 
-                from = IsInsideSprtOtherPoint(edges[cntr], common);
+                from = IsInside_OtherPoint(edges[cntr], common);
                 to = edges[cntr].AllEdgePoints[common];
 
                 if (Math2D.QuickHull2D.IsRightOfLine(from, to, point) != includeRight)
@@ -6405,7 +6426,7 @@ namespace Game.HelperClassesWPF
 
             // Within the loop, from is other.  But in this section to is other
             from = edges[edges.Length - 1].AllEdgePoints[common];
-            to = IsInsideSprtOtherPoint(edges[edges.Length - 1], common);
+            to = IsInside_OtherPoint(edges[edges.Length - 1], common);
 
             if (Math2D.QuickHull2D.IsRightOfLine(from, to, point) != includeRight)
             {
@@ -6416,20 +6437,20 @@ namespace Game.HelperClassesWPF
 
             return true;
         }
-        private static bool IsInsideSprtWinding(Edge2D[] edges)
+        private static bool IsInside_Winding(Edge2D[] edges)
         {
             int common = GetCommonIndex(edges[0], edges[1]);
 
-            Point left = IsInsideSprtOtherPoint(edges[0], common);
+            Point left = IsInside_OtherPoint(edges[0], common);
             Point middle = edges[0].AllEdgePoints[common];
-            Point right = IsInsideSprtOtherPoint(edges[1], common);
+            Point right = IsInside_OtherPoint(edges[1], common);
 
             return Math2D.QuickHull2D.IsRightOfLine(left, middle, right);
         }
         /// <summary>
         /// Returns the point that isn't commmon
         /// </summary>
-        private static Point IsInsideSprtOtherPoint(Edge2D edge, int common)
+        private static Point IsInside_OtherPoint(Edge2D edge, int common)
         {
             if (edge.Index0 == common)
             {
@@ -6534,6 +6555,25 @@ namespace Game.HelperClassesWPF
         /// This is an array of polygons that are inside the outer polygon
         /// </summary>
         public readonly Point[][] Holes;
+    }
+
+    #endregion
+
+    #region class: TransformsToFrom2D
+
+    /// <summary>
+    /// This holds a pair of transforms to take coplanar 3D points into 2D, then back from that 2D plane to the 3D's plane
+    /// </summary>
+    public class TransformsToFrom2D
+    {
+        /// <summary>
+        /// Transform from 3D to 2D
+        /// </summary>
+        public Transform3D From3D_To2D { get; set; }
+        /// <summary>
+        /// How to get a 2D back to 3D
+        /// </summary>
+        public Transform3D From2D_BackTo3D { get; set; }
     }
 
     #endregion
