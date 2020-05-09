@@ -1860,13 +1860,23 @@ namespace Game.Newt.v2.GameItems.MapParts
                 // Sometimes there were holes, so call convex to fix that
                 ITriangleIndexed[] convex = Math3D.GetConvexHull(Triangle.GetUniquePoints(secondSlicedHull));
 
-                return convex;
+                if(convex == null)
+                {
+                    return hull;
+                }
+                else
+                {
+                    return convex;
+                }
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+            }
 
             if (retVal == null)
             {
-                throw new ApplicationException("Couldn't create a hull");
+                //throw new ApplicationException("Couldn't create a hull");
+                return hull;
             }
             else
             {
