@@ -577,7 +577,7 @@ namespace Game.HelperClassesCore
             return unchecked((long)value + long.MinValue);
         }
 
-        private static string[] _suffix = { "  ", "K", "M", "G", "T", "P", "E", "Z", "Y" };  // longs run out around EB -- yotta is bigger than zetta :)
+        private static string[] _suffix = { " ", "K", "M", "G", "T", "P", "E", "Z", "Y" };  // longs run out around EB -- yotta is bigger than zetta :)
         public static string GetSizeDisplay(long size, int decimalPlaces = 0, bool includeB = false)
         {
             //http://stackoverflow.com/questions/281640/how-do-i-get-a-human-readable-file-size-in-bytes-abbreviation-using-net
