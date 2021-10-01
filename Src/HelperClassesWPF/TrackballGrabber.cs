@@ -461,10 +461,10 @@ namespace Game.HelperClassesWPF
 
             // Wrap (otherwise, everything greater than 1 will map to the permiter of the sphere where z = 0)
             bool localInvert;
-            x = ProjectToTrackballSprtWrap(out localInvert, x);
+            x = ProjectToTrackball_Wrap(out localInvert, x);
             shouldInvertZ |= localInvert;
 
-            y = ProjectToTrackballSprtWrap(out localInvert, y);
+            y = ProjectToTrackball_Wrap(out localInvert, y);
             shouldInvertZ |= localInvert;
 
             // Project onto a sphere
@@ -491,35 +491,43 @@ namespace Game.HelperClassesWPF
         /// <summary>
         /// This wraps the value so it stays between -1 and 1
         /// </summary>
-        private static double ProjectToTrackballSprtWrap(out bool shouldInvertZ, double value)
+        /// <remarks>
+        /// This function is only needed when they drag beyond the ball's bounds.  For example, they start dragging and keep
+        /// dragging to the right.  Since the mouse is captured, mouse events keep firing even though the mouse is off the control.
+        /// As they keep dragging, the value needs to wrap by multiples of the control's radius (value was normalized to between
+        /// -1 and 1, so this can hardcode to 4)
+        /// </remarks>
+        private static double ProjectToTrackball_Wrap(out bool shouldInvertZ, double value)
         {
             // Everything starts over at 4 (4 becomes zero)
             double retVal = value % 4d;
 
-            double absX = Math.Abs(retVal);
-            bool isNegX = retVal < 0d;
+            //Console.WriteLine($"value: {value} | mod4: {retVal}");
+
+            double abs = Math.Abs(retVal);
+            bool isNeg = retVal < 0d;
 
             shouldInvertZ = false;
 
-            if (absX >= 3d)
+            if (abs >= 3d)
             {
                 // Anything from 3 to 4 needs to be -1 to 0
                 // Anything from -4 to -3 needs to be 0 to 1
-                retVal = 4d - absX;
+                retVal = 4d - abs;
 
-                if (!isNegX)
+                if (!isNeg)
                 {
                     retVal *= -1d;
                 }
             }
-            else if (absX > 1d)
+            else if (abs > 1d)
             {
                 // This is the back side of the sphere
                 // Anything from 1 to 3 needs to be flipped (1 stays 1, 2 becomes 0, 3 becomes -1)
                 // -1 stays -1, -2 becomes 0, -3 becomes 1
-                retVal = 2d - absX;
+                retVal = 2d - abs;
 
-                if (isNegX)
+                if (isNeg)
                 {
                     retVal *= -1d;
                 }
