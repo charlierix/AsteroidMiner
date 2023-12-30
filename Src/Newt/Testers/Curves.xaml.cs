@@ -4902,6 +4902,7 @@ namespace Game.Newt.Testers
             BezierSegment3D[] segments = BezierUtil.GetBezierSegments(ends, trkSingleLineMultiSegments3DPercent.Value, chkIsClosed3D.IsChecked.Value);
 
             Point3D[] bezierPoints = BezierUtil.GetPath(200, segments);
+            //Point3D[] bezierPoints = BezierUtil.GetPoints(200, segments);
 
             PrepFor3D();
 

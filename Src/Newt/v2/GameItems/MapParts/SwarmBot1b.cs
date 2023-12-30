@@ -854,14 +854,9 @@ namespace Game.Newt.v2.GameItems.MapParts
                 // Add to total
                 if (accel != null)
                 {
-                    if (retVal == null)
-                    {
-                        retVal = accel;
-                    }
-                    else
-                    {
-                        retVal = retVal.Value + accel.Value;
-                    }
+                    retVal = retVal == null ?
+                        accel :
+                        retVal.Value + accel.Value;
                 }
             }
 
@@ -874,14 +869,11 @@ namespace Game.Newt.v2.GameItems.MapParts
                 if (thisVel.LengthSquared < minSpeed * minSpeed)
                 {
                     thisVel = thisVel.ToUnit();
+
                     if (thisVel.LengthSquared.IsNearZero())
-                    {
                         thisVel = Math3D.GetRandomVector_Spherical(minSpeed);
-                    }
                     else
-                    {
                         thisVel *= minSpeed;
-                    }
 
                     retVal += thisVel;
                 }

@@ -1245,7 +1245,6 @@ namespace Game.HelperClassesWPF
                 retVal[cntr] = new TriangleIndexed(oldToNewIndex[triangles[cntr].Index0], oldToNewIndex[triangles[cntr].Index1], oldToNewIndex[triangles[cntr].Index2], allUsedPoints);
             }
 
-            // Exit Function
             return retVal;
         }
 

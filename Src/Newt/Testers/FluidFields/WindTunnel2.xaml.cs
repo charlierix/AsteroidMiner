@@ -208,11 +208,12 @@ namespace Game.Newt.Testers.FluidFields
                 //NOTE: The hulls need to be in model coords
 
                 // Get populated hulls
-                ITriangleIndexed[][] hulls1 = hulls.Where(o => o.Length > 0).ToArray();
+                ITriangleIndexed[][] hulls1 = hulls.
+                    Where(o => o.Length > 0).
+                    ToArray();
+
                 if (hulls1.Length == 0)
-                {
                     return new int[0];      // no hulls were passed in
-                }
 
                 // Get the location of all the cells
                 Rectangle3DIndexedMapped[] cells1 = field.GetCells();
@@ -220,18 +221,20 @@ namespace Game.Newt.Testers.FluidFields
                 #region Filter AABB
 
                 // Remove non aabb matches
-                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).ToArray();
+                Rect3D[] aabbs = hulls1.
+                    Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).
+                    ToArray();
 
-                Rectangle3DIndexedMapped[] cells2 = cells1.Where(o =>
-                {
-                    Rect3D cellRect = o.ToRect3D();
-                    return aabbs.Any(p => p.OverlapsWith(cellRect));
-                }).ToArray();
+                Rectangle3DIndexedMapped[] cells2 = cells1.
+                    Where(o =>
+                    {
+                        Rect3D cellRect = o.ToRect3D();
+                        return aabbs.Any(p => p.OverlapsWith(cellRect));
+                    }).
+                    ToArray();
 
                 if (cells2.Length == 0)
-                {
                     return new int[0];      // this should never happen
-                }
 
                 #endregion
 
@@ -240,7 +243,7 @@ namespace Game.Newt.Testers.FluidFields
                 #region Test points
 
                 // Process the corners of the cells
-                int[] cornerMatches = GetBlockedCellsSprtPointMap(cells2).
+                int[] cornerMatches = GetBlockedCells_PointMap(cells2).
                     //AsParallel().
                     Where(o => hulls1.Any(p => Math3D.IsInside_ConcaveHull(p, o.Item1))).
                     SelectMany(o => o.Item2.Select(p => cells2[p].Mapping.Offset1D)).       // add all the cells that neighbor this corner point
@@ -272,10 +275,12 @@ namespace Game.Newt.Testers.FluidFields
                 if (cells3.Length > 0)
                 {
                     // aabbs is for entire hulls.  This needs to be for each triangle in each hull
-                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).ToArray();
+                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.
+                        SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).
+                        ToArray();
 
                     // Now compare each remaining candidate cell to each triangle of each hull
-                    edgeMatches = GetBlockedCellsSprtEdgeMap(cells3).
+                    edgeMatches = GetBlockedCells_EdgeMap(cells3).
                         AsParallel().
                         Where(o => hullTrianglesAABBs.Any(p => IsEdgeMatch(p, o.Item1))).
                         SelectMany(o => o.Item2.Select(p => cells3[p].Mapping.Offset1D)).       // add all the cells that neighbor this corner point
@@ -285,7 +290,6 @@ namespace Game.Newt.Testers.FluidFields
 
                 #endregion
 
-                // Exit Function
                 return UtilityCore.Iterate(cornerMatches, centerMatches, edgeMatches).ToArray();
             }
 
@@ -294,7 +298,7 @@ namespace Game.Newt.Testers.FluidFields
             /// <summary>
             /// This returns all the unique corner points of the cells passed in, and which cells share each of those points
             /// </summary>
-            private static Tuple<Point3D, int[]>[] GetBlockedCellsSprtPointMap(Rectangle3DIndexedMapped[] cells)
+            private static Tuple<Point3D, int[]>[] GetBlockedCells_PointMap(Rectangle3DIndexedMapped[] cells)
             {
                 if (cells.Length == 0)
                 {
@@ -334,7 +338,7 @@ namespace Game.Newt.Testers.FluidFields
             /// This returns all the unique edge triangles of the cells passed in (each face of the cell cube has two triangles), and which
             /// cells share each of those triangles
             /// </summary>
-            private static Tuple<ITriangle, int[]>[] GetBlockedCellsSprtEdgeMap(Rectangle3DIndexedMapped[] cells)
+            private static Tuple<ITriangle, int[]>[] GetBlockedCells_EdgeMap(Rectangle3DIndexedMapped[] cells)
             {
                 if (cells.Length == 0)
                 {
@@ -404,11 +408,12 @@ namespace Game.Newt.Testers.FluidFields
                 //NOTE: The hulls need to be in model coords
 
                 // Get populated hulls
-                ITriangleIndexed[][] hulls1 = hulls.Where(o => o.Length > 0).ToArray();
+                ITriangleIndexed[][] hulls1 = hulls.
+                    Where(o => o.Length > 0).
+                    ToArray();
+
                 if (hulls1.Length == 0)
-                {
                     return new int[0];      // no hulls were passed in
-                }
 
                 // Get the location of all the cells
                 Rectangle3DIndexedMapped[] cells1 = field.GetCells();
@@ -416,18 +421,20 @@ namespace Game.Newt.Testers.FluidFields
                 #region Filter AABB
 
                 // Remove non aabb matches
-                Rect3D[] aabbs = hulls1.Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).ToArray();
+                Rect3D[] aabbs = hulls1.
+                    Select(o => Math3D.GetAABB_Rect(o[0].AllPoints)).
+                    ToArray();
 
-                Rectangle3DIndexedMapped[] cells2 = cells1.Where(o =>
-                {
-                    Rect3D cellRect = o.ToRect3D();
-                    return aabbs.Any(p => p.OverlapsWith(cellRect));
-                }).ToArray();
+                Rectangle3DIndexedMapped[] cells2 = cells1.
+                    Where(o =>
+                    {
+                        Rect3D cellRect = o.ToRect3D();
+                        return aabbs.Any(p => p.OverlapsWith(cellRect));
+                    }).
+                    ToArray();
 
                 if (cells2.Length == 0)
-                {
                     return new int[0];      // this should never happen
-                }
 
                 #endregion
 
@@ -440,10 +447,12 @@ namespace Game.Newt.Testers.FluidFields
                 if (cells2.Length > 0)
                 {
                     // aabbs is for entire hulls.  This needs to be for each triangle in each hull
-                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).ToArray();
+                    Tuple<ITriangle, Rect3D>[] hullTrianglesAABBs = hulls.
+                        SelectMany(o => o.Select(p => new Tuple<ITriangle, Rect3D>(p, Math3D.GetAABB_Rect(p)))).
+                        ToArray();
 
                     // Now compare each remaining candidate cell to each triangle of each hull
-                    edgeMatches = GetBlockedCellsSprtEdgeMap(cells2).
+                    edgeMatches = GetBlockedCells_EdgeMap(cells2).
                         AsParallel().
                         Where(o => hullTrianglesAABBs.Any(p => IsEdgeMatch(p, o.Item1))).
                         SelectMany(o => o.Item2.Select(p => cells2[p].Mapping.Offset1D)).       // add all the cells that neighbor this corner point
@@ -453,7 +462,6 @@ namespace Game.Newt.Testers.FluidFields
 
                 #endregion
 
-                // Exit Function
                 return edgeMatches;
             }
 
@@ -462,7 +470,7 @@ namespace Game.Newt.Testers.FluidFields
             /// <summary>
             /// This returns all the unique corner points of the cells passed in, and which cells share each of those points
             /// </summary>
-            private static Tuple<Point3D, int[]>[] GetBlockedCellsSprtPointMap(Rectangle3DIndexedMapped[] cells)
+            private static Tuple<Point3D, int[]>[] GetBlockedCells_PointMap(Rectangle3DIndexedMapped[] cells)
             {
                 if (cells.Length == 0)
                 {
@@ -502,7 +510,7 @@ namespace Game.Newt.Testers.FluidFields
             /// This returns all the unique edge triangles of the cells passed in (each face of the cell cube has two triangles), and which
             /// cells share each of those triangles
             /// </summary>
-            private static Tuple<ITriangle, int[]>[] GetBlockedCellsSprtEdgeMap(Rectangle3DIndexedMapped[] cells)
+            private static Tuple<ITriangle, int[]>[] GetBlockedCells_EdgeMap(Rectangle3DIndexedMapped[] cells)
             {
                 if (cells.Length == 0)
                 {

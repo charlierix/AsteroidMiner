@@ -118,18 +118,24 @@ namespace Game.Newt.Testers.FluidFields
             _kSize = x * y;
             _numLayers = numLayers;
 
-            _layers = Enumerable.Range(0, numLayers).Select(o => new double[x * y]).ToArray();
+            _layers = Enumerable.Range(0, numLayers).
+                Select(o => new double[x * y]).
+                ToArray();
             _xVel = new double[x * y];
             _yVel = new double[x * y];
 
             _xVelTemp = _xVel.ToArray();
             _yVelTemp = _yVel.ToArray();
-            _layersP = Enumerable.Range(0, numLayers).Select(o => new double[x * y]).ToArray();
+            _layersP = Enumerable.Range(0, numLayers).
+                Select(o => new double[x * y]).
+                ToArray();
 
             _curl = new double[_kSize];
             _curlAbs = new double[_kSize];
 
-            _layerSrc = Enumerable.Range(0, _numLayers).Select(o => new double[_kSize]).ToArray();
+            _layerSrc = Enumerable.Range(0, _numLayers).
+                Select(o => new double[_kSize]).
+                ToArray();
 
             _xVelSrc = new double[_kSize];
             _yVelSrc = new double[_kSize];
@@ -143,44 +149,20 @@ namespace Game.Newt.Testers.FluidFields
         #region Public Properties
 
         private int _xSize;
-        public int XSize
-        {
-            get
-            {
-                return _xSize;
-            }
-        }
+        public int XSize => _xSize;
 
         private int _ySize;
-        public int YSize
-        {
-            get
-            {
-                return _ySize;
-            }
-        }
+        public int YSize => _ySize;
 
         private int _kSize;
         /// <summary>
         /// This is the 1D size of the arrays.  It is just _xSize * _ySize.
         /// See GetK()
         /// </summary>
-        public int KSize
-        {
-            get
-            {
-                return _kSize;
-            }
-        }
+        public int KSize => _kSize;
 
         private int _numLayers;
-        public int NumLayers
-        {
-            get
-            {
-                return _numLayers;
-            }
-        }
+        public int NumLayers => _numLayers;
 
         private double _wallReflectivity = .95d;
         public double WallReflectivity
@@ -322,41 +304,17 @@ namespace Game.Newt.Testers.FluidFields
         }
 
         //----------------------- Exposed for reading only -----------------------
-        public double[] XVel
-        {
-            get
-            {
-                return _xVel;
-            }
-        }
-        public double[] YVel
-        {
-            get
-            {
-                return _yVel;
-            }
-        }
+        public double[] XVel => _xVel;
+        public double[] YVel => _yVel;
 
-        public double[][] Layers
-        {
-            get
-            {
-                return _layers;
-            }
-        }
+        public double[][] Layers => _layers;
 
         //TODO: Be able to request the forces acting on a cell
         private bool[] _blocked;
         /// <summary>
         /// These are individual cells that are blocked (they represent internal walls)
         /// </summary>
-        public bool[] Blocked
-        {
-            get
-            {
-                return _blocked;
-            }
-        }
+        public bool[] Blocked => _blocked;
 
         //---------------------------------------------------------------------------------
 

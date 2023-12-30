@@ -518,29 +518,22 @@ namespace Game.Newt.v2.GameItems
                 if (localForce != null)
                 {
                     if (retVal == null)
-                    {
                         retVal = localForce;
-                    }
+
                     else
-                    {
                         retVal = retVal.Value + localForce.Value;
-                    }
                 }
             }
 
             if (retVal != null)
-            {
                 retVal = retVal.Value * percent;
-            }
 
             // Apply the force
             if (retVal != null && !retVal.Value.IsNearZero())
             {
                 // Limit if exceeds this.MaxForce
                 if (maxForce != null && retVal.Value.LengthSquared > maxForce.Value * maxForce.Value)
-                {
                     retVal = retVal.Value.ToUnit() * maxForce.Value;
-                }
 
                 // Limit acceleration
                 if (maxAcceleration != null)
@@ -549,9 +542,7 @@ namespace Game.Newt.v2.GameItems
                     double accel = retVal.Value.Length / args.ItemMass;
 
                     if (accel > maxAcceleration.Value)
-                    {
                         retVal = retVal.Value.ToUnit() * (maxAcceleration.Value * args.ItemMass);
-                    }
                 }
             }
 
@@ -603,9 +594,7 @@ namespace Game.Newt.v2.GameItems
         public ChasePoint_Force(ChaseDirectionType direction, double value, bool isAccel = true, bool isSpring = false, bool isDistanceRadius = true, GradientEntry[] gradient = null)
         {
             if (gradient != null && gradient.Length == 1)
-            {
                 throw new ArgumentException("Gradient must have at least two items if it is populated");
-            }
 
             Direction = direction;
             Value = value;
@@ -613,14 +602,9 @@ namespace Game.Newt.v2.GameItems
             IsSpring = isSpring;
             IsDistanceRadius = isDistanceRadius;
 
-            if (gradient == null || gradient.Length == 0)
-            {
-                Gradient = null;
-            }
-            else
-            {
-                Gradient = gradient;
-            }
+            Gradient = gradient == null || gradient.Length == 0 ?
+                null :
+                gradient;
         }
 
         #endregion
@@ -629,14 +613,7 @@ namespace Game.Newt.v2.GameItems
 
         public readonly ChaseDirectionType Direction;
 
-        public bool IsDrag
-        {
-            get
-            {
-                // Direction is attract, all else is drag
-                return this.Direction != ChaseDirectionType.Attract_Direction;
-            }
-        }
+        public bool IsDrag => Direction != ChaseDirectionType.Attract_Direction;        // Direction is attract, all else is drag
 
         /// <summary>
         /// True: The value is an acceleration
@@ -691,38 +668,25 @@ namespace Game.Newt.v2.GameItems
         public Vector3D? GetForce(ChasePoint_GetForceArgs e)
         {
             if (!IsDirectionValid(e.IsVelocityAlongTowards))
-            {
                 return null;
-            }
 
-            GetDesiredVector(out Vector3D unit, out double length, e, this.Direction);
+            GetDesiredVector(out Vector3D unit, out double length, e, Direction);
             if (Math3D.IsNearZero(unit))
-            {
                 return null;
-            }
 
-            double force = this.Value;
-            if (this.IsAccel)
-            {
-                // f=ma
-                force *= e.ItemMass;
-            }
+            double force = Value;
+            if (IsAccel)
+                force *= e.ItemMass;        // f=ma
 
-            if (this.IsSpring)
-            {
+            if (IsSpring)
                 force *= GetDistance(e.DirectionLength, e.Item.Radius);
-            }
 
-            if (this.IsDrag)
-            {
+            if (IsDrag)
                 force *= -length;       // negative, because it needs to be a drag force
-            }
 
             // Gradient %
-            if (this.Gradient != null)
-            {
+            if (Gradient != null)
                 force *= GetGradientPercent(GetDistance(e.DirectionLength, e.Item.Radius), Gradient);
-            }
 
             return unit * force;
         }
@@ -731,22 +695,17 @@ namespace Game.Newt.v2.GameItems
         {
             // See if they are outside the gradient (if so, use that cap's %)
             if (distance <= gradient[0].Distance)
-            {
                 return gradient[0].Percent;
-            }
-            else if (distance >= gradient[gradient.Length - 1].Distance)
-            {
-                return gradient[gradient.Length - 1].Percent;
-            }
 
-            //  It is inside the gradient.  Find the two stops that are on either side
+            else if (distance >= gradient[gradient.Length - 1].Distance)
+                return gradient[gradient.Length - 1].Percent;
+
+            // It is inside the gradient.  Find the two stops that are on either side
             for (int cntr = 0; cntr < gradient.Length - 1; cntr++)
             {
                 if (distance > gradient[cntr].Distance && distance <= gradient[cntr + 1].Distance)
-                {
                     // LERP between the from % and to %
                     return UtilityCore.GetScaledValue(gradient[cntr].Percent, gradient[cntr + 1].Percent, gradient[cntr].Distance, gradient[cntr + 1].Distance, distance);        //NOTE: Not calling the capped overload, because max could be smaller than min (and capped would fail)
-                }
             }
 
             throw new ApplicationException("Execution should never get here");
@@ -758,15 +717,12 @@ namespace Game.Newt.v2.GameItems
 
         private bool IsDirectionValid(bool isVelocityAlongTowards)
         {
-            if ((this.Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway && isVelocityAlongTowards) ||
-                (this.Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward && !isVelocityAlongTowards))
-            {
+            if ((Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityAway && isVelocityAlongTowards) ||
+                (Direction == ChaseDirectionType.Drag_Velocity_AlongIfVelocityToward && !isVelocityAlongTowards))
                 return false;
-            }
+
             else
-            {
                 return true;
-            }
         }
 
         private static void GetDesiredVector(out Vector3D unit, out double length, ChasePoint_GetForceArgs e, ChaseDirectionType direction)
@@ -802,15 +758,12 @@ namespace Game.Newt.v2.GameItems
 
         private double GetDistance(double distance, double itemRadius)
         {
-            if (this.IsDistanceRadius)
-            {
+            if (IsDistanceRadius)
                 // A distance of 1 item radius will return 1.  2 radii will be 2, etc
                 return distance / itemRadius;
-            }
+
             else
-            {
                 return distance;
-            }
         }
 
         #endregion

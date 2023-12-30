@@ -146,22 +146,10 @@ namespace Game.Newt.v2.NewtonDynamics
         /// <summary>
         /// Number of cells of each axis (only perfect cubes are currently supported)
         /// </summary>
-        public int Size
-        {
-            get
-            {
-                return _size;
-            }
-        }
+        public int Size => _size;
 
         private int _size1D;
-        public int Size1D
-        {
-            get
-            {
-                return _size1D;
-            }
-        }
+        public int Size1D => _size1D;
 
         /// <summary>
         /// Rate at which the ink/velocity diffuses and spreads out in the fluid.
@@ -286,22 +274,10 @@ namespace Game.Newt.v2.NewtonDynamics
             get;
             set;
         }
-        public double SizeWorld
-        {
-            get;
-            set;
-        }
-        public Quaternion RotationWorld
-        {
-            get;
-            set;
-        }
+        public double SizeWorld { get; set; }
+        public Quaternion RotationWorld { get; set; }
         //NOTE: I was debating whether I need to model angular velocity, but I don't think I do, but I could be wrong :)
-        public Vector3D VelocityWorld
-        {
-            get;
-            set;
-        }
+        public Vector3D VelocityWorld { get; set; }
 
         //----------------------- Exposed for reading only -----------------------
 
@@ -313,54 +289,24 @@ namespace Game.Newt.v2.NewtonDynamics
         /// FluidField2D has an arbitrary number of ink arrays (Layers) for R,G,B.  It is safe to add that kind of functionality to this class
         /// as well if needed
         /// </remarks>
-        public double[] Ink
-        {
-            get
-            {
-                return _ink;
-            }
-        }
+        public double[] Ink => _ink;
 
         // Velocity of the fluid
         private double[] _velocityX;
-        public double[] VelocityX
-        {
-            get
-            {
-                return _velocityX;
-            }
-        }
+        public double[] VelocityX => _velocityX;
 
         private double[] _velocityY;
-        public double[] VelocityY
-        {
-            get
-            {
-                return _velocityY;
-            }
-        }
+        public double[] VelocityY => _velocityY;
 
         private double[] _velocityZ;
-        public double[] VelocityZ
-        {
-            get
-            {
-                return _velocityZ;
-            }
-        }
+        public double[] VelocityZ => _velocityZ;
 
         //TODO: Be able to request the forces acting on a cell
         private bool[] _blocked;
         /// <summary>
         /// These are individual cells that are blocked (they represent internal walls)
         /// </summary>
-        public bool[] Blocked
-        {
-            get
-            {
-                return _blocked;
-            }
-        }
+        public bool[] Blocked => _blocked;
 
         //---------------------------------------------------------------------------------
 
@@ -377,7 +323,7 @@ namespace Game.Newt.v2.NewtonDynamics
             IndexBlockedCells();
             PopulateOpenBorderVelocites();
 
-            // Need to force totally bloced cell velocities to zero
+            // Need to force totally blocked cell velocities to zero
             foreach (int index in _boundrySettings.Blocked_Total)
             {
                 _velocityX[index] = 0;
@@ -618,7 +564,7 @@ namespace Game.Newt.v2.NewtonDynamics
                     for (int z = 0; z < _size; z++)
                     {
                         int index = Get1DIndex(x, y, z);
-                        retVal[index] = new Rectangle3DIndexedMapped(new Mapping_3D_1D(x, y, z, index), cornerPoints, new int[] 
+                        retVal[index] = new Rectangle3DIndexedMapped(new Mapping_3D_1D(x, y, z, index), cornerPoints, new int[]
                             {
                                 FluidField3D.Get1DIndex(x, y, z, cornerSize),
                                 FluidField3D.Get1DIndex(x, y, z + 1, cornerSize),
@@ -1210,8 +1156,8 @@ namespace Game.Newt.v2.NewtonDynamics
                 {
                     for (int y = 1; y < size - 1; y++)
                     {
-                        cells[IX(0, y, z, size)] = SetBoundry_OpenSprtCap(cells[IX(1, y, z, size)], false);
-                        cells[IX(size - 1, y, z, size)] = SetBoundry_OpenSprtCap(cells[IX(size - 2, y, z, size)], true);
+                        cells[IX(0, y, z, size)] = SetBoundry_Open_Cap(cells[IX(1, y, z, size)], false);
+                        cells[IX(size - 1, y, z, size)] = SetBoundry_Open_Cap(cells[IX(size - 2, y, z, size)], true);
                     }
                 }
             }
@@ -1236,8 +1182,8 @@ namespace Game.Newt.v2.NewtonDynamics
                 {
                     for (int x = 1; x < size - 1; x++)
                     {
-                        cells[IX(x, 0, z, size)] = SetBoundry_OpenSprtCap(cells[IX(x, 1, z, size)], false);
-                        cells[IX(x, size - 1, z, size)] = SetBoundry_OpenSprtCap(cells[IX(x, size - 2, z, size)], true);
+                        cells[IX(x, 0, z, size)] = SetBoundry_Open_Cap(cells[IX(x, 1, z, size)], false);
+                        cells[IX(x, size - 1, z, size)] = SetBoundry_Open_Cap(cells[IX(x, size - 2, z, size)], true);
                     }
                 }
             }
@@ -1262,8 +1208,8 @@ namespace Game.Newt.v2.NewtonDynamics
                 {
                     for (int x = 1; x < size - 1; x++)
                     {
-                        cells[IX(x, y, 0, size)] = SetBoundry_OpenSprtCap(cells[IX(x, y, 1, size)], false);
-                        cells[IX(x, y, size - 1, size)] = SetBoundry_OpenSprtCap(cells[IX(x, y, size - 2, size)], true);
+                        cells[IX(x, y, 0, size)] = SetBoundry_Open_Cap(cells[IX(x, y, 1, size)], false);
+                        cells[IX(x, y, size - 1, size)] = SetBoundry_Open_Cap(cells[IX(x, y, size - 2, size)], true);
                     }
                 }
             }
@@ -1286,69 +1232,69 @@ namespace Game.Newt.v2.NewtonDynamics
             for (int x = 1; x < size - 1; x++)
             {
                 cells[IX(x, 0, 0, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, 1, 0, size)], false) : cells[IX(x, 1, 0, size)]) +      // restrict y travel when it's the y veloctiy array
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, 0, 1, size)], false) : cells[IX(x, 0, 1, size)])        // restrict z travel when it's the z velocity array
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, 1, 0, size)], false) : cells[IX(x, 1, 0, size)]) +      // restrict y travel when it's the y veloctiy array
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, 0, 1, size)], false) : cells[IX(x, 0, 1, size)])        // restrict z travel when it's the z velocity array
                     );
 
                 cells[IX(x, size - 1, 0, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, size - 2, 0, size)], true) : cells[IX(x, size - 2, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, size - 1, 1, size)], false) : cells[IX(x, size - 1, 1, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, size - 2, 0, size)], true) : cells[IX(x, size - 2, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, size - 1, 1, size)], false) : cells[IX(x, size - 1, 1, size)])
                     );
 
                 cells[IX(x, 0, size - 1, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, 1, size - 1, size)], false) : cells[IX(x, 1, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, 0, size - 2, size)], true) : cells[IX(x, 0, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, 1, size - 1, size)], false) : cells[IX(x, 1, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, 0, size - 2, size)], true) : cells[IX(x, 0, size - 2, size)])
                     );
 
                 cells[IX(x, size - 1, size - 1, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, size - 2, size - 1, size)], true) : cells[IX(x, size - 2, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, size - 1, size - 2, size)], true) : cells[IX(x, size - 1, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, size - 2, size - 1, size)], true) : cells[IX(x, size - 2, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, size - 1, size - 2, size)], true) : cells[IX(x, size - 1, size - 2, size)])
                     );
             }
 
             for (int y = 1; y < size - 1; y++)
             {
                 cells[IX(0, y, 0, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, y, 0, size)], false) : cells[IX(1, y, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, y, 1, size)], false) : cells[IX(0, y, 1, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, y, 0, size)], false) : cells[IX(1, y, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, y, 1, size)], false) : cells[IX(0, y, 1, size)])
                     );
 
                 cells[IX(size - 1, y, 0, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, y, 0, size)], true) : cells[IX(size - 2, y, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, y, 1, size)], false) : cells[IX(size - 1, y, 1, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, y, 0, size)], true) : cells[IX(size - 2, y, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, y, 1, size)], false) : cells[IX(size - 1, y, 1, size)])
                     );
 
                 cells[IX(0, y, size - 1, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, y, size - 1, size)], false) : cells[IX(1, y, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, y, size - 2, size)], true) : cells[IX(0, y, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, y, size - 1, size)], false) : cells[IX(1, y, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, y, size - 2, size)], true) : cells[IX(0, y, size - 2, size)])
                     );
 
                 cells[IX(size - 1, y, size - 1, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, y, size - 1, size)], true) : cells[IX(size - 2, y, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, y, size - 2, size)], true) : cells[IX(size - 1, y, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, y, size - 1, size)], true) : cells[IX(size - 2, y, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, y, size - 2, size)], true) : cells[IX(size - 1, y, size - 2, size)])
                     );
             }
 
             for (int z = 0; z < size - 1; z++)
             {
                 cells[IX(0, 0, z, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, z, size)], false) : cells[IX(1, 0, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, z, size)], false) : cells[IX(0, 1, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, z, size)], false) : cells[IX(1, 0, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, z, size)], false) : cells[IX(0, 1, z, size)])
                     );
 
                 cells[IX(size - 1, 0, z, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, z, size)], true) : cells[IX(size - 2, 0, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, z, size)], false) : cells[IX(size - 1, 1, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, z, size)], true) : cells[IX(size - 2, 0, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, z, size)], false) : cells[IX(size - 1, 1, z, size)])
                     );
 
                 cells[IX(0, size - 1, z, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, z, size)], false) : cells[IX(1, size - 1, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, z, size)], true) : cells[IX(0, size - 2, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, z, size)], false) : cells[IX(1, size - 1, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, z, size)], true) : cells[IX(0, size - 2, z, size)])
                     );
 
                 cells[IX(size - 1, size - 1, z, size)] = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, z, size)], true) : cells[IX(size - 2, size - 1, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, z, size)], true) : cells[IX(size - 1, size - 2, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, z, size)], true) : cells[IX(size - 2, size - 1, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, z, size)], true) : cells[IX(size - 1, size - 2, z, size)])
                     );
             }
 
@@ -1431,51 +1377,51 @@ namespace Game.Newt.v2.NewtonDynamics
             // Corners take average of neighbors
 
             cells[IX(0, 0, 0, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, 0, size)], false) : cells[IX(1, 0, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, 0, size)], false) : cells[IX(0, 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, 0, 1, size)], false) : cells[IX(0, 0, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, 0, size)], false) : cells[IX(1, 0, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, 0, size)], false) : cells[IX(0, 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, 0, 1, size)], false) : cells[IX(0, 0, 1, size)])
                 );
 
             cells[IX(0, size - 1, 0, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, 0, size)], false) : cells[IX(1, size - 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, 0, size)], true) : cells[IX(0, size - 2, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, size - 1, 1, size)], false) : cells[IX(0, size - 1, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, 0, size)], false) : cells[IX(1, size - 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, 0, size)], true) : cells[IX(0, size - 2, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, size - 1, 1, size)], false) : cells[IX(0, size - 1, 1, size)])
                 );
 
             cells[IX(0, 0, size - 1, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, size - 1, size)], false) : cells[IX(1, 0, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, size - 1, size)], false) : cells[IX(0, 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, 0, size - 2, size)], true) : cells[IX(0, 0, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, size - 1, size)], false) : cells[IX(1, 0, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, size - 1, size)], false) : cells[IX(0, 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, 0, size - 2, size)], true) : cells[IX(0, 0, size - 2, size)])
                 );
 
             cells[IX(0, size - 1, size - 1, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, size - 1, size)], false) : cells[IX(1, size - 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, size - 1, size)], true) : cells[IX(0, size - 2, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, size - 1, size - 2, size)], true) : cells[IX(0, size - 1, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, size - 1, size)], false) : cells[IX(1, size - 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, size - 1, size)], true) : cells[IX(0, size - 2, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, size - 1, size - 2, size)], true) : cells[IX(0, size - 1, size - 2, size)])
                 );
 
             cells[IX(size - 1, 0, 0, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, 0, size)], true) : cells[IX(size - 2, 0, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, 0, size)], false) : cells[IX(size - 1, 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 0, 1, size)], false) : cells[IX(size - 1, 0, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, 0, size)], true) : cells[IX(size - 2, 0, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, 0, size)], false) : cells[IX(size - 1, 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, 0, 1, size)], false) : cells[IX(size - 1, 0, 1, size)])
                 );
 
             cells[IX(size - 1, size - 1, 0, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, 0, size)], true) : cells[IX(size - 2, size - 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, 0, size)], true) : cells[IX(size - 1, size - 2, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 1, 1, size)], false) : cells[IX(size - 1, size - 1, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, 0, size)], true) : cells[IX(size - 2, size - 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, 0, size)], true) : cells[IX(size - 1, size - 2, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 1, 1, size)], false) : cells[IX(size - 1, size - 1, 1, size)])
                 );
 
             cells[IX(size - 1, 0, size - 1, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, size - 1, size)], true) : cells[IX(size - 2, 0, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, size - 1, size)], false) : cells[IX(size - 1, 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 0, size - 2, size)], true) : cells[IX(size - 1, 0, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, size - 1, size)], true) : cells[IX(size - 2, 0, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, size - 1, size)], false) : cells[IX(size - 1, 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, 0, size - 2, size)], true) : cells[IX(size - 1, 0, size - 2, size)])
                 );
 
             cells[IX(size - 1, size - 1, size - 1, size)] = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, size - 1, size)], true) : cells[IX(size - 2, size - 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, size - 1, size)], true) : cells[IX(size - 1, size - 2, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 1, size - 2, size)], true) : cells[IX(size - 1, size - 1, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, size - 1, size)], true) : cells[IX(size - 2, size - 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, size - 1, size)], true) : cells[IX(size - 1, size - 2, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 1, size - 2, size)], true) : cells[IX(size - 1, size - 1, size - 2, size)])
                 );
 
 
@@ -1568,7 +1514,7 @@ namespace Game.Newt.v2.NewtonDynamics
 
             #endregion
         }
-        private static double SetBoundry_OpenSprtCap(double newValue, bool allowPositive)
+        private static double SetBoundry_Open_Cap(double newValue, bool allowPositive)
         {
             bool isPositive = newValue > 0;
 
@@ -1665,29 +1611,29 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 index = IX(x, 0, 0, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, 1, 0, size)], false) : cells[IX(x, 1, 0, size)]) +      // restrict y travel when it's the y veloctiy array
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, 0, 1, size)], false) : cells[IX(x, 0, 1, size)])        // restrict z travel when it's the z velocity array
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, 1, 0, size)], false) : cells[IX(x, 1, 0, size)]) +      // restrict y travel when it's the y veloctiy array
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, 0, 1, size)], false) : cells[IX(x, 0, 1, size)])        // restrict z travel when it's the z velocity array
                     );
                 cells[index] = .5d * (source[index] + thisValue);       // now take the average of this field's value with the source.  NOTE: Giving the two equal weight, that's why I don't just add the 3 and divide by 3.
 
                 index = IX(x, size - 1, 0, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, size - 2, 0, size)], true) : cells[IX(x, size - 2, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, size - 1, 1, size)], false) : cells[IX(x, size - 1, 1, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, size - 2, 0, size)], true) : cells[IX(x, size - 2, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, size - 1, 1, size)], false) : cells[IX(x, size - 1, 1, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(x, 0, size - 1, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, 1, size - 1, size)], false) : cells[IX(x, 1, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, 0, size - 2, size)], true) : cells[IX(x, 0, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, 1, size - 1, size)], false) : cells[IX(x, 1, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, 0, size - 2, size)], true) : cells[IX(x, 0, size - 2, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(x, size - 1, size - 1, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(x, size - 2, size - 1, size)], true) : cells[IX(x, size - 2, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(x, size - 1, size - 2, size)], true) : cells[IX(x, size - 1, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(x, size - 2, size - 1, size)], true) : cells[IX(x, size - 2, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(x, size - 1, size - 2, size)], true) : cells[IX(x, size - 1, size - 2, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
             }
@@ -1696,29 +1642,29 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 index = IX(0, y, 0, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, y, 0, size)], false) : cells[IX(1, y, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, y, 1, size)], false) : cells[IX(0, y, 1, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, y, 0, size)], false) : cells[IX(1, y, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, y, 1, size)], false) : cells[IX(0, y, 1, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(size - 1, y, 0, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, y, 0, size)], true) : cells[IX(size - 2, y, 0, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, y, 1, size)], false) : cells[IX(size - 1, y, 1, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, y, 0, size)], true) : cells[IX(size - 2, y, 0, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, y, 1, size)], false) : cells[IX(size - 1, y, 1, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(0, y, size - 1, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, y, size - 1, size)], false) : cells[IX(1, y, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, y, size - 2, size)], true) : cells[IX(0, y, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, y, size - 1, size)], false) : cells[IX(1, y, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, y, size - 2, size)], true) : cells[IX(0, y, size - 2, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(size - 1, y, size - 1, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, y, size - 1, size)], true) : cells[IX(size - 2, y, size - 1, size)]) +
-                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, y, size - 2, size)], true) : cells[IX(size - 1, y, size - 2, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, y, size - 1, size)], true) : cells[IX(size - 2, y, size - 1, size)]) +
+                    (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, y, size - 2, size)], true) : cells[IX(size - 1, y, size - 2, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
             }
@@ -1727,29 +1673,29 @@ namespace Game.Newt.v2.NewtonDynamics
             {
                 index = IX(0, 0, z, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, z, size)], false) : cells[IX(1, 0, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, z, size)], false) : cells[IX(0, 1, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, z, size)], false) : cells[IX(1, 0, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, z, size)], false) : cells[IX(0, 1, z, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(size - 1, 0, z, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, z, size)], true) : cells[IX(size - 2, 0, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, z, size)], false) : cells[IX(size - 1, 1, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, z, size)], true) : cells[IX(size - 2, 0, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, z, size)], false) : cells[IX(size - 1, 1, z, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(0, size - 1, z, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, z, size)], false) : cells[IX(1, size - 1, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, z, size)], true) : cells[IX(0, size - 2, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, z, size)], false) : cells[IX(1, size - 1, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, z, size)], true) : cells[IX(0, size - 2, z, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
 
                 index = IX(size - 1, size - 1, z, size);
                 thisValue = 0.5 * (
-                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, z, size)], true) : cells[IX(size - 2, size - 1, z, size)]) +
-                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, z, size)], true) : cells[IX(size - 1, size - 2, z, size)])
+                    (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, z, size)], true) : cells[IX(size - 2, size - 1, z, size)]) +
+                    (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, z, size)], true) : cells[IX(size - 1, size - 2, z, size)])
                     );
                 cells[index] = .5d * (source[index] + thisValue);
             }
@@ -1762,65 +1708,65 @@ namespace Game.Newt.v2.NewtonDynamics
 
             index = IX(0, 0, 0, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, 0, size)], false) : cells[IX(1, 0, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, 0, size)], false) : cells[IX(0, 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, 0, 1, size)], false) : cells[IX(0, 0, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, 0, size)], false) : cells[IX(1, 0, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, 0, size)], false) : cells[IX(0, 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, 0, 1, size)], false) : cells[IX(0, 0, 1, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(0, size - 1, 0, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, 0, size)], false) : cells[IX(1, size - 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, 0, size)], true) : cells[IX(0, size - 2, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, size - 1, 1, size)], false) : cells[IX(0, size - 1, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, 0, size)], false) : cells[IX(1, size - 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, 0, size)], true) : cells[IX(0, size - 2, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, size - 1, 1, size)], false) : cells[IX(0, size - 1, 1, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(0, 0, size - 1, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, 0, size - 1, size)], false) : cells[IX(1, 0, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, 1, size - 1, size)], false) : cells[IX(0, 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, 0, size - 2, size)], true) : cells[IX(0, 0, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, 0, size - 1, size)], false) : cells[IX(1, 0, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, 1, size - 1, size)], false) : cells[IX(0, 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, 0, size - 2, size)], true) : cells[IX(0, 0, size - 2, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(0, size - 1, size - 1, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(1, size - 1, size - 1, size)], false) : cells[IX(1, size - 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(0, size - 2, size - 1, size)], true) : cells[IX(0, size - 2, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(0, size - 1, size - 2, size)], true) : cells[IX(0, size - 1, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(1, size - 1, size - 1, size)], false) : cells[IX(1, size - 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(0, size - 2, size - 1, size)], true) : cells[IX(0, size - 2, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(0, size - 1, size - 2, size)], true) : cells[IX(0, size - 1, size - 2, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(size - 1, 0, 0, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, 0, size)], true) : cells[IX(size - 2, 0, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, 0, size)], false) : cells[IX(size - 1, 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 0, 1, size)], false) : cells[IX(size - 1, 0, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, 0, size)], true) : cells[IX(size - 2, 0, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, 0, size)], false) : cells[IX(size - 1, 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, 0, 1, size)], false) : cells[IX(size - 1, 0, 1, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(size - 1, size - 1, 0, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, 0, size)], true) : cells[IX(size - 2, size - 1, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, 0, size)], true) : cells[IX(size - 1, size - 2, 0, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 1, 1, size)], false) : cells[IX(size - 1, size - 1, 1, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, 0, size)], true) : cells[IX(size - 2, size - 1, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, 0, size)], true) : cells[IX(size - 1, size - 2, 0, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 1, 1, size)], false) : cells[IX(size - 1, size - 1, 1, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(size - 1, 0, size - 1, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, 0, size - 1, size)], true) : cells[IX(size - 2, 0, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 1, size - 1, size)], false) : cells[IX(size - 1, 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, 0, size - 2, size)], true) : cells[IX(size - 1, 0, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, 0, size - 1, size)], true) : cells[IX(size - 2, 0, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, 1, size - 1, size)], false) : cells[IX(size - 1, 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, 0, size - 2, size)], true) : cells[IX(size - 1, 0, size - 2, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
             index = IX(size - 1, size - 1, size - 1, size);
             thisValue = ONETHIRD * (
-                (whichSide == SetBoundsType.VelocityX ? SetBoundry_OpenSprtCap(cells[IX(size - 2, size - 1, size - 1, size)], true) : cells[IX(size - 2, size - 1, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityY ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 2, size - 1, size)], true) : cells[IX(size - 1, size - 2, size - 1, size)]) +
-                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_OpenSprtCap(cells[IX(size - 1, size - 1, size - 2, size)], true) : cells[IX(size - 1, size - 1, size - 2, size)])
+                (whichSide == SetBoundsType.VelocityX ? SetBoundry_Open_Cap(cells[IX(size - 2, size - 1, size - 1, size)], true) : cells[IX(size - 2, size - 1, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityY ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 2, size - 1, size)], true) : cells[IX(size - 1, size - 2, size - 1, size)]) +
+                (whichSide == SetBoundsType.VelocityZ ? SetBoundry_Open_Cap(cells[IX(size - 1, size - 1, size - 2, size)], true) : cells[IX(size - 1, size - 1, size - 2, size)])
                 );
             cells[index] = .5d * (source[index] + thisValue);
 
@@ -2421,20 +2367,16 @@ namespace Game.Newt.v2.NewtonDynamics
         private void IndexBlockedCells()
         {
             if (!_boundrySettings.IsBlockCacheDirty)
-            {
                 return;
-            }
 
             _boundrySettings.HasBlockedCells = false;
 
-            List<IndexLERP> velocityX = new List<IndexLERP>();
-            List<IndexLERP> velocityY = new List<IndexLERP>();
-            List<IndexLERP> velocityZ = new List<IndexLERP>();
-            List<IndexLERP> other = new List<IndexLERP>();
+            var velocityX = new List<IndexLERP>();
+            var velocityY = new List<IndexLERP>();
+            var velocityZ = new List<IndexLERP>();
+            var other = new List<IndexLERP>();
 
-            List<int> totalBlock = new List<int>();
-
-            List<int> open = new List<int>();
+            var totalBlock = new List<int>();
 
             // For now, ignore blocked cells that are on the edges of the field
 
@@ -2447,11 +2389,9 @@ namespace Game.Newt.v2.NewtonDynamics
                         int index1D = Get1DIndex(x, y, z);
 
                         if (!_blocked[index1D])
-                        {
                             continue;
-                        }
 
-                        #region Detect total block
+                        #region detect total block
 
                         bool foundOpen = false;
 
@@ -2469,15 +2409,11 @@ namespace Game.Newt.v2.NewtonDynamics
                                 }
 
                                 if (foundOpen)
-                                {
                                     break;
-                                }
                             }
 
                             if (foundOpen)
-                            {
                                 break;
-                            }
                         }
 
                         if (!foundOpen)
@@ -2491,27 +2427,19 @@ namespace Game.Newt.v2.NewtonDynamics
 
                         // Plate - YZ - X free
                         if (IndexBlockedCells_Plate(Axis.Y, Axis.Z, Axis.X, velocityY, velocityZ, velocityX, other, y, z, x, index1D))
-                        {
                             continue;
-                        }
 
                         // Plate - XZ - Y free
                         if (IndexBlockedCells_Plate(Axis.X, Axis.Z, Axis.Y, velocityX, velocityZ, velocityY, other, x, z, y, index1D))
-                        {
                             continue;
-                        }
 
                         // Plate - XY - Z free
                         if (IndexBlockedCells_Plate(Axis.X, Axis.Y, Axis.Z, velocityX, velocityY, velocityZ, other, x, y, z, index1D))
-                        {
                             continue;
-                        }
 
                         // Inside Edge,Corner
                         if (IndexBlockedCells_Inside(velocityX, velocityY, velocityZ, other, x, y, z, index1D))
-                        {
                             continue;
-                        }
 
                         // Outside Edge,Corner
                         IndexBlockedCells_Outside(velocityX, velocityY, velocityZ, other, x, y, z, index1D);
